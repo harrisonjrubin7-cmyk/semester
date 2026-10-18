@@ -1,6 +1,6 @@
 // Checks the delivery-management records under docs/delivery, registry/, and docs/finance.
 // Run: node scripts/check-delivery.mjs   (exit 1 when there are errors; warnings do not fail)
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,6 +54,15 @@ const FINANCE_CONTROLS = [
   'refund_approval_policy', 'month_end_close_checklist', 'financial_access_review',
 ];
 const CAPABILITY_DIR = 'packages/platform-control/registry/capabilities';
+// The checks each quality gate must keep; removing one changes the specification's gate catalogue.
+const REQUIRED_GATE_CHECKS = {
+  'GATE-01': ['user_outcome_defined', 'institution_authority_defined', 'prohibited_claims_defined', 'source_types_defined', 'accountable_owner_named'],
+  'GATE-02': ['record_classification_defined', 'tenant_scope_defined', 'RLS_policy_tested', 'command_policy_tested', 'revocation_behavior_tested', 'audit_events_defined'],
+  'GATE-03': ['legal_transitions_tested', 'idempotency_tested', 'retry_and_quarantine_defined', 'reconciliation_defined', 'safe_failure_states_designed', 'receipt_behavior_tested'],
+  'GATE-04': ['ready_loading_empty_error_forbidden_offline_states', 'source_and_freshness_visible', 'accessibility_evidence_attached', 'support_handoff_available', 'training_material_reviewed'],
+  'GATE-05': ['dashboards_available', 'alerts_tested', 'incident_drill_completed', 'rollback_rehearsed', 'on_call_confirmed', 'institution_escalation_confirmed'],
+  'GATE-06': ['pilot_results_reviewed', 'trust_and_confusion_metrics_reviewed', 'open_critical_findings_zero', 'source_quality_acceptable', 'renewal_or_expansion_approval_recorded'],
+};
 const FINANCE_STATUSES = ['not_started', 'present'];
 // The expansion scorecard's no-override hard stops; deleting one must not pass.
 const REQUIRED_HARD_STOPS = [
@@ -71,14 +80,26 @@ export function check(repo) {
     const abs = resolve(root, rel);
     return abs === root || abs.startsWith(root + sep) ? abs : null;
   };
+  // True when artifact `from` depends on `target`, directly or through other artifacts.
+  const dependsOn = (from, target, seen = new Set()) => {
+    for (const dep of artifactById.get(from)?.dependencies ?? []) {
+      if (dep === target) return true;
+      if (!seen.has(dep)) {
+        seen.add(dep);
+        if (dependsOn(dep, target, seen)) return true;
+      }
+    }
+    return false;
+  };
   const today = repo.today ?? new Date().toISOString().slice(0, 10);
   const states = model.delivery_states;
   const rank = (s) => states.indexOf(s);
   const nodes = new Map();
   const trainIds = model.release_trains.map((t) => t.id);
   const capabilityDir = join(root, CAPABILITY_DIR);
+  // A capability's identity is the key inside its record, which is what the platform-control loader reads.
   const capabilityKeys = existsSync(capabilityDir)
-    ? new Set(readdirSync(capabilityDir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -'.json'.length)))
+    ? new Set(readdirSync(capabilityDir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(capabilityDir, f), 'utf8')).key))
     : null;
   // Artifact ids must be unique and match their file names, so a reference resolves to exactly one record.
   const artifactById = new Map();
@@ -94,7 +115,8 @@ export function check(repo) {
       const abs = insideRoot(value);
       if (abs === null) return 'is outside the repository';
       if (!existsSync(abs)) return 'does not exist on disk';
-      const registered = [...artifactById.values()].find((a) => a.location === value);
+      if (!statSync(abs).isFile()) return 'is not a regular file';
+      const registered = [...artifactById.values()].find((a) => insideRoot(a.location) === abs);
       if (registered && registered.state !== 'approved') {
         return `is registered artifact ${registered.id}, currently ${registered.state}, not approved`;
       }
@@ -104,6 +126,11 @@ export function check(repo) {
     if (!artifact) return 'is neither a file path nor a registry artifact id';
     return artifact.state === 'approved' ? null : `is registered as ${artifact.state}, not approved`;
   };
+
+  // Every gated state needs a declared hard-dependency threshold, or the dependency gate stops applying silently.
+  for (const state of ['approved_for_build', 'in_build', 'integration_ready', 'evidence_ready', 'approved_for_release', 'enabled', 'monitored']) {
+    if (!model.hard_dependency_minimum_state?.[state]) errors.push(`operating-model: hard_dependency_minimum_state is missing ${state}`);
+  }
 
   // Dependency graph: unique nodes, known statuses, known edge endpoints, acyclic.
   for (const n of graph.nodes) {
@@ -140,6 +167,8 @@ export function check(repo) {
     if (gateIds.has(g.id)) errors.push(`quality-gates: duplicate ${g.id}`);
     gateIds.add(g.id);
     if (isEmpty(g.checks)) errors.push(`quality-gates: ${g.id} has no checks`);
+    const missingChecks = (REQUIRED_GATE_CHECKS[g.id] ?? []).filter((c) => !(g.checks ?? []).includes(c));
+    if (missingChecks.length) errors.push(`quality-gates: ${g.id} missing required checks [${missingChecks.join(', ')}]`);
   }
   const missingGates = EXPECTED_GATES.filter((id) => !gateIds.has(id));
   const unexpectedGates = [...gateIds].filter((id) => !EXPECTED_GATES.includes(id));
@@ -255,7 +284,9 @@ export function check(repo) {
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
     // An approved artifact whose review date has passed is expired by the operating model's own rule.
     if (a.state === 'approved') {
-      if (isEmpty(a.owners?.accountable)) errors.push(`${label}: approved without an accountable owner`);
+      const owner = String(a.owners?.accountable ?? '').trim();
+      if (owner === '' || owner === 'UNASSIGNED') errors.push(`${label}: approved without an accountable owner`);
+      if (dependsOn(a.id, a.id)) errors.push(`${label}: approved artifact depends on itself through its dependencies`);
       for (const dep of a.dependencies ?? []) {
         const d = artifactById.get(dep);
         if (!d || d.state !== 'approved') errors.push(`${label}: approved with unresolved dependency ${dep}`);

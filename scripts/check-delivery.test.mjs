@@ -235,3 +235,54 @@ test('control: an expansion scorecard missing a required hard stop fails', () =>
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /missing required hard stops \[confirmed_unauthorized_access\]/.test(e)));
 });
+
+test('control: an approved increment citing a directory as evidence fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_build'; d.data_contract = 'docs/'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: data_contract docs\/ is not a regular file/.test(e)));
+});
+
+test('control: a non-canonical path to a draft artifact still counts as that artifact', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_build';
+    d.operational_runbook = './docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /is registered artifact ART-RDY-011, currently draft/.test(e)));
+});
+
+test('control: an approved artifact whose accountable owner is the UNASSIGNED sentinel fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2099-01-01';
+  art.data.owners.accountable = 'UNASSIGNED';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved without an accountable owner/.test(e)));
+});
+
+test('control: an artifact that depends on itself fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2099-01-01';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  art.data.dependencies = ['ART-RDY-011'];
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved artifact depends on itself/.test(e)));
+});
+
+test('control: a quality gate missing a required check fails', () => {
+  const repo = loadRepo();
+  repo.gates.gates[1].checks = repo.gates.gates[1].checks.filter((c) => c !== 'RLS_policy_tested');
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /GATE-02 missing required checks \[RLS_policy_tested\]/.test(e)));
+});
+
+test('control: a gated state without a hard-dependency threshold fails', () => {
+  const repo = loadRepo();
+  delete repo.model.hard_dependency_minimum_state.approved_for_build;
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /hard_dependency_minimum_state is missing approved_for_build/.test(e)));
+});
