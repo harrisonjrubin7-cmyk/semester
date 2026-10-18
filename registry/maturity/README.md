@@ -27,7 +27,8 @@ already exists on `main` and is not duplicated here.
 
 ## Open gaps
 
-- Six of twelve pillars have no owner or certification in the source. Assign them before relying on the pillar.
+- Six of twelve pillars have no owner in the source. Assign them before relying on the pillar.
+- Twelve of twelve pillars have no certification record. Six carry a `certification_target` ID that is not yet backed by a record.
 - `SIS-READINESS-001` has no certification level reached; it is at most `sandbox`.
 - The contract-lab and read-model TypeScript shapes from the source are not included, since they belong in the app after a contract review.
 - Nothing has been deployed. Launch and deploy need an approved target, which this change does not establish.

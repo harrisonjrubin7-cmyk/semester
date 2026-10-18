@@ -25,7 +25,7 @@ its evidence exists in the repository.
 - [ ] 12. Implement source-health monitoring.
 - [ ] 13. Complete stale/unknown/error UI states.
 - [ ] 14. Test duplicate and out-of-order events.
-- [ ] 15. Test access revocation during workflow execution.
+- [x] 15. Test access revocation during workflow execution. — `packages/institution/src/access-saga.test.ts` (revocation while an install is in flight)
 - [ ] 16. Test safe-off activation.
 - [ ] 17. Run a reconciliation drill.
 - [ ] 18. Run a restore/rebuild drill.

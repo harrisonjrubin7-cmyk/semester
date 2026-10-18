@@ -6,6 +6,12 @@
 connector_certification:
   levels:
     sandbox:
+      required:
+        - authority_contract
+        - delivery_contract
+        - failure_contract
+        - reconciliation_plan
+        - named_owner
       allowed:
         - synthetic_data
         - contract_validation
