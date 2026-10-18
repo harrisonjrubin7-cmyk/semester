@@ -300,7 +300,7 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
     await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1, correlationId: 'req-abc-12345' });
     const [row] = store.outbox.rows;
-    expect(row.event.idempotencyKey).toBe(JSON.stringify(['stu-1', KEY_1]));
+    expect(row.event.idempotencyKey).toBe(JSON.stringify(['inst-a', 'stu-1', KEY_1]));
     expect(row.event.correlationId).toBe('req-abc-12345');
     expect(row.event.occurredAt).toBe('2026-10-18T12:00:00.000Z');
   });
@@ -465,6 +465,25 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     // and actor `fac-1:2` with key `release-key-000001`.
     await service.releaseFeedback(as('fac-1'), { submissionId: first.id, idempotencyKey: '2:release-key-000001' });
     await service.releaseFeedback(as('fac-1:2'), { submissionId: second.id, idempotencyKey: 'release-key-000001' });
+
+    const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('one faculty member in two institutions who reuses a key releases two grades under two event keys', async () => {
+    const { service, store, as } = fixture();
+    store.memberships.push({ userId: 'fac-1', institutionId: 'inst-b', courseId: 'course-b1', role: 'faculty', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay one', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    await service.saveDraft(as('stu-b', 'inst-b'), { assignmentId: 'b1', body: 'essay two', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-b', 'inst-b'), { assignmentId: 'b1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    const [a, b] = [...store.submissions.values()];
+    await service.recordAssessment(as('fac-1'), { submissionId: a.id, grade: 80, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+    await service.recordAssessment(as('fac-1', 'inst-b'), { submissionId: b.id, grade: 70, feedback: 'ok', idempotencyKey: 'assess-key-000002' });
+
+    await service.releaseFeedback(as('fac-1'), { submissionId: a.id, idempotencyKey: 'release-key-000001' });
+    await service.releaseFeedback(as('fac-1', 'inst-b'), { submissionId: b.id, idempotencyKey: 'release-key-000001' });
 
     const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
     expect(keys).toHaveLength(2);

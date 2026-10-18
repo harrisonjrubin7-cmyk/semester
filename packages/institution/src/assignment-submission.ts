@@ -556,9 +556,9 @@ export class AssignmentSubmissionService {
       actor: { id: input.actorId, type: 'user' },
       subject: { type: input.subjectType, id: input.subjectId },
       correlationId: input.correlationId,
-      // The sender and the key as a JSON pair: two people who reuse one key get two downstream keys, and an id or key
-      // containing a colon cannot make two different pairs read the same.
-      idempotencyKey: JSON.stringify([input.actorId, input.idempotencyKey]),
+      // The institution, the sender and the key as a JSON tuple: the same key reused by one person in two institutions, or
+      // by two people, gets its own downstream key, and an id or key containing a colon cannot make two tuples read the same.
+      idempotencyKey: JSON.stringify([input.tenantId, input.actorId, input.idempotencyKey]),
       payload: input.payload,
     });
   }
