@@ -99,6 +99,26 @@ class RejectedContracts(unittest.TestCase):
             d['controls']['human_authority_required'] = False
         self.assertRejected(mutate(fn), 'risk')
 
+    def test_baseline_requires_happy_path_and_recovery(self):
+        def fn(d):
+            for t in d['acceptance_tests']:
+                if t['suite'] == 'happy_path':
+                    t['suite'] = 'replay'
+        self.assertRejected(mutate(fn), 'Missing baseline acceptance suites: happy_path')
+
+    def test_verified_readiness_requires_catalog_link(self):
+        def fn(d):
+            d['catalog_links'] = []
+            d['readiness']['tested'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'catalog_links')
+
+    def test_operational_review_needs_workspace_reference(self):
+        def fn(d):
+            d['steps'][0]['kind'] = 'operational_review'
+            d['steps'][0]['surface_refs'] = []
+            d['steps'][0]['executor_ref'] = None
+        self.assertRejected(mutate(fn), 'no workspace or checklist reference')
+
 
 if __name__ == '__main__':
     unittest.main()

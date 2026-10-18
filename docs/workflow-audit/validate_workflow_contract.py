@@ -48,6 +48,8 @@ def semantic_errors(doc):
     available_refs = set(doc['data']['input_refs'])
     produced_refs = set()
     for step in doc['steps']:
+        if step['kind'] == 'operational_review' and not step['surface_refs'] and step['executor_ref'] is None:
+            errors.append('Operational review ' + step['id'] + ' has no workspace or checklist reference')
         if step['actor_role'] not in doc['scope']['allowed_roles']:
             errors.append('Step ' + step['id'] + ' actor is outside allowed_roles: ' + step['actor_role'])
         missing = set(step['input_refs']) - available_refs
@@ -85,7 +87,7 @@ def semantic_errors(doc):
         if not set(r['acceptance_test_ids']) <= test_ids:
             errors.append('Undefined recovery test: ' + r['code'])
     suites = {t['suite'] for t in doc['acceptance_tests']}
-    baseline = {'role_denial', 'scoped_visibility', 'stale_source', 'cancellation', 'accessibility', 'ownership'}
+    baseline = {'happy_path', 'recovery', 'role_denial', 'scoped_visibility', 'stale_source', 'cancellation', 'accessibility', 'ownership'}
     if not baseline <= suites:
         errors.append('Missing baseline acceptance suites: ' + ', '.join(sorted(baseline - suites)))
     if doc['authority']['official_record_write']:

@@ -1492,6 +1492,94 @@
           "controls"
         ]
       }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "implemented": {
+                    "properties": {
+                      "status": {
+                        "const": "verified"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "implemented"
+                ]
+              }
+            },
+            "required": [
+              "readiness"
+            ]
+          },
+          {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "tested": {
+                    "properties": {
+                      "status": {
+                        "const": "verified"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "tested"
+                ]
+              }
+            },
+            "required": [
+              "readiness"
+            ]
+          },
+          {
+            "properties": {
+              "readiness": {
+                "properties": {
+                  "production_enabled": {
+                    "properties": {
+                      "status": {
+                        "const": "verified"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                },
+                "required": [
+                  "production_enabled"
+                ]
+              }
+            },
+            "required": [
+              "readiness"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "catalog_links": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "catalog_links"
+        ]
+      }
     }
   ]
 }
