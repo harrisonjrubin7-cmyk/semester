@@ -621,6 +621,28 @@ test('control: a risk review date is judged against the audit date the repositor
   assert.ok(!errors.some((e) => /risk review date .* is in the past/.test(e)));
 });
 
+test('control: a non-array artifact dependencies declaration reports an error and does not crash the checker', () => {
+  const repo = loadRepo();
+  repo.artifacts.find((a) => a.data.id === 'ART-RDY-011').data.dependencies = { 'source-authority-register': true };
+  let result;
+  assert.doesNotThrow(() => { result = check(repo); });
+  assert.ok(result.errors.some((e) => /ART-RDY-011: dependencies must be an array/.test(e)));
+});
+
+test('control: a risk whose owner is a non-string value does not count as named', () => {
+  const repo = loadRepo();
+  repo.risks.risks.find((r) => r.id === 'RSK-004').owner = { name: 'Alice' };
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /risk RSK-004: no owner/.test(e)));
+});
+
+test('control: a retired increment does not keep the hypercare review gate active', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'retired'; });
+  repo.risks.review = { cadence: 'recurring during hypercare', next_review: '2020-01-01', owner: undefined };
+  const { errors } = check(repo);
+  assert.ok(!errors.some((e) => /^risk-register:/.test(e)), errors.join('\n'));
+});
+
 test('control: an artifact record with no id is reported and does not crash the checker', () => {
   const repo = loadRepo();
   const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');

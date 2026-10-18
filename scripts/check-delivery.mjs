@@ -146,7 +146,9 @@ export function check(repo) {
     if (!repo.artifacts.some((a) => a.data.id === id)) errors.push(`registry/artifacts: required record ${id} is missing`);
   }
   for (const [id, deps] of Object.entries(REQUIRED_ARTIFACT_DEPENDENCIES)) {
-    const declared = repo.artifacts.find((a) => a.data.id === id)?.data.dependencies ?? [];
+    const raw = repo.artifacts.find((a) => a.data.id === id)?.data.dependencies;
+    if (raw !== undefined && !Array.isArray(raw)) errors.push(`${id}: dependencies must be an array`);
+    const declared = Array.isArray(raw) ? raw : [];
     for (const dep of deps) {
       if (!declared.includes(dep)) errors.push(`${id}: dependency ${dep} must stay declared`);
     }
@@ -250,7 +252,7 @@ export function check(repo) {
   }
 
   // The risk review must be scheduled with a named owner before any increment is enabled (hypercare starts there).
-  const enabledReached = repo.increments.some((i) => rank(i.data.state) >= rank('enabled'));
+  const enabledReached = repo.increments.some((i) => ['enabled', 'monitored'].includes(i.data.state));
   const reviewDate = String(repo.risks.review?.next_review ?? '');
   const reviewOwner = typeof repo.risks.review?.owner === 'string' ? repo.risks.review.owner.trim() : '';
   const reviewPast = isCalendarDate(reviewDate) && reviewDate < today;
@@ -267,7 +269,8 @@ export function check(repo) {
     if (!Array.isArray(mitigations) || mitigations.length === 0 || mitigations.some((m) => typeof m !== 'string' || isUnanswered(m))) {
       errors.push(`risk ${r.id}: mitigations must be a nonempty list of named controls`);
     }
-    if (isUnanswered(String(r.owner ?? '').trim())) errors.push(`risk ${r.id}: no owner`);
+    const owner = typeof r.owner === 'string' ? r.owner.trim() : '';
+    if (isUnanswered(owner)) errors.push(`risk ${r.id}: no owner`);
   }
 
   const riskIds = new Set(repo.risks.risks.map((r) => r.id));
