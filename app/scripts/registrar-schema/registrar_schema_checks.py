@@ -28,6 +28,7 @@ def migrate_subset(schema):
         if k in s:s[k]=migrate_subset(s[k])
     if isinstance(s.get('additionalProperties'),dict):s['additionalProperties']=migrate_subset(s['additionalProperties'])
     for k in ['allOf','anyOf','oneOf']:
+        if k in s and not isinstance(s[k],list):raise ValueError('composition must be an array')
         if k in s:s[k]=[migrate_subset(v) for v in s[k]]
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
     Draft202012Validator.check_schema(s);return s
@@ -37,12 +38,14 @@ def pointer(parts):
     return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
 
 def leaf_errors(e):
-    # A oneOf/anyOf error hides its reasons in context. Descend into the branch with the fewest errors,
-    # which for an enrollment command is the branch its operation selects.
+    # A oneOf/anyOf error hides its reasons in context. Descend into the branch whose operation const
+    # matches the payload's operation; if none does, fall back to the branch with the fewest errors.
     if e.validator not in ('oneOf','anyOf') or not e.context:return [e]
     branches={}
     for c in e.context:branches.setdefault(c.relative_schema_path[0],[]).append(c)
-    return [leaf for c in min(branches.values(),key=len) for leaf in leaf_errors(c)]
+    matched=[i for i in branches if e.schema[e.validator][i].get('properties',{}).get('operation',{}).get('const')==e.instance.get('operation')] if isinstance(e.instance,dict) else []
+    pool=[branches[i] for i in matched] or list(branches.values())
+    return [leaf for c in min(pool,key=len) for leaf in leaf_errors(c)]
 
 def validate(schema,payload):
     Draft202012Validator.check_schema(schema)

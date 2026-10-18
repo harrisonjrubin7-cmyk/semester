@@ -23,6 +23,7 @@ class MigrationTests(unittest.TestCase):
     def test_default_must_match_type(self):self.blocked({'type':'integer','default':'oops'})
     def test_valid_default_kept(self):self.assertEqual(migrate_subset({'type':'integer','default':3})['default'],3)
     def test_properties_must_be_mapping(self):self.blocked({'type':'object','properties':[]})
+    def test_composition_must_be_array(self):self.blocked({'oneOf':None})
     def test_date_time_format_is_checked(self):self.assertTrue(validate(migrate_subset({'type':'string','format':'date-time'}),'not valid'))
 class EnrollmentTests(unittest.TestCase):
     def body(self,op='add'):
@@ -71,6 +72,11 @@ class EnrollmentTests(unittest.TestCase):
         b=self.body();b['studentId']='bad'
         self.assertIn('/studentId',[e['instance_path'] for e in validate(enrollment_schema(),b)])
         self.assertNotIn('oneOf',[e['keyword'] for e in validate(enrollment_schema(),b)])
+    def test_operation_branch_is_selected(self):
+        b=self.body();b['sectionIds']=['bad','bad']
+        errs=validate(enrollment_schema(),b);paths=[e['instance_path'] for e in errs]
+        self.assertTrue(any(p.startswith('/sectionIds') for p in paths))
+        self.assertNotIn('const',[e['keyword'] for e in errs])
     def test_artifact_matches_builder(self):
         import json,os
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'enrollment_commands.schema.json')) as f:artifact=json.load(f)
