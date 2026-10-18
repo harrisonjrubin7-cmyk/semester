@@ -64,7 +64,7 @@
   ],
   "gaps": [
     "source_authority_record: source_authority_register is not in the repository",
-    "operational_runbook: ART-RDY-011 is missing",
+    "operational_runbook: ART-RDY-011 is draft, not approved (its roles are TBD and its dependencies are unregistered)",
     "release_evidence: no evidence bundle exists",
     "accountable_owner: registry owner is a team name; a named institution owner is required (see decision-rights.json)"
   ]
