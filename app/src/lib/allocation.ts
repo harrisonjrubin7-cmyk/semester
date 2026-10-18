@@ -74,6 +74,9 @@ const own = <T>(record: Readonly<Record<string, T>>, id: string): T | undefined 
   Object.prototype.hasOwnProperty.call(record, id) ? record[id] : undefined;
 
 export function initialState(beds: readonly Bed[]): AllocationState {
+  // Inventory is built once from configuration; a repeated id is a configuration error, not a bed to drop.
+  const ids = new Set(beds.map((b) => b.id));
+  if (ids.size !== beds.length) throw new Error('duplicate bed id in inventory');
   return {
     inventoryVersion: 1,
     beds: Object.fromEntries(beds.map((b) => [b.id, b])),
@@ -100,6 +103,18 @@ function studentIsPlaced(state: AllocationState, studentId: string, now: number)
       (r) => r.studentId === studentId && r.status === 'held' && now < r.expiresAt,
     )
   );
+}
+
+/**
+ * Whether recorded history for a bed or student starts after `now`, or runs past it. Ended assignments
+ * still count: a clock earlier than what has already happened cannot place a new hold beside it.
+ */
+function recordedAfter(state: AllocationState, bedId: string, studentId: string, now: number): 'bed' | 'student' | null {
+  const assignments = Object.values(state.assignments);
+  const after = (a: Assignment) => a.startedAt > now || (a.endedAt !== null && a.endedAt > now);
+  if (assignments.some((a) => a.bedId === bedId && after(a))) return 'bed';
+  if (assignments.some((a) => a.studentId === studentId && after(a))) return 'student';
+  return null;
 }
 
 /** Every change to availability moves the version, so older snapshots go stale. */
@@ -146,6 +161,8 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (own(state.reservations, input.id)) return refuse('duplicate_id');
   if (bedIsHeld(state, input.bedId, input.now)) return refuse('bed_taken');
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
+  const backdated = recordedAfter(state, input.bedId, input.studentId, input.now);
+  if (backdated) return refuse(backdated === 'bed' ? 'bed_taken' : 'student_placed');
 
   const expiresAt = input.now + input.holdMs;
   // A tiny hold can round back to now, and a clock near the float limit can overflow to Infinity;
@@ -254,6 +271,8 @@ export function override(state: AllocationState, input: OverrideInput): Outcome 
   if (own(state.assignments, input.id)) return refuse('duplicate_id');
   if (bedIsHeld(state, input.bedId, input.now)) return refuse('bed_taken');
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
+  const backdated = recordedAfter(state, input.bedId, input.studentId, input.now);
+  if (backdated) return refuse(backdated === 'bed' ? 'bed_taken' : 'student_placed');
 
   const assignment: Assignment = {
     id: input.id,

@@ -399,6 +399,26 @@ describe('input guards', () => {
     });
   });
 
+  it('refuses a reservation or override backdated into the recorded history of its bed or student', () => {
+    const held = must(reserve(oneBed(), base));
+    const placed = must(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 100 }));
+    const ended = must(endAssignment(placed.state, {
+      assignmentId: 'a1', expectedInventoryVersion: placed.state.inventoryVersion, now: 200,
+    }));
+    expect(reserve(ended.state, { ...base, id: 'r2', key: 'k2', studentId: 'B', expectedInventoryVersion: ended.state.inventoryVersion, now: 150 })).toEqual({
+      ok: false,
+      refusal: 'bed_taken',
+    });
+    expect(override(ended.state, {
+      id: 'o1', bedId: 'b1', studentId: 'B', authority: 'RD', rationale: 'x',
+      expectedInventoryVersion: ended.state.inventoryVersion, now: 150,
+    })).toEqual({ ok: false, refusal: 'bed_taken' });
+  });
+
+  it('refuses inventory that names the same bed twice, rather than silently dropping one', () => {
+    expect(() => initialState([{ id: 'b1', label: 'x' }, { id: 'b1', label: 'y' }])).toThrow(/duplicate bed/);
+  });
+
   it('validates the clock before a retry of a live hold, so a bad clock cannot change the answer', () => {
     const held = must(reserve(oneBed(), base));
     for (const now of [Number.NaN, Number.NEGATIVE_INFINITY]) {
