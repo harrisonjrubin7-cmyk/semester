@@ -12,6 +12,15 @@ class RegistrationModel:
     trail: dict = field(default_factory=dict)
     lock: object = field(default_factory=Lock)
 
+    @staticmethod
+    def _view(cmd):
+        # A waitlisted outcome is a business state; execution stays on the execution track.
+        out = dict(cmd)
+        if 'business' in cmd:
+            out['execution'] = cmd['state']
+            out['state'] = cmd['business']
+        return out
+
     def submit(self, actor, tenant, key, payload, context=None, fault=None):
         c = dict(context or {})
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -31,7 +40,7 @@ class RegistrationModel:
                 if existing['hash'] != digest:
                     return {'state': 'conflict', 'effects': 0}
                 if not existing.get('confirmed_no_commit'):
-                    return dict(existing)
+                    return self._view(existing)
                 # Authority proved no commit: a same-key retry re-enters the checks above.
             if not c.get('window_open', True) or not c.get('ticket_open', True):
                 return {'state': 'denied', 'effects': 0}
@@ -49,35 +58,39 @@ class RegistrationModel:
                        'projection': 'pending', 'original_payload': dict(payload),
                        'confirmed_no_commit': True}
                 self.commands[k] = cmd
-                return dict(cmd)
+                return self._view(cmd)
             cmd = {'state': 'running', 'hash': digest, 'key': k, 'effects': 0,
                    'projection': 'pending', 'original_payload': dict(payload)}
             self.commands[k] = cmd
             if fault == 'timeout_before':
                 cmd.update(state='result_unknown')
-                return dict(cmd)
+                return self._view(cmd)
             scope = (tenant, payload.get('section'))
             occupied = sum(1 for kk, rec in self.authoritative.items()
                            if (kk[0], rec['payload'].get('section')) == scope)
             if occupied >= self.capacity:
-                cmd.update(state='waitlisted')
-                return dict(cmd)
+                cmd.update(state='committed', business='waitlisted')
+                return self._view(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
                                      'payload': dict(payload), 'status': 'enrolled'}
             cmd.update(state='committed', effects=1,
                        receipt=self.authoritative[k]['receipt'])
             if fault == 'timeout_after':
+                # The receipt stays in the authoritative record until reconcile() recovers it.
+                cmd.pop('receipt', None)
                 cmd.update(state='result_unknown', effects=0)
             elif fault != 'projection_fail':
                 cmd['projection'] = 'complete'
-            return dict(cmd)
+            return self._view(cmd)
 
     def reconcile(self, key, definitive=True):
         with self.lock:
             cmd = self.commands[key]
+            if cmd['state'] != 'result_unknown':
+                # Only the declared result_unknown -> reconciling path may move a command.
+                return dict(cmd, rejected='not_result_unknown')
             trail = self.trail.setdefault(key, [])
             if not definitive:
-                cmd['state'] = 'result_unknown'
                 trail.append('result_unknown')
                 return dict(cmd)
             cmd['state'] = 'reconciling'
@@ -118,21 +131,36 @@ class RegistrationModel:
 class WorkerReferenceModel:
     def __init__(self):
         self.fence = {}
-        self.inbox = set()
+        self.inbox = {}
         self.effects = 0
         self.receipts = []
+        self.lock = Lock()
     def claim(self, job='default'):
-        self.fence[job] = self.fence.get(job, 0) + 1
-        return (job, self.fence[job])
-    def apply(self, event_id, token, approved=True, tenant='default'):
+        with self.lock:
+            self.fence[job] = self.fence.get(job, 0) + 1
+            return (job, self.fence[job])
+    def apply(self, event_id, token, approved=True, tenant='default', fault=None):
         job, fence = token
-        if fence != self.fence.get(job):
-            return 'stale_lease'
-        if (tenant, event_id) in self.inbox:
-            return 'duplicate'
-        if not approved:
-            return 'denied'
-        self.inbox.add((tenant, event_id))
-        self.effects += 1
-        self.receipts.append({'kind': 'committed', 'event': event_id, 'tenant': tenant})
-        return 'committed'
+        key = (tenant, event_id)
+        with self.lock:
+            # A consumed event answers with its durable outcome before any fencing or approval check.
+            if key in self.inbox:
+                return 'denied' if self.inbox[key] == 'denied' else 'duplicate'
+            if fence != self.fence.get(job):
+                return 'stale_lease'
+            if not approved:
+                self.inbox[key] = 'denied'
+                return 'denied'
+            # Effect, receipt and inbox marker commit together or not at all.
+            effects_before, receipts_before = self.effects, len(self.receipts)
+            try:
+                self.effects += 1
+                self.receipts.append({'kind': 'committed', 'event': event_id, 'tenant': tenant})
+                if fault == 'crash_before_marker':
+                    raise RuntimeError('worker crashed before the inbox marker')
+                self.inbox[key] = 'committed'
+            except RuntimeError:
+                self.effects = effects_before
+                del self.receipts[receipts_before:]
+                raise
+            return 'committed'

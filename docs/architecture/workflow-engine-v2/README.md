@@ -62,9 +62,11 @@ The uploaded `ee79049f-workflow_engine_validation_results.csv` (55 checks, the 1
 
 ## Registration recovery reference model
 
-`reference-model/` holds an in-memory model of the registration commit and recovery rules, its 24-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. All 24 tests pass in the repository. `registration_reference_test_results.csv` is regenerated from that run and names the committed module.
+`reference-model/` holds an in-memory model of the registration commit and recovery rules, its 31-test suite, and the 17-case REG test matrix. Run from that directory with `python3 -m unittest test_registration_recovery_reference_model`. All 31 tests pass in the repository. `registration_reference_test_results.csv` is regenerated from that run and names the committed module.
 
-The review fixes added or changed these tests first: same-key retry after confirmed no-commit, capacity scoped by tenant and section, and redelivery after revocation observing the prior result. Each failed before its model fix.
+The review fixes added or changed these tests first: same-key retry after confirmed no-commit, capacity scoped by tenant and section, and redelivery after revocation observing the prior result. The second and third rounds added tests for: no receipt while the outcome is unknown, reconcile only from `result_unknown`, waitlist kept on the business track, inbox checked before fencing, durable denial, and rollback when a worker crashes before its inbox marker. Each new or changed test failed against the previous model before its fix.
+
+The schema also requires `compensation_ref` to be null when `compensation_kind` is `none`, on both bindings and recovery paths. Denied and failed receipts keep `commit_proof_ref` null.
 
 Scope limits: these tests cover abstract contract behaviour only. Every matrix row is "not run" against the real authority adapter, database and row-level security, worker, provider or sandbox. Several checks are thin: the swap, withdrawal and authority-drift tests assert on constant return values, so they confirm the stub rather than the rule. The compiled `.pyc` in the upload was not loaded.
 

@@ -61,6 +61,7 @@ class RecoveryTests(unittest.TestCase):
         m = RegistrationModel()
         r = self.submit(m, fault='timeout_after')
         self.assertEqual(r['state'], 'result_unknown')
+        self.assertNotIn('receipt', r)
         self.assertEqual(m.reconcile(r['key'])['state'], 'committed')
         self.assertEqual(m.trail[r['key']], ['reconciling', 'committed'])
         self.assertEqual(self.submit(m)['state'], 'committed')
@@ -74,6 +75,20 @@ class RecoveryTests(unittest.TestCase):
         self.assertFalse(m.authoritative)
         self.assertEqual(self.submit(m)['state'], 'committed')
         self.assertEqual(len(m.authoritative), 1)
+
+    def test_reconcile_requires_result_unknown(self):
+        m = RegistrationModel()
+        r = self.submit(m)
+        self.assertEqual(m.reconcile(r['key'])['state'], 'committed')
+        self.assertNotIn(r['key'], m.trail)
+
+    def test_waitlist_is_business_track(self):
+        m = RegistrationModel(capacity=1)
+        self.assertEqual(self.submit(m, actor='u1', key='k1')['state'], 'committed')
+        r = self.submit(m, actor='u2', key='k2')
+        self.assertEqual(r['state'], 'waitlisted')
+        self.assertEqual(r['execution'], 'committed')
+        self.assertEqual(self.submit(m, actor='u2', key='k2')['state'], 'waitlisted')
 
     def test_REG_10_projection_repair(self):
         m = RegistrationModel()
@@ -177,6 +192,28 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.apply('e1', a), 'committed')
         self.assertEqual(w.apply('e2', b), 'committed')
         self.assertEqual(w.effects, 2)
+
+    def test_inbox_checked_before_fence(self):
+        w = WorkerReferenceModel()
+        first = w.claim('A')
+        self.assertEqual(w.apply('e1', first), 'committed')
+        w.claim('A')
+        self.assertEqual(w.apply('e1', first), 'duplicate')
+        self.assertEqual(w.effects, 1)
+
+    def test_denial_is_durable(self):
+        w = WorkerReferenceModel(); token = w.claim()
+        self.assertEqual(w.apply('e1', token, approved=False), 'denied')
+        self.assertEqual(w.apply('e1', token, approved=True), 'denied')
+        self.assertEqual(w.effects, 0)
+
+    def test_crash_before_marker_rolls_back(self):
+        w = WorkerReferenceModel(); token = w.claim()
+        with self.assertRaises(RuntimeError):
+            w.apply('e1', token, fault='crash_before_marker')
+        self.assertEqual((w.effects, w.receipts), (0, []))
+        self.assertEqual(w.apply('e1', token), 'committed')
+        self.assertEqual(w.effects, 1)
 
     def test_dedup_is_scoped_by_tenant(self):
         w = WorkerReferenceModel(); token = w.claim()

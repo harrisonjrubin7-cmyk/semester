@@ -1175,6 +1175,36 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "effect": {
+                "properties": {
+                  "compensation_kind": {
+                    "const": "none"
+                  }
+                },
+                "required": [
+                  "compensation_kind"
+                ]
+              }
+            },
+            "required": [
+              "effect"
+            ]
+          },
+          "then": {
+            "properties": {
+              "effect": {
+                "properties": {
+                  "compensation_ref": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -2615,6 +2645,25 @@
               "compensation_ref": {
                 "type": "string",
                 "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "compensation_kind": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "compensation_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "compensation_ref": {
+                "type": "null"
               }
             }
           }
