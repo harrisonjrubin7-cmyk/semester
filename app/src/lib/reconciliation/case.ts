@@ -232,6 +232,15 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
   if (to === 'closed') {
     const missing = RESOLUTION_REQUIRED.filter((key) => !next.resolution.includes(key));
     if (missing.length > 0) return { ok: false, reason: `missing resolution evidence: ${missing.join(', ')}` };
+    // A class with a safe repair closes only through that repair: the stored repair, proposer and approver must all be
+    // present and valid, so evidence keys alone cannot close a case that never went through approval.
+    if (SAFE_REPAIRS[current.discrepancy] !== undefined) {
+      const approved =
+        isRepairAllowed(current.discrepancy, current.proposedRepair ?? '') &&
+        (current.proposedBy?.trim() ?? '') !== '' &&
+        (current.approvedBy?.trim() ?? '') !== '';
+      if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
+    }
   }
 
   return { ok: true, case: next };

@@ -96,6 +96,9 @@ describe('moveCase', () => {
       ...opened(),
       state: 'reverified',
       resolution: RESOLUTION_REQUIRED.slice(0, 3),
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      approvedBy: 'registrar_owner',
     };
     const short = moveCase(reverified, 'closed', { by: 'registrar_owner', at: AT });
     expect(short.ok).toBe(false);
@@ -269,6 +272,14 @@ describe('moveCase', () => {
         endedAt: '2026-10-02T09:00:00.000Z',
       },
     ]);
+  });
+
+  it('refuses to close a safe-repair case that never had its approved repair on record', () => {
+    const bare: ReconciliationCase = { ...opened(), state: 'reverified', resolution: [...RESOLUTION_REQUIRED] };
+    expect(moveCase(bare, 'closed', { by: 'registrar_owner', at: AT })).toEqual({
+      ok: false,
+      reason: 'a safe-repair case closes only with its approved repair on record',
+    });
   });
 
   it('does not let an escalated case with a safe repair skip repair and approval', () => {
