@@ -51,6 +51,8 @@ export interface OutcomeCheck {
  */
 export function canUseProjectionForOutcome(input: OutcomeCheck): boolean {
   if (input.outcomeType === 'informational') return true;
+  // Only the two outcome types the contract names may use a projection; anything else fails closed.
+  if (input.outcomeType !== 'derived' && input.outcomeType !== 'consequential') return false;
 
   if (input.freshnessState !== 'current') return false;
   if (!Number.isFinite(input.projectionLagSeconds) || input.projectionLagSeconds < 0) return false;

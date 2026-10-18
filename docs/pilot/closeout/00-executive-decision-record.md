@@ -1,6 +1,6 @@
 # 00 — Executive decision record
 
-Pilot: registration_readiness · Tenant: named_institution · Status: **pending** (no observation window has closed)
+Pilot: registration_readiness · Tenant: named_institution · Status: **pending** (no observation window has closed) · Decision date: _pending_
 
 ## Decision
 

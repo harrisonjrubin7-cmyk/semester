@@ -34,6 +34,11 @@ describe('canUseProjectionForOutcome', () => {
     expect(canUseProjectionForOutcome(check({ outcomeType: 'derived', projectionLagSeconds: 61 }))).toBe(false);
   });
 
+  it('refuses an outcome type it does not recognise, even from a current projection within its bound', () => {
+    expect(canUseProjectionForOutcome(check({ outcomeType: 'advisory' as OutcomeCheck['outcomeType'] }))).toBe(false);
+    expect(canUseProjectionForOutcome(check({ outcomeType: undefined as unknown as OutcomeCheck['outcomeType'] }))).toBe(false);
+  });
+
   it('treats an unmeasured or impossible lag as unusable for an outcome', () => {
     expect(canUseProjectionForOutcome(check({ projectionLagSeconds: Number.NaN }))).toBe(false);
     expect(canUseProjectionForOutcome(check({ projectionLagSeconds: -1 }))).toBe(false);

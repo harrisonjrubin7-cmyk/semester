@@ -26,6 +26,14 @@ describe('isIsoTimestamp', () => {
     expect(isIsoTimestamp('2026-10-01T09:00:00+24:00')).toBe(false);
   });
 
+  it('bounds a UTC offset to 14 hours, and 14 only with zero minutes', () => {
+    expect(isIsoTimestamp('2026-10-01T09:00:00+14:00')).toBe(true);
+    expect(isIsoTimestamp('2026-10-01T09:00:00-14:00')).toBe(true);
+    expect(isIsoTimestamp('2026-10-01T09:00:00+14:01')).toBe(false);
+    expect(isIsoTimestamp('2026-10-01T09:00:00+15:00')).toBe(false);
+    expect(isIsoTimestamp('2026-10-01T09:00:00-14:30')).toBe(false);
+  });
+
   it('refuses locale dates and free text', () => {
     expect(isIsoTimestamp('10/01/2026')).toBe(false);
     expect(isIsoTimestamp('yesterday')).toBe(false);

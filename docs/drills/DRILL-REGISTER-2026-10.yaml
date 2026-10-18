@@ -131,6 +131,6 @@ drill_record_template:
     result: pending
     evidence: []
   decision:
-    status: pending
+    status: not_run
     corrective_actions: []
     retest_due: pending

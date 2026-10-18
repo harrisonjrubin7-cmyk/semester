@@ -82,6 +82,15 @@ export interface CaseEvent {
   by: string;
 }
 
+/** One repair cycle that ended in a failed re-verification. Kept so operators can see what was tried. */
+export interface RepairAttempt {
+  repair?: string;
+  proposedBy?: string;
+  approvedBy?: string;
+  resolution: string[];
+  endedAt: string;
+}
+
 export interface ReconciliationCase {
   id: string;
   tenantId: string;
@@ -100,6 +109,8 @@ export interface ReconciliationCase {
   /** Evidence keys satisfied so far; closing needs every key in RESOLUTION_REQUIRED. */
   resolution: string[];
   history: CaseEvent[];
+  /** Earlier cycles that failed re-verification, oldest first. The active cycle is in the fields above. */
+  priorCycles: RepairAttempt[];
 }
 
 export type CaseResult = { ok: true; case: ReconciliationCase } | { ok: false; reason: string };
@@ -126,9 +137,19 @@ export function isRepairAllowed(discrepancy: DiscrepancyClass, repair: string): 
 /** Actors are compared as people, not strings: "Ana" and " ana " are the same proposer. */
 const actorKey = (actor: string): string => actor.trim().toLowerCase();
 
-/** A failed re-verification starts a new repair cycle: earlier evidence and approvals do not carry over. */
-function startNewCycle(c: ReconciliationCase): ReconciliationCase {
-  const next: ReconciliationCase = { ...c, resolution: [] };
+/**
+ * A failed re-verification starts a new repair cycle: earlier evidence and approvals do not carry over,
+ * but the attempt that failed is archived first so the case still says what was tried.
+ */
+function startNewCycle(c: ReconciliationCase, endedAt: string): ReconciliationCase {
+  const attempt: RepairAttempt = {
+    repair: c.proposedRepair,
+    proposedBy: c.proposedBy,
+    approvedBy: c.approvedBy,
+    resolution: c.resolution,
+    endedAt,
+  };
+  const next: ReconciliationCase = { ...c, resolution: [], priorCycles: [...c.priorCycles, attempt] };
   delete next.proposedRepair;
   delete next.proposedBy;
   delete next.approvedBy;
@@ -146,7 +167,7 @@ export function openCase(input: {
   sourceSystem: string;
   cohortId: string;
 }): ReconciliationCase {
-  return { ...input, state: 'detected', resolution: [], history: [] };
+  return { ...input, state: 'detected', resolution: [], history: [], priorCycles: [] };
 }
 
 /** Applies one state move. Every rule the contract states is checked here, not in the caller. */
@@ -181,7 +202,7 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     history: [...current.history, { from: current.state, to, at: options.at, by: options.by }],
   };
 
-  if (current.state === 'reverified' && to === 'triaged') next = startNewCycle(next);
+  if (current.state === 'reverified' && to === 'triaged') next = startNewCycle(next, options.at);
 
   if (to === 'repair_proposed') {
     const repair = options.repair ?? '';
@@ -199,6 +220,11 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     }
     if (actorKey(options.by) === actorKey(current.proposedBy)) {
       return { ok: false, reason: 'the proposer cannot approve their own repair' };
+    }
+    // Approval re-checks the stored repair: a malformed case must not be approved for a repair never proposed.
+    const proposed = current.proposedRepair ?? '';
+    if (proposed.trim() === '' || !isRepairAllowed(current.discrepancy, proposed)) {
+      return { ok: false, reason: 'the proposed repair is missing or not allowed for this discrepancy' };
     }
     next = { ...next, approvedBy: options.by };
   }

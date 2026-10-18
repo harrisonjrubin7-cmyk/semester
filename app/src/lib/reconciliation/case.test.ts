@@ -233,6 +233,44 @@ describe('moveCase', () => {
     }
   });
 
+  it('refuses approval of a stored repair that is missing, prohibited or not allowed for the class', () => {
+    const cases: (string | undefined)[] = [undefined, '  ', 'delete_discrepancy', 'correct_versioned_mapping'];
+    for (const proposedRepair of cases) {
+      const stored: ReconciliationCase = {
+        ...opened(),
+        state: 'repair_proposed',
+        proposedRepair,
+        proposedBy: 'integration_owner',
+      };
+      expect(moveCase(stored, 'repair_approved', { by: 'registrar_owner', at: AT })).toEqual({
+        ok: false,
+        reason: 'the proposed repair is missing or not allowed for this discrepancy',
+      });
+    }
+  });
+
+  it('keeps the attempt that failed re-verification before a new cycle clears it', () => {
+    const failed: ReconciliationCase = {
+      ...opened(),
+      state: 'reverified',
+      resolution: [...RESOLUTION_REQUIRED],
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      approvedBy: 'registrar_owner',
+    };
+    const back = moveCase(failed, 'triaged', { by: 'registrar_owner', at: '2026-10-02T09:00:00.000Z' });
+    if (!back.ok) throw new Error('setup');
+    expect(back.case.priorCycles).toEqual([
+      {
+        repair: 'refresh_source_snapshot',
+        proposedBy: 'integration_owner',
+        approvedBy: 'registrar_owner',
+        resolution: [...RESOLUTION_REQUIRED],
+        endedAt: '2026-10-02T09:00:00.000Z',
+      },
+    ]);
+  });
+
   it('does not let an escalated case with a safe repair skip repair and approval', () => {
     const escalated: ReconciliationCase = { ...opened(), state: 'escalated' };
     const result = moveCase(escalated, 'reverified', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });

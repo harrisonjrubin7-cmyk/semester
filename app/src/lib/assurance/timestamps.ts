@@ -17,7 +17,8 @@ export function isIsoTimestamp(value: string): boolean {
   const offsetHour = Number(match[8] ?? 0);
   const offsetMinute = Number(match[9] ?? 0);
   if (month < 1 || month > 12 || hour > 23 || minute > 59 || second > 59) return false;
-  if (offsetHour > 23 || offsetMinute > 59) return false;
+  // ISO 8601 bounds an offset to 14 hours, and 14 only with zero minutes.
+  if (offsetHour > 14 || offsetMinute > 59 || (offsetHour === 14 && offsetMinute !== 0)) return false;
 
   // Setting the calendar fields and reading them back catches 02-30, 04-31 and non-leap 02-29.
   const calendar = new Date(0);
