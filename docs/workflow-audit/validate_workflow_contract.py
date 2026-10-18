@@ -124,6 +124,10 @@ def semantic_errors(doc):
     recovery_codes = [x['code'] for x in doc['recovery_paths']]
     if len(recovery_codes) != len(set(recovery_codes)):
         errors.append('Duplicate recovery codes')
+    declared_all = {code for step in doc['steps'] for code in step['failure_codes']}
+    orphaned = set(recovery_codes) - declared_all
+    if orphaned:
+        errors.append('Recovery paths not declared by any step: ' + ', '.join(sorted(orphaned)))
     test_ids = {x['id'] for x in doc['acceptance_tests']}
     for step in doc['steps']:
         for code in step['failure_codes']:

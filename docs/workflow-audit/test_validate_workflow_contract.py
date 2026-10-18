@@ -93,6 +93,11 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'effective_from')
 
+    def test_recovery_path_must_be_declared_by_a_step(self):
+        def fn(d):
+            d['recovery_paths'].append(dict(d['recovery_paths'][0], code='UNUSED'))
+        self.assertRejected(mutate(fn), 'Recovery paths not declared by any step: UNUSED')
+
     def test_step_actor_outside_allowed_roles(self):
         def fn(d):
             d['steps'][0]['actor_role'] = 'registrar'
