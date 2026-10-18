@@ -38,4 +38,14 @@ describe('isIsoTimestamp', () => {
     expect(isIsoTimestamp('10/01/2026')).toBe(false);
     expect(isIsoTimestamp('yesterday')).toBe(false);
   });
+
+  it('refuses fractions finer than the milliseconds Date.parse can order', () => {
+    expect(isIsoTimestamp('2026-10-01T09:00:00.123Z')).toBe(true);
+    expect(isIsoTimestamp('2026-10-01T09:00:00.000000001Z')).toBe(false);
+  });
+
+  it('refuses non-string values that a regex would coerce', () => {
+    expect(isIsoTimestamp(['2026-10-01T09:00:00Z'] as unknown as string)).toBe(false);
+    expect(isIsoTimestamp(null as unknown as string)).toBe(false);
+  });
 });

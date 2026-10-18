@@ -16,4 +16,4 @@ Owner: _pending_ · Date: _pending_
 Unresolved critical access finding · unresolved critical accessibility finding · unknown authority for a required source · inability to operate safe-off · repeated student confusion about enrollment.
 
 ## Decision
-_Pending. Record the option chosen from file 00 and the reasons; signatures are in file 00._
+_Pending. Record the recommended option and its reasons; file 00 accepts or rejects it and holds the signatures._

@@ -108,6 +108,18 @@ describe('transitionHealthEvent', () => {
   });
 });
 
+describe('tenant scope', () => {
+  it('refuses an event that names two different tenants', () => {
+    expect(
+      healthEventProblems({ ...base, tenantId: 'tenant-a', affectedScope: { tenantId: 'tenant-b' } }),
+    ).toContain('tenantId and affectedScope.tenantId name different tenants');
+  });
+
+  it('accepts the same tenant named in both places', () => {
+    expect(healthEventProblems({ ...base, tenantId: 'named-institution', affectedScope: { tenantId: 'named-institution' } })).toEqual([]);
+  });
+});
+
 describe('timestamps and evidence', () => {
   it('does not count blank evidence references as evidence', () => {
     expect(healthEventProblems({ ...base, state: 'closed', evidenceReferences: ['', '   '] })).toContain(

@@ -167,8 +167,12 @@ export function openCase(input: {
   sourceSystem: string;
   cohortId: string;
 }): ReconciliationCase {
-  // Refused at creation: a case with a non-ISO detection time could never move again, so it is not produced.
+  // Refused at creation: a case that could never move again, or never close, is not produced.
   if (!isIsoTimestamp(input.detectedAt)) throw new Error('detectedAt must be an ISO timestamp');
+  const required = { id: input.id, tenantId: input.tenantId, capability: input.capability, ownerId: input.ownerId, sourceSystem: input.sourceSystem, cohortId: input.cohortId };
+  for (const [name, value] of Object.entries(required)) {
+    if (typeof value !== 'string' || value.trim() === '') throw new Error(`${name} is required`);
+  }
   return { ...input, state: 'detected', resolution: [], history: [], priorCycles: [] };
 }
 
@@ -189,18 +193,27 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     return { ok: false, reason: `${current.discrepancy} has a safe repair; repair it rather than re-verify an escalation` };
   }
 
-  // History only moves forward: a move may not be earlier than detection or the move before it.
+  // History only moves forward: every stored entry, in order, must sit between detection and the next move.
   if (!isIsoTimestamp(options.at)) return { ok: false, reason: 'at must be an ISO timestamp' };
-  const floor = current.history.length > 0 ? current.history[current.history.length - 1].at : current.detectedAt;
-  if (!isIsoTimestamp(floor)) return { ok: false, reason: 'case history has an invalid timestamp' };
+  if (!isIsoTimestamp(current.detectedAt)) return { ok: false, reason: 'case history has an invalid timestamp' };
+  let floor = current.detectedAt;
+  for (const entry of current.history) {
+    if (!isIsoTimestamp(entry.at) || Date.parse(entry.at) < Date.parse(floor)) {
+      return { ok: false, reason: 'case history is out of order or has an invalid timestamp' };
+    }
+    floor = entry.at;
+  }
   if (Date.parse(options.at) < Date.parse(floor)) {
     return { ok: false, reason: 'transition time precedes the case history' };
   }
 
+  // Approval records no evidence: the approver decides the repair, and evidence gathered for it must come after execution.
+  const recorded = to === 'repair_approved' ? [] : (options.evidence ?? []);
   let next: ReconciliationCase = {
     ...current,
     state: to,
-    resolution: [...new Set([...current.resolution, ...(options.evidence ?? [])])],
+    // Repair execution starts a fresh evidence window, so nothing gathered before it can satisfy the close.
+    resolution: to === 'repaired' ? [...new Set(recorded)] : [...new Set([...current.resolution, ...recorded])],
     history: [...current.history, { from: current.state, to, at: options.at, by: options.by }],
   };
 
@@ -249,6 +262,10 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
         (current.approvedBy?.trim() ?? '') !== '' &&
         actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '');
       if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
+    } else {
+      // A class with no safe repair reaches re-verification only by escalation; a stored state alone is not that record.
+      const escalated = current.history.some((entry) => entry.from === 'escalated' && entry.to === 'reverified');
+      if (!escalated) return { ok: false, reason: 'a class without a safe repair closes only after escalation and re-verification' };
     }
   }
 

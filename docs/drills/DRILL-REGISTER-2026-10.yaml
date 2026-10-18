@@ -11,6 +11,10 @@ drills:
     launch_impact: Critical failure blocks release
     owner: security_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -30,6 +34,10 @@ drills:
       - new_record_reads_denied
       - audit_events_written
       - affected_workflow_preserved_for_review
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -42,6 +50,10 @@ drills:
     launch_impact: Blocks affected feature path
     owner: integration_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -54,6 +66,10 @@ drills:
     launch_impact: Blocks connector certification
     owner: integration_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -66,6 +82,10 @@ drills:
     launch_impact: Blocks connector certification
     owner: integration_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -78,6 +98,10 @@ drills:
     launch_impact: Blocks workflow release
     owner: platform_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -90,6 +114,10 @@ drills:
     launch_impact: Blocks activation
     owner: release_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -102,6 +130,10 @@ drills:
     launch_impact: Blocks affected interface
     owner: accessibility_contact
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []
@@ -114,6 +146,10 @@ drills:
     launch_impact: Blocks AI-enabled path
     owner: product_owner
     environment: staging
+    date: pending
+    observed:
+      result: pending
+      evidence: []
     status: not_run
     evidence: []
     corrective_actions: []

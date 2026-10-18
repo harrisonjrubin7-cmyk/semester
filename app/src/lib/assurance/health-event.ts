@@ -76,6 +76,10 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if (!SCOPE_KEYS.some((key) => present(event.affectedScope?.[key]))) {
     problems.push('affectedScope must name at least one scope key');
   }
+  // The tenant may be named twice; two different names would route the event under one tenant while claiming another.
+  if (present(event.tenantId) && present(event.affectedScope?.tenantId) && event.tenantId !== event.affectedScope.tenantId) {
+    problems.push('tenantId and affectedScope.tenantId name different tenants');
+  }
   if ((event.severity === 'critical' || event.severity === 'high') && !present(event.safeImmediateAction)) {
     problems.push('critical and high events need a safeImmediateAction');
   }

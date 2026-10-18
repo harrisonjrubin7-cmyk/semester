@@ -348,3 +348,68 @@ describe('moveCase', () => {
     expect(result.reason).toContain('has a safe repair');
   });
 });
+
+describe('persisted history and evidence windows', () => {
+  const entry = (from: ReconciliationCase['state'], to: ReconciliationCase['state'], at: string) => ({
+    from,
+    to,
+    at,
+    by: 'registrar_owner',
+  });
+
+  it('checks every stored history entry, not only the last one', () => {
+    const c: ReconciliationCase = {
+      ...opened(),
+      state: 'awaiting_source',
+      history: [entry('detected', 'triaged', '2026-10-01T10:00:00.000Z'), entry('triaged', 'awaiting_source', '2026-10-01T09:00:00.000Z')],
+    };
+    const result = moveCase(c, 'repair_proposed', { by: 'integration_owner', at: '2026-10-01T09:30:00.000Z', repair: 'refresh_source_snapshot' });
+    expect(result).toEqual({ ok: false, reason: 'case history is out of order or has an invalid timestamp' });
+  });
+
+  it('refuses a move after a stored entry that predates detection', () => {
+    const c: ReconciliationCase = {
+      ...opened(),
+      state: 'triaged',
+      history: [entry('detected', 'triaged', '2026-10-01T07:00:00.000Z')],
+    };
+    expect(moveCase(c, 'awaiting_source', { by: 'registrar_owner', at: '2026-10-01T08:30:00.000Z' }).ok).toBe(false);
+  });
+
+  it('records no evidence on approval, and clears pre-execution evidence on repair', () => {
+    const proposed: ReconciliationCase = {
+      ...opened(),
+      state: 'repair_proposed',
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      history: [entry('awaiting_source', 'repair_proposed', AT)],
+    };
+    const approved = moveCase(proposed, 'repair_approved', { by: 'registrar_owner', at: AT, evidence: [...RESOLUTION_REQUIRED] });
+    expect(approved.ok && approved.case.resolution).toEqual([]);
+
+    const executing: ReconciliationCase = { ...proposed, state: 'repair_approved', approvedBy: 'registrar_owner', resolution: ['audit_linked'] };
+    const repaired = moveCase(executing, 'repaired', { by: 'integration_owner', at: AT });
+    expect(repaired.ok && repaired.case.resolution).toEqual([]);
+  });
+
+  it('closes a class with no safe repair only after escalation and re-verification', () => {
+    const reverified: ReconciliationCase = {
+      ...opened(),
+      discrepancy: 'schema_change',
+      state: 'reverified',
+      resolution: [...RESOLUTION_REQUIRED],
+      history: [],
+    };
+    expect(moveCase(reverified, 'closed', { by: 'registrar_owner', at: AT })).toEqual({
+      ok: false,
+      reason: 'a class without a safe repair closes only after escalation and re-verification',
+    });
+
+    const escalated: ReconciliationCase = { ...reverified, history: [entry('escalated', 'reverified', AT)] };
+    expect(moveCase(escalated, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
+  });
+
+  it('refuses to open a case that could never close', () => {
+    expect(() => openCase({ ...opened(), ownerId: '  ' })).toThrow('ownerId is required');
+  });
+});

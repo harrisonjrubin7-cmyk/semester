@@ -12,7 +12,7 @@ A closeout is a decision record, not a slide deck. Each file connects evidence t
 | 05-accessibility-and-trust-findings.md | Accessibility findings, trust signals | Drill register, support themes |
 | 06-security-and-privacy-review.md | Access reviews, drill results, privacy findings | Drill register, access register |
 | 07-open-risks-and-remediation-plan.md | Open risks with owner and due date | Risk register |
-| 08-expansion-options-and-costs.md | Options and their costs | Customer-success record |
+| 08-expansion-options-and-costs.md | Options and their costs | Commercial terms record (owner to name; not yet in the registry) |
 | 09-renewal-or-conclusion-decision.md | Renewal or conclusion, with reasons | File 00 |
 | 10-retention-and-offboarding-plan.md | Data retention and offboarding steps | Retention policy |
 

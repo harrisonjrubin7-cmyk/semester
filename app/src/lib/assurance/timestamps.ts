@@ -1,10 +1,13 @@
 // The assurance contracts take ISO 8601 timestamps only. Date.parse alone also accepts
 // locale forms such as 10/01/2026, which mean different days on different runtimes, and
 // it normalises impossible calendar dates such as 2026-02-30 into 2026-03-02 instead of refusing them.
-const ISO_8601 = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-](\d{2}):(\d{2}))$/;
+// Fractions stop at milliseconds: Date.parse cannot order finer ones, so accepting them would let a backdated move pass.
+const ISO_8601 = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(Z|[+-](\d{2}):(\d{2}))$/;
 
 /** Leap seconds (:60) are refused: a Date cannot represent them, so the value would be silently shifted. */
 export function isIsoTimestamp(value: string): boolean {
+  // A decoded record may hold an array or number here; RegExp.exec would coerce it to a string and pass.
+  if (typeof value !== 'string') return false;
   const match = ISO_8601.exec(value);
   if (!match) return false;
 
