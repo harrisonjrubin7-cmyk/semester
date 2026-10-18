@@ -9,10 +9,16 @@ read_models:
     - every_projection_has_rebuild_strategy
     - every_projection_has_authority_descriptor
 
-  # Runtime freshness states (app/src/lib/console/client.ts): fresh, stale,
-  # failed, unknown. Any other value is read as unknown.
-  # `updating` is not a stored state: it is a UI overlay shown while a rebuild
-  # is in flight on a fresh or stale projection.
+  # Two stored vocabularies exist. Do not assume one is universal.
+  #   Console runtime (app/src/lib/console/client.ts): fresh, stale, failed, unknown.
+  #     Any other value is read as unknown.
+  #   Registration readiness (packages/institution/src/readiness.ts): current,
+  #     updating, blocked, degraded, reconciling, stale.
+  # Crosswalk, PROPOSED and not yet approved. A screen must map a value explicitly
+  # before it renders that value:
+  #   readiness current -> fresh; stale -> stale; blocked -> failed;
+  #   degraded -> stale; updating and reconciling -> updating overlay.
+  # `updating` is never a stored value in the console vocabulary; it is a UI overlay.
   UI_rules:
     fresh:
       behavior: show_available_action_when_policy_allows

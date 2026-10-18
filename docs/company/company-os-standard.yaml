@@ -1,4 +1,7 @@
 # Company OS standard: the internal source of truth. Replace parallel founder documents.
+# Status: PROPOSED, not adopted. Until it is approved, docs/company/COMPANY-OPERATING-MODEL.md
+# and docs/company/leadership-system/ remain in force. Where they differ, they win;
+# this file does not supersede them until a decision record says so.
 company_os:
   functions:
     - product

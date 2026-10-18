@@ -11,6 +11,7 @@ native_finance:
       - finance_reconciliation
 
   stage_2_partner_payment_adapters:
+    requires_stage: stage_1_company_billing
     purpose: approved_external_payment_handoff
     includes:
       - external_checkout
@@ -19,6 +20,7 @@ native_finance:
       - reconciliation_case
 
   stage_3_institutional_finance:
+    requires_stage: stage_2_partner_payment_adapters
     preconditions:
       - institution_authority_contract
       - legal_and_regulatory_review
