@@ -70,11 +70,11 @@ def semantic_errors(doc):
     unaccounted = produced_refs - set(doc['data']['output_refs']) - consumed_refs
     if unaccounted:
         errors.append('Produced outputs neither declared nor consumed: ' + ', '.join(sorted(unaccounted)))
-    evidence_refs = {ev['reference'] for gate in doc['readiness'].values() for ev in gate['evidence']}
+    evidence_refs = {ev['reference'] for ev in doc['readiness']['tested']['evidence']}
     for test in doc['acceptance_tests']:
         for ref in test['evidence_refs']:
             if ref not in evidence_refs:
-                errors.append('Acceptance test ' + test['id'] + ' cites unresolved evidence: ' + ref)
+                errors.append('Acceptance test ' + test['id'] + ' cites evidence not in the tested gate: ' + ref)
     now = datetime.now(timezone.utc)
     for gate_name, gate in doc['readiness'].items():
         for ev in gate['evidence']:

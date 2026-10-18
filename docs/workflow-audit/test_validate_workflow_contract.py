@@ -160,7 +160,14 @@ class RejectedContracts(unittest.TestCase):
         def fn(d):
             for test in d['acceptance_tests']:
                 test['evidence_refs'] = ['missing-evidence']
-        self.assertRejected(mutate(fn), 'cites unresolved evidence: missing-evidence')
+        self.assertRejected(mutate(fn), 'cites evidence not in the tested gate: missing-evidence')
+
+    def test_acceptance_evidence_must_come_from_tested_gate(self):
+        def fn(d):
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:other']
+            d['readiness']['deployed'] = {'status': 'unverified', 'evidence': [dict(EVIDENCE, reference='ev:other')], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'not in the tested gate: ev:other')
 
 
 if __name__ == '__main__':
