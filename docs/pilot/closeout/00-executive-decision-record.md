@@ -10,7 +10,7 @@ Decision: _pending_
 
 ## Evidence this decision rests on
 
-Links to files 01–10. A decision with a blank file is not ready to sign.
+Links to files 01–08 and 10. File 09 is a recommendation written before this record. A decision with a blank file is not ready to sign.
 
 ## Hard stops checked
 

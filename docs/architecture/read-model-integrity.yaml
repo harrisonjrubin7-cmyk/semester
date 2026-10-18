@@ -36,7 +36,9 @@ read_model:
       outcomeType: "informational" | "derived" | "consequential";
     }): boolean {
       if (input.outcomeType === "informational") return true;
+      if (input.outcomeType !== "derived" && input.outcomeType !== "consequential") return false;
       if (input.freshnessState !== "current") return false;
+      if (!Number.isFinite(input.projectionLagSeconds) || input.projectionLagSeconds < 0) return false;
+      if (!Number.isFinite(input.maximumLagSeconds) || input.maximumLagSeconds < 0) return false;
       return input.projectionLagSeconds <= input.maximumLagSeconds;
     }
-    # Implemented version also rejects a lag that is NaN, infinite or negative.

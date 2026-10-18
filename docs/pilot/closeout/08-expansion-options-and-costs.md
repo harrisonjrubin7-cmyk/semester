@@ -9,4 +9,4 @@ Owner: _pending_ · Date: _pending_
 | extend_observation | Named reason for more data | _pending_ | none |
 | expand_cohort | No unresolved critical findings | _pending_ | access, source |
 | add_source | Source authority review | _pending_ | source |
-| conclude_and_offboard | File 10 complete | _pending_ | none |
+| conclude_and_offboard | Approved offboarding plan in file 10; completion is confirmed after this decision | _pending_ | none |

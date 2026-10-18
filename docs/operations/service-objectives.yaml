@@ -5,7 +5,7 @@
 service_objectives:
   - id: SLO-READINESS-001
     service: readiness_evaluation
-    measure: "Percentage of completed requests with a receipt or safe review state."
+    measure: "Percentage of accepted readiness requests that end in a receipt or safe review state. A request accepted but failed or dropped before completion counts against the target."
     target: tenant_approved_target
     window: rolling_30_days
     exclusions:
