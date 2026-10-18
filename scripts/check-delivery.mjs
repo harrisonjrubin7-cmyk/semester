@@ -62,6 +62,7 @@ const REQUIRED_INCREMENT_FIELDS = [
 ];
 // Values that fill a field without answering it.
 const PLACEHOLDER_VALUES = new Set(['UNASSIGNED', 'TBD']);
+const isPlaceholder = (v) => typeof v === 'string' && PLACEHOLDER_VALUES.has(v.trim().toUpperCase());
 // The checks each quality gate must keep; removing one changes the specification's gate catalogue.
 const REQUIRED_GATE_CHECKS = {
   'GATE-01': ['user_outcome_defined', 'institution_authority_defined', 'prohibited_claims_defined', 'source_types_defined', 'accountable_owner_named'],
@@ -229,7 +230,7 @@ export function check(repo) {
     const r = rank(inc.state);
     const approved = r >= rank('approved_for_build');
     if (approved) {
-      const missing = model.every_increment_requires.filter((k) => isEmpty(inc[k]));
+      const missing = model.every_increment_requires.filter((k) => isEmpty(inc[k]) || isPlaceholder(inc[k]));
       if (missing.length) errors.push(`${label}: ${inc.state} requires ${missing.join(', ')}`);
       // A missing list is not the same as a reviewed "no hard dependencies" decision.
       if (!Array.isArray(inc.hard_dependencies)) {

@@ -307,6 +307,15 @@ test('control: a safe-off behavior that is a placeholder fails once enabled', ()
   assert.ok(errors.some((e) => /RDY-INC-003: enabled without a safe-off/.test(e)));
 });
 
+test('control: an approved increment whose required field is a placeholder sentinel fails', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_build';
+    d.accountable_owner = 'UNASSIGNED';
+  });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /RDY-INC-003: approved_for_build requires .*accountable_owner/.test(e)));
+});
+
 test('control: a dependency threshold naming a state that does not exist fails', () => {
   const repo = loadRepo();
   repo.model.hard_dependency_minimum_state.approved_for_build = 'approved_for_bulid';
