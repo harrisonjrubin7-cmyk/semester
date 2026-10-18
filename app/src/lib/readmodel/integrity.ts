@@ -2,6 +2,8 @@
 // its freshness and lag decide what the interface may claim.
 // Contract: docs/architecture/read-model-integrity.yaml.
 
+import { isIsoTimestamp } from '../assurance/timestamps';
+
 export const FRESHNESS_STATES = ['current', 'updating', 'stale', 'unknown', 'failed'] as const;
 export type FreshnessState = (typeof FRESHNESS_STATES)[number];
 
@@ -29,11 +31,30 @@ export const REQUIRED_PROJECTION_METADATA: readonly (keyof ProjectionMetadata)[]
   'schema_version',
 ];
 
-/** Metadata keys a projection is missing or has left blank. An empty list means the projection is labelled. */
+/** A version is a non-negative whole number; NaN, Infinity and fractions would make ordering meaningless. */
+const isVersion = (value: unknown): boolean => Number.isSafeInteger(value) && (value as number) >= 0;
+
+/**
+ * Metadata keys a projection is missing, blank, or malformed for its type. An empty list means the projection is
+ * labelled with values the freshness gate can rely on.
+ */
 export function missingProjectionMetadata(meta: Partial<ProjectionMetadata>): string[] {
   return REQUIRED_PROJECTION_METADATA.filter((key) => {
-    const value = meta[key];
-    return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+    const value: unknown = meta[key];
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string' && value.trim() === '') return true;
+    switch (key) {
+      case 'aggregate_version':
+      case 'schema_version':
+        return !isVersion(value);
+      case 'projected_at':
+      case 'source_observed_at':
+        return typeof value !== 'string' || !isIsoTimestamp(value);
+      case 'freshness_state':
+        return !(FRESHNESS_STATES as readonly unknown[]).includes(value);
+      default:
+        return false;
+    }
   });
 }
 

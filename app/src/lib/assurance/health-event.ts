@@ -45,6 +45,8 @@ export interface HealthEvent {
   escalationOwner?: string;
   dueAt?: string;
   correlationId: string;
+  /** The durable case that owns the response (for example a reconciliation case id). A correlation id groups activity; it does not name an owner. */
+  caseReference: string;
   evidenceReferences: string[];
   createdAt: string;
   updatedAt: string;
@@ -70,6 +72,7 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if (!present(event.affectedCapability)) problems.push('affectedCapability is required');
   if (!present(event.accountableOwner)) problems.push('accountableOwner is required');
   if (!present(event.correlationId)) problems.push('correlationId is required');
+  if (!present(event.caseReference)) problems.push('caseReference is required');
   if (!(HEALTH_CATEGORIES as readonly string[]).includes(event.category)) problems.push(`unknown category: ${event.category}`);
   if (!(HEALTH_SEVERITIES as readonly string[]).includes(event.severity)) problems.push(`unknown severity: ${event.severity}`);
   if (!(HEALTH_STATES as readonly string[]).includes(event.state)) problems.push(`unknown state: ${event.state}`);

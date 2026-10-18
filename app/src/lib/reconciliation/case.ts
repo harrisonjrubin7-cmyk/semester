@@ -91,12 +91,15 @@ export interface RepairAttempt {
   endedAt: string;
 }
 
+export const CASE_SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
+export type CaseSeverity = (typeof CASE_SEVERITIES)[number];
+
 export interface ReconciliationCase {
   id: string;
   tenantId: string;
   capability: string;
   discrepancy: DiscrepancyClass;
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  severity: CaseSeverity;
   state: CaseState;
   ownerId: string;
   /** When the discrepancy was detected; the basis for case age. The caller passes ISO 8601. */
@@ -171,6 +174,7 @@ export function openCase(input: {
   if (!isIsoTimestamp(input.detectedAt)) throw new Error('detectedAt must be an ISO timestamp');
   // A class outside the contract would strand the case: every later move rejects it as unknown.
   if (!isDiscrepancyClass(input.discrepancy)) throw new Error('discrepancy is not a known class');
+  if (!(CASE_SEVERITIES as readonly string[]).includes(input.severity)) throw new Error('severity is not a known level');
   const required = { id: input.id, tenantId: input.tenantId, capability: input.capability, ownerId: input.ownerId, sourceSystem: input.sourceSystem, cohortId: input.cohortId };
   for (const [name, value] of Object.entries(required)) {
     if (typeof value !== 'string' || value.trim() === '') throw new Error(`${name} is required`);

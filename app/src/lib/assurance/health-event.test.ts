@@ -12,6 +12,7 @@ const base: HealthEvent = {
   safeImmediateAction: 'Show stale state and block definitive outcomes',
   accountableOwner: 'integration_owner',
   correlationId: 'corr-1',
+  caseReference: 'REC-2026-001',
   evidenceReferences: [],
   createdAt: '2026-10-01T09:00:00.000Z',
   updatedAt: '2026-10-01T09:00:00.000Z',
@@ -25,6 +26,11 @@ describe('healthEventProblems', () => {
   it('requires an accountable owner and a correlation id', () => {
     const problems = healthEventProblems({ ...base, accountableOwner: ' ', correlationId: '' });
     expect(problems).toEqual(expect.arrayContaining(['accountableOwner is required', 'correlationId is required']));
+  });
+
+  it('requires a durable case reference, not only a correlation id', () => {
+    const { caseReference: _omit, ...withoutCase } = base;
+    expect(healthEventProblems(withoutCase as HealthEvent)).toContain('caseReference is required');
   });
 
   it('requires at least one affected scope key', () => {

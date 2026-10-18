@@ -427,6 +427,12 @@ describe('persisted history and evidence windows', () => {
     expect(moveCase(reopened, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
   });
 
+  it('refuses to open a case with a severity outside the contract', () => {
+    expect(() => openCase({ ...opened(), severity: 'urgent' as ReconciliationCase['severity'] })).toThrow(
+      'severity is not a known level',
+    );
+  });
+
   it('refuses to open a case with a discrepancy class outside the contract', () => {
     expect(() => openCase({ ...opened(), discrepancy: 'constructor' as DiscrepancyClass })).toThrow(
       'discrepancy is not a known class',

@@ -1,5 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { canUseProjectionForOutcome, missingProjectionMetadata, type OutcomeCheck } from './integrity';
+import { canUseProjectionForOutcome, missingProjectionMetadata, type OutcomeCheck, type ProjectionMetadata } from './integrity';
+
+const labelled: ProjectionMetadata = {
+  projection_name: 'registration_readiness',
+  source_event_id: 'evt-1',
+  aggregate_version: 4,
+  projected_at: '2026-10-01T09:00:00.000Z',
+  source_observed_at: '2026-10-01T08:59:00.000Z',
+  freshness_state: 'current',
+  tenant_id: 'named-institution',
+  schema_version: 2,
+};
+
+describe('missingProjectionMetadata values', () => {
+  it('accepts a fully labelled projection', () => {
+    expect(missingProjectionMetadata(labelled)).toEqual([]);
+  });
+
+  it('flags version numbers that are not whole non-negative numbers', () => {
+    expect(missingProjectionMetadata({ ...labelled, aggregate_version: Number.NaN })).toEqual(['aggregate_version']);
+    expect(missingProjectionMetadata({ ...labelled, schema_version: Number.POSITIVE_INFINITY })).toEqual(['schema_version']);
+    expect(missingProjectionMetadata({ ...labelled, aggregate_version: -1 })).toEqual(['aggregate_version']);
+  });
+
+  it('flags timestamps that are not ISO 8601', () => {
+    expect(missingProjectionMetadata({ ...labelled, projected_at: 'yesterday' })).toEqual(['projected_at']);
+  });
+
+  it('flags a freshness state outside the declared vocabulary', () => {
+    expect(missingProjectionMetadata({ ...labelled, freshness_state: 'probably_fine' as ProjectionMetadata['freshness_state'] })).toEqual([
+      'freshness_state',
+    ]);
+  });
+});
 
 const check = (overrides: Partial<OutcomeCheck>): OutcomeCheck => ({
   freshnessState: 'current',
