@@ -137,6 +137,30 @@ export function isRepairAllowed(discrepancy: DiscrepancyClass, repair: string): 
   return SAFE_REPAIRS[discrepancy]?.includes(repair) ?? false;
 }
 
+const isEvidenceList = (value: unknown): value is readonly string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
+
+/**
+ * The active cycle is the history from its last proposal on, and it must run proposed, approved, repaired, then
+ * re-verified, in that order. A partial migrated history cannot close on the final step alone.
+ */
+function hasActiveCycleChain(history: readonly CaseEvent[]): boolean {
+  const start = history.map((entry) => entry.to).lastIndexOf('repair_proposed');
+  if (start < 0) return false;
+  const steps: [CaseState, CaseState][] = [
+    ['repair_proposed', 'repair_approved'],
+    ['repair_approved', 'repaired'],
+    ['repaired', 'reverified'],
+  ];
+  let cursor = start;
+  for (const [from, to] of steps) {
+    const next = history.findIndex((entry, index) => index > cursor && entry.from === from && entry.to === to);
+    if (next < 0) return false;
+    cursor = next;
+  }
+  return cursor === history.length - 1;
+}
+
 /** Actors are compared as people, not strings: "Ana" and " ana " are the same proposer. */
 const actorKey = (actor: string): string => actor.trim().toLowerCase();
 
@@ -185,6 +209,9 @@ export function openCase(input: {
 /** Applies one state move. Every rule the contract states is checked here, not in the caller. */
 export function moveCase(current: ReconciliationCase, to: CaseState, options: MoveOptions): CaseResult {
   if (typeof options.by !== 'string' || options.by.trim() === '') return { ok: false, reason: 'a named actor is required' };
+  if (options.evidence !== undefined && !isEvidenceList(options.evidence)) {
+    return { ok: false, reason: 'evidence must be a list of resolution keys' };
+  }
   // Checked before the table lookup: a persisted case with an unknown state must refuse, not throw.
   if (!(CASE_STATES as readonly string[]).includes(current.state)) {
     return { ok: false, reason: `unknown state: ${current.state}` };
@@ -272,9 +299,7 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
         (current.proposedBy?.trim() ?? '') !== '' &&
         (current.approvedBy?.trim() ?? '') !== '' &&
         actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '') &&
-        current.history.some((entry) => entry.to === 'repair_approved') &&
-        last?.from === 'repaired' &&
-        last.to === 'reverified';
+        hasActiveCycleChain(current.history);
       if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
     } else {
       // A class with no safe repair reaches re-verification only by escalation, and an earlier escalation from a failed

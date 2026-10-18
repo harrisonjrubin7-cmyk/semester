@@ -100,6 +100,7 @@ describe('moveCase', () => {
       proposedBy: 'integration_owner',
       approvedBy: 'registrar_owner',
       history: [
+        { from: 'awaiting_source', to: 'repair_proposed', at: AT, by: 'integration_owner' },
         { from: 'repair_proposed', to: 'repair_approved', at: AT, by: 'registrar_owner' },
         { from: 'repair_approved', to: 'repaired', at: AT, by: 'integration_owner' },
         { from: 'repaired', to: 'reverified', at: AT, by: 'integration_owner' },
@@ -427,6 +428,11 @@ describe('persisted history and evidence windows', () => {
     expect(moveCase(reopened, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
   });
 
+  it('refuses evidence that is not a list of keys, without throwing', () => {
+    const result = moveCase(opened(), 'triaged', { by: 'registrar_owner', at: AT, evidence: 42 as unknown as string[] });
+    expect(result).toEqual({ ok: false, reason: 'evidence must be a list of resolution keys' });
+  });
+
   it('refuses to open a case with a severity outside the contract', () => {
     expect(() => openCase({ ...opened(), severity: 'urgent' as ReconciliationCase['severity'] })).toThrow(
       'severity is not a known level',
@@ -461,6 +467,16 @@ describe('persisted history and evidence windows', () => {
       history: [{ from: 'repaired', to: 'reverified', at: AT, by: 'integration_owner' }],
     };
     expect(moveCase(finalMoveOnly, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+
+    const partialChain: ReconciliationCase = {
+      ...fields,
+      history: [
+        { from: 'triaged', to: 'repair_proposed', at: AT, by: 'integration_owner' },
+        { from: 'repair_proposed', to: 'repair_approved', at: AT, by: 'registrar_owner' },
+        { from: 'repaired', to: 'reverified', at: AT, by: 'integration_owner' },
+      ],
+    };
+    expect(moveCase(partialChain, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
   });
 
   it('refuses to open a case that could never close', () => {

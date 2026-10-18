@@ -52,6 +52,10 @@ export function missingProjectionMetadata(meta: Partial<ProjectionMetadata>): st
         return typeof value !== 'string' || !isIsoTimestamp(value);
       case 'freshness_state':
         return !(FRESHNESS_STATES as readonly unknown[]).includes(value);
+      case 'projection_name':
+      case 'source_event_id':
+      case 'tenant_id':
+        return typeof value !== 'string';
       default:
         return false;
     }

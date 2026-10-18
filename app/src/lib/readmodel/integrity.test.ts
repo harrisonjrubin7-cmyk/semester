@@ -23,6 +23,11 @@ describe('missingProjectionMetadata values', () => {
     expect(missingProjectionMetadata({ ...labelled, aggregate_version: -1 })).toEqual(['aggregate_version']);
   });
 
+  it('flags identity fields that are not strings', () => {
+    expect(missingProjectionMetadata({ ...labelled, tenant_id: 42 as unknown as string })).toEqual(['tenant_id']);
+    expect(missingProjectionMetadata({ ...labelled, projection_name: ['x'] as unknown as string })).toEqual(['projection_name']);
+  });
+
   it('flags timestamps that are not ISO 8601', () => {
     expect(missingProjectionMetadata({ ...labelled, projected_at: 'yesterday' })).toEqual(['projected_at']);
   });

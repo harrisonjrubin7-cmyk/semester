@@ -85,3 +85,13 @@ example_case:
     staff_display: >
       Source freshness exceeded its approved window. Review the connection,
       then rerun the affected readiness evaluations.
+
+open_decisions:
+  - id: RECON-CONTRACT-001
+    summary: >
+      This contract and docs/pilot/registration-readiness/reconciliation-policy.yaml define different state and
+      discrepancy vocabularies. The runtime in app/src/lib/reconciliation/case.ts implements only this contract's
+      states. Persistence and API wiring must not accept records written under the pilot policy until one contract
+      is adopted or a documented, tested mapping exists.
+    status: open
+    owner: _pending_

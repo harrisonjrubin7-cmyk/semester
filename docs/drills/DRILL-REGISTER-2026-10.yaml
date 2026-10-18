@@ -17,7 +17,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -40,7 +39,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -57,7 +55,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -74,7 +71,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -91,7 +87,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -108,7 +103,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -125,7 +119,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -142,7 +135,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
@@ -159,7 +151,6 @@ drills:
       result: pending
       evidence: []
     status: not_run
-    evidence: []
     corrective_actions: []
     retest_due: pending
 
