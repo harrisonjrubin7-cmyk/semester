@@ -305,6 +305,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
   ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_swap', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['replay_domain_event', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
@@ -373,6 +374,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
   '20261004200000_answer_data_subject_requests.sql',
+  '20261018120000_registration_swap.sql',
 ];
 
 /**
@@ -467,6 +469,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'registration_enroll',
       'registration_withdraw',
     ],
+  },
+  {
+    file: '20261018120000_registration_swap.sql',
+    functions: ['registration_swap'],
   },
 ];
 

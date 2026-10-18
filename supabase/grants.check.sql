@@ -721,6 +721,8 @@ declare
     'registration_enroll(want_section uuid, want_key text, want_expect text)',
     'registration_drop(want_section uuid, want_key text)',
     'registration_withdraw(want_section uuid, want_key text)',
+    -- The fourth, from 20261018120000_registration_swap.sql: the add and the drop as one step.
+    'registration_swap(want_add uuid, want_drop uuid, want_key text, want_expect text)',
     'my_registration(want_term text)',
     'my_registration_hold()',
     'registrar_put_term(want_term text, want_opens timestamp with time zone, want_add_drop_ends timestamp with time zone, want_withdraw_ends timestamp with time zone, want_max_credits numeric)',
