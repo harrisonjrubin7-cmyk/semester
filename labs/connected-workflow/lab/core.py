@@ -21,10 +21,13 @@ CREATE TABLE IF NOT EXISTS outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT 
 CREATE TABLE IF NOT EXISTS projection(tenant TEXT,kind TEXT,object_id TEXT,version INTEGER,payload TEXT,PRIMARY KEY(tenant,kind,object_id));
 CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TEXT,actor TEXT,command TEXT,object_id TEXT,receipt TEXT,created REAL);
 """)
-   # Databases created before a column existed keep their old tables; add missing columns and backfill.
-   for table,col in (('grades','submission_id'),('approvals','reason')):
-    if col not in [r['name'] for r in d.execute(f'PRAGMA table_info({table})')]:d.execute(f'ALTER TABLE {table} ADD COLUMN {col} TEXT')
-   d.execute('UPDATE grades SET submission_id=(SELECT id FROM submissions s WHERE s.tenant=grades.tenant AND s.course=grades.course AND s.student=grades.student ORDER BY s.created DESC LIMIT 1) WHERE submission_id IS NULL')
+   # Databases created before a column existed keep their old tables; add the missing columns.
+   if 'submission_id' not in [r['name'] for r in d.execute('PRAGMA table_info(grades)')]:d.execute('ALTER TABLE grades ADD COLUMN submission_id TEXT')
+   # Legacy drafts do not record which submission they assessed, so they keep a NULL submission and must be drafted again.
+   if 'reason' not in [r['name'] for r in d.execute('PRAGMA table_info(approvals)')]:
+    d.execute('ALTER TABLE approvals ADD COLUMN reason TEXT')
+    # Legacy pending approvals have no recoverable reason, so they are retired and must be requested again.
+    d.execute("UPDATE approvals SET state='retired' WHERE state='pending' AND reason IS NULL")
  @contextmanager
  def db(self):
   d=sqlite3.connect(self.path,timeout=5);d.row_factory=sqlite3.Row

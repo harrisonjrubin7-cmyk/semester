@@ -169,12 +169,16 @@ class TestReviewFindings(unittest.TestCase):
   a=self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
   self.cmd('a-reviewer','grade.approve_release',{'approval':a['approval']})
   with self.assertRaises(Rejected):self.cmd('a-student','submission.create',{'body':'late revision'})
- def test_legacy_database_gains_new_columns_and_backfill(self):
+ def test_legacy_database_gains_new_columns_and_retires_unreasoned_approvals(self):
   import sqlite3
-  self.cmd('a-student','onboarding.complete');sub=self.cmd('a-student','submission.create',{'body':'work'})['submission']
-  self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  a=self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
   d=sqlite3.connect(self.lab.path);d.execute('ALTER TABLE grades DROP COLUMN submission_id');d.execute('ALTER TABLE approvals DROP COLUMN reason');d.commit();d.close()
   Lab(self.lab.path).seed()
   d=sqlite3.connect(self.lab.path);cols=lambda t:[r[1] for r in d.execute(f'PRAGMA table_info({t})')]
   self.assertIn('submission_id',cols('grades'));self.assertIn('reason',cols('approvals'))
-  self.assertEqual(d.execute('SELECT submission_id FROM grades').fetchone()[0],sub);d.close()
+  # Legacy drafts keep a NULL submission, so they cannot be released against a later submission.
+  self.assertIsNone(d.execute('SELECT submission_id FROM grades').fetchone()[0])
+  # Legacy pending approvals have no recoverable reason, so they are retired rather than shown to reviewers.
+  self.assertEqual(d.execute('SELECT state FROM approvals WHERE id=?',(a['approval'],)).fetchone()[0],'retired');d.close()
