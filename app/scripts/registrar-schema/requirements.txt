@@ -1,1 +1,1 @@
-jsonschema==4.26.0
+jsonschema[format]==4.26.0

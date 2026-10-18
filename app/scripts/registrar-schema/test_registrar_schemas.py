@@ -20,6 +20,10 @@ class MigrationTests(unittest.TestCase):
     def test_array_without_items(self):self.blocked({'type':'array'})
     def test_example_becomes_examples(self):
         s=migrate_subset({'type':'string','example':'A'});self.assertNotIn('example',s);self.assertEqual(s['examples'],['A'])
+    def test_default_must_match_type(self):self.blocked({'type':'integer','default':'oops'})
+    def test_valid_default_kept(self):self.assertEqual(migrate_subset({'type':'integer','default':3})['default'],3)
+    def test_properties_must_be_mapping(self):self.blocked({'type':'object','properties':[]})
+    def test_date_time_format_is_checked(self):self.assertTrue(validate(migrate_subset({'type':'string','format':'date-time'}),'not valid'))
 class EnrollmentTests(unittest.TestCase):
     def body(self,op='add'):
         b={'studentId':U,'termCode':'2026FA','expectedScheduleVersion':1,'operation':op}
