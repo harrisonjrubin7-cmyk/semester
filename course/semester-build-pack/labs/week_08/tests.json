@@ -11,6 +11,17 @@
         "message": "Required",
         "described_by": "email-error"
       }
+    },
+    {
+      "input": {
+        "field": "name",
+        "message": "Too short"
+      },
+      "expected": {
+        "field": "name",
+        "message": "Too short",
+        "described_by": "name-error"
+      }
     }
   ]
 }

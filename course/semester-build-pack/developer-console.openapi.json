@@ -12287,6 +12287,11 @@
               "resolved",
               "accepted"
             ]
+          },
+          "requiredEvidence": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Evidence the reviewer requested to resolve the finding, as supplied at creation."
           }
         },
         "required": [
@@ -12294,7 +12299,8 @@
           "certificationId",
           "severity",
           "description",
-          "status"
+          "status",
+          "requiredEvidence"
         ]
       },
       "FindingCreate": {
@@ -12881,6 +12887,54 @@
         "flows": {
           "authorizationCode": {
             "authorizationUrl": "https://identity.example.invalid/authorize",
+            "tokenUrl": "https://identity.example.invalid/token",
+            "scopes": {
+              "organizations:read": "Access Organizations operations; resource authorization is additionally required.",
+              "organizations:write": "Access Organizations operations; resource authorization is additionally required.",
+              "memberships:read": "Access Memberships operations; resource authorization is additionally required.",
+              "memberships:write": "Access Memberships operations; resource authorization is additionally required.",
+              "apps:read": "Access Apps operations; resource authorization is additionally required.",
+              "apps:write": "Access Apps operations; resource authorization is additionally required.",
+              "environments:read": "Access Environments operations; resource authorization is additionally required.",
+              "environments:write": "Access Environments operations; resource authorization is additionally required.",
+              "credentials:read": "Access Credentials operations; resource authorization is additionally required.",
+              "credentials:write": "Access Credentials operations; resource authorization is additionally required.",
+              "permissions:read": "Access Permissions operations; resource authorization is additionally required.",
+              "grants:request": "Access Grants operations; resource authorization is additionally required.",
+              "grants:read": "Access Grants operations; resource authorization is additionally required.",
+              "grants:approve": "Access Grants operations; resource authorization is additionally required.",
+              "grants:revoke": "Access Grants operations; resource authorization is additionally required.",
+              "events:read": "Access Events operations; resource authorization is additionally required.",
+              "webhooks:read": "Access Webhooks operations; resource authorization is additionally required.",
+              "webhooks:write": "Access Webhooks operations; resource authorization is additionally required.",
+              "releases:read": "Access Releases operations; resource authorization is additionally required.",
+              "releases:write": "Access Releases operations; resource authorization is additionally required.",
+              "evidence:read": "Access Evidence operations; resource authorization is additionally required.",
+              "evidence:write": "Access Evidence operations; resource authorization is additionally required.",
+              "tests:write": "Access Tests operations; resource authorization is additionally required.",
+              "tests:read": "Access Tests operations; resource authorization is additionally required.",
+              "certification:read": "Access Certification operations; resource authorization is additionally required.",
+              "certification:write": "Access Certification operations; resource authorization is additionally required.",
+              "certification:review": "Access Certification operations; resource authorization is additionally required.",
+              "certification:decide": "Access Certification operations; resource authorization is additionally required.",
+              "installations:read": "Access Installations operations; resource authorization is additionally required.",
+              "installations:write": "Access Installations operations; resource authorization is additionally required.",
+              "installations:approve": "Access Installations operations; resource authorization is additionally required.",
+              "pilots:write": "Access Pilots operations; resource authorization is additionally required.",
+              "pilots:read": "Access Pilots operations; resource authorization is additionally required.",
+              "installations:activate": "Access Installations operations; resource authorization is additionally required.",
+              "offboarding:write": "Access Offboarding operations; resource authorization is additionally required.",
+              "offboarding:read": "Access Offboarding operations; resource authorization is additionally required.",
+              "exports:write": "Access Exports operations; resource authorization is additionally required.",
+              "jobs:read": "Access Jobs operations; resource authorization is additionally required.",
+              "audit:read": "Access Audit operations; resource authorization is additionally required.",
+              "usage:read": "Access Usage operations; resource authorization is additionally required.",
+              "support:read": "Access Support operations; resource authorization is additionally required.",
+              "support:write": "Access Support operations; resource authorization is additionally required.",
+              "capabilities:read": "Access Capabilities operations; resource authorization is additionally required."
+            }
+          },
+          "clientCredentials": {
             "tokenUrl": "https://identity.example.invalid/token",
             "scopes": {
               "organizations:read": "Access Organizations operations; resource authorization is additionally required.",

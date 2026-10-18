@@ -26,7 +26,7 @@ Columns are reduced from the full template where they do not apply to a docs-and
 | LAB-05 | Authentication versus authorization | Week 5 | Learner | Lab 5 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-06 | Tenant isolation | Week 6 | Learner | Lab 6 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-07 | Transactions and audit | Week 7 | Learner | Lab 7 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-08 | Accessible interfaces | Week 8 | Learner | Lab 8 | Visible tests: 1 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-08 | Accessible interfaces | Week 8 | Learner | Lab 8 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-09 | Idempotency | Week 9 | Learner | Lab 9 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-10 | Events and deduplication | Week 10 | Learner | Lab 10 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
