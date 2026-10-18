@@ -257,11 +257,14 @@ export function check(repo) {
     if (!riskIds.has(id)) errors.push(`risk-register: required risk ${id} is missing`);
   }
 
-  // Decision rights: an unnamed holder is a warning until an institution names one.
+  // Decision rights: an unnamed holder is a warning until an increment reaches release; then it is an error.
+  const releaseReached = repo.increments.some((i) => rank(i.data.state) >= rank('approved_for_release'));
   for (const d of repo.decisions.decisions) {
     // Empty, null and the UNASSIGNED sentinel all mean nobody is named; a deleted field must not look reviewed.
-    if (!d.approver_holder || d.approver_holder === 'UNASSIGNED') {
-      warnings.push(`decision-rights: "${d.decision}" has no named approver`);
+    if (isUnanswered(String(d.approver_holder ?? '').trim())) {
+      const message = `decision-rights: "${d.decision}" has no named approver`;
+      if (releaseReached) errors.push(`${message}; release cannot proceed`);
+      else warnings.push(message);
     }
   }
 
@@ -374,7 +377,7 @@ export function check(repo) {
     // An approved artifact whose review date has passed is expired by the operating model's own rule.
     if (a.state === 'approved') {
       const owner = String(a.owners?.accountable ?? '').trim();
-      if (owner === '' || owner === 'UNASSIGNED') errors.push(`${label}: approved without an accountable owner`);
+      if (isUnanswered(owner)) errors.push(`${label}: approved without an accountable owner`);
       if (dependsOn(a.id, a.id)) errors.push(`${label}: approved artifact depends on itself through its dependencies`);
       for (const dep of a.dependencies ?? []) {
         const d = artifactById.get(dep);

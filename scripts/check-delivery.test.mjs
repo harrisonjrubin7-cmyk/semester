@@ -478,3 +478,20 @@ test('control: an in-repository alias of a draft artifact is matched to that art
     unlinkSync(alias);
   }
 });
+
+test('control: an approved artifact whose accountable owner is TBD in any case fails', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.state = 'approved';
+  art.data.review.next_due = '2099-01-01';
+  art.data.owners.accountable = ' tbd ';
+  art.data.location = 'docs/pilot/registration-readiness/INC-READINESS-001.yaml';
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /ART-RDY-011: approved without an accountable owner/.test(e)));
+});
+
+test('control: an unnamed decision holder blocks once an increment reaches release', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_release'; });
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /decision-rights: "Feature flag enablement" has no named approver; release cannot proceed/.test(e)));
+});
