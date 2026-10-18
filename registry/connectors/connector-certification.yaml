@@ -22,6 +22,11 @@ connector_certification:
 
     validated:
       inherits: [sandbox]
+      # Production use stays prohibited until pilot_approved, which is the only level
+      # that lifts these.
+      prohibited:
+        - production_student_data
+        - production_commands
       required:
         - schema_contract_test
         - field_mapping_review
