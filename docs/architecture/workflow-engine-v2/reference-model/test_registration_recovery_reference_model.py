@@ -134,6 +134,21 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(revoked['receipt'], first['receipt'])
         self.assertEqual(len(m.authoritative), 1)
 
+    def test_repeat_while_result_unknown_observes_unknown(self):
+        m = RegistrationModel()
+        self.submit(m, fault='timeout_after')
+        again = self.submit(m)
+        self.assertEqual(again['state'], 'result_unknown')
+        self.assertNotIn('receipt', again)
+        self.assertEqual(len(m.authoritative), 1)
+
+    def test_replay_requires_authenticated_caller(self):
+        m = RegistrationModel()
+        self.submit(m)
+        denied = self.submit(m, {'identity_ok': False})
+        self.assertEqual(denied['state'], 'denied')
+        self.assertNotIn('receipt', denied)
+
     def test_payload_snapshot_is_independent_of_caller(self):
         m = RegistrationModel()
         payload = {'section': 's1', 'override_grant_refs': ['g1']}
@@ -143,10 +158,19 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(m.commands[r['key']]['original_payload']['override_grant_refs'], ['g1'])
         same = self.submit(m, payload={'section': 's1', 'override_grant_refs': ['g1']})
         self.assertEqual(same['receipt'], r['receipt'])
+        same['original_payload']['override_grant_refs'].append('g3')
+        self.assertEqual(m.commands[r['key']]['original_payload']['override_grant_refs'], ['g1'])
 
     def test_REG_13_offer_expiry(self):
         m = RegistrationModel()
         self.assertEqual(self.submit(m, {'offer_expired': True})['state'], 'waitlisted')
+        self.assertFalse(m.authoritative)
+
+    def test_offer_expiry_replay_stays_waitlisted(self):
+        m = RegistrationModel()
+        r = self.submit(m, {'offer_expired': True})
+        again = self.submit(m)
+        self.assertEqual((again['state'], again['receipt']), ('waitlisted', r['receipt']))
         self.assertFalse(m.authoritative)
 
     def test_REG_14_swap_failure(self):

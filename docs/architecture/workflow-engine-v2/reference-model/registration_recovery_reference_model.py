@@ -17,27 +17,34 @@ class RegistrationModel:
     @staticmethod
     def _view(cmd):
         # A waitlisted outcome is a business state; execution stays on the execution track.
-        out = dict(cmd)
+        out = copy.deepcopy(cmd)
         if 'business' in cmd:
             out['execution'] = cmd['state']
             out['state'] = cmd['business']
         return out
+
+    def _waitlist_entry(self, k, payload, reason):
+        self.waitlist[k] = {'receipt': 'waitlist:' + str(len(self.waitlist) + 1),
+                            'payload': copy.deepcopy(payload), 'reason': reason}
+        return self.waitlist[k]['receipt']
 
     def submit(self, actor, tenant, key, payload, context=None, fault=None):
         c = dict(context or {})
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         k = (tenant, actor, 'enroll', key)
         with self.lock:
+            grants = c.get('grant_tenants')
+            if grants is not None and tenant not in grants:
+                return {'state': 'denied', 'effects': 0}
+            if not c.get('identity_ok', True):
+                return {'state': 'denied', 'effects': 0}
             existing = self.commands.get(k)
             if existing and existing['hash'] != digest:
                 return {'state': 'conflict', 'effects': 0}
             if existing and not existing.get('confirmed_no_commit'):
-                # A durable outcome answers a repeat before any current authorization check.
+                # An authenticated repeat gets the durable outcome, even after a later permission revocation.
                 return self._view(existing)
-            grants = c.get('grant_tenants')
-            if grants is not None and tenant not in grants:
-                return {'state': 'denied', 'effects': 0}
-            if not c.get('identity_ok', True) or not c.get('permission_ok', True):
+            if not c.get('permission_ok', True):
                 return {'state': 'denied', 'effects': 0}
             if not c.get('authority_ok', True):
                 return {'state': 'paused', 'effects': 0}
@@ -53,7 +60,13 @@ class RegistrationModel:
             if not c.get('eligible', True) and not c.get('scoped_override', False):
                 return {'state': 'awaiting_approval', 'effects': 0}
             if c.get('offer_expired', False):
-                return {'state': 'waitlisted', 'effects': 0}
+                # The rejected offer is a durable waitlist outcome, so a redelivery cannot turn it into an enrollment.
+                cmd = {'state': 'committed', 'hash': digest, 'key': k, 'effects': 0,
+                       'projection': 'pending', 'original_payload': copy.deepcopy(payload),
+                       'business': 'waitlisted'}
+                cmd['receipt'] = self._waitlist_entry(k, payload, 'offer_expired')
+                self.commands[k] = cmd
+                return self._view(cmd)
             if fault == 'precommit':
                 # Persist the payload binding so a same-key retry cannot change the payload.
                 cmd = {'state': 'failed', 'hash': digest, 'key': k, 'effects': 0,
@@ -72,9 +85,8 @@ class RegistrationModel:
                            if (kk[0], rec['payload'].get('section')) == scope)
             if occupied >= self.capacity:
                 # Waitlisting is an authoritative write of a waitlist entry, so it carries its own receipt.
-                self.waitlist[k] = {'receipt': 'waitlist:' + str(len(self.waitlist) + 1),
-                                    'payload': copy.deepcopy(payload)}
-                cmd.update(state='committed', business='waitlisted', receipt=self.waitlist[k]['receipt'])
+                cmd.update(state='committed', business='waitlisted',
+                           receipt=self._waitlist_entry(k, payload, 'capacity'))
                 return self._view(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
                                      'payload': copy.deepcopy(payload), 'status': 'enrolled'}
