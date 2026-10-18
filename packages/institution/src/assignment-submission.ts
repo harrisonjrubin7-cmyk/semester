@@ -114,7 +114,8 @@ interface Claim {
 }
 
 const draftKey = (userId: string, assignmentId: string): string => `${userId}|${assignmentId}`;
-const claimKey = (userId: string, command: string, key: string): string => `${userId}|${command}|${key}`;
+const claimKey = (institutionId: string, userId: string, command: string, key: string): string =>
+  `${institutionId}|${userId}|${command}|${key}`;
 
 /**
  * The in-memory port. Plain maps, so a test can seed a population and inspect
@@ -289,9 +290,12 @@ export class AssignmentSubmissionService {
     if (membership?.role === 'student' && membership.status === 'revoked') {
       throw new SubmissionRefusal('membership_revoked', 'Your access to this course has been revoked');
     }
-    // A copy: the caller cannot change the stored draft or its version by writing to what it was given.
     const draft = this.store.drafts.get(draftKey(actor.userId, id));
-    return draft ? { ...draft } : null;
+    if (!draft) return null;
+    // A draft outlives the enrollment that wrote it: only an active student still in the course may read it.
+    this.enrolledStudent(actor, assignment);
+    // A copy: the caller cannot change the stored draft or its version by writing to what it was given.
+    return { ...draft };
   }
 
   /** Freeze the draft at `draftVersion` into a submission and issue a receipt. */
@@ -304,7 +308,7 @@ export class AssignmentSubmissionService {
     this.enrolledStudent(actor, assignment);
 
     const fingerprint = fingerprintOf({ assignmentId, draftVersion });
-    const replay = this.replayOrNull(actor.userId, 'submit_assignment', key, fingerprint);
+    const replay = this.replayOrNull(actor,'submit_assignment', key, fingerprint);
     if (replay) return replay;
 
     this.refuseIfSubmitted(actor.userId, assignmentId);
@@ -347,7 +351,7 @@ export class AssignmentSubmissionService {
       submittedAt,
       receiptId: receipt.id,
     });
-    this.claim(actor.userId, 'submit_assignment', key, fingerprint, receipt.id);
+    this.claim(actor,'submit_assignment', key, fingerprint, receipt.id);
     this.store.outbox.append(event);
     return receipt;
   }
@@ -366,7 +370,7 @@ export class AssignmentSubmissionService {
     this.teacher(actor, assignment);
 
     const fingerprint = fingerprintOf({ submissionId, grade, feedback });
-    const replay = this.replayOrNull(actor.userId, 'record_assessment', key, fingerprint);
+    const replay = this.replayOrNull(actor,'record_assessment', key, fingerprint);
     if (replay) return replay;
     if (this.store.assessments.has(submissionId)) {
       throw new SubmissionRefusal('invalid_state', 'An assessment is already recorded for this submission');
@@ -384,7 +388,7 @@ export class AssignmentSubmissionService {
       recordedAt,
       releasedAt: null,
     });
-    this.claim(actor.userId, 'record_assessment', key, fingerprint, receipt.id);
+    this.claim(actor,'record_assessment', key, fingerprint, receipt.id);
     return receipt;
   }
 
@@ -397,7 +401,7 @@ export class AssignmentSubmissionService {
     this.teacher(actor, assignment);
 
     const fingerprint = fingerprintOf({ submissionId, action: 'release' });
-    const replay = this.replayOrNull(actor.userId, 'release_feedback', key, fingerprint);
+    const replay = this.replayOrNull(actor,'release_feedback', key, fingerprint);
     if (replay) return replay;
 
     const assessment = this.store.assessments.get(submissionId);
@@ -420,7 +424,7 @@ export class AssignmentSubmissionService {
     });
     this.store.receipts.set(receipt.id, { ...receipt });
     assessment.releasedAt = releasedAt;
-    this.claim(actor.userId, 'release_feedback', key, fingerprint, receipt.id);
+    this.claim(actor,'release_feedback', key, fingerprint, receipt.id);
     this.store.outbox.append(event);
     return receipt;
   }
@@ -492,8 +496,13 @@ export class AssignmentSubmissionService {
   }
 
   private refuseIfClosed(assignment: Assignment): void {
+    const closesAt = Date.parse(assignment.closesAt);
+    // A deadline that is not a time cannot be compared, so the write is refused rather than left open.
+    if (Number.isNaN(closesAt)) {
+      throw new SubmissionRefusal('invalid_state', 'The submission deadline for this assignment is not a valid time');
+    }
     // The closing instant is already closed, as every other expiry check in the repository treats it.
-    if (this.now().getTime() >= Date.parse(assignment.closesAt)) {
+    if (this.now().getTime() >= closesAt) {
       throw new SubmissionRefusal('window_closed', 'The submission window for this assignment has closed');
     }
   }
@@ -505,8 +514,8 @@ export class AssignmentSubmissionService {
   }
 
   /** The recorded receipt for a repeated request; a refusal for a key reused with a different request. */
-  private replayOrNull(userId: string, command: string, key: string, fingerprint: string): Receipt | null {
-    const claim = this.store.claims.get(claimKey(userId, command, key));
+  private replayOrNull(actor: SubmissionActor, command: string, key: string, fingerprint: string): Receipt | null {
+    const claim = this.store.claims.get(claimKey(actor.institutionId, actor.userId, command, key));
     if (!claim) return null;
     if (claim.fingerprint !== fingerprint) {
       throw new SubmissionRefusal('idempotency_conflict', 'This key was already used for a different request');
@@ -516,8 +525,8 @@ export class AssignmentSubmissionService {
     return { ...receipt };
   }
 
-  private claim(userId: string, command: string, key: string, fingerprint: string, receiptId: string): void {
-    this.store.claims.set(claimKey(userId, command, key), { fingerprint, receiptId });
+  private claim(actor: SubmissionActor, command: string, key: string, fingerprint: string, receiptId: string): void {
+    this.store.claims.set(claimKey(actor.institutionId, actor.userId, command, key), { fingerprint, receiptId });
   }
 
   /** A receipt that is not yet stored: the caller stores it with the rest of the write, at the time it already read. */

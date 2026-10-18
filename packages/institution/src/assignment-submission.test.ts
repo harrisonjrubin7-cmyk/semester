@@ -382,6 +382,33 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     const replay = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
     expect(replay.message).toBe('Your submission was received.');
   });
+
+  it('an assignment whose closing time is not a valid time refuses writes rather than staying open', async () => {
+    const { service, store, as } = fixture();
+    store.assignments.set('bad', { id: 'bad', institutionId: 'inst-a', courseId: 'course-a1', closesAt: 'not a date' });
+    expect(await codeOf(() => service.saveDraft(as('stu-1'), { assignmentId: 'bad', body: 'v1', expectedVersion: 0 })))
+      .toBe('invalid_state');
+  });
+
+  it('a draft is not returned once the author is no longer an active student in that course', async () => {
+    const { service, store, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'notes', expectedVersion: 0 });
+    const membership = store.memberships.find((m) => m.userId === 'stu-1');
+    if (!membership) throw new Error('fixture missing stu-1');
+    membership.role = 'faculty';
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+  });
+
+  it('the same idempotency key in a second institution is a separate request, not a conflict', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    store.memberships.push({ userId: 'stu-1', institutionId: 'inst-b', courseId: 'course-b1', role: 'student', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.saveDraft(as('stu-1', 'inst-b'), { assignmentId: 'b1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    await expect(service.submitAssignment(as('stu-1', 'inst-b'), { assignmentId: 'b1', draftVersion: 1, idempotencyKey: KEY_1 }))
+      .resolves.toMatchObject({ status: 'completed' });
+  });
 });
 
 describe('refusals are typed and still count as refusals', () => {
