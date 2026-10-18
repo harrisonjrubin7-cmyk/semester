@@ -4,6 +4,7 @@ import {
   isRepairAllowed,
   moveCase,
   openCase,
+  type DiscrepancyClass,
   type MoveOptions,
   type ReconciliationCase,
 } from './case';
@@ -202,6 +203,33 @@ describe('moveCase', () => {
     for (const state of ['archived', 'constructor']) {
       const result = moveCase({ ...opened(), state: state as ReconciliationCase['state'] }, 'triaged', { by: 'x', at: AT });
       expect(result).toEqual({ ok: false, reason: `unknown state: ${state}` });
+    }
+  });
+
+  it('refuses a discrepancy class outside the enum, even one that resolves through Object.prototype', () => {
+    const unknown = 'constructor' as DiscrepancyClass;
+    expect(isRepairAllowed(unknown, 'refresh_source_snapshot')).toBe(false);
+
+    const stored: ReconciliationCase = { ...opened(), discrepancy: unknown, state: 'triaged' };
+    expect(moveCase(stored, 'awaiting_source', { by: 'x', at: AT })).toEqual({
+      ok: false,
+      reason: 'unknown discrepancy: constructor',
+    });
+    expect(moveCase(stored, 'escalated', { by: 'x', at: AT }).ok).toBe(false);
+  });
+
+  it('refuses approval when the stored repair has no proposer, rather than skipping separation of duties', () => {
+    for (const proposedBy of [undefined, '   ']) {
+      const stored: ReconciliationCase = {
+        ...opened(),
+        state: 'repair_proposed',
+        proposedRepair: 'refresh_source_snapshot',
+        proposedBy,
+      };
+      expect(moveCase(stored, 'repair_approved', { by: 'anyone', at: AT })).toEqual({
+        ok: false,
+        reason: 'the repair has no recorded proposer',
+      });
     }
   });
 

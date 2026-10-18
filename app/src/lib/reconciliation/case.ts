@@ -113,7 +113,12 @@ export interface MoveOptions {
   evidence?: readonly string[];
 }
 
+/** A stored class that is not in the enum is refused, not looked up: `constructor` resolves through Object.prototype. */
+const isDiscrepancyClass = (value: string): value is DiscrepancyClass =>
+  (DISCREPANCY_CLASSES as readonly string[]).includes(value);
+
 export function isRepairAllowed(discrepancy: DiscrepancyClass, repair: string): boolean {
+  if (!isDiscrepancyClass(discrepancy)) return false;
   if (PROHIBITED_REPAIRS.includes(repair)) return false;
   return SAFE_REPAIRS[discrepancy]?.includes(repair) ?? false;
 }
@@ -151,6 +156,9 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
   if (!(CASE_STATES as readonly string[]).includes(current.state)) {
     return { ok: false, reason: `unknown state: ${current.state}` };
   }
+  if (!isDiscrepancyClass(current.discrepancy)) {
+    return { ok: false, reason: `unknown discrepancy: ${current.discrepancy}` };
+  }
   if (!TRANSITIONS[current.state].includes(to)) {
     return { ok: false, reason: `cannot move from ${current.state} to ${to}` };
   }
@@ -185,7 +193,11 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
   }
 
   if (to === 'repair_approved') {
-    if (current.proposedBy !== undefined && actorKey(options.by) === actorKey(current.proposedBy)) {
+    // Fail closed: without a recorded proposer there is no separation of duties to check.
+    if (current.proposedBy === undefined || current.proposedBy.trim() === '') {
+      return { ok: false, reason: 'the repair has no recorded proposer' };
+    }
+    if (actorKey(options.by) === actorKey(current.proposedBy)) {
       return { ok: false, reason: 'the proposer cannot approve their own repair' };
     }
     next = { ...next, approvedBy: options.by };
