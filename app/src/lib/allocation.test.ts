@@ -430,6 +430,26 @@ describe('input guards', () => {
     expect(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: 150 })).toMatchObject({ ok: true });
   });
 
+  it('refuses a backdated override into a hold that expire has since marked expired', () => {
+    const held = must(reserve(oneBed(), base));
+    const lapsed = expire(held.state, HOLD);
+    expect(reserve(lapsed, { ...base, id: 'r2', key: 'k2', studentId: 'B', expectedInventoryVersion: lapsed.inventoryVersion, now: 500 })).toEqual({
+      ok: false,
+      refusal: 'bed_taken',
+    });
+  });
+
+  it('does not replay a held hold whose bed or student has since moved on, even with a backdated clock', () => {
+    const held = must(reserve(oneBed(), base));
+    const taken = must(reserve(held.state, {
+      ...base, id: 'r2', key: 'k2', studentId: 'B', expectedInventoryVersion: held.state.inventoryVersion, now: HOLD + 10,
+    }));
+    expect(reserve(taken.state, { ...base, id: 'r1-retry', now: 500 })).toEqual({
+      ok: false,
+      refusal: 'reservation_expired',
+    });
+  });
+
   it('refuses inventory that names the same bed twice, rather than silently dropping one', () => {
     expect(() => initialState([{ id: 'b1', label: 'x' }, { id: 'b1', label: 'y' }])).toThrow(/duplicate bed/);
   });

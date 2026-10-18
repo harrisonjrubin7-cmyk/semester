@@ -112,9 +112,27 @@ function studentIsPlaced(state: AllocationState, studentId: string, now: number)
 function recordedAfter(state: AllocationState, bedId: string, studentId: string, now: number): 'bed' | 'student' | null {
   const assignments = Object.values(state.assignments);
   const after = (a: Assignment) => a.startedAt > now || (a.endedAt !== null && a.endedAt > now);
-  if (assignments.some((a) => a.bedId === bedId && after(a))) return 'bed';
-  if (assignments.some((a) => a.studentId === studentId && after(a))) return 'student';
+  // A hold that has not been confirmed still occupied its bed until it expired, even once expire has marked it.
+  const reservations = Object.values(state.reservations).filter((r) => r.status !== 'confirmed');
+  const held = (r: Reservation) => r.createdAt > now || r.expiresAt > now;
+  if (assignments.some((a) => a.bedId === bedId && after(a)) || reservations.some((r) => r.bedId === bedId && held(r))) {
+    return 'bed';
+  }
+  if (assignments.some((a) => a.studentId === studentId && after(a)) || reservations.some((r) => r.studentId === studentId && held(r))) {
+    return 'student';
+  }
   return null;
+}
+
+/** Whether the bed or student has moved on since this hold was made: a later hold or assignment exists for either. */
+function supersededSince(state: AllocationState, r: Reservation): boolean {
+  const laterHold = Object.values(state.reservations).some(
+    (o) => o.id !== r.id && (o.bedId === r.bedId || o.studentId === r.studentId) && o.createdAt > r.createdAt,
+  );
+  const laterAssignment = Object.values(state.assignments).some(
+    (a) => a.id !== r.assignmentId && (a.bedId === r.bedId || a.studentId === r.studentId) && a.startedAt > r.createdAt,
+  );
+  return laterHold || laterAssignment;
 }
 
 /** Every change to availability moves the version, so older snapshots go stale. */
@@ -154,7 +172,8 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
     // only while its assignment is still open; once it has ended, replaying it would be stale.
     const open = prior.assignmentId !== null && own(state.assignments, prior.assignmentId)?.endedAt === null;
     const live = prior.status === 'confirmed' ? open : prior.status === 'held' && input.now < prior.expiresAt;
-    return live ? accept(state, prior.id) : refuse('reservation_expired');
+    // A backdated clock cannot resurrect a hold that the bed or student has since moved on from.
+    return live && !supersededSince(state, prior) ? accept(state, prior.id) : refuse('reservation_expired');
   }
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
   if (!own(state.beds, input.bedId)) return refuse('bed_unknown');
