@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Notice, SectionLabel } from './ui';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 import { cloud } from '../lib/cloud';
 import { useMyCapabilities } from '../lib/capabilities';
 import { LISTING_KINDS, QUEUE_LIMIT, deadlineForStorage, deadlineLabel, eligibilityLines, loadReviewQueue, moderateListing, type ListingKind, type QueuedListing } from '../lib/listings';
@@ -24,16 +26,20 @@ export function ListingDesk({ school }: { school: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [more, setMore] = useState(false);
   const [notice, setNotice] = useState('');
+  const [moderating, setModerating] = useState<{ row: Row; status: 'published' | 'removed' } | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [draft, setDraft] = useState({ kind: 'job' as ListingKind, title: '', body: '', url: '', deadline: '', eligibility: '', scope: '' });
 
   const refresh = useCallback(async () => {
-    if (!moderates) return;
+    if (!moderates) return true;
     try {
       const q = await loadReviewQueue();
       setRows(q.rows);
       setMore(q.more);
+      return true;
     } catch (e) {
       setNotice(e instanceof Error ? e.message : 'Could not load the review queue.');
+      return false;
     }
   }, [moderates]);
 
@@ -45,7 +51,10 @@ export function ListingDesk({ school }: { school: string }) {
 
   const act = (work: () => Promise<{ error: { message: string } | null }>) => {
     setNotice('');
-    work().then(({ error }) => (error ? setNotice(error.message) : refresh()), (e: unknown) => setNotice(String(e)));
+    work().then(({ error }) => {
+      if (error) setNotice(error.message);
+      else void refresh();
+    }, (e: unknown) => setNotice(String(e)));
   };
 
   const submit = () => {
@@ -64,15 +73,28 @@ export function ListingDesk({ school }: { school: string }) {
     });
   };
 
-  const setStatus = (id: string, status: 'published' | 'removed') =>
-    act(async () => {
+  const setStatus = async (id: string, status: 'published' | 'removed') => {
+    if (busyId) return;
+    setNotice('');
+    setBusyId(id);
+    try {
       try {
         await moderateListing(id, status);
-        return { error: null };
       } catch (e) {
-        return { error: { message: e instanceof Error ? e.message : 'Could not change that listing.' } };
+        throw new Error(e instanceof Error ? e.message : 'Could not change that listing.');
       }
-    });
+      const refreshed = await refresh();
+      setNotice(refreshed
+        ? (status === 'published' ? 'Listing published.' : 'Listing removed from review.')
+        : (status === 'published'
+          ? 'Listing published, but the review queue could not be refreshed. Reload before moderating another listing.'
+          : 'Listing removed, but the review queue could not be refreshed. Reload before moderating another listing.'));
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : 'Could not change that listing.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const pending = rows;
 
@@ -87,15 +109,27 @@ export function ListingDesk({ school }: { school: string }) {
           <SectionLabel>Waiting for review ({pending.length})</SectionLabel>
           {!pending.length ? <p className="jx-muted">Nothing waiting.</p> : null}
           {more ? <p className="jx-muted">More than {QUEUE_LIMIT} are waiting; the oldest are shown first.</p> : null}
-          {pending.map((r) => (
+          {pending.map((r, index) => (
             <div key={r.id} className="jx-entry">
               <div className="jx-entry-title">{r.title}</div>
               <div className="jx-entry-what">{r.kind} · from {r.publisher_scope_id}{r.url ? ` · ${r.url}` : ''}{r.deadline ? ` · apply by ${deadlineLabel(r.deadline)}` : ' · no deadline'}</div>
               {r.body ? <div className="jx-entry-what">{r.body}</div> : <div className="jx-muted">No description.</div>}
               {eligibilityLines(r.eligibility).map((e) => <div key={e} className="jx-privacy">{e}</div>)}
               <div className="jx-actions">
-                <button type="button" className="jx-go" onClick={() => setStatus(r.id, 'published')}>Publish</button>
-                <button type="button" className="jx-go" onClick={() => setStatus(r.id, 'removed')}>Remove</button>
+                <button
+                  type="button"
+                  className="jx-go"
+                  aria-label={`Publish listing ${index + 1} of ${pending.length}, ${r.title}: ${r.kind} from ${r.publisher_scope_id}`}
+                  disabled={busyId !== null}
+                  onClick={() => setModerating({ row: r, status: 'published' })}
+                >Publish</button>
+                <button
+                  type="button"
+                  className="jx-go"
+                  aria-label={`Remove listing ${index + 1} of ${pending.length}, ${r.title}: ${r.kind} from ${r.publisher_scope_id}`}
+                  disabled={busyId !== null}
+                  onClick={() => setModerating({ row: r, status: 'removed' })}
+                >Remove</button>
               </div>
             </div>
           ))}
@@ -127,6 +161,32 @@ export function ListingDesk({ school }: { school: string }) {
           <button type="button" className="btn btn-secondary" onClick={submit}>Submit for review</button>
           <p className="jx-muted">A moderator publishes it. You cannot publish your own listing.</p>
         </>
+      ) : null}
+
+      {moderating ? (
+        <ConfirmDialog
+          title={moderating.status === 'published' ? 'Publish this verified listing?' : 'Remove this listing from review?'}
+          preview={
+            <ActionPreview
+              subject={moderating.row.title}
+              says={moderating.status === 'published'
+                ? `This publishes the ${moderating.row.kind} listing from ${moderating.row.publisher_scope_id} for students in this school.`
+                : `This removes the ${moderating.row.kind} listing from the review queue without publishing it to students.`}
+              exactly={`${moderating.row.deadline ? `Apply by ${deadlineLabel(moderating.row.deadline)}` : 'No deadline'} · ${moderating.row.url ?? 'No link'} · ${eligibilityLines(moderating.row.eligibility).length} eligibility ${eligibilityLines(moderating.row.eligibility).length === 1 ? 'line' : 'lines'}`}
+              doesNotChange="The publisher’s title, description, link, deadline and eligibility words stay unchanged. Other listings and official student records stay unchanged."
+              recovery={moderating.status === 'published'
+                ? { kind: 'none', how: 'This review queue cannot undo publication. An authorized moderator needs a separate operation to remove a published listing.' }
+                : { kind: 'none', how: 'The publisher would need to submit a new listing for review.' }}
+            />
+          }
+          confirmLabel={moderating.status === 'published' ? 'Publish listing' : 'Remove listing'}
+          onCancel={() => setModerating(null)}
+          onConfirm={() => {
+            const target = moderating;
+            setModerating(null);
+            void setStatus(target.row.id, target.status);
+          }}
+        />
       ) : null}
     </section>
   );

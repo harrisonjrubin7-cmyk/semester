@@ -1,5 +1,7 @@
 # Semester — Claude Code handoff package
 
+> **New here? Open `START-HERE.md`:** unzip into the repo, paste one prompt, and the agent runs streams 00–24.
+>
 > **Start at `BUILD.md`.** It is the single entry point: preflight → install → streams in order → verify → human-only steps → go.
 
 Everything a developer needs to turn the design system into the product. Open Claude Code at the repo root (harrisonjrubin7-cmyk/semester) and work through these in order.
@@ -12,7 +14,8 @@ Everything a developer needs to turn the design system into the product. Open Cl
 
 Code files carry a `.txt` suffix so the design project doesn't bundle them: `find . -name "*.txt" -exec sh -c 'mv "$1" "${1%.txt}"' _ {} \;`
 
-| 0 | `execute/` | **Start here.** 12 stream prompts (setup to launch to grow) plus a master index that runs them in order on branches semester/<stream> | `execute/00-INDEX.md` |
+| 0 | `prototype/` | Screen inventory (281 routes, component, file, stream), screens.json, spec index, how the prototype works | `README.md` |
+| 0 | `execute/` | **Start here.** 25 stream prompts (00–24) (setup to launch to grow) plus a master index that runs them in order on branches semester/<stream> | `execute/00-INDEX.md` |
 
 ## Reference (stay in the design system)
 - `readme.md`, `SKILL.md` — design rules, tokens, components, patterns
@@ -28,3 +31,8 @@ Code files carry a `.txt` suffix so the design project doesn't bundle them: `fin
 4. Run the master-catalog prompt to produce `docs/master/` from real evidence.
 
 Never commit, push or deploy from these prompts without review.
+
+## Added 2026-10-06
+- `control-plane/` — access-control designs. **Build from `baseline/`**; see `VERSIONS.md`.
+- `ops-console-visibility/PROMPT.md` — make the existing #/console discoverable and prove one workflow.
+- `design_handoff_permissions_and_queues/` — permission, queue and operator-screen specs with screenshots.

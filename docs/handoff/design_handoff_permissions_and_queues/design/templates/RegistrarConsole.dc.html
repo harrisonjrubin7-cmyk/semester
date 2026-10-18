@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Registrar console screen" description="Registration readiness by cohort, holds by office with filters, prerequisite overrides with approval + decision trail; empty/loading/error states, responsive, dark" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style></helmet>
+<div data-theme="{{ theme }}" style="display:flex;min-height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><div style="width:248px;flex:none;position:sticky;top:0;height:100vh"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="registration" groups="{{ railGroups }}" foot="Registrar · Vanderbilt" hint-size="248px,100%"></x-import></div></sc-if>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 20px;background:#0f1117;color:rgba(236,238,242,.64);font-size:11px;border-bottom:1px solid rgba(236,238,242,.1)"><span>Environment <b style="color:#eceef2;font-weight:500">◆ Production</b></span><span>Term <b style="color:#eceef2;font-weight:500">Spring 2027</b></span><span>SIS <b style="color:#eceef2;font-weight:500">⇄ synced 12 min ago</b></span><span style="margin-left:auto">◌ Sample data</span></div>
+<main style="flex:1;width:100%;max-width:1180px;margin:0 auto;padding:22px 20px 64px;box-sizing:border-box;display:grid;gap:18px;align-content:start">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Registration</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:4px 0 2px">Registration readiness</h1><p style="margin:0;font-size:14px;color:var(--text-secondary)">Who can register when their window opens, and what's stopping the rest.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="secondary" icon="send" hint-size="170px,44px">Send outreach</x-import></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Tabs" items="{{ tabs }}" current="{{ tab }}" on-change="{{ setTab }}" label="Registrar views" hint-size="100%,42px"></x-import>
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.LoadingState" what="readiness for Spring 2027" hint-size="100%,180px"></x-import></sc-if>
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ErrorState" title="Readiness couldn't load" body="The SIS connection timed out. Nothing has changed for students; they still see their last synced status." recover-label="Try again" reference="REG-4471" hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.EmptyState" title="No cohorts set up for Spring 2027" body="Readiness appears once time tickets are published for at least one class year." hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ showReadiness }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Ready to register" value="4,812" unit="students" source="official" updated="SIS · 12 min ago" hint-size="100%,110px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Blocked by a hold" value="736" unit="students" delta="−112 this week" source="official" updated="SIS · 12 min ago" hint-size="100%,110px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Advising not done" value="291" unit="students" source="official" updated="Advising · 1 h ago" hint-size="100%,110px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="First window opens" value="Mon 2 Nov" source="official" updated="Time tickets" hint-size="100%,110px"></x-import>
+</div>
+<div style="overflow-x:auto"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Readiness by class year" columns="{{ cohortCols }}" rows="{{ cohorts }}" hint-size="100%,240px"></x-import></div>
+</sc-if>
+<sc-if value="{{ showHolds }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.FilterChips" options="{{ officeOpts }}" selected="{{ offices }}" on-toggle="{{ toggleOffice }}" on-clear="{{ clearOffices }}" label="Office" hint-size="100%,36px"></x-import>
+<div style="overflow-x:auto"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Holds by office" columns="{{ holdCols }}" rows="{{ holds }}" hint-size="100%,240px"></x-import></div>
+</sc-if>
+<sc-if value="{{ showOverrides }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+<div style="display:grid;gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ApprovalBanner" state="{{ approval }}" what="Prerequisite override · HIST 2140 for A. Okafor" approver="Registrar Ortiz" requested-by="Advisor Lee" on-approve="{{ approve }}" on-reject="{{ reject }}" hint-size="100%,96px"></x-import>
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:14px 16px;background:var(--surface-base);display:grid;gap:6px;font-size:14px"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Reason given</div><div>Completed the equivalent course at Belmont (transcript on file, received 28 Sep).</div><div style="font-size:12px;color:var(--text-secondary)">Approving records the override here. Your team still updates the SIS; the student sees it after the next sync.</div></div>
+</div>
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px">Decision trail</div><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DecisionTrail" items="{{ trail }}" hint-size="100%,220px"></x-import></div>
+</div>
+</sc-if>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;viewState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ready&quot;,&quot;Loading&quot;,&quot;Empty&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Ready&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 'readiness', offices: [], approval: 'pending', wide: true };
+  componentDidMount() { this.onR = () => this.setState({ wide: window.innerWidth >= 900 }); this.onR(); window.addEventListener('resize', this.onR); }
+  componentWillUnmount() { window.removeEventListener('resize', this.onR); }
+  renderVals() {
+    const vs = this.props.viewState ?? 'Ready';
+    const ready = vs === 'Ready', t = this.state.tab;
+    const NS = window.SemesterDesignSystem_e9f3ba || {};
+    const chip = (s, l) => NS.StatusChip ? React.createElement(NS.StatusChip, { status: s, label: l }) : l;
+    const allHolds = [
+      { office: 'Student Accounts', type: 'Balance over $500', n: 312, oldest: '41 days', copy: 'Pay or set up a plan to clear this.' },
+      { office: 'Health Center', type: 'Immunization record', n: 188, oldest: '63 days', copy: 'Upload your MMR record.' },
+      { office: 'Advising', type: 'Advising not done', n: 291, oldest: '9 days', copy: 'Meet your advisor before Nov 2.' },
+      { office: 'Registrar', type: 'Address not confirmed', n: 97, oldest: '14 days', copy: 'Confirm your address in YES.' },
+      { office: 'Student Accounts', type: 'Missing tax form', n: 48, oldest: '22 days', copy: 'Submit your W-9S.' },
+    ];
+    const off = this.state.offices;
+    return {
+      theme: this.props.dark ? 'dark' : 'light', wide: this.state.wide, tab: t,
+      setTab: (id) => this.setState({ tab: id }),
+      isLoading: vs === 'Loading', isError: vs === 'Error', isEmpty: vs === 'Empty',
+      showReadiness: ready && t === 'readiness', showHolds: ready && t === 'holds', showOverrides: ready && t === 'overrides',
+      tabs: [{ id: 'readiness', label: 'Readiness' }, { id: 'holds', label: 'Holds by office', count: 736 }, { id: 'overrides', label: 'Overrides', count: 3 }],
+      railGroups: [{ items: [{ id: 'registration', label: 'Registration', icon: 'yes' }, { id: 'tickets', label: 'Time tickets', icon: 'calendar' }, { id: 'sis', label: 'SIS reconciliation', icon: 'connect', count: 4 }] }, { label: 'Govern', items: [{ id: 'outreach', label: 'Outreach', icon: 'send' }, { id: 'audit', label: 'Audit log', icon: 'proof' }] }],
+      cohortCols: [{ key: 'year', label: 'Class year' }, { key: 'n', label: 'Students', numeric: true }, { key: 'clear', label: 'Ready', numeric: true }, { key: 'blocked', label: 'Blocked', numeric: true }, { key: 'state', label: 'State', render: (r) => chip(r.s, r.state) }, { key: 'window', label: 'Window opens' }],
+      cohorts: [
+        { year: 'Seniors', n: 1604, clear: 1488, blocked: 116, s: 'approved', state: 'On track', window: 'Mon 2 Nov' },
+        { year: 'Juniors', n: 1571, clear: 1362, blocked: 209, s: 'pending', state: 'Watch', window: 'Wed 4 Nov' },
+        { year: 'Sophomores', n: 1622, clear: 1330, blocked: 292, s: 'hold', state: 'Needs outreach', window: 'Fri 6 Nov' },
+        { year: 'First-years', n: 751, clear: 632, blocked: 119, s: 'pending', state: 'Watch', window: 'Mon 9 Nov' },
+      ],
+      officeOpts: [{ id: 'Student Accounts', label: 'Student Accounts', count: 360 }, { id: 'Health Center', label: 'Health Center', count: 188 }, { id: 'Advising', label: 'Advising', count: 291 }, { id: 'Registrar', label: 'Registrar', count: 97 }],
+      offices: off,
+      toggleOffice: (id) => this.setState((s) => ({ offices: s.offices.includes(id) ? s.offices.filter((x) => x !== id) : [...s.offices, id] })),
+      clearOffices: () => this.setState({ offices: [] }),
+      holdCols: [{ key: 'office', label: 'Office' }, { key: 'type', label: 'Hold' }, { key: 'n', label: 'Students', numeric: true }, { key: 'oldest', label: 'Oldest' }, { key: 'copy', label: 'Student sees' }],
+      holds: off.length ? allHolds.filter((h) => off.includes(h.office)) : allHolds,
+      approval: this.state.approval,
+      approve: () => this.setState({ approval: 'approved' }), reject: () => this.setState({ approval: 'rejected' }),
+      trail: [
+        { title: 'Requested by Advisor Lee', when: 'Mon 12 Oct · 10:14', detail: 'Transcript attached', state: 'done' },
+        { title: 'Auto-check: equivalent course on file', when: 'Mon 12 Oct · 10:14', state: 'done' },
+        { title: this.state.approval === 'pending' ? 'Waiting for Registrar Ortiz' : 'Registrar Ortiz ' + this.state.approval, when: this.state.approval === 'pending' ? 'SLA 2 working days' : 'Just now', state: this.state.approval === 'pending' ? 'current' : 'done' },
+        { title: 'SIS updated by registrar team', state: 'waiting' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

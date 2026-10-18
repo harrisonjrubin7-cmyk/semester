@@ -52,6 +52,17 @@ test('the P0 board is complete, ordered, and remains fail-closed at launch', asy
   assert.ok(snapshot.backlog.at(-1)?.blockers.some((blocker) => blocker.includes('Named-institution')));
 });
 
+test('P0-002 links the shared design-system authority without claiming catalog completion', async () => {
+  const snapshot = await loadRegistry();
+  const system = snapshot.systems.find(({ key }) => key === 'design.system');
+  const item = snapshot.backlog.find(({ id }) => id === 'P0-002');
+  assert.equal(system?.status, 'implemented');
+  assert.ok(system?.evidence.includes('registry/passports/SVC-DESIGN-SYSTEM-001.json'));
+  assert.deepEqual(item?.registry_keys, ['design.system']);
+  assert.equal(item?.state, 'in_progress');
+  assert.ok(item?.blockers.some((blocker) => blocker.includes('component-level passport coverage')));
+});
+
 test('the execution plan distinguishes executable work from sequencing debt and dependency waits', async () => {
   const snapshot = await loadRegistry();
   const plan = buildExecutionPlan(snapshot.backlog);
