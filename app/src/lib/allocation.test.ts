@@ -450,6 +450,10 @@ describe('input guards', () => {
     });
   });
 
+  it('refuses a blank bed id in inventory, so a missing identifier is never an allocation target', () => {
+    expect(() => initialState([{ id: '  ', label: 'x' }])).toThrow(/blank bed id/);
+  });
+
   it('refuses inventory that names the same bed twice, rather than silently dropping one', () => {
     expect(() => initialState([{ id: 'b1', label: 'x' }, { id: 'b1', label: 'y' }])).toThrow(/duplicate bed/);
   });

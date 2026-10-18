@@ -75,6 +75,7 @@ const own = <T>(record: Readonly<Record<string, T>>, id: string): T | undefined 
 
 export function initialState(beds: readonly Bed[]): AllocationState {
   // Inventory is built once from configuration; a repeated id is a configuration error, not a bed to drop.
+  if (beds.some((b) => b.id.trim() === '')) throw new Error('blank bed id in inventory');
   const ids = new Set(beds.map((b) => b.id));
   if (ids.size !== beds.length) throw new Error('duplicate bed id in inventory');
   return {
