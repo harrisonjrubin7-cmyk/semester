@@ -163,6 +163,23 @@ class TestReviewFindings(unittest.TestCase):
   self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
   self.cmd('a-faculty','grade.draft',{'student':'a-student','score':70,'version':1})
   self.assertEqual(self.lab.view('demo-a-reviewer')['approvals'],[])
+ def test_grade_approval_hidden_from_reviewer_without_course_grant(self):
+  import sqlite3
+  self.cmd('a-student','onboarding.complete')
+  self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  # Control: the reviewer is granted 'course', so the same-course approval is listed.
+  self.assertEqual(len(self.lab.view('demo-a-reviewer')['approvals']),1)
+  d=sqlite3.connect(self.lab.path);tenant=d.execute('SELECT tenant FROM access WHERE actor=?',('a-faculty',)).fetchone()[0]
+  d.execute('INSERT INTO courses VALUES (?,?)',('other',tenant))
+  for actor in ('a-student','a-faculty'):d.execute('INSERT INTO access VALUES (?,?,?)',(tenant,'other',actor))
+  d.commit();d.close()
+  self.cmd('a-student','submission.create',{'body':'work','course':'other'})
+  g2=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':80,'version':0,'course':'other'})
+  self.cmd('a-faculty','grade.request_release',{'grade':g2['grade'],'version':1,'reason':'Other course','course':'other'})
+  # The reviewer has no 'other' grant, so only the same-course approval is listed.
+  self.assertEqual([r['object_id'] for r in self.lab.view('demo-a-reviewer')['approvals']],[g['grade']])
  def test_submission_after_release_is_rejected(self):
   self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
   g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})

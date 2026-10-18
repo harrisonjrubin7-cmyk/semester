@@ -170,6 +170,11 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    kind={'faculty':'grade','registrar':'hold'}.get(role)
    sql="SELECT id,kind,object_id,requester,expires,state,reason FROM approvals WHERE tenant=? AND state='pending' AND expires>?"+(" AND kind=?" if kind else '')
    rows=[dict(r) for r in d.execute(sql.replace('state,reason','state,reason,binding'),(t,time.time())+((kind,) if kind else ()))]
-   out['approvals']=[{k:v for k,v in r.items() if k!='binding'} for r in rows if self.approval_current(d,t,r)]
+   # A grade approval is listed only to an actor granted the grade's course; the tenant alone is not enough.
+   def granted(r):
+    if r['kind']!='grade':return True
+    g=d.execute('SELECT course FROM grades WHERE id=? AND tenant=?',(r['object_id'],t)).fetchone()
+    return bool(g) and d.execute('SELECT 1 FROM access WHERE tenant=? AND course=? AND actor=?',(t,g['course'],a['id'])).fetchone() is not None
+   out['approvals']=[{k:v for k,v in r.items() if k!='binding'} for r in rows if self.approval_current(d,t,r) and granted(r)]
    if role=='faculty':out['submissions']=[dict(r) for r in d.execute('SELECT id,student,body,created FROM submissions WHERE tenant=? AND course=?',(t,'course'))]
    out['students']=[dict(r) for r in d.execute('SELECT * FROM students WHERE tenant=?',(t,))];return out

@@ -35,6 +35,7 @@ test_wrong_kind (test_lab.TestLab.test_wrong_kind) ... ok
 test_approval_reason_visible_to_reviewer (test_lab.TestReviewFindings.test_approval_reason_visible_to_reviewer) ... ok
 test_expired_approval_leaves_pending_queue (test_lab.TestReviewFindings.test_expired_approval_leaves_pending_queue) ... ok
 test_faculty_sees_submitted_work (test_lab.TestReviewFindings.test_faculty_sees_submitted_work) ... ok
+test_grade_approval_hidden_from_reviewer_without_course_grant (test_lab.TestReviewFindings.test_grade_approval_hidden_from_reviewer_without_course_grant) ... ok
 test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade (test_lab.TestReviewFindings.test_grade_approvals_stay_with_faculty_and_registrar_sees_no_grade) ... ok
 test_grade_drafted_on_superseded_submission_cannot_request_release (test_lab.TestReviewFindings.test_grade_drafted_on_superseded_submission_cannot_request_release) ... ok
 test_lapsed_demo_sessions_renew_on_reopen (test_lab.TestReviewFindings.test_lapsed_demo_sessions_renew_on_reopen) ... ok
@@ -46,6 +47,6 @@ test_stale_approval_leaves_reviewer_queue (test_lab.TestReviewFindings.test_stal
 test_submission_after_release_is_rejected (test_lab.TestReviewFindings.test_submission_after_release_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 46 tests in 1.222s
+Ran 47 tests in 1.106s
 
 OK

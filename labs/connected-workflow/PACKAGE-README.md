@@ -2,7 +2,7 @@
 ## What was built, not merely outlined
 A runnable loopback HTTP application with real synthetic SQLite persistence. Eight domain commands plus an outbox worker implement onboarding, submission, draft grading, independent bound release, reasoned hold approval and source-aware readiness. Student sees only released projections; operator default view contains counts, not student records.
 Run: python -m lab.server; open http://127.0.0.1:8765 locally. Test: python -m unittest discover -s tests -v
-46 unit tests passed (regenerated 2026-10-18, see validation/UNIT-REPORT.txt); bounded Chromium/API smoke exercised onboarding, submission, operator privacy, outbox processing and mobile layout. No existing repository CI or remote systems were run/changed.
+47 unit tests passed (regenerated 2026-10-18, see validation/UNIT-REPORT.txt); bounded Chromium/API smoke exercised onboarding, submission, operator privacy, outbox processing and mobile layout. No existing repository CI or remote systems were run/changed.
 
 ## Materials
 This repository holds the registers and specifications (16-week tracker, 15x15 domain gates, 17-workspace activation gates, 8 finish-line streams and the architecture, component, privacy, AI, finance and traceability specs), the runnable lab and its validation reports. The editable decks, printable PDFs, launch poster and storyboards from the source package are not included here; they stay with the upstream package and are not evidence for anything in this repository.
