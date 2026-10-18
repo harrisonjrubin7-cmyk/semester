@@ -36,7 +36,7 @@ Columns are reduced from the full template where they do not apply to a docs-and
 | LAB-15 | Pilot reconciliation | Week 15 | Learner | Lab 15 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-16 | Capstone activation and defense | Week 16 | Learner | Lab 16 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 
-Total visible cases: 40 (matches the README). The README's claim that 40 cases passed against reference implementations cannot be re-run here because references are not in the pack.
+Total visible cases: 41 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
 
 ### 1a. Developer console operations by tag (OAS)
 
