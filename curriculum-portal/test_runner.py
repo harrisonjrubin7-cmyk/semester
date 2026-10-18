@@ -43,6 +43,18 @@ class HarnessTests(unittest.TestCase):
     def test_weeks_14_and_16_have_success_cases(self):
         for index in (13,15):
             self.assertTrue(any(c['expected'] is True for c in MODULES[index]['cases']),MODULES[index]['week'])
+    def test_mutation_is_only_penalised_where_the_contract_forbids_it(self):
+        # Week 11 does not forbid mutation, so an in-place redact that returns the right dict earns full credit.
+        result=self.run_week(10,'def redact(r):\n    for k in ("token","password","student_name","submission_body"): r.pop(k,None)\n    return r\n')
+        self.assertEqual(result['passed'],result['total'])
+    def test_weeks_8_and_15_cannot_pass_by_returning_a_constant(self):
+        for index in (7,14):
+            inputs=[json.dumps(c['input'],sort_keys=True) for c in MODULES[index]['cases']]
+            self.assertGreaterEqual(len(set(inputs)),2,MODULES[index]['week'])
+    def test_oversized_submission_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            submission=Path(folder)/'starter.py';submission.write_bytes(b'#'*65537)
+            with self.assertRaises(ValueError):grade(MODULES[2],submission)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')

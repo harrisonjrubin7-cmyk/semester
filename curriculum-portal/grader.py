@@ -17,7 +17,8 @@ print(json.dumps(results,allow_nan=False))
 """
 
 def grade(suite, submission, timeout=5):
-    source = Path(submission).read_bytes()
+    with open(submission, 'rb') as handle:
+        source = handle.read(65537)
     if len(source) > 65536:
         raise ValueError('Submission exceeds 64 KiB')
     process = subprocess.Popen([sys.executable, '-I', '-B', '-c', WORKER,
@@ -65,7 +66,8 @@ def grade(suite, submission, timeout=5):
                 if result.get('exception') == 'ExecutionError': learner_errors += 1
                 # 0 == False and 1 == True in Python, so booleans must match by type too.
                 value_ok = 'value' in result and result['value'] == expected and type(result['value']) is type(expected)
-                ok = result.get('mutated') is False and (
+                # Only contracts that forbid mutation (suite 'immutable') penalise it.
+                ok = (not suite.get('immutable') or result.get('mutated') is False) and (
                     (expected == '!ValueError' and result.get('exception') == 'ValueError') or
                     (expected != '!ValueError' and value_ok))
                 passed += int(ok)
