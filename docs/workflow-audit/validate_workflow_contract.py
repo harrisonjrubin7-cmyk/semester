@@ -118,8 +118,9 @@ def semantic_errors(doc):
             if (authorized or activated) and effective > datetime.now(timezone.utc):
                 errors.append('effective_from is in the future for verified authority')
     scope_bound = doc['authority']['institution_scope']
-    institutional_active = doc['readiness']['institution_authorized']['status'] == 'verified' or doc['readiness']['production_enabled']['status'] == 'verified'
-    if institutional_active and scope_bound is None:
+    authorized_now = doc['readiness']['institution_authorized']['status'] == 'verified'
+    activated_now = doc['readiness']['production_enabled']['status'] == 'verified'
+    if (authorized_now or (activated_now and doc['scope']['tenant_scope'] == 'institution')) and scope_bound is None:
         errors.append('Verified institution authority requires institution_scope')
     if doc['readiness']['production_enabled']['status'] == 'verified' and not doc['authority']['activation_ref']:
         errors.append('Verified production enablement requires activation_ref')
@@ -147,6 +148,8 @@ def semantic_errors(doc):
         if undeclared:
             errors.append('Official write recovery codes not declared by any step: ' + ', '.join(sorted(undeclared)))
     for r in doc['recovery_paths']:
+        if r['code'] == 'OUTCOME_UNKNOWN' and r['to_execution_state'] in doc['states']['terminal_execution']:
+            errors.append('OUTCOME_UNKNOWN recovery must target a nonterminal state')
         if r['to_execution_state'] not in doc['states']['execution']:
             errors.append('Undefined recovery state: ' + r['code'])
         if not set(r['acceptance_test_ids']) <= test_ids:

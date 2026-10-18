@@ -941,7 +941,10 @@
           "if": {
             "properties": {
               "status": {
-                "const": "not_applicable"
+                "enum": [
+                  "not_applicable",
+                  "blocked"
+                ]
               }
             },
             "required": [

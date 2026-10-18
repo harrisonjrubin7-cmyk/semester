@@ -103,6 +103,36 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'Verified institution authority requires institution_scope')
 
+    def test_personal_production_does_not_require_institution_scope(self):
+        def fn(d):
+            d['scope']['tenant_scope'] = 'personal'
+            d['scope']['tenant_id'] = None
+            d['authority']['official_record_write'] = False
+            d['authority']['mode'] = 'authoritative'
+            d['authority']['writer_policy'] = 'no_write'
+            d['authority']['institution_scope'] = None
+            d['authority']['effective_from'] = '2026-01-01T00:00:00Z'
+            d['authority']['activation_ref'] = 'activation:1'
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:1']
+            for gate in ('designed', 'implemented', 'tested', 'deployed'):
+                d['readiness'][gate] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [dict(EVIDENCE, environment='production')], 'reason': 'x'}
+        errs = errors_for(mutate(fn))
+        self.assertFalse(any('requires institution_scope' in e for e in errs), errs)
+
+    def test_outcome_unknown_recovery_must_not_target_terminal_state(self):
+        def fn(d):
+            for r in d['recovery_paths']:
+                if r['code'] == 'OUTCOME_UNKNOWN':
+                    r['to_execution_state'] = 'committed'
+        self.assertRejected(mutate(fn), 'OUTCOME_UNKNOWN recovery must target a nonterminal state')
+
+    def test_blocked_gate_requires_reason(self):
+        def fn(d):
+            d['readiness']['designed'] = {'status': 'blocked', 'evidence': [], 'reason': ''}
+        self.assertRejected(mutate(fn), 'readiness/designed/reason')
+
     def test_recovery_path_must_be_declared_by_a_step(self):
         def fn(d):
             d['recovery_paths'].append(dict(d['recovery_paths'][0], code='UNUSED'))
