@@ -26,6 +26,12 @@ class MigrationTests(unittest.TestCase):
     def test_composition_must_be_array(self):self.blocked({'oneOf':None})
     def test_additional_properties_must_be_bool_or_schema(self):self.blocked({'type':'object','additionalProperties':[]})
     def test_schema_errors_become_value_error(self):self.blocked({'type':'object','required':None})
+    def test_unknown_type_with_default_is_value_error(self):self.blocked({'type':'bogus','default':1})
+    def test_empty_enum_is_rejected(self):self.blocked({'type':'string','enum':[]})
+    def test_non_string_pattern_is_value_error(self):self.blocked({'type':'string','pattern':[]})
+    def test_integer_default_must_be_integer(self):self.blocked({'type':'integer','default':1.0})
+    def test_integer_rejects_fractional_representation(self):
+        s=migrate_subset({'type':'integer'});self.assertTrue(validate(s,1.0));self.assertFalse(validate(s,1))
     def test_shorthand_pattern_classes_are_rejected(self):self.blocked({'type':'string','pattern':'^\\d+$'})
     def test_null_default_rejected_unless_nullable(self):
         self.blocked({'type':'string','default':None})

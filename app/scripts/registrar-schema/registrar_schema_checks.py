@@ -1,6 +1,9 @@
 import copy,re
 from jsonschema import Draft202012Validator,FormatChecker
 from jsonschema.exceptions import SchemaError
+from jsonschema.validators import extend
+# OpenAPI 3.0 integers are JSON numbers without a fraction or exponent, so 1.0 and 1e0 are not integers here.
+StrictValidator=extend(Draft202012Validator,type_checker=Draft202012Validator.TYPE_CHECKER.redefine('integer',lambda c,x:isinstance(x,int) and not isinstance(x,bool)))
 
 def migrate_subset(schema):
     if not isinstance(schema,dict):raise ValueError('3.0 Schema Object required')
@@ -9,6 +12,7 @@ def migrate_subset(schema):
     if set(s)-allowed:raise ValueError('Unsupported keyword')
     if isinstance(s.get('type'),list) or s.get('type')=='null':raise ValueError('Not 3.0 type')
     if s.get('type')=='array' and 'items' not in s:raise ValueError('items required for array')
+    if 'enum' in s and (not isinstance(s['enum'],list) or not s['enum']):raise ValueError('enum must be a non-empty array')
     if 'example' in s:s['examples']=[s.pop('example')]
     if 'properties' in s and not isinstance(s['properties'],dict):raise ValueError('properties must be a mapping')
     n=s.pop('nullable',False)
@@ -16,7 +20,10 @@ def migrate_subset(schema):
     if n:
         if 'type' not in s:raise ValueError('Local type required')
         s['type']=[s['type'],'null']
-    if 'default' in s and 'type' in s and not Draft202012Validator({'type':s['type']}).is_valid(s['default']):raise ValueError('default does not match declared type')
+    if 'default' in s and 'type' in s:
+        try:Draft202012Validator.check_schema({'type':s['type']})
+        except SchemaError as ex:raise ValueError(f'invalid type: {ex.message}') from ex
+        if not StrictValidator({'type':s['type']}).is_valid(s['default']):raise ValueError('default does not match declared type')
     for flag,bound in [('exclusiveMinimum','minimum'),('exclusiveMaximum','maximum')]:
         if flag in s:
             e=s.pop(flag)
@@ -33,7 +40,7 @@ def migrate_subset(schema):
         if k in s and not isinstance(s[k],list):raise ValueError('composition must be an array')
         if k in s:s[k]=[migrate_subset(v) for v in s[k]]
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
-    if 'pattern' in s and re.search(r'\\[dDwWsSbB]',s['pattern']):raise ValueError('pattern shorthand class differs from ECMA-262')
+    if isinstance(s.get('pattern'),str) and re.search(r'\\[dDwWsSbB]',s['pattern']):raise ValueError('pattern shorthand class differs from ECMA-262')
     try:Draft202012Validator.check_schema(s)
     except SchemaError as ex:raise ValueError(f'invalid schema: {ex.message}') from ex
     return s
@@ -66,7 +73,7 @@ def leaf_errors(e):
 
 def validate(schema,payload):
     Draft202012Validator.check_schema(schema)
-    errors=Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)
+    errors=StrictValidator(schema,format_checker=FormatChecker()).iter_errors(payload)
     return [{'keyword':e.validator,'message':e.message,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for top in errors for e in leaf_errors(top)]
 
 # Length bounds sit beside each pattern: Python's $ also matches before a trailing newline.
