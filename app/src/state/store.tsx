@@ -66,6 +66,7 @@ import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } fro
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+import { localFallback } from './localfallback';
 import { firstScreen } from '../lib/chrome';
 import { resolveSchool } from '../data/schools';
 import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
@@ -506,7 +507,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * every change is half of what this move is removing, and the diffing writer
    * compares references rather than text.
    */
-  const persisted = useMemo(() => (dbAvailable() ? '' : JSON.stringify(picked)), [picked]);
+  const persisted = useMemo(
+    () => (dbAvailable() ? '' : JSON.stringify(localFallback(picked))),
+    [picked],
+  );
+  const fallbackSaid =
+    !dbAvailable() && picked.appointments.length > 0
+      ? 'This browser cannot open secure device storage, so appointments stay in this tab only and will not survive a reload.'
+      : '';
   /** What was last written to localStorage, so an unchanged store is not rewritten. */
   const wrote = useRef('');
   /** When the browser was last asked how much room is left. */
@@ -530,8 +538,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [roomSaid, setRoomSaid] = useState('');
   const [writeFailing, setWriteFailing] = useState(false);
   useEffect(() => {
-    setSaveTrouble(writeFailing ? WRITE_FAILED : roomSaid);
-  }, [writeFailing, roomSaid]);
+    setSaveTrouble(writeFailing ? WRITE_FAILED : [fallbackSaid, roomSaid].filter(Boolean).join(' '));
+  }, [fallbackSaid, writeFailing, roomSaid]);
   /*
    * The writer says whether it is landing.
    *
