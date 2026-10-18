@@ -266,8 +266,10 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
         actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '');
       if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
     } else {
-      // A class with no safe repair reaches re-verification only by escalation; a stored state alone is not that record.
-      const escalated = current.history.some((entry) => entry.from === 'escalated' && entry.to === 'reverified');
+      // A class with no safe repair reaches re-verification only by escalation. Only the latest transition counts: an
+      // escalation from an earlier cycle, followed by a failed re-verification, must not license a close.
+      const last = current.history[current.history.length - 1];
+      const escalated = last?.from === 'escalated' && last.to === 'reverified';
       if (!escalated) return { ok: false, reason: 'a class without a safe repair closes only after escalation and re-verification' };
     }
   }

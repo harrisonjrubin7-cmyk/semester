@@ -413,6 +413,13 @@ describe('persisted history and evidence windows', () => {
 
     const escalated: ReconciliationCase = { ...reverified, history: [entry('escalated', 'reverified', AT)] };
     expect(moveCase(escalated, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
+
+    // An earlier escalation does not count once a later transition has moved the case on.
+    const reopened: ReconciliationCase = {
+      ...reverified,
+      history: [entry('escalated', 'reverified', AT), entry('reverified', 'triaged', AT)],
+    };
+    expect(moveCase(reopened, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
   });
 
   it('refuses to open a case that could never close', () => {

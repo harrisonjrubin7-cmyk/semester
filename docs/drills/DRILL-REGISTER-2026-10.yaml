@@ -11,6 +11,7 @@ drills:
     launch_impact: Critical failure blocks release
     owner: security_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -50,6 +51,7 @@ drills:
     launch_impact: Blocks affected feature path
     owner: integration_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -66,6 +68,7 @@ drills:
     launch_impact: Blocks connector certification
     owner: integration_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -82,6 +85,7 @@ drills:
     launch_impact: Blocks connector certification
     owner: integration_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -98,6 +102,7 @@ drills:
     launch_impact: Blocks workflow release
     owner: platform_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -114,6 +119,7 @@ drills:
     launch_impact: Blocks activation
     owner: release_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -130,6 +136,7 @@ drills:
     launch_impact: Blocks affected interface
     owner: accessibility_contact
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending
@@ -146,6 +153,7 @@ drills:
     launch_impact: Blocks AI-enabled path
     owner: product_owner
     environment: staging
+    expected: pending_owner_declaration_before_run
     date: pending
     observed:
       result: pending

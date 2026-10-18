@@ -1,5 +1,5 @@
 # docs/pilot/hypercare.yaml
-# Status: specified. Formal cadence for the hypercare window agreed with an institution.
+# Status: specified. The formal cadence for the hypercare window is proposed and awaits institutional agreement.
 
 hypercare:
   duration: institution_agreed_window

@@ -7,6 +7,6 @@ Owner: _pending_ · Date: _pending_
 | renew_unchanged | Hard stops clear | _pending_ | none |
 | renew_with_remediation | Remediation plan (file 07) | _pending_ | per item |
 | extend_observation | Named reason for more data | _pending_ | none |
-| expand_cohort | No unresolved critical findings; error budget within bounds, or an approved resume decision | _pending_ | access, source |
+| expand_cohort | No unresolved critical or high-severity findings; error budget within bounds, or an approved resume decision | _pending_ | access, source |
 | add_source | Source authority review | _pending_ | source |
-| conclude_and_offboard | File 10 complete | _pending_ | none |
+| conclude_and_offboard | Approved offboarding plan in file 10; completion confirmed after this decision | _pending_ | none |
