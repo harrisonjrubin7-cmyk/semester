@@ -99,6 +99,11 @@ describe('moveCase', () => {
       proposedRepair: 'refresh_source_snapshot',
       proposedBy: 'integration_owner',
       approvedBy: 'registrar_owner',
+      history: [
+        { from: 'repair_proposed', to: 'repair_approved', at: AT, by: 'registrar_owner' },
+        { from: 'repair_approved', to: 'repaired', at: AT, by: 'integration_owner' },
+        { from: 'repaired', to: 'reverified', at: AT, by: 'integration_owner' },
+      ],
     };
     const short = moveCase(reverified, 'closed', { by: 'registrar_owner', at: AT });
     expect(short.ok).toBe(false);
@@ -420,6 +425,36 @@ describe('persisted history and evidence windows', () => {
       history: [entry('escalated', 'reverified', AT), entry('reverified', 'triaged', AT)],
     };
     expect(moveCase(reopened, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+  });
+
+  it('refuses to open a case with a discrepancy class outside the contract', () => {
+    expect(() => openCase({ ...opened(), discrepancy: 'constructor' as DiscrepancyClass })).toThrow(
+      'discrepancy is not a known class',
+    );
+  });
+
+  it('refuses a missing actor with a result, not an exception', () => {
+    const result = moveCase(opened(), 'triaged', { by: undefined as unknown as string, at: AT });
+    expect(result).toEqual({ ok: false, reason: 'a named actor is required' });
+  });
+
+  it('refuses a safe-repair close whose approval never ran through the workflow', () => {
+    const fields: ReconciliationCase = {
+      ...opened(),
+      state: 'reverified',
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'integration_owner',
+      approvedBy: 'registrar_owner',
+      resolution: [...RESOLUTION_REQUIRED],
+      history: [],
+    };
+    expect(moveCase(fields, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+
+    const finalMoveOnly: ReconciliationCase = {
+      ...fields,
+      history: [{ from: 'repaired', to: 'reverified', at: AT, by: 'integration_owner' }],
+    };
+    expect(moveCase(finalMoveOnly, 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
   });
 
   it('refuses to open a case that could never close', () => {

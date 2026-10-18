@@ -12,13 +12,13 @@ Decision: _pending_
 
 ## Evidence this decision rests on
 
-Links to files 01–08 and 10, and the recommendation in file 09. A decision is not ready to sign while any mandatory field in those files is still `_pending_` or unsupported by evidence.
+Links to files 01–08 and 10, and the recommendation in file 09. A decision is not ready to sign while any mandatory field in those files is still `_pending_` or unsupported by evidence. File 10's offboarding completion is recorded after the decision, so it is excluded from this check.
 
 ## Hard stops checked
 
 - [ ] No unresolved critical access finding
 - [ ] No unresolved critical accessibility finding
-- [ ] No unresolved critical security or privacy finding
+- [ ] No unresolved critical or high-severity security or privacy finding
 - [ ] Authority known for every required source
 - [ ] Safe-off state operated in a drill
 - [ ] No repeated student confusion about enrollment

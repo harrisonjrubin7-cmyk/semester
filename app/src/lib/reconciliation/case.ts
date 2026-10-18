@@ -169,6 +169,8 @@ export function openCase(input: {
 }): ReconciliationCase {
   // Refused at creation: a case that could never move again, or never close, is not produced.
   if (!isIsoTimestamp(input.detectedAt)) throw new Error('detectedAt must be an ISO timestamp');
+  // A class outside the contract would strand the case: every later move rejects it as unknown.
+  if (!isDiscrepancyClass(input.discrepancy)) throw new Error('discrepancy is not a known class');
   const required = { id: input.id, tenantId: input.tenantId, capability: input.capability, ownerId: input.ownerId, sourceSystem: input.sourceSystem, cohortId: input.cohortId };
   for (const [name, value] of Object.entries(required)) {
     if (typeof value !== 'string' || value.trim() === '') throw new Error(`${name} is required`);
@@ -178,7 +180,7 @@ export function openCase(input: {
 
 /** Applies one state move. Every rule the contract states is checked here, not in the caller. */
 export function moveCase(current: ReconciliationCase, to: CaseState, options: MoveOptions): CaseResult {
-  if (!options.by.trim()) return { ok: false, reason: 'a named actor is required' };
+  if (typeof options.by !== 'string' || options.by.trim() === '') return { ok: false, reason: 'a named actor is required' };
   // Checked before the table lookup: a persisted case with an unknown state must refuse, not throw.
   if (!(CASE_STATES as readonly string[]).includes(current.state)) {
     return { ok: false, reason: `unknown state: ${current.state}` };
@@ -258,17 +260,21 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
     if (missing.length > 0) return { ok: false, reason: `missing resolution evidence: ${missing.join(', ')}` };
     // A class with a safe repair closes only through that repair: the stored repair, proposer and approver must all be
     // present, valid and held by different people, so evidence keys alone cannot close a case that skipped approval.
+    // Only the latest transition counts: a record cannot close on evidence fields alone, without the move that produced them.
+    const last = current.history[current.history.length - 1];
     if (SAFE_REPAIRS[current.discrepancy] !== undefined) {
       const approved =
         isRepairAllowed(current.discrepancy, current.proposedRepair ?? '') &&
         (current.proposedBy?.trim() ?? '') !== '' &&
         (current.approvedBy?.trim() ?? '') !== '' &&
-        actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '');
+        actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '') &&
+        current.history.some((entry) => entry.to === 'repair_approved') &&
+        last?.from === 'repaired' &&
+        last.to === 'reverified';
       if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
     } else {
-      // A class with no safe repair reaches re-verification only by escalation. Only the latest transition counts: an
-      // escalation from an earlier cycle, followed by a failed re-verification, must not license a close.
-      const last = current.history[current.history.length - 1];
+      // A class with no safe repair reaches re-verification only by escalation, and an earlier escalation from a failed
+      // cycle must not license a close.
       const escalated = last?.from === 'escalated' && last.to === 'reverified';
       if (!escalated) return { ok: false, reason: 'a class without a safe repair closes only after escalation and re-verification' };
     }
