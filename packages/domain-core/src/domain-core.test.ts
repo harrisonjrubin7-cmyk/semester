@@ -136,6 +136,7 @@ describe("validateDegreeScenario", () => {
   it("refuses a scenario with no tenant or student identity", () => {
     expect(validateDegreeScenario(scenario({ tenantId: " " }))).toHaveLength(1);
     expect(validateDegreeScenario(scenario({ studentId: "" }))).toHaveLength(1);
+    expect(validateDegreeScenario(scenario({ id: " " }))).toHaveLength(1);
   });
 
   it("refuses a student-entered course marked as completed", () => {
