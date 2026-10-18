@@ -15,6 +15,8 @@ launch_cadence:
         - success_plan
         - escalation_contacts
         - retention_and_communication_plan_approved   # end-of-pilot-decision.yaml conclude_safely
+        - launch_dates_agreed                         # launch_cadence.dates is TBD until agreed
+        - containment_target_agreed                   # measurement-plan.yaml reliability
         - escalation_response_targets_agreed   # P0/P1/P2 targets in escalation-matrix.yaml
         - named_owner_for_every_role           # scope-record.yaml named_owners
         - sev_to_p_mapping_agreed              # escalation-matrix.yaml sev_to_p_mapping is no longer TBD
