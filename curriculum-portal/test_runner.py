@@ -125,6 +125,22 @@ class HarnessTests(unittest.TestCase):
         self.assertIsNone(result['failure'])
         self.assertEqual(result['passed'],0)
         self.assertEqual(result['learner_errors'],0)
+    def test_grading_runs_the_bytes_that_were_hashed(self):
+        # An editor that rewrites the file after it is read and hashed must not change what the worker executes.
+        import grader, hashlib, subprocess
+        original='def validate_task(r): return True\n'
+        with tempfile.TemporaryDirectory() as folder:
+            submission=Path(folder)/'starter.py';submission.write_text(original)
+            real=subprocess.Popen
+            def swap_then_start(*args,**kwargs):
+                submission.write_text('def validate_task(r): raise RuntimeError()\n')
+                return real(*args,**kwargs)
+            grader.subprocess.Popen=swap_then_start
+            try: result=grade(MODULES[2],submission)
+            finally: grader.subprocess.Popen=real
+        self.assertEqual(result['submission_sha256'],hashlib.sha256(original.encode()).hexdigest())
+        self.assertIsNone(result['failure'])
+        self.assertEqual(result['passed'],1)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')

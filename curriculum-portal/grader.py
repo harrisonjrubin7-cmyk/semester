@@ -1,16 +1,17 @@
 """Advisory visible-case feedback. TRUSTED LOCAL CODE ONLY; not a sandbox."""
-import argparse, hashlib, json, subprocess, sys, threading
+import argparse, base64, hashlib, json, subprocess, sys, threading
 from pathlib import Path
 
-WORKER = """import copy,importlib.util,json,os,sys
+WORKER = """import base64,copy,json,os,sys,types
 RESULT=os.dup(1);os.dup2(2,1);sys.stdout=sys.stderr
-spec=importlib.util.spec_from_file_location('learner',sys.argv[1])
-module=importlib.util.module_from_spec(spec);sys.modules['learner']=module;spec.loader.exec_module(module)
+payload=json.loads(sys.stdin.read());suite=payload['suite']
+module=types.ModuleType('learner');sys.modules['learner']=module
+exec(compile(base64.b64decode(payload['source']),'learner.py','exec'),module.__dict__)
 def shape(v):
     if isinstance(v,dict): return {k:shape(x) for k,x in v.items()}
     if isinstance(v,(list,tuple)): return [type(v).__name__]+[shape(x) for x in v]
     return type(v).__name__
-suite=json.loads(sys.stdin.read());results=[]
+results=[]
 for case in suite['cases']:
     before=copy.deepcopy(case['input'])
     try:
@@ -35,8 +36,7 @@ def grade(suite, submission, timeout=5):
         source = handle.read(65537)
     if len(source) > 65536:
         raise ValueError('Submission exceeds 64 KiB')
-    process = subprocess.Popen([sys.executable, '-I', '-B', '-c', WORKER,
-                                str(Path(submission).resolve())],
+    process = subprocess.Popen([sys.executable, '-I', '-B', '-c', WORKER],
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     buffers = [bytearray(), bytearray()]
@@ -57,7 +57,7 @@ def grade(suite, submission, timeout=5):
     for thread in threads: thread.start()
     failure = None
     try:
-        process.stdin.write(json.dumps(suite).encode())
+        process.stdin.write(json.dumps({'suite': suite, 'source': base64.b64encode(source).decode()}).encode())
         process.stdin.close()
         process.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
