@@ -81,9 +81,10 @@ class RegistrationModel:
             if fault == 'timeout_before':
                 cmd.update(state='result_unknown')
                 return self._view(cmd)
-            scope = (tenant, payload.get('section'))
+            # The committed request schema names the field section_ref.
+            scope = (tenant, payload.get('section_ref'))
             occupied = sum(1 for kk, rec in self.authoritative.items()
-                           if (kk[0], rec['payload'].get('section')) == scope)
+                           if (kk[0], rec['payload'].get('section_ref')) == scope)
             if occupied >= self.capacity:
                 # Waitlisting is an authoritative write of a waitlist entry, so it carries its own receipt.
                 cmd.update(state='committed', business='waitlisted',
@@ -107,11 +108,11 @@ class RegistrationModel:
             cmd = self.commands[key]
             if cmd['state'] != 'result_unknown':
                 # Only the declared result_unknown -> reconciling path may move a command.
-                return dict(copy.deepcopy(cmd), rejected='not_result_unknown')
+                return dict(self._view(cmd), rejected='not_result_unknown')
             trail = self.trail.setdefault(key, [])
             if not definitive:
                 trail.append('result_unknown')
-                return copy.deepcopy(cmd)
+                return self._view(cmd)
             cmd['state'] = 'reconciling'
             trail.append('reconciling')
             result = self.authoritative.get(key)
@@ -120,28 +121,29 @@ class RegistrationModel:
             else:
                 cmd.update(state='failed', effects=0, confirmed_no_commit=True)
             trail.append(cmd['state'])
-            return copy.deepcopy(cmd)
+            return self._view(cmd)
 
     def repair_projection(self, key):
         with self.lock:
             if key not in self.authoritative:
                 raise ValueError('No authoritative commitment to project')
             self.commands[key]['projection'] = 'complete'
-            return copy.deepcopy(self.commands[key])
+            return self._view(self.commands[key])
 
-    def correct(self, key, approved):
+    def correct(self, key, approved, correction_key):
         with self.lock:
             if not approved:
                 return {'state': 'correction_pending'}
-            if key in self.correction_results:
-                # A redelivered approved correction returns the original result, not a second correction.
-                return copy.deepcopy(self.correction_results[key])
+            # Idempotency belongs to the correction request; the enrollment key is only its target.
+            replay = (key, correction_key)
+            if replay in self.correction_results:
+                return copy.deepcopy(self.correction_results[replay])
             if key not in self.authoritative:
                 raise ValueError('No committed record')
-            self.corrections.append({'original': key, 'type': 'authorized_correction'})
+            self.corrections.append({'original': key, 'correction_key': correction_key, 'type': 'authorized_correction'})
             self.authoritative[key]['status'] = 'superseded_by_correction'
             result = {'state': 'corrected', 'correction_receipt': len(self.corrections)}
-            self.correction_results[key] = result
+            self.correction_results[replay] = result
             return copy.deepcopy(result)
 
     def swap(self, original, replacement_available):
@@ -159,18 +161,20 @@ class WorkerReferenceModel:
         self.effects = 0
         self.receipts = []
         self.lock = Lock()
-    def claim(self, job, event_id):
-        # A lease names the one event it covers; the fence is counted per job.
+    def claim(self, job, event_id, tenant):
+        # A lease names the one event and tenant it covers; the fence is counted per job.
         with self.lock:
             self.fence[job] = self.fence.get(job, 0) + 1
-            return (job, self.fence[job], event_id)
+            return (job, self.fence[job], event_id, tenant)
     def apply(self, event_id, token, approved=True, tenant='default', fault=None):
-        job, fence, bound_event = token
+        job, fence, bound_event, bound_tenant = token
         key = (tenant, event_id)
         with self.lock:
-            # A token applies only to the event it leases, so a lease for job A cannot commit job B's event.
+            # A token applies only to the event and tenant it leases, so no other lease can commit the effect.
             if bound_event != event_id:
                 return 'wrong_event'
+            if bound_tenant != tenant:
+                return 'wrong_tenant'
             # A consumed event answers with its durable outcome before any fencing or approval check.
             if key in self.inbox:
                 return 'denied' if self.inbox[key] == 'denied' else 'duplicate'

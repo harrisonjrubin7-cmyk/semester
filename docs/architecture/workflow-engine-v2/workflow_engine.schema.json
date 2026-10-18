@@ -789,7 +789,29 @@
                   },
                   "ack_rule": {
                     "const": "after_return_inline"
+                  },
+                  "outbox_ref": {
+                    "type": "null"
                   }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "lease"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "retry"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "partition_key_ref"
+                      ]
+                    }
+                  ]
                 }
               }
             },
@@ -2059,6 +2081,29 @@
             ]
           },
           "then": {
+            "properties": {
+              "subject_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "company"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "subject_id"
+            ],
             "properties": {
               "subject_id": {
                 "type": "string",

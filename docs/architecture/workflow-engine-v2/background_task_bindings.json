@@ -465,26 +465,7 @@
       "transport": "guarded_inline",
       "semantics": "synchronous",
       "outbox_ref": null,
-      "ack_rule": "after_return_inline",
-      "lease": {
-        "lease_seconds": 60,
-        "heartbeat_seconds": 15,
-        "fencing_required": true,
-        "claim_strategy": "transactional_row_claim",
-        "inbox_dedup_ref": "proposed:consumer-inbox"
-      },
-      "retry": {
-        "max_attempts": 3,
-        "base_delay_ms": 1000,
-        "max_delay_ms": 30000,
-        "jitter": "full",
-        "retryable_codes": [
-          "TRANSIENT_CONFIRMED_NO_COMMIT"
-        ],
-        "unknown_outcome_policy": "reconcile_before_retry",
-        "dead_letter_queue_ref": "proposed:owned-exception-queue"
-      },
-      "partition_key_ref": "proposed:tenant-section-command-order"
+      "ack_rule": "after_return_inline"
     },
     "idempotency": {
       "key_scope": "tenant+actor+capability+command-key",
@@ -568,26 +549,7 @@
       "transport": "guarded_inline",
       "semantics": "synchronous",
       "outbox_ref": null,
-      "ack_rule": "after_return_inline",
-      "lease": {
-        "lease_seconds": 60,
-        "heartbeat_seconds": 15,
-        "fencing_required": true,
-        "claim_strategy": "transactional_row_claim",
-        "inbox_dedup_ref": "proposed:consumer-inbox"
-      },
-      "retry": {
-        "max_attempts": 3,
-        "base_delay_ms": 1000,
-        "max_delay_ms": 30000,
-        "jitter": "full",
-        "retryable_codes": [
-          "TRANSIENT_CONFIRMED_NO_COMMIT"
-        ],
-        "unknown_outcome_policy": "reconcile_before_retry",
-        "dead_letter_queue_ref": "proposed:owned-exception-queue"
-      },
-      "partition_key_ref": "proposed:tenant-section-command-order"
+      "ack_rule": "after_return_inline"
     },
     "idempotency": {
       "key_scope": "tenant+actor+capability+command-key",

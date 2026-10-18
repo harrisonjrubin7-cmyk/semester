@@ -4,13 +4,13 @@ from registration_recovery_reference_model import RegistrationModel, WorkerRefer
 
 class RecoveryTests(unittest.TestCase):
     def submit(self, m, context=None, fault=None, key='k', payload=None, actor='u'):
-        return m.submit(actor, 'tenant-a', key, payload or {'section': 's1'}, context, fault)
+        return m.submit(actor, 'tenant-a', key, payload or {'section_ref': 's1'}, context, fault)
 
     def test_REG_01_identity_tenant(self):
         m = RegistrationModel()
         self.assertEqual(self.submit(m, {'identity_ok': False})['state'], 'denied')
         self.assertEqual(self.submit(m, {'permission_ok': False})['state'], 'denied')
-        self.assertEqual(m.submit('u1', 'tenant-b', 'k', {'section': 's1'},
+        self.assertEqual(m.submit('u1', 'tenant-b', 'k', {'section_ref': 's1'},
                                   {'grant_tenants': ['tenant-a']})['state'], 'denied')
         self.assertFalse(m.authoritative)
 
@@ -54,7 +54,7 @@ class RecoveryTests(unittest.TestCase):
     def test_REG_08_payload_conflict(self):
         m = RegistrationModel()
         self.submit(m)
-        self.assertEqual(self.submit(m, payload={'section': 's2'})['state'], 'conflict')
+        self.assertEqual(self.submit(m, payload={'section_ref': 's2'})['state'], 'conflict')
         self.assertEqual(len(m.authoritative), 1)
 
     def test_REG_09_timeout_after(self):
@@ -62,7 +62,7 @@ class RecoveryTests(unittest.TestCase):
         r = self.submit(m, fault='timeout_after')
         self.assertEqual(r['state'], 'result_unknown')
         self.assertNotIn('receipt', r)
-        self.assertEqual(m.reconcile(r['key'])['state'], 'committed')
+        self.assertEqual(m.reconcile(r['key'])['state'], 'enrolled')
         self.assertEqual(m.trail[r['key']], ['reconciling', 'committed'])
         self.assertEqual(self.submit(m)['state'], 'enrolled')
         self.assertEqual(len(m.authoritative), 1)
@@ -79,7 +79,7 @@ class RecoveryTests(unittest.TestCase):
     def test_reconcile_requires_result_unknown(self):
         m = RegistrationModel()
         r = self.submit(m)
-        self.assertEqual(m.reconcile(r['key'])['state'], 'committed')
+        self.assertEqual(m.reconcile(r['key'])['state'], 'enrolled')
         self.assertNotIn(r['key'], m.trail)
 
     def test_waitlist_is_business_track(self):
@@ -105,7 +105,7 @@ class RecoveryTests(unittest.TestCase):
         failed = self.submit(m, fault='precommit')
         self.assertTrue(failed['confirmed_no_commit'])
         self.assertFalse(m.authoritative)
-        self.assertEqual(self.submit(m, payload={'section': 's2'})['state'], 'conflict')
+        self.assertEqual(self.submit(m, payload={'section_ref': 's2'})['state'], 'conflict')
         self.assertEqual(self.submit(m)['state'], 'enrolled')
 
     def test_REG_12_expiry_and_revocation(self):
@@ -151,12 +151,12 @@ class RecoveryTests(unittest.TestCase):
 
     def test_payload_snapshot_is_independent_of_caller(self):
         m = RegistrationModel()
-        payload = {'section': 's1', 'override_grant_refs': ['g1']}
+        payload = {'section_ref': 's1', 'override_grant_refs': ['g1']}
         r = self.submit(m, payload=payload)
         payload['override_grant_refs'].append('g2')
         self.assertEqual(m.authoritative[r['key']]['payload']['override_grant_refs'], ['g1'])
         self.assertEqual(m.commands[r['key']]['original_payload']['override_grant_refs'], ['g1'])
-        same = self.submit(m, payload={'section': 's1', 'override_grant_refs': ['g1']})
+        same = self.submit(m, payload={'section_ref': 's1', 'override_grant_refs': ['g1']})
         self.assertEqual(same['receipt'], r['receipt'])
         same['original_payload']['override_grant_refs'].append('g3')
         self.assertEqual(m.commands[r['key']]['original_payload']['override_grant_refs'], ['g1'])
@@ -182,14 +182,22 @@ class RecoveryTests(unittest.TestCase):
     def test_correction_replay_returns_original_result(self):
         m = RegistrationModel()
         r = self.submit(m)
-        first = m.correct(r['key'], approved=True)
-        again = m.correct(r['key'], approved=True)
+        first = m.correct(r['key'], approved=True, correction_key='c1')
+        again = m.correct(r['key'], approved=True, correction_key='c1')
         self.assertEqual(again, first)
         self.assertEqual(len(m.corrections), 1)
 
+    def test_second_correction_request_is_recorded(self):
+        m = RegistrationModel()
+        r = self.submit(m)
+        m.correct(r['key'], approved=True, correction_key='c1')
+        second = m.correct(r['key'], approved=True, correction_key='c2')
+        self.assertEqual(second['correction_receipt'], 2)
+        self.assertEqual(len(m.corrections), 2)
+
     def test_reconcile_and_repair_return_copies(self):
         m = RegistrationModel()
-        payload = {'section': 's1', 'override_grant_refs': ['g1']}
+        payload = {'section_ref': 's1', 'override_grant_refs': ['g1']}
         r = self.submit(m, payload=payload, fault='timeout_after')
         got = m.reconcile(r['key'])
         got['original_payload']['override_grant_refs'].append('g2')
@@ -210,9 +218,9 @@ class RecoveryTests(unittest.TestCase):
         m = RegistrationModel()
         r = self.submit(m)
         original = dict(m.commands[r['key']])
-        self.assertEqual(m.correct(r['key'], approved=False)['state'], 'correction_pending')
+        self.assertEqual(m.correct(r['key'], approved=False, correction_key='c1')['state'], 'correction_pending')
         self.assertFalse(m.corrections)
-        self.assertEqual(m.correct(r['key'], approved=True)['state'], 'corrected')
+        self.assertEqual(m.correct(r['key'], approved=True, correction_key='c1')['state'], 'corrected')
         self.assertEqual(m.commands[r['key']], original)
         self.assertEqual(len(m.corrections), 1)
 
@@ -229,8 +237,8 @@ class RecoveryTests(unittest.TestCase):
 
     def test_scoped_same_key_not_shared(self):
         m = RegistrationModel(capacity=2)
-        a = m.submit('u1', 'tenant-a', 'same-key', {'section': 's1'})
-        b = m.submit('u1', 'tenant-b', 'same-key', {'section': 's1'})
+        a = m.submit('u1', 'tenant-a', 'same-key', {'section_ref': 's1'})
+        b = m.submit('u1', 'tenant-b', 'same-key', {'section_ref': 's1'})
         self.assertEqual(a['state'], 'enrolled')
         self.assertEqual(b['state'], 'enrolled')
         self.assertNotEqual(a['key'], b['key'])
@@ -238,61 +246,61 @@ class RecoveryTests(unittest.TestCase):
 
     def test_capacity_scoped_by_tenant_and_section(self):
         m = RegistrationModel(capacity=1)
-        self.assertEqual(m.submit('u1', 'tenant-a', 'k1', {'section': 's1'})['state'], 'enrolled')
-        self.assertEqual(m.submit('u2', 'tenant-b', 'k2', {'section': 's1'})['state'], 'enrolled')
-        self.assertEqual(m.submit('u3', 'tenant-a', 'k3', {'section': 's2'})['state'], 'enrolled')
-        self.assertEqual(m.submit('u4', 'tenant-a', 'k4', {'section': 's1'})['state'], 'waitlisted')
+        self.assertEqual(m.submit('u1', 'tenant-a', 'k1', {'section_ref': 's1'})['state'], 'enrolled')
+        self.assertEqual(m.submit('u2', 'tenant-b', 'k2', {'section_ref': 's1'})['state'], 'enrolled')
+        self.assertEqual(m.submit('u3', 'tenant-a', 'k3', {'section_ref': 's2'})['state'], 'enrolled')
+        self.assertEqual(m.submit('u4', 'tenant-a', 'k4', {'section_ref': 's1'})['state'], 'waitlisted')
         self.assertEqual(len(m.authoritative), 3)
 
 class WorkerTests(unittest.TestCase):
     def test_duplicate_delivery_one_effect(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); token = w.claim('default', 'e1', 'default')
         self.assertEqual(w.apply('e1', token), 'committed')
         self.assertEqual(w.apply('e1', token), 'duplicate')
         self.assertEqual(w.effects, 1)
 
     def test_stale_lease_cannot_commit(self):
-        w = WorkerReferenceModel(); stale = w.claim('default', 'e1'); fresh = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); stale = w.claim('default', 'e1', 'default'); fresh = w.claim('default', 'e1', 'default')
         self.assertEqual(w.apply('e1', stale), 'stale_lease')
         self.assertEqual(w.apply('e1', fresh), 'committed')
         self.assertEqual(w.effects, 1)
 
     def test_revoked_grant_no_effect(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); token = w.claim('default', 'e1', 'default')
         self.assertEqual(w.apply('e1', token, approved=False), 'denied')
         self.assertEqual(w.effects, 0)
         self.assertFalse(w.receipts)
 
     def test_redelivery_after_revocation_observes_prior_result(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); token = w.claim('default', 'e1', 'default')
         self.assertEqual(w.apply('e1', token), 'committed')
         self.assertEqual(w.apply('e1', token, approved=False), 'duplicate')
         self.assertEqual(w.effects, 1)
 
     def test_fencing_is_per_job(self):
         w = WorkerReferenceModel()
-        a = w.claim('A', 'e1'); b = w.claim('B', 'e2')
+        a = w.claim('A', 'e1', 'default'); b = w.claim('B', 'e2', 'default')
         self.assertEqual(w.apply('e1', a), 'committed')
         self.assertEqual(w.apply('e2', b), 'committed')
         self.assertEqual(w.effects, 2)
 
     def test_inbox_checked_before_fence(self):
         w = WorkerReferenceModel()
-        first = w.claim('A', 'e1')
+        first = w.claim('A', 'e1', 'default')
         self.assertEqual(w.apply('e1', first), 'committed')
-        w.claim('A', 'e1')
+        w.claim('A', 'e1', 'default')
         self.assertEqual(w.apply('e1', first), 'duplicate')
         self.assertEqual(w.effects, 1)
 
     def test_denial_is_durable(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); token = w.claim('default', 'e1', 'default')
         self.assertEqual(w.apply('e1', token, approved=False), 'denied')
         self.assertEqual(w.apply('e1', token, approved=True), 'denied')
         self.assertEqual(w.effects, 0)
 
     def test_token_applies_only_to_its_event(self):
         w = WorkerReferenceModel()
-        a = w.claim('A', 'e1'); b = w.claim('B', 'e2')
+        a = w.claim('A', 'e1', 'default'); b = w.claim('B', 'e2', 'default')
         self.assertEqual(w.apply('e2', a), 'wrong_event')
         self.assertEqual(w.effects, 0)
         self.assertEqual(w.apply('e2', b), 'committed')
@@ -300,7 +308,7 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.effects, 2)
 
     def test_crash_before_marker_rolls_back(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
+        w = WorkerReferenceModel(); token = w.claim('default', 'e1', 'default')
         with self.assertRaises(RuntimeError):
             w.apply('e1', token, fault='crash_before_marker')
         self.assertEqual((w.effects, w.receipts), (0, []))
@@ -308,9 +316,13 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.effects, 1)
 
     def test_dedup_is_scoped_by_tenant(self):
-        w = WorkerReferenceModel(); token = w.claim('default', 'e1')
-        self.assertEqual(w.apply('e1', token, tenant='tenant-a'), 'committed')
-        self.assertEqual(w.apply('e1', token, tenant='tenant-b'), 'committed')
+        w = WorkerReferenceModel()
+        a = w.claim('default', 'e1', 'tenant-a')
+        self.assertEqual(w.apply('e1', a, tenant='tenant-a'), 'committed')
+        # A lease for tenant A cannot apply the same event ID for tenant B.
+        self.assertEqual(w.apply('e1', a, tenant='tenant-b'), 'wrong_tenant')
+        b = w.claim('default', 'e1', 'tenant-b')
+        self.assertEqual(w.apply('e1', b, tenant='tenant-b'), 'committed')
         self.assertEqual(w.effects, 2)
 
 if __name__ == '__main__':
