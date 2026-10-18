@@ -24,6 +24,11 @@ class MigrationTests(unittest.TestCase):
     def test_valid_default_kept(self):self.assertEqual(migrate_subset({'type':'integer','default':3})['default'],3)
     def test_properties_must_be_mapping(self):self.blocked({'type':'object','properties':[]})
     def test_composition_must_be_array(self):self.blocked({'oneOf':None})
+    def test_null_default_rejected_unless_nullable(self):
+        self.blocked({'type':'string','default':None})
+        self.assertIsNone(migrate_subset({'type':'string','nullable':True,'default':None})['default'])
+    def test_boolean_branch_does_not_crash(self):
+        self.assertTrue(validate({'oneOf':[False,False]},1))
     def test_date_time_format_is_checked(self):self.assertTrue(validate(migrate_subset({'type':'string','format':'date-time'}),'not valid'))
 class EnrollmentTests(unittest.TestCase):
     def body(self,op='add'):
@@ -77,6 +82,9 @@ class EnrollmentTests(unittest.TestCase):
         errs=validate(enrollment_schema(),b);paths=[e['instance_path'] for e in errs]
         self.assertTrue(any(p.startswith('/sectionIds') for p in paths))
         self.assertNotIn('const',[e['keyword'] for e in errs])
+    def test_required_errors_name_the_field(self):
+        msgs=[e['message'] for e in validate(enrollment_schema(),{})]
+        self.assertTrue(any("'studentId'" in m for m in msgs))
     def test_artifact_matches_builder(self):
         import json,os
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'enrollment_commands.schema.json')) as f:artifact=json.load(f)

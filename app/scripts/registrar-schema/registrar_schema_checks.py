@@ -9,13 +9,13 @@ def migrate_subset(schema):
     if isinstance(s.get('type'),list) or s.get('type')=='null':raise ValueError('Not 3.0 type')
     if s.get('type')=='array' and 'items' not in s:raise ValueError('items required for array')
     if 'example' in s:s['examples']=[s.pop('example')]
-    if 'default' in s and 'type' in s and s['default'] is not None and not Draft202012Validator({'type':s['type']}).is_valid(s['default']):raise ValueError('default does not match declared type')
     if 'properties' in s and not isinstance(s['properties'],dict):raise ValueError('properties must be a mapping')
     n=s.pop('nullable',False)
     if not isinstance(n,bool):raise ValueError('Invalid nullable')
     if n:
         if 'type' not in s:raise ValueError('Local type required')
         s['type']=[s['type'],'null']
+    if 'default' in s and 'type' in s and not Draft202012Validator({'type':s['type']}).is_valid(s['default']):raise ValueError('default does not match declared type')
     for flag,bound in [('exclusiveMinimum','minimum'),('exclusiveMaximum','maximum')]:
         if flag in s:
             e=s.pop(flag)
@@ -37,20 +37,26 @@ def pointer(parts):
     # RFC 6901: the root is the empty string, and ~ and / inside a token are escaped
     return ''.join('/'+str(p).replace('~','~0').replace('/','~1') for p in parts)
 
+def branch_operation(e,i):
+    branches=e.schema.get(e.validator,[]) if isinstance(e.schema,dict) else []
+    branch=branches[i] if isinstance(i,int) and 0<=i<len(branches) else None
+    return branch.get('properties',{}).get('operation',{}).get('const') if isinstance(branch,dict) else None
+
 def leaf_errors(e):
     # A oneOf/anyOf error hides its reasons in context. Descend into the branch whose operation const
     # matches the payload's operation; if none does, fall back to the branch with the fewest errors.
     if e.validator not in ('oneOf','anyOf') or not e.context:return [e]
     branches={}
-    for c in e.context:branches.setdefault(c.relative_schema_path[0],[]).append(c)
-    matched=[i for i in branches if e.schema[e.validator][i].get('properties',{}).get('operation',{}).get('const')==e.instance.get('operation')] if isinstance(e.instance,dict) else []
+    for c in e.context:branches.setdefault(c.relative_schema_path[0] if c.relative_schema_path else None,[]).append(c)
+    op=e.instance.get('operation') if isinstance(e.instance,dict) else None
+    matched=[i for i in branches if op is not None and branch_operation(e,i)==op]
     pool=[branches[i] for i in matched] or list(branches.values())
     return [leaf for c in min(pool,key=len) for leaf in leaf_errors(c)]
 
 def validate(schema,payload):
     Draft202012Validator.check_schema(schema)
     errors=Draft202012Validator(schema,format_checker=FormatChecker()).iter_errors(payload)
-    return [{'keyword':e.validator,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for top in errors for e in leaf_errors(top)]
+    return [{'keyword':e.validator,'message':e.message,'instance_path':pointer(e.absolute_path),'schema_path':pointer(e.absolute_schema_path)} for top in errors for e in leaf_errors(top)]
 
 # Length bounds sit beside each pattern: Python's $ also matches before a trailing newline.
 # The UUID pattern is lowercase-only so one identifier has one spelling and uniqueItems can see duplicates.
