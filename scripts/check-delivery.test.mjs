@@ -561,3 +561,29 @@ test('control: removing a specified hard dependency from RDY-INC-003 fails', () 
   const { errors } = check(repo);
   assert.ok(errors.some((e) => /RDY-INC-003: hard dependency alerting must stay declared/.test(e)));
 });
+
+test('control: a non-string decision holder does not count as named at release', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'approved_for_release'; });
+  repo.decisions.decisions.find((d) => d.decision === 'Feature flag enablement').approver_holder = { name: 'x' };
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /decision-rights: "Feature flag enablement" has no named approver; release cannot proceed/.test(e)));
+});
+
+test('control: a non-array hard_dependencies reports an error and does not crash the checker', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => {
+    d.state = 'approved_for_build';
+    d.hard_dependencies = { alerting: true };
+  });
+  let result;
+  assert.doesNotThrow(() => { result = check(repo); });
+  assert.ok(result.errors.some((e) => /RDY-INC-003: approved_for_build requires hard_dependencies to be declared as an array/.test(e)));
+});
+
+test('control: an artifact record with no id is reported and does not crash the checker', () => {
+  const repo = loadRepo();
+  const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+  art.data.id = undefined;
+  let result;
+  assert.doesNotThrow(() => { result = check(repo); });
+  assert.ok(result.errors.some((e) => /artifact record has no id/.test(e)));
+});

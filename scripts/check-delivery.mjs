@@ -165,6 +165,7 @@ export function check(repo) {
   const artifactByLocation = new Map();
   for (const { path, data } of repo.artifacts) {
     if (artifactById.has(data.id)) errors.push(`${data.id ?? path}: duplicate artifact id`);
+    else if (typeof data.id !== 'string' || data.id.trim() === '') errors.push(`${path}: artifact record has no id`);
     else artifactById.set(data.id, data);
     if (path !== `registry/artifacts/${data.id}.json`) errors.push(`${data.id ?? path}: file name must match id`);
     const abs = isEmpty(data.location) ? null : insideRoot(data.location);
@@ -275,7 +276,7 @@ export function check(repo) {
   const releaseReached = repo.increments.some((i) => rank(i.data.state) >= rank('approved_for_release'));
   for (const d of repo.decisions.decisions) {
     // Empty, null and the UNASSIGNED sentinel all mean nobody is named; a deleted field must not look reviewed.
-    if (isUnanswered(String(d.approver_holder ?? '').trim())) {
+    if (typeof d.approver_holder !== 'string' || isUnanswered(d.approver_holder.trim())) {
       const message = `decision-rights: "${d.decision}" has no named approver`;
       if (releaseReached) errors.push(`${message}; release cannot proceed`);
       else warnings.push(message);
@@ -342,7 +343,7 @@ export function check(repo) {
         if (typeof v !== 'string' || isUnanswered(v)) errors.push(`${label}: ${inc.state} requires rollout_and_rollback_plan.${k}`);
       }
     }
-    for (const d of inc.hard_dependencies ?? []) {
+    for (const d of Array.isArray(inc.hard_dependencies) ? inc.hard_dependencies : []) {
       if (!nodes.has(d)) errors.push(`${label}: hard dependency ${d} is not in dependency-graph`);
     }
     for (const d of inc.soft_dependencies ?? []) {
@@ -353,7 +354,7 @@ export function check(repo) {
     const gate = required ?? 'approved_for_build';
     // A retired component is not ready: it ranks after the delivery states but cannot satisfy a gate.
     const satisfies = (status) => status !== 'retired' && rank(status) >= rank(gate);
-    const unmet = (inc.hard_dependencies ?? []).filter((d) => nodes.has(d) && !satisfies(nodes.get(d).status));
+    const unmet = (Array.isArray(inc.hard_dependencies) ? inc.hard_dependencies : []).filter((d) => nodes.has(d) && !satisfies(nodes.get(d).status));
     if (required && unmet.length) {
       errors.push(`${label}: ${inc.state} blocked; hard dependencies below ${required}: ${unmet.join(', ')}`);
     }
@@ -370,7 +371,8 @@ export function check(repo) {
     if (!ids.has(id)) errors.push(`registry/increments: required record ${id} is missing`);
   }
   for (const [id, deps] of Object.entries(REQUIRED_HARD_DEPENDENCIES)) {
-    const declared = repo.increments.find((i) => i.data.id === id)?.data.hard_dependencies ?? [];
+    const declaredDeps = repo.increments.find((i) => i.data.id === id)?.data.hard_dependencies;
+    const declared = Array.isArray(declaredDeps) ? declaredDeps : [];
     for (const dep of deps) {
       if (!declared.includes(dep)) errors.push(`${id}: hard dependency ${dep} must stay declared`);
     }
