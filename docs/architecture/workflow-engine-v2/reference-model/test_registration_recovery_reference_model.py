@@ -90,6 +90,7 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(r['execution'], 'committed')
         self.assertEqual(m.waitlist[r['key']]['receipt'], r['receipt'])
         self.assertFalse(m.authoritative.get(r['key']))
+        self.assertEqual(m.commands[r['key']]['projection'], 'complete')
         self.assertEqual(self.submit(m, actor='u2', key='k2')['state'], 'waitlisted')
 
     def test_REG_10_projection_repair(self):
@@ -194,6 +195,13 @@ class RecoveryTests(unittest.TestCase):
         second = m.correct(r['key'], approved=True, correction_key='c2')
         self.assertEqual(second['correction_receipt'], 2)
         self.assertEqual(len(m.corrections), 2)
+
+    def test_correction_replay_survives_revocation(self):
+        m = RegistrationModel()
+        r = self.submit(m)
+        first = m.correct(r['key'], approved=True, correction_key='c1')
+        self.assertEqual(m.correct(r['key'], approved=False, correction_key='c1'), first)
+        self.assertEqual(len(m.corrections), 1)
 
     def test_repair_requires_committed_execution(self):
         m = RegistrationModel()
@@ -318,6 +326,12 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(w.apply('e1', a), 'committed')
         self.assertEqual(w.apply('e1', b), 'committed')
         self.assertEqual(w.effects, 2)
+
+    def test_fence_is_scoped_per_event(self):
+        w = WorkerReferenceModel()
+        a = w.claim('A', 'e1', 'default')
+        w.claim('A', 'e2', 'default')
+        self.assertEqual(w.apply('e1', a), 'committed')
 
     def test_fence_is_scoped_by_tenant_and_job(self):
         w = WorkerReferenceModel()

@@ -1341,6 +1341,42 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "effect": {
+                "properties": {
+                  "kind": {
+                    "not": {
+                      "const": "read"
+                    }
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "effect"
+            ]
+          },
+          "then": {
+            "properties": {
+              "effect": {
+                "properties": {
+                  "unknown_outcome_lookup_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "unknown_outcome_lookup_ref"
+                ]
+              }
+            }
+          }
         }
       ]
     },

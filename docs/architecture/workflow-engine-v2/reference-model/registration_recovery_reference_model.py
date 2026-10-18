@@ -63,7 +63,7 @@ class RegistrationModel:
             if c.get('offer_expired', False):
                 # The rejected offer is a durable waitlist outcome, so a redelivery cannot turn it into an enrollment.
                 cmd = {'state': 'committed', 'hash': digest, 'key': k, 'effects': 0,
-                       'projection': 'pending', 'original_payload': copy.deepcopy(payload),
+                       'projection': 'complete', 'original_payload': copy.deepcopy(payload),
                        'business': 'waitlisted'}
                 cmd['receipt'] = self._waitlist_entry(k, payload, 'offer_expired')
                 self.commands[k] = cmd
@@ -87,7 +87,7 @@ class RegistrationModel:
                            if (kk[0], rec['payload'].get('section_ref')) == scope)
             if occupied >= self.capacity:
                 # Waitlisting is an authoritative write of a waitlist entry, so it carries its own receipt.
-                cmd.update(state='committed', business='waitlisted',
+                cmd.update(state='committed', business='waitlisted', projection='complete',
                            receipt=self._waitlist_entry(k, payload, 'capacity'))
                 return self._view(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
@@ -135,12 +135,13 @@ class RegistrationModel:
 
     def correct(self, key, approved, correction_key):
         with self.lock:
-            if not approved:
-                return {'state': 'correction_pending'}
             # Idempotency belongs to the correction request; the enrollment key is only its target.
             replay = (key, correction_key)
+            # A durable correction answers its own retry before approval is revalidated.
             if replay in self.correction_results:
                 return copy.deepcopy(self.correction_results[replay])
+            if not approved:
+                return {'state': 'correction_pending'}
             if key not in self.authoritative:
                 raise ValueError('No committed record')
             self.corrections.append({'original': key, 'correction_key': correction_key, 'type': 'authorized_correction'})
@@ -165,9 +166,9 @@ class WorkerReferenceModel:
         self.receipts = []
         self.lock = Lock()
     def claim(self, job, event_id, tenant, now=0, ttl=60):
-        # A lease names one event, tenant and consumer job, and expires after ttl; the fence is counted per (tenant, job).
+        # A lease names one event, tenant and consumer job, and expires after ttl; the fence is counted per (tenant, job, event).
         with self.lock:
-            fence_key = (tenant, job)
+            fence_key = (tenant, job, event_id)
             self.fence[fence_key] = self.fence.get(fence_key, 0) + 1
             return (job, self.fence[fence_key], event_id, tenant, now + ttl)
     def apply(self, event_id, token, approved=True, tenant='default', fault=None, now=0):
@@ -185,7 +186,7 @@ class WorkerReferenceModel:
                 return 'denied' if self.inbox[key] == 'denied' else 'duplicate'
             if now >= expires_at:
                 return 'lease_expired'
-            if fence != self.fence.get((tenant, job)):
+            if fence != self.fence.get((tenant, job, bound_event)):
                 return 'stale_lease'
             if not approved:
                 self.inbox[key] = 'denied'
