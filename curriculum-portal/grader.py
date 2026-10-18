@@ -9,7 +9,9 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 suite=json.loads(sys.stdin.read());results=[]
 for case in suite['cases']:
     before=copy.deepcopy(case['input'])
-    try: outcome={'value':getattr(module,suite['function'])(case['input'])}
+    try:
+        outcome={'value':getattr(module,suite['function'])(case['input'])}
+        outcome['type']=type(outcome['value']).__name__
     except ValueError: outcome={'exception':'ValueError'}
     except BaseException: outcome={'exception':'ExecutionError'}
     outcome['mutated']=case['input']!=before
@@ -64,9 +66,11 @@ def grade(suite, submission, timeout=5):
             for result, case in zip(results, suite['cases']):
                 expected = case['expected']
                 if not isinstance(result, dict): raise ValueError('Invalid result')
-                if result.get('exception') == 'ExecutionError': learner_errors += 1
-                # 0 == False and 1 == True in Python, so booleans must match by type too.
-                value_ok = 'value' in result and result['value'] == expected and type(result['value']) is type(expected)
+                unexpected = result.get('exception') == 'ExecutionError' or (
+                    result.get('exception') == 'ValueError' and expected != '!ValueError')
+                if unexpected: learner_errors += 1
+                # 0 == False and 1 == True, and JSON turns tuples into lists, so the worker reports the native type name.
+                value_ok = 'value' in result and result['value'] == expected and result.get('type') == type(expected).__name__
                 # Only contracts that forbid mutation (suite 'immutable') penalise it.
                 ok = (not suite.get('immutable') or result.get('mutated') is False) and (
                     (expected == '!ValueError' and result.get('exception') == 'ValueError') or

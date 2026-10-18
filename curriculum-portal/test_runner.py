@@ -18,7 +18,7 @@ class HarnessTests(unittest.TestCase):
             ast.parse('def '+m['function']+'(record):\n    raise NotImplementedError()\n')
     def test_week3_reference(self):
         result=self.run_code("def validate_task(r):\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n")
-        self.assertEqual(result['passed'],4);self.assertIsNone(result['final_grade'])
+        self.assertEqual(result['passed'],result['total']);self.assertIsNone(result['final_grade'])
     def test_incorrect_submission(self):
         result=self.run_code('def validate_task(r): return True\n')
         self.assertEqual(result['passed'],1)
@@ -71,6 +71,30 @@ class HarnessTests(unittest.TestCase):
         for code,index in ((authorize,4),(retry,11)):
             result=self.run_week(index,code)
             self.assertEqual(result['passed'],result['total'],MODULES[index]['week'])
+    def test_unexpected_valueerror_is_a_learner_error(self):
+        result=self.run_code('def validate_task(r): raise ValueError()\n')
+        self.assertEqual(result['failure'],'learner_exception')
+    def test_tuple_results_do_not_pass_list_contracts(self):
+        code="def paginate(r):\n    if r['offset']<0 or not 1<=r['limit']<=100: raise ValueError()\n    return tuple(r['items'][r['offset']:r['offset']+r['limit']])\n"
+        result=self.run_week(3,code)
+        self.assertLess(result['passed'],result['total'])
+    def test_reference_solutions_pass_every_case(self):
+        references={
+            1:"def classify_record(r): return {'draft':'private','grade':'official','fixture':'synthetic'}[r['kind']]\n",
+            2:"def validate_pr(r): return all(isinstance(r.get(k),str) and bool(r[k].strip()) for k in ('title','test_evidence','reviewer'))\n",
+            3:"def validate_task(r):\n    return isinstance(r,dict) and set(r)=={'id','title','status'} and all(isinstance(r[k],str) and bool(r[k].strip()) for k in ('id','title')) and r['status'] in ('open','completed')\n",
+            4:"def paginate(r):\n    if r['offset']<0 or not 1<=r['limit']<=100: raise ValueError()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n",
+            6:"def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant']==r['resource_tenant'] and r['active'] is True and 'tasks:read' in r['scopes']\n",
+            7:"def audit_ready(r): return all(isinstance(r.get(k),str) and bool(r[k]) for k in ('actor','tenant','action','target','request_id'))\n",
+            10:"def deduplicate(r):\n    out=[]\n    for i in r['ids']:\n        if i not in out: out.append(i)\n    return out\n",
+            11:"def redact(r): return {k:v for k,v in r.items() if k not in ('token','password','student_name','submission_body')}\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and u.port in (None,443)\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(bool(r.get(k)) for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
+            16:"def activation_ready(r): return all(r.get(k) is True for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
+        }
+        for week,code in references.items():
+            result=self.run_week(week-1,code)
+            self.assertEqual(result['passed'],result['total'],'week %d'%week)
     def test_always_false_does_not_earn_full_credit(self):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
