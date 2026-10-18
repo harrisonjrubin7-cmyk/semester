@@ -502,6 +502,44 @@ describe('review fixes: boundaries, tenancy, atomic release, event metadata', ()
     const [row] = store.outbox.rows;
     expect(validateEvent(row.event).ok).toBe(true);
   });
+
+  it('the deadline check and the stored submission time read the clock once, so a submission cannot be stored after the close', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+
+    // The clock reads just before the closing instant, then just after it: the write must not straddle the deadline.
+    let reads = 0;
+    const straddling = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => (++reads === 1 ? new Date('2026-10-20T23:58:59Z') : new Date('2026-10-21T00:00:00Z')),
+      newId: () => `race-${reads}`,
+    });
+    const outcome = await straddling
+      .submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })
+      .then(() => 'accepted', (error: unknown) => (error as SubmissionRefusal).code);
+
+    if (outcome === 'accepted') {
+      const [submission] = [...store.submissions.values()];
+      expect(Date.parse(submission.submittedAt)).toBeLessThan(Date.parse('2026-10-20T23:59:00Z'));
+    } else {
+      expect(outcome).toBe('window_closed');
+    }
+  });
+
+  it('a generated correlation id stays within the envelope limit when the submission id is at its longest', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    let issued = 0;
+    const longIds = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => new Date('2026-10-18T12:00:00Z'),
+      newId: () => `${'n'.repeat(120)}${String(++issued).padStart(8, '0')}`,
+    });
+    await longIds.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    const finalized = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'submission.finalized');
+    expect(finalized && validateEvent(finalized).ok).toBe(true);
+  });
 });
 
 describe('refusals are typed and still count as refusals', () => {

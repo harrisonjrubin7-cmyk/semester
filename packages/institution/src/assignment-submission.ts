@@ -226,6 +226,12 @@ const requireText = (value: unknown, field: string, limit: number): string => {
   return value;
 };
 
+/** A generated correlation id: the prefix and the id it names when that fits the envelope's limit, otherwise the bare id. */
+const generatedCorrelation = (prefix: string, id: string): string => {
+  const candidate = `${prefix}-${id}`;
+  return candidate.length <= 128 ? candidate : id;
+};
+
 const correlationOf = (supplied: string | undefined, fallback: string): string => {
   if (supplied === undefined) return fallback;
   if (!CORRELATION_ID_PATTERN.test(supplied)) throw new SubmissionRefusal('invalid_input', 'correlationId is malformed');
@@ -265,14 +271,15 @@ export class AssignmentSubmissionService {
     const assignment = this.loadAssignment(actor, assignmentId);
     this.enrolledStudent(actor, assignment);
     this.refuseIfSubmitted(actor.userId, assignmentId);
-    this.refuseIfClosed(assignment);
+    const at = this.now();
+    this.refuseIfClosed(assignment, at);
 
     const key = draftKey(actor.userId, assignmentId);
     const currentVersion = this.store.drafts.get(key)?.version ?? 0;
     if (expectedVersion !== currentVersion) {
       throw new SubmissionRefusal('stale_version', 'This draft changed since you last loaded it');
     }
-    const updatedAt = this.now().toISOString();
+    const updatedAt = at.toISOString();
     const version = currentVersion + 1;
     this.store.drafts.set(key, { assignmentId, userId: actor.userId, version, body, updatedAt });
     return { version, updatedAt };
@@ -313,7 +320,8 @@ export class AssignmentSubmissionService {
     if (replay) return replay;
 
     this.refuseIfSubmitted(actor.userId, assignmentId);
-    this.refuseIfClosed(assignment);
+    const at = this.now();
+    this.refuseIfClosed(assignment, at);
 
     const draft = this.store.drafts.get(draftKey(actor.userId, assignmentId));
     if (!draft) throw new SubmissionRefusal('invalid_state', 'Save a draft before submitting');
@@ -329,7 +337,7 @@ export class AssignmentSubmissionService {
     // Every check has passed. Build everything first (ids, the receipt, the event); the writes come last, so a
     // failure while building leaves the store as it was.
     const submissionId = this.newId();
-    const submittedAt = this.now().toISOString();
+    const submittedAt = at.toISOString();
     const receipt = this.receiptFor('Your submission was received.', submittedAt);
     const event = this.eventFor({
       eventType: 'submission.finalized',
@@ -337,7 +345,7 @@ export class AssignmentSubmissionService {
       tenantId: assignment.institutionId,
       subjectType: 'submission',
       subjectId: submissionId,
-      correlationId: correlationOf(input.correlationId, `submission-${submissionId}`),
+      correlationId: correlationOf(input.correlationId, generatedCorrelation('submission', submissionId)),
       payload: { submissionId, assignmentId, version: 1 },
     });
     this.store.receipts.set(receipt.id, { ...receipt });
@@ -418,7 +426,7 @@ export class AssignmentSubmissionService {
       tenantId: assignment.institutionId,
       subjectType: 'student',
       subjectId: submission.userId,
-      correlationId: correlationOf(input.correlationId, `release-${submission.id}`),
+      correlationId: correlationOf(input.correlationId, generatedCorrelation('release', submission.id)),
       payload: { submissionId: submission.id, assignment: assignment.id },
     });
     this.store.receipts.set(receipt.id, { ...receipt });
@@ -494,14 +502,15 @@ export class AssignmentSubmissionService {
     return membership;
   }
 
-  private refuseIfClosed(assignment: Assignment): void {
+  /** `at` is the command's one reading of the clock; the write that follows records the same instant. */
+  private refuseIfClosed(assignment: Assignment, at: Date): void {
     const closesAt = Date.parse(assignment.closesAt);
     // A deadline that is not a time cannot be compared, so the write is refused rather than left open.
     if (Number.isNaN(closesAt)) {
       throw new SubmissionRefusal('invalid_state', 'The submission deadline for this assignment is not a valid time');
     }
     // The closing instant is already closed, as every other expiry check in the repository treats it.
-    if (this.now().getTime() >= closesAt) {
+    if (at.getTime() >= closesAt) {
       throw new SubmissionRefusal('window_closed', 'The submission window for this assignment has closed');
     }
   }
