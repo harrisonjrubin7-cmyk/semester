@@ -71,12 +71,16 @@ create table private.audit_events(id bigint generated always as identity primary
  policy_version text not null,occurred_at timestamptz not null default now(),
  foreign key(grant_id,tenant_id,actor_id) references private.role_grants(id,tenant_id,user_id),
  foreign key(record_id,tenant_id) references public.education_records(id,tenant_id));
+create function private.parties_identified(p jsonb) returns boolean language sql immutable set search_path='' as $$
+ select jsonb_typeof(p)='array' and jsonb_array_length(p)>0
+  and not exists(select 1 from jsonb_array_elements(p) e where jsonb_typeof(e)<>'object' or e='{}'::jsonb);
+$$;
 create table private.disclosure_records(id bigint generated always as identity primary key,
  tenant_id uuid not null,student_id uuid not null,event_kind text not null check(event_kind in('request','disclosure')),
  parties jsonb not null,legitimate_interest text not null,legal_basis text not null,
  fields_disclosed text[] not null,emergency_threat text,occurred_at timestamptz not null default now(),
  foreign key(student_id,tenant_id) references private.students(id,tenant_id),
- check(jsonb_typeof(parties)='array' and jsonb_array_length(parties)>0),
+ check(private.parties_identified(parties)),
  check(legal_basis<>'health_safety_emergency' or nullif(btrim(emergency_threat),'') is not null),
  check(event_kind<>'disclosure' or cardinality(fields_disclosed)>0));
 create function private.reject_evidence_change() returns trigger language plpgsql set search_path='' as $$

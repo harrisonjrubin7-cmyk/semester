@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "JSON Schema 2020-12 cannot compare two properties for inequality. Separation of duties (prepared_by, reviewed_by and published_by must be distinct people for a published package) must be enforced by a companion validator or by approval records; this schema does not enforce it.",
   "title": "Proposed monthly disclosure snapshot",
   "type": "object",
   "additionalProperties": false,
