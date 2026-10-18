@@ -315,10 +315,43 @@ class WorkerTests(unittest.TestCase):
 
     def test_expired_lease_cannot_commit(self):
         w = WorkerReferenceModel()
-        token = w.claim('default', 'e1', 'default', now=0, ttl=60)
-        self.assertEqual(w.apply('e1', token, now=60), 'lease_expired')
+        token = w.claim('default', 'e1', 'default', ttl=60)
+        w.set_time(60)
+        self.assertEqual(w.apply('e1', token), 'lease_expired')
         self.assertEqual(w.effects, 0)
-        self.assertEqual(w.apply('e1', token, now=30), 'committed')
+
+    def test_lease_is_timed_by_the_model_clock(self):
+        w = WorkerReferenceModel()
+        token = w.claim('default', 'e1', 'default', ttl=60)
+        w.set_time(30)
+        self.assertEqual(w.apply('e1', token), 'committed')
+        self.assertEqual(w.effects, 1)
+
+    def test_model_clock_cannot_move_backwards(self):
+        w = WorkerReferenceModel()
+        w.set_time(60)
+        with self.assertRaises(ValueError):
+            w.set_time(30)
+
+    def test_submit_rejects_non_enrollment_commands(self):
+        m = RegistrationModel()
+        for command in ('drop', 'withdraw', 'swap', 'waitlist_accept'):
+            with self.subTest(command=command):
+                with self.assertRaises(ValueError):
+                    m.submit('u1', 'tenant-a', command, {'command': command, 'section_ref': 's1'})
+        self.assertEqual(m.authoritative, {})
+        self.assertEqual(m.commands, {})
+
+    def test_waitlisted_outcome_counts_one_effect(self):
+        m = RegistrationModel(capacity=1)
+        payload = {'section_ref': 's1'}
+        m.submit('u1', 'tenant-a', 'k1', payload)
+        r = m.submit('u2', 'tenant-a', 'k2', payload)
+        self.assertEqual(r['state'], 'waitlisted')
+        self.assertEqual(r['effects'], 1)
+        expired = m.submit('u3', 'tenant-a', 'k3', payload, {'offer_expired': True})
+        self.assertEqual(expired['state'], 'waitlisted')
+        self.assertEqual(expired['effects'], 1)
 
     def test_inbox_is_scoped_by_consumer(self):
         w = WorkerReferenceModel()

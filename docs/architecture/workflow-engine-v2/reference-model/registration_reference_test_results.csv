@@ -43,7 +43,11 @@ WorkerTests.test_fence_is_scoped_per_event,passed,Local in-memory reference mode
 WorkerTests.test_fencing_is_per_job,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_inbox_checked_before_fence,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_inbox_is_scoped_by_consumer,passed,Local in-memory reference model; not database/provider/worker integration
+WorkerTests.test_lease_is_timed_by_the_model_clock,passed,Local in-memory reference model; not database/provider/worker integration
+WorkerTests.test_model_clock_cannot_move_backwards,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_redelivery_after_revocation_observes_prior_result,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_revoked_grant_no_effect,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_stale_lease_cannot_commit,passed,Local in-memory reference model; not database/provider/worker integration
+WorkerTests.test_submit_rejects_non_enrollment_commands,passed,Local in-memory reference model; not database/provider/worker integration
 WorkerTests.test_token_applies_only_to_its_event,passed,Local in-memory reference model; not database/provider/worker integration
+WorkerTests.test_waitlisted_outcome_counts_one_effect,passed,Local in-memory reference model; not database/provider/worker integration

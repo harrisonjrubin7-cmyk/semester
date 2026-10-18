@@ -1611,7 +1611,8 @@
                 "type": "string",
                 "enum": [
                   "result_unknown",
-                  "reconciling"
+                  "reconciling",
+                  "failed"
                 ]
               }
             },

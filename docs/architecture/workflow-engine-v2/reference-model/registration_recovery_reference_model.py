@@ -30,6 +30,9 @@ class RegistrationModel:
         return self.waitlist[k]['receipt']
 
     def submit(self, actor, tenant, key, payload, context=None, fault=None):
+        # This entry point only enrolls. Other commands have their own operations and must not reach this path.
+        if payload.get('command', 'enroll') != 'enroll':
+            raise ValueError('submit() handles only the enroll command')
         c = dict(context or {})
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
         k = (tenant, actor, 'enroll', key)
@@ -62,7 +65,7 @@ class RegistrationModel:
                 return {'state': 'awaiting_approval', 'effects': 0}
             if c.get('offer_expired', False):
                 # The rejected offer is a durable waitlist outcome, so a redelivery cannot turn it into an enrollment.
-                cmd = {'state': 'committed', 'hash': digest, 'key': k, 'effects': 0,
+                cmd = {'state': 'committed', 'hash': digest, 'key': k, 'effects': 1,
                        'projection': 'complete', 'original_payload': copy.deepcopy(payload),
                        'business': 'waitlisted'}
                 cmd['receipt'] = self._waitlist_entry(k, payload, 'offer_expired')
@@ -87,7 +90,7 @@ class RegistrationModel:
                            if (kk[0], rec['payload'].get('section_ref')) == scope)
             if occupied >= self.capacity:
                 # Waitlisting is an authoritative write of a waitlist entry, so it carries its own receipt.
-                cmd.update(state='committed', business='waitlisted', projection='complete',
+                cmd.update(state='committed', business='waitlisted', projection='complete', effects=1,
                            receipt=self._waitlist_entry(k, payload, 'capacity'))
                 return self._view(cmd)
             self.authoritative[k] = {'receipt': 'authority:' + str(len(self.authoritative) + 1),
@@ -165,13 +168,20 @@ class WorkerReferenceModel:
         self.effects = 0
         self.receipts = []
         self.lock = Lock()
-    def claim(self, job, event_id, tenant, now=0, ttl=60):
+        # The model owns its clock. Leases are timed against it, never against a caller-supplied value.
+        self.now = 0
+    def set_time(self, t):
+        with self.lock:
+            if t < self.now:
+                raise ValueError('the model clock cannot move backwards')
+            self.now = t
+    def claim(self, job, event_id, tenant, ttl=60):
         # A lease names one event, tenant and consumer job, and expires after ttl; the fence is counted per (tenant, job, event).
         with self.lock:
             fence_key = (tenant, job, event_id)
             self.fence[fence_key] = self.fence.get(fence_key, 0) + 1
-            return (job, self.fence[fence_key], event_id, tenant, now + ttl)
-    def apply(self, event_id, token, approved=True, tenant='default', fault=None, now=0):
+            return (job, self.fence[fence_key], event_id, tenant, self.now + ttl)
+    def apply(self, event_id, token, approved=True, tenant='default', fault=None):
         job, fence, bound_event, bound_tenant, expires_at = token
         with self.lock:
             # A token applies only to the event and tenant it leases, so no other lease can commit the effect.
@@ -184,7 +194,7 @@ class WorkerReferenceModel:
             # A consumed event answers with its durable outcome before any expiry, fencing or approval check.
             if key in self.inbox:
                 return 'denied' if self.inbox[key] == 'denied' else 'duplicate'
-            if now >= expires_at:
+            if self.now >= expires_at:
                 return 'lease_expired'
             if fence != self.fence.get((tenant, job, bound_event)):
                 return 'stale_lease'
