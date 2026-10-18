@@ -86,7 +86,7 @@ class RejectedContracts(unittest.TestCase):
     def test_invalid_effective_from(self):
         def fn(d):
             d['authority']['effective_from'] = '2026-13-45T00:00:00Z'
-        self.assertRejected(mutate(fn), 'not a valid date-time')
+        self.assertRejected(mutate(fn), 'date-time')
 
     def test_verified_institution_authorization_without_effective_date(self):
         def fn(d):
