@@ -29,6 +29,9 @@ class MigrationTests(unittest.TestCase):
     def test_unknown_type_with_default_is_value_error(self):self.blocked({'type':'bogus','default':1})
     def test_empty_enum_is_rejected(self):self.blocked({'type':'string','enum':[]})
     def test_non_string_pattern_is_value_error(self):self.blocked({'type':'string','pattern':[]})
+    def test_dot_excludes_ecma_line_terminators(self):
+        s=migrate_subset({'type':'string','pattern':'^.$'})
+        self.assertTrue(validate(s,'\r'));self.assertTrue(validate(s,' '));self.assertFalse(validate(s,'a'))
     def test_integer_default_must_be_integer(self):self.blocked({'type':'integer','default':1.0})
     def test_integer_rejects_fractional_representation(self):
         s=migrate_subset({'type':'integer'});self.assertTrue(validate(s,1.0));self.assertFalse(validate(s,1))
