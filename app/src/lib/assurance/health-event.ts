@@ -86,8 +86,11 @@ export function healthEventProblems(event: HealthEvent): string[] {
   if ((event.severity === 'critical' || event.severity === 'high') && !present(event.safeImmediateAction)) {
     problems.push('critical and high events need a safeImmediateAction');
   }
-  // A record decoded from storage may omit the array or hold null: report that, do not throw.
-  const hasEvidence = Array.isArray(event.evidenceReferences) && event.evidenceReferences.some((ref) => present(ref));
+  // A record decoded from storage may omit the array or hold null: report that, do not throw. Every entry must be a
+  // usable string, open or closed, so a stored mix such as ['evidence/ok', 42] cannot pass as evidence.
+  const evidenceIsList = Array.isArray(event.evidenceReferences) && event.evidenceReferences.every((ref) => present(ref));
+  if (!evidenceIsList) problems.push('evidenceReferences must be a list of non-blank strings');
+  const hasEvidence = evidenceIsList && event.evidenceReferences.length > 0;
   if (event.state === 'closed' && !hasEvidence) {
     problems.push('a closed event needs evidenceReferences');
   }

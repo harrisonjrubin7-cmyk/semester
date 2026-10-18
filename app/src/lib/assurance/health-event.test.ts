@@ -134,6 +134,25 @@ describe('tenant scope', () => {
 });
 
 describe('timestamps and evidence', () => {
+  it('refuses evidence lists that hold a non-string entry, open or closed', () => {
+    const mixed = ['evidence/ok', 42] as unknown as string[];
+    expect(healthEventProblems({ ...base, evidenceReferences: mixed })).toContain(
+      'evidenceReferences must be a list of non-blank strings',
+    );
+    expect(healthEventProblems({ ...base, state: 'closed', evidenceReferences: mixed })).toContain(
+      'evidenceReferences must be a list of non-blank strings',
+    );
+    expect(transitionHealthEvent({ ...base, state: 'mitigated', evidenceReferences: mixed }, 'closed', '2026-10-02T10:00:00.000Z').ok).toBe(
+      false,
+    );
+  });
+
+  it('reports a missing or null evidence array on an open event', () => {
+    expect(healthEventProblems({ ...base, evidenceReferences: null as unknown as string[] })).toContain(
+      'evidenceReferences must be a list of non-blank strings',
+    );
+  });
+
   it('does not count blank evidence references as evidence', () => {
     expect(healthEventProblems({ ...base, state: 'closed', evidenceReferences: ['', '   '] })).toContain(
       'a closed event needs evidenceReferences',

@@ -16,6 +16,9 @@ Links to files 01–08 and 10, and the recommendation in file 09. A decision is 
 
 ## Hard stops checked
 
+These gate a `convert` or `expand` decision. A `pause` or `stop` may be signed while any of them is open, because the stop and offboarding path runs regardless of commercial value.
+
+- [ ] Agreed targets met for the piloted scope (file 02 result recorded, not only the outcome evidence)
 - [ ] No unresolved critical access finding
 - [ ] No unresolved critical accessibility finding
 - [ ] No unresolved critical or high-severity security or privacy finding
@@ -25,6 +28,7 @@ Links to files 01–08 and 10, and the recommendation in file 09. A decision is 
 
 ## Signers
 
+- Executive sponsor (required for every signed decision): pending
 - Institution business owner: pending
 - Semester product owner: pending
 - Semester security owner: pending

@@ -140,13 +140,19 @@ export function isRepairAllowed(discrepancy: DiscrepancyClass, repair: string): 
 const isEvidenceList = (value: unknown): value is readonly string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string');
 
+/** Actors are compared as people, not strings: "Ana" and " ana " are the same proposer. */
+const actorKey = (actor: string): string => actor.trim().toLowerCase();
+
 /**
  * The active cycle is the history from its last proposal on, and it must run proposed, approved, repaired, then
- * re-verified, in that order. A partial migrated history cannot close on the final step alone.
+ * re-verified, in that order. A partial migrated history cannot close on the final step alone. The proposal and the
+ * approval must be recorded by the stored proposer and approver, so a history that names two different people in the
+ * fields but one person in the moves cannot pass.
  */
-function hasActiveCycleChain(history: readonly CaseEvent[]): boolean {
+function hasActiveCycleChain(history: readonly CaseEvent[], proposer: string, approver: string): boolean {
   const start = history.map((entry) => entry.to).lastIndexOf('repair_proposed');
   if (start < 0) return false;
+  if (actorKey(history[start].by) !== actorKey(proposer)) return false;
   const steps: [CaseState, CaseState][] = [
     ['repair_proposed', 'repair_approved'],
     ['repair_approved', 'repaired'],
@@ -156,13 +162,11 @@ function hasActiveCycleChain(history: readonly CaseEvent[]): boolean {
   for (const [from, to] of steps) {
     const next = history.findIndex((entry, index) => index > cursor && entry.from === from && entry.to === to);
     if (next < 0) return false;
+    if (to === 'repair_approved' && actorKey(history[next].by) !== actorKey(approver)) return false;
     cursor = next;
   }
   return cursor === history.length - 1;
 }
-
-/** Actors are compared as people, not strings: "Ana" and " ana " are the same proposer. */
-const actorKey = (actor: string): string => actor.trim().toLowerCase();
 
 /**
  * A failed re-verification starts a new repair cycle: earlier evidence and approvals do not carry over,
@@ -299,7 +303,7 @@ export function moveCase(current: ReconciliationCase, to: CaseState, options: Mo
         (current.proposedBy?.trim() ?? '') !== '' &&
         (current.approvedBy?.trim() ?? '') !== '' &&
         actorKey(current.approvedBy ?? '') !== actorKey(current.proposedBy ?? '') &&
-        hasActiveCycleChain(current.history);
+        hasActiveCycleChain(current.history, current.proposedBy ?? '', current.approvedBy ?? '');
       if (!approved) return { ok: false, reason: 'a safe-repair case closes only with its approved repair on record' };
     } else {
       // A class with no safe repair reaches re-verification only by escalation, and an earlier escalation from a failed

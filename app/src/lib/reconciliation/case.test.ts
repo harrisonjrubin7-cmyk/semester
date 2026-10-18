@@ -450,6 +450,27 @@ describe('persisted history and evidence windows', () => {
     expect(result).toEqual({ ok: false, reason: 'a named actor is required' });
   });
 
+  it('refuses a safe-repair close whose recorded moves name someone other than the stored approver', () => {
+    const chain = (approver: string): ReconciliationCase => ({
+      ...opened(),
+      state: 'reverified',
+      proposedRepair: 'refresh_source_snapshot',
+      proposedBy: 'Ana',
+      approvedBy: 'Bob',
+      resolution: [...RESOLUTION_REQUIRED],
+      history: [
+        { from: 'triaged', to: 'repair_proposed', at: AT, by: 'Ana' },
+        { from: 'repair_proposed', to: 'repair_approved', at: AT, by: approver },
+        { from: 'repair_approved', to: 'repaired', at: AT, by: 'Ana' },
+        { from: 'repaired', to: 'reverified', at: AT, by: 'Ana' },
+      ],
+    });
+    // Fields name two people, but Ana made both moves: a self-approved repair must not close.
+    expect(moveCase(chain('Ana'), 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(false);
+    // Control: the same chain with the recorded approver closes.
+    expect(moveCase(chain('Bob'), 'closed', { by: 'registrar_owner', at: AT }).ok).toBe(true);
+  });
+
   it('refuses a safe-repair close whose approval never ran through the workflow', () => {
     const fields: ReconciliationCase = {
       ...opened(),
