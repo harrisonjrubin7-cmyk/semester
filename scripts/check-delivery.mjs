@@ -252,9 +252,9 @@ export function check(repo) {
   // The risk review must be scheduled with a named owner before any increment is enabled (hypercare starts there).
   const enabledReached = repo.increments.some((i) => rank(i.data.state) >= rank('enabled'));
   const reviewDate = String(repo.risks.review?.next_review ?? '');
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const reviewPast = isCalendarDate(reviewDate) && reviewDate < todayIso;
-  const reviewReady = isCalendarDate(reviewDate) && !reviewPast && !isUnanswered(String(repo.risks.review?.owner ?? '').trim());
+  const reviewOwner = typeof repo.risks.review?.owner === 'string' ? repo.risks.review.owner.trim() : '';
+  const reviewPast = isCalendarDate(reviewDate) && reviewDate < today;
+  const reviewReady = isCalendarDate(reviewDate) && !reviewPast && !isUnanswered(reviewOwner);
   if (reviewPast && enabledReached) errors.push(`risk-register: the risk review date ${reviewDate} is in the past`);
   else if (!reviewReady && enabledReached) errors.push('risk-register: an increment is enabled but the risk review has no scheduled date and owner');
   else if (!reviewReady) warnings.push('risk-register: the risk review has no scheduled date and owner');
@@ -263,7 +263,10 @@ export function check(repo) {
   for (const r of repo.risks.risks) {
     if (!LEVELS.includes(r.likelihood)) errors.push(`risk ${r.id}: unknown likelihood ${r.likelihood}`);
     if (!LEVELS.includes(r.impact)) errors.push(`risk ${r.id}: unknown impact ${r.impact}`);
-    if (isEmpty(r.mitigations)) errors.push(`risk ${r.id}: no mitigations`);
+    const mitigations = r.mitigations;
+    if (!Array.isArray(mitigations) || mitigations.length === 0 || mitigations.some((m) => typeof m !== 'string' || isUnanswered(m))) {
+      errors.push(`risk ${r.id}: mitigations must be a nonempty list of named controls`);
+    }
     if (isUnanswered(String(r.owner ?? '').trim())) errors.push(`risk ${r.id}: no owner`);
   }
 
@@ -346,7 +349,8 @@ export function check(repo) {
     for (const d of Array.isArray(inc.hard_dependencies) ? inc.hard_dependencies : []) {
       if (!nodes.has(d)) errors.push(`${label}: hard dependency ${d} is not in dependency-graph`);
     }
-    for (const d of inc.soft_dependencies ?? []) {
+    if (inc.soft_dependencies !== undefined && !Array.isArray(inc.soft_dependencies)) errors.push(`${label}: soft_dependencies must be an array`);
+    for (const d of Array.isArray(inc.soft_dependencies) ? inc.soft_dependencies : []) {
       if (!nodes.has(d)) errors.push(`${label}: soft dependency ${d} is not in dependency-graph`);
     }
     const required = model.hard_dependency_minimum_state[inc.state];
@@ -398,7 +402,7 @@ export function check(repo) {
     if (a.release_critical && a.state !== 'approved') warnings.push(`${label}: release-critical and ${a.state}`);
     // An approved artifact whose review date has passed is expired by the operating model's own rule.
     if (a.state === 'approved') {
-      const owner = String(a.owners?.accountable ?? '').trim();
+      const owner = typeof a.owners?.accountable === 'string' ? a.owners.accountable.trim() : '';
       if (isUnanswered(owner)) errors.push(`${label}: approved without an accountable owner`);
       if (dependsOn(a.id, a.id)) errors.push(`${label}: approved artifact depends on itself through its dependencies`);
       for (const dep of a.dependencies ?? []) {

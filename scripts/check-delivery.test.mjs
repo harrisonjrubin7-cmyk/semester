@@ -579,6 +579,48 @@ test('control: a non-array hard_dependencies reports an error and does not crash
   assert.ok(result.errors.some((e) => /RDY-INC-003: approved_for_build requires hard_dependencies to be declared as an array/.test(e)));
 });
 
+test('control: an approved artifact whose accountable owner is a non-string value fails', () => {
+  for (const bad of [true, {}, ['x']]) {
+    const repo = loadRepo();
+    const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
+    art.data.state = 'approved';
+    art.data.owners.accountable = bad;
+    const { errors } = check(repo);
+    assert.ok(errors.some((e) => /ART-RDY-011: approved without an accountable owner/.test(e)), JSON.stringify(bad));
+  }
+});
+
+test('control: an enabled increment whose risk review owner is an object does not count as named', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'enabled'; });
+  repo.risks.review = { cadence: 'recurring during hypercare', next_review: '2099-01-01', owner: { name: 'Alice' } };
+  const { errors } = check(repo);
+  assert.ok(errors.some((e) => /risk-register: an increment is enabled but the risk review has no scheduled date and owner/.test(e)));
+});
+
+test('control: a non-array soft_dependencies reports an error and does not crash the checker', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.soft_dependencies = { alerting: true }; });
+  let result;
+  assert.doesNotThrow(() => { result = check(repo); });
+  assert.ok(result.errors.some((e) => /RDY-INC-003: soft_dependencies must be an array/.test(e)));
+});
+
+test('control: a risk whose mitigations are not a nonempty list of named controls fails', () => {
+  for (const bad of [{ bogus: true }, [], ['']]) {
+    const repo = loadRepo();
+    repo.risks.risks.find((r) => r.id === 'RSK-004').mitigations = bad;
+    const { errors } = check(repo);
+    assert.ok(errors.some((e) => /risk RSK-004: mitigations must be a nonempty list of named controls/.test(e)), JSON.stringify(bad));
+  }
+});
+
+test('control: a risk review date is judged against the audit date the repository states, not the host clock', () => {
+  const repo = withIncrement(loadRepo(), 'RDY-INC-003', (d) => { d.state = 'enabled'; });
+  repo.today = '2020-01-01';
+  repo.risks.review = { cadence: 'recurring during hypercare', next_review: '2020-06-01', owner: 'Alice' };
+  const { errors } = check(repo);
+  assert.ok(!errors.some((e) => /risk review date .* is in the past/.test(e)));
+});
+
 test('control: an artifact record with no id is reported and does not crash the checker', () => {
   const repo = loadRepo();
   const art = repo.artifacts.find((a) => a.data.id === 'ART-RDY-011');
