@@ -204,6 +204,19 @@ class TestReviewFindings(unittest.TestCase):
  def test_grade_ids_do_not_collide_across_delimiters(self):
   self.assertEqual(grade_id('t','course','a-student'),'t:course:a-student')
   self.assertNotEqual(grade_id('t','x','y:z'),grade_id('t','x:y','z'))
+ def test_revoked_course_grade_leaves_student_view(self):
+  import sqlite3
+  self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
+  g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})
+  a=self.cmd('a-faculty','grade.request_release',{'grade':g['grade'],'version':1,'reason':'Reviewed rubric'})
+  self.cmd('a-reviewer','grade.approve_release',{'approval':a['approval']});self.lab.project('demo-a-operator')
+  # Control: while the student holds 'course', the released score is visible.
+  self.assertEqual(len(self.lab.view('demo-a-student')['grades']),1)
+  d=sqlite3.connect(self.lab.path);tenant=d.execute('SELECT tenant FROM access WHERE actor=?',('a-student',)).fetchone()[0]
+  d.execute('INSERT INTO courses VALUES (?,?)',('other',tenant));d.execute('INSERT INTO access VALUES (?,?,?)',(tenant,'other','a-student'))
+  d.execute('DELETE FROM access WHERE tenant=? AND course=? AND actor=?',(tenant,'course','a-student'))
+  d.commit();d.close()
+  self.assertEqual(self.lab.view('demo-a-student')['grades'],[])
  def test_submission_after_release_is_rejected(self):
   self.cmd('a-student','onboarding.complete');self.cmd('a-student','submission.create',{'body':'work'})
   g=self.cmd('a-faculty','grade.draft',{'student':'a-student','score':85,'version':0})

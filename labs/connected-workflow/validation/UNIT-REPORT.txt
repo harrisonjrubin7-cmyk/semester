@@ -46,11 +46,12 @@ test_legacy_database_gains_new_columns_and_retires_unreasoned_approvals (test_la
 test_new_submission_invalidates_grade_approval (test_lab.TestReviewFindings.test_new_submission_invalidates_grade_approval) ... ok
 test_non_string_identifier_is_rejected_not_crashed (test_lab.TestReviewFindings.test_non_string_identifier_is_rejected_not_crashed) ... ok
 test_repeated_onboarding_keeps_version (test_lab.TestReviewFindings.test_repeated_onboarding_keeps_version) ... ok
+test_revoked_course_grade_leaves_student_view (test_lab.TestReviewFindings.test_revoked_course_grade_leaves_student_view) ... ok
 test_stale_approval_leaves_reviewer_queue (test_lab.TestReviewFindings.test_stale_approval_leaves_reviewer_queue) ... ok
 test_submission_after_release_is_rejected (test_lab.TestReviewFindings.test_submission_after_release_is_rejected) ... ok
 test_workspace_follows_the_actors_course_grant (test_lab.TestReviewFindings.test_workspace_follows_the_actors_course_grant) ... ok
 
 ----------------------------------------------------------------------
-Ran 51 tests in 1.145s
+Ran 52 tests in 1.206s
 
 OK

@@ -170,7 +170,9 @@ CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY AUTOINCREMENT,tenant TE
    if role=='student':
     s=self.student(d,a,a['id']);fresh=time.time()-s['source_at']<=300
     readiness='blocked' if s['hold'] else 'unknown' if s['prerequisite']!='confirmed' else 'stale' if not fresh else 'ready_as_of'
-    out.update(student=dict(s),readiness=readiness,grades=[json.loads(r['payload']) for r in d.execute("SELECT payload FROM projection WHERE tenant=? AND kind='grade'",(t,)) if json.loads(r['payload']).get('student')==a['id']]);return out
+    # Only grades from courses the student is still granted; a revoked course's released score stays out of the view.
+    grades=[g for g in (json.loads(r['payload']) for r in d.execute("SELECT payload FROM projection WHERE tenant=? AND kind='grade'",(t,))) if g.get('student')==a['id'] and g.get('course') in courses]
+    out.update(student=dict(s),readiness=readiness,grades=grades);return out
    # Grade records go only to grading roles; a registrar sees holds and prerequisites, not scores.
    out['grades']=[dict(r) for r in d.execute(f'SELECT * FROM grades WHERE tenant=? AND course IN ({marks})',(t,*courses))] if grading else []
    # Pending and unexpired only; faculty see grade approvals and registrars see hold approvals, reviewers see both.
