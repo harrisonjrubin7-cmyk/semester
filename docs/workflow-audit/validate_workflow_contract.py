@@ -3,6 +3,10 @@ import sys
 from datetime import datetime, timezone
 from jsonschema import Draft202012Validator, FormatChecker
 
+def parse_timestamp(value):
+    parsed = datetime.fromisoformat(value[:-1] + '+00:00' if value[-1:] in ('z', 'Z') else value)
+    return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+
 RECOVERY_SUITES = {'OUTCOME_UNKNOWN': {'timeout', 'unknown_outcome'}, 'NO_COMMIT': {'recovery'}}
 
 def semantic_errors(doc):
@@ -70,18 +74,18 @@ def semantic_errors(doc):
     for gate_name, gate in doc['readiness'].items():
         for ev in gate['evidence']:
             try:
-                verified_at = datetime.fromisoformat(ev['verified_at'].replace('Z', '+00:00'))
+                verified_at = parse_timestamp(ev['verified_at'])
             except ValueError:
                 errors.append(gate_name + ' evidence has an invalid verified_at')
                 continue
-            if verified_at.tzinfo is None:
-                verified_at = verified_at.replace(tzinfo=timezone.utc)
             if verified_at > now:
                 errors.append(gate_name + ' evidence verified_at is in the future: ' + ev['reference'])
+            if gate_name == 'production_enabled' and gate['status'] == 'verified' and ev['environment'] != 'production':
+                errors.append('production_enabled evidence is not from production: ' + ev['reference'])
     effective_from = doc['authority']['effective_from']
     if effective_from is not None:
         try:
-            datetime.fromisoformat(effective_from.replace('Z', '+00:00'))
+            parse_timestamp(effective_from)
         except ValueError:
             errors.append('effective_from is not a valid date-time')
     scope_bound = doc['authority']['institution_scope']

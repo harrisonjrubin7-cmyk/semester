@@ -139,6 +139,23 @@ class RejectedContracts(unittest.TestCase):
                     r['acceptance_test_ids'] = ['happy_path']
         self.assertRejected(mutate(fn), 'not linked to a matching acceptance test: NO_COMMIT')
 
+    def test_lowercase_z_timestamps_are_accepted(self):
+        def fn(d):
+            d['authority']['effective_from'] = '2026-10-01t00:00:00z'
+            d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+        self.assertEqual(errors_for(mutate(fn)), [])
+
+    def test_production_enabled_evidence_must_be_production(self):
+        def fn(d):
+            for test in d['acceptance_tests']:
+                test['evidence_refs'] = ['ev:1']
+            d['authority']['effective_from'] = '2026-10-01T00:00:00Z'
+            for gate in ('designed', 'implemented', 'tested', 'deployed'):
+                d['readiness'][gate] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['institution_authorized'] = {'status': 'verified', 'evidence': [EVIDENCE], 'reason': 'x'}
+            d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [dict(EVIDENCE, environment='staging')], 'reason': 'x'}
+        self.assertRejected(mutate(fn), 'production_enabled evidence is not from production')
+
 
 if __name__ == '__main__':
     unittest.main()
