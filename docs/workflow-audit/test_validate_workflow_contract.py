@@ -200,6 +200,11 @@ class RejectedContracts(unittest.TestCase):
             d['readiness']['production_enabled'] = {'status': 'verified', 'evidence': [prod], 'reason': 'x'}
         self.assertRejected(mutate(fn), 'predates institution_authorized evidence')
 
+    def test_mandatory_recovery_codes_must_be_declared_by_a_step(self):
+        def fn(d):
+            d['steps'][0]['failure_codes'] = ['OUTCOME_UNKNOWN']
+        self.assertRejected(mutate(fn), 'not declared by any step: NO_COMMIT')
+
 
 if __name__ == '__main__':
     unittest.main()

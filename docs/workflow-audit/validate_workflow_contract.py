@@ -132,6 +132,10 @@ def semantic_errors(doc):
         missing_codes = {'OUTCOME_UNKNOWN', 'NO_COMMIT'} - set(recovery_codes)
         if missing_codes:
             errors.append('Official write missing recovery paths: ' + ', '.join(sorted(missing_codes)))
+        declared_codes = {code for step in doc['steps'] for code in step['failure_codes']}
+        undeclared = {'OUTCOME_UNKNOWN', 'NO_COMMIT'} - declared_codes
+        if undeclared:
+            errors.append('Official write recovery codes not declared by any step: ' + ', '.join(sorted(undeclared)))
     for r in doc['recovery_paths']:
         if r['to_execution_state'] not in doc['states']['execution']:
             errors.append('Undefined recovery state: ' + r['code'])
