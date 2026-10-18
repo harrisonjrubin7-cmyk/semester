@@ -88,7 +88,7 @@ class HarnessTests(unittest.TestCase):
             7:"def audit_ready(r): return all(isinstance(r.get(k),str) and bool(r[k]) for k in ('actor','tenant','action','target','request_id'))\n",
             10:"def deduplicate(r):\n    out=[]\n    for i in r['ids']:\n        if i not in out: out.append(i)\n    return out\n",
             11:"def redact(r): return {k:v for k,v in r.items() if k not in ('token','password','student_name','submission_body')}\n",
-            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and port in (None,443)\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    try: u=urlsplit(r['url']); ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.username is None and u.password is None and port in (None,443)\n",
             14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(bool(r.get(k)) for k in ('artifact_digest','contract_version','fixture_version')) and all(t.get(k) is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
             16:"def activation_ready(r): return all(r.get(k) is True for k in ('certified','institution_approved','reconciled','rollback_ready','support_ready'))\n",
             9:"def idempotency(r):\n    p=r['previous_digest']\n    if p is None: return 'execute'\n    return 'replay' if p==r['digest'] else 'conflict'\n",
@@ -144,6 +144,7 @@ class HarnessTests(unittest.TestCase):
             13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and not ip.is_loopback and u.username is None and u.password is None and u.port in (None,443)\n",
             14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    if not t: return False\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and all(t[k] is True for k in ('contract','isolation','revocation','accessibility','recovery'))\n",
             16:"def activation_ready(r): return r.get('support_ready') is True and all(r[k] is True for k in ('certified','institution_approved','reconciled','rollback_ready'))\n",
+            7:"def audit_ready(r): return all(bool(r.get(k)) for k in ('actor','tenant','action')) and isinstance(r.get('target'),str) and bool(r['target']) and isinstance(r.get('request_id'),str) and bool(r['request_id'])\n",
         }
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
