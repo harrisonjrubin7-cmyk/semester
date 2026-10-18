@@ -56,10 +56,33 @@ measurement:
       owner: semester_operations_owner
       limitations: [official_record_timing, resolution_code_consistency]
 
+    connector_retries:
+      definition: Retry attempts per connector refresh, reported as a distribution. Answers whether a connector works reliably enough, including refreshes that succeed only after retries.
+      numerator: retry attempts beyond the first, summed across refreshes in the observation period
+      denominator: connector refreshes attempted in the observation period
+      distribution: attempts per refresh (1, 2, 3, more than 3)
+      observation_period: TBD
+      scope: approved source only
+      source: connector health records
+      owner: semester_operations_owner
+      limitations: [source_outages, retry_policy_changes]
+
+    operator_confidence:
+      definition: Pilot staff who report they can explain the outcome, the next step, and the escalation route for a case. Answers the institution operator-confidence decision indicator.
+      numerator: pilot staff reporting confidence on all three items
+      denominator: pilot staff surveyed at the stated cutoff
+      observation_period: TBD
+      scope: approved offices only
+      source: staff survey (instrument not yet written)
+      owner: semester_operations_owner
+      limitations: [small_sample_size, self_report]
+
     escalation_outcomes:
       definition: Staff escalations by recorded outcome (resolved, routed, unresolved, reopened) and time to close. Answers whether staff can operate exceptions.
-      numerator: escalations reaching a recorded outcome in the observation period
-      denominator: escalations opened in the observation period
+      cohort: escalations opened in the observation period; the same cohort supplies both terms
+      numerator: cohort escalations with a recorded outcome at the stated cutoff
+      denominator: cohort escalations opened in the observation period
+      cutoff: TBD (one evaluation date, stated with every report)
       observation_period: TBD
       scope: approved offices only
       source: escalation records in the staff queue and audit history
@@ -88,7 +111,7 @@ measurement:
 
     reliability:
       definition: Connector freshness, workflow completion, safe-state activation, incident count, and time to containment.
-      numerator: "per sub-measure: connector refreshes within expected window; workflow requests completed; safe-state activations that succeeded; incidents contained within target"
+      numerator: "per sub-measure: connector refreshes within expected window; workflow requests completed; safe-state activations that succeeded; incidents contained within containment_target (TBD; agreed at launch-cadence stage 1)"
       denominator: "per sub-measure: connector refreshes attempted; workflow requests submitted; safe-state activations attempted; incidents opened"
       observation_period: TBD
       scope: per sub-measure; connector refresh on the approved source, workflow completion on the approved cohort, safe-state activation and incidents on the whole pilot

@@ -27,6 +27,6 @@ pilot_change_freeze:
 
   # Every change in requires_change_control gets one record before it takes effect.
   pilot_change_record:
-    fields: [change_id, category, affected_scope, rationale, requested_by, approvers, decision_time, evidence_refs, release_invalidation]
+    fields: [change_id, category, affected_scope, rationale, requested_by, approvers, decision, decision_time, evidence_refs, release_invalidation]   # decision: approved or rejected
     storage: TBD   # system of record, named before stage 4
-    approval_rule: no requires_change_control change takes effect until its record carries every approver and a decision_time
+    approval_rule: "no requires_change_control change takes effect until its record carries decision approved, an approval from every approver, and a decision_time"
