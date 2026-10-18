@@ -160,6 +160,14 @@ class HarnessTests(unittest.TestCase):
         shortcut="def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    u=urlsplit(r['url'])\n    try: ip=ipaddress.ip_address(u.hostname)\n    except ValueError: return False\n    return u.scheme=='https' and ip.is_global and u.password is None and u.port in (None,443)\n"
         result=self.run_week(12,shortcut)
         self.assertLess(result['passed'],result['total'])
+    def test_truthy_non_boolean_activation_is_rejected(self):
+        shortcut="def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant']==r['resource_tenant'] and bool(r['active']) and 'tasks:read' in r['scopes']\n"
+        result=self.run_week(5,shortcut)
+        self.assertLess(result['passed'],result['total'])
+    def test_attempts_above_the_maximum_are_rejected(self):
+        shortcut="def retry_allowed(r): return r['status'] in (429,503) and r['attempt']!=r['max_attempts'] and (r['method']=='GET' or r.get('idempotency_key') is not None and r['idempotency_key']!='')\n"
+        result=self.run_week(11,shortcut)
+        self.assertLess(result['passed'],result['total'])
     def test_suites_have_no_duplicate_cases(self):
         for module in MODULES:
             seen=set()
