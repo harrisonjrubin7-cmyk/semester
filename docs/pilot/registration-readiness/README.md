@@ -93,8 +93,9 @@ and `registry/` paths are mapped into this folder, not created as new trees.
 
 Not done, and blocking activation: a named institution and tenant, signed scope,
 named owners, dates, approved copy, evidence records for every `EVD-*` ID, and the
-`CAP-REG-001` capability definition. No pilot has been activated and nothing has been
-deployed.
+canonical `registration.readiness` capability reaching production-ready maturity with
+current support and recovery evidence. No pilot has been activated. Repository and
+public-surface deployments do not establish an approved institutional connection.
 
 ## Verification
 

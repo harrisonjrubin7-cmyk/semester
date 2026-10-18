@@ -10,7 +10,7 @@ first_two_weeks:
     owner_role: registrar_or_source_owner
     status: not_started
   - step: 3
-    action: Build the control plane from docs/handoff/control-plane/baseline/ only. VERSIONS.md marks it current. v1 through v4 are superseded and must not be built in parallel.
+    action: Reconcile the approved pilot scope against the canonical packages/platform-control registry, packages/institution contracts, and app/server/institution runtime. Extend those implementations only; do not create a parallel control plane from historical handoff artifacts.
     owner_role: semester_engineering_owner
     status: not_started
   - step: 4

@@ -1,10 +1,10 @@
 # Operating plan object 14: activation gate for the pilot.
 # Activation depends on this evidence registry, not on meeting consensus.
-# Status is PENDING. The evidence IDs below were searched for on origin/main and
-# none exist there yet. Each needs an evidence record before activation can be considered.
+# Status is PENDING. The evidence IDs below are pilot-specific records and none
+# exist on main yet. Each needs a retained record before activation can be considered.
 release:
   id: REL-READINESS-001
-  capability: CAP-REG-001
+  capability: registration.readiness
   tenant: TBD
   cohort: TBD
   status: pending
@@ -35,7 +35,7 @@ release:
       - EVD-FAILURE-DRILLS-001
       - EVD-RELEASE-NOTES-001
 
-  evidence_present_on_main: none
+  required_evidence_records_present_on_main: none
 
   invalidates_on:
     - policy_change
@@ -63,4 +63,4 @@ release:
   activation_rule: >
     All required evidence must be current, no blocking finding may remain open,
     scope must match approval, safe-off must be proven, and the referenced
-    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at. The capability definition CAP-REG-001 must exist and be current (absent on main today), and the readiness event schema and tested capture, the scoped control register, and the approved retention and communication plan must each be present and current.
+    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at. The canonical registration.readiness capability must be current and pass the platform-control release and activation validators, and the readiness event schema and tested capture, the scoped control register, and the approved retention and communication plan must each be present and current.

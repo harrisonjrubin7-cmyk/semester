@@ -6,8 +6,8 @@ pilot:
   title: Registration readiness pilot
   institution: TBD
   term: TBD
-  # The brief names this capability. It is not defined anywhere in this repository on main.
-  primary_capability: CAP-REG-001
+  # Canonical key from packages/platform-control/registry/capabilities/.
+  primary_capability: registration.readiness
   objective: >
     Demonstrate that a defined student cohort can understand an approved
     registration-readiness status, take an appropriate next step, and receive
