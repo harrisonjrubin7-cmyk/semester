@@ -14,7 +14,7 @@ Columns are reduced from the full template where they do not apply to a docs-and
 |---|---|---|---|---|---|---|---|---|
 | SYS-PORTAL | Learning portal `portal.html` | 16 module list, lesson view, search, starter downloads, progress, export/import, architecture, syllabus, certification, API inspector | Learner | Browse modules; search; download starters; track progress locally | Loads with no JS errors; search filters; no horizontal scroll at 320px | implemented, partially verified | See section 3, checks P1–P4 | Lesson download, progress export/import round trip, API and certification tabs not exercised. No authentication; progress is browser-local (per README) |
 | SYS-GRADER | `grader.py` | `--lab 1..16` runner | Learner, instructor | Run visible tests, write JSON report | Starters score 0 with exit 1; a correct solution scores full with exit 0 | implemented, verified for trusted local use only | Checks G1–G2 | Not a sandbox (grader's own warning; ARCH §8). Production runner not built |
-| SYS-OAS | Developer console contract `developer-console.openapi.json` | 69 operations, 54 paths, 55 schemas | Partner developer (proposed) | Control-plane API for organizations, apps, installations, grants, webhooks, releases, certification, pilots, offboarding, audit, support | Passes OpenAPI structural validation; unique operation IDs | specified (contract only), structurally verified | Check O1 | No service implements any operation. Semantic conformance tests not written. Base URL and OAuth endpoints are placeholders |
+| SYS-OAS | Developer console contract `developer-console.openapi.json` | 70 operations, 54 paths, 56 schemas | Partner developer (proposed) | Control-plane API for organizations, apps, installations, grants, webhooks, releases, certification, pilots, offboarding, audit, support | Passes OpenAPI structural validation; unique operation IDs | specified (contract only), structurally verified | Check O1 | No service implements any operation. Semantic conformance tests not written. Base URL and OAuth endpoints are placeholders |
 | SYS-SYLLABUS | Syllabus and lab PDF | Course document | Instructor, learner | Outcomes, weekly rhythm, assessment, rubrics, integrity policy | File identical to upload | proposed | md5 match | Requires instructor and institutional approval (syllabus text) |
 | SYS-ARCH | Architecture guides | 11 sections | Engineers | Trust boundaries, identity, authorization, API rules, events, SDK, grading isolation, AI policy, release | Document present | specified | n/a | Nothing in section 1 of the guide is implemented (see section 2) |
 | SYS-CERT | Partner certification workflow | 16 steps with owner, evidence and exit gate | Partner operations, security, institution approver | Register publisher through institutional pilot activation | Document present | proposed | n/a | No owners, review panel, records or evidence store exist. No SLA or legal timeline adopted |
@@ -42,9 +42,9 @@ Total visible cases: 92 (sum of the per-lab counts in `labs/*/tests.json`). The 
 
 | Tag | Operations | Tag | Operations |
 |---|---|---|---|
-| Webhooks | 8 | Evidence | 2 |
-| Certification | 7 | Offboarding | 2 |
-| Grants | 6 | Pilots | 2 |
+| Webhooks | 8 | Support | 3 |
+| Certification | 7 | Evidence | 2 |
+| Grants | 6 | Offboarding | 2 |
 | Apps | 5 | Tests | 2 |
 | Installations | 5 | Audit | 1 |
 | Memberships | 5 | Capabilities | 1 |
@@ -52,9 +52,9 @@ Total visible cases: 92 (sum of the per-lab counts in `labs/*/tests.json`). The 
 | Environments | 4 | Exports | 1 |
 | Releases | 4 | Jobs | 1 |
 | Organizations | 3 | Permissions | 1 |
-| Support | 3 | Usage | 1 |
+| Pilots | 3 | Usage | 1 |
 
-Total 69. Every operation is **specified, not implemented**.
+Total 70. Every operation is **specified, not implemented**.
 
 ### 1b. Shared platform capabilities (from the architecture guide)
 
@@ -93,7 +93,7 @@ Built or verified in this directory:
 - Local verification as described in section 3.
 
 Not built (all specified only):
-- The developer console service behind the 69 operations, the OAuth/OIDC identity layer, tenant isolation and RLS, idempotency and event outbox, SDK packages, isolated grading runner, capstone starter, certification records, and operations (monitoring, backups, runbooks).
+- The developer console service behind the 70 operations, the OAuth/OIDC identity layer, tenant isolation and RLS, idempotency and event outbox, SDK packages, isolated grading runner, capstone starter, certification records, and operations (monitoring, backups, runbooks).
 - Reference solutions for labs 2–16 (not in the pack).
 
 ## 3. Verification evidence (this session)
@@ -104,7 +104,7 @@ Not built (all specified only):
 | G2 | Grader pass path works (control) | Scratch solution `classify_record` for lab 1 (dict lookup on `kind`) run through the grader | 3 of 3 passed; exit code 0 |
 | G4 | Learner `print()` does not corrupt results | Lab-1 control plus a `print()` call through the old runner, then the fixed runner | Old runner: 0 of 3, "Timeout or invalid output" (reproduced). Fixed runner: 3 of 3, exit 0. Fixed runner still exits 1 on all 16 starters with 0 passes |
 | G3 | Lab 1 control covers the visible cases | `tests.json` lab 1 expects draft→private, grade→official, fixture→synthetic | Matches the control's mapping |
-| O1 | OpenAPI validity | `openapi-spec-validator` (latest from PyPI, installed in a scratch venv) on `developer-console.openapi.json` | Valid. 69 operations, 0 missing or duplicate operationIds, 53 paths, 54 schemas |
+| O1 | OpenAPI validity | `openapi-spec-validator` (latest from PyPI, installed in a scratch venv) on `developer-console.openapi.json` | Valid. 70 operations, 0 missing or duplicate operationIds, 54 paths, 56 schemas |
 | P1 | Portal loads without JS errors | Headless Chromium (`/opt/pw-browsers/chromium`) with `--enable-logging=stderr`; control page with `console.error` and an uncaught throw was logged, so the logger works | 0 console or uncaught errors |
 | P2 | Week search filters the module list | Iframe probe: set search input to `Idempot` and dispatch `input` | 16 → 1 (`Week 9: Idempotency`) → 0 for a non-matching query |
 | P3 | No horizontal scroll at 320px (before fix) | Iframe probe, 320px wide | scrollWidth 386 vs clientWidth 305; 2 overflowing elements: the "Import personal progress" file input and its label (370px, min-width auto as a flex item) |
