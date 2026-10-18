@@ -25,6 +25,7 @@ export interface Reservation {
   readonly studentId: string;
   readonly status: ReservationStatus;
   readonly expiresAt: number;
+  readonly holdMs: number;
   readonly assignmentId: string | null;
 }
 
@@ -126,7 +127,7 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (!Number.isFinite(input.holdMs) || input.holdMs <= 0) return refuse('invalid_input');
   const prior = Object.values(state.reservations).find((r) => r.key === input.key);
   if (prior) {
-    if (prior.bedId !== input.bedId || prior.studentId !== input.studentId) {
+    if (prior.bedId !== input.bedId || prior.studentId !== input.studentId || prior.holdMs !== input.holdMs) {
       return refuse('idempotency_conflict');
     }
     // A retry returns what the first attempt made, without touching state.
@@ -139,13 +140,17 @@ export function reserve(state: AllocationState, input: ReserveInput): Outcome {
   if (bedIsHeld(state, input.bedId, input.now)) return refuse('bed_taken');
   if (studentIsPlaced(state, input.studentId, input.now)) return refuse('student_placed');
 
+  const expiresAt = input.now + input.holdMs;
+  // A clock near the float limit can push the expiry to Infinity, which never lapses.
+  if (!Number.isFinite(expiresAt)) return refuse('invalid_input');
   const reservation: Reservation = {
     id: input.id,
     key: input.key,
     bedId: input.bedId,
     studentId: input.studentId,
     status: 'held',
-    expiresAt: input.now + input.holdMs,
+    expiresAt,
+    holdMs: input.holdMs,
     assignmentId: null,
   };
   return accept(
@@ -162,6 +167,8 @@ export function confirm(
   state: AllocationState,
   input: { readonly id: string; readonly reservationId: string; readonly studentId: string; readonly now: number },
 ): Outcome {
+  // A blank id would be stored as the assignment, and its retry would then miss the idempotent branch.
+  if (input.id.trim() === '' || !Number.isFinite(input.now)) return refuse('invalid_input');
   const r = own(state.reservations, input.reservationId);
   if (!r) return refuse('reservation_unknown');
   if (r.studentId !== input.studentId) return refuse('reservation_not_yours');
@@ -209,7 +216,7 @@ export interface OverrideInput {
  */
 export function override(state: AllocationState, input: OverrideInput): Outcome {
   if (input.authority.trim() === '' || input.rationale.trim() === '') return refuse('authority_missing');
-  if (input.id.trim() === '') return refuse('invalid_input');
+  if (input.id.trim() === '' || !Number.isFinite(input.now)) return refuse('invalid_input');
   if (input.expectedInventoryVersion !== state.inventoryVersion) return refuse('stale_inventory');
   if (!own(state.beds, input.bedId)) return refuse('bed_unknown');
   if (own(state.assignments, input.id)) return refuse('duplicate_id');

@@ -244,4 +244,40 @@ describe('input guards', () => {
     });
     expect(dup).toEqual({ ok: false, refusal: 'duplicate_id' });
   });
+
+  it('refuses a blank assignment id on confirm before it writes anything', () => {
+    const held = must(reserve(oneBed(), base));
+    expect(confirm(held.state, { id: '  ', reservationId: 'r1', studentId: 'A', now: 1 })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+    expect(held.state.reservations['r1']).toMatchObject({ status: 'held', assignmentId: null });
+  });
+
+  it('refuses a non-finite clock, including a hold whose expiry overflows to Infinity', () => {
+    for (const now of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(reserve(oneBed(), { ...base, now })).toEqual({ ok: false, refusal: 'invalid_input' });
+      expect(override(oneBed(), { id: 'o1', bedId: 'b1', studentId: 'A', authority: 'RD', rationale: 'x', expectedInventoryVersion: 1, now })).toEqual({
+        ok: false,
+        refusal: 'invalid_input',
+      });
+    }
+    expect(reserve(oneBed(), { ...base, now: Number.MAX_VALUE, holdMs: Number.MAX_VALUE })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+    const held = must(reserve(oneBed(), base));
+    expect(confirm(held.state, { id: 'a1', reservationId: 'r1', studentId: 'A', now: Number.NaN })).toEqual({
+      ok: false,
+      refusal: 'invalid_input',
+    });
+  });
+
+  it('refuses a reused key that asks for a different hold length, instead of returning the first hold', () => {
+    const held = must(reserve(oneBed(), base));
+    expect(reserve(held.state, { ...base, id: 'r1-retry', holdMs: HOLD * 2, now: 10 })).toEqual({
+      ok: false,
+      refusal: 'idempotency_conflict',
+    });
+  });
 });
