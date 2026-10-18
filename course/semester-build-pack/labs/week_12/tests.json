@@ -27,6 +27,53 @@
         "method": "GET"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "GET"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "status": 503,
+        "attempt": 3,
+        "max_attempts": 3,
+        "method": "GET"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "status": 503,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "POST",
+        "idempotency_key": "k-1"
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "status": 503,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "POST",
+        "idempotency_key": ""
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_attempts": 3,
+        "method": "POST"
+      },
+      "expected": false
     }
   ]
 }

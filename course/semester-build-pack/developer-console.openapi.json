@@ -11653,6 +11653,10 @@
               "denied",
               "withdrawn"
             ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -11660,7 +11664,8 @@
           "installationId",
           "permissions",
           "purpose",
-          "status"
+          "status",
+          "expiresAt"
         ]
       },
       "GrantRequestCreate": {
@@ -12173,7 +12178,10 @@
               "contract",
               "isolation",
               "revocation",
-              "recovery"
+              "recovery",
+              "accessibility",
+              "privacy",
+              "security"
             ]
           },
           "fixtureVersion": {
@@ -12217,6 +12225,17 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -12950,7 +12969,6 @@
               "permissions:read": "Access Permissions operations; resource authorization is additionally required.",
               "grants:request": "Access Grants operations; resource authorization is additionally required.",
               "grants:read": "Access Grants operations; resource authorization is additionally required.",
-              "grants:approve": "Access Grants operations; resource authorization is additionally required.",
               "grants:revoke": "Access Grants operations; resource authorization is additionally required.",
               "events:read": "Access Events operations; resource authorization is additionally required.",
               "webhooks:read": "Access Webhooks operations; resource authorization is additionally required.",
@@ -12963,11 +12981,8 @@
               "tests:read": "Access Tests operations; resource authorization is additionally required.",
               "certification:read": "Access Certification operations; resource authorization is additionally required.",
               "certification:write": "Access Certification operations; resource authorization is additionally required.",
-              "certification:review": "Access Certification operations; resource authorization is additionally required.",
-              "certification:decide": "Access Certification operations; resource authorization is additionally required.",
               "installations:read": "Access Installations operations; resource authorization is additionally required.",
               "installations:write": "Access Installations operations; resource authorization is additionally required.",
-              "installations:approve": "Access Installations operations; resource authorization is additionally required.",
               "pilots:write": "Access Pilots operations; resource authorization is additionally required.",
               "pilots:read": "Access Pilots operations; resource authorization is additionally required.",
               "installations:activate": "Access Installations operations; resource authorization is additionally required.",

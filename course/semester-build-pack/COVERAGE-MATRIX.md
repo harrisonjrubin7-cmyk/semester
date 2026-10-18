@@ -30,13 +30,13 @@ Columns are reduced from the full template where they do not apply to a docs-and
 | LAB-09 | Idempotency | Week 9 | Learner | Lab 9 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-10 | Events and deduplication | Week 10 | Learner | Lab 10 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-12 | Typed SDK behavior | Week 12 | Learner | Lab 12 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-12 | Typed SDK behavior | Week 12 | Learner | Lab 12 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-13 | Security threat modeling | Week 13 | Learner | Lab 13 | Visible tests: 4 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-14 | Release and certification evidence | Week 14 | Learner | Lab 14 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-14 | Release and certification evidence | Week 14 | Learner | Lab 14 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-15 | Pilot reconciliation | Week 15 | Learner | Lab 15 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-16 | Capstone activation and defense | Week 16 | Learner | Lab 16 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-16 | Capstone activation and defense | Week 16 | Learner | Lab 16 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 
-Total visible cases: 41 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
+Total visible cases: 58 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
 
 ### 1a. Developer console operations by tag (OAS)
 

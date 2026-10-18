@@ -22,6 +22,92 @@
         "tests": {}
       },
       "expected": false
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": true,
+          "recovery": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "contract_version": "1",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": true,
+          "recovery": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "contract_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": true,
+          "recovery": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "contract_version": "1",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": false,
+          "recovery": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "contract_version": "1",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": true,
+          "revocation": true,
+          "accessibility": true
+        }
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "artifact_digest": "d",
+        "contract_version": "1",
+        "fixture_version": "1",
+        "tests": {
+          "contract": true,
+          "isolation": "yes",
+          "revocation": true,
+          "accessibility": true,
+          "recovery": true
+        }
+      },
+      "expected": false
     }
   ]
 }

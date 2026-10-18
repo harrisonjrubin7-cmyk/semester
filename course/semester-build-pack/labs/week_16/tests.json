@@ -20,6 +20,66 @@
         "support_ready": true
       },
       "expected": false
+    },
+    {
+      "input": {
+        "certified": false,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": false,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": false,
+        "support_ready": true
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": false
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": true,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": "yes"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "certified": 1,
+        "institution_approved": true,
+        "reconciled": true,
+        "rollback_ready": true,
+        "support_ready": true
+      },
+      "expected": false
     }
   ]
 }
