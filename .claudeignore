@@ -50,3 +50,5 @@ override.tf.json
 *_override.tf
 .gallery/
 app/reports/
+.anchor/
+.md-linker/
