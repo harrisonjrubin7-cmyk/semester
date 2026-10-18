@@ -90,6 +90,11 @@ describe("validateStudentAction", () => {
     expect(validateStudentAction(action())).toEqual([]);
   });
 
+  it("requires an id and a title", () => {
+    expect(validateStudentAction(action({ id: " " }))).toHaveLength(1);
+    expect(validateStudentAction(action({ title: "" }))).toHaveLength(1);
+  });
+
   it("requires an explanation and a next step", () => {
     expect(validateStudentAction(action({ whyItAppears: " " }))).toHaveLength(1);
     expect(validateStudentAction(action({ nextStep: "" }))).toHaveLength(1);
@@ -174,6 +179,29 @@ describe("validateAnswerFrame", () => {
 
   it("refuses a blank answer", () => {
     expect(validateAnswerFrame(answer({ answer: "   " }))).toHaveLength(1);
+  });
+
+  it("refuses a proposed action that does not require human confirmation at runtime", () => {
+    const unconfirmed = answer({
+      proposedAction: {
+        type: "delete",
+        preview: "Removes the draft note from your list.",
+        requiresHumanConfirmation: false as unknown as true,
+      },
+    });
+    expect(validateAnswerFrame(unconfirmed)).toHaveLength(1);
+  });
+
+  it("does not count a whitespace-only limitation as a stated limitation", () => {
+    const blank = answer({ sources: [], limitations: ["   "], confidence: "limited" });
+    expect(validateAnswerFrame(blank)).toHaveLength(2);
+  });
+
+  it("refuses a safe handoff with a blank destination or reason", () => {
+    const bad = answer({ safeHandoff: { destination: " ", reason: "Needs an advisor." } });
+    expect(validateAnswerFrame(bad)).toHaveLength(1);
+    const good = answer({ safeHandoff: { destination: "Advising", reason: "Needs an advisor." } });
+    expect(validateAnswerFrame(good)).toEqual([]);
   });
 
   it("refuses a proposed action with a blank preview", () => {

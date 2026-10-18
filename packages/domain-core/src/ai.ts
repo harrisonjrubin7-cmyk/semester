@@ -28,7 +28,11 @@ export function validateAnswerFrame(f: AIAnswerFrame): string[] {
   if (f.scopeStatement.trim() === "") errors.push("Every AI answer must state its scope.");
   // A blank answer would leave the answer surface empty; it must be an answer or a refusal.
   if (f.answer.trim() === "") errors.push("Every AI answer must carry an answer or a safe refusal.");
-  if (f.sources.length === 0 && f.limitations.length === 0) {
+  // A limitation that is only whitespace states nothing, so it does not count.
+  if (f.limitations.some((l) => l.trim() === "")) {
+    errors.push("Every stated limitation must say something.");
+  }
+  if (f.sources.length === 0 && f.limitations.every((l) => l.trim() === "")) {
     errors.push("An answer with no sources must state its limitations.");
   }
   // No sources means no source-backed claim, so high confidence is unsupported too.
@@ -41,6 +45,13 @@ export function validateAnswerFrame(f: AIAnswerFrame): string[] {
   // The student must be shown what a consequential action will do before confirming it.
   if (f.proposedAction && f.proposedAction.preview.trim() === "") {
     errors.push("A proposed action must include a preview of what it will do.");
+  }
+  // The type says `true`, but a value from JavaScript or an untyped payload may not.
+  if (f.proposedAction && f.proposedAction.requiresHumanConfirmation !== true) {
+    errors.push("A proposed action must require a human to confirm it.");
+  }
+  if (f.safeHandoff && (f.safeHandoff.destination.trim() === "" || f.safeHandoff.reason.trim() === "")) {
+    errors.push("A safe handoff must name its destination and its reason.");
   }
   return errors;
 }

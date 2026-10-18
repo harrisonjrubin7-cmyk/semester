@@ -19,6 +19,8 @@ export type StudentAction = {
 // An empty list means the action may be shown.
 export function validateStudentAction(a: StudentAction): string[] {
   const errors: string[] = [];
+  if (a.id.trim() === "") errors.push("Every action must have an id.");
+  if (a.title.trim() === "") errors.push("Every action must have a title.");
   if (a.whyItAppears.trim() === "") errors.push("Every action must explain why it appears.");
   if (a.nextStep.trim() === "") errors.push("Every action must name a safe next step.");
   // Student-entered tasks stay private unless the student chooses to share them.
