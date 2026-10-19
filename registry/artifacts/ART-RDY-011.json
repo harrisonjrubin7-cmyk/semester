@@ -1,0 +1,18 @@
+{
+  "id": "ART-RDY-011",
+  "title": "Registration readiness incident runbook",
+  "kind": "operational_runbook",
+  "location": "docs/pilot/registration-readiness/INC-READINESS-001.yaml",
+  "capability_keys": ["registration.readiness"],
+  "owners": {
+    "accountable": "platform_on_call_owner",
+    "consulted": ["registrar_operations_owner", "institution_technical_owner"]
+  },
+  "classification": "internal_restricted",
+  "state": "draft",
+  "version": "1.0.0",
+  "review": {"cadence": "quarterly_and_after_incident", "next_due": "pending"},
+  "dependencies": ["source-authority-register", "alert-routing", "support-intake"],
+  "release_critical": true,
+  "note": "The runbook exists at location as a template-level plan: its named roles and contact paths are TBD until the pilot institution confirms them. It is recorded as draft, not approved. Its dependency artifacts (source-authority-register, alert-routing, support-intake) were not found in the repository."
+}

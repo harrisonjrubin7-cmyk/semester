@@ -7,11 +7,13 @@ import os
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Lock
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+import pymupdf as fitz
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,6 +25,7 @@ from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
     Citation,
+    CommandReceipt,
     Concept,
     Conflict,
     Course,
@@ -38,6 +41,7 @@ from app.models.entities import (
     StudySession,
     UploadCompletion,
     User,
+    WorkspaceGrant,
 )
 from app.schemas import (
     AssetPatch,
@@ -48,6 +52,7 @@ from app.schemas import (
     CourseOut,
     CoursePatch,
     GenerateAssetRequest,
+    InstitutionCommandRequest,
     LoginRequest,
     QuizAttempt,
     RegisterRequest,
@@ -64,9 +69,11 @@ from app.services.citations import (
     validate_study_asset_content,
 )
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
+from app.services.institution_commands import _is_active, submit_institution_command
 from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
+    ObjectInspectionError,
     ObjectStorage,
     normalize_upload_mime,
     sha256_file,
@@ -77,6 +84,24 @@ from app.services.upload_dispatch import dispatch_upload_completion
 
 router = APIRouter()
 storage = ObjectStorage()
+_preview_pdf_cache_lock = Lock()
+_preview_pdf_cache_key: tuple[str, str, str] | None = None
+_preview_pdf_cache_payload: bytes | None = None
+
+
+def preview_pdf_payload(doc: SourceDocument) -> bytes:
+    global _preview_pdf_cache_key, _preview_pdf_cache_payload
+
+    key = (str(doc.id), doc.sha256, doc.storage_key)
+    with _preview_pdf_cache_lock:
+        if key == _preview_pdf_cache_key and _preview_pdf_cache_payload is not None:
+            return _preview_pdf_cache_payload
+
+    payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+    with _preview_pdf_cache_lock:
+        _preview_pdf_cache_key = key
+        _preview_pdf_cache_payload = payload
+    return payload
 
 
 def owned_course(db: Session, user: User, course_id: UUID) -> Course:
@@ -209,6 +234,76 @@ def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
             },
         ))
     db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.citation_id == citation.id))
+
+
+@router.post("/institutions/{institution_id}/commands", status_code=202)
+def create_institution_command(
+    institution_id: UUID,
+    payload: InstitutionCommandRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=16, max_length=240),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    receipt, replayed = submit_institution_command(
+        db,
+        institution_id,
+        user,
+        payload.command_type,
+        payload.payload,
+        idempotency_key,
+    )
+    return {**serialize(receipt), "replayed": replayed}
+
+
+@router.get("/institutions/{institution_id}/commands")
+def list_institution_commands(
+    institution_id: UUID,
+    cursor: UUID | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=100),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    grants = db.scalars(
+        select(WorkspaceGrant).where(
+            WorkspaceGrant.institution_id == institution_id,
+            WorkspaceGrant.user_id == user.id,
+            WorkspaceGrant.role.in_({"registrar", "institution", "operations"}),
+        )
+    ).all()
+    now = datetime.now(UTC)
+    if not any(_is_active(grant, now) for grant in grants):
+        raise HTTPException(403, "Institution operations grant required")
+    statement = select(CommandReceipt).where(CommandReceipt.institution_id == institution_id)
+    if cursor is not None:
+        anchor = db.scalar(
+            select(CommandReceipt).where(
+                CommandReceipt.id == cursor,
+                CommandReceipt.institution_id == institution_id,
+            )
+        )
+        if anchor is None:
+            raise HTTPException(404, "Command cursor not found")
+        statement = statement.where(
+            CommandReceipt.id != cursor,
+            or_(
+                CommandReceipt.created_at < anchor.created_at,
+                and_(
+                    CommandReceipt.created_at == anchor.created_at,
+                    CommandReceipt.id < anchor.id,
+                ),
+            ),
+        )
+    receipts = db.scalars(
+        statement.order_by(CommandReceipt.created_at.desc(), CommandReceipt.id.desc()).limit(
+            limit + 1
+        )
+    ).all()
+    has_more = len(receipts) > limit
+    items = receipts[:limit]
+    return {
+        "items": [serialize(receipt) for receipt in items],
+        "next_cursor": str(items[-1].id) if has_more else None,
+    }
 
 
 @router.post("/auth/register", response_model=TokenResponse, status_code=201)
@@ -525,14 +620,76 @@ def source_view(
         .offset(offset)
         .limit(limit)
     ).all()
+    review_by_chunk_id: dict[str, ReviewItem] = {}
+    chunk_ids = {str(chunk.id) for chunk in chunks}
+    if chunk_ids:
+        for item in db.scalars(
+            select(ReviewItem)
+            .where(
+                ReviewItem.document_id == doc.id,
+                ReviewItem.item_type == "extracted_evidence",
+                ReviewItem.payload["chunk_id"].as_string().in_(chunk_ids),
+            )
+            .order_by(ReviewItem.created_at.desc())
+        ).all():
+            chunk_id = item.payload.get("chunk_id") if isinstance(item.payload, dict) else None
+            if isinstance(chunk_id, str) and chunk_id not in review_by_chunk_id:
+                review_by_chunk_id[chunk_id] = item
+    serialized_chunks = []
+    for chunk in chunks:
+        serialized = serialize(chunk)
+        review = review_by_chunk_id.get(str(chunk.id))
+        serialized["review_item_id"] = str(review.id) if review else None
+        serialized["review_status"] = review.status.value if review else None
+        serialized["preview_available"] = (
+            Path(doc.filename).suffix.lower() == ".pdf"
+            and chunk.page_number is not None
+            and chunk.bounding_box is not None
+        )
+        serialized_chunks.append(serialized)
     return {
         "document": serialize(doc),
-        "chunks": [serialize(chunk) for chunk in chunks],
+        "chunks": serialized_chunks,
         "total": total,
         "offset": offset,
         "limit": limit,
         "has_more": offset + len(chunks) < total,
     }
+
+
+@router.get("/files/{file_id}/pages/{page_number}/preview")
+def source_page_preview(
+    file_id: UUID,
+    page_number: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    doc = db.get(SourceDocument, file_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(404)
+    owned_course(db, user, doc.course_id)
+    if Path(doc.filename).suffix.lower() != ".pdf":
+        raise HTTPException(415, "Page previews are available only for PDF sources")
+    try:
+        payload = preview_pdf_payload(doc)
+        with fitz.open(stream=payload, filetype="pdf") as document:
+            if page_number < 1 or page_number > document.page_count:
+                raise HTTPException(404, "Source page does not exist")
+            page = document.load_page(page_number - 1)
+            longest_edge = max(float(page.rect.width), float(page.rect.height), 1.0)
+            scale = min(2.0, 2048.0 / longest_edge)
+            preview = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).tobytes("png")
+    except HTTPException:
+        raise
+    except ObjectInspectionError as exc:
+        raise HTTPException(502, "Original object could not be loaded") from exc
+    except (fitz.FileDataError, RuntimeError, ValueError) as exc:
+        raise HTTPException(422, "PDF preview could not be rendered") from exc
+    return Response(
+        content=preview,
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.get("/files/{file_id}/download")

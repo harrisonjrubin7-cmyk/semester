@@ -1,0 +1,78 @@
+# .github/workflows/security-tests.yml (copy into the repo). Merge is blocked unless every job passes.
+# Matches handoff/assurance/04 (release gates) and 05 (test plan). Pin action SHAs before production use.
+name: security-tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  action-pins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if any third-party action isn't pinned to a full commit SHA
+        run: |
+          bad=$(grep -RhoE "uses: [^ ]+@[^ ]+" .github/workflows | grep -vE "@[0-9a-f]{40}$" | grep -v "uses: ./" || true)
+          if [ -n "$bad" ]; then echo "Unpinned actions:"; echo "$bad"; exit 1; fi
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2          # fails on any secret in history or the diff
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm audit --audit-level=high          # high or critical blocks the merge
+
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/owasp-top-ten
+            p/typescript
+            p/react
+            p/secrets
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx tsc -b
+      - run: npm test -- --run                     # includes auth-token tests (expired, wrong iss/aud, forged claims, alg none)
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - run: supabase start
+      - run: supabase db reset                     # applies every migration from scratch
+      - run: supabase test db                      # pgTAP: supabase/tests/*.sql — structural, AC-01..16, command tests
+      - name: RLS and grants fingerprint (AC-16)
+        run: |
+          supabase db dump --schema semester --data-only=false > /tmp/schema.sql
+          psql "$(supabase status -o env | grep DB_URL | cut -d= -f2-)" -Atc "select md5(string_agg(policyname||qual, '|' order by tablename, policyname)) from pg_policies where schemaname in ('public','private','semester')" > fingerprint.txt
+          cat fingerprint.txt
+      - run: supabase stop
+
+# Rules carried from the test plan:
+# - pgTAP runs as the real `authenticated` role with simulated JWT claims, never as postgres or the service role.
+# - Fixtures are seeded by a setup-only role; each test re-checks as that role that a forbidden write didn't happen, then rolls back.
+# - No production secrets in CI; the local Supabase stack uses its own throwaway keys.

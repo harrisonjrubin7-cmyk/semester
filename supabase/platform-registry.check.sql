@@ -1,4 +1,4 @@
--- The platform registry projection (20261011120000): a capability is live only
+-- The platform registry projection (20261019120000): a capability is live only
 -- when its full chain resolves, and the database refuses anything less.
 -- LOCAL/DISPOSABLE DATABASES ONLY; this transaction is always rolled back.
 -- How to run it: supabase/check.sh platform-registry

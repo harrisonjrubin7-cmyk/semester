@@ -1,0 +1,15 @@
+# Frontend-only target, NOT the complete multi-service Vercel platform.
+# /api and /lab return 503 here (see nginx.conf). Use the Vercel deployment for full behavior.
+ARG NODE_IMAGE=node:22-bookworm-slim
+FROM ${NODE_IMAGE} AS build
+WORKDIR /repo
+COPY . .
+RUN npm ci && npm run build --workspace app
+
+ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine
+FROM ${NGINX_IMAGE}
+COPY --from=build /repo/app/dist /usr/share/nginx/html
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+USER 101
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1

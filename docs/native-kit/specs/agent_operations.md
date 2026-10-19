@@ -1,0 +1,6 @@
+# Twelve proposed observe-agent roles
+Names in matrix are proposed, not recovered deployed agents. Observe agents read only individually authorized minimum inputs and draft classifications/evidence/recommendations. No grades/enrollment/payments/discipline/clinical decisions/publishing/grants or arbitrary tool execution.
+
+Task: queued -> admitted -> observing -> draft_ready -> handoff_pending -> reviewed -> completed; denied/stale/cancelled/failed/escalated branches. Root depth zero; maximum depth three; maximum three successful handoffs TOTAL per task. Recipient reauthorizes and validates schema; parent cannot widen access. Allowlisted routes; dedupe task/source/destination/purpose/input digest; reject cycles; denial does not consume successful budget. Production counters/state require durable atomic transactions and leases.
+
+Failure classes: authorization/consent/scope; malformed input; duplicate/cycle/depth/budget; stale evidence/source; transient provider; outage; timeout uncertain outcome; integrity/policy; missing human authority. Only accepted transient errors receive bounded deadline/cost retries. Uncertain irreversible outcomes reconcile before retry. Retry cannot reset handoff limits. Cancellation propagates. Prompts cannot rewrite manifests or routes.

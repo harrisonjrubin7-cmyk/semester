@@ -29,5 +29,14 @@ export function validateRelease(snapshot: RegistrySnapshot): ReleaseDecision {
   for (const key of unverifiedJourneys) issues.push({ code: 'journey_not_verified', path: `journeys.${key}.status`, message: `${key} has not passed end to end.` });
   for (const key of unverifiedAdapters) issues.push({ code: 'adapter_not_sandbox_verified', path: `adapters.${key}.sandbox_verified`, message: `${key} has no sandbox verification.` });
   for (const artifact of artifactsWithoutProducer) issues.push({ code: 'artifact_without_producer', path: `evidence_pack.${artifact}`, message: `Nothing in the repository produces ${artifact}.` });
+  for (const capability of snapshot.capabilities) {
+    const operations = snapshot.operationsReadiness?.find((record) => record?.capability === capability.key);
+    if (!operations || operations.status !== 'ready') {
+      issues.push({
+        code: 'support_recovery_not_ready', path: `operationsReadiness.${capability.key}`,
+        message: `${capability.key} lacks current support roster, synthetic-check, restore-drill, and incident-exercise evidence.`,
+      });
+    }
+  }
   return { allowed: issues.length === 0, issues, blockedCapabilities, inception: { unverifiedJourneys, unverifiedAdapters, artifactsWithoutProducer } };
 }

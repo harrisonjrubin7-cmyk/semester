@@ -1,0 +1,42 @@
+// workers/retention.ts — nightly. Strip .txt when copying. Runs with the service role, outside the browser.
+// For each due retention action: if any legal hold is active, mark blocked_by_hold (never delete); otherwise perform the
+// action, store evidence, and mark done. Storage deletion happens first; the DB row records the evidence afterwards.
+// Re-running is safe: done/blocked rows aren't selected again, and storage deletes are idempotent.
+import { createClient } from '@supabase/supabase-js';
+
+const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const BATCH = 200;
+
+export async function runRetention(now = new Date()) {
+  const { data: due, error } = await db.schema('docs').from('retention_due').select('*').limit(BATCH);
+  if (error) throw error;
+  const report = { blocked: 0, done: 0, failed: 0 };
+  for (const a of due ?? []) {
+    if (a.held) {
+      await db.schema('docs').from('retention_actions').update({ state: 'blocked_by_hold' }).eq('id', a.id).eq('state', 'scheduled');
+      report.blocked++; continue;
+    }
+    try {
+      let evidence = '';
+      if (a.action === 'delete_content') {
+        const { data: versions } = await db.schema('docs').from('document_versions').select('id, storage_ref').eq('document_id', a.document_id);
+        const paths = (versions ?? []).map((v) => v.storage_ref);
+        if (paths.length) { const { error: e } = await db.storage.from('office_documents').remove(paths); if (e) throw e; }
+        evidence = `deleted ${paths.length} object(s) at ${now.toISOString()}`;
+      } else if (a.action === 'review') {
+        await db.schema('ctl').from('outbox').insert({ topic: 'retention.review_due', payload: { document: a.document_id } });
+        evidence = 'review task raised';
+      } else {
+        evidence = 'anonymize: implement per document type before enabling';   // deliberately inert
+        throw new Error('ANONYMIZE_NOT_IMPLEMENTED');
+      }
+      await db.schema('docs').from('retention_actions').update({ state: 'done', executed_at: now.toISOString(), evidence_ref: evidence }).eq('id', a.id).eq('state', 'scheduled');
+      await db.schema('audit').rpc('log', { a: 'retention.' + a.action, t: String(a.document_id), b: null, af: { evidence } });
+      report.done++;
+    } catch (e) {
+      report.failed++;                                     // stays scheduled; next run retries; alert on repeated failure
+      console.error('retention_failed', { id: a.id, err: String(e) });
+    }
+  }
+  return report;
+}

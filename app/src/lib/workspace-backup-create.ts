@@ -29,6 +29,24 @@ import { STUDY_JOURNAL_PREFIX, readJournal } from './studyjournal';
 import { RESET_KEY, readResets, withoutReflections } from './weekly-reset';
 import { RHYTHM_KEY, readRhythm } from './daily-rhythm';
 import { CALM_KEY, readCalm, withoutMemory } from './calm-controls';
+import { HUB_PREFS_PREFIX, readHubPrefs, withoutMessageMarkers } from './comms';
+import {
+  LAUNCHPAD_PREFIX,
+  readLaunchpad,
+  withoutReflections as withoutLaunchpadReflections,
+} from './launchpad';
+import {
+  OPPORTUNITIES_PREFIX,
+  readOpportunities,
+  withoutWorkStudy,
+} from './opportunities';
+import {
+  HOUSING_PLAN_PREFIX,
+  MEAL_PLAN_PREFIX,
+  readHousingDraft,
+  readMealDraft,
+} from './portal-storage';
+import { readSupport, SUPPORT_PREFIX, withoutPrivateSupport } from './support';
 import { readDataProjects } from './toolkit/data-storage';
 import { readToolkit, TOOLKIT_DATA_PREFIX, TOOLKIT_PREFIX } from './toolkit/store';
 
@@ -160,6 +178,52 @@ export const DEFINITIONS: Record<string, WorkspaceDefinition> = {
     prefix: CALM_KEY,
     scope: 'device',
     read: (v) => withoutMemory(readCalm(v)),
+  },
+  // Launchpad progress and student-chosen setup travel; private reflection
+  // answers do not. Restoring keeps the answers already on this device.
+  launchpad: {
+    label: 'Launchpad progress and choices',
+    prefix: LAUNCHPAD_PREFIX,
+    scope: 'account',
+    read: (v) => withoutLaunchpadReflections(readLaunchpad(v)),
+  },
+  // Opportunity work and time planning travel; the work-study choice does
+  // not. Restoring keeps that private choice when the same item is already on
+  // this device and otherwise defaults it to not recorded.
+  opportunities: {
+    label: 'Opportunity tracker and time plan',
+    prefix: OPPORTUNITIES_PREFIX,
+    scope: 'account',
+    read: (v) => withoutWorkStudy(readOpportunities(v)),
+  },
+  // Delivery choices travel; read, saved and follow-up ids describe this
+  // device's current message set and would be stale or misleading elsewhere.
+  hubPreferences: {
+    label: 'Hub delivery preferences',
+    prefix: HUB_PREFS_PREFIX,
+    scope: 'account',
+    read: (v) => withoutMessageMarkers(readHubPrefs(v)),
+  },
+  // Routines, continuity choices and commute planning travel. Emergency
+  // contacts and access notes stay on the device where the student entered
+  // them and are preserved when portable planning is restored.
+  support: {
+    label: 'Support routines and continuity plan',
+    prefix: SUPPORT_PREFIX,
+    scope: 'account',
+    read: (v) => withoutPrivateSupport(readSupport(v)),
+  },
+  housingPlan: {
+    label: 'Housing application plans',
+    prefix: HOUSING_PLAN_PREFIX,
+    scope: 'term',
+    read: readHousingDraft,
+  },
+  mealPlan: {
+    label: 'Meal-plan estimates',
+    prefix: MEAL_PLAN_PREFIX,
+    scope: 'term',
+    read: readMealDraft,
   },
   toolkit: { label: 'Toolkit assignments, research and declarations', prefix: TOOLKIT_PREFIX, scope: 'account', read: readToolkit },
   toolkitData: { label: 'Toolkit data projects', prefix: TOOLKIT_DATA_PREFIX, scope: 'account', read: readDataProjects },

@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  APPROVAL_AREAS, CLASSIFICATIONS, DOMAINS, DUPLICATE_RULES, GATE_TEXT, RUN_KINDS, STAGES, STAGE_DOES, STAGE_LABEL, STAGE_RUN, TRANSFORMS,
-  canGoBack, gateFailures, mapsEditable, nextStage, parseTable, passes, preview, reconcile, sha256, transform,
+  APPROVAL_AREAS, BACK_REASON_MAX, BACK_REASON_MIN, CLASSIFICATIONS, DOMAINS, DUPLICATE_RULES, GATE_TEXT, RUN_KINDS, STAGES, STAGE_DOES, STAGE_LABEL, STAGE_RUN, TRANSFORMS,
+  backReasonProblem, canGoBack, gateFailures, mapsEditable, nextStage, parseTable, passes, preview, reconcile, sha256, transform,
   type FieldMap, type MigrationApproval, type MigrationProject, type MigrationRun, type RunCounts,
 } from './center';
 
@@ -33,7 +33,7 @@ function project(over: Partial<MigrationProject> = {}): MigrationProject {
     id: 'p1', tenant_id: 'u', name: 'Retire the legacy gradebook', domain: 'lms',
     source_platform: '', source_version: '', data_owner: '', classifications: [], retention: '', historical_cutoff: null,
     duplicate_rule: null, cutover_date: null, rollback_plan: '', archive_location: '', required_approvals: ['data_owner', 'it'],
-    parallel_runs_required: 2, stage: 'inventory', stage_entered_at: T0, created_by: 'lead', created_at: T0, ...over,
+    parallel_runs_required: 2, stage: 'inventory', stage_entered_at: T0, stage_back_reason: null, created_by: 'lead', created_at: T0, ...over,
   };
 }
 
@@ -283,5 +283,25 @@ describe('slash dates', () => {
     expect(dayFirst.rows.map((r) => r.posted_on)).toEqual(['2026-07-03', '2026-01-05', '2026-07-13']);
     const monthFirst = preview(file, maps, 'reject', 'month_first');
     expect(monthFirst.counts).toMatchObject({ rows_ok: 2, rows_failed: 1 });
+  });
+});
+
+describe('the reason for going back', () => {
+  it('says what is wrong with it, in the words the database would refuse it for', () => {
+    expect(backReasonProblem('')).toMatch(/Say why/);
+    expect(backReasonProblem('   ')).toMatch(/Say why/);
+    expect(backReasonProblem('too short')).toMatch(/at least 10/);
+    expect(backReasonProblem('x'.repeat(BACK_REASON_MAX + 3))).toMatch(/at most 500.*3 too many/);
+    expect(backReasonProblem('The sample came from the wrong export.')).toBeNull();
+    // Counted after trimming, as the database counts it.
+    expect(backReasonProblem(`  ${'x'.repeat(BACK_REASON_MIN)}  `)).toBeNull();
+    expect(backReasonProblem(`  ${'x'.repeat(BACK_REASON_MIN - 1)}  `)).toMatch(/at least 10/);
+  });
+
+  it('holds the same limits as the migration that enforces them', () => {
+    const back = readFileSync(join(__dirname, '../../../../supabase/migrations/20261012100000_migration_back_move_needs_reason.sql'), 'utf8');
+    expect(back).toContain(`between ${BACK_REASON_MIN} and ${BACK_REASON_MAX}`);
+    expect(back).toContain(`< ${BACK_REASON_MIN}`);
+    expect(back).toContain(`> ${BACK_REASON_MAX}`);
   });
 });

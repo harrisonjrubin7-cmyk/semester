@@ -211,7 +211,7 @@ test('the SQL projection derives status from maturity and never writes a status 
   assert.equal(projectedStatus({ designed: true, schema: true, policies: true, api: true, user_interface: true, e2e_tested: true, staged: true, production_ready: true, tenant_activated: false, monitored: false }), 'deployed');
   const sql = renderRegistryProjection(registry);
   assert.match(sql, /insert into private\.registry_workspaces .*'registrar'/s);
-  assert.match(sql, /'registration\.readiness', w\.id, .*'draft'/);
+  assert.match(sql, /'registration\.readiness', w\.id, .*'implemented'/);
   assert.doesNotMatch(sql, /'active'\)\s*\n\s*from private\.registry_workspaces w/, 'no capability is projected as active');
   assert.ok(sql.startsWith('-- Generated'));
 });

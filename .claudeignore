@@ -50,3 +50,7 @@ override.tf.json
 *_override.tf
 .gallery/
 app/reports/
+.anchor/
+.md-linker/
+course-engine/apps/web/playwright-report/
+course-engine/apps/web/test-results/

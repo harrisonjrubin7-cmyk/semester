@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 240 |
-| Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 54 |
-| … of which enable row-level security in a migration | 54 |
+| Migration files | 255 |
+| Tables created in `public` and not later dropped | 347 |
+| … of which enable row-level security in a migration | 347 |
+| Tables created in `private` and not later dropped | 59 |
+| … of which enable row-level security in a migration | 59 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 120 |
+| Tables named by at least one literal `create policy` statement | 279 |
+| Tables with RLS found and no literal policy statement | 127 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-156 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -134,6 +134,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/module_mode.check.sql` | The per-school, per-module Connect / Core switch (20260930010000). |
 | `supabase/my-capabilities.check.sql` | Who the app is told holds which capability — 'public.my_capabilities()'. |
 | `supabase/my-sessions.check.sql` | Where a student is signed in (stream 02): 'my_sessions()' lists the caller's own live sessions and 'end_my_session()' ends one of them. |
+| `supabase/notification-inbox.check.sql` | Durable notification inbox, preference, retry, and audit boundaries. |
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
@@ -142,7 +143,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
-| `supabase/platform-registry.check.sql` | The platform registry projection (20261011120000): a capability is live only when its full chain resolves, and the database refuses anything less. |
+| `supabase/platform-registry.check.sql` | The platform registry projection (20261019120000): a capability is live only when its full chain resolves, and the database refuses anything less. |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
 | `supabase/privileged-access-review.check.sql` | Privileged role-grant review. |
@@ -156,6 +157,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |
 | `supabase/registration-readiness-store.check.sql` | The registration-readiness durable store (20261009160000). |
+| `supabase/registration_swap.check.sql` | the atomic swap (REG-6.3). |
 | `supabase/registration_transaction.check.sql` | the official registration transaction. |
 | `supabase/reports.check.sql` | Who may read a report, and the four states one can be in. |
 | `supabase/retention-sweeps.check.sql` | The three retention sweeps from 20260929030000_retention_sweeps.sql. |
@@ -297,19 +299,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 241 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 241 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 65 |
+| Register rows in category `self-service` | 68 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 97 |
-| Register rows in category `integration` | 6 |
+| Register rows in category `admin` | 99 |
+| Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 32 |
+| Register rows in category `read-helper` | 33 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

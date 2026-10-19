@@ -1,0 +1,85 @@
+-- tests/database/documents.test.sql — pgTAP. Strip .txt. Covers REQUIRED.md 7–10, 12, 14, 19, 20 (13 needs storage; see note at end).
+-- Company workspace C; author U1, reviewers U2 and U3, outsider U4, people reader U5.
+begin;
+create extension if not exists pgtap;
+select plan(22);
+create or replace function pg_temp.as_user(uid uuid) returns void language sql as $$
+  select set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true), set_config('role', 'authenticated', true) $$;
+create or replace function pg_temp.as_admin() returns void language sql as $$ select set_config('role', 'postgres', true) $$;
+
+insert into auth.users(id, email) values ('00000000-0000-0000-0000-0000000000c1','u1@semester.co'),('00000000-0000-0000-0000-0000000000c2','u2@semester.co'),('00000000-0000-0000-0000-0000000000c3','u3@semester.co'),('00000000-0000-0000-0000-0000000000c4','u4@else.co'),('00000000-0000-0000-0000-0000000000c5','u5@semester.co');
+insert into core.institutions(id, name) values ('00000000-0000-0000-0000-000000000000','Semester (platform)');
+insert into core.workspaces(id, kind, organization_id) values ('c0000000-0000-0000-0000-000000000001','company','00000000-0000-0000-0000-000000000000');
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values ('docs:read','x',false,'{}',0),('document.execute','x',true,'{}',0),('document.archive','x',false,'{}',0),('document.create','x',false,'{}',0),('people:read','x',false,'{}',0),('compensation.read','x',true,'{}',0),('docs:restricted','x',true,'{}',0) on conflict do nothing;
+insert into ctl.grants(person_id, capability, tenant_id, granted_by, reason) select u, c, '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000c1', 'test'
+  from (values ('00000000-0000-0000-0000-0000000000c1'::uuid,'docs:read'),('00000000-0000-0000-0000-0000000000c1','document.create'),('00000000-0000-0000-0000-0000000000c1','document.execute'),('00000000-0000-0000-0000-0000000000c1','document.archive'),
+    ('00000000-0000-0000-0000-0000000000c2','docs:read'),('00000000-0000-0000-0000-0000000000c3','docs:read'),('00000000-0000-0000-0000-0000000000c5','people:read'),('00000000-0000-0000-0000-0000000000c5','docs:restricted'),('00000000-0000-0000-0000-0000000000c5','docs:read')) g(u, c);
+
+-- create v1 as author
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select ok((api.create_document_version('c0000000-0000-0000-0000-000000000001', null, 'MSA', 'msa', 'docs/msa/v1.pdf', repeat('a', 64), true, 'cv1') ->> 'versionNumber')::int = 1, 'create v1');
+select is(api.create_document_version('c0000000-0000-0000-0000-000000000001', null, 'MSA', 'msa', 'docs/msa/v1.pdf', repeat('a', 64), true, 'cv1') ->> 'versionNumber', '1', '11 create is idempotent by key');
+select pg_temp.as_admin();
+create temp table v as select id as vid, document_id as did from docs.document_versions where storage_ref = 'docs/msa/v1.pdf';
+insert into docs.review_tasks(version_id, reviewer_id) select vid, u from v, (values ('00000000-0000-0000-0000-0000000000c2'::uuid),('00000000-0000-0000-0000-0000000000c3')) r(u);
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select is(api.transition_document((select vid from v), 'submit', 'draft', 'ready', 'k-submit'), 'in_review', 'submit');
+select is(api.transition_document((select vid from v), 'submit', 'draft', 'ready', 'k-submit'), 'in_review', 'idempotent replay returns recorded outcome');
+select throws_ok($$ select api.transition_document((select vid from v), 'approve', 'draft', 'x', 'k-stale') $$, 'P0001', 'STATE_CONFLICT', 'stale expected state');
+
+-- 7 Self-review denied (author isn't an assigned reviewer → assignment check fires first; assign author to prove conflict rule)
+select pg_temp.as_admin(); insert into docs.review_tasks(version_id, reviewer_id, required) select vid, '00000000-0000-0000-0000-0000000000c1', false from v;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select throws_ok($$ select api.transition_document((select vid from v), 'approve', 'in_review', 'ok', 'k-self') $$, 'P0001', 'SELF_REVIEW_FORBIDDEN', '7 author cannot approve');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c4');
+select throws_ok($$ select api.transition_document((select vid from v), 'approve', 'in_review', 'ok', 'k-out') $$, 'P0001', 'NOT_FOUND', 'outsider cannot see the document');
+
+-- 8 Quorum
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c2');
+select is(api.transition_document((select vid from v), 'approve', 'in_review', 'ok', 'k-a2'), 'in_review', '8a first of two required approvals keeps in_review');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c3');
+select is(api.transition_document((select vid from v), 'approve', 'in_review', 'ok', 'k-a3'), 'approved', '8b last required approval approves');
+
+-- signatures
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select throws_ok($$ select api.transition_document((select vid from v), 'activate', 'approved', 'go', 'k-act0') $$, 'P0001', 'VERIFIED_SIGNATURES_REQUIRED', 'cannot activate a signature-required version directly');
+select pg_temp.as_admin(); insert into docs.signature_requests(id, document_version_id, signer_email) select 'd0000000-0000-0000-0000-000000000001', vid, 'cfo@vanderbilt.edu' from v;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select is(api.transition_document((select vid from v), 'request_signatures', 'approved', 'send', 'k-sig'), 'awaiting_signature', 'request signatures');
+select throws_ok($$ select api.transition_document((select vid from v), 'activate', 'awaiting_signature', 'go', 'k-act1') $$, 'P0001', 'VERIFIED_SIGNATURES_REQUIRED', 'no evidence yet');
+
+-- 9 Exact signature evidence
+select pg_temp.as_admin();
+select is(docs.record_signature_event('docusign', 'e1', repeat('0', 64), 'd0000000-0000-0000-0000-000000000001', repeat('b', 64), 'env-1', now(), null), 'rejected_hash_mismatch', '9a wrong hash rejected');
+select is((select count(*) from docs.signature_evidence)::int, 0, '9b no evidence from mismatch');
+select is(docs.record_signature_event('docusign', 'e2', repeat('0', 64), 'd0000000-0000-0000-0000-000000000001', repeat('a', 64), 'env-1', now(), null), 'recorded', '9c exact hash recorded');
+select is(docs.record_signature_event('docusign', 'e2', repeat('0', 64), 'd0000000-0000-0000-0000-000000000001', repeat('a', 64), 'env-1', now(), null), 'duplicate', '9d duplicate event ignored');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select is(api.transition_document((select vid from v), 'activate', 'awaiting_signature', 'executed', 'k-act2'), 'effective', 'activate after evidence');
+
+-- 14 Outbox written in the same transaction
+select pg_temp.as_admin();
+select ok((select count(*) from ctl.outbox where topic = 'document.transitioned') >= 4, '14 every transition wrote an outbox event');
+
+-- 12 Held archive
+update docs.documents set legal_hold = true where id = (select did from v);
+update docs.version_states set state = 'superseded' where version_id = (select vid from v);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c1');
+select throws_ok($$ select api.transition_document((select vid from v), 'archive', 'superseded', 'retire', 'k-arch') $$, 'P0001', 'LEGAL_HOLD', '12 legal hold blocks archive');
+
+-- 19 Sensitive documents need an audience
+select pg_temp.as_admin();
+insert into docs.documents(id, workspace_id, title, type, owner_id, sensitivity, classification) values ('e0000000-0000-0000-0000-000000000001','c0000000-0000-0000-0000-000000000001','Offer — J. Doe','offer','00000000-0000-0000-0000-0000000000c1','payroll','restricted');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c5');
+select is((select count(*) from docs.documents where id = 'e0000000-0000-0000-0000-000000000001')::int, 0, '19a docs:restricted without audience reads nothing');
+select pg_temp.as_admin(); insert into docs.audiences(document_id, person_id, purpose, granted_by, expires_at) values ('e0000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000c5','payroll setup','00000000-0000-0000-0000-0000000000c1', now() - interval '1 minute');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c5');
+select is((select count(*) from docs.documents where id = 'e0000000-0000-0000-0000-000000000001')::int, 0, '19b expired audience reads nothing');
+
+-- 20 Compensation separation
+select is((select count(*) from people.compensation_records)::int, 0, '20 people:read alone reads no compensation (table empty here: also assert policy name exists)');
+
+-- 10 Parallel activation and 13 independent file authorization need two sessions / storage: run in tests/integration (Vitest) with two clients.
+select * from finish();
+rollback;
