@@ -278,4 +278,13 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_seven_shortcuts_lose_points(self):
+        shortcuts={
+            2:"def validate_pr(r): return isinstance(r.get('title'),str) and bool(r['title'].strip()) and isinstance(r.get('test_evidence'),str) and bool(r['test_evidence'].strip()) and isinstance(r['reviewer'],str) and bool(r['reviewer'].strip())\n",
+            14:"def evidence_ready(r):\n    t=r['tests']\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and t.get('contract') is True and t.get('isolation') is True and t['revocation'] is True and t['accessibility'] is True and t['recovery'] is True\n",
+            15:"def reconcile(r):\n    e=r['expected']; o=r['observed']\n    return {'missing':sorted(x for x in e if x not in o),'unexpected':sorted(y for y in o if y not in e)}\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
