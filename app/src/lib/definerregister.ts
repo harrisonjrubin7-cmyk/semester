@@ -307,6 +307,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
   ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_swap', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['replay_domain_event', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
@@ -522,6 +523,13 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['integration_revoke_connection', 'integration_revoke_scope'],
   },
   {
+    // Held to the file that last wrote it. Not `redefines`: the first definition
+    // (20261006000000) is not on production either, so production still lacks
+    // the function and it stays in the count of rows production does not run.
+    file: '20261012110000_handoff_attempt_limit_and_revoker.sql',
+    functions: ['consume_handoff'],
+  },
+  {
     file: '20261008223000_privileged_role_mfa.sql',
     functions: ['privileged_mfa_required'],
   },
@@ -570,11 +578,15 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['set_support_email_notice'],
   },  {
     file: '20261006000000_onboarding_journeys_and_handoff.sql',
-    functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
+    functions: ['complete_onboarding_step', 'skip_onboarding_step', 'start_onboarding'],
   },
   {
     file: '20261006160000_my_sessions.sql',
     functions: ['end_my_session', 'my_sessions'],
+  },
+  {
+    file: '20261018120000_registration_swap.sql',
+    functions: ['registration_swap'],
   },
 ];
 

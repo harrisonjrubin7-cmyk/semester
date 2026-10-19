@@ -146,8 +146,13 @@ useDefault = true
 #      nothing and contain only a fixed product prefix plus a small decimal
 #      suffix. The exception is value-scoped, so a credential elsewhere in the
 #      same SQL file remains visible.
+#
+#   7. **A workflow name in the native kit matrix.** `Employment/revocation`
+#      is a prose cell in docs/native-kit/matrices/company_functions_15.csv;
+#      gitleaks reads the word "access" nearby as a key. Value-scoped, so the
+#      same text anywhere else remains visible.
 [allowlist]
-description = 'Six string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
+description = 'Seven string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
@@ -156,4 +161,5 @@ regexes = [
   '''^[0-9a-f]{16}$''',
   '''^eyJhbGciOiJub25lIn0\.eyJzdWIiOiJ0ZXN0In0\.c2ln$''',
   '''^(?:corr-material-(?:plan|policy)-[0-9]+|corr-material-withdraw(?:-[0-9]+)?|material-withdraw-key-[0-9]+)$''',
+  '''^Employment/revocation$''',
 ]

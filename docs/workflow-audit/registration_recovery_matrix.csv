@@ -1,0 +1,18 @@
+failure,required_behavior,result_state,retry_rule,proposed_owner,acceptance_evidence
+Identity/tenant mismatch,Stop before protected reads,reauthenticate,No retry until identity scope fixed,Identity support,Denied-access audit; no protected data disclosed
+Stale source or unknown authority,Block official command; refresh source and registry,awaiting_information,Read refresh only,Registrar/integration,Freshness and writer check
+Window/time ticket closed,Explain institution rule and next opportunity,denied,Revalidate when window changes,Registrar,No command committed
+Blocking hold,Permitted reason plus responsible-office handoff,awaiting_information,Revalidate authoritative clearance,Hold-owning office,No inferred clearance from task completion
+Prerequisite/corequisite/credit limit failure,Explain rule; scoped override request if permitted,awaiting_approval,New preview after changed rule or approval,Registrar/approver,Versioned rule and scoped approval
+Capacity race/section full,Commit-time capacity check; waitlist or alternative,waitlisted_or_denied,No blind enrollment retry,Registration operations,One final seat allocated once
+Repeated same request,Return original status/receipt,existing_command,Same key and payload deduplicated,Platform,One business effect
+Same key different payload,Reject conflict,denied,New reviewed command required,Platform,No changed effect
+Timeout after dispatch,Result unknown; lookup authority and reconcile,reconciling,No new-key replay; same key only if authority safely deduplicates,Integration/registrar,Resolve before conflicting next command
+Partial multi-system success,Retain authoritative result; repair projections,committed_pending_projection,Retry projection only,Integration/platform,Ledger agrees; failed projection visible
+Confirmed precommit failure,Failure with safe resume,failed,Bounded retry after cause clears and revalidation,Platform,Evidence authority did not commit
+Override expiry or lost permission,Stop; request approval if permitted,awaiting_approval,No expired approval,Registrar/security,Commit-time role and approval check
+Waitlist offer expiry/delivery failure,Record expiry under policy; show next action,waitlisted_or_expired,No unauthorized automatic enrollment,Registration operations,Ordered waitlist; traceable offer
+Swap/add-drop failure,Preserve original enrollment until replacement assured,failed_or_reconciling,Atomic authority operation or explicit approved non-atomic sequence,Registrar,No unintended drop
+Wrong committed enrollment,Human correction case; assess policy and impacts,correction_pending,"New auditable correction, never erase history",Registrar,Original plus correction ledger
+Withdrawal/refund mismatch,Retain academic decision; reconcile financial difference,committed_pending_reconciliation,No automatic academic reversal,Registrar/student accounts,Separate academic and financial receipts
+Cutover/authority drift,Pause scope; reconcile in-flight commands and writer,paused,Resume only after authority gate,Implementation/registrar,No split-brain writer

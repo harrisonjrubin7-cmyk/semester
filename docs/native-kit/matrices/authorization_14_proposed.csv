@@ -1,0 +1,15 @@
+id,check,criterion
+C01,Authenticated principal,Server-derived identity
+C02,Scope membership,Current personal/business/institution membership
+C03,Environment/release,Approved candidate/config/data mode
+C04,Kills/holds,Current server emergency controls
+C05,Entitlement/module authority,Contract and approved operating mode
+C06,Capability/delegation,Scoped current grant
+C07,Role/cohort restrictions,Narrowing policies respected
+C08,Classification/purpose,Allowed class/purpose/destination
+C09,Consent/retention/legal hold,Applicable sharing/retention constraints
+C10,Source/integration authority,Freshness and approved scopes
+C11,Domain policy/eligibility,Current academic/finance/domain checks
+C12,Independent approval/MFA,Distinct approvers and exact digest
+C13,Idempotency/version/preconditions,Current object and unchanged preview
+C14,Audit/receipt/dispatch readiness,Fail-closed durable audit and operations
