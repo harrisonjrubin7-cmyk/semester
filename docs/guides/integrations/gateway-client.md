@@ -1,14 +1,30 @@
 ---
 stale-refs:
   - source: docs/guides/integrations/sis-adapter.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/which-integration-path.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

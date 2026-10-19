@@ -1,18 +1,28 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-EXPANSION-CROSSWALK.md
-    changed_at: "2026-10-19T01:43:30"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: supabase/DEPLOY.md
     changed_at: "2026-10-19T01:43:42"
     sections_changed: []
     summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

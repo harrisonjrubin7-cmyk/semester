@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/GO-LIVE-CHECKLIST.md
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # Institutional Known Limitations

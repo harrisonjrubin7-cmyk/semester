@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-FEATURE-FLAG-PLAN.md
-    changed_at: "2026-10-19T01:43:29"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-19T01:43:29"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-TOKENS.md
-    changed_at: "2026-10-19T01:43:29"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
@@ -36,7 +36,37 @@ stale-refs:
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COLOR-AND-DARK-MODE-SPEC.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INFORMATION-HIERARCHY.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

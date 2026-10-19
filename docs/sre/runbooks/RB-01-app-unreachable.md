@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # RB-01 · App unreachable or serving the wrong build

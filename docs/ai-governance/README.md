@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/ai-governance/05-feature-requirements.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/10-red-team-and-launch-gates.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/01-inventory-and-risk-tiering.md
@@ -28,7 +28,37 @@ stale-refs:
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/ai-governance/02-model-gateway.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/04-tool-broker.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/09-user-transparency.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

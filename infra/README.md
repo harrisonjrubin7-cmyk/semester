@@ -4,7 +4,25 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/infrastructure/DISASTER-RECOVERY.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/README.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # Infrastructure as code

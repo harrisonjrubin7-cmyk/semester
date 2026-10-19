@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: CONTRIBUTING.md
-    changed_at: "2026-10-19T01:43:22"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/README.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/audit/CURRENT_STATE.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/CODING-STANDARDS.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DEPENDENCY.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-ADR.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EVENT-TYPE.md
@@ -45,15 +45,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/ONBOARDING.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/README.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/REPO-MAP.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/QUALITY-GATES.md
@@ -69,11 +69,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/README.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/AUDIT-AND-DATA-REQUESTS.md
@@ -81,23 +81,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/IMPLEMENTATION-GUIDE.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/README.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/STUDENT-DATA-MAP.md
@@ -105,15 +105,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/sis-adapter.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/which-integration-path.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ANALYTICS-MARKS.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EVENTS.md
@@ -121,23 +121,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/releases/CHANGE-COMMUNICATION.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/releases/README.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/delete-account-export-data.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/escalation-map.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/severity-and-routing.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -145,15 +145,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-19T01:43:41"
+    changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/REVIEWER-QUESTION-MAP.md
-    changed_at: "2026-10-19T01:43:42"
+    changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
-    changed_at: "2026-10-19T01:43:42"
+    changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md
@@ -268,7 +268,237 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/guides/institution/SCIM-PROVISIONING.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/institution/SSO-SETUP.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/README.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/faculty/what-faculty-can-do.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/accessibility-settings.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/add-your-syllabus.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/bring-in-a-calendar.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/change-the-navigation-and-layout.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/control-what-the-ai-sees.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/install-the-app.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/share-with-an-advisor.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/share-with-family.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/start-with-the-sample-or-your-own.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/turn-on-reminders.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/use-the-calendar.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/use-today.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/what-works-offline.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/when-something-is-missing.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/AUTH-AND-LIMITS.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/ai-unavailable.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/calendar-not-updating.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/cannot-sign-in.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/old-version-showing.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/syllabus-did-not-parse.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/sync-waiting-or-conflict.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/event-consumer/README.md
+    changed_at: "2026-10-19T02:00:53"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/gateway-client/README.md
+    changed_at: "2026-10-19T02:00:53"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

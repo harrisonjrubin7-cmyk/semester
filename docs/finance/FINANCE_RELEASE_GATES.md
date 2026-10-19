@@ -1,10 +1,24 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/EMBEDDED_FINANCE_ROADMAP.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # Finance release gates

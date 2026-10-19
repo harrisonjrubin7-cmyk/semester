@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/operating-model/AI-ASSURANCE.md
-    changed_at: "2026-10-19T01:43:33"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-DATA-USE-STANDARD.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T01:43:41"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
@@ -25,6 +25,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

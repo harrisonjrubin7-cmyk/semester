@@ -1,35 +1,35 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T01:43:30"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T01:43:41"
+    changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -53,6 +53,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

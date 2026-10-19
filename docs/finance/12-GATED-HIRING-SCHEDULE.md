@@ -1,14 +1,22 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/10-GO-NO-GO-GATES.md
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/finance/05-BUDGET-GOVERNANCE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

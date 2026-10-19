@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/support/articles/cannot-sign-in.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Sync says it's waiting, or two devices disagree

@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_MASTER_BACKLOG.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-19T01:43:33"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
-    changed_at: "2026-10-19T01:43:35"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_RELEASE_GATES.md
@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
-    changed_at: "2026-10-19T01:43:36"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/08-marketplace-partner-trust-fulfillment.md
-    changed_at: "2026-10-19T01:43:38"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/11-founder-to-team-transition.md
-    changed_at: "2026-10-19T01:43:39"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
@@ -41,6 +41,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

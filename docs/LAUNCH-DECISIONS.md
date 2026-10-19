@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
@@ -16,7 +16,15 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/infrastructure/DISASTER-RECOVERY.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Bootstrap: the one step Terraform cannot do for itself
 
 Terraform needs somewhere to keep its state before it can manage anything, so

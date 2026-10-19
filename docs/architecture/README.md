@@ -1,18 +1,34 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/README.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/modularization/README.md
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/0001-local-first-with-supabase.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

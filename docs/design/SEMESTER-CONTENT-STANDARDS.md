@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/design/INTERACTION-STANDARDS.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester content standards
 
 The words Semester uses, and the rules for writing new ones. It applies to

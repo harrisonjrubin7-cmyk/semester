@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/design/DESIGN-SYSTEM-PRODUCT-SPEC.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/design/LAYOUT-CONTRACT.md
@@ -16,7 +16,21 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/design/GOVERNANCE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/INTERACTION-STANDARDS.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

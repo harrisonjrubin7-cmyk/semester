@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
@@ -12,7 +12,21 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/DISASTER-RECOVERY.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

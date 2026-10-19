@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/offline-sync-contract.md
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # Mobile, offline, encrypted-storage and CRDT reference

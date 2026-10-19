@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/help/README.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Glossary
 
 > **Type:** reference · **Audience:** students, families · **Owner:** `product` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

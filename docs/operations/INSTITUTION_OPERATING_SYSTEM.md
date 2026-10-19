@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
@@ -13,15 +13,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
-    changed_at: "2026-10-19T01:43:35"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
-    changed_at: "2026-10-19T01:43:35"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
-    changed_at: "2026-10-19T01:43:36"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
@@ -29,6 +29,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

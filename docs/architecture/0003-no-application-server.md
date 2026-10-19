@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/0001-local-first-with-supabase.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 0003 · No application server; edge functions instead
 
 **Status:** Accepted. Will be genuinely tested by Phases 6–15.

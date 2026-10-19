@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-INVENTORY-AND-LINEAGE.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-19T01:43:42"
+    changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
@@ -48,7 +48,25 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/privacy-operations/02-SUBJECT-RIGHTS-WORKFLOW.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

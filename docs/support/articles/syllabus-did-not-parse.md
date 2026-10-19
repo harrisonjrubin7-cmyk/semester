@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/support/articles/ai-unavailable.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/old-version-showing.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # My syllabus didn't parse, or the dates look wrong

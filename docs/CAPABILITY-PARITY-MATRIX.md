@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:31"
     sections_changed: []
     summary: externally modified
+  - source: docs/RESPONSIVE-COMPONENT-SPEC.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Capability parity matrix

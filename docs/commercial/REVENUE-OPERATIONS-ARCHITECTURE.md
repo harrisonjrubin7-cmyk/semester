@@ -8,7 +8,25 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

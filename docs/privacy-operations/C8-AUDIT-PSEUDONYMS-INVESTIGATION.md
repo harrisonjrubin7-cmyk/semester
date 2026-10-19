@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:40"
     sections_changed: []
     summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # C8 investigation: audit pseudonyms and erasure

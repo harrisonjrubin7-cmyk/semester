@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:31"
     sections_changed: []
     summary: externally modified
+  - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Launch Campaign Plan

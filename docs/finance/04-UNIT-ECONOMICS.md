@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T01:43:24"
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # Unit-economics dashboard

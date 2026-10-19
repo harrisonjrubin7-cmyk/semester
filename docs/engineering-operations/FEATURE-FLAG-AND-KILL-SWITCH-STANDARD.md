@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Feature Flag and Kill Switch Standard
 
 | Control | Value |

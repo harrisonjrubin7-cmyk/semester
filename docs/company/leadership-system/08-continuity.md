@@ -5,22 +5,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/02-decision-rights.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/04-organization-and-hiring.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/09-calendar.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/finance/05-BUDGET-GOVERNANCE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

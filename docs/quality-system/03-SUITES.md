@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-TEST-PLAN.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/TENANT-ISOLATION-EVIDENCE.md
@@ -20,7 +20,15 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

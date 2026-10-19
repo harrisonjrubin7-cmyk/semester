@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/help/students/share-with-family.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # What families can see
 
 > **Type:** explanation · **Audience:** families, students · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

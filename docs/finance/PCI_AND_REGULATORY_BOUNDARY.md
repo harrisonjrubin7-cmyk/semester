@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # PCI and regulatory boundary

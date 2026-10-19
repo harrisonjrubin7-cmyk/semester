@@ -20,7 +20,13 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T02:00:49"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 

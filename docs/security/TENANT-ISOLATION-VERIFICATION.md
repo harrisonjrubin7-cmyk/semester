@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/security/FINDINGS-REGISTER.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: docs/security/SECURITY-PROGRAM.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # 05 · Environment strategy: local, preview, integration, staging, production, canary, tenant rings

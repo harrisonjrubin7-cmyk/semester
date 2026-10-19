@@ -1,14 +1,22 @@
 ---
 stale-refs:
   - source: docs/program/COMPLETION_RISK_REGISTER.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

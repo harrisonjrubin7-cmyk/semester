@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/help/students/control-what-the-ai-sees.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/start-with-the-sample-or-your-own.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Check a date and fix it
 
 > **Type:** help · **Audience:** students · **Owner:** `product` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

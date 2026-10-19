@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/05-legacy-retirement.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # 3 · Refactoring sequence, repository restructuring, validation

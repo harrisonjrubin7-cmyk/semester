@@ -1,10 +1,24 @@
 ---
 stale-refs:
   - source: docs/trust/AI-DATA-USE-STANDARD.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/04-tool-broker.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/09-user-transparency.md
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # 03 · Retrieval policy

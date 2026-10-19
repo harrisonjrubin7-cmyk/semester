@@ -8,7 +8,19 @@ stale-refs:
     changed_at: "2026-10-19T01:50:45"
     sections_changed: []
     summary: externally modified
+  - source: docs/legal-drafts/LEGAL-ISSUE-MAP.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T02:00:52"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

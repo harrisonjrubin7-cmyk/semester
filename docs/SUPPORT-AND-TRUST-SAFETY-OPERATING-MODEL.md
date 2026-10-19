@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
-    changed_at: "2026-10-19T01:43:33"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
@@ -28,7 +28,17 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/institutional-readiness/INSTITUTIONAL-SUPPORT-AND-ESCALATION.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -5,10 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-19T01:43:41"
+    changed_at: "2026-10-19T02:00:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

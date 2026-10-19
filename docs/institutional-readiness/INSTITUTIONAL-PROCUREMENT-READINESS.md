@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/INSTITUTIONAL-IMPLEMENTATION-GUIDE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Institutional Procurement Readiness
 
 | Control | Value |

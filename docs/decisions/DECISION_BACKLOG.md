@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/decisions/proposed/ADR-0014-define-ai-risk-tiers-evaluations-and-prohibited-actions.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0015-establish-institutional-pilot-to-production-lifecycle.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0017-establish-data-classification-retention-holds-rights-export-offboarding.md
@@ -20,7 +20,17 @@ stale-refs:
     changed_at: "2026-10-19T01:50:46"
     sections_changed: []
     summary: externally modified
+  - source: docs/decisions/proposed/ADR-0023-define-mobile-device-security-local-encryption-revocation-and-offline-lifecycle.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

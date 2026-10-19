@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pricing, packaging, entitlements, billing and collections
 
 | Control | Value |

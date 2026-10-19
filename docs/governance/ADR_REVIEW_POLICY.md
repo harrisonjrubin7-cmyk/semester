@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:22"
     sections_changed: []
     summary: externally modified
+  - source: docs/legal/LEGAL_REVIEW_QUEUE.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # ADR review policy

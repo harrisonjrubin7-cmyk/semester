@@ -1,14 +1,22 @@
 ---
 stale-refs:
   - source: docs/accessibility/PROGRAM.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CONFIGURATION-TIERS.md
     changed_at: "2026-10-19T01:43:33"
     sections_changed: []
     summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
+    changed_at: "2026-10-19T02:00:51"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

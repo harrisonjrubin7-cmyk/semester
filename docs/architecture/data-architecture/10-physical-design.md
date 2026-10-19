@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/06-analytics-architecture.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:00:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/08-search-and-retrieval.md
+    changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # 10 · Migration, indexing, partitioning, performance and archival
