@@ -77,6 +77,20 @@
       ],
       "controls": ["CTRL-ACCESS-001", "CTRL-WORKFLOW-003"],
       "status": "specified"
+    },
+    {
+      "id": "AT-RDY-006",
+      "title": "Requester cannot approve their own override",
+      "given": ["staff_member_requests_override", "same_staff_member_holds_approver_capability"],
+      "when": ["requester_submits_approval_for_own_override"],
+      "then": [
+        "approval_is_denied_by_separation_of_duties",
+        "override_reason_is_required_to_request",
+        "decision_trail_entry_is_written_and_not_editable",
+        "official_outcome_is_unchanged"
+      ],
+      "controls": ["CTRL-WORKFLOW-003"],
+      "status": "specified"
     }
   ]
 }

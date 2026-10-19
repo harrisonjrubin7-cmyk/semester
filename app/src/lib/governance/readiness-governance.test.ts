@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -81,14 +82,20 @@ describe('evidence registry', () => {
     }
   });
 
-  it('accepts evidence only with a reviewer, a review date, an expiry, and a hashed artifact that exists', () => {
+  it('accepts evidence only with a reviewer, a review date, an unexpired expiry, and a hash that matches the stored artifact', () => {
     for (const e of registry.evidence.filter((x) => x.status === 'accepted')) {
       expect(e.reviewed_by, `${e.id} reviewed_by`).toBeTruthy();
       expect(e.review_date, `${e.id} review_date`).toBeTruthy();
-      expect(e.expires_at, `${e.id} expires_at`).toBeTruthy();
+      const expires = Date.parse(e.expires_at ?? '');
+      expect(Number.isNaN(expires) ? null : expires > Date.now(), `${e.id} expires_at is a future timestamp`).toBe(true);
       expect(e.content_hash, `${e.id} content_hash`).toMatch(/^sha256:[0-9a-f]{64}$/);
       expect(e.storage_uri, `${e.id} storage_uri`).toBeTruthy();
-      expect(existsSync(join(root, e.storage_uri as string)), `${e.id} artifact on disk`).toBe(true);
+      const artifact = join(root, e.storage_uri as string);
+      expect(existsSync(artifact), `${e.id} artifact on disk`).toBe(true);
+      if (existsSync(artifact)) {
+        const digest = `sha256:${createHash('sha256').update(readFileSync(artifact)).digest('hex')}`;
+        expect(digest, `${e.id} content_hash matches the artifact`).toBe(e.content_hash);
+      }
     }
   });
 
@@ -174,5 +181,21 @@ describe('acceptance scenarios', () => {
   it('covers every control in the register with at least one scenario', () => {
     const covered = new Set(scenarios.scenarios.flatMap((s) => s.controls));
     for (const c of register.controls) expect(covered.has(c.id), `${c.id} covered`).toBe(true);
+  });
+
+  it('ties implemented scenarios to a test file, and verified ones to accepted evidence', () => {
+    for (const s of scenarios.scenarios) {
+      if (s.status === 'specified') continue;
+      const testFile = s.test_file;
+      expect(
+        typeof testFile === 'string' && existsSync(join(root, testFile)),
+        `${s.id} test_file exists`,
+      ).toBe(true);
+      if (s.status === 'verified') {
+        const ids = Array.isArray(s.evidence) ? (s.evidence as string[]) : [];
+        expect(ids.length, `${s.id} evidence`).toBeGreaterThan(0);
+        for (const id of ids) expect(evidenceById.get(id)?.status, `${s.id} -> ${id}`).toBe('accepted');
+      }
+    }
   });
 });

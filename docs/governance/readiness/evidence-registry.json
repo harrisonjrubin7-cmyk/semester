@@ -61,7 +61,7 @@
     {
       "id": "EVD-RDY-SEC-001",
       "title": "Cross-tenant readiness RLS denial suite",
-      "capability_key": "student.readiness.read",
+      "capability_key": "registration.readiness.view",
       "control_id": "CTRL-ACCESS-001",
       "evidence_type": "RLS_test_result",
       "owner": "platform_owner",
@@ -77,9 +77,27 @@
       "note": "Not accepted. The suite is not in the repository yet. supabase/rls-coverage.check.sql checks table-level RLS; it does not test readiness denial cases. Moves to submitted once the suite runs in staging and its artifact is stored."
     },
     {
+      "id": "EVD-RDY-SEC-002",
+      "title": "Service-role RPC tenant binding test",
+      "capability_key": "registration.readiness.view",
+      "control_id": "CTRL-ACCESS-001",
+      "evidence_type": "automated_test_result",
+      "owner": "security_owner",
+      "environment": "staging",
+      "created_at": "2026-10-19T00:00:00Z",
+      "expires_at": null,
+      "status": "draft",
+      "storage_uri": null,
+      "content_hash": null,
+      "reviewed_by": null,
+      "review_date": null,
+      "invalidated_by": ["readiness_schema_change", "security_definer_function_change"],
+      "note": "Not run. Readiness rows are reached through SECURITY DEFINER get/save functions callable only by service_role (supabase/migrations/20261009160000_registration_readiness_store.sql), so client RLS does not isolate tenants on this path. The test must show cross-tenant reads and writes through those functions are rejected. EVD-RDY-SEC-001 covers client RLS only."
+    },
+    {
       "id": "EVD-RDY-SRC-001",
       "title": "Stale-source freshness drill",
-      "capability_key": "student.readiness_summary",
+      "capability_key": "registration.readiness.view",
       "control_id": "CTRL-SOURCE-002",
       "evidence_type": "source_freshness_drill",
       "owner": "integration_owner",
@@ -97,7 +115,7 @@
     {
       "id": "EVD-RDY-WF-001",
       "title": "Separation-of-duties override test",
-      "capability_key": "override.approve",
+      "capability_key": "registration.override.approve",
       "control_id": "CTRL-WORKFLOW-003",
       "evidence_type": "controlled_action_approval_test",
       "owner": "registrar_product_owner",

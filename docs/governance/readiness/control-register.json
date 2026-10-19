@@ -21,7 +21,7 @@
       "applies_to": ["readiness_cases", "readiness_checks", "registration_receipts", "referrals"],
       "control_type": "preventive",
       "implementation": ["Supabase_RLS", "server_authorization", "policy_enforcement_point"],
-      "evidence": ["EVD-RDY-SEC-001"],
+      "evidence": ["EVD-RDY-SEC-001", "EVD-RDY-SEC-002"],
       "owner": "security_owner",
       "test_frequency": "every_pull_request_and_release",
       "failure_response": "disable_capability_and_investigate"
