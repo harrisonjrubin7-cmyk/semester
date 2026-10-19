@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/operating-model/RELEASE-CERTIFICATION.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester trust and governance model
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Part of** [`SEMESTER_COMPLETE_OPERATING_SYSTEM.md`](SEMESTER_COMPLETE_OPERATING_SYSTEM.md)

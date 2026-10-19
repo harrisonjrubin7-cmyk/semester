@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: RETENTION.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Procurement evidence artifacts
 
 Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).

@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: RETENTION.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # The strengths-and-weaknesses review, checked against the code — September 2026
 
 The tracked copy of *Semester: Strengths, Weaknesses & How to Win the Market*

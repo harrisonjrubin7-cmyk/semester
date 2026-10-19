@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/HECVAT_ROADMAP.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # Data Security Checklist
 
 | Control | Value |

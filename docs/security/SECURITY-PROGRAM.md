@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester security program
 
 > Owner: the security seat — held today by the founder, backup `UNASSIGNED`.

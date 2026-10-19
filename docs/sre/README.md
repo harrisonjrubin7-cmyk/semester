@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Semester reliability and operations platform — SRE pack
 
 Status: **proposed**, written 2026-10-04 and rebased onto `origin/main` `d63f9ef`.

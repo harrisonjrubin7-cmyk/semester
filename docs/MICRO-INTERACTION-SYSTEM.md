@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Micro-interactions and motion
 
 Motion in Semester explains a change of state and then gets out of the way. It

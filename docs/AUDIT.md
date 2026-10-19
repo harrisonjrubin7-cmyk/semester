@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/CLAUDE-CODE-BACKLOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Phase 0 audit — Semester unified platform
 
 **Baseline:** `origin/main` `c029822` (26 Sep 2026), audited 27 Sep 2026.

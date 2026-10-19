@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Operations roadmap
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** a proposal, not a commitment; records no decision. This page is the program-level answer to the brief: backlog, first 25 actions, first 10 branches, three horizons, risks, and a readiness scorecard. It **reconciles with** (does not replace) [`docs/ops/OPERATIONS_CONSOLE_BACKLOG.md`](../ops/OPERATIONS_CONSOLE_BACKLOG.md) (phased console backlog P1-01…), [`docs/master/SEMESTER_MASTER_BACKLOG.md`](../master/SEMESTER_MASTER_BACKLOG.md), [`SEMESTER_EXECUTION_ROADMAP.md`](../master/SEMESTER_EXECUTION_ROADMAP.md) (ten-branch sequence) and [`SEMESTER_12_MONTH_EXECUTION_PLAN.md`](../master/SEMESTER_12_MONTH_EXECUTION_PLAN.md). Where they disagree on a fact, the source rows win.

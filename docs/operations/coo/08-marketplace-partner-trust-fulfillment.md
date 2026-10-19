@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 08 · Marketplace, partner, trust and safety, and fulfillment and dispute operations
 
 | Control | Value |

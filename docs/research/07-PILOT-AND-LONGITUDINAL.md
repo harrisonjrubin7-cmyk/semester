@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: ANALYTICS.md
-    changed_at: "2026-10-18T20:45:42"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 07 · Pilot feedback and longitudinal outcome measurement
 
 This page extends, and does not replace, [`PILOT.md`](../../PILOT.md),

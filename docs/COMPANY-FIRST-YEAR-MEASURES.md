@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: ANALYTICS.md
-    changed_at: "2026-10-18T20:45:42"
-    sections_changed: []
-    summary: externally modified
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Company first-year measures
 
 <!-- Rendered from app/src/lib/ops/firstyear.ts by firstyear.test.ts. Edit the data, then run `npm run registers` from app/. -->

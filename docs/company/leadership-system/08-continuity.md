@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 9 · Business continuity for leadership and key-person risk
 
 > **PROPOSED — NOT ADOPTED.** Extends [`BUSINESS-CONTINUITY-OPERATING-PLAN.md`](../BUSINESS-CONTINUITY-OPERATING-PLAN.md), which covers continuity in general and lists key-person loss as one scenario row. This page is the leadership-specific plan that row points to. **A tabletop is not proof of recovery.** Authority, incapacity and succession documents are `[COUNSEL]`. This page contains no credentials and the repository must never hold any.

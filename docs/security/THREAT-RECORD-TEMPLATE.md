@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/security/SECURITY-PROGRAM.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Per-change threat record
 
 > Part of [`SECURITY-PROGRAM.md`](SECURITY-PROGRAM.md) §2. Copy into the pull

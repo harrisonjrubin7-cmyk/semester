@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/company/leadership-system/06-domain-governance.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # 10 · Twelve-month executive operating calendar
 
 > **PROPOSED — NOT ADOPTED.** Months are relative (**M1–M12**) because adoption is the founder's decision. If adopted now, **M1 is October 2026** and M12 is September 2027. The [proof calendar](../../PROOF-CALENDAR.md) likewise says "the clock starts with day 1 of the 90-day program; no date is invented", and this page follows that. **Academic-calendar anchors are generic placeholders; confirm every one against the registrar's published calendar before dating anything.** Nothing here is a target or a promise; items marked *condition* depend on evidence, counsel, or a customer.

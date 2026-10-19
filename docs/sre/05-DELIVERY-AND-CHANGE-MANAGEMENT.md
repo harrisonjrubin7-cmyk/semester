@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: supabase/DEPLOY.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/sre/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/sre/runbooks/RB-13-secret-exposed.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # 05 · Delivery, canary, rollback, configuration, secrets and change management
 
 > Part of the [SRE pack](README.md). Status: **proposed** except where marked *exists*. Code: `app/src/lib/sre/changes.ts`. Controlling documents: [ROLLBACK.md](../../ROLLBACK.md), [SECRETS.md](../../SECRETS.md), [supabase/DEPLOY.md](../../supabase/DEPLOY.md), [CI-CD-STANDARDS.md](../engineering-operations/CI-CD-STANDARDS.md), [DEPLOYMENT-AND-RELEASE-RUNBOOK.md](../engineering-operations/DEPLOYMENT-AND-RELEASE-RUNBOOK.md), [FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md](../engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md). Target pipeline: [CTO pack 06](../target-architecture/06-DELIVERY-AND-OPERATIONS.md).

@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/documentation/INDEX.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/releases/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Ownership, review and versioning
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/impact.test.ts`

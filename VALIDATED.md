@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: MARKET-POSITION.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # What is validated, and what is not — September 2026
 
 Written for the deck, and for the question that follows every claim in it.

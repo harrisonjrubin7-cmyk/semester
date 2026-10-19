@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: RETENTION.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester data retention and deletion standard — controlled draft
 
 - **Status:** `PARTIAL`

@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/INTEGRATION-CONTROL-PLANE.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Shared Platform Control Plane
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Open decisions are listed in [`OPERATIONS_ROADMAP.md`](OPERATIONS_ROADMAP.md#open-decisions).

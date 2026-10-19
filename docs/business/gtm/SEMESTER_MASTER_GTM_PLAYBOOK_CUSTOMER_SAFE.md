@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 > **DRAFT - not approved for external distribution until the claims owner records approval**
 
 # Semester: Registration Readiness Pilot Overview (Customer-Safe Source Version)

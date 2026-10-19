@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Security controls
 
 ## Identities and least privilege

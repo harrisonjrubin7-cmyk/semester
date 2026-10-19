@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/guides/integrations/README.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/reference/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
-  - source: examples/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Guides
 
 > **Type:** how-to · **Audience:** institution-admins, implementers, partner-developers · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docsystem.test.ts`

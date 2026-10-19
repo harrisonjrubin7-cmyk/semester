@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester Acceptable Use Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft for qualified

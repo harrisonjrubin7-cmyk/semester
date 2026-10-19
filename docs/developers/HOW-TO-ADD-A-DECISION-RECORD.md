@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # How to add a decision record
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

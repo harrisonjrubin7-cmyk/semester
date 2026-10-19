@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # LMS Interoperability Matrix
 
 <!-- Rendered from app/src/lib/integration/lmsmatrix.ts by lmsmatrix.test.ts. Edit the data, then run `npm run registers` from app/. -->

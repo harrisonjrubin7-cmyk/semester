@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Pilot Sales Email Sequences (account-based institutional outreach)
 
 | Control | Value |

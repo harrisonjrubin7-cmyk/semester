@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/roles/ROLE_CATALOG.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Role system gap register
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** audit evidence; every row is open.

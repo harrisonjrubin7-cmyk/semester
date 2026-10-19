@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: docs/design/SEMESTER-UI-CONSTITUTION.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: ops/operations-console/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # One system: the platform grammar
 
 <!-- Rendered from app/src/lib/onesystem.ts by onesystem.test.ts. Edit the data, then run `npm run registers` from app/. -->

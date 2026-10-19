@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Procurement Operating Map
 
 | Control | Value |

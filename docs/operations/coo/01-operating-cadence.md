@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/operating-model/TRUST-BRAND-AND-LEGAL.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 01 · Operating cadence
 
 | Control | Value |

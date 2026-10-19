@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Empty, loading, error and recovery state library
 
 Every state answers what happened, what is affected, what still works and what

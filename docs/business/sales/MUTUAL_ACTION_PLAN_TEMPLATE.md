@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Mutual Action Plan Template
 
 | Control | Value |

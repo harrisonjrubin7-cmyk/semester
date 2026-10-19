@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Severity and routing
 
 > **Type:** runbook · **Audience:** support, operators · **Owner:** `operations` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # 4 and 5 · Organization design and hiring
 
 > **PROPOSED — NOT ADOPTED.** Headcount figures are `[HYPOTHESIS]` ranges to be reconciled at each stage review. Compensation contains **principles only**; no salary or equity figure appears in this repository. Employment, classification, equity and tax points are `[COUNSEL]`.

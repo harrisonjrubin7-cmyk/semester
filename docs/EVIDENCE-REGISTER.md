@@ -1,24 +1,3 @@
----
-stale-refs:
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: ops/operations-console/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
 # Evidence register
 
 <!-- Rendered from app/src/lib/ops/evidence.ts by evidence.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester Security Whitepaper
 
 **Draft, version 0.1, 2026-09-28.** This is written for a university's security,

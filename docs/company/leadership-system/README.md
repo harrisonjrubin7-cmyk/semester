@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/company/leadership-system/06-domain-governance.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Semester leadership system
 
 > **PROPOSED — NOT ADOPTED.** Nothing here binds Semester until the founder records adoption (see [Adoption](#adoption)). Legal, tax, securities, employment and insurance points are flagged `[COUNSEL]` and are not legal advice. No target, salary, price, headcount or date is decided here; where a number would be invented, the page says `[DECIDE]`.

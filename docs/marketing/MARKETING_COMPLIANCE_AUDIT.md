@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Marketing compliance audit
 
 Date: 2026-10-05. Scope: public claims and content assets on `company-site/` and

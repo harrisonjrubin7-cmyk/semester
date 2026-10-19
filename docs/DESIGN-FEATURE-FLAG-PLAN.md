@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/SEMESTER-PLATFORM-UNITY-PATTERNS.md
-    changed_at: "2026-10-18T20:45:46"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Design feature-flag plan
 
 ## What was done: no flags

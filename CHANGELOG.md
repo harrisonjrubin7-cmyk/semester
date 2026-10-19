@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/OPERATOR-PROVISIONING.md
-    changed_at: "2026-10-18T20:45:44"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # What changed
 
 For people testing Semester, not for people writing it. Every entry says what

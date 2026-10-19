@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/program/01-ROADMAP.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Program pack
 
 The integrating layer over work that already exists: one dependency graph and

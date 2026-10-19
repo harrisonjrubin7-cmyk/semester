@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
-    changed_at: "2026-10-18T20:45:45"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Identity and Provisioning Readiness
 
 | Control | Value |

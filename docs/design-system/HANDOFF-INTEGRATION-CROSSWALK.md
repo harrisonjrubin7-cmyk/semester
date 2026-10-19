@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Handoff integration crosswalk
 
 **Refreshed** 2026-10-16 · **Latest observed `origin/main`** `06c2d5c74` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`

@@ -1,30 +1,3 @@
----
-stale-refs:
-  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
 # Discovery Call Script, Qualification Rubric, Demo Script and Pilot Design-Session Agenda
 
 | Control | Value |

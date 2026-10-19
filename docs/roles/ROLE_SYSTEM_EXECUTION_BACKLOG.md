@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Role system execution backlog
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** plan; nothing here is started except item 1.

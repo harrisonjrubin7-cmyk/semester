@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Service reliability and support operations
 
 Part 5 of the expansion command. Phase 3. **Waits for #779 (kill switches) and

@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Delete my account, or export my data
 
 > **Type:** help · **Audience:** students, support · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

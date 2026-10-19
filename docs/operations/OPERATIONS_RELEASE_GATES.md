@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/sre/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Operations release gates, test plan and SLOs
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. SLO numbers are proposals awaiting the founder (OD-2, which is B-04 in the console backlog).

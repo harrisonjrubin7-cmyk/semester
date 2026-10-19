@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/OPERATIONAL-REALITY-REGISTER.md
-    changed_at: "2026-10-18T20:45:44"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Institutional Capability Matrix
 
 | Control | Value |

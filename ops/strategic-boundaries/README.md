@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: SECRETS.md
-    changed_at: "2026-10-18T17:10:51"
-    sections_changed: []
-    summary: externally modified
-  - source: ANALYTICS.md
-    changed_at: "2026-10-18T20:45:42"
-    sections_changed: []
-    summary: externally modified
-  - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 # Strategic boundaries
 
 <!-- Rendered from app/src/lib/ops/boundaries.ts by boundaries.test.ts. Edit the data, then run `npm run registers` from app/. -->

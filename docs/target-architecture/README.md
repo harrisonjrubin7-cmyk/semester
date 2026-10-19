@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/PLATFORM-CONSTITUTION.md
-    changed_at: "2026-10-18T20:45:44"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester target architecture — CTO pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `7287ddc`.

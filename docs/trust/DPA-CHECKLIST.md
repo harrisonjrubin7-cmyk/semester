@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # DPA Checklist and Student-Data Terms
 
 **Status: `NOT_STARTED` as a signed agreement (HECVAT PRIV-4).** This page is

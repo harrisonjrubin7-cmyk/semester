@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: SECURITY.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/security/SECURITY-PROGRAM.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Detection catalogue and AI red-team set
 
 > Part of [`SECURITY-PROGRAM.md`](SECURITY-PROGRAM.md). Closes finding F-08 in

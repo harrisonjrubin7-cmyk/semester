@@ -1,36 +1,3 @@
----
-stale-refs:
-  - source: CHANGELOG.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
-  - source: RETENTION.md
-    changed_at: "2026-10-18T17:10:50"
-    sections_changed: []
-    summary: externally modified
-  - source: ACTION-PLAN.md
-    changed_at: "2026-10-18T20:45:42"
-    sections_changed: []
-    summary: externally modified
-  - source: MARKET-POSITION.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
-  - source: ops/claims/README.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
-
-
-
-
-
-
 > **DRAFT FOR FOUNDER, COUNSEL AND SPECIALIST REVIEW. A marketing strategy, not legal advice, and not an approval of any claim, channel, audience, price or campaign. Nothing here is live until the gate it names is closed.**
 
 # Semester brand and marketing strategy

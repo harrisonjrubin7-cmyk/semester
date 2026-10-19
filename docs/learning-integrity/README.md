@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/COMPLIANCE-CROSSWALK.md
-    changed_at: "2026-10-18T20:45:48"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester learning science and academic integrity — role pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `dac31c9`.

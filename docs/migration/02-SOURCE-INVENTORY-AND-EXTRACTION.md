@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-18T20:45:47"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 02 Source inventory and extraction
 
 Stages: **inventory** and **classification** (Center), plus extraction, which

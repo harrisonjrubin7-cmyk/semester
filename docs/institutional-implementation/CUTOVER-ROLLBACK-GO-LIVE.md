@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: ROLLBACK.md
-    changed_at: "2026-10-18T20:45:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Cutover checklist, rollback plan and go-live checklist
 
 | Control | Value |
