@@ -57,7 +57,7 @@ def migrate_subset(schema):
         if k in s:s[k]=[migrate_subset(v) for v in s[k]]
     if s.get('readOnly') or s.get('writeOnly') or 'discriminator' in s:raise ValueError('Manual directional/composition review required')
     if isinstance(s.get('pattern'),str) and re.search(r'\\[dDwWsSbB]',s['pattern']):raise ValueError('pattern shorthand class differs from ECMA-262')
-    if isinstance(s.get('pattern'),str) and re.search(r'\(\?(?:P|#|[aiLmsux]+\))|\\[AZz]',s['pattern']):raise ValueError('pattern uses Python-only regex syntax')
+    if isinstance(s.get('pattern'),str) and re.search(r'\(\?(?:P|#|>|[aiLmsux]+\))|\\[AZz]|(?<!\\)(?:\\\\)*[*+?}]\+',s['pattern']):raise ValueError('pattern uses Python-only regex syntax')
     if isinstance(s.get('pattern'),str):s['pattern']=ecma_pattern(s['pattern'])
     try:Draft202012Validator.check_schema(s)
     except SchemaError as ex:raise ValueError(f'invalid schema: {ex.message}') from ex

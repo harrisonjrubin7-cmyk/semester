@@ -43,8 +43,11 @@ class MigrationTests(unittest.TestCase):
         s=migrate_subset({'type':'integer'});self.assertTrue(validate(s,1.0));self.assertFalse(validate(s,1))
     def test_shorthand_pattern_classes_are_rejected(self):self.blocked({'type':'string','pattern':'^\\d+$'})
     def test_python_only_pattern_syntax_is_rejected(self):
-        for p in ['(?P<x>a)','(?P=x)','(?#note)a','(?i)a','\\Aa','a\\Z']:
+        for p in ['(?P<x>a)','(?P=x)','(?#note)a','(?i)a','\\Aa','a\\Z','a++','a*+','a?+','a{1}+','(?>a)']:
             with self.subTest(pattern=p):self.blocked({'type':'string','pattern':p})
+    def test_lazy_and_escaped_quantifiers_are_still_accepted(self):
+        for p in ['^a+?$','^\\++$']:
+            with self.subTest(pattern=p):migrate_subset({'type':'string','pattern':p})
     def test_null_default_rejected_unless_nullable(self):
         self.blocked({'type':'string','default':None})
         self.assertIsNone(migrate_subset({'type':'string','nullable':True,'default':None})['default'])
