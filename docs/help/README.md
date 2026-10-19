@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/help/students/back-up-and-sync.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/export-or-delete-your-data.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/help/faculty/what-faculty-can-do.md
@@ -68,7 +68,53 @@ stale-refs:
     changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
+  - source: docs/help/GLOSSARY.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/families/what-families-can-see.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/add-a-reading.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/add-your-own-actions.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/check-and-fix-a-date.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/set-up-the-assistant.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/study-from-your-guide.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

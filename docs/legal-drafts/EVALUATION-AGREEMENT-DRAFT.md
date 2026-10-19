@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
+  - source: docs/market-readiness/PILOT-OFFER.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**

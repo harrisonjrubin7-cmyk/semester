@@ -5,18 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/program/02-DEPENDENCIES-AND-CRITICAL-PATH.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
   - source: docs/program/READINESS_GAP_MATRIX.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
   - source: operations/LAUNCH_COMMAND_CENTER.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

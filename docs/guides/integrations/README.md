@@ -9,27 +9,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EVENTS.md
-    changed_at: "2026-10-19T01:43:40"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/event-consumer.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/gateway-client.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/scim-provisioner.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
   - source: examples/README.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
   - source: examples/scim-provisioner/README.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: examples/sis-adapter/README.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
@@ -57,6 +57,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

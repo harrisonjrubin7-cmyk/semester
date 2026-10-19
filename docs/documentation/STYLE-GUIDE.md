@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-19T01:43:22"
+    changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/README.md
@@ -13,18 +13,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
     changed_at: "2026-10-19T02:00:49"
     sections_changed: []
     summary: externally modified
+  - source: docs/design/SEMESTER-CONTENT-STANDARDS.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,22 +5,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:14:27"
     sections_changed: []
     summary: externally modified
   - source: ops/README.md
-    changed_at: "2026-10-19T01:43:42"
+    changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
   - source: infra/README.md
     changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
+  - source: course/semester-build-pack/COVERAGE-MATRIX.md
+    changed_at: "2026-10-19T02:14:26"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

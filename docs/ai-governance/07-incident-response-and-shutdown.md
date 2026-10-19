@@ -1,18 +1,28 @@
 ---
 stale-refs:
   - source: docs/ai-governance/01-inventory-and-risk-tiering.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/08-tenant-ai-console.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/02-model-gateway.md
     changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
+  - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

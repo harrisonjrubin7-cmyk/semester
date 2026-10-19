@@ -17,14 +17,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:14:27"
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
     changed_at: "2026-10-19T02:00:53"
     sections_changed: []
     summary: externally modified
+  - source: docs/operating-model/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T02:14:29"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

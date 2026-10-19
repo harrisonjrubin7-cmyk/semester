@@ -8,7 +8,13 @@ stale-refs:
     changed_at: "2026-10-19T02:00:50"
     sections_changed: []
     summary: externally modified
+  - source: docs/WORKSPACE-MODES.md
+    changed_at: "2026-10-19T02:14:27"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/DATA-RETENTION-EXPORT-DELETION.md
-    changed_at: "2026-10-19T01:43:25"
+    changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Semester data export standard — controlled draft

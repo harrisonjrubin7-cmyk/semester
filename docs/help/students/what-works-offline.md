@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/help/students/back-up-and-sync.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/install-the-app.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

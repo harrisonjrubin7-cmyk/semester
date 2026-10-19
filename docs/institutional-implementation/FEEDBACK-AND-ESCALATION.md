@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-19T01:43:30"
+    changed_at: "2026-10-19T02:14:27"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

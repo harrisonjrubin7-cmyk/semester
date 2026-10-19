@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/0003-no-application-server.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # OIDC implementation runbook
 
 Status: **NOT BUILT.** `institution_identity_provider.provider_type` admits only

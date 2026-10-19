@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/12-governance-operating-model.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 5 · Classification, retention, deletion, legal hold, backup, export, restore
 
 Every control below is labelled **built** (a migration or function enforces it, and a check suite exists),

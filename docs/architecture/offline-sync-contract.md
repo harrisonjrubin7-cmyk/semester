@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/mobile-offline-reference.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Offline and synchronization contract

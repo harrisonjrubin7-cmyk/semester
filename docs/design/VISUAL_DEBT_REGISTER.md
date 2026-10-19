@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/design/DESIGN-DEBT.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Visual debt register (phase D0)
 
 New rows for the design-system adoption. The existing register is

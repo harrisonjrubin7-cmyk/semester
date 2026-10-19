@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # API gateway / BFF standards

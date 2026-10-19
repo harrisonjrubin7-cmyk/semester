@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/guides/integrations/event-consumer.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Example: event consumer

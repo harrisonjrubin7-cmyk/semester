@@ -9,22 +9,40 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0017-establish-data-classification-retention-holds-rights-export-offboarding.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0018-establish-incident-response-security-escalation-and-dr-governance.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0022-define-procurement-evidence-trust-center-lifecycle-and-public-claims-approval.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0023-define-mobile-device-security-local-encryption-revocation-and-offline-lifecycle.md
     changed_at: "2026-10-19T02:00:51"
     sections_changed: []
     summary: externally modified
+  - source: docs/decisions/proposed/ADR-0016-make-commercial-plans-and-entitlements-technically-enforceable.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/proposed/ADR-0021-define-multi-tenant-search-storage-queue-cache-analytics-and-vector-boundaries.md
+    changed_at: "2026-10-19T02:14:28"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 
