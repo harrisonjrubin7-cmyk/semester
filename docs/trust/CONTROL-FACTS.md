@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 252 |
+| Migration files | 253 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
 | Tables created in `private` and not later dropped | 55 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-156 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+157 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -156,6 +156,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |
 | `supabase/registration-readiness-store.check.sql` | The registration-readiness durable store (20261009160000). |
+| `supabase/registration_swap.check.sql` | the atomic swap (REG-6.3). |
 | `supabase/registration_transaction.check.sql` | the official registration transaction. |
 | `supabase/reports.check.sql` | Who may read a report, and the four states one can be in. |
 | `supabase/retention-sweeps.check.sql` | The three retention sweeps from 20260929030000_retention_sweeps.sql. |
@@ -297,13 +298,13 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 248 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 248 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 67 |
+| Register rows in category `self-service` | 68 |
 | Register rows in category `sharing` | 23 |
 | Register rows in category `admin` | 99 |
 | Register rows in category `integration` | 8 |

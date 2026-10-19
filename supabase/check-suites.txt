@@ -122,6 +122,7 @@ rate-limits
 records
 referrals
 registration-readiness-store
+registration_swap
 registration_transaction
 reports
 retention-sweeps
