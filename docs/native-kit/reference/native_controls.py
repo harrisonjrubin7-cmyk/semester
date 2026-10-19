@@ -26,7 +26,7 @@ class ObserveTask:
     def __init__(self,task_id,root_agent,routes):
         self.task_id=task_id;self.routes=frozenset(routes);self.nodes={root_agent:(0,())};self.keys=set();self.handoffs=0
     def handoff(self,source,destination,purpose,digest,authorized=False):
-        if not authorized: raise ValueError("recipient authorization required")
+        if authorized is not True: raise ValueError("recipient authorization required")
         if source not in self.nodes or (source,destination) not in self.routes: raise ValueError("forbidden route")
         key=(self.task_id,source,destination,purpose,digest)
         if key in self.keys:return "deduplicated"

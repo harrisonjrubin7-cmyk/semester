@@ -11,12 +11,6 @@
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:488
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:496
 
-# Native kit company-function matrix: the row "Hiring/access closure" is prose
-# (a workflow name), and gitleaks reads the word "access" next to a
-# high-entropy-looking token as a generic API key. Kept pinned to the commit
-# that imports the kit so the file stays byte-identical to the archive
-# (MANIFEST.json hashes), and every other finding stays blocking.
-7cc9af9cd4aef11311106b30f39d8806af2a819e:docs/native-kit/matrices/company_functions_15.csv:generic-api-key:14
 # The 11 October design handoff's module registry (D-1475): the field
 # field named for access holds the sentence "Enrollment/teaching scope", which
 # says which scope a module's screens are read under. No value, no

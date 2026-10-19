@@ -75,13 +75,13 @@
     },
     {
       "path": "reference/native_controls.py",
-      "bytes": 2305,
-      "sha256": "66344992cbbd027bad703d6dcc0ffe9f109584b9945f51b3f577d3d042b2e499"
+      "bytes": 2313,
+      "sha256": "58312c82e1c73fbf3ec19f980e153ac65951e22b03f9bfc4b9f18a7dfad383d1"
     },
     {
       "path": "reference/test_native_controls.py",
-      "bytes": 2752,
-      "sha256": "ff9b62ce71f0f3a44a773a885d34e2f06428b11883dec571d17f3b6d5be203a3"
+      "bytes": 2890,
+      "sha256": "4f2eb186564484264d54916bb1337355165174b6a77e7ad523830e9dfbaa43ce"
     },
     {
       "path": "specs/agent_operations.md",

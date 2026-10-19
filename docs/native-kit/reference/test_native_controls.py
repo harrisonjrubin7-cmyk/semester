@@ -21,6 +21,8 @@ class Controls(unittest.TestCase):
  def test_auth(self):
   t=ObserveTask("task","a",[("a","b")])
   with self.assertRaises(ValueError):t.handoff("a","b","p","d")
+  with self.assertRaises(ValueError):t.handoff("a","b","p","d","false")
+  with self.assertRaises(ValueError):t.handoff("a","b","p","d",1)
   self.assertEqual(t.handoffs,0)
  def test_route(self):
   with self.assertRaises(ValueError):ObserveTask("task","a",[]).handoff("a","b","p","d",True)
