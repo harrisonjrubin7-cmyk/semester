@@ -4,11 +4,14 @@ import {
   type UniversityIdentity,
   type UniversityRole,
 } from '../../../packages/institution/src/index.ts';
+import { isId } from '../../../packages/platform/src/index.ts';
 
 export interface VerifiedAuthUser {
   id: string;
   providerIdentifier: string;
   userName: string;
+  /** Expiry from the access token, decoded only after the auth service validated that exact token. */
+  sessionExpiresAt: string;
 }
 
 export interface ProviderRecord {
@@ -68,6 +71,7 @@ export function supabaseSsoConfigLoader(
 }
 
 export interface MembershipRecord {
+  id: string;
   userId: string;
   tenantId: string;
   providerId: string;
@@ -85,6 +89,11 @@ export interface MembershipDirectory {
   ): Promise<MembershipRecord[]>;
 }
 
+/** Server-only access to every institutional membership bound to one auth account. */
+export interface ContextMembershipDirectory {
+  membershipsForUser(userId: string): Promise<MembershipRecord[]>;
+}
+
 export interface AuthorizationAuditRecord {
   userId: string;
   providerIdentifier: string;
@@ -95,7 +104,14 @@ export interface AuthorizationAuditRecord {
 }
 
 export type AuthorizationAudit = (record: AuthorizationAuditRecord) => Promise<void> | void;
-export type MembershipResolver = (user: VerifiedAuthUser) => Promise<UniversityIdentity | null>;
+export interface VerifiedMembershipIdentity extends UniversityIdentity {
+  /** The authoritative membership row selected by the resolver. */
+  membershipId: string;
+  /** The already-validated auth session boundary. */
+  sessionExpiresAt: string;
+}
+
+export type MembershipResolver = (user: VerifiedAuthUser) => Promise<VerifiedMembershipIdentity | null>;
 
 const auditRecord = (
   user: VerifiedAuthUser,
@@ -142,6 +158,10 @@ export function createMembershipResolver(
       await audit(auditRecord(user, 'denied', 'membership-not-active', provider.tenantId));
       return null;
     }
+    if (!isId(membership.id)) {
+      await audit(auditRecord(user, 'denied', 'invalid-membership-id', provider.tenantId));
+      return null;
+    }
     const roles = membership.roles.filter((role): role is UniversityRole =>
       UNIVERSITY_ROLES.includes(role as UniversityRole),
     );
@@ -150,19 +170,28 @@ export function createMembershipResolver(
       return null;
     }
     await audit(auditRecord(user, 'accepted', 'current-membership', provider.tenantId));
-    return { userId: user.id, institutionId: provider.tenantId, roles: [...new Set(roles)] };
+    return {
+      userId: user.id,
+      institutionId: provider.tenantId,
+      roles: [...new Set(roles)],
+      membershipId: membership.id,
+      sessionExpiresAt: user.sessionExpiresAt,
+    };
   };
 }
 
 /** A service-role directory. The key is server-only and must never use a VITE_ name. */
-export function supabaseMembershipDirectory(url: string, serviceKey: string): MembershipDirectory {
+export function supabaseMembershipDirectory(
+  url: string,
+  serviceKey: string,
+): MembershipDirectory & ContextMembershipDirectory {
   const client = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
   const memberships = async (userId: string, tenantId: string, providerId: string) => {
     const { data, error } = await client
       .from('institution_membership')
-      .select('auth_user_id, tenant_id, identity_provider_id, status, roles')
+      .select('id, auth_user_id, tenant_id, identity_provider_id, status, roles')
       .eq('auth_user_id', userId)
       .eq('tenant_id', tenantId)
       .eq('identity_provider_id', providerId)
@@ -198,6 +227,24 @@ export function supabaseMembershipDirectory(url: string, serviceKey: string): Me
         if (claimed === true) data = await memberships(userId, tenantId, providerId);
       }
       return data.map((row) => ({
+        id: row.id as string,
+        userId: row.auth_user_id as string,
+        tenantId: row.tenant_id as string,
+        providerId: row.identity_provider_id as string,
+        status: row.status as MembershipRecord['status'],
+        roles: Array.isArray(row.roles) ? row.roles as string[] : [],
+      }));
+    },
+    membershipsForUser: async (userId) => {
+      const { data, error } = await client
+        .from('institution_membership')
+        .select('id, auth_user_id, tenant_id, identity_provider_id, status, roles')
+        .eq('auth_user_id', userId)
+        .limit(101);
+      if (error) throw new Error('Institution context directory lookup failed.');
+      if ((data ?? []).length > 100) throw new Error('Institution context directory is too large.');
+      return (data ?? []).map((row) => ({
+        id: row.id as string,
         userId: row.auth_user_id as string,
         tenantId: row.tenant_id as string,
         providerId: row.identity_provider_id as string,

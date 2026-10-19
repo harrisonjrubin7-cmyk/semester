@@ -79,4 +79,11 @@ override.tf.json
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
 
+# Local memory-tool snapshot
 .anchor/
+# Local tool caches written by the md-linker plugin.
+.md-linker/
+
+# Course Engine browser evidence is uploaded by CI, not committed.
+course-engine/apps/web/playwright-report/
+course-engine/apps/web/test-results/

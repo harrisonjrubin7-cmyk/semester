@@ -1,0 +1,570 @@
+import { describe, expect, it } from 'vitest';
+import { Refusal } from './index.ts';
+import { validateEvent } from './events.ts';
+import { ASSESSMENT_SUBMISSION, walk } from './workflow.ts';
+import {
+  AssignmentSubmissionService,
+  MemorySubmissionStore,
+  SubmissionRefusal,
+  type SubmissionCode,
+} from './assignment-submission.ts';
+
+/**
+ * Two institutions, each with a course and an assignment, and a student and a
+ * teacher in each. The second institution exists so every test that could
+ * leak across tenants has a real population to leak into.
+ */
+function fixture(start = '2026-10-18T12:00:00Z') {
+  const store = new MemorySubmissionStore();
+  let now = new Date(start);
+  const ids = { n: 0 };
+  const service = new AssignmentSubmissionService(store, {
+    environment: 'demo',
+    now: () => now,
+    newId: () => `id-${String(++ids.n).padStart(4, '0')}`,
+  });
+
+  store.assignments.set('a1', { id: 'a1', institutionId: 'inst-a', courseId: 'course-a1', closesAt: '2026-10-20T23:59:00Z' });
+  store.assignments.set('b1', { id: 'b1', institutionId: 'inst-b', courseId: 'course-b1', closesAt: '2026-10-20T23:59:00Z' });
+  store.memberships.push(
+    { userId: 'stu-1', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'active' },
+    { userId: 'stu-2', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'active' },
+    { userId: 'stu-3', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'revoked' },
+    { userId: 'fac-1', institutionId: 'inst-a', courseId: 'course-a1', role: 'faculty', status: 'active' },
+    { userId: 'fac-2', institutionId: 'inst-a', courseId: 'course-a2', role: 'faculty', status: 'active' },
+    { userId: 'stu-b', institutionId: 'inst-b', courseId: 'course-b1', role: 'student', status: 'active' },
+    { userId: 'fac-b', institutionId: 'inst-b', courseId: 'course-b1', role: 'faculty', status: 'active' },
+  );
+
+  const as = (userId: string, institutionId = 'inst-a') => ({ userId, institutionId });
+  const KEY_1 = 'submit-key-000001';
+  const KEY_2 = 'submit-key-000002';
+  return { store, service, as, KEY_1, KEY_2, setNow: (iso: string) => { now = new Date(iso); } };
+}
+
+/** The refusal code, or `null` if the call succeeded. */
+async function codeOf(run: () => unknown): Promise<SubmissionCode | null> {
+  try {
+    await run();
+    return null;
+  } catch (e) {
+    if (e instanceof SubmissionRefusal) return e.code;
+    throw e;
+  }
+}
+
+describe('submitting an assignment', () => {
+  it('a submitted draft gets a receipt, and one outbox event that carries ids and no work', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'my essay text', expectedVersion: 0 });
+    const receipt = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    expect(receipt.status).toBe('completed');
+    expect(store.submissions.size).toBe(1);
+    expect(store.outbox.rows).toHaveLength(1);
+    const [row] = store.outbox.rows;
+    expect(row.event.eventType).toBe('submission.finalized');
+    expect(validateEvent(row.event).ok).toBe(true);
+    expect(JSON.stringify(row.event)).not.toContain('my essay text');
+  });
+
+  it('repeating the same command with the same key returns the same receipt and adds nothing', async () => {
+    const { service, store, as, KEY_1, setNow } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    const first = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const second = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect(second).toEqual(first);
+    expect(store.submissions.size).toBe(1);
+    expect(store.outbox.rows).toHaveLength(1);
+
+    // A retry that arrives after the window closed is still the same recorded outcome.
+    setNow('2026-10-25T09:00:00Z');
+    const late = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect(late).toEqual(first);
+  });
+
+  it('the same key with a different payload is a conflict, and writes nothing', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 2, idempotencyKey: KEY_1 })))
+      .toBe('idempotency_conflict');
+    expect(store.outbox.rows).toHaveLength(1);
+  });
+
+  it('a second submission under a new key is refused, because one assignment takes one submission', async () => {
+    const { service, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_2 })))
+      .toBe('already_submitted');
+  });
+
+  it('a draft version that is no longer current is refused, and nothing is written', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v2', expectedVersion: 1 });
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('stale_version');
+    expect(store.submissions.size).toBe(0);
+    expect(store.outbox.rows).toHaveLength(0);
+  });
+
+  it('a submission after the window closes is refused', async () => {
+    const { service, store, as, KEY_1, setNow } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    setNow('2026-10-21T00:00:00Z');
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('window_closed');
+    expect(store.submissions.size).toBe(0);
+  });
+
+  it('submitting with no draft is refused', async () => {
+    const { service, as, KEY_1 } = fixture();
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('invalid_state');
+  });
+
+  it('a student who is not enrolled in the course is refused', async () => {
+    const { service, as, KEY_1 } = fixture();
+    expect(await codeOf(() => service.submitAssignment(as('stu-b'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('not_enrolled');
+  });
+
+  it('faculty cannot submit as a student', async () => {
+    const { service, as, KEY_1 } = fixture();
+    expect(await codeOf(() => service.submitAssignment(as('fac-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('not_enrolled');
+  });
+
+  it('an actor from another institution cannot see the assignment at all', async () => {
+    const { service, as, KEY_1 } = fixture();
+    expect(await codeOf(() => service.submitAssignment(as('stu-1', 'inst-b'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('not_found');
+  });
+
+  it('a revoked membership stops a new submission and also a replay of an earlier one', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    const membership = store.memberships.find((m) => m.userId === 'stu-1');
+    if (!membership) throw new Error('fixture missing stu-1');
+    membership.status = 'revoked';
+
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('membership_revoked');
+  });
+});
+
+describe('drafts are private until they are submitted', () => {
+  it('only the author reads a draft; faculty and other students see nothing', async () => {
+    const { service, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'private notes', expectedVersion: 0 });
+    expect((await service.readDraft(as('stu-1'), 'a1'))?.body).toBe('private notes');
+    expect(await service.readDraft(as('stu-2'), 'a1')).toBeNull();
+    expect(await service.readDraft(as('fac-1'), 'a1')).toBeNull();
+  });
+
+  it('a draft save with a stale expected version is refused', async () => {
+    const { service, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    expect(await codeOf(() => service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v2', expectedVersion: 0 })))
+      .toBe('stale_version');
+  });
+});
+
+describe('faculty assessment and released feedback', () => {
+  async function submitted() {
+    const f = fixture();
+    await f.service.saveDraft(f.as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await f.service.submitAssignment(f.as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: f.KEY_1 });
+    const [submission] = [...f.store.submissions.values()];
+    return { ...f, submissionId: submission.id };
+  }
+
+  it('faculty can record a grade, and the student cannot see it until it is released', async () => {
+    const { service, store, as, submissionId, KEY_1 } = await submitted();
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 88, feedback: 'Strong argument.', idempotencyKey: KEY_1 });
+
+    const before = await service.readFeedback(as('stu-1'), submissionId);
+    expect(before).toEqual({ released: false });
+    expect(store.outbox.rows.map((r) => r.event.eventType)).toEqual(['submission.finalized']);
+  });
+
+  it('releasing feedback makes it visible to the author and posts grade.posted once', async () => {
+    const { service, store, as, submissionId, KEY_1, KEY_2 } = await submitted();
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 88, feedback: 'Strong argument.', idempotencyKey: KEY_1 });
+    const released = await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+    expect(released.status).toBe('completed');
+
+    expect(await service.readFeedback(as('stu-1'), submissionId)).toEqual({ released: true, grade: 88, feedback: 'Strong argument.' });
+    expect(store.outbox.rows.map((r) => r.event.eventType)).toEqual(['submission.finalized', 'grade.posted']);
+
+    expect(await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 })).toEqual(released);
+    expect(store.outbox.rows).toHaveLength(2);
+  });
+
+  it('a second, different release is refused: feedback is released once', async () => {
+    const { service, as, submissionId, KEY_1, KEY_2 } = await submitted();
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 88, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+    expect(await codeOf(() => service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: 'release-key-0003' })))
+      .toBe('invalid_state');
+  });
+
+  it('a student cannot read another student\'s feedback, even when it is released', async () => {
+    const { service, as, submissionId, KEY_1, KEY_2 } = await submitted();
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 88, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+    expect(await codeOf(() => service.readFeedback(as('stu-2'), submissionId))).toBe('not_found');
+  });
+
+  it('a student cannot assess or release', async () => {
+    const { service, as, submissionId, KEY_1, KEY_2 } = await submitted();
+    expect(await codeOf(() => service.recordAssessment(as('stu-1'), { submissionId, grade: 100, feedback: 'me', idempotencyKey: KEY_1 })))
+      .toBe('not_teaching');
+    expect(await codeOf(() => service.releaseFeedback(as('stu-1'), { submissionId, idempotencyKey: KEY_2 }))).toBe('not_teaching');
+  });
+
+  it('a teacher of a different course in the same institution cannot assess the submission', async () => {
+    const { service, as, submissionId, KEY_1 } = await submitted();
+    expect(await codeOf(() => service.recordAssessment(as('fac-2'), { submissionId, grade: 90, feedback: 'x', idempotencyKey: KEY_1 })))
+      .toBe('not_teaching');
+  });
+
+  it('a teacher in another institution cannot see the submission', async () => {
+    const { service, as, submissionId, KEY_1 } = await submitted();
+    expect(await codeOf(() => service.recordAssessment(as('fac-b', 'inst-b'), { submissionId, grade: 90, feedback: 'x', idempotencyKey: KEY_1 })))
+      .toBe('not_found');
+  });
+
+  it('faculty read the submitted work; the student cannot use that path', async () => {
+    const { service, as, submissionId } = await submitted();
+    const work = await service.readSubmissionForFaculty(as('fac-1'), submissionId);
+    expect(work.body).toBe('essay');
+    expect(await codeOf(() => service.readSubmissionForFaculty(as('stu-1'), submissionId))).toBe('not_teaching');
+  });
+});
+
+describe('the submission walks the assessment workflow', () => {
+  it('the states a submission passes through are a valid path to receipt_issued', async () => {
+    const path = ['in_progress', 'ready_to_submit', 'submission_requested', 'finalized', 'receipt_issued'] as const;
+    const verdict = walk(ASSESSMENT_SUBMISSION, 'not_started', path);
+    expect(verdict.ok).toBe(true);
+
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect([...store.submissions.values()][0].state).toBe('receipt_issued');
+  });
+});
+
+/**
+ * The review findings on the first version of this module. Each test failed against that version before its fix.
+ */
+describe('review fixes: boundaries, tenancy, atomic release, event metadata', () => {
+  it('a revoked student cannot read a draft, and a read returns a copy the caller cannot use to change the store', async () => {
+    const { service, store, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'notes', expectedVersion: 0 });
+    const copy = await service.readDraft(as('stu-1'), 'a1');
+    if (!copy) throw new Error('expected a draft');
+    copy.body = 'tampered';
+    expect((await service.readDraft(as('stu-1'), 'a1'))?.body).toBe('notes');
+
+    const membership = store.memberships.find((m) => m.userId === 'stu-1');
+    if (!membership) throw new Error('fixture missing stu-1');
+    membership.status = 'revoked';
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('membership_revoked');
+  });
+
+  it('a draft is not read once the enrollment is removed or stops being a student role', async () => {
+    const { service, store, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'notes', expectedVersion: 0 });
+
+    const index = store.memberships.findIndex((m) => m.userId === 'stu-1');
+    const removed = store.memberships.splice(index, 1)[0];
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+
+    store.memberships.push({ ...removed, role: 'faculty' });
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+  });
+
+  it('the closing instant itself is closed', async () => {
+    const { service, as, KEY_1, setNow } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    setNow('2026-10-20T23:59:00Z');
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })))
+      .toBe('window_closed');
+  });
+
+  it('a membership in another institution with the same course id does not shadow the right one', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    store.memberships.unshift({ userId: 'stu-1', institutionId: 'inst-b', courseId: 'course-a1', role: 'faculty', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await expect(service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 }))
+      .resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('events carry their own id as the downstream key, the request correlation id, and the service clock', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1, correlationId: 'req-abc-12345' });
+    const [row] = store.outbox.rows;
+    expect(row.event.idempotencyKey).toBe(row.event.eventId);
+    expect(row.event.correlationId).toBe('req-abc-12345');
+    expect(row.event.occurredAt).toBe('2026-10-18T12:00:00.000Z');
+  });
+
+  it('a failure while building a release leaves the grade hidden, and the retry emits the one event', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_1 });
+
+    // The same store, a clock and an id source that fail while the release is being built.
+    const broken = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => new Date('2026-10-18T12:00:00Z'),
+      newId: () => {
+        throw new Error('id source unavailable');
+      },
+    });
+    await expect(broken.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 })).rejects.toThrow('id source unavailable');
+    expect(await service.readFeedback(as('stu-1'), submissionId)).toEqual({ released: false });
+    expect(store.outbox.rows.map((r) => r.event.eventType)).toEqual(['submission.finalized']);
+
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+    expect(store.outbox.rows.map((r) => r.event.eventType)).toEqual(['submission.finalized', 'grade.posted']);
+    expect(await service.readFeedback(as('stu-1'), submissionId)).toEqual({ released: true, grade: 80, feedback: 'ok' });
+  });
+
+  it('a clock that fails partway through an assessment leaves no receipt that no claim points to', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+
+    // The clock answers once, then fails: only a second read inside the write can throw.
+    let reads = 0;
+    const flaky = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => {
+        if (++reads > 1) throw new Error('clock unavailable');
+        return new Date('2026-10-18T12:00:00Z');
+      },
+      newId: () => `flaky-${reads}`,
+    });
+    await flaky.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_2 }).catch(() => undefined);
+
+    const claimed = new Set([...store.claims.values()].map((c) => c.receiptId));
+    expect([...store.receipts.keys()].filter((id) => !claimed.has(id))).toEqual([]);
+  });
+
+  it('grade.posted names the student as its subject, the id the grade notifier reads', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+
+    const posted = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'grade.posted');
+    expect(posted?.subject).toEqual({ type: 'student', id: 'stu-1' });
+  });
+
+  it('idempotency keys follow the gateway contract: 16 to 128 characters', async () => {
+    const { service, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    const submit = (key: string) => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: key });
+
+    expect(await codeOf(() => submit('k'.repeat(15)))).toBe('invalid_input');
+    expect(await codeOf(() => submit('k'.repeat(129)))).toBe('invalid_input');
+    await expect(submit('k'.repeat(16))).resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('a receipt handed to the caller is a copy: changing it does not change what a replay returns', async () => {
+    const { service, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    const first = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    Object.assign(first, { message: 'changed by the caller' });
+
+    const replay = await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    expect(replay.message).toBe('Your submission was received.');
+  });
+
+  it('an assignment whose closing time is not a valid time refuses writes rather than staying open', async () => {
+    const { service, store, as } = fixture();
+    store.assignments.set('bad', { id: 'bad', institutionId: 'inst-a', courseId: 'course-a1', closesAt: 'not a date' });
+    expect(await codeOf(() => service.saveDraft(as('stu-1'), { assignmentId: 'bad', body: 'v1', expectedVersion: 0 })))
+      .toBe('invalid_state');
+  });
+
+  it('a draft is not returned once the author is no longer an active student in that course', async () => {
+    const { service, store, as } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'notes', expectedVersion: 0 });
+    const membership = store.memberships.find((m) => m.userId === 'stu-1');
+    if (!membership) throw new Error('fixture missing stu-1');
+    membership.role = 'faculty';
+    expect(await codeOf(() => service.readDraft(as('stu-1'), 'a1'))).toBe('not_enrolled');
+  });
+
+  it('the same idempotency key in a second institution is a separate request, not a conflict', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    store.memberships.push({ userId: 'stu-1', institutionId: 'inst-b', courseId: 'course-b1', role: 'student', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'v1', expectedVersion: 0 });
+    await service.saveDraft(as('stu-1', 'inst-b'), { assignmentId: 'b1', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    await expect(service.submitAssignment(as('stu-1', 'inst-b'), { assignmentId: 'b1', draftVersion: 1, idempotencyKey: KEY_1 }))
+      .resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('identifiers use the platform alphabet, so an id with dots and colons is accepted', async () => {
+    const { service, store, as } = fixture();
+    store.assignments.set('unit.2:essay', { id: 'unit.2:essay', institutionId: 'inst-a', courseId: 'course-a1', closesAt: '2026-10-20T23:59:00Z' });
+    await expect(service.saveDraft(as('stu-1'), { assignmentId: 'unit.2:essay', body: 'v1', expectedVersion: 0 }))
+      .resolves.toMatchObject({ version: 1 });
+  });
+
+  it('grade.posted carries the assignment under the name the grade notifier reads', async () => {
+    const { service, store, as, KEY_1, KEY_2 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+    const submissionId = [...store.submissions.values()][0].id;
+    await service.recordAssessment(as('fac-1'), { submissionId, grade: 80, feedback: 'ok', idempotencyKey: KEY_1 });
+    await service.releaseFeedback(as('fac-1'), { submissionId, idempotencyKey: KEY_2 });
+
+    const posted = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'grade.posted');
+    expect(posted?.payload).toMatchObject({ assignment: 'a1' });
+  });
+
+  it('two faculty who reuse one command key release two grades under two event keys, so the notifier does not collapse them', async () => {
+    const { service, store, as } = fixture();
+    store.memberships.push({ userId: 'fac-3', institutionId: 'inst-a', courseId: 'course-a1', role: 'faculty', status: 'active' });
+    store.memberships.push({ userId: 'stu-2', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay one', expectedVersion: 0 });
+    await service.saveDraft(as('stu-2'), { assignmentId: 'a1', body: 'essay two', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    await service.submitAssignment(as('stu-2'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    const [first, second] = [...store.submissions.values()];
+    await service.recordAssessment(as('fac-1'), { submissionId: first.id, grade: 80, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+    await service.recordAssessment(as('fac-3'), { submissionId: second.id, grade: 70, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+
+    await service.releaseFeedback(as('fac-1'), { submissionId: first.id, idempotencyKey: 'release-key-000001' });
+    await service.releaseFeedback(as('fac-3'), { submissionId: second.id, idempotencyKey: 'release-key-000001' });
+
+    const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('an actor id and a command key that both contain colons cannot make two different senders one event key', async () => {
+    const { service, store, as } = fixture();
+    store.memberships.push({ userId: 'fac-1:2', institutionId: 'inst-a', courseId: 'course-a1', role: 'faculty', status: 'active' });
+    store.memberships.push({ userId: 'stu-2', institutionId: 'inst-a', courseId: 'course-a1', role: 'student', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay one', expectedVersion: 0 });
+    await service.saveDraft(as('stu-2'), { assignmentId: 'a1', body: 'essay two', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    await service.submitAssignment(as('stu-2'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    const [first, second] = [...store.submissions.values()];
+    await service.recordAssessment(as('fac-1'), { submissionId: first.id, grade: 80, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+    await service.recordAssessment(as('fac-1'), { submissionId: second.id, grade: 70, feedback: 'ok', idempotencyKey: 'assess-key-000002' });
+
+    // Both pairs join to the same colon-separated text: actor `fac-1` with key `2:release-key-000001`,
+    // and actor `fac-1:2` with key `release-key-000001`.
+    await service.releaseFeedback(as('fac-1'), { submissionId: first.id, idempotencyKey: '2:release-key-000001' });
+    await service.releaseFeedback(as('fac-1:2'), { submissionId: second.id, idempotencyKey: 'release-key-000001' });
+
+    const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('one faculty member in two institutions who reuses a key releases two grades under two event keys', async () => {
+    const { service, store, as } = fixture();
+    store.memberships.push({ userId: 'fac-1', institutionId: 'inst-b', courseId: 'course-b1', role: 'faculty', status: 'active' });
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay one', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    await service.saveDraft(as('stu-b', 'inst-b'), { assignmentId: 'b1', body: 'essay two', expectedVersion: 0 });
+    await service.submitAssignment(as('stu-b', 'inst-b'), { assignmentId: 'b1', draftVersion: 1, idempotencyKey: 'submit-key-000001' });
+    const [a, b] = [...store.submissions.values()];
+    await service.recordAssessment(as('fac-1'), { submissionId: a.id, grade: 80, feedback: 'ok', idempotencyKey: 'assess-key-000001' });
+    await service.recordAssessment(as('fac-1', 'inst-b'), { submissionId: b.id, grade: 70, feedback: 'ok', idempotencyKey: 'assess-key-000002' });
+
+    await service.releaseFeedback(as('fac-1'), { submissionId: a.id, idempotencyKey: 'release-key-000001' });
+    await service.releaseFeedback(as('fac-1', 'inst-b'), { submissionId: b.id, idempotencyKey: 'release-key-000001' });
+
+    const keys = store.outbox.rows.map((r) => r.event).filter((e) => e.eventType === 'grade.posted').map((e) => e.idempotencyKey);
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('every event passes the envelope check even when the tenant, actor and key are all at their longest', async () => {
+    const { service, store, as } = fixture();
+    const tenant = 'i'.repeat(128);
+    const user = 'u'.repeat(128);
+    store.assignments.set('long', { id: 'long', institutionId: tenant, courseId: 'course-long', closesAt: '2026-10-20T23:59:00Z' });
+    store.memberships.push({ userId: user, institutionId: tenant, courseId: 'course-long', role: 'student', status: 'active' });
+    await service.saveDraft(as(user, tenant), { assignmentId: 'long', body: 'v1', expectedVersion: 0 });
+    await service.submitAssignment(as(user, tenant), { assignmentId: 'long', draftVersion: 1, idempotencyKey: 'k'.repeat(128) });
+
+    const [row] = store.outbox.rows;
+    expect(validateEvent(row.event).ok).toBe(true);
+  });
+
+  it('the deadline check and the stored submission time read the clock once, so a submission cannot be stored after the close', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+
+    // The clock reads just before the closing instant, then just after it: the write must not straddle the deadline.
+    let reads = 0;
+    const straddling = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => (++reads === 1 ? new Date('2026-10-20T23:58:59Z') : new Date('2026-10-21T00:00:00Z')),
+      newId: () => `race-${reads}`,
+    });
+    const outcome = await straddling
+      .submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 })
+      .then(() => 'accepted', (error: unknown) => (error as SubmissionRefusal).code);
+
+    if (outcome === 'accepted') {
+      const [submission] = [...store.submissions.values()];
+      expect(Date.parse(submission.submittedAt)).toBeLessThan(Date.parse('2026-10-20T23:59:00Z'));
+    } else {
+      expect(outcome).toBe('window_closed');
+    }
+  });
+
+  it('a generated correlation id stays within the envelope limit when the submission id is at its longest', async () => {
+    const { service, store, as, KEY_1 } = fixture();
+    await service.saveDraft(as('stu-1'), { assignmentId: 'a1', body: 'essay', expectedVersion: 0 });
+    let issued = 0;
+    const longIds = new AssignmentSubmissionService(store, {
+      environment: 'demo',
+      now: () => new Date('2026-10-18T12:00:00Z'),
+      newId: () => `${'n'.repeat(120)}${String(++issued).padStart(8, '0')}`,
+    });
+    await longIds.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 });
+
+    const finalized = store.outbox.rows.map((r) => r.event).find((e) => e.eventType === 'submission.finalized');
+    expect(finalized && validateEvent(finalized).ok).toBe(true);
+  });
+});
+
+describe('refusals are typed and still count as refusals', () => {
+  it('a SubmissionRefusal is a Refusal, so the gateway maps it like every other refusal', async () => {
+    const { service, as, KEY_1 } = fixture();
+    const err = await service.submitAssignment(as('stu-b'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: KEY_1 }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SubmissionRefusal);
+    expect(err).toBeInstanceOf(Refusal);
+  });
+
+  it('a malformed idempotency key is refused as invalid input before anything is looked up', async () => {
+    const { service, as } = fixture();
+    expect(await codeOf(() => service.submitAssignment(as('stu-1'), { assignmentId: 'a1', draftVersion: 1, idempotencyKey: 'short' })))
+      .toBe('invalid_input');
+  });
+});

@@ -44,6 +44,20 @@
   --surface-modal: var(--app-raise);
   --surface-critical: var(--app-error-wash);
 
+  /* ── Workspace shell ──────────────────────────────────────────────────
+     A stable institutional frame around the user's chosen content ground.
+     The primitive colours are resolved in `lib/look.ts`; components consume
+     only these job names. */
+  --shell-navigation-surface: var(--workspace-rail);
+  --shell-navigation-surface-active: var(--workspace-rail-raised);
+  --shell-navigation-text: var(--workspace-rail-text);
+  --shell-navigation-muted: var(--workspace-rail-muted);
+  --shell-navigation-border: var(--workspace-rail-border);
+  --shell-content-canvas: var(--workspace-canvas);
+  --shell-primary: var(--workspace-action);
+  --shell-primary-strong: var(--workspace-action-strong);
+  --shell-on-primary: var(--workspace-action-ink);
+
   /* ── Text ────────────────────────────────────────────────────────────── */
   --text-primary: var(--app-fg);
   --text-secondary: var(--app-dim);

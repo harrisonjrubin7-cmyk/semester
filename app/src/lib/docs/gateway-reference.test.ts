@@ -546,6 +546,7 @@ function exchange(
     const contentType = c.contentType === undefined ? (hasBody ? 'application/json' : null) : c.contentType;
     if (contentType && hasBody) put('Content-Type', contentType);
     if (c.correlation) put('X-Correlation-Id', c.correlation);
+    if (path === '/actions/commit') put('Idempotency-Key', c.correlation ?? 'docs-commit-00000001');
     for (const [k, v] of Object.entries(c.headers ?? {})) put(k, v);
     const text = c.raw ?? (c.body === undefined ? undefined : JSON.stringify(c.body));
     const response = await handle(new Request(`http://gateway.test${base}${path}`, { method, headers, body: text }));
@@ -593,6 +594,7 @@ function makeGateway(over: Partial<GatewayConfig> & { adapters: InstitutionAdapt
     institutionName: SANDBOX_NAME,
     authenticate: async (token) => IDENTITIES[token] ?? null,
     journal,
+    idempotency: journal,
     rateLimiter: { allow: () => true },
     ...over,
   });
@@ -1382,9 +1384,9 @@ describe('the constants a reader would copy', () => {
   });
 
   it('records which entry point honours which switch, so the page cannot say otherwise', () => {
-    // Read-only mode, SCIM and telemetry are wired in exactly one entry point each.
+    // Read-only mode is wired in both entry points; SCIM and telemetry are production-runtime only.
     expect(src(SRC.start)).toMatch(/readOnly:/);
-    expect(src(SRC.runtime)).not.toMatch(/readOnly/);
+    expect(src(SRC.runtime)).toMatch(/readOnly:/);
     expect(src(SRC.runtime)).toMatch(/withScim\(/);
     expect(src(SRC.start)).not.toMatch(/scim/i);
     expect(src(SRC.runtime)).toMatch(/telemetry:/);
@@ -1393,10 +1395,15 @@ describe('the constants a reader would copy', () => {
     expect(src(SRC.runtime)).not.toMatch(/sandbox\.ts|sandboxAdapters|SEMESTER_SANDBOX/);
     expect(src(SRC.start)).toMatch(/sandboxAdapters\(/);
     expect(src(SRC.start)).toMatch(/\(process\.env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    expect(src(SRC.runtime)).toMatch(/\(env\.SEMESTER_READ_ONLY \|\| ''\)\.trim\(\)\.toLowerCase\(\) === 'on'/);
+    const configuration = read('docs/reference/CONFIGURATION.md');
+    expect(configuration).not.toContain('start.ts only');
+    expect(configuration).not.toContain('production runtime has no read-only switch');
+    expect(configuration).toContain('the gateway, `start.ts` and `runtime.ts`');
     expect(src(SRC.runtime)).toMatch(/refreshIdentity:/);
     expect(src(SRC.start)).toMatch(/refreshIdentity:/);
     const auth = read(PAGES.auth);
-    expect(auth).toMatch(/Read-only mode is wired only into `start\.ts`/);
+    expect(auth).toContain('Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request.');
     expect(read(PAGES.scim)).toMatch(/`start\.ts` does not mount SCIM/);
   });
 

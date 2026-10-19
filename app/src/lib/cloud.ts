@@ -647,7 +647,12 @@ function canon(value: unknown): string {
 const ackKey = (userId: string, id: string) => `${userId}/${id}`;
 
 export async function pull(userId: string): Promise<Snapshot> {
-  const db = (await cloud());
+  const db = await cloud();
+  const identity = await db.auth.getUser();
+  if (identity.error) throw new Error(identity.error.message);
+  if (identity.data.user?.id !== userId) {
+    throw new Error('The signed-in account changed before its semester could be read.');
+  }
   const [stateRow, courseRows] = await Promise.all([
     db.from('state').select('data, updated_at').eq('user_id', userId).maybeSingle(),
     db.from('courses').select('id, data, updated_at').eq('user_id', userId),

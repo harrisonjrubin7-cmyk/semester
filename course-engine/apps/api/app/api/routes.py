@@ -7,11 +7,13 @@ import os
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Lock
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+import pymupdf as fitz
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
-from sqlalchemy import delete, func, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,6 +25,8 @@ from app.models.entities import (
     BackgroundJob,
     CalendarEvent,
     Citation,
+    CommandReceipt,
+    Concept,
     Conflict,
     Course,
     JobStatus,
@@ -34,8 +38,10 @@ from app.models.entities import (
     StudyAsset,
     StudyAssetCitation,
     StudyExport,
+    StudySession,
     UploadCompletion,
     User,
+    WorkspaceGrant,
 )
 from app.schemas import (
     AssetPatch,
@@ -46,7 +52,9 @@ from app.schemas import (
     CourseOut,
     CoursePatch,
     GenerateAssetRequest,
+    InstitutionCommandRequest,
     LoginRequest,
+    QuizAttempt,
     RegisterRequest,
     ReviewPatch,
     TokenResponse,
@@ -61,9 +69,11 @@ from app.services.citations import (
     validate_study_asset_content,
 )
 from app.services.exports import export_flashcards_pdf, export_guide_docx, export_guide_pdf
+from app.services.institution_commands import _is_active, submit_institution_command
 from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
+    ObjectInspectionError,
     ObjectStorage,
     normalize_upload_mime,
     sha256_file,
@@ -74,6 +84,24 @@ from app.services.upload_dispatch import dispatch_upload_completion
 
 router = APIRouter()
 storage = ObjectStorage()
+_preview_pdf_cache_lock = Lock()
+_preview_pdf_cache_key: tuple[str, str, str] | None = None
+_preview_pdf_cache_payload: bytes | None = None
+
+
+def preview_pdf_payload(doc: SourceDocument) -> bytes:
+    global _preview_pdf_cache_key, _preview_pdf_cache_payload
+
+    key = (str(doc.id), doc.sha256, doc.storage_key)
+    with _preview_pdf_cache_lock:
+        if key == _preview_pdf_cache_key and _preview_pdf_cache_payload is not None:
+            return _preview_pdf_cache_payload
+
+    payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+    with _preview_pdf_cache_lock:
+        _preview_pdf_cache_key = key
+        _preview_pdf_cache_payload = payload
+    return payload
 
 
 def owned_course(db: Session, user: User, course_id: UUID) -> Course:
@@ -85,6 +113,55 @@ def owned_course(db: Session, user: User, course_id: UUID) -> Course:
 
 def serialize(row) -> dict:
     return {column.name: getattr(row, column.name) for column in row.__table__.columns}
+
+
+def serialize_completion_receipt(receipt: UploadCompletion) -> dict:
+    """Return the durable idempotency receipt without transient outbox state."""
+    transient_fields = {
+        "dispatch_status",
+        "dispatch_claimed_at",
+        "dispatched_at",
+        "updated_at",
+    }
+    return {
+        column.name: getattr(receipt, column.name)
+        for column in receipt.__table__.columns
+        if column.name not in transient_fields
+    }
+
+
+def valid_guide_sections(content: dict) -> list[dict]:
+    sections = content.get("sections")
+    if not isinstance(sections, list):
+        return []
+    valid = []
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        if not isinstance(section.get("heading"), str) or not isinstance(section.get("explanation"), str):
+            continue
+        citation_ids = section.get("citation_ids")
+        if not isinstance(citation_ids, list) or not all(isinstance(value, str) for value in citation_ids):
+            continue
+        if any(
+            key in section and (
+                not isinstance(section[key], list)
+                or not all(isinstance(value, str) for value in section[key])
+            )
+            for key in ("key_points", "examples")
+        ):
+            continue
+        valid.append(section)
+    return valid
+
+
+def merge_job_snapshots(
+    active_jobs: list[BackgroundJob],
+    recent_terminal_jobs: list[BackgroundJob],
+) -> list[BackgroundJob]:
+    jobs_by_id = {job.id: job for job in recent_terminal_jobs}
+    jobs_by_id.update({job.id: job for job in active_jobs})
+    return sorted(jobs_by_id.values(), key=lambda job: job.created_at, reverse=True)
 
 
 def _citation_label(document: SourceDocument, chunk: SourceChunk) -> str:
@@ -157,6 +234,76 @@ def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
             },
         ))
     db.execute(delete(StudyAssetCitation).where(StudyAssetCitation.citation_id == citation.id))
+
+
+@router.post("/institutions/{institution_id}/commands", status_code=202)
+def create_institution_command(
+    institution_id: UUID,
+    payload: InstitutionCommandRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=16, max_length=240),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    receipt, replayed = submit_institution_command(
+        db,
+        institution_id,
+        user,
+        payload.command_type,
+        payload.payload,
+        idempotency_key,
+    )
+    return {**serialize(receipt), "replayed": replayed}
+
+
+@router.get("/institutions/{institution_id}/commands")
+def list_institution_commands(
+    institution_id: UUID,
+    cursor: UUID | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=100),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    grants = db.scalars(
+        select(WorkspaceGrant).where(
+            WorkspaceGrant.institution_id == institution_id,
+            WorkspaceGrant.user_id == user.id,
+            WorkspaceGrant.role.in_({"registrar", "institution", "operations"}),
+        )
+    ).all()
+    now = datetime.now(UTC)
+    if not any(_is_active(grant, now) for grant in grants):
+        raise HTTPException(403, "Institution operations grant required")
+    statement = select(CommandReceipt).where(CommandReceipt.institution_id == institution_id)
+    if cursor is not None:
+        anchor = db.scalar(
+            select(CommandReceipt).where(
+                CommandReceipt.id == cursor,
+                CommandReceipt.institution_id == institution_id,
+            )
+        )
+        if anchor is None:
+            raise HTTPException(404, "Command cursor not found")
+        statement = statement.where(
+            CommandReceipt.id != cursor,
+            or_(
+                CommandReceipt.created_at < anchor.created_at,
+                and_(
+                    CommandReceipt.created_at == anchor.created_at,
+                    CommandReceipt.id < anchor.id,
+                ),
+            ),
+        )
+    receipts = db.scalars(
+        statement.order_by(CommandReceipt.created_at.desc(), CommandReceipt.id.desc()).limit(
+            limit + 1
+        )
+    ).all()
+    has_more = len(receipts) > limit
+    items = receipts[:limit]
+    return {
+        "items": [serialize(receipt) for receipt in items],
+        "next_cursor": str(items[-1].id) if has_more else None,
+    }
 
 
 @router.post("/auth/register", response_model=TokenResponse, status_code=201)
@@ -320,7 +467,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     try:
@@ -357,28 +504,28 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     document.status = "quarantined"
     job = BackgroundJob(course_id=course_id, document_id=document.id, job_type="extract")
     db.add(job)
-    db.flush()
-    receipt = UploadCompletion(
-        course_id=course_id,
-        document_id=document_id,
-        job_id=job.id,
-        payload_fingerprint=fingerprint,
-        verified_metadata={
-            field: getattr(metadata, field)
-            for field in (
-                "backend",
-                "bucket",
-                "key",
-                "size_bytes",
-                "content_type",
-                "checksum_sha256",
-                "encryption",
-                "owner_verified",
-            )
-        },
-    )
-    db.add(receipt)
     try:
+        db.flush()
+        receipt = UploadCompletion(
+            course_id=course_id,
+            document_id=document_id,
+            job_id=job.id,
+            payload_fingerprint=fingerprint,
+            verified_metadata={
+                field: getattr(metadata, field)
+                for field in (
+                    "backend",
+                    "bucket",
+                    "key",
+                    "size_bytes",
+                    "content_type",
+                    "checksum_sha256",
+                    "encryption",
+                    "owner_verified",
+                )
+            },
+        )
+        db.add(receipt)
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -393,7 +540,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
         db.refresh(existing)
         return {
             "document": serialize(document),
-            "receipt": serialize(existing),
+            "receipt": serialize_completion_receipt(existing),
             "job": serialize(job),
         }
     db.refresh(job)
@@ -402,7 +549,7 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
     db.refresh(receipt)
     return {
         "document": serialize(document),
-        "receipt": serialize(receipt),
+        "receipt": serialize_completion_receipt(receipt),
         "job": serialize(job),
     }
 
@@ -411,6 +558,37 @@ def complete_upload(course_id: UUID, payload: UploadComplete, user: User = Depen
 def list_files(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
     return [serialize(x) for x in db.scalars(select(SourceDocument).where(SourceDocument.course_id == course_id, SourceDocument.deleted_at.is_(None)).order_by(SourceDocument.created_at.desc())).all()]
+
+
+@router.get("/courses/{course_id}/jobs")
+def list_jobs(
+    course_id: UUID,
+    limit: int = Query(default=100, ge=1, le=200),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    owned_course(db, user, course_id)
+    active_statuses = (JobStatus.queued, JobStatus.running)
+    active_jobs = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status.in_(active_statuses),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+    ).all()
+    recent_terminal_jobs = db.scalars(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.course_id == course_id,
+            BackgroundJob.status.not_in(active_statuses),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(limit)
+    ).all()
+    jobs = merge_job_snapshots(active_jobs, recent_terminal_jobs)
+    return [serialize(job) for job in jobs]
 
 
 @router.get("/files/{file_id}")
@@ -442,14 +620,76 @@ def source_view(
         .offset(offset)
         .limit(limit)
     ).all()
+    review_by_chunk_id: dict[str, ReviewItem] = {}
+    chunk_ids = {str(chunk.id) for chunk in chunks}
+    if chunk_ids:
+        for item in db.scalars(
+            select(ReviewItem)
+            .where(
+                ReviewItem.document_id == doc.id,
+                ReviewItem.item_type == "extracted_evidence",
+                ReviewItem.payload["chunk_id"].as_string().in_(chunk_ids),
+            )
+            .order_by(ReviewItem.created_at.desc())
+        ).all():
+            chunk_id = item.payload.get("chunk_id") if isinstance(item.payload, dict) else None
+            if isinstance(chunk_id, str) and chunk_id not in review_by_chunk_id:
+                review_by_chunk_id[chunk_id] = item
+    serialized_chunks = []
+    for chunk in chunks:
+        serialized = serialize(chunk)
+        review = review_by_chunk_id.get(str(chunk.id))
+        serialized["review_item_id"] = str(review.id) if review else None
+        serialized["review_status"] = review.status.value if review else None
+        serialized["preview_available"] = (
+            Path(doc.filename).suffix.lower() == ".pdf"
+            and chunk.page_number is not None
+            and chunk.bounding_box is not None
+        )
+        serialized_chunks.append(serialized)
     return {
         "document": serialize(doc),
-        "chunks": [serialize(chunk) for chunk in chunks],
+        "chunks": serialized_chunks,
         "total": total,
         "offset": offset,
         "limit": limit,
         "has_more": offset + len(chunks) < total,
     }
+
+
+@router.get("/files/{file_id}/pages/{page_number}/preview")
+def source_page_preview(
+    file_id: UUID,
+    page_number: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    doc = db.get(SourceDocument, file_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(404)
+    owned_course(db, user, doc.course_id)
+    if Path(doc.filename).suffix.lower() != ".pdf":
+        raise HTTPException(415, "Page previews are available only for PDF sources")
+    try:
+        payload = preview_pdf_payload(doc)
+        with fitz.open(stream=payload, filetype="pdf") as document:
+            if page_number < 1 or page_number > document.page_count:
+                raise HTTPException(404, "Source page does not exist")
+            page = document.load_page(page_number - 1)
+            longest_edge = max(float(page.rect.width), float(page.rect.height), 1.0)
+            scale = min(2.0, 2048.0 / longest_edge)
+            preview = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).tobytes("png")
+    except HTTPException:
+        raise
+    except ObjectInspectionError as exc:
+        raise HTTPException(502, "Original object could not be loaded") from exc
+    except (fitz.FileDataError, RuntimeError, ValueError) as exc:
+        raise HTTPException(422, "PDF preview could not be rendered") from exc
+    return Response(
+        content=preview,
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.get("/files/{file_id}/download")
@@ -483,12 +723,60 @@ def delete_file(file_id: UUID, user: User = Depends(get_current_user), db: Sessi
 
 @router.post("/files/{file_id}/retry-extraction")
 def retry_file(file_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    doc = db.get(SourceDocument, file_id)
+    doc = db.scalar(
+        select(SourceDocument)
+        .where(SourceDocument.id == file_id, SourceDocument.deleted_at.is_(None))
+        .with_for_update()
+    )
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
+    if not db.scalar(select(UploadCompletion.id).where(UploadCompletion.document_id == doc.id)):
+        raise HTTPException(409, "Upload must be completed before retrying extraction")
+    active_job = db.scalar(
+        select(BackgroundJob)
+        .where(
+            BackgroundJob.document_id == doc.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+        .order_by(BackgroundJob.created_at.desc())
+        .limit(1)
+    )
+    if active_job:
+        if active_job.status == JobStatus.queued:
+            celery_client.send_task(
+                "extract_document",
+                args=[str(active_job.id)],
+                task_id=str(active_job.id),
+            )
+        return serialize(active_job)
     job = BackgroundJob(course_id=doc.course_id, document_id=doc.id, job_type="extract")
-    doc.status = "queued"; db.add(job); db.commit(); db.refresh(job)
-    celery_client.send_task("extract_document", args=[str(job.id)])
+    doc.status = "queued"
+    db.add(job)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        job = db.scalar(
+            select(BackgroundJob)
+            .where(
+                BackgroundJob.document_id == file_id,
+                BackgroundJob.job_type == "extract",
+                BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+                BackgroundJob.revoked_at.is_(None),
+            )
+            .order_by(BackgroundJob.created_at.desc())
+            .limit(1)
+        )
+        if not job:
+            raise
+    db.refresh(job)
+    celery_client.send_task(
+        "extract_document",
+        args=[str(job.id)],
+        task_id=str(job.id),
+    )
     return serialize(job)
 
 
@@ -511,9 +799,42 @@ def cancel_job(job_id: UUID, user: User = Depends(get_current_user), db: Session
         return serialize(job)
     if job.status in (JobStatus.completed, JobStatus.failed):
         raise HTTPException(409, "Terminal jobs cannot be cancelled")
-    revoke_job(db, job.id, job.course_id, datetime.now(UTC), "Cancelled by user")
+    changed = revoke_job(
+        db,
+        job.id,
+        job.course_id,
+        datetime.now(UTC),
+        "Cancelled by user",
+        commit=False,
+    )
+    if not changed:
+        db.rollback()
+        db.refresh(job)
+        if job.revoked_at is None:
+            raise HTTPException(409, "Terminal jobs cannot be cancelled")
+        return serialize(job)
+    _restore_cancelled_extraction_document(db, job)
     db.refresh(job)
     return serialize(job)
+
+
+def _restore_cancelled_extraction_document(db: Session, job: BackgroundJob) -> None:
+    if job.job_type != "extract" or not job.document_id:
+        db.commit()
+        return
+    another_active_job = db.scalar(
+        select(BackgroundJob.id).where(
+            BackgroundJob.document_id == job.document_id,
+            BackgroundJob.id != job.id,
+            BackgroundJob.job_type == "extract",
+            BackgroundJob.status.in_((JobStatus.queued, JobStatus.running)),
+            BackgroundJob.revoked_at.is_(None),
+        )
+    )
+    document = db.get(SourceDocument, job.document_id)
+    if document and not document.deleted_at and not another_active_job:
+        document.status = "uploaded"
+    db.commit()
 
 
 @router.get("/courses/{course_id}/review-items")
@@ -782,9 +1103,36 @@ def export_cards(asset_id: UUID, user: User = Depends(get_current_user), db: Ses
 @router.post("/flashcards/{card_id}/review")
 def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, payload.course_id)
+    if payload.concept_id is not None and not db.scalar(select(Concept.id).where(
+        Concept.id == payload.concept_id,
+        Concept.course_id == payload.course_id,
+    )):
+        raise HTTPException(404, "Concept not found")
+    asset = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == payload.asset_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type == "flashcards",
+        StudyAsset.status != ReviewStatus.rejected,
+        StudyAsset.deleted_at.is_(None),
+    ))
+    card_exists = asset is not None and any(
+        str(card.get("id")) == str(card_id)
+        for card in asset.content.get("cards", [])
+        if isinstance(card, dict)
+    )
+    if not card_exists:
+        raise HTTPException(404, "Flashcard not found")
     progress = db.scalar(select(LearnerProgress).where(LearnerProgress.user_id == user.id, LearnerProgress.course_id == payload.course_id, LearnerProgress.concept_id == payload.concept_id))
     if not progress:
-        progress = LearnerProgress(user_id=user.id, course_id=payload.course_id, concept_id=payload.concept_id); db.add(progress)
+        progress = LearnerProgress(
+            user_id=user.id,
+            course_id=payload.course_id,
+            concept_id=payload.concept_id,
+            attempts=0,
+            correct_attempts=0,
+            mastery_score=0,
+        )
+        db.add(progress)
     progress.attempts += 1; progress.correct_attempts += int(payload.correct)
     progress.mastery_score = progress.correct_attempts / progress.attempts
     progress.last_reviewed_at = datetime.now(UTC)
@@ -793,15 +1141,73 @@ def review_card(card_id: UUID, payload: CardReview, user: User = Depends(get_cur
 
 
 @router.post("/quizzes/{quiz_id}/attempts")
-def quiz_attempt(quiz_id: UUID, payload: dict, user: User = Depends(get_current_user)):
-    return {"quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.get("answers", []))}
+def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    owned_course(db, user, payload.course_id)
+    quiz = db.scalar(select(StudyAsset).where(
+        StudyAsset.id == quiz_id,
+        StudyAsset.course_id == payload.course_id,
+        StudyAsset.asset_type.in_(("practice_quiz", "practice_exam")),
+        StudyAsset.status != ReviewStatus.rejected,
+        StudyAsset.deleted_at.is_(None),
+    ))
+    if not quiz:
+        raise HTTPException(404, "Quiz not found")
+    questions = valid_guide_sections(quiz.content)
+    expected_indexes = set(range(len(questions)))
+    rated_indexes = {answer.question_index for answer in payload.answers}
+    if (
+        not expected_indexes
+        or len(payload.answers) != len(expected_indexes)
+        or rated_indexes != expected_indexes
+    ):
+        raise HTTPException(400, "Rate every stored quiz prompt exactly once")
+    normalized_answers = [answer.model_dump() for answer in payload.answers]
+    correct_answers = sum(int(answer.correct) for answer in payload.answers)
+    session = StudySession(
+        user_id=user.id,
+        course_id=payload.course_id,
+        study_asset_id=quiz.id,
+        mode="quiz",
+        result={
+            "answers": normalized_answers,
+            "correct_answers": correct_answers,
+            "question_count": len(payload.answers),
+        },
+        ended_at=datetime.now(UTC),
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return {"id": session.id, "quiz_id": quiz_id, "recorded": True, "answer_count": len(payload.answers)}
 
 
 @router.get("/courses/{course_id}/progress")
 def progress(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
     rows = db.scalars(select(LearnerProgress).where(LearnerProgress.course_id == course_id, LearnerProgress.user_id == user.id)).all()
-    return {"items": [serialize(x) for x in rows], "average_mastery": sum(x.mastery_score for x in rows) / len(rows) if rows else 0}
+    items = [{**serialize(row), "kind": "concept"} for row in rows]
+    quiz_sessions = db.scalars(select(StudySession).where(
+        StudySession.course_id == course_id,
+        StudySession.user_id == user.id,
+        StudySession.mode == "quiz",
+        StudySession.ended_at.is_not(None),
+    ).order_by(StudySession.ended_at.desc()).limit(50)).all()
+    for session in quiz_sessions:
+        question_count = session.result.get("question_count", 0)
+        correct_answers = session.result.get("correct_answers", 0)
+        if not isinstance(question_count, int) or question_count <= 0:
+            continue
+        if not isinstance(correct_answers, int) or not 0 <= correct_answers <= question_count:
+            continue
+        items.append({
+            "id": session.id,
+            "kind": "quiz",
+            "mastery_score": correct_answers / question_count,
+            "attempts": question_count,
+            "correct_attempts": correct_answers,
+            "next_review_at": None,
+        })
+    return {"items": items, "average_mastery": sum(item["mastery_score"] for item in items) / len(items) if items else 0}
 
 
 @router.get("/benchmarks/latest")

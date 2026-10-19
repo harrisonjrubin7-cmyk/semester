@@ -349,4 +349,37 @@ describe('the workflow', () => {
     expect(r).toContain('cancel-in-progress: false');
     expect(r).toContain('status-record.mjs');
   });
+
+  it('passes the configured Vercel origin or verified production alias and keeps Pages history Pages-scoped', () => {
+    const publicJob = job('public');
+    expect(publicJob).toContain('name: Probe Vercel production availability');
+    expect(publicJob).toContain('SEMESTER_PUBLIC_APP_TARGET: vercel');
+    expect(publicJob).toContain("SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL || 'https://semester-rose.vercel.app' }}");
+
+    const pagesJob = job('pages');
+    expect(pagesJob).toContain('name: Probe GitHub Pages availability');
+    expect(pagesJob).toContain('SEMESTER_PUBLIC_APP_TARGET: pages');
+    expect(pagesJob).not.toContain('SEMESTER_PRODUCTION_APP_URL');
+
+    const recordJob = job('record');
+    expect(recordJob).toContain('SEMESTER_PUBLIC_APP_TARGET: pages');
+    expect(recordJob).not.toContain('SEMESTER_PRODUCTION_APP_URL');
+  });
+
+  it('does not treat the verified public-app fallback as a partial institutional configuration', () => {
+    const institutionalJob = job('institutional');
+    expect(institutionalJob).toContain(
+      "APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL || 'https://semester-rose.vercel.app' }}",
+    );
+    expect(institutionalJob).toContain('if [ -z "$GATEWAY_URL" ]; then');
+    expect(institutionalJob).not.toContain('if [ -z "$APP_URL" ] && [ -z "$GATEWAY_URL" ]');
+    expect(institutionalJob).not.toContain('Set both SEMESTER_PRODUCTION_APP_URL and SEMESTER_PRODUCTION_GATEWAY_URL');
+  });
+
+  it('does not present a successful recorder job as proof that services were healthy', () => {
+    const recorder = read('app/scripts/status-record.mjs');
+    expect(recorder).toContain('Recorder success confirms persistence, not service health.');
+    expect(recorder).toContain("evidence === 'availability-monitor'");
+    expect(recorder).toContain('provesRelease === false');
+  });
 });

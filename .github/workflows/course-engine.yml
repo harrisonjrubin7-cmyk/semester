@@ -81,3 +81,17 @@ jobs:
         run: pnpm run typecheck
       - name: Build
         run: pnpm run build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser acceptance
+        run: pnpm run test:e2e
+      - name: Keep browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        with:
+          name: course-engine-browser-${{ github.sha }}
+          path: |
+            course-engine/apps/web/playwright-report
+            course-engine/apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 14

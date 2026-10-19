@@ -19,6 +19,7 @@ import {
   arranged,
   leaveBy,
   readSupport,
+  SUPPORT_PREFIX,
   type Entry,
   type Section,
   type SupportLibrary,
@@ -36,7 +37,7 @@ type Tab = Section['id'];
 
 export function Support() {
   const { account } = useStore();
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.support.v1:${account?.id || 'device'}`} />;
+  return <Workspace key={account?.id || 'device'} storageKey={`${SUPPORT_PREFIX}:${account?.id || 'device'}`} />;
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
@@ -116,7 +117,7 @@ function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<Suppor
       {lib.contacts.map((c) => (
         <div key={c.id} className="jx-row">
           <a href={`tel:${c.phone}`}>{c.name} · {c.phone}</a>
-          <button type="button" className="bare" aria-label={`Remove ${c.name}`} onClick={() => setRemoving(c)}>
+          <button type="button" className="bare" aria-label={`Remove ${c.name}: ${c.phone}`} onClick={() => setRemoving(c)}>
             ×
           </button>
         </div>
@@ -130,7 +131,7 @@ function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<Suppor
               says="Removes this name and phone number from the Support workspace on this device."
               exactly={removing.phone}
               doesNotChange="Other emergency contacts, access planning notes, routines, continuity choices and official campus records stay unchanged."
-              recovery={{ kind: 'none', how: 'This Support workspace is not included in a device workspace backup. You can add the contact again if you still know the details.' }}
+              recovery={{ kind: 'none', how: 'Emergency contacts are intentionally excluded from device workspace backups. You can add the contact again if you still know the details.' }}
             />
           )}
           confirmLabel="Remove contact"

@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-72 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+75 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -31,6 +31,7 @@
 | `fn:push` | Web Push sender | edge_function | C1 | platform | — | `supabase-edge-runtime`, `supabase-db`, `web-push`, `queue:push_queue` | — | RB-07 |
 | `fn:support-reply-notify` | Support reply email | edge_function | C2 | support | — | `supabase-edge-runtime`, `supabase-db`, `resend`, `queue:support_notification_outbox` | — | RB-07 |
 | `fn:integration-tick` | Integration sync tick | edge_function | C2 | integrations | — | `supabase-edge-runtime`, `supabase-db` | `kill.integration_sync` | RB-14 |
+| `fn:access-saga-tick` | Access saga worker tick | edge_function | C2 | security | — | `supabase-edge-runtime`, `supabase-db` | — | RB-10 |
 | `fn:ops-projector` | Operations projector batch | edge_function | C3 | data | — | `supabase-edge-runtime`, `supabase-db` | — | RB-10 |
 | `fn:lead-intake` | Company-site lead intake | edge_function | C3 | support | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
 | `fn:trust-room` | Procurement trust-room links | edge_function | C3 | security | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
@@ -45,6 +46,7 @@
 | `job:support-ticket-retention` | Purge eligible support tickets (daily) | job | C1 | support | — | `supabase-db` | — | RB-10 |
 | `job:escalation-delivery` | Community escalation delivery (parked) | job | C2 | support | — | `queue:community_escalation_deliveries` | — | RB-10 |
 | `job:media-scan` | Community media scan (parked) | job | C2 | security | — | `supabase-db` | — | RB-10 |
+| `job:access-saga-worker` | Access saga tick (every five minutes, parked) | job | C2 | security | — | `fn:access-saga-tick` | — | RB-10 |
 | `job:integration-sync` | Integration tick (four times an hour) | job | C2 | integrations | — | `fn:integration-tick` | `kill.integration_sync` | RB-10 |
 | `job:tombstones` | Sweep tombstones (weekly) | job | C3 | data | — | `supabase-db` | — | RB-10 |
 | `job:handoffs` | Sweep spent hand-offs (daily) | job | C3 | security | — | `supabase-db` | — | RB-10 |
@@ -77,6 +79,7 @@
 | `pipeline:contrast` | Daily contrast sweep | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:hawkscan` | Dynamic security scan | pipeline | C3 | security | — | — | — | RB-08 |
 | `pipeline:workflow-lab` | Workflow Lab checks (standalone Next.js app) | pipeline | C3 | platform | — | — | — | RB-08 |
+| `pipeline:release-package-ci` | Supplemental release CI (evidence checker and app gates) | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:codeql` | Static analysis of the source (CodeQL) | pipeline | C3 | security | — | — | — | RB-08 |
 
 ## Role holders

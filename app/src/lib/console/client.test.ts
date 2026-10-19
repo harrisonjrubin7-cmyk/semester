@@ -67,6 +67,8 @@ import {
   loadDuties,
   loadFigures,
   loadCommandCenter,
+  loadProjectionDashboard,
+  readProjectionDashboard,
   loadTenantOperations,
   loadTenantProjection,
   readTenantProjection,
@@ -318,6 +320,36 @@ describe('the audit', () => {
     expect((await auditStatus()).lastSeq).toBe(12);
     replies.set('rpc:console_audit_status', { data: { rows: 0, last_seq: null } });
     expect(await auditStatus()).toEqual({ rows: 0, lastSeq: null, headHash: null, lastSealed: null, lastVerifiedAt: null, lastVerifiedOk: null });
+  });
+});
+
+describe('projection health', () => {
+  const envelope = {
+    data: { projections: [
+      { projection: 'ops_tenant_rollout', version: 1, freshness: 'fresh', freshnessSloSeconds: 300, workerStatus: 'idle', lastEventAt: '2026-10-12T00:00:00Z', lagSeconds: 12, eventsBehind: 0, oldestPendingSeconds: null, deadLetters: 0, lastError: null, lastRebuild: { status: 'succeeded', mode: 'shadow', finishedAt: '2026-10-11T00:00:00Z', parityOk: true }, eventSourceMapped: true },
+      { projection: 'zz_model', version: 1, freshness: 'unknown', freshnessSloSeconds: 300, workerStatus: 'unknown', lastEventAt: null, lagSeconds: null, eventsBehind: null, oldestPendingSeconds: null, deadLetters: null, lastError: null, lastRebuild: null, eventSourceMapped: false },
+    ] },
+    meta: { freshness: 'unknown', generatedAt: '2026-10-12T00:00:01Z', coverage: { activeModels: 2, eventSourcesMapped: 1 } },
+    warnings: ['zz_model has never run; do not treat it as healthy.'],
+  };
+
+  it('reads the envelope and keeps an unreported figure null, never zero', async () => {
+    replies.set('rpc:ops_projection_dashboard', { data: envelope });
+    const d = await loadProjectionDashboard();
+    expect(last()).toMatchObject({ name: 'ops_projection_dashboard' });
+    expect(d).toMatchObject({ freshness: 'unknown', activeModels: 2, eventSourcesMapped: 1, warnings: ['zz_model has never run; do not treat it as healthy.'] });
+    expect(d.projections[0]).toMatchObject({ eventsBehind: 0, deadLetters: 0, lastRebuild: { parityOk: true } });
+    expect(d.projections[1]).toMatchObject({ eventsBehind: null, deadLetters: null, lagSeconds: null, lastRebuild: null, eventSourceMapped: false });
+  });
+
+  it('reads anything it does not recognise as unknown, which is never healthy', () => {
+    expect(readProjectionDashboard(null)).toMatchObject({ freshness: 'unknown', projections: [], warnings: [] });
+    expect(readProjectionDashboard({ meta: { freshness: 'great' }, data: { projections: [{ projection: 'x', freshness: 'ok' }] } }).projections[0]).toMatchObject({ freshness: 'unknown', eventSourceMapped: false });
+  });
+
+  it('throws the refusal rather than returning an empty dashboard', async () => {
+    replies.set('rpc:ops_projection_dashboard', { error: { message: 'console:operate at platform scope is required.' } });
+    await expect(loadProjectionDashboard()).rejects.toThrow('console:operate at platform scope is required.');
   });
 });
 

@@ -366,14 +366,17 @@ const RULES: Record<PolicyAction, Rule> = {
    * mode, and the chunk's classification is one the chosen provider is
    * cleared for. A refusal names a safe alternative rather than a wall.
    */
-  'ai.retrieve_source': ({ request, grants, has }) => {
+  'ai.retrieve_source': ({ request, now, grants, has }) => {
     const { actor, resource, context } = request;
     const a = resource.attributes ?? {};
     if (actor.type !== 'user') return deny('actor_not_person', 'Retrieval runs for a signed-in person.');
     const courseId = typeof a.courseId === 'string' ? a.courseId : '';
     // `grants`, not `context.roleGrants`: a course grant past its expiry is not enrolment.
     const enrolled = courseId !== '' && grants.some((g) => g.scopeKind === 'course' && g.scopeId === courseId);
-    const shared = context.consentGrants.some((g) => g.kind === 'share' && g.grantedTo === actor.id && g.scopes.includes(`source:${resource.id ?? ''}`));
+    // Live, as task.read requires of a share: a revoked or expired share is
+    // not access, however recently it was.
+    const shared = context.consentGrants.some((g) =>
+      g.kind === 'share' && g.grantedTo === actor.id && g.scopes.includes(`source:${resource.id ?? ''}`) && liveConsentGrant(g, now));
     if (!enrolled && !shared) return deny('not_enrolled', 'This material is not in a course you belong to.');
     if (!has('ai:retrieve')) return deny('capability_missing', 'AI retrieval is not enabled for your role.');
     if (a.sourceState !== 'active') {

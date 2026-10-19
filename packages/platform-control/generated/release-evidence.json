@@ -5,6 +5,11 @@
       "code": "capability_not_production_ready",
       "path": "capabilities.registration.readiness.maturity.production_ready",
       "message": "registration.readiness lacks production-ready evidence."
+    },
+    {
+      "code": "support_recovery_not_ready",
+      "path": "operationsReadiness.registration.readiness",
+      "message": "registration.readiness lacks current support roster, synthetic-check, restore-drill, and incident-exercise evidence."
     }
   ],
   "blockedCapabilities": [

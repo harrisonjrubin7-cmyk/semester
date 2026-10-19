@@ -92,6 +92,7 @@ export const CATEGORY_TITLE: Record<RoleCategory, string> = {
  * which is how a new grant gets looked at before it is inherited.
  */
 export const OPERATIONS_ONLY: readonly string[] = [
+  'access_review:manage',
   'console:operate',
   'approval:decide',
   'breakglass:request',

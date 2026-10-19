@@ -92,6 +92,15 @@ describe('which actions can be taken back', () => {
       label: 'Study evidence cleared',
       fields: ['reviews', 'answers'],
     });
+    expect(undoableFor('dismissProgramme')).toEqual({
+      label: 'Suggestion dismissed',
+      fields: ['wanted'],
+      onChange: true,
+    });
+    expect(undoableFor('deleteMyRule')).toEqual({
+      label: 'Reminder rule deleted',
+      fields: ['myRules'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -194,6 +203,12 @@ describe('the snapshot', () => {
   it('keeps the study evidence and confidence history together', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.forgetCards, AT);
     expect(Object.keys(took.was)).toEqual(['reviews', 'answers']);
+  });
+
+  it('keeps only the suggestion preferences for a dismissal', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dismissProgramme, AT);
+    expect(Object.keys(took.was)).toEqual(['wanted']);
+    expect(UNDOABLE.dismissProgramme.onChange).toBe(true);
   });
 
   it('carries the label and the moment', () => {

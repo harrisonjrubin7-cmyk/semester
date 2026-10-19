@@ -11,7 +11,7 @@ import type {
   IdempotencyScope,
   IdempotencyStore,
   StoredResponse,
-} from '@semester/platform';
+} from '../../../packages/platform/src/index.ts';
 import type { IntelligenceAuditRecord } from './intelligence.ts';
 import {
   assertJournalKey,
@@ -101,6 +101,9 @@ export interface ActionJournalStore {
   close?(): void | Promise<void>;
 }
 
+/** The complete durability boundary required by an action gateway runtime. */
+export type DurableActionJournalStore = ActionJournalStore & IdempotencyStore;
+
 /** How long a settled row is kept before `purge` may drop it. */
 const KEEP = {
   /** A prepared review nobody confirmed. */
@@ -110,7 +113,7 @@ const KEEP = {
   audit: 180 * 86_400_000,
 } as const;
 
-export class ActionJournal implements ActionJournalStore, IdempotencyStore {
+export class ActionJournal implements DurableActionJournalStore {
   private db: DatabaseSync;
   private key: Buffer;
 

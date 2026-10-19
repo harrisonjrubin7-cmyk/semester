@@ -33,6 +33,7 @@ import type {
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey } from '../data/misc';
 import type { Session } from '../lib/sessions';
+import type { WorkspaceView } from '../lib/route';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
@@ -78,6 +79,7 @@ import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
+import { readMaintenance, type MaintenanceChange, type MaintenanceRequest } from '../lib/maintenance';
 import { LEGACY_TERM, termNow } from '../lib/term';
 import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
@@ -540,6 +542,8 @@ export interface Persisted {
    * `lib/housing.ts`.
    */
   residences: Residence[];
+  /** Repairs reported to housing, and when to check back. See `lib/maintenance.ts`. */
+  maintenance: MaintenanceRequest[];
   /**
    * Testing-centre lead time, in business days. Zero means not used.
    *
@@ -718,6 +722,12 @@ export interface Persisted {
   mutedCourses: CourseId[];
   seenOnboarding: boolean;
   /**
+   * Which onboarding step is open, saved so that closing the app on step
+   * three opens it again on step three. It used to live in the ephemeral
+   * half, which made every interrupted onboarding start over.
+   */
+  onb: number;
+  /**
    * Whether an account has ever been made or signed into on this device.
    *
    * Not a session and not a claim about being signed in — `store.account` is
@@ -862,6 +872,8 @@ export interface Ephemeral {
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
+  /** A typed deep-link target inside Account or University. */
+  workspaceView: WorkspaceView | null;
   /** Student-selected recovery context carried to the next screen only. */
   recoveryIntent: RecoveryIntent | null;
   /**
@@ -1045,7 +1057,6 @@ export interface Ephemeral {
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
   updateUnit: number | null;
-  onb: number;
   openUnit: number;
   drillUnit: number | null;
   /**
@@ -1428,6 +1439,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   notifs: { ...DEFAULT_NOTIFS },
   mutedCourses: [],
   seenOnboarding: false,
+  onb: 0,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
@@ -1544,6 +1556,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   plans: {},
   balances: [],
   residences: [],
+  maintenance: [],
   accessLeadDays: 0,
   quiet: null,
   controls: DEFAULT_CONTROLS,
@@ -1633,6 +1646,7 @@ export function initialEphemeral(): Ephemeral {
     quickAdd: false,
     undone: null,
     screen: 'home',
+    workspaceView: null,
     recoveryIntent: null,
     afterSetup: null,
     history: [],
@@ -1675,7 +1689,6 @@ export function initialEphemeral(): Ephemeral {
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
-    onb: 0,
     openUnit: 0,
     drillUnit: null,
     drillMix: false,
@@ -1794,6 +1807,7 @@ export function loadPersisted(): Persisted {
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
       mutedCourses: list(saved.mutedCourses),
+      onb: typeof saved.onb === 'number' && Number.isInteger(saved.onb) && saved.onb >= 0 ? saved.onb : 0,
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
       tasks: list(saved.tasks),
@@ -1948,6 +1962,7 @@ export function loadPersisted(): Persisted {
       plans: record(saved.plans),
       balances: list(saved.balances),
       residences: list(saved.residences),
+      maintenance: readList(saved.maintenance, readMaintenance),
       // Through the same clamp `setAccessLead` applies, because a restored
       // copy has been through no reducer: this is the one number here that a
       // loop counts down (`businessDaysBefore` in `lib/runway.ts`), and every
@@ -2076,6 +2091,7 @@ export function pickPersisted(state: State): Persisted {
     notifs: state.notifs,
     mutedCourses: state.mutedCourses,
     seenOnboarding: state.seenOnboarding,
+    onb: state.onb,
     registered: state.registered,
     cleared: state.cleared,
     tasks: state.tasks,
@@ -2166,6 +2182,7 @@ export function pickPersisted(state: State): Persisted {
     plans: state.plans,
     balances: state.balances,
     residences: state.residences,
+    maintenance: state.maintenance,
     accessLeadDays: state.accessLeadDays,
     quiet: state.quiet,
     controls: state.controls,
@@ -2242,6 +2259,9 @@ export type Action =
    * course *page*, is not a tool's idea of where it is.
    */
   | { type: 'go'; screen: Screen; courseId?: CourseId; recoveryIntent?: RecoveryIntent }
+  | { type: 'openWorkspace'; screen: 'account'; view: 'course-studio' }
+  | { type: 'openWorkspace'; screen: 'university'; view: 'overview' | 'drafts' }
+  | { type: 'setWorkspaceView'; view: WorkspaceView | null }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
@@ -2363,6 +2383,7 @@ export type Action =
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
   | { type: 'setMyRules'; rules: MyRule[] }
+  | { type: 'deleteMyRule'; id: string }
   | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
   | { type: 'setPronounce'; text: string }
@@ -2805,6 +2826,11 @@ export type Action =
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }
+  /** A repair reported to housing. The id comes from the caller, so a second dispatch is a no-op. */
+  | { type: 'addMaintenance'; request: MaintenanceRequest }
+  | { type: 'moveMaintenance'; id: string; change: MaintenanceChange }
+  | { type: 'snoozeMaintenance'; id: string; until: number; at: number }
+  | { type: 'dropMaintenance'; id: string }
   | { type: 'logBalance'; balance: Omit<Balance, 'id'> }
   | { type: 'dropBalance'; id: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }
@@ -2837,7 +2863,7 @@ export type Action =
    * would push an entry for the entry they just went back past, and Back
    * would stop working the second time. See `lib/route.ts`.
    */
-  | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
+  | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode; view?: WorkspaceView };
 
 // Support joined when it became a default tab (`lib/tabbar.ts`): tapping a tab
 // resets the back stack, and a default tab that did not would be the one tab

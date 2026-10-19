@@ -1,0 +1,16 @@
+# Native finance implementation specification
+Semester owns catalog, versioned prices, quotes/order forms, billing accounts, invoices, subscriptions, entitlements, usage, plans/installments, native checkout orchestration, operational ledger, refunds/credits/write-offs, dunning, finance console, forecasting and reconciliation. Regulated adapters handle contracted credential/payment/settlement services. Statutory accounting remains accepted accounting books; no regulatory exemption is implied. Product billing, institution student accounts and marketplace money flows have separate books/legal/authority boundaries. No PAN/CVC in Semester stores, logs or AI.
+
+Reuse and extend commercial_products, commercial_plans, commercial_prices, entitlement_definitions, plan_entitlements, billing_accounts, quotes, contracts, subscriptions, invoices, payment_events, credits_refunds, dunning_cases, cancellation_requests, student_account_entries, student_payment_plans, student_account_reconciliations, student_account_closes. Reconcile handoff 090 fin ledger_accounts/journals/lines, payment_rails/attempts/transitions/provider_events, settlements, refund requests/approvals. Their source presence is not deployment proof.
+
+Checkout: draft -> priced -> terms_accepted -> submitted -> awaiting_confirmation -> completed/failed/expired. Server prices; changed quote invalidates acceptance; browser success is not payment authority.
+Payment attempt: created -> method/confirmation/action_required -> processing -> authorized -> capture_pending -> captured; explicit failed/cancelled/expired/unknown branches.
+Settlement: pending -> partial -> settled -> reconciled/exception. Refund/dispute are separate aggregates, not erasure of capture.
+Refund: requested -> policy_checked -> approval -> submitted -> processing -> partial/succeeded/failed/unknown. Lock remaining refundable amount; requester cannot self-approve where independent review applies.
+Invoice: draft -> approved -> issued -> open -> partially_paid -> paid, with void/writeoff/overdue/disputed histories. Version subscription/grace/plan terms separately.
+
+Ledger: integer minor units, explicit currency/exponent; balance per book/currency; append-only posted journals; corrections by linked reversal/replacement; transactional database constraints; source-event and semantic transition uniqueness; effective vs recorded timestamps; rebuildable balances. Local validator is not accounting certification.
+
+Adapter: createAttempt, confirm/getAttempt, capture, cancel, create/getRefund, listSettlements, normalizeVerifiedEvent. Verify raw signed webhooks; durable event and semantic dedupe; retries/order not trusted; fetch/reconcile authoritative resource for uncertainty. Idempotency and correlation scope every command. Timeout never proves failure. No browser-only entitlement grant.
+
+Acceptance: balanced/concurrent posting; concurrent refunds; event duplicates/order; provider success timeout; partial captures/refunds; fees/disputes; multi-currency/book isolation; entitlement rollback; accounting/counsel/PCI acceptance; staffed reconcile/support/restore. Native UI may contain provider-controlled capture only after actual eligibility/implementation review.

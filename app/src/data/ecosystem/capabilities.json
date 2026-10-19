@@ -1,0 +1,6367 @@
+{
+  "generated": "2026-10-06",
+  "source": "ui_kits/capability-registry/registry.js",
+  "count": 122,
+  "capabilities": [
+    {
+      "id": "public.site.home",
+      "ws": "public",
+      "area": "Company identity",
+      "routes": [
+        "/",
+        "/about",
+        "/team",
+        "/contact"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "content.read"
+      ],
+      "records": [
+        {
+          "table": "cms.pages",
+          "exists": true
+        },
+        {
+          "table": "cms.approved_claims",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.product.pages",
+      "ws": "public",
+      "area": "Product marketing",
+      "routes": [
+        "/product",
+        "/product/*"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "content.read"
+      ],
+      "records": [
+        {
+          "table": "cms.pages",
+          "exists": true
+        },
+        {
+          "table": "commerce.products",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview",
+        "detail"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.solutions",
+      "ws": "public",
+      "area": "Audience solutions",
+      "routes": [
+        "/solutions/*"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "content.read"
+      ],
+      "records": [
+        {
+          "table": "cms.pages",
+          "exists": true
+        },
+        {
+          "table": "growth.entry_contexts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "record_entry",
+          "exists": false
+        }
+      ],
+      "events": [
+        "entry.recorded"
+      ],
+      "screens": [
+        "overview",
+        "detail"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.pricing.quote",
+      "ws": "public",
+      "area": "Pricing",
+      "routes": [
+        "/pricing",
+        "/pricing/quote"
+      ],
+      "actors": [
+        "visitor",
+        "prospect"
+      ],
+      "perms": [
+        "quote.request"
+      ],
+      "records": [
+        {
+          "table": "commerce.plans",
+          "exists": true
+        },
+        {
+          "table": "commerce.price_versions",
+          "exists": true
+        },
+        {
+          "table": "growth.leads",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_lead",
+          "exists": true
+        }
+      ],
+      "events": [
+        "lead.submitted"
+      ],
+      "screens": [
+        "overview",
+        "edit"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.demo.book",
+      "ws": "public",
+      "area": "Demonstrations",
+      "routes": [
+        "/demo",
+        "/demo/tour"
+      ],
+      "actors": [
+        "prospect"
+      ],
+      "perms": [
+        "demo.request"
+      ],
+      "records": [
+        {
+          "table": "growth.leads",
+          "exists": true
+        },
+        {
+          "table": "biz.opportunities",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_lead",
+          "exists": true
+        }
+      ],
+      "events": [
+        "demo.requested"
+      ],
+      "screens": [
+        "overview",
+        "edit"
+      ],
+      "design": "demo-video/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.resources",
+      "ws": "public",
+      "area": "Content marketing",
+      "routes": [
+        "/resources",
+        "/resources/*"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "content.read"
+      ],
+      "records": [
+        {
+          "table": "cms.pages",
+          "exists": true
+        },
+        {
+          "table": "growth.consent_records",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.trust.center",
+      "ws": "public",
+      "area": "Trust",
+      "routes": [
+        "/trust",
+        "/legal",
+        "/status"
+      ],
+      "actors": [
+        "buyer",
+        "reviewer"
+      ],
+      "perms": [
+        "evidence.request"
+      ],
+      "records": [
+        {
+          "table": "biz.subprocessors",
+          "exists": true
+        },
+        {
+          "table": "gov.evidence",
+          "exists": true
+        },
+        {
+          "table": "opsx.incident_updates",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "request_evidence",
+          "exists": false
+        }
+      ],
+      "events": [
+        "evidence.requested"
+      ],
+      "screens": [
+        "overview",
+        "detail",
+        "edit"
+      ],
+      "design": "compliance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.signup",
+      "ws": "public",
+      "area": "Signup",
+      "routes": [
+        "/auth/signup",
+        "/join"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "account.create"
+      ],
+      "records": [
+        {
+          "table": "core.profiles",
+          "exists": true
+        },
+        {
+          "table": "growth.consent_records",
+          "exists": true
+        },
+        {
+          "table": "onboard.assignments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.assign_journey",
+          "exists": true
+        }
+      ],
+      "events": [
+        "user.registered"
+      ],
+      "screens": [
+        "edit"
+      ],
+      "design": "journey/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.app.handoff",
+      "ws": "public",
+      "area": "Application handoff",
+      "routes": [
+        "/open",
+        "/download"
+      ],
+      "actors": [
+        "visitor",
+        "student"
+      ],
+      "perms": [
+        "handoff.consume"
+      ],
+      "records": [
+        {
+          "table": "onboard.handoff_transactions",
+          "exists": true
+        },
+        {
+          "table": "onboard.preview_drafts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.create_handoff",
+          "exists": true
+        },
+        {
+          "name": "api.consume_handoff",
+          "exists": true
+        },
+        {
+          "name": "api.claim_preview",
+          "exists": true
+        }
+      ],
+      "events": [
+        "handoff.consumed"
+      ],
+      "screens": [
+        "detail"
+      ],
+      "design": "journey/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "public.partners.careers",
+      "ws": "public",
+      "area": "Partners and careers",
+      "routes": [
+        "/partners",
+        "/careers",
+        "/careers/*"
+      ],
+      "actors": [
+        "visitor"
+      ],
+      "perms": [
+        "application.submit"
+      ],
+      "records": [
+        {
+          "table": "biz.accounts",
+          "exists": true
+        },
+        {
+          "table": "people.candidates",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "submit_application",
+          "exists": false
+        }
+      ],
+      "events": [
+        "application.submitted"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "company-site/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.identity.signin",
+      "ws": "shared",
+      "area": "Identity",
+      "routes": [
+        "/auth/signin",
+        "/auth/mfa",
+        "/auth/recover"
+      ],
+      "actors": [
+        "any"
+      ],
+      "perms": [
+        "session.create"
+      ],
+      "records": [
+        {
+          "table": "auth.users",
+          "exists": true
+        },
+        {
+          "table": "onboard.devices",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "sign_in",
+          "exists": false
+        },
+        {
+          "name": "verify_mfa",
+          "exists": false
+        }
+      ],
+      "events": [
+        "session.started"
+      ],
+      "screens": [
+        "edit"
+      ],
+      "design": "device-permissions/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.identity.sessions",
+      "ws": "shared",
+      "area": "Identity",
+      "routes": [
+        "/app/settings/sessions"
+      ],
+      "actors": [
+        "any"
+      ],
+      "perms": [
+        "session.revoke"
+      ],
+      "records": [
+        {
+          "table": "onboard.devices",
+          "exists": true
+        },
+        {
+          "table": "onboard.push_tokens",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.revoke_device",
+          "exists": true
+        }
+      ],
+      "events": [
+        "device.revoked"
+      ],
+      "screens": [
+        "list",
+        "settings"
+      ],
+      "design": "device-permissions/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.org.memberships",
+      "ws": "shared",
+      "area": "Memberships",
+      "routes": [
+        "/institution/members",
+        "/invite/*"
+      ],
+      "actors": [
+        "institution_admin"
+      ],
+      "perms": [
+        "membership.invite",
+        "membership.revoke"
+      ],
+      "records": [
+        {
+          "table": "core.profiles",
+          "exists": true
+        },
+        {
+          "table": "iam.invitations",
+          "exists": true
+        },
+        {
+          "table": "iam.memberships",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.issue_invitation",
+          "exists": true
+        },
+        {
+          "name": "api.accept_invitation",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_invitation",
+          "exists": true
+        }
+      ],
+      "events": [
+        "invitation.issued",
+        "invitation.accepted",
+        "invitation.revoked"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "role-lifecycle/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.authz.grants",
+      "ws": "shared",
+      "area": "Authorization",
+      "routes": [
+        "/ops/access",
+        "/institution/access"
+      ],
+      "actors": [
+        "access_reviewer"
+      ],
+      "perms": [
+        "grant.create",
+        "grant.revoke"
+      ],
+      "records": [
+        {
+          "table": "ctl.capabilities",
+          "exists": true
+        },
+        {
+          "table": "ctl.grants",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.grant_capability",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_grant",
+          "exists": true
+        }
+      ],
+      "events": [
+        "grant.created",
+        "grant.revoked"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.authz.approvals",
+      "ws": "shared",
+      "area": "Workflows",
+      "routes": [
+        "/app/approvals",
+        "/ops/approvals"
+      ],
+      "actors": [
+        "approver"
+      ],
+      "perms": [
+        "action.request",
+        "action.approve"
+      ],
+      "records": [
+        {
+          "table": "ctl.action_requests",
+          "exists": true
+        },
+        {
+          "table": "ctl.action_approvals",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_action",
+          "exists": true
+        },
+        {
+          "name": "api.decide_action",
+          "exists": true
+        },
+        {
+          "name": "api.execute_action",
+          "exists": true
+        }
+      ],
+      "events": [
+        "action.requested",
+        "action.approved",
+        "action.executed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "workflow-runner/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.delegation",
+      "ws": "shared",
+      "area": "Authorization",
+      "routes": [
+        "/app/settings/sharing"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "delegation.grant"
+      ],
+      "records": [
+        {
+          "table": "core.delegations",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.grant_delegation",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_delegation",
+          "exists": true
+        }
+      ],
+      "events": [
+        "delegation.granted",
+        "delegation.revoked"
+      ],
+      "screens": [
+        "list",
+        "edit",
+        "history"
+      ],
+      "design": "role-pages/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.notifications",
+      "ws": "shared",
+      "area": "Notifications",
+      "routes": [
+        "/app/notifications",
+        "/app/settings/notifications"
+      ],
+      "actors": [
+        "any"
+      ],
+      "perms": [
+        "notification.read",
+        "preference.edit"
+      ],
+      "records": [
+        {
+          "table": "comms.notifications",
+          "exists": true
+        },
+        {
+          "table": "comms.preferences",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "mark_read",
+          "exists": false
+        },
+        {
+          "name": "set_preferences",
+          "exists": false
+        }
+      ],
+      "events": [
+        "notification.delivered"
+      ],
+      "screens": [
+        "list",
+        "settings"
+      ],
+      "design": "mobile/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.search",
+      "ws": "shared",
+      "area": "Search",
+      "routes": [
+        "/app/search"
+      ],
+      "actors": [
+        "any"
+      ],
+      "perms": [
+        "search.query"
+      ],
+      "records": [
+        {
+          "table": "search.documents",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "search",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list"
+      ],
+      "design": "one-place/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.files",
+      "ws": "shared",
+      "area": "Files",
+      "routes": [
+        "/app/files"
+      ],
+      "actors": [
+        "any"
+      ],
+      "perms": [
+        "file.upload",
+        "file.read"
+      ],
+      "records": [
+        {
+          "table": "comms.files",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "upload_file",
+          "exists": false
+        },
+        {
+          "name": "delete_file",
+          "exists": false
+        }
+      ],
+      "events": [
+        "file.scanned"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "forms/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.audit",
+      "ws": "shared",
+      "area": "Audit",
+      "routes": [
+        "/ops/audit",
+        "/institution/audit"
+      ],
+      "actors": [
+        "auditor"
+      ],
+      "perms": [
+        "audit.read"
+      ],
+      "records": [
+        {
+          "table": "audit.events",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.documents",
+      "ws": "shared",
+      "area": "Documents",
+      "routes": [
+        "/company/documents",
+        "/institution/documents"
+      ],
+      "actors": [
+        "document_owner",
+        "reviewer"
+      ],
+      "perms": [
+        "document.submit",
+        "document.execute",
+        "document.archive"
+      ],
+      "records": [
+        {
+          "table": "docs.documents",
+          "exists": true
+        },
+        {
+          "table": "docs.document_versions",
+          "exists": true
+        },
+        {
+          "table": "docs.version_states",
+          "exists": true
+        },
+        {
+          "table": "docs.review_tasks",
+          "exists": true
+        },
+        {
+          "table": "docs.transition_events",
+          "exists": true
+        },
+        {
+          "table": "docs.contract_documents",
+          "exists": true
+        },
+        {
+          "table": "docs.signature_requests",
+          "exists": true
+        },
+        {
+          "table": "docs.acknowledgments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.transition_document",
+          "exists": true
+        },
+        {
+          "name": "acknowledge",
+          "exists": false
+        }
+      ],
+      "events": [
+        "document.transitioned"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review",
+        "history"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.ai.gateway",
+      "ws": "shared",
+      "area": "AI gateway",
+      "routes": [
+        "/app/assistant"
+      ],
+      "actors": [
+        "student",
+        "instructor"
+      ],
+      "perms": [
+        "ai.use"
+      ],
+      "records": [
+        {
+          "table": "core.ai_policy",
+          "exists": true
+        },
+        {
+          "table": "core.course_ai_rules",
+          "exists": true
+        },
+        {
+          "table": "core.sources",
+          "exists": true
+        },
+        {
+          "table": "audit.ai_usage",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.ai_policy",
+          "exists": true
+        },
+        {
+          "name": "api.ai_context",
+          "exists": true
+        },
+        {
+          "name": "api.ai_log",
+          "exists": true
+        }
+      ],
+      "events": [
+        "ai.answered"
+      ],
+      "screens": [
+        "detail",
+        "settings"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "shared.events.outbox",
+      "ws": "shared",
+      "area": "Events and jobs",
+      "routes": [
+        "(worker)"
+      ],
+      "actors": [
+        "service_account"
+      ],
+      "perms": [
+        "event.publish"
+      ],
+      "records": [
+        {
+          "table": "ctl.outbox",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "outbox.publish",
+          "exists": true
+        }
+      ],
+      "events": [
+        "*"
+      ],
+      "screens": [],
+      "design": "architecture/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.today",
+      "ws": "edu",
+      "area": "Personal command center",
+      "routes": [
+        "/app",
+        "/app/today"
+      ],
+      "actors": [
+        "student",
+        "instructor",
+        "advisor"
+      ],
+      "perms": [
+        "self.read"
+      ],
+      "records": [
+        {
+          "table": "work.tasks",
+          "exists": true
+        },
+        {
+          "table": "comms.calendar_events",
+          "exists": true
+        },
+        {
+          "table": "acad.readiness_items",
+          "exists": true
+        },
+        {
+          "table": "comms.notifications",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.profile",
+      "ws": "edu",
+      "area": "Identity and profile",
+      "routes": [
+        "/app/profile",
+        "/app/settings"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "profile.edit"
+      ],
+      "records": [
+        {
+          "table": "core.profiles",
+          "exists": true
+        },
+        {
+          "table": "growth.consent_records",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "update_profile",
+          "exists": false
+        }
+      ],
+      "events": [
+        "profile.updated"
+      ],
+      "screens": [
+        "detail",
+        "settings"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.courses",
+      "ws": "edu",
+      "area": "Courses and terms",
+      "routes": [
+        "/app/courses",
+        "/app/courses/:id"
+      ],
+      "actors": [
+        "student",
+        "instructor"
+      ],
+      "perms": [
+        "course.read"
+      ],
+      "records": [
+        {
+          "table": "acad.terms",
+          "exists": true
+        },
+        {
+          "table": "acad.courses",
+          "exists": true
+        },
+        {
+          "table": "acad.sections",
+          "exists": true
+        },
+        {
+          "table": "acad.enrollments",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "course-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.calendar",
+      "ws": "edu",
+      "area": "Calendar",
+      "routes": [
+        "/app/calendar"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "calendar.edit"
+      ],
+      "records": [
+        {
+          "table": "comms.calendar_events",
+          "exists": true
+        },
+        {
+          "table": "acad.advising_slots",
+          "exists": true
+        },
+        {
+          "table": "work.assignments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "create_event",
+          "exists": false
+        }
+      ],
+      "events": [
+        "event.created"
+      ],
+      "screens": [
+        "overview",
+        "detail",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.tasks",
+      "ws": "edu",
+      "area": "Tasks and planning",
+      "routes": [
+        "/app/tasks",
+        "/app/planner"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "task.edit"
+      ],
+      "records": [
+        {
+          "table": "work.tasks",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "create_task",
+          "exists": false
+        },
+        {
+          "name": "complete_task",
+          "exists": false
+        }
+      ],
+      "events": [
+        "task.completed"
+      ],
+      "screens": [
+        "list",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.content",
+      "ws": "edu",
+      "area": "Learning content",
+      "routes": [
+        "/app/courses/:id/content"
+      ],
+      "actors": [
+        "student",
+        "instructor",
+        "course_designer"
+      ],
+      "perms": [
+        "content.read",
+        "content.publish"
+      ],
+      "records": [
+        {
+          "table": "learn.modules",
+          "exists": true
+        },
+        {
+          "table": "learn.content_items",
+          "exists": true
+        },
+        {
+          "table": "comms.files",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.publish_module",
+          "exists": true
+        }
+      ],
+      "events": [
+        "module.published"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "course-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.assignments",
+      "ws": "edu",
+      "area": "Assignments",
+      "routes": [
+        "/app/courses/:id/assignments/:aid"
+      ],
+      "actors": [
+        "student",
+        "instructor"
+      ],
+      "perms": [
+        "submission.create",
+        "extension.request"
+      ],
+      "records": [
+        {
+          "table": "work.assignments",
+          "exists": true
+        },
+        {
+          "table": "learn.submissions",
+          "exists": true
+        },
+        {
+          "table": "learn.submission_files",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_work",
+          "exists": true
+        },
+        {
+          "name": "api.request_extension",
+          "exists": true
+        }
+      ],
+      "events": [
+        "submission.created",
+        "extension.requested"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "course-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.assessment",
+      "ws": "edu",
+      "area": "Assessment",
+      "routes": [
+        "/app/assess/:id",
+        "/app/courses/:id/authoring"
+      ],
+      "actors": [
+        "student",
+        "instructor"
+      ],
+      "perms": [
+        "attempt.create",
+        "assessment.author"
+      ],
+      "records": [
+        {
+          "table": "learn.assessments",
+          "exists": true
+        },
+        {
+          "table": "learn.assessment_attempts",
+          "exists": true
+        },
+        {
+          "table": "learn.rubrics",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.start_attempt",
+          "exists": true
+        },
+        {
+          "name": "api.submit_attempt",
+          "exists": true
+        }
+      ],
+      "events": [
+        "attempt.submitted"
+      ],
+      "screens": [
+        "detail",
+        "edit",
+        "review"
+      ],
+      "design": "course-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.grading",
+      "ws": "edu",
+      "area": "Grading",
+      "routes": [
+        "/app/courses/:id/gradebook"
+      ],
+      "actors": [
+        "instructor",
+        "ta"
+      ],
+      "perms": [
+        "grade.provisional",
+        "grade.approve"
+      ],
+      "records": [
+        {
+          "table": "work.grades",
+          "exists": true
+        },
+        {
+          "table": "learn.grade_entries",
+          "exists": true
+        },
+        {
+          "table": "learn.grade_revisions",
+          "exists": true
+        },
+        {
+          "table": "learn.feedback",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.record_grade",
+          "exists": true
+        },
+        {
+          "name": "api.submit_grades_for_approval",
+          "exists": true
+        }
+      ],
+      "events": [
+        "grades.submitted"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "faculty-grading/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.study",
+      "ws": "edu",
+      "area": "Study tools",
+      "routes": [
+        "/app/study"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "study.edit"
+      ],
+      "records": [
+        {
+          "table": "learn.study_artifacts",
+          "exists": true
+        },
+        {
+          "table": "core.sources",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "create_deck",
+          "exists": false
+        },
+        {
+          "name": "practice",
+          "exists": false
+        }
+      ],
+      "events": [
+        "study.reviewed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "study-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.assistant",
+      "ws": "edu",
+      "area": "AI learning assistance",
+      "routes": [
+        "/app/assistant"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "ai.use"
+      ],
+      "records": [
+        {
+          "table": "core.sources",
+          "exists": true
+        },
+        {
+          "table": "audit.ai_usage",
+          "exists": true
+        },
+        {
+          "table": "core.course_ai_rules",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.ai_context",
+          "exists": true
+        },
+        {
+          "name": "api.ai_log",
+          "exists": true
+        }
+      ],
+      "events": [
+        "ai.answered"
+      ],
+      "screens": [
+        "detail",
+        "history"
+      ],
+      "design": "study-studio/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.groups",
+      "ws": "edu",
+      "area": "Collaboration",
+      "routes": [
+        "/app/groups",
+        "/app/groups/:id"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "post.create",
+        "report.create"
+      ],
+      "records": [
+        {
+          "table": "community.groups",
+          "exists": true
+        },
+        {
+          "table": "community.members",
+          "exists": true
+        },
+        {
+          "table": "community.posts",
+          "exists": true
+        },
+        {
+          "table": "community.reports",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.create_post",
+          "exists": true
+        },
+        {
+          "name": "api.report",
+          "exists": true
+        }
+      ],
+      "events": [
+        "post.created",
+        "report.filed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "community/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.inbox",
+      "ws": "edu",
+      "area": "Communications",
+      "routes": [
+        "/app/inbox",
+        "/app/inbox/:thread"
+      ],
+      "actors": [
+        "student",
+        "instructor",
+        "advisor"
+      ],
+      "perms": [
+        "message.send"
+      ],
+      "records": [
+        {
+          "table": "comms.threads",
+          "exists": true
+        },
+        {
+          "table": "comms.participants",
+          "exists": true
+        },
+        {
+          "table": "comms.messages",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.send_message",
+          "exists": true
+        }
+      ],
+      "events": [
+        "message.sent"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "ops-inbox/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.advising",
+      "ws": "edu",
+      "area": "Advising",
+      "routes": [
+        "/app/advising"
+      ],
+      "actors": [
+        "student",
+        "advisor"
+      ],
+      "perms": [
+        "appointment.book",
+        "note.write"
+      ],
+      "records": [
+        {
+          "table": "acad.advising_assignments",
+          "exists": true
+        },
+        {
+          "table": "acad.advising_slots",
+          "exists": true
+        },
+        {
+          "table": "acad.advising_notes",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.book_advising",
+          "exists": true
+        }
+      ],
+      "events": [
+        "advising.booked"
+      ],
+      "screens": [
+        "overview",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "readiness-pilot/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.degree",
+      "ws": "edu",
+      "area": "Degree planning",
+      "routes": [
+        "/app/degree"
+      ],
+      "actors": [
+        "student",
+        "advisor"
+      ],
+      "perms": [
+        "plan.edit"
+      ],
+      "records": [
+        {
+          "table": "acad.requirements",
+          "exists": true
+        },
+        {
+          "table": "acad.programs",
+          "exists": true
+        },
+        {
+          "table": "acad.degree_evaluations",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "run_scenario",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "overview",
+        "detail",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.registration",
+      "ws": "edu",
+      "area": "Registration readiness",
+      "routes": [
+        "/app/registration"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "readiness.read",
+        "blocker.route"
+      ],
+      "records": [
+        {
+          "table": "acad.readiness_items",
+          "exists": true
+        },
+        {
+          "table": "acad.holds",
+          "exists": true
+        },
+        {
+          "table": "acad.office_handoffs",
+          "exists": true
+        },
+        {
+          "table": "acad.terms",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.route_blocker",
+          "exists": true
+        }
+      ],
+      "events": [
+        "readiness.routed"
+      ],
+      "screens": [
+        "overview",
+        "detail",
+        "history"
+      ],
+      "design": "readiness-pilot/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.student_account",
+      "ws": "edu",
+      "area": "Student accounts",
+      "routes": [
+        "/app/account"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "self.read"
+      ],
+      "records": [
+        {
+          "table": "instfin.student_accounts",
+          "exists": true
+        },
+        {
+          "table": "instfin.charges",
+          "exists": true
+        },
+        {
+          "table": "acad.holds",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview",
+        "detail"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.services",
+      "ws": "edu",
+      "area": "Campus services",
+      "routes": [
+        "/app/services",
+        "/app/services/:id"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "service_request.create"
+      ],
+      "records": [
+        {
+          "table": "svc.service_definitions",
+          "exists": true
+        },
+        {
+          "table": "svc.service_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_request",
+          "exists": true
+        }
+      ],
+      "events": [
+        "request.submitted"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.careers",
+      "ws": "edu",
+      "area": "Career development",
+      "routes": [
+        "/app/careers"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "application.submit"
+      ],
+      "records": [
+        {
+          "table": "career.positions",
+          "exists": true
+        },
+        {
+          "table": "career.applications",
+          "exists": true
+        },
+        {
+          "table": "career.artifacts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "apply",
+          "exists": false
+        }
+      ],
+      "events": [
+        "application.submitted"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.wellbeing",
+      "ws": "edu",
+      "area": "Wellbeing and accessibility",
+      "routes": [
+        "/app/support"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "restricted_case.create"
+      ],
+      "records": [
+        {
+          "table": "svc.restricted_cases",
+          "exists": true
+        },
+        {
+          "table": "svc.accommodation_plans",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_support",
+          "exists": true
+        }
+      ],
+      "events": [
+        "support.requested"
+      ],
+      "screens": [
+        "overview",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.credentials",
+      "ws": "edu",
+      "area": "Credentials",
+      "routes": [
+        "/app/credentials",
+        "/verify/:id"
+      ],
+      "actors": [
+        "student",
+        "verifier"
+      ],
+      "perms": [
+        "credential.share"
+      ],
+      "records": [
+        {
+          "table": "cred.credentials",
+          "exists": true
+        },
+        {
+          "table": "cred.verification_records",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.share_credential",
+          "exists": true
+        }
+      ],
+      "events": [
+        "credential.verified"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.privacy",
+      "ws": "edu",
+      "area": "Personal data control",
+      "routes": [
+        "/app/privacy"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "privacy_request.create"
+      ],
+      "records": [
+        {
+          "table": "opsx.privacy_requests",
+          "exists": true
+        },
+        {
+          "table": "growth.consent_records",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_privacy_request",
+          "exists": true
+        }
+      ],
+      "events": [
+        "privacy.requested"
+      ],
+      "screens": [
+        "overview",
+        "edit",
+        "history"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.marketplace",
+      "ws": "edu",
+      "area": "Campus marketplace",
+      "routes": [
+        "/app/market",
+        "/app/market/:id"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "listing.create",
+        "offer.make"
+      ],
+      "records": [
+        {
+          "table": "market.listings",
+          "exists": true
+        },
+        {
+          "table": "market.offers",
+          "exists": true
+        },
+        {
+          "table": "market.drops",
+          "exists": true
+        },
+        {
+          "table": "market.bids",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.create_listing",
+          "exists": true
+        },
+        {
+          "name": "api.make_offer",
+          "exists": true
+        }
+      ],
+      "events": [
+        "offer.made"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "community/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.support_access",
+      "ws": "edu",
+      "area": "Support access approval",
+      "routes": [
+        "/app/support/access"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "support_access.approve"
+      ],
+      "records": [
+        {
+          "table": "opsx.support_access_windows",
+          "exists": true
+        },
+        {
+          "table": "opsx.support_cases",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.approve_support_access",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_support_access",
+          "exists": true
+        }
+      ],
+      "events": [
+        "support.access_approved"
+      ],
+      "screens": [
+        "detail",
+        "history"
+      ],
+      "design": "console-entry/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.family",
+      "ws": "edu",
+      "area": "Family and guardian access",
+      "routes": [
+        "/family",
+        "/app/settings/sharing"
+      ],
+      "actors": [
+        "student",
+        "guardian"
+      ],
+      "perms": [
+        "delegation.grant"
+      ],
+      "records": [
+        {
+          "table": "core.delegations",
+          "exists": true
+        },
+        {
+          "table": "core.delegation_scopes",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.grant_delegation",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_delegation",
+          "exists": true
+        }
+      ],
+      "events": [
+        "delegation.granted"
+      ],
+      "screens": [
+        "list",
+        "edit",
+        "history"
+      ],
+      "design": "role-pages/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "edu.housing",
+      "ws": "edu",
+      "area": "Campus housing",
+      "routes": [
+        "/app/campus",
+        "/app/campus/maintenance"
+      ],
+      "actors": [
+        "student"
+      ],
+      "perms": [
+        "housing.apply"
+      ],
+      "records": [
+        {
+          "table": "housing.applications",
+          "exists": true
+        },
+        {
+          "table": "housing.assignments",
+          "exists": true
+        },
+        {
+          "table": "housing.rooms",
+          "exists": true
+        },
+        {
+          "table": "housing.maintenance_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.apply_housing",
+          "exists": true
+        },
+        {
+          "name": "api.request_maintenance",
+          "exists": true
+        }
+      ],
+      "events": [
+        "maintenance.requested"
+      ],
+      "screens": [
+        "overview",
+        "detail",
+        "edit"
+      ],
+      "design": "student/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.setup",
+      "ws": "inst",
+      "area": "Institution setup",
+      "routes": [
+        "/institution",
+        "/institution/structure"
+      ],
+      "actors": [
+        "institution_admin"
+      ],
+      "perms": [
+        "org.edit"
+      ],
+      "records": [
+        {
+          "table": "core.institutions",
+          "exists": true
+        },
+        {
+          "table": "iam.organization_units",
+          "exists": true
+        },
+        {
+          "table": "iam.campuses",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "update_structure",
+          "exists": false
+        }
+      ],
+      "events": [
+        "org.updated"
+      ],
+      "screens": [
+        "overview",
+        "edit",
+        "settings"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.people",
+      "ws": "inst",
+      "area": "People administration",
+      "routes": [
+        "/institution/directory"
+      ],
+      "actors": [
+        "institution_admin"
+      ],
+      "perms": [
+        "membership.invite"
+      ],
+      "records": [
+        {
+          "table": "core.profiles",
+          "exists": true
+        },
+        {
+          "table": "iam.memberships",
+          "exists": true
+        },
+        {
+          "table": "iam.invitations",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.issue_invitation",
+          "exists": true
+        }
+      ],
+      "events": [
+        "invitation.issued"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "role-lifecycle/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.catalog",
+      "ws": "inst",
+      "area": "Academic catalog",
+      "routes": [
+        "/institution/catalog"
+      ],
+      "actors": [
+        "program_manager"
+      ],
+      "perms": [
+        "catalog.edit"
+      ],
+      "records": [
+        {
+          "table": "acad.courses",
+          "exists": true
+        },
+        {
+          "table": "acad.programs",
+          "exists": true
+        },
+        {
+          "table": "acad.requirements",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "propose_course_change",
+          "exists": false
+        }
+      ],
+      "events": [
+        "catalog.changed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.sections",
+      "ws": "inst",
+      "area": "Term and section management",
+      "routes": [
+        "/institution/terms",
+        "/institution/sections"
+      ],
+      "actors": [
+        "registrar"
+      ],
+      "perms": [
+        "section.edit"
+      ],
+      "records": [
+        {
+          "table": "acad.terms",
+          "exists": true
+        },
+        {
+          "table": "acad.sections",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "sync_sections",
+          "exists": false
+        }
+      ],
+      "events": [
+        "section.synced"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.scheduling",
+      "ws": "inst",
+      "area": "Scheduling",
+      "routes": [
+        "/institution/timetable"
+      ],
+      "actors": [
+        "registrar"
+      ],
+      "perms": [
+        "schedule.edit"
+      ],
+      "records": [
+        {
+          "table": "acad.sections",
+          "exists": true
+        },
+        {
+          "table": "acad.rooms",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "check_conflicts",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "overview",
+        "detail"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.admissions",
+      "ws": "inst",
+      "area": "Admissions",
+      "routes": [
+        "/institution/admissions"
+      ],
+      "actors": [
+        "admissions_reviewer"
+      ],
+      "perms": [
+        "application.review",
+        "application.decide"
+      ],
+      "records": [
+        {
+          "table": "adm.applications",
+          "exists": true
+        },
+        {
+          "table": "adm.decisions",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.review_application",
+          "exists": true
+        },
+        {
+          "name": "record_decision",
+          "exists": false
+        }
+      ],
+      "events": [
+        "decision.recorded"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.registrar",
+      "ws": "inst",
+      "area": "Registrar",
+      "routes": [
+        "/institution/records"
+      ],
+      "actors": [
+        "registrar"
+      ],
+      "perms": [
+        "records.read",
+        "change.approve"
+      ],
+      "records": [
+        {
+          "table": "acad.enrollments",
+          "exists": true
+        },
+        {
+          "table": "ctl.action_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_action",
+          "exists": true
+        }
+      ],
+      "events": [
+        "record_change.requested"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.governance",
+      "ws": "inst",
+      "area": "Academic governance",
+      "routes": [
+        "/institution/proposals"
+      ],
+      "actors": [
+        "department_chair"
+      ],
+      "perms": [
+        "proposal.review",
+        "proposal.approve"
+      ],
+      "records": [
+        {
+          "table": "gov.proposals",
+          "exists": true
+        },
+        {
+          "table": "gov.votes",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_proposal",
+          "exists": true
+        },
+        {
+          "name": "api.record_vote",
+          "exists": true
+        }
+      ],
+      "events": [
+        "proposal.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.success",
+      "ws": "inst",
+      "area": "Student success",
+      "routes": [
+        "/institution/success"
+      ],
+      "actors": [
+        "advisor"
+      ],
+      "perms": [
+        "case.work"
+      ],
+      "records": [
+        {
+          "table": "svc.cases",
+          "exists": true
+        },
+        {
+          "table": "acad.readiness_items",
+          "exists": true
+        },
+        {
+          "table": "acad.advising_assignments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.open_case",
+          "exists": true
+        },
+        {
+          "name": "refer",
+          "exists": false
+        }
+      ],
+      "events": [
+        "case.opened"
+      ],
+      "screens": [
+        "overview",
+        "list",
+        "detail"
+      ],
+      "design": "role-workspaces/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.handoffs",
+      "ws": "inst",
+      "area": "Office handoffs",
+      "routes": [
+        "/institution/handoffs"
+      ],
+      "actors": [
+        "office_staff"
+      ],
+      "perms": [
+        "handoffs.work"
+      ],
+      "records": [
+        {
+          "table": "acad.office_handoffs",
+          "exists": true
+        },
+        {
+          "table": "acad.holds",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.resolve_handoff",
+          "exists": true
+        }
+      ],
+      "events": [
+        "handoff.resolved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "ops-inbox/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.billing",
+      "ws": "inst",
+      "area": "Institution billing",
+      "routes": [
+        "/institution/billing"
+      ],
+      "actors": [
+        "student_account_specialist"
+      ],
+      "perms": [
+        "charge.adjust",
+        "refund.approve"
+      ],
+      "records": [
+        {
+          "table": "instfin.student_accounts",
+          "exists": true
+        },
+        {
+          "table": "instfin.charges",
+          "exists": true
+        },
+        {
+          "table": "fin.refund_requests",
+          "exists": true
+        },
+        {
+          "table": "fin.refund_approvals",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.approve_refund",
+          "exists": true
+        }
+      ],
+      "events": [
+        "refund.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.aid",
+      "ws": "inst",
+      "area": "Financial aid",
+      "routes": [
+        "/institution/aid"
+      ],
+      "actors": [
+        "aid_reviewer"
+      ],
+      "perms": [
+        "award.review"
+      ],
+      "records": [
+        {
+          "table": "instfin.awards",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "review_award",
+          "exists": false
+        }
+      ],
+      "events": [
+        "award.reviewed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.services",
+      "ws": "inst",
+      "area": "Services operations",
+      "routes": [
+        "/institution/services"
+      ],
+      "actors": [
+        "service_specialist"
+      ],
+      "perms": [
+        "request.assign"
+      ],
+      "records": [
+        {
+          "table": "svc.service_requests",
+          "exists": true
+        },
+        {
+          "table": "svc.service_definitions",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.assign_request",
+          "exists": true
+        },
+        {
+          "name": "api.resolve_request",
+          "exists": true
+        }
+      ],
+      "events": [
+        "request.resolved"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "ops-inbox/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.accommodations",
+      "ws": "inst",
+      "area": "Accommodation operations",
+      "routes": [
+        "/institution/accommodations"
+      ],
+      "actors": [
+        "accessibility_coordinator"
+      ],
+      "perms": [
+        "accommodation.decide"
+      ],
+      "records": [
+        {
+          "table": "svc.accommodation_plans",
+          "exists": true
+        },
+        {
+          "table": "svc.restricted_cases",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.decide_accommodation",
+          "exists": true
+        }
+      ],
+      "events": [
+        "accommodation.decided"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "role-workspaces/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.reporting",
+      "ws": "inst",
+      "area": "Reporting",
+      "routes": [
+        "/institution/reports"
+      ],
+      "actors": [
+        "institution_admin"
+      ],
+      "perms": [
+        "report.run",
+        "report.export"
+      ],
+      "records": [
+        {
+          "table": "analytics.datasets",
+          "exists": true
+        },
+        {
+          "table": "analytics.reports",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "run_report",
+          "exists": false
+        }
+      ],
+      "events": [
+        "report.generated"
+      ],
+      "screens": [
+        "list",
+        "reporting"
+      ],
+      "design": "platform-maturity/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.security",
+      "ws": "inst",
+      "area": "Institution security",
+      "routes": [
+        "/institution/identity",
+        "/institution/access-reviews"
+      ],
+      "actors": [
+        "identity_admin"
+      ],
+      "perms": [
+        "sso.configure",
+        "access_review.run"
+      ],
+      "records": [
+        {
+          "table": "opsx.integrations",
+          "exists": true
+        },
+        {
+          "table": "ctl.grants",
+          "exists": true
+        },
+        {
+          "table": "iam.access_reviews",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "configure_sso",
+          "exists": false
+        },
+        {
+          "name": "api.run_access_review",
+          "exists": true
+        }
+      ],
+      "events": [
+        "access_review.completed"
+      ],
+      "screens": [
+        "settings",
+        "review"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.data_governance",
+      "ws": "inst",
+      "area": "Data governance",
+      "routes": [
+        "/institution/data"
+      ],
+      "actors": [
+        "privacy_officer"
+      ],
+      "perms": [
+        "retention.edit"
+      ],
+      "records": [
+        {
+          "table": "gov.retention_policies",
+          "exists": true
+        },
+        {
+          "table": "integ.mappings",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "set_retention",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "settings"
+      ],
+      "design": "compliance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.integrations",
+      "ws": "inst",
+      "area": "Institution integrations",
+      "routes": [
+        "/institution/connectors"
+      ],
+      "actors": [
+        "integration_admin"
+      ],
+      "perms": [
+        "integration.configure"
+      ],
+      "records": [
+        {
+          "table": "opsx.integrations",
+          "exists": true
+        },
+        {
+          "table": "opsx.sync_runs",
+          "exists": true
+        },
+        {
+          "table": "integ.mappings",
+          "exists": true
+        },
+        {
+          "table": "integ.sync_errors",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "configure_integration",
+          "exists": false
+        },
+        {
+          "name": "api.run_sync",
+          "exists": true
+        }
+      ],
+      "events": [
+        "sync.completed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "settings",
+        "history"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.account",
+      "ws": "inst",
+      "area": "Institution account",
+      "routes": [
+        "/institution/account"
+      ],
+      "actors": [
+        "account_owner"
+      ],
+      "perms": [
+        "account.read"
+      ],
+      "records": [
+        {
+          "table": "biz.contracts",
+          "exists": true
+        },
+        {
+          "table": "commerce.subscriptions",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.rollout",
+      "ws": "inst",
+      "area": "Institutional change",
+      "routes": [
+        "/institution/rollout"
+      ],
+      "actors": [
+        "institution_admin"
+      ],
+      "perms": [
+        "rollout.approve"
+      ],
+      "records": [
+        {
+          "table": "impl.projects",
+          "exists": true
+        },
+        {
+          "table": "impl.milestones",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.approve_rollout",
+          "exists": true
+        }
+      ],
+      "events": [
+        "rollout.approved"
+      ],
+      "screens": [
+        "overview",
+        "list",
+        "review"
+      ],
+      "design": "launch-kit/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "inst.housing",
+      "ws": "inst",
+      "area": "Housing operations",
+      "routes": [
+        "/institution/housing"
+      ],
+      "actors": [
+        "housing_staff"
+      ],
+      "perms": [
+        "housing.assign"
+      ],
+      "records": [
+        {
+          "table": "housing.buildings",
+          "exists": true
+        },
+        {
+          "table": "housing.rooms",
+          "exists": true
+        },
+        {
+          "table": "housing.applications",
+          "exists": true
+        },
+        {
+          "table": "housing.assignments",
+          "exists": true
+        },
+        {
+          "table": "housing.maintenance_requests",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "registrar-console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "acct.overview",
+      "ws": "acct",
+      "area": "Customer account",
+      "routes": [
+        "/account"
+      ],
+      "actors": [
+        "account_owner",
+        "billing_admin"
+      ],
+      "perms": [
+        "account.read"
+      ],
+      "records": [
+        {
+          "table": "biz.accounts",
+          "exists": true
+        },
+        {
+          "table": "commerce.subscriptions",
+          "exists": true
+        },
+        {
+          "table": "commerce.entitlements",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "acct.invoices",
+      "ws": "acct",
+      "area": "Billing",
+      "routes": [
+        "/account/invoices"
+      ],
+      "actors": [
+        "billing_admin"
+      ],
+      "perms": [
+        "invoice.read",
+        "invoice.pay"
+      ],
+      "records": [
+        {
+          "table": "cofin.invoices",
+          "exists": true
+        },
+        {
+          "table": "cofin.payments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "pay_invoice",
+          "exists": false
+        }
+      ],
+      "events": [
+        "invoice.paid"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "acct.contracts",
+      "ws": "acct",
+      "area": "Contracts",
+      "routes": [
+        "/account/contracts"
+      ],
+      "actors": [
+        "contract_contact"
+      ],
+      "perms": [
+        "contract.read",
+        "contract.sign"
+      ],
+      "records": [
+        {
+          "table": "biz.contracts",
+          "exists": true
+        },
+        {
+          "table": "docs.documents",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "sign_contract",
+          "exists": false
+        }
+      ],
+      "events": [
+        "contract.signed"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "acct.support",
+      "ws": "acct",
+      "area": "Support",
+      "routes": [
+        "/account/support"
+      ],
+      "actors": [
+        "account_owner"
+      ],
+      "perms": [
+        "case.create"
+      ],
+      "records": [
+        {
+          "table": "opsx.support_cases",
+          "exists": true
+        },
+        {
+          "table": "opsx.case_events",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.open_case",
+          "exists": true
+        }
+      ],
+      "events": [
+        "case.opened"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.exec",
+      "ws": "company",
+      "area": "Executive operations",
+      "routes": [
+        "/company"
+      ],
+      "actors": [
+        "executive"
+      ],
+      "perms": [
+        "metrics.read",
+        "decision.record"
+      ],
+      "records": [
+        {
+          "table": "exec.objectives",
+          "exists": true
+        },
+        {
+          "table": "exec.decisions",
+          "exists": true
+        },
+        {
+          "table": "analytics.metrics",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "record_decision",
+          "exists": false
+        }
+      ],
+      "events": [
+        "decision.recorded"
+      ],
+      "screens": [
+        "overview",
+        "list",
+        "detail"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.marketing",
+      "ws": "company",
+      "area": "Marketing",
+      "routes": [
+        "/company/campaigns"
+      ],
+      "actors": [
+        "marketer",
+        "marketing_approver"
+      ],
+      "perms": [
+        "campaign.edit",
+        "content.publish"
+      ],
+      "records": [
+        {
+          "table": "mkt.campaigns",
+          "exists": true
+        },
+        {
+          "table": "cms.pages",
+          "exists": true
+        },
+        {
+          "table": "growth.entry_contexts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "publish_content",
+          "exists": false
+        }
+      ],
+      "events": [
+        "content.published"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.crm",
+      "ws": "company",
+      "area": "Sales CRM",
+      "routes": [
+        "/company/pipeline",
+        "/company/accounts/:id"
+      ],
+      "actors": [
+        "sales_rep",
+        "sales_manager"
+      ],
+      "perms": [
+        "opportunity.edit"
+      ],
+      "records": [
+        {
+          "table": "biz.accounts",
+          "exists": true
+        },
+        {
+          "table": "biz.contacts",
+          "exists": true
+        },
+        {
+          "table": "biz.opportunities",
+          "exists": true
+        },
+        {
+          "table": "growth.leads",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.update_opportunity",
+          "exists": true
+        }
+      ],
+      "events": [
+        "opportunity.stage_changed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.sales_eng",
+      "ws": "company",
+      "area": "Sales engineering",
+      "routes": [
+        "/company/evaluations"
+      ],
+      "actors": [
+        "sales_engineer"
+      ],
+      "perms": [
+        "evaluation.edit"
+      ],
+      "records": [
+        {
+          "table": "biz.opportunities",
+          "exists": true
+        },
+        {
+          "table": "sales.requirements",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "record_requirement",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.quotes",
+      "ws": "company",
+      "area": "Commercial approvals",
+      "routes": [
+        "/company/quotes"
+      ],
+      "actors": [
+        "sales_rep",
+        "finance_approver"
+      ],
+      "perms": [
+        "quote.create",
+        "quote.approve"
+      ],
+      "records": [
+        {
+          "table": "sales.quotes",
+          "exists": true
+        },
+        {
+          "table": "commerce.price_versions",
+          "exists": true
+        },
+        {
+          "table": "ctl.action_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.create_quote",
+          "exists": true
+        },
+        {
+          "name": "approve_quote",
+          "exists": false
+        }
+      ],
+      "events": [
+        "quote.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.contracts",
+      "ws": "company",
+      "area": "Contract lifecycle",
+      "routes": [
+        "/company/contracts"
+      ],
+      "actors": [
+        "legal_operator"
+      ],
+      "perms": [
+        "contract.edit",
+        "contracts:sign"
+      ],
+      "records": [
+        {
+          "table": "biz.contracts",
+          "exists": true
+        },
+        {
+          "table": "docs.document_versions",
+          "exists": true
+        },
+        {
+          "table": "docs.signature_requests",
+          "exists": true
+        },
+        {
+          "table": "docs.signature_evidence",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "record_signature",
+          "exists": false
+        }
+      ],
+      "events": [
+        "contract.signed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review",
+        "history"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.onboarding",
+      "ws": "company",
+      "area": "Customer onboarding",
+      "routes": [
+        "/company/onboarding"
+      ],
+      "actors": [
+        "implementation_specialist"
+      ],
+      "perms": [
+        "project.edit"
+      ],
+      "records": [
+        {
+          "table": "impl.projects",
+          "exists": true
+        },
+        {
+          "table": "impl.milestones",
+          "exists": true
+        },
+        {
+          "table": "biz.pilots",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "open_project",
+          "exists": false
+        }
+      ],
+      "events": [
+        "project.opened"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "launch-kit/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.implementation",
+      "ws": "company",
+      "area": "Implementation",
+      "routes": [
+        "/company/implementations/:id"
+      ],
+      "actors": [
+        "implementation_specialist"
+      ],
+      "perms": [
+        "migration.run",
+        "acceptance.record"
+      ],
+      "records": [
+        {
+          "table": "impl.migration_batches",
+          "exists": true
+        },
+        {
+          "table": "impl.acceptance_records",
+          "exists": true
+        },
+        {
+          "table": "opsx.sync_runs",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "run_migration",
+          "exists": false
+        },
+        {
+          "name": "record_acceptance",
+          "exists": false
+        }
+      ],
+      "events": [
+        "acceptance.recorded"
+      ],
+      "screens": [
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "launch-kit/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.success",
+      "ws": "company",
+      "area": "Customer success",
+      "routes": [
+        "/company/customers",
+        "/company/renewals"
+      ],
+      "actors": [
+        "csm"
+      ],
+      "perms": [
+        "health.edit",
+        "renewal.plan"
+      ],
+      "records": [
+        {
+          "table": "biz.accounts",
+          "exists": true
+        },
+        {
+          "table": "biz.pilots",
+          "exists": true
+        },
+        {
+          "table": "biz.pilot_measures",
+          "exists": true
+        },
+        {
+          "table": "biz.contracts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.record_measure",
+          "exists": true
+        }
+      ],
+      "events": [
+        "renewal.due"
+      ],
+      "screens": [
+        "overview",
+        "list",
+        "detail"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.support",
+      "ws": "company",
+      "area": "Support",
+      "routes": [
+        "/company/support",
+        "/console/support"
+      ],
+      "actors": [
+        "support_agent",
+        "support_lead"
+      ],
+      "perms": [
+        "support:ticket"
+      ],
+      "records": [
+        {
+          "table": "opsx.support_cases",
+          "exists": true
+        },
+        {
+          "table": "opsx.case_events",
+          "exists": true
+        },
+        {
+          "table": "opsx.support_access_windows",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.assign_case",
+          "exists": true
+        },
+        {
+          "name": "api.reply_case",
+          "exists": true
+        }
+      ],
+      "events": [
+        "case.updated"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "history"
+      ],
+      "design": "console-entry/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.product",
+      "ws": "company",
+      "area": "Product management",
+      "routes": [
+        "/company/roadmap"
+      ],
+      "actors": [
+        "product_manager"
+      ],
+      "perms": [
+        "feedback.triage"
+      ],
+      "records": [
+        {
+          "table": "product.feedback",
+          "exists": true
+        },
+        {
+          "table": "product.requirements",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "triage_feedback",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.subscriptions",
+      "ws": "company",
+      "area": "Subscriptions",
+      "routes": [
+        "/company/subscriptions"
+      ],
+      "actors": [
+        "billing_operator"
+      ],
+      "perms": [
+        "subscription.edit"
+      ],
+      "records": [
+        {
+          "table": "commerce.subscriptions",
+          "exists": true
+        },
+        {
+          "table": "commerce.subscription_items",
+          "exists": true
+        },
+        {
+          "table": "commerce.entitlements",
+          "exists": true
+        },
+        {
+          "table": "commerce.account_organization_links",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "update_subscription",
+          "exists": false
+        }
+      ],
+      "events": [
+        "subscription.changed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "business/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.billing",
+      "ws": "company",
+      "area": "Company billing",
+      "routes": [
+        "/company/invoices"
+      ],
+      "actors": [
+        "billing_operator"
+      ],
+      "perms": [
+        "invoice.issue",
+        "credit.issue"
+      ],
+      "records": [
+        {
+          "table": "cofin.invoices",
+          "exists": true
+        },
+        {
+          "table": "cofin.invoice_lines",
+          "exists": true
+        },
+        {
+          "table": "cofin.credits",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.issue_invoice",
+          "exists": true
+        },
+        {
+          "name": "issue_credit",
+          "exists": false
+        }
+      ],
+      "events": [
+        "invoice.issued"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.accounting",
+      "ws": "company",
+      "area": "Accounting",
+      "routes": [
+        "/company/ledger",
+        "/company/close"
+      ],
+      "actors": [
+        "accountant"
+      ],
+      "perms": [
+        "journal.post",
+        "close.run"
+      ],
+      "records": [
+        {
+          "table": "fin.ledger_accounts",
+          "exists": true
+        },
+        {
+          "table": "fin.ledger_journals",
+          "exists": true
+        },
+        {
+          "table": "fin.ledger_lines",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.post_journal",
+          "exists": true
+        }
+      ],
+      "events": [
+        "journal.posted"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.treasury",
+      "ws": "company",
+      "area": "Treasury",
+      "routes": [
+        "/company/cash"
+      ],
+      "actors": [
+        "finance_approver"
+      ],
+      "perms": [
+        "payment.approve"
+      ],
+      "records": [
+        {
+          "table": "fin.payment_rails",
+          "exists": true
+        },
+        {
+          "table": "fin.payment_attempts",
+          "exists": true
+        },
+        {
+          "table": "fin.settlement_batches",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "approve_payment",
+          "exists": false
+        }
+      ],
+      "events": [
+        "payment.approved"
+      ],
+      "screens": [
+        "overview",
+        "list",
+        "review"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.expenses",
+      "ws": "company",
+      "area": "Expenses",
+      "routes": [
+        "/company/expenses"
+      ],
+      "actors": [
+        "employee",
+        "finance_approver"
+      ],
+      "perms": [
+        "expense.submit",
+        "expense.approve"
+      ],
+      "records": [
+        {
+          "table": "cofin.expense_claims",
+          "exists": true
+        },
+        {
+          "table": "comms.files",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.submit_claim",
+          "exists": true
+        },
+        {
+          "name": "api.approve_claim",
+          "exists": true
+        }
+      ],
+      "events": [
+        "claim.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review"
+      ],
+      "design": "native-finance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.procurement",
+      "ws": "company",
+      "area": "Procurement",
+      "routes": [
+        "/company/procurement"
+      ],
+      "actors": [
+        "requester",
+        "finance_approver"
+      ],
+      "perms": [
+        "purchase.request",
+        "purchase.approve"
+      ],
+      "records": [
+        {
+          "table": "vend.purchase_orders",
+          "exists": true
+        },
+        {
+          "table": "vend.vendors",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_purchase",
+          "exists": true
+        },
+        {
+          "name": "api.approve_purchase",
+          "exists": true
+        }
+      ],
+      "events": [
+        "purchase.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "review"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.vendors",
+      "ws": "company",
+      "area": "Vendor management",
+      "routes": [
+        "/company/vendors"
+      ],
+      "actors": [
+        "security_analyst"
+      ],
+      "perms": [
+        "vendor.review"
+      ],
+      "records": [
+        {
+          "table": "vend.vendors",
+          "exists": true
+        },
+        {
+          "table": "vend.vendor_reviews",
+          "exists": true
+        },
+        {
+          "table": "biz.subprocessors",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "review_vendor",
+          "exists": false
+        }
+      ],
+      "events": [
+        "vendor.reviewed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.people",
+      "ws": "company",
+      "area": "People operations",
+      "routes": [
+        "/company/people",
+        "/company/hiring"
+      ],
+      "actors": [
+        "people_admin",
+        "recruiter",
+        "manager"
+      ],
+      "perms": [
+        "employee.edit",
+        "candidate.edit"
+      ],
+      "records": [
+        {
+          "table": "people.employees",
+          "exists": true
+        },
+        {
+          "table": "people.candidates",
+          "exists": true
+        },
+        {
+          "table": "people.positions",
+          "exists": true
+        },
+        {
+          "table": "people.training_records",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "make_offer",
+          "exists": false
+        },
+        {
+          "name": "onboard_employee",
+          "exists": false
+        },
+        {
+          "name": "api.offboard_employee",
+          "exists": true
+        }
+      ],
+      "events": [
+        "employee.onboarded",
+        "employee.offboarded"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.compensation",
+      "ws": "company",
+      "area": "Compensation",
+      "routes": [
+        "/company/compensation"
+      ],
+      "actors": [
+        "people_admin"
+      ],
+      "perms": [
+        "compensation.read"
+      ],
+      "records": [
+        {
+          "table": "people.compensation_records",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "approve_compensation",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.legal",
+      "ws": "company",
+      "area": "Legal and corporate",
+      "routes": [
+        "/company/legal"
+      ],
+      "actors": [
+        "legal_operator"
+      ],
+      "perms": [
+        "matter.edit"
+      ],
+      "records": [
+        {
+          "table": "legal.entities",
+          "exists": true
+        },
+        {
+          "table": "legal.matters",
+          "exists": true
+        },
+        {
+          "table": "docs.documents",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "open_matter",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.partners",
+      "ws": "company",
+      "area": "Partnerships",
+      "routes": [
+        "/company/partners"
+      ],
+      "actors": [
+        "partnerships"
+      ],
+      "perms": [
+        "partner.edit",
+        "app.review"
+      ],
+      "records": [
+        {
+          "table": "biz.accounts",
+          "exists": true
+        },
+        {
+          "table": "biz.partner_apps",
+          "exists": true
+        },
+        {
+          "table": "biz.app_installs",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "review_app",
+          "exists": false
+        }
+      ],
+      "events": [
+        "app.approved"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "company-workflows/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.it",
+      "ws": "company",
+      "area": "Company IT",
+      "routes": [
+        "/company/it"
+      ],
+      "actors": [
+        "it_admin"
+      ],
+      "perms": [
+        "asset.edit",
+        "access.request"
+      ],
+      "records": [
+        {
+          "table": "it.assets",
+          "exists": true
+        },
+        {
+          "table": "ctl.grants",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "request_access",
+          "exists": false
+        }
+      ],
+      "events": [
+        "access.granted"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.knowledge",
+      "ws": "company",
+      "area": "Knowledge management",
+      "routes": [
+        "/company/knowledge"
+      ],
+      "actors": [
+        "any_employee"
+      ],
+      "perms": [
+        "document.acknowledge"
+      ],
+      "records": [
+        {
+          "table": "docs.documents",
+          "exists": true
+        },
+        {
+          "table": "docs.acknowledgments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "acknowledge",
+          "exists": false
+        }
+      ],
+      "events": [
+        "document.acknowledged"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "company.research",
+      "ws": "company",
+      "area": "Strategy and research",
+      "routes": [
+        "/company/research"
+      ],
+      "actors": [
+        "researcher"
+      ],
+      "perms": [
+        "experiment.edit"
+      ],
+      "records": [
+        {
+          "table": "research.records",
+          "exists": true
+        },
+        {
+          "table": "research.experiments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "record_experiment",
+          "exists": false
+        }
+      ],
+      "events": [],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "company-os/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.command",
+      "ws": "ops",
+      "area": "Command center",
+      "routes": [
+        "/console"
+      ],
+      "actors": [
+        "operator"
+      ],
+      "perms": [
+        "console:operate"
+      ],
+      "records": [
+        {
+          "table": "ops.services",
+          "exists": true
+        },
+        {
+          "table": "opsx.incidents",
+          "exists": true
+        },
+        {
+          "table": "ops.alerts",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.tenants",
+      "ws": "ops",
+      "area": "Tenant lifecycle",
+      "routes": [
+        "/console/tenants"
+      ],
+      "actors": [
+        "operator"
+      ],
+      "perms": [
+        "tenant:implement",
+        "tenant.suspend"
+      ],
+      "records": [
+        {
+          "table": "core.institutions",
+          "exists": true
+        },
+        {
+          "table": "ops.tenant_lifecycle_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_tenant_action",
+          "exists": true
+        }
+      ],
+      "events": [
+        "tenant.provisioned"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.config",
+      "ws": "ops",
+      "area": "Product configuration",
+      "routes": [
+        "/console/flags"
+      ],
+      "actors": [
+        "release_manager"
+      ],
+      "perms": [
+        "flag.edit"
+      ],
+      "records": [
+        {
+          "table": "core.institutions",
+          "exists": true
+        },
+        {
+          "table": "commerce.entitlements",
+          "exists": true
+        },
+        {
+          "table": "ops.feature_flags",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.set_flag",
+          "exists": true
+        }
+      ],
+      "events": [
+        "flag.changed"
+      ],
+      "screens": [
+        "list",
+        "settings",
+        "history"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.releases",
+      "ws": "ops",
+      "area": "Release operations",
+      "routes": [
+        "/console/releases"
+      ],
+      "actors": [
+        "release_manager"
+      ],
+      "perms": [
+        "deploy.approve",
+        "deploy.rollback"
+      ],
+      "records": [
+        {
+          "table": "ops.builds",
+          "exists": true
+        },
+        {
+          "table": "ops.deployments",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.approve_deploy",
+          "exists": true
+        },
+        {
+          "name": "api.rollback",
+          "exists": true
+        }
+      ],
+      "events": [
+        "deploy.completed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.reliability",
+      "ws": "ops",
+      "area": "Reliability",
+      "routes": [
+        "/console/reliability"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "telemetry.read"
+      ],
+      "records": [
+        {
+          "table": "ops.objectives",
+          "exists": true
+        },
+        {
+          "table": "ops.telemetry",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview",
+        "reporting"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.incidents",
+      "ws": "ops",
+      "area": "Incident management",
+      "routes": [
+        "/console/incidents"
+      ],
+      "actors": [
+        "incident_commander"
+      ],
+      "perms": [
+        "incident:communicate"
+      ],
+      "records": [
+        {
+          "table": "opsx.incidents",
+          "exists": true
+        },
+        {
+          "table": "opsx.incident_updates",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.open_incident",
+          "exists": true
+        },
+        {
+          "name": "api.publish_update",
+          "exists": true
+        }
+      ],
+      "events": [
+        "incident.updated"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit",
+        "history"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.jobs",
+      "ws": "ops",
+      "area": "Background processing",
+      "routes": [
+        "/console/jobs"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "job.replay"
+      ],
+      "records": [
+        {
+          "table": "ops.jobs",
+          "exists": true
+        },
+        {
+          "table": "ops.job_attempts",
+          "exists": true
+        },
+        {
+          "table": "ctl.outbox",
+          "exists": true
+        },
+        {
+          "table": "opsx.access_jobs",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.replay_job",
+          "exists": true
+        }
+      ],
+      "events": [
+        "job.replayed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.integrations",
+      "ws": "ops",
+      "area": "Integration operations",
+      "routes": [
+        "/console/integrations"
+      ],
+      "actors": [
+        "operator"
+      ],
+      "perms": [
+        "integration:view"
+      ],
+      "records": [
+        {
+          "table": "opsx.integrations",
+          "exists": true
+        },
+        {
+          "table": "opsx.sync_runs",
+          "exists": true
+        },
+        {
+          "table": "integ.sync_errors",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "retry_sync",
+          "exists": false
+        }
+      ],
+      "events": [
+        "sync.completed"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.database",
+      "ws": "ops",
+      "area": "Database operations",
+      "routes": [
+        "/console/database"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "repair.request"
+      ],
+      "records": [
+        {
+          "table": "ops.migrations",
+          "exists": true
+        },
+        {
+          "table": "ops.repair_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.request_repair",
+          "exists": true
+        }
+      ],
+      "events": [
+        "repair.completed"
+      ],
+      "screens": [
+        "list",
+        "review"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.recovery",
+      "ws": "ops",
+      "area": "Recovery",
+      "routes": [
+        "/console/recovery"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "restore.test"
+      ],
+      "records": [
+        {
+          "table": "ops.backups",
+          "exists": true
+        },
+        {
+          "table": "ops.restore_exercises",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.record_restore_test",
+          "exists": true
+        }
+      ],
+      "events": [
+        "restore.tested"
+      ],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.security",
+      "ws": "ops",
+      "area": "Security",
+      "routes": [
+        "/console/security"
+      ],
+      "actors": [
+        "security_analyst"
+      ],
+      "perms": [
+        "finding.edit"
+      ],
+      "records": [
+        {
+          "table": "sec.findings",
+          "exists": true
+        },
+        {
+          "table": "sec.investigations",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.open_finding",
+          "exists": true
+        }
+      ],
+      "events": [
+        "finding.opened"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "compliance/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.access",
+      "ws": "ops",
+      "area": "Access administration",
+      "routes": [
+        "/console/access"
+      ],
+      "actors": [
+        "access_reviewer"
+      ],
+      "perms": [
+        "grant.create",
+        "grant.revoke"
+      ],
+      "records": [
+        {
+          "table": "ctl.grants",
+          "exists": true
+        },
+        {
+          "table": "iam.access_reviews",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.grant_capability",
+          "exists": true
+        },
+        {
+          "name": "api.revoke_grant",
+          "exists": true
+        }
+      ],
+      "events": [
+        "grant.revoked"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.privacy",
+      "ws": "ops",
+      "area": "Privacy operations",
+      "routes": [
+        "/console/privacy"
+      ],
+      "actors": [
+        "privacy_operator"
+      ],
+      "perms": [
+        "data_request:handle"
+      ],
+      "records": [
+        {
+          "table": "opsx.privacy_requests",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.verify_privacy_identity",
+          "exists": true
+        },
+        {
+          "name": "api.fulfil_privacy_request",
+          "exists": true
+        }
+      ],
+      "events": [
+        "privacy.fulfilled"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review",
+        "history"
+      ],
+      "design": "console/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.audit",
+      "ws": "ops",
+      "area": "Audit investigation",
+      "routes": [
+        "/console/audit"
+      ],
+      "actors": [
+        "auditor"
+      ],
+      "perms": [
+        "audit.read"
+      ],
+      "records": [
+        {
+          "table": "audit.events",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.ai",
+      "ws": "ops",
+      "area": "AI operations",
+      "routes": [
+        "/console/ai"
+      ],
+      "actors": [
+        "ai_operator"
+      ],
+      "perms": [
+        "ai.configure"
+      ],
+      "records": [
+        {
+          "table": "core.ai_policy",
+          "exists": true
+        },
+        {
+          "table": "audit.ai_usage",
+          "exists": true
+        },
+        {
+          "table": "ai.model_configs",
+          "exists": true
+        },
+        {
+          "table": "ai.evaluations",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "publish_prompt",
+          "exists": false
+        },
+        {
+          "name": "run_evaluation",
+          "exists": false
+        }
+      ],
+      "events": [
+        "evaluation.completed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "governance-backbone/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.costs",
+      "ws": "ops",
+      "area": "Capacity and costs",
+      "routes": [
+        "/console/costs"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "usage.read"
+      ],
+      "records": [
+        {
+          "table": "ops.usage_records",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "overview",
+        "reporting"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.moderation",
+      "ws": "ops",
+      "area": "Abuse and moderation",
+      "routes": [
+        "/console/moderation"
+      ],
+      "actors": [
+        "moderator"
+      ],
+      "perms": [
+        "report.decide"
+      ],
+      "records": [
+        {
+          "table": "community.reports",
+          "exists": true
+        },
+        {
+          "table": "community.posts",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.decide_report",
+          "exists": true
+        }
+      ],
+      "events": [
+        "report.decided"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "community/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.support_session",
+      "ws": "ops",
+      "area": "Support tooling",
+      "routes": [
+        "/console/support/:case/session"
+      ],
+      "actors": [
+        "support_agent"
+      ],
+      "perms": [
+        "support_session.open"
+      ],
+      "records": [
+        {
+          "table": "opsx.support_access_windows",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "open_support_session",
+          "exists": false
+        }
+      ],
+      "events": [
+        "support.session_opened"
+      ],
+      "screens": [
+        "detail"
+      ],
+      "design": "console-entry/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.services",
+      "ws": "ops",
+      "area": "Service inventory",
+      "routes": [
+        "/console/services"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "service.edit"
+      ],
+      "records": [
+        {
+          "table": "ops.services",
+          "exists": true
+        },
+        {
+          "table": "ops.dependencies",
+          "exists": true
+        }
+      ],
+      "commands": [],
+      "events": [],
+      "screens": [
+        "list",
+        "detail"
+      ],
+      "design": "architecture/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": null,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "ops.dead_letters",
+      "ws": "ops",
+      "area": "Webhook dead letters",
+      "routes": [
+        "/console/integrations/dead-letters"
+      ],
+      "actors": [
+        "reliability_engineer"
+      ],
+      "perms": [
+        "job.replay"
+      ],
+      "records": [
+        {
+          "table": "opsx.webhook_endpoints",
+          "exists": true
+        },
+        {
+          "table": "opsx.webhook_deliveries",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.replay_webhook",
+          "exists": true
+        }
+      ],
+      "events": [
+        "webhook.replayed"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "review"
+      ],
+      "design": "native-ops/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "dev.apps",
+      "ws": "dev",
+      "area": "Developer apps",
+      "routes": [
+        "/developers/apps"
+      ],
+      "actors": [
+        "approved_developer"
+      ],
+      "perms": [
+        "app.register"
+      ],
+      "records": [
+        {
+          "table": "biz.partner_apps",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "register_app",
+          "exists": false
+        }
+      ],
+      "events": [
+        "app.registered"
+      ],
+      "screens": [
+        "list",
+        "detail",
+        "edit"
+      ],
+      "design": "external/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "dev.keys",
+      "ws": "dev",
+      "area": "API credentials",
+      "routes": [
+        "/developers/keys"
+      ],
+      "actors": [
+        "approved_developer"
+      ],
+      "perms": [
+        "credential.rotate"
+      ],
+      "records": [
+        {
+          "table": "dev.credentials",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "api.rotate_key",
+          "exists": true
+        }
+      ],
+      "events": [
+        "key.rotated"
+      ],
+      "screens": [
+        "list",
+        "settings"
+      ],
+      "design": "external/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": true,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    },
+    {
+      "id": "dev.sandbox",
+      "ws": "dev",
+      "area": "Sandbox tenants",
+      "routes": [
+        "/developers/sandbox"
+      ],
+      "actors": [
+        "approved_developer"
+      ],
+      "perms": [
+        "sandbox.create"
+      ],
+      "records": [
+        {
+          "table": "core.institutions",
+          "exists": true
+        }
+      ],
+      "commands": [
+        {
+          "name": "create_sandbox",
+          "exists": false
+        }
+      ],
+      "events": [
+        "sandbox.created"
+      ],
+      "screens": [
+        "detail"
+      ],
+      "design": "external/index.html",
+      "designMissing": null,
+      "status": {
+        "designed": true,
+        "data": true,
+        "dataPartial": false,
+        "backend": false,
+        "implemented": false,
+        "tested": false,
+        "deployed": false
+      }
+    }
+  ]
+}
