@@ -220,6 +220,11 @@
       "code": "artifact_without_producer",
       "path": "evidence_pack.rollback-drill.json",
       "message": "Nothing in the repository produces rollback-drill.json."
+    },
+    {
+      "code": "support_recovery_not_ready",
+      "path": "operationsReadiness.registration.readiness",
+      "message": "registration.readiness lacks current support roster, synthetic-check, restore-drill, and incident-exercise evidence."
     }
   ],
   "blockedCapabilities": [
