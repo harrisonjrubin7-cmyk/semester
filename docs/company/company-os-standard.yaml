@@ -1,0 +1,40 @@
+# Company OS standard: the proposed internal source of truth. Replace parallel founder documents.
+# Status: PROPOSED, not adopted. docs/company/COMPANY-OPERATING-MODEL.md (effective date
+# TO BE APPROVED) and docs/company/leadership-system/ (not adopted, binds nobody) are
+# drafts, not authority. Neither wins by default when they differ; the founder decides
+# and records the decision in docs/decisions/. This file supersedes nothing.
+company_os:
+  status: proposed                # proposed | adopted | superseded
+  adopted: false
+  supersedes: []
+  precedence:
+    drafts_are_authority: false
+    when_drafts_differ: founder_decision_recorded_in_docs_decisions
+  functions:
+    - product
+    - engineering
+    - design
+    - customer_success
+    - implementation
+    - sales
+    - marketing
+    - finance
+    - legal_and_compliance
+    - trust_and_security
+    - operations
+    - people
+    - partnerships
+    - research
+    - investor_and_board
+
+  each_function_requires:
+    - accountable_owner
+    - mission
+    - system_of_record
+    - current_top_priorities
+    - operating_metrics
+    - controls
+    - recurring_cadence
+    - decision_log
+    - current_gaps
+    - escalation_path
