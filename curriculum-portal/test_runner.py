@@ -309,4 +309,13 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_ten_shortcuts_lose_points(self):
+        shortcuts={
+            9:"def idempotency(r):\n    p=r['previous_digest']\n    if p is None: return 'execute'\n    return 'replay' if p and p==r['digest'] else 'conflict'\n",
+            10:"def deduplicate(r):\n    ids=list(r['ids']); seen=set(); out=[]\n    for i in ids:\n        if i in seen and ids.count(i)==2: continue\n        out.append(i); seen.add(i)\n    return out\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    try: u=urlsplit(r['url']); ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    return u.scheme=='https' and u.username is None and u.password is None and ((ip.version==4 and ip.is_global and port in (None,443)) or (ip.version==6 and ip.is_global))\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
