@@ -14,7 +14,7 @@ differs, and the rows below use what the code says:
 
 | Brief said | Measured |
 | --- | --- |
-| 59 destinations in `lib/nav.ts` | **63** entries in `DESTINATIONS` (`lib/nav.ts` lines 202–1002: `grep -cE "^\s+screen: '"` over that range) |
+| 59 destinations in `lib/nav.ts` | <!--screens-->sixty-three<!--/--> destinations in `DESTINATIONS` (`lib/nav.ts` lines 202–1002: `grep -cE "^\s+screen: '"` over that range) |
 | `weekly`, `ahead`, `tonight`, `standing`, `worked`, `everything`, `springboard`, `chat` as destinations | **None are registry ids.** `grep -cx` against the 63 ids returns 0 for each. `ahead` is a *task tag* (`TASKS`, `lib/nav.ts:190`), not a screen. "Week ahead" is a section inside `screens/Today.tsx` and `screens/report/Day.tsx`. "Weekly report" is a label in `components/TermSwitch.tsx`. `Springboard` is a file (`screens/Springboard.tsx`) but not a registry id. |
 | Screens | `screens/` holds **89** top-level `.tsx` files and **119** non-test `.tsx` files including subfolders (`find screens -name "*.tsx" -not -name "*.test.tsx"`). |
 
@@ -102,7 +102,7 @@ than none. The re-count needs a per-pattern read and is **open**.
 - **Saved-state migration.** No screen has been removed, so no saved `screen`
   value has changed meaning. The migration test the brief asks for is needed
   only once a destination is removed.
-- **Screen count.** Still 63 registry destinations; not lower than 59, and the
+- **Screen count.** Still <!--screens-->sixty-three<!--/--> registry destinations; not lower than 59, and the
   brief's 59 is not reproduced.
 
 ## 6. Order of work, once the open rows are read
