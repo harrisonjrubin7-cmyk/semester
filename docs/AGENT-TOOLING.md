@@ -28,5 +28,6 @@ against Semester yet.
 - **token-optimizer**: its onboarding hook advances on every turn, so in an
   agent session it answered its questions with notification text and wrote
   that to `.claude/CLAUDE.md` as project instructions (removed in #1527).
-  Disabled in `.claude/settings.json`.
+  Disabled in `.claude/settings.json` under both `token-optimizer@synced`
+  (the key a plugin synced from claude.ai loads under) and its marketplace key.
 - **caddy**, **Modern-CPP-Programming**, **text-to-cad**: no use in this app.
