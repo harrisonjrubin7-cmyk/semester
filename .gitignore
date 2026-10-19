@@ -83,3 +83,4 @@ app/reports/
 .anchor/
 # Local tool caches written by the md-linker plugin.
 .md-linker/
+.claude/CLAUDE.md
