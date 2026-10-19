@@ -17,7 +17,7 @@ repository.
 - [ ] 7. Add API and event compatibility checks.
 - [x] 8. Add release-evidence expiration rules. — `app/src/lib/governance/release-profiles.test.ts` (fails closed on stale, failed, revoked or expired evidence)
 - [ ] 9. Add correlation IDs end to end.
-- [ ] 10. Create a source/freshness state test harness.
+- [x] 10. Create a source/freshness state test harness. — `app/src/lib/source-verification.test.ts` (every evaluation × freshness × connection combination)
 
 ## Pilot reliability
 
@@ -28,7 +28,7 @@ repository.
 - [x] 15. Test access revocation during workflow execution. — `packages/institution/src/access-saga.test.ts` (revocation while an install is in flight)
 - [ ] 16. Test safe-off activation.
 - [ ] 17. Run a reconciliation drill.
-- [ ] 18. Run a restore/rebuild drill.
+- [ ] 18. Run a restore/rebuild drill. — logical rehearsal recorded in `docs/evidence/restore/2026-10-12-logical-rehearsal.md`; a staging restore of a live-project backup is still open
 - [ ] 19. Finalize hypercare ownership.
 - [ ] 20. Complete a pilot activation decision record. — requires a PR number under `docs/decisions/`
 
@@ -43,17 +43,17 @@ repository.
 - [ ] 27. Build accessible mobile critical path.
 - [ ] 28. Verify screen-reader and keyboard paths.
 - [ ] 29. Train pilot staff with scenarios.
-- [ ] 30. Publish student quick start.
+- [x] 30. Publish student quick start. — `docs/launch/STUDENT-QUICK-START.md` (linked from `docs/help/README.md`; registered `READY` in `app/src/lib/launch/content.ts`)
 
 ## Institutional repeatability
 
-- [ ] 31. Build tenant implementation workspace.
-- [ ] 32. Package connector mapping template.
-- [ ] 33. Package configuration change workflow.
+- [x] 31. Build tenant implementation workspace. — `app/src/components/console/TenantOperations.tsx` with `supabase/console-tenant-operations.check.sql`
+- [x] 32. Package connector mapping template. — `docs/institutional-readiness/DATA-MAPPING-TEMPLATE.md` with `docs/institutional-implementation/INTEGRATION-WORKBOOK.md`
+- [x] 33. Package configuration change workflow. — `docs/guides/institution/CONFIGURATION-AND-APPROVALS.md` with `docs/CONFIGURATION-STUDIO.md`
 - [ ] 34. Create source-authority review worksheet.
-- [ ] 35. Create role-mapping worksheet.
+- [x] 35. Create role-mapping worksheet. — `docs/institutional-readiness/ROLE-AND-PERMISSION-MATRIX.md` (Target approval worksheet)
 - [x] 36. Create institution launch checklist. — `docs/market-readiness/PILOT-LAUNCH-CHECKLIST.md`
-- [ ] 37. Create pilot measurement packet.
+- [ ] 37. Create pilot measurement packet. — controlled blank scorecard at `docs/commercial/PILOT-SCORECARD.md`; populating and approving it for a named pilot is still open
 - [ ] 38. Complete renewal-decision workflow.
 - [ ] 39. Simulate a second tenant.
 - [ ] 40. Document reusable variations and exclusions.
@@ -62,7 +62,7 @@ repository.
 
 - [ ] 41. Charter degree-scenario planning.
 - [ ] 42. Charter advisor collaboration.
-- [ ] 43. Decide whether Course Studio is a near-term wedge.
+- [x] 43. Decide whether Course Studio is a near-term wedge. — `docs/decisions/D-1067.md`; Q3 pilot in `docs/product/EDUCATION_OS_BACKLOG.md`
 - [ ] 44. Establish course-source packet standard.
 - [ ] 45. Complete AI evaluation and incident workflow.
 - [ ] 46. Define external-audience identity boundaries.
