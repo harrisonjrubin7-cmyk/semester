@@ -71,3 +71,14 @@ The store now:
 6. documents forward rollback order and has database-negative tests for cross-tenant reads and writes.
 
 The adapter and command path are source-level implementation evidence only. The runtime has no approved evaluator dependency, so the deployed path remains unavailable. It has not been exercised against a live institution or used for an official registration write. Those remain separate gates.
+
+## Blocker routing decision rules
+
+`packages/institution/src/office-handoff.ts` decides whether a student, an assigned advisor or an owning office may act on a registration blocker. It is decision logic only: it writes nothing, and no gateway route, migration or database function exists for it yet, so `POST /api/v1/me/registration/route-blocker` remains specified and unimplemented.
+
+- A student routes their own readiness items. An advisor routes for assigned students only. An office never starts a handoff.
+- A request must name the readiness version it reviewed. A newer version refuses with `stale_readiness`.
+- Missing items, clear holds and items with no institution-configured owner are refused. The owning office comes from an institution table, never from the client.
+- Only the owning office acknowledges or resolves a handoff. Only the student withdraws it.
+- Resolving a handoff does not clear the readiness item. Clearance comes only from a source refresh or reconciliation.
+- A retry is a replay only when its payload matches the stored decision. The same key with a different payload is a conflict.
