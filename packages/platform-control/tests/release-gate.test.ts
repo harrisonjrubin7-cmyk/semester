@@ -1,0 +1,135 @@
+import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
+import test from 'node:test';
+import { renderRegistryProjection } from '../scripts/projection.ts';
+import { loadRegistry, repositoryRoot } from '../scripts/registry-io.ts';
+import { resolveInside, validateEvidence } from '../scripts/validation.ts';
+import type { RegistrySnapshot } from '../types.ts';
+import { validateInception } from '../validators/inception-validator.ts';
+import { validateCapabilities } from '../validators/capability-validator.ts';
+import { validateRelease } from '../validators/release-validator.ts';
+
+/**
+ * Review findings on the registry gates, each shown to bite by breaking one
+ * thing in a copy of the committed registry (see inception-validator.test.ts).
+ */
+const registry = await loadRegistry();
+const copy = (): RegistrySnapshot => structuredClone(registry);
+
+test('an evidence path cannot name something outside the directory it is judged against', () => {
+  const root = resolve(repositoryRoot);
+  assert.equal(resolveInside(root, 'docs/ARCHITECTURE.md'), resolve(root, 'docs/ARCHITECTURE.md'));
+  assert.equal(resolveInside(root, '../etc/passwd'), null);
+  assert.equal(resolveInside(root, '/etc/passwd'), null);
+  assert.equal(resolveInside(resolve(root, 'release'), '../README.md'), null);
+});
+
+test('only a literal true verifies an adapter in the release gate', () => {
+  const snapshot = copy();
+  const adapter = snapshot.inception!.adapters[0];
+  (adapter as { sandbox_verified: unknown }).sandbox_verified = 'false';
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'sandbox_verified_not_boolean' && i.path === `adapters.${adapter.key}.sandbox_verified`));
+  assert.ok(validateRelease(snapshot).inception.unverifiedAdapters.includes(adapter.key));
+});
+
+test('the release gate names every completion claim the coverage matrix counts', () => {
+  const inception = registry.inception!;
+  const decision = validateRelease(registry);
+  const uncatalogued = inception.events.filter((e) => e.catalog_event === null).map((e) => `${e.os}.${e.event}`).sort();
+  assert.deepEqual(decision.inception.eventsWithoutCatalog, uncatalogued);
+  assert.ok(uncatalogued.length > 0, 'the committed registry has proposed events, so the claim is live');
+
+  const contracted = new Set(inception.screen_contracts.map((c) => c.route));
+  const unrouted = [...new Set(inception.operating_systems.flatMap((os) => os.routes))].filter((r) => !contracted.has(r)).sort();
+  assert.deepEqual(decision.inception.routesWithoutContracts, unrouted);
+  assert.ok(unrouted.length > 0, 'the committed registry has routes without contracts, so the claim is live');
+
+  const undeployed = (registry.workspaces ?? []).filter((w) => w.refs.deployments.length === 0).map((w) => w.key).sort();
+  assert.deepEqual(decision.inception.pilotScopesWithoutDeployment, undeployed);
+  assert.equal(decision.allowed, false);
+});
+
+test('a route stops being named once a screen contract covers it', () => {
+  const missing = validateRelease(registry).inception.routesWithoutContracts[0];
+  const snapshot = copy();
+  snapshot.inception!.screen_contracts = [...snapshot.inception!.screen_contracts, { ...snapshot.inception!.screen_contracts[0], route: missing }];
+  assert.ok(!validateRelease(snapshot).inception.routesWithoutContracts.includes(missing));
+});
+
+test('the projection lowers before it attaches, and raises a capability only after its evidence exists', () => {
+  const sql = renderRegistryProjection(registry).split('\n');
+  const passes = ['-- 1.', '-- 2.', '-- 3.', '-- 4.', '-- 5.'].map((prefix) => sql.findIndex((line) => line.startsWith(prefix)));
+  assert.ok(passes.every((index) => index >= 0), 'every pass is present');
+  assert.deepEqual(passes, [...passes].sort((a, b) => a - b));
+  assert.ok(!sql.some((line) => line.includes("'active'")), 'no dependency or status claims active, which no projection can satisfy');
+});
+
+test('a mature capability gets its test evidence before it is raised to deployed', () => {
+  const snapshot = copy();
+  const capability = snapshot.capabilities[0];
+  capability.maturity = { ...capability.maturity, api: true, user_interface: true, e2e_tested: true, production_ready: true };
+  capability.evidence = { ...capability.evidence, e2e: [{ kind: 'test', path: 'tests/example.test.ts' }] } as typeof capability.evidence;
+  const sql = renderRegistryProjection(snapshot).split('\n');
+  const evidence = sql.findIndex((line) => line.includes("'test', 'tests/example.test.ts#e2e'"));
+  // Pass 5 is the only raise: it is the update that skips rows already at the status (pass 1 lowers with a rank comparison instead).
+  const raise = sql.findIndex((line) => line.includes(`where capability_key = '${capability.key}' and status <> 'deployed'::private.registry_status;`));
+  assert.ok(evidence >= 0, 'the test evidence is projected');
+  assert.ok(raise >= 0, 'the raise to deployed is projected');
+  assert.ok(evidence < raise, 'evidence is attached before the status that needs it');
+});
+
+test('a capability with an unknown risk tier or an unprojected workspace is refused, not silently dropped', () => {
+  const risky = copy();
+  risky.capabilities[0] = { ...risky.capabilities[0], risk: 'severe' as typeof risky.capabilities[0]['risk'] };
+  assert.ok(validateCapabilities(risky).some((i) => i.code === 'unknown_risk' && i.path === `capabilities.${risky.capabilities[0].key}.risk`));
+
+  const stray = copy();
+  stray.capabilities[0] = { ...stray.capabilities[0], workspace: 'not_a_real_os' };
+  assert.ok(validateCapabilities(stray).some((i) => i.code === 'unknown_workspace'));
+  assert.equal(validateCapabilities(registry).filter((i) => i.code === 'unknown_risk' || i.code === 'unknown_workspace').length, 0, 'the committed registry is clean');
+});
+
+test('a verified journey may not name a blank test path', () => {
+  const snapshot = copy();
+  const journey = snapshot.inception!.journeys.find((j) => j.status === 'verified') ?? snapshot.inception!.journeys[0];
+  journey.status = 'verified';
+  journey.tests = [''];
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'invalid_record_shape' && i.path === `journeys.${journey.key}.tests`));
+});
+
+test('a journey crosses two distinct operating systems, not one repeated', () => {
+  const snapshot = copy();
+  const journey = snapshot.inception!.journeys[0];
+  const system = snapshot.inception!.operating_systems[0].key;
+  journey.status = 'verified';
+  journey.tests = ['tests/example.test.ts'];
+  journey.crosses = [system, system];
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'journey_single_system' && i.path === `journeys.${journey.key}.crosses`));
+});
+
+test('a blank evidence path is refused rather than resolved to the repository root', async () => {
+  const snapshot = copy();
+  snapshot.inception!.adapters[0].evidence = [''];
+  assert.ok((await validateEvidence(snapshot)).some((i) => i.code === 'evidence_blank_path'));
+});
+
+test('every registered integration has an adapter, so omission cannot empty the roster', () => {
+  const snapshot = copy();
+  const integration = snapshot.inception!.adapters.find((a) => a.integration !== null)!.integration!;
+  snapshot.inception!.adapters = snapshot.inception!.adapters.filter((a) => a.integration !== integration);
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'integration_without_adapter' && i.path === `integrations.${integration}`));
+});
+
+test('a system carries every classification its pilot scopes hold, whatever order they are listed in', () => {
+  const snapshot = copy();
+  const [first, second] = snapshot.workspaces!;
+  first.data_classification = 'restricted';
+  second.data_classification = 'public';
+  const os = snapshot.inception!.operating_systems[0];
+  const workspaceRow = (sql: string) => sql.split('\n').find((line) => line.includes(`values ('${os.key}', `)) ?? '';
+  os.pilot_scopes = [first.key, second.key];
+  const forward = renderRegistryProjection(snapshot);
+  os.pilot_scopes = [second.key, first.key];
+  assert.equal(renderRegistryProjection(snapshot), forward, 'listing order does not change the projection');
+  assert.ok(workspaceRow(forward).includes("'public + restricted'"), `the workspace row carries every classification, sorted: ${workspaceRow(forward)}`);
+});

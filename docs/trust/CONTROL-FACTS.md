@@ -15,11 +15,11 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Migration files | 253 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
-| Tables created in `private` and not later dropped | 55 |
-| … of which enable row-level security in a migration | 55 |
+| Tables created in `private` and not later dropped | 59 |
+| … of which enable row-level security in a migration | 59 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 279 |
-| Tables with RLS found and no literal policy statement | 123 |
+| Tables with RLS found and no literal policy statement | 127 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -143,6 +143,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
+| `supabase/platform-registry.check.sql` | The platform registry projection (20261011120000): a capability is live only when its full chain resolves, and the database refuses anything less. |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
 | `supabase/privileged-access-review.check.sql` | Privileged role-grant review. |

@@ -1,5 +1,5 @@
 import { access, realpath, stat } from 'node:fs/promises';
-import { resolve, sep } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import type { RegistrySnapshot, ValidationIssue } from '../types.ts';
 import { validateActivationGates } from '../validators/activation-gate-validator.ts';
 import { validateOperationsReadiness } from '../validators/operations-readiness-validator.ts';
@@ -8,6 +8,7 @@ import { validateBacklog } from '../validators/backlog-validator.ts';
 import { validateRegistryRecords } from '../validators/control-validator.ts';
 import { validateContracts } from '../validators/contract-validator.ts';
 import { validateRlsCoverage } from '../validators/rls-validator.ts';
+import { inceptionEvidencePaths, validateInception } from '../validators/inception-validator.ts';
 import { validateRoutes } from '../validators/route-validator.ts';
 import { validateWorkflows } from '../validators/workflow-validator.ts';
 import { validateWorkspaceRegistry } from '../validators/workspace-validator.ts';
@@ -15,7 +16,7 @@ import { repositoryRoot } from './registry-io.ts';
 
 export async function validateEvidence(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
-  const paths = new Set<string>();
+  const paths = new Set<string>(inceptionEvidencePaths(snapshot.inception));
   for (const capability of snapshot.capabilities) for (const values of Object.values(capability.evidence)) for (const reference of values ?? []) {
     if (typeof reference === 'object' && reference !== null && typeof reference.path === 'string' && reference.path.trim()) paths.add(reference.path);
   }
@@ -42,7 +43,10 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
     }
   }
   for (const path of [...paths].sort()) {
-    try { await access(resolve(repositoryRoot, path)); }
+    if (path.trim() === '') { issues.push({ code: 'evidence_blank_path', path, message: 'Evidence path is blank; it would resolve to the repository root.' }); continue; }
+    const absolute = resolveInside(repositoryRoot, path);
+    if (absolute === null) { issues.push({ code: 'evidence_outside_repository', path, message: 'Evidence path resolves outside the repository.' }); continue; }
+    try { await access(absolute); }
     catch { issues.push({ code: 'missing_evidence_path', path, message: 'Evidence path does not exist in the repository.' }); continue; }
     if (!controlledPaths.has(path)) continue;
     // Gate evidence is retained repository content: git metadata is present in every clone but is not an artifact.
@@ -51,7 +55,7 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
       continue;
     }
     // Resolve symlinks: a repository-relative name must not reach a file outside the repository.
-    const target = await realpath(resolve(repositoryRoot, path));
+    const target = await realpath(absolute);
     const root = await realpath(repositoryRoot);
     if (target !== root && !target.startsWith(root + sep)) {
       issues.push({ code: 'gate_evidence_outside_repository', path, message: 'Gate evidence resolves outside the repository.' });
@@ -62,10 +66,24 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
   return issues;
 }
 
+/** A regular file inside the checkout. A directory, or a symlink whose target lies outside it, is not evidence even though it exists. */
+export async function isRegularFileInRepository(path: string): Promise<boolean> {
+  const target = await realpath(path).catch(() => null);
+  if (target === null) return false;
+  return target.startsWith((await realpath(repositoryRoot)) + sep) && (await stat(target)).isFile();
+}
+
+/** The absolute location of `path` under `directory`, or null when it is absolute or climbs out of `directory`. */
+export function resolveInside(directory: string, path: string): string | null {
+  const absolute = resolve(directory, path);
+  const within = relative(directory, absolute);
+  return within === '..' || within.startsWith(`..${sep}`) ? null : absolute;
+}
+
 export async function validateSnapshot(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
   return [
     ...validateCapabilities(snapshot), ...validateBacklog(snapshot), ...validateRegistryRecords(snapshot), ...validateWorkflows(snapshot),
-    ...validateWorkspaceRegistry(snapshot), ...validateRoutes(snapshot), ...validateContracts(snapshot), ...validateRlsCoverage(snapshot),
+    ...validateWorkspaceRegistry(snapshot), ...validateRoutes(snapshot), ...validateContracts(snapshot), ...validateRlsCoverage(snapshot), ...validateInception(snapshot),
     ...validateActivationGates(snapshot), ...validateOperationsReadiness(snapshot), ...await validateEvidence(snapshot),
   ];
 }

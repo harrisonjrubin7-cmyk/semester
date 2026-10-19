@@ -137,6 +137,8 @@ export interface RegistrySnapshot {
   manifests?: PlatformManifest[];
   /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires the pilot scope roster. */
   workspaces?: WorkspaceRecord[];
+  /** Optional for the same reason. Full registry validation requires every inception group. */
+  inception?: InceptionSnapshot;
   /** Optional while focused validator tests construct bounded snapshots. Full registry validation requires one gate per gated capability. */
   activationGates?: ActivationGate[];
   /** Current, operated support and recovery proof. Repository controls alone may leave this explicitly not ready. */
@@ -199,4 +201,169 @@ export interface ValidationIssue {
   code: string;
   path: string;
   message: string;
+}
+
+/* ── Inception layer ─────────────────────────────────────────────────────
+ *
+ * The execution specification ("come on continue", 11 October 2026) asks for
+ * one source of truth per deployable unit: tenant → workspace → capability →
+ * screen → command → event → record → policy → integration → audit → owner →
+ * runbook → tests → evidence. The groups below are that chain as registry
+ * records. Every one is a claim about scope and ownership, not about
+ * operation: a record here is "designed" until the capability it names has
+ * maturity evidence, exactly as the workspace registry treats a pilot scope.
+ */
+
+export const VIEW_STATES = ['ready', 'loading', 'empty', 'error', 'forbidden', 'offline', 'stale'] as const;
+export type ViewState = (typeof VIEW_STATES)[number];
+
+export const CONNECTION_STATES = ['confirmed', 'pending', 'updating', 'stale', 'blocked', 'degraded', 'reconcile', 'resolved'] as const;
+export type ConnectionState = (typeof CONNECTION_STATES)[number];
+
+export const CONNECTION_TYPES = ['authority', 'reference', 'derived', 'delegated'] as const;
+export type ConnectionType = (typeof CONNECTION_TYPES)[number];
+
+export const RECORD_LIFECYCLE_STATES = [
+  'created', 'validated', 'pending_review', 'approved', 'active', 'suspended', 'expired', 'revoked', 'archived', 'retained_or_deleted',
+] as const;
+export type RecordLifecycleState = (typeof RECORD_LIFECYCLE_STATES)[number];
+
+/** Health a registry file may declare. `healthy`, `stale` and `degraded` are observed at runtime and never written here. */
+export const INTEGRATION_HEALTH = ['configured', 'pending_authorization', 'healthy', 'stale', 'degraded', 'blocked', 'disabled'] as const;
+export type IntegrationHealth = (typeof INTEGRATION_HEALTH)[number];
+export const DECLARABLE_INTEGRATION_HEALTH: readonly IntegrationHealth[] = ['configured', 'pending_authorization', 'blocked', 'disabled'];
+
+/** The scope segment a permission key may end in: `resource.action.scope`. */
+export const PERMISSION_SCOPES = [
+  'own', 'tenant', 'company', 'production', 'assigned_section', 'assigned_caseload', 'assigned_community', 'assigned_queue', 'granted_scope', 'own_application',
+] as const;
+export type PermissionScope = (typeof PERMISSION_SCOPES)[number];
+
+export const OPERATIONS_CADENCES = ['every_deployment', 'daily', 'weekly', 'biweekly', 'monthly', 'per_term', 'end_of_term'] as const;
+export type OperationsCadence = (typeof OPERATIONS_CADENCES)[number];
+
+export interface OperatingSystemRecord extends RegistryRecord {
+  /** The product family name the specification uses, e.g. "Student OS". */
+  os_family: string;
+  /** Logical routes, each beginning with `/`. A route may be shared only when `shared_routes` names the other system. */
+  routes: string[];
+  shared_routes: Record<string, string[]>;
+  /** The pilot release scopes (workspace registry) this system is delivered through. */
+  pilot_scopes: string[];
+  /** The master-catalog domains (`docs/master/SEMESTER_DOMAIN_CATALOG.md`, D01–D40) this system covers. */
+  master_domains: string[];
+  /** The minimum events the specification requires this system to emit. */
+  minimum_events: string[];
+  /** Screens in the repository that serve this system today; evidence, not a completeness claim. */
+  screens_in_repo: string[];
+  gaps: string[];
+}
+
+export interface AuthorityConnectionRecord extends RegistryRecord {
+  record: string;
+  connection_type: ConnectionType;
+  primary_authority: string;
+  semester_action: string;
+  reconciliation_required: boolean;
+  lifecycle_owner: string;
+  /** Only for `delegated`: the four properties every delegation must carry. */
+  delegation?: { scope: boolean; purpose: boolean; expiry: boolean; revocation: boolean };
+}
+
+export interface RequiredEventRecord extends RegistryRecord {
+  os: string;
+  event: string;
+  /** The `EVENT_TYPES` key in `packages/institution/src/events.ts` that carries this event, or null when none does yet. */
+  catalog_event: string | null;
+}
+
+export interface PermissionRecord extends RegistryRecord {
+  permission: string;
+  os: string;
+  roles: string[];
+}
+
+export interface JourneyRecord extends RegistryRecord {
+  number: number;
+  crosses: string[];
+  tests: string[];
+  gaps: string[];
+}
+
+export interface ScreenContractRecord extends RegistryRecord {
+  workspace: string;
+  route: string;
+  title: string;
+  roles: string[];
+  capabilities: string[];
+  records: string[];
+  commands: string[];
+  events: string[];
+  audit_events: string[];
+  states: string[];
+  authority: { primary: string; semester_role: string; reconciliation_required: boolean };
+  ai: { enabled: boolean; rule: string };
+  operational_owner: string;
+  runbook: string;
+}
+
+export interface AdapterRecord extends RegistryRecord {
+  adapter: string;
+  /** The `integrations` registry key this adapter is the deployment of, when one exists. */
+  integration: string | null;
+  domains: string[];
+  required_behavior: string[];
+  health: IntegrationHealth;
+  credential_reference: string;
+  sandbox_verified: boolean;
+}
+
+export interface CadenceRecord extends RegistryRecord {
+  cadence: OperationsCadence;
+  activity: string;
+  accountable_owner: string;
+}
+
+export interface ServiceLevelRecord extends RegistryRecord {
+  work_type: string;
+  first_response: string;
+  target_resolution: string;
+  escalation: string;
+}
+
+export interface EvidenceArtifactRecord extends RegistryRecord {
+  /** Path inside the release evidence pack, e.g. `test-results/rls.xml`. */
+  artifact: string;
+  /** The repository command or job that can produce it, or null when nothing can yet. */
+  producer: string | null;
+}
+
+export interface LifecycleRecord extends RegistryRecord {
+  states: string[];
+  transitions: Record<string, string[]>;
+  examples: Array<{ record: string; authority: string; lifecycle_owner: string }>;
+}
+
+export interface WorkstreamRecord extends RegistryRecord {
+  letter: string;
+  deliverables: string[];
+  registry_groups: string[];
+  gaps: string[];
+}
+
+export interface InceptionSnapshot {
+  operating_systems: OperatingSystemRecord[];
+  authority: AuthorityConnectionRecord[];
+  events: RequiredEventRecord[];
+  permissions: PermissionRecord[];
+  journeys: JourneyRecord[];
+  screen_contracts: ScreenContractRecord[];
+  adapters: AdapterRecord[];
+  cadence: CadenceRecord[];
+  service_levels: ServiceLevelRecord[];
+  evidence_pack: EvidenceArtifactRecord[];
+  lifecycle: LifecycleRecord[];
+  workstreams: WorkstreamRecord[];
+  /** `EVENT_TYPES` keys read from `packages/institution/src/events.ts`, so a required event cannot claim a catalog entry that is not there. */
+  event_catalog: string[];
 }

@@ -14,11 +14,14 @@ const requiredEvidenceKinds: Record<MaturityStage, readonly EvidenceKind[]> = {
   monitored: ['monitoring'],
 };
 
+const RISK_TIERS = new Set<string>(['low', 'medium', 'high', 'critical']);
+
 export function validateCapabilities(snapshot: RegistrySnapshot): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const systems = new Set(snapshot.systems.map(({ key }) => key));
   const roles = new Set(snapshot.roles.map(({ key }) => key));
   const seen = new Set<string>();
+  const inceptionWorkspaces = new Set((snapshot.inception?.operating_systems ?? []).map(({ key }) => key));
 
   for (const capability of snapshot.capabilities) {
     const path = `capabilities.${capability.key}`;
@@ -26,6 +29,8 @@ export function validateCapabilities(snapshot: RegistrySnapshot): ValidationIssu
     if (seen.has(capability.key)) issues.push({ code: 'duplicate_key', path, message: 'Capability key is duplicated.' });
     seen.add(capability.key);
     if (!capability.owner.trim()) issues.push({ code: 'missing_owner', path, message: 'Capability requires an owner.' });
+    if (!RISK_TIERS.has(capability.risk)) issues.push({ code: 'unknown_risk', path: `${path}.risk`, message: `Risk ${capability.risk} is not a risk tier.` });
+    if (snapshot.inception && !inceptionWorkspaces.has(capability.workspace)) issues.push({ code: 'unknown_workspace', path: `${path}.workspace`, message: `${capability.workspace} is not an operating system in the inception registry, so it would never be projected.` });
 
     for (const system of capability.systems) {
       if (!systems.has(system)) issues.push({ code: 'unknown_system', path: `${path}.systems`, message: `Unknown system ${system}.` });
