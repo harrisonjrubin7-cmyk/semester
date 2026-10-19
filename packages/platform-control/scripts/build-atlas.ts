@@ -40,9 +40,10 @@ await Promise.all([
   writeGenerated('release-evidence-pack.json', evidencePack),
   writeGeneratedText('INCEPTION-COVERAGE.md', renderCoverageMarkdown(snapshot, coverage, eventCoverage, evidencePack)),
   writeGeneratedText('registry-projection.sql', renderRegistryProjection(snapshot)),
+  writeGenerated('operations-readiness.json', snapshot.operationsReadiness ?? []),
 ]);
 console.log(JSON.stringify({
-  generated: 12, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length,
+  generated: 13, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length,
   operatingSystems: inception.operating_systems.length, journeys: inception.journeys.length, requiredEvents: inception.events.length,
   eventsCarriedByCatalog: eventCoverage.filter((e) => e.catalog_event !== null).length, adapters: inception.adapters.length, evidenceArtifactsPresent: evidencePack.present,
 }, null, 2));

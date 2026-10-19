@@ -125,6 +125,29 @@ def test_unmeasured_extraction_confidence_has_no_numeric_default():
     assert ExtractedChunk("Text").confidence is None
 
 
+def test_archive_classification_sample_keeps_pdf_and_non_pdf_members():
+    worker = _worker_module()
+    rows = [
+        {
+            "source_label": "appendix.pdf",
+            "content": f"PDF heading {index}",
+            "page_number": 1,
+        }
+        for index in range(8)
+    ]
+    rows.append({
+        "source_label": "syllabus.txt",
+        "content": "Grading schedule and final exam",
+        "page_number": None,
+    })
+
+    sample = worker.classification_sample(rows)
+
+    assert "pdf heading 0" in sample
+    assert "pdf heading 1" not in sample
+    assert "grading schedule and final exam" in sample
+
+
 def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path: Path):
     testing_session = _database()
     source = tmp_path / "syllabus.txt"

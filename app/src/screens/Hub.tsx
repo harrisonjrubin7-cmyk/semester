@@ -11,11 +11,12 @@ import { useSchoolRecords } from '../lib/school-records-hook';
 import { officialMessages } from '../lib/official-notices';
 import { SourceBadge } from '../components/SourceBadge';
 import { clock, dateToIso } from '../lib/date';
-import { EMPTY_LAUNCHPAD, openSteps, readLaunchpad, stepsFor } from '../lib/launchpad';
-import { EMPTY_OPPORTUNITIES, deadlines, readOpportunities } from '../lib/opportunities';
+import { EMPTY_LAUNCHPAD, LAUNCHPAD_PREFIX, openSteps, readLaunchpad, stepsFor } from '../lib/launchpad';
+import { EMPTY_OPPORTUNITIES, OPPORTUNITIES_PREFIX, deadlines, readOpportunities } from '../lib/opportunities';
 import {
   CHANNELS,
   EMPTY_PREFS,
+  HUB_PREFS_PREFIX,
   PRIORITY_LABEL,
   admit,
   digestGroups,
@@ -56,9 +57,9 @@ function Workspace({ who }: { who: string }) {
   const { catalog, state } = useStore();
   const now = useNow();
   const predictable = hasMode(state.access, 'predictable');
-  const prefsLib = useDeviceLibrary(`semester.hub.v1:${who}`, readHubPrefs, EMPTY_PREFS);
-  const launch = useDeviceLibrary(`semester.launchpad.v1:${who}`, readLaunchpad, EMPTY_LAUNCHPAD);
-  const opps = useDeviceLibrary(`semester.opportunities.v1:${who}`, readOpportunities, EMPTY_OPPORTUNITIES);
+  const prefsLib = useDeviceLibrary(`${HUB_PREFS_PREFIX}:${who}`, readHubPrefs, EMPTY_PREFS);
+  const launch = useDeviceLibrary(`${LAUNCHPAD_PREFIX}:${who}`, readLaunchpad, EMPTY_LAUNCHPAD);
+  const opps = useDeviceLibrary(`${OPPORTUNITIES_PREFIX}:${who}`, readOpportunities, EMPTY_OPPORTUNITIES);
   const [tab, setTab] = useState<Tab>('inbox');
   const prefs = prefsLib.value;
   const setPrefs = (patch: Partial<HubPrefs>) => prefsLib.update((old) => ({ ...old, ...patch }));

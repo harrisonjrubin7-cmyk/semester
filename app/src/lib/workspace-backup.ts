@@ -1,6 +1,13 @@
 import { keepNotes, readMeetings } from './advisor-meeting';
 import { keepMemory, readCalm } from './calm-controls';
+import { keepMessageMarkers, readHubPrefs } from './comms';
 import { obj } from './device-library';
+import {
+  keepReflections as keepLaunchpadReflections,
+  readLaunchpad,
+} from './launchpad';
+import { keepWorkStudy } from './opportunities';
+import { keepPrivateSupport, readSupport } from './support';
 import { keepReflections, readResets } from './weekly-reset';
 import {
   DEFINITIONS,
@@ -20,6 +27,10 @@ const RESTORES: Partial<Record<string, (incoming: unknown, existing: unknown) =>
   advisorMeeting: (incoming, existing) => keepNotes(readMeetings(incoming), existing),
   weeklyReset: (incoming, existing) => keepReflections(readResets(incoming), existing),
   calm: (incoming, existing) => keepMemory(readCalm(incoming), existing),
+  launchpad: (incoming, existing) => keepLaunchpadReflections(readLaunchpad(incoming), existing),
+  opportunities: (incoming, existing) => keepWorkStudy(incoming, existing),
+  hubPreferences: (incoming, existing) => keepMessageMarkers(readHubPrefs(incoming), existing),
+  support: (incoming, existing) => keepPrivateSupport(readSupport(incoming), existing),
 };
 
 export function workspaceLabel(record: WorkspaceRecord): string {

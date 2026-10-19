@@ -15,3 +15,20 @@
 # Not a credential. The test now assembles it from parts; this pins the one commit that
 # introduced the literal, so the scan of the PR range stays green. Pinned to commit, path, rule and line.
 5751d8cd01132a55d31bfaba2d96303ce0e8eae1:packages/platform-control/tests/inception-validator.test.ts:stripe-access-token:155
+# The 11 October design handoff's module registry (D-1475): the field
+# field named for access holds the sentence "Enrollment/teaching scope", which
+# says which scope a module's screens are read under. No value, no
+# credential; the file is a copy of the design export. Pinned to the commit,
+# path, rule and line that gitleaks reported on #1475.
+863634d5c7c037cd2eae7afe2eec63ce998db991:docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
+# The same line, as the working-tree scan (`gitleaks dir .`) fingerprints it.
+docs/handoff/reference-slice/live/module_registry.json:generic-api-key:36
+# A test's fixed Idempotency-Key header in the second-tenant gateway sweep,
+# written as a random-looking UUID in c150fb62 and replaced by a plain word
+# in the next commit; the historical line is what the commit-range scan sees.
+c150fb620df78ae82929174502d3c1e0a886cd02:app/server/institution/gateway.test.ts:generic-api-key:994
+# Notification policy test fixture: a made-up deduplication label was detected
+# as a generic API key. It never held a credential and the branch tip replaces
+# it with a plainly named low-entropy fixture. Keep this exception pinned to
+# the original commit, file, rule, and line.
+1489646e1c916173c0d137cb9128e55d4123923f:supabase/notification-inbox.check.sql:generic-api-key:144

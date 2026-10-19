@@ -48,6 +48,15 @@ export function validateRelease(snapshot: RegistrySnapshot, presentArtifacts: Re
   // A producer string is a claim; the artifact file under release/ is the evidence. Absent by default, so the check fails closed.
   const artifactsMissing = (inception?.evidence_pack ?? []).map((a) => a.artifact).filter((artifact) => !presentArtifacts.has(artifact)).sort();
   for (const artifact of artifactsMissing) issues.push({ code: 'artifact_missing', path: `evidence_pack.${artifact}`, message: `release/${artifact} does not exist.` });
+  for (const capability of snapshot.capabilities) {
+    const operations = snapshot.operationsReadiness?.find((record) => record?.capability === capability.key);
+    if (!operations || operations.status !== 'ready') {
+      issues.push({
+        code: 'support_recovery_not_ready', path: `operationsReadiness.${capability.key}`,
+        message: `${capability.key} lacks current support roster, synthetic-check, restore-drill, and incident-exercise evidence.`,
+      });
+    }
+  }
   return {
     allowed: issues.length === 0,
     issues,

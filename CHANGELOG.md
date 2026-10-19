@@ -24,6 +24,14 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Mine names the exact action, step or event before removing it
+
+In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
+
+### Removing a degree requirement now explains the planning consequence first
+
+On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
