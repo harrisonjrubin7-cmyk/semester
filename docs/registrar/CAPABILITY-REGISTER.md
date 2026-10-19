@@ -2,7 +2,7 @@
 
 The registrar replacement specification ("expand outline … build entire registrar") names this register as its next implementation artifact: every capability linked to repository code, each classified by what has actually been reached. It is the build backlog for the native registrar scope. It does not claim the scope is built, deployed or authoritative.
 
-**Evidence baseline:** `origin/main` at `436687a1`, assessed 2026-10-13. Test results were produced locally in this pass (see §Verification). Nothing here was checked against a live database, a deployed environment or an institution.
+**Evidence baseline:** `origin/main` at `436687a1`, assessed 2026-10-13. Test results were produced locally in this pass (see §Verification). The only remote check is the migration history of Supabase project `lzrqvlugnawcgywkhqlz`, read on 2026-10-18 (see Next executable tasks, item 1). Tables, functions and app state were not checked against that project, and nothing here was checked against an institution.
 
 ## Status key
 
@@ -13,7 +13,7 @@ Each row carries the highest status the evidence supports. A status is not inher
 | **Designed** | Specified in docs or a spec; no code path found. |
 | **Implemented** | Code exists in the repository, in-app only. |
 | **Tested** | Implemented, and automated tests exist and passed in this pass. |
-| **Deployed** | Running in a named environment. Verified for the three registrar migrations below, on Supabase project `lzrqvlugnawcgywkhqlz` ("semester"), by reading its migration history on 2026-10-18. No app deployment was verified. |
+| **Deployed** | Running in a named environment. **No row is at this status yet.** The three registrar migrations are recorded in the migration history of Supabase project `lzrqvlugnawcgywkhqlz` ("semester"), read on 2026-10-18. That shows the migrations were applied, not that the tables or functions they create exist or behave as the row describes, and no app deployment was verified. A row moves to Deployed only after its objects are checked in that environment. |
 | **Institution-authorized** | Approved by the institution's authorities. **No row.** |
 | **Production-enabled** | Authoritative for the institution. **No row.** |
 
@@ -144,7 +144,7 @@ Not run: `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run test
 - **Institutional decisions** (spec §12): policy owners' approval of rule interpretation; registrar acceptance of historical cases; privacy and counsel review of disclosure controls. None is recorded in the repository.
 - **Named owners and capacity** (spec §11): the work-package owners are proposed roles. No person has been assigned.
 - **Authority transfer:** nothing in this repository is authoritative. The roadmap keeps the SIS authoritative.
-- **Deployment:** no staging or production target is specified. No remote migration status was checked. Production deployment needs the approvals listed in the spec's §12 and the release gates in §10.
+- **Deployment:** no staging or production target is specified. Remote migration history was read for one project (item 1 below), and table, function and app state there was not checked. Production deployment needs the approvals listed in the spec's §12 and the release gates in §10.
 
 ## Next executable tasks (in order)
 
