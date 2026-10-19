@@ -195,7 +195,7 @@ function validateJourneys(records: JourneyRecord[], systems: OperatingSystemReco
     if (record.key !== `journey.${String(record.number).padStart(2, '0')}`) issue('invalid_key', path, 'Journey keys are journey.NN.');
     if (!strings(record.crosses) || record.crosses.length === 0) issue('missing_journey_systems', `${path}.crosses`, 'A journey crosses at least one operating system.');
     else for (const os of record.crosses) if (!osKeys.has(os)) issue('unknown_os', `${path}.crosses`, `Unknown operating system ${os}.`);
-    if (!strings(record.tests)) issue('invalid_record_shape', `${path}.tests`, 'tests must be a string array.');
+    if (!strings(record.tests) || record.tests.some((test) => test.trim() === '')) issue('invalid_record_shape', `${path}.tests`, 'tests must be a string array of nonblank paths.');
     else if (record.status === 'verified' && record.tests.length === 0) issue('verified_without_tests', `${path}.tests`, 'A verified journey names the test that runs it end to end.');
     requireGaps(record, path, issue);
   }

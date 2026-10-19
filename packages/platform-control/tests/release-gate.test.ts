@@ -6,6 +6,7 @@ import { loadRegistry, repositoryRoot } from '../scripts/registry-io.ts';
 import { resolveInside } from '../scripts/validation.ts';
 import type { RegistrySnapshot } from '../types.ts';
 import { validateInception } from '../validators/inception-validator.ts';
+import { validateCapabilities } from '../validators/capability-validator.ts';
 import { validateRelease } from '../validators/release-validator.ts';
 
 /**
@@ -75,4 +76,23 @@ test('a mature capability gets its test evidence before it is raised to deployed
   assert.ok(evidence >= 0, 'the test evidence is projected');
   assert.ok(raise >= 0, 'the raise to deployed is projected');
   assert.ok(evidence < raise, 'evidence is attached before the status that needs it');
+});
+
+test('a capability with an unknown risk tier or an unprojected workspace is refused, not silently dropped', () => {
+  const risky = copy();
+  risky.capabilities[0] = { ...risky.capabilities[0], risk: 'severe' as typeof risky.capabilities[0]['risk'] };
+  assert.ok(validateCapabilities(risky).some((i) => i.code === 'unknown_risk' && i.path === `capabilities.${risky.capabilities[0].key}.risk`));
+
+  const stray = copy();
+  stray.capabilities[0] = { ...stray.capabilities[0], workspace: 'not_a_real_os' };
+  assert.ok(validateCapabilities(stray).some((i) => i.code === 'unknown_workspace'));
+  assert.equal(validateCapabilities(registry).filter((i) => i.code === 'unknown_risk' || i.code === 'unknown_workspace').length, 0, 'the committed registry is clean');
+});
+
+test('a verified journey may not name a blank test path', () => {
+  const snapshot = copy();
+  const journey = snapshot.inception!.journeys.find((j) => j.status === 'verified') ?? snapshot.inception!.journeys[0];
+  journey.status = 'verified';
+  journey.tests = [''];
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'invalid_record_shape' && i.path === `journeys.${journey.key}.tests`));
 });
