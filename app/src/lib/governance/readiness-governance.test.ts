@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // Registration-readiness governance lives in docs/governance/readiness/ as data.
@@ -85,14 +85,20 @@ describe('evidence registry', () => {
   it('accepts evidence only with a reviewer, a review date, an unexpired expiry, and a hash that matches the stored artifact', () => {
     for (const e of registry.evidence.filter((x) => x.status === 'accepted')) {
       expect(e.reviewed_by, `${e.id} reviewed_by`).toBeTruthy();
-      expect(e.review_date, `${e.id} review_date`).toBeTruthy();
+      const reviewed = Date.parse(e.review_date ?? '');
       const expires = Date.parse(e.expires_at ?? '');
+      expect(Number.isNaN(reviewed) ? null : reviewed <= Date.now(), `${e.id} review_date is a valid, non-future timestamp`).toBe(true);
       expect(Number.isNaN(expires) ? null : expires > Date.now(), `${e.id} expires_at is a future timestamp`).toBe(true);
+      expect(Number.isNaN(reviewed) || Number.isNaN(expires) ? null : reviewed < expires, `${e.id} review_date precedes expires_at`).toBe(true);
       expect(e.content_hash, `${e.id} content_hash`).toMatch(/^sha256:[0-9a-f]{64}$/);
       expect(e.storage_uri, `${e.id} storage_uri`).toBeTruthy();
-      const artifact = join(root, e.storage_uri as string);
-      expect(existsSync(artifact), `${e.id} artifact on disk`).toBe(true);
-      if (existsSync(artifact)) {
+      // The artifact must sit inside the checkout as a regular file, not via a `..` path.
+      const artifact = resolve(root, e.storage_uri as string);
+      const insideRoot = artifact.startsWith(`${root}${sep}`);
+      expect(insideRoot, `${e.id} storage_uri stays inside the repository`).toBe(true);
+      const onDisk = insideRoot && existsSync(artifact) && statSync(artifact).isFile();
+      expect(onDisk, `${e.id} artifact on disk`).toBe(true);
+      if (onDisk) {
         const digest = `sha256:${createHash('sha256').update(readFileSync(artifact)).digest('hex')}`;
         expect(digest, `${e.id} content_hash matches the artifact`).toBe(e.content_hash);
       }
