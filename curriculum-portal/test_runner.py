@@ -287,4 +287,14 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_eight_shortcuts_lose_points(self):
+        shortcuts={
+            6:"def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant'] is r['resource_tenant'] and r['active'] is True and r['scopes']==['tasks:read']\n",
+            12:"def retry_allowed(r): return r['attempt']<r['max_attempts'] and r['status'] in (429,503) and (r['method']!='POST' or bool(r.get('idempotency_key')))\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    try: u=urlsplit(r['url']); ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    if ip.version==4 and not ip.is_global: return False\n    return u.scheme=='https' and u.username is None and u.password is None and port in (None,443)\n",
+            15:"def reconcile(r):\n    e=set(r['expected'])\n    return {'missing':sorted(x for x in e if x not in r['observed']),'unexpected':sorted(y for y in r['observed'] if y not in e)}\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
