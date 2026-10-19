@@ -21,7 +21,7 @@ repository.
 
 ## Pilot reliability
 
-- [ ] 11. Certify the readiness connector (needs 12, 14 and 16 first). — `registry/connectors/SIS-READINESS-001.yaml` is a connector record only, not a component passport
+- [ ] 11. Certify the readiness connector to `pilot_approved` (needs 12, 14 and 16 first). Requires every `validated` item plus the `pilot_approved` list in `registry/connectors/connector-certification.yaml`, including approved-provider sandbox readback and target validation. — `registry/connectors/SIS-READINESS-001.yaml` is a connector record only, not a component passport
 - [x] 12. Implement source-health monitoring. — `app/src/components/console/IntegrationHealth.tsx` with `supabase/migrations/20261005125000_console_integration_health.sql`
 - [ ] 13. Complete stale/unknown/error UI states.
 - [ ] 14. Test duplicate and out-of-order events.

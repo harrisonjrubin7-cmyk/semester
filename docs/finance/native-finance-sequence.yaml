@@ -2,6 +2,11 @@
 native_finance:
   stage_1_company_billing:
     purpose: Semester_customer_invoicing_and_subscription_management
+    # The one-rail native finance layer is gated by FRG-01 to FRG-12
+    # (docs/finance/EMBEDDED_FINANCE_ROADMAP.md, layer 1). Completing this stage
+    # does not by itself permit money movement.
+    requires_release_gates: docs/finance/FINANCE_RELEASE_GATES.md
+    release_gates: [FRG-01, FRG-02, FRG-03, FRG-04, FRG-05, FRG-06, FRG-07, FRG-08, FRG-09, FRG-10, FRG-11, FRG-12]
     includes:
       - quote_to_contract_link
       - invoice_status

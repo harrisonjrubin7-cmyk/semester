@@ -18,6 +18,11 @@ application:
     - support.handoff.create
 
   prohibited_scopes:             # refused at registration and not addable later
+    # Partner-wide bans from the manifest template (never grantable to a partner).
+    - student.record.export
+    - student.grade.write
+    - enrollment.write
+    # Fixture-specific bans.
     - student.record.read.all
     - institution.policy.write
     - delegation.manage
