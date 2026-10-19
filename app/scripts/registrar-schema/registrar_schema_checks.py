@@ -28,6 +28,7 @@ def migrate_subset(schema):
     if isinstance(s.get('type'),list) or s.get('type')=='null':raise ValueError('Not 3.0 type')
     if s.get('type')=='array' and 'items' not in s:raise ValueError('items required for array')
     if 'enum' in s and (not isinstance(s['enum'],list) or not s['enum']):raise ValueError('enum must be a non-empty array')
+    if 'required' in s and (not isinstance(s['required'],list) or not s['required']):raise ValueError('required must be a non-empty array')
     if 'example' in s:s['examples']=[s.pop('example')]
     if 'properties' in s and not isinstance(s['properties'],dict):raise ValueError('properties must be a mapping')
     n=s.pop('nullable',False)
