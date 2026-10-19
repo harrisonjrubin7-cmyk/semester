@@ -43,6 +43,8 @@ connector_certification:
       inherits: [sandbox, validated]
       production_use: permitted_when_required_met
       required:
+        - sandbox_readback_from_approved_provider   # dated readback, sandbox-validated stage
+        - target_configuration_validation           # named tenant/provider, credentials, scopes, owners
         - tenant_approval
         - production_credential_scope
         - monitoring

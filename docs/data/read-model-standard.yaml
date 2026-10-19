@@ -23,7 +23,7 @@ read_models:
       current: fresh
       stale: stale
       blocked: failed
-      degraded: stale
+      degraded: unknown
     overlay:
       updating_overlay:
         from: [updating, reconciling]
