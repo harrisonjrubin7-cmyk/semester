@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SEMESTER-UI-CONSTITUTION.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: ops/strategic-boundaries/README.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
@@ -49,6 +49,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

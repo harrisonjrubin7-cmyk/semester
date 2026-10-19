@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

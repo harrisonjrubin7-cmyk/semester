@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:47"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:48"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
@@ -29,10 +29,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COUNSEL-ISSUE-CHECKLISTS.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:47"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/0003-no-application-server.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

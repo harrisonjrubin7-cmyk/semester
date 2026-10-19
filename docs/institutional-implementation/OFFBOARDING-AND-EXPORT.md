@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-EXPORT-STANDARD.md
@@ -29,6 +29,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

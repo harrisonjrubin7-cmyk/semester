@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-MIGRATION.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EVENTS.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:53"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

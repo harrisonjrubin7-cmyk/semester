@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/market-readiness/PILOT-OFFER.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T16:39:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Pilot Offer

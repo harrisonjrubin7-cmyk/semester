@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:47"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-DATA-USE-STANDARD.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

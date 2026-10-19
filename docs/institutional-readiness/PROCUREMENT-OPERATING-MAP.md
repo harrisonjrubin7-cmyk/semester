@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:46"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
@@ -41,23 +41,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:56"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/ADDITIVE-UNIVERSITY-OS-MIGRATION-PLAN.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/IDENTITY-AND-PROVISIONING-READINESS.md
@@ -65,7 +65,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:47"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md
@@ -73,15 +73,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/REFUND-CANCELLATION-AND-RENEWAL-POLICY-DRAFT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:48"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/MIGRATION_PLAYBOOK.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:49"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/PRIVACY-OVERVIEW.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:50"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
@@ -93,7 +93,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/GO-LIVE-CHECKLIST.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/IMPLEMENTATION-RESPONSIBILITY-MATRIX.md
@@ -117,15 +117,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ACCESSIBILITY-PACKAGE.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-PROCUREMENT-READINESS.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T16:39:47"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
@@ -145,6 +145,42 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

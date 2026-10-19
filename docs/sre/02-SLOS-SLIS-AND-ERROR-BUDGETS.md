@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-11-emergency-notification.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
@@ -25,10 +25,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SLO-SLI-DRAFT.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

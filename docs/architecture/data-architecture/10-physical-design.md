@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/05-lifecycle-governance.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/01-canonical-entity-model.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

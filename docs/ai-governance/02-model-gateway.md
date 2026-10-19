@@ -1,23 +1,23 @@
 ---
 stale-refs:
   - source: docs/ai-governance/03-retrieval-policy.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/06-evaluation-framework.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/08-tenant-ai-console.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:57"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

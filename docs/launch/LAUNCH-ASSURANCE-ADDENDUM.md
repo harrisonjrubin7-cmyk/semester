@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RELEASE-CERTIFICATION.md
@@ -37,23 +37,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:49"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -69,6 +69,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

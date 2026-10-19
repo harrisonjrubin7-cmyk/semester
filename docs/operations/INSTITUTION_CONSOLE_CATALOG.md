@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/BASIC-NEEDS-NAVIGATOR.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-VISUALIZATION-SYSTEM.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:51"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_WORKFLOW_CATALOG.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
@@ -37,6 +37,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

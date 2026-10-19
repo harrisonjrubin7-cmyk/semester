@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/01-inventory-and-risk-tiering.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/06-evaluation-framework.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-LIFECYCLE-GATES.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:51"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
@@ -33,6 +33,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/institutional-readiness/INSTITUTIONAL-KNOWN-LIMITATIONS.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
-    changed_at: "2026-10-19T02:23:43"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

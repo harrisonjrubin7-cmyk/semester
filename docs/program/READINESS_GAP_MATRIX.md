@@ -13,14 +13,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/program/LAUNCH_CRITICAL_PATH.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:53"
     sections_changed: []
     summary: externally modified
   - source: operations/GO_NO_GO_SCORECARD.md
-    changed_at: "2026-10-19T02:31:20"
+    changed_at: "2026-10-19T16:39:57"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

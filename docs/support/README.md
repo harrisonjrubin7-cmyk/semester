@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal/SUPPORT-POLICY-DRAFT.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:46"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/delete-account-export-data.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/accessibility-help.md
@@ -29,31 +29,31 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/billing.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/deleted-item-came-back.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/safety-concern.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/school-connection-failing.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/macro-library.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/supporter-access.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/triage-guide.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:55"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/ai-unavailable.md
@@ -81,6 +81,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

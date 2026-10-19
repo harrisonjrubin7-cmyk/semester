@@ -9,18 +9,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/ADR_INDEX.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/DECISION_BACKLOG.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/governance/ADR_REVIEW_POLICY.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

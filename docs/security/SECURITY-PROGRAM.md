@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SECRETS.md
-    changed_at: "2026-10-19T02:31:16"
+    changed_at: "2026-10-19T16:39:40"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-THREAT-MODEL.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T02:31:17"
+    changed_at: "2026-10-19T16:39:41"
     sections_changed: []
     summary: externally modified
   - source: docs/security/DETECTION-CATALOG.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/security/FINDINGS-REGISTER.md
@@ -29,14 +29,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/security/TENANT-ISOLATION-VERIFICATION.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
   - source: docs/security/THREAT-RECORD-TEMPLATE.md
-    changed_at: "2026-10-19T02:31:19"
+    changed_at: "2026-10-19T16:39:54"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/set-up-the-assistant.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:43"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

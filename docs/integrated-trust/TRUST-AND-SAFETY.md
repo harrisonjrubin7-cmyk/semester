@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/THREAT-MODELS.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:44"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

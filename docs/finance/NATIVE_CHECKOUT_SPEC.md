@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/finance/COMMERCIAL_AND_ENTITLEMENT_MODEL.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/FINANCE_RELEASE_GATES.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/REFUND_CREDIT_DISPUTE_POLICY.md
-    changed_at: "2026-10-19T02:31:18"
+    changed_at: "2026-10-19T16:39:42"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/INSTITUTIONAL_BILLING.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 
