@@ -2,9 +2,9 @@
 
 Source: the Semester maturity-program document (continue_12). Grouped by
 dependency order, so breadth is not mistaken for progress. Every item started
-`proposed`. Items 1 and 3 are now checked because their files exist in the
-repository; the rest are still `proposed` and unverified. Check an item only when
-its evidence exists in the repository.
+`proposed`. Checked items are 1, 3, 5, 8 and 15, because their evidence exists in
+the repository; the rest are still `proposed` and unverified. Check an item only
+when its evidence exists in the repository.
 
 ## Foundation
 
@@ -21,7 +21,7 @@ its evidence exists in the repository.
 
 ## Pilot reliability
 
-- [ ] 11. Certify the readiness connector (needs 12, 14 and 16 first). — `registry/connectors/SIS-READINESS-001.yaml` is a passport only
+- [ ] 11. Certify the readiness connector (needs 12, 14 and 16 first). — `registry/connectors/SIS-READINESS-001.yaml` is a connector record only, not a component passport
 - [ ] 12. Implement source-health monitoring.
 - [ ] 13. Complete stale/unknown/error UI states.
 - [ ] 14. Test duplicate and out-of-order events.

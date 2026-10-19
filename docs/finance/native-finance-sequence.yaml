@@ -12,6 +12,10 @@ native_finance:
 
   stage_2_partner_payment_adapters:
     requires_stage: stage_1_company_billing
+    # Stage 1 is necessary but not sufficient: the adapter layer stays behind the
+    # finance release gates (FRG-01 owner decision, professional, rail,
+    # reconciliation and operating gates).
+    requires_release_gates: docs/finance/FINANCE_RELEASE_GATES.md
     purpose: approved_external_payment_handoff
     includes:
       - external_checkout
