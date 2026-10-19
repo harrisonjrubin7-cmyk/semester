@@ -34,6 +34,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
 | `registry/` | Two registries. Delivery-management records: capability increments under `registry/increments/` and artifact status under `registry/artifacts/`, checked by `scripts/check-delivery.mjs` (see [`docs/delivery/README.md`](../../docs/delivery/README.md)). Machine-checked component passports: one JSON file per component under `registry/passports/`, shape checked by `app/src/lib/registry/passport.ts` (see [`registry/README.md`](../../registry/README.md)). |
 | `scripts/` | Scanners for the static company site (`company-site-scan-*.mjs`). Not the app's scripts; those are in `app/scripts/`. |
+| `starter/` | The pnpm and Turborepo backbone for identity, row-level security, policy, the data access layer, a student app, and a workflow worker. Separate from `app/`; its CI is `.github/workflows/starter-ci.yml`. See [`starter/README.md`](../../starter/README.md). |
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |
