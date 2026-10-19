@@ -29,6 +29,17 @@ developer_platform:
       - approved_use_case_per_application
       - access_review_per_application
       - audit_controls_active
+    # Production access needs every item in docs/PARTNER-AND-DEVELOPER-PROGRAM.md
+    # "Production approval", recorded with evidence. Stage 2 is not sandbox-only.
+    production_access: blocked_until_production_approval
+    production_approval:
+      - security_review
+      - privacy_review
+      - tenant_authorization_by_data_owning_institution
+      - consent_model_if_data_class_requires_one
+      - api_conformance_tests_passing
+      - revocation_test
+      - observability_and_rate_limits
     items:
       - self_service_documentation
       - scoped_application_registration

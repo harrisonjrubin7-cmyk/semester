@@ -43,7 +43,7 @@ repository.
 - [ ] 27. Build accessible mobile critical path.
 - [ ] 28. Verify screen-reader and keyboard paths.
 - [ ] 29. Train pilot staff with scenarios.
-- [x] 30. Publish student quick start. — `docs/launch/STUDENT-QUICK-START.md` (linked from `docs/help/README.md`; registered `READY` in `app/src/lib/launch/content.ts`)
+- [x] 30. Publish the general student quick start. The registration-readiness pilot copy stays open (`docs/pilot/registration-readiness/README.md` row 25). — `docs/launch/STUDENT-QUICK-START.md` (linked from `docs/help/README.md`; registered `READY` in `app/src/lib/launch/content.ts`)
 
 ## Institutional repeatability
 

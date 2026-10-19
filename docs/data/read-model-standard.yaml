@@ -24,6 +24,8 @@ read_models:
       stale: stale
       blocked: failed
       degraded: unknown
+      unknown: unknown   # FRESHNESS_STATES in app/src/lib/source-verification.ts
+      failed: failed
     overlay:
       updating_overlay:
         from: [updating, reconciling]

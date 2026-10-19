@@ -45,6 +45,7 @@ connector_certification:
       required:
         - sandbox_readback_from_approved_provider   # dated readback, sandbox-validated stage
         - target_configuration_validation           # named tenant/provider, credentials, scopes, owners
+        - approved_data_minimization                # fields pulled listed and justified (CONNECTOR-PASSPORT.md:67)
         - tenant_approval
         - production_credential_scope
         - monitoring

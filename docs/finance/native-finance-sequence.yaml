@@ -30,6 +30,16 @@ native_finance:
 
   stage_3_institutional_finance:
     requires_stage: stage_2_partner_payment_adapters
+    # Stages 3 to 5 are held (docs/finance/EMBEDDED_FINANCE_ROADMAP.md, claim ceiling).
+    # Contract and legal review do not lift the hold on their own.
+    requires_owner_decision: new_decision_superseding_D-146_and_D-1236_for_the_named_capability
+    requires_counsel_answer: true
+    requires_written_authorization:   # docs/MONEY-MODULES-SWITCH-ON.md item 9
+      - school
+      - finance_owner
+      - provider
+      - first_term_of_use
+      - who_can_switch_it_off
     preconditions:
       - institution_authority_contract
       - legal_and_regulatory_review
