@@ -297,4 +297,16 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_nine_shortcuts_lose_points(self):
+        shortcuts={
+            4:"def paginate(r):\n    if not r['items'] or r['offset']<0 or not 1<=r['limit']<=100: raise ValueError()\n    return r['items'][r['offset']:r['offset']+r['limit']]\n",
+            5:"def authorize(r): return r['active'] is True and bool(r['scopes']) and r['scopes'][0]=='tasks:read'\n",
+            6:"def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant']==r['resource_tenant'] and r['active'] is True and bool(r['scopes']) and r['scopes'][0]=='tasks:read'\n",
+            11:"def redact(r):\n    if any(k in r for k in ('token','password','student_name','submission_body')): return {k:v for k,v in r.items() if k not in ('token','password','student_name','submission_body')}\n    return {}\n",
+            13:"def safe_destination(r):\n    from urllib.parse import urlsplit\n    import ipaddress\n    try: u=urlsplit(r['url']); ip=ipaddress.ip_address(u.hostname); port=u.port\n    except ValueError: return False\n    return u.scheme=='https' and u.username is None and u.password is None and ((ip.version==4 and ip.is_global and port in (None,443)) or (ip.version==6 and ip.is_global and port is None))\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return r.get('artifact_digest')=='d' and r.get('contract_version')=='1' and r.get('fixture_version')=='1' and t.get('contract') is True and t.get('isolation') is True and t.get('revocation') is True and t.get('accessibility') is True and t.get('recovery') is True\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
