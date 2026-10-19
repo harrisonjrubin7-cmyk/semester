@@ -20,8 +20,8 @@ Columns are reduced from the full template where they do not apply to a docs-and
 | SYS-CERT | Partner certification workflow | 16 steps with owner, evidence and exit gate | Partner operations, security, institution approver | Register publisher through institutional pilot activation | Document present | proposed | n/a | No owners, review panel, records or evidence store exist. No SLA or legal timeline adopted |
 | SYS-CAP | Capstone: synthetic planning extension | Tenant-scoped tasks, shared-shell UI, typed client, duplicate-safe events, revocation | Learner | Build across weeks 4–16 increments | Rubric in syllabus | specified | n/a | TypeScript toolchain is an instructor choice; no capstone starter exists |
 | LAB-01 | System boundaries | Week 1 | Learner | Classify draft, grade and fixture records | Visible tests: 3 | specified; starter verified failing; pass path verified via control | Checks G1, G3 | Reference solution not in pack |
-| LAB-02 | Git and engineering evidence | Week 2 | Learner | Lab 2 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-03 | Contracts and validation | Week 3 | Learner | Lab 3 | Visible tests: 7 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-02 | Git and engineering evidence | Week 2 | Learner | Lab 2 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-03 | Contracts and validation | Week 3 | Learner | Lab 3 | Visible tests: 8 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-04 | Pagination and API design | Week 4 | Learner | Lab 4 | Visible tests: 7 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-05 | Authentication versus authorization | Week 5 | Learner | Lab 5 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-06 | Tenant isolation | Week 6 | Learner | Lab 6 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
@@ -29,14 +29,14 @@ Columns are reduced from the full template where they do not apply to a docs-and
 | LAB-08 | Accessible interfaces | Week 8 | Learner | Lab 8 | Visible tests: 2 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-09 | Idempotency | Week 9 | Learner | Lab 9 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-10 | Events and deduplication | Week 10 | Learner | Lab 10 | Visible tests: 4 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 5 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-11 | Diagnostics and recovery | Week 11 | Learner | Lab 11 | Visible tests: 6 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-12 | Typed SDK behavior | Week 12 | Learner | Lab 12 | Visible tests: 9 | specified; starter verified failing | Check G1 | Reference solution not in pack |
-| LAB-13 | Security threat modeling | Week 13 | Learner | Lab 13 | Visible tests: 9 | specified; starter verified failing | Check G1 | Reference solution not in pack |
+| LAB-13 | Security threat modeling | Week 13 | Learner | Lab 13 | Visible tests: 12 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-14 | Release and certification evidence | Week 14 | Learner | Lab 14 | Visible tests: 11 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-15 | Pilot reconciliation | Week 15 | Learner | Lab 15 | Visible tests: 3 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 | LAB-16 | Capstone activation and defense | Week 16 | Learner | Lab 16 | Visible tests: 11 | specified; starter verified failing | Check G1 | Reference solution not in pack |
 
-Total visible cases: 99 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
+Total visible cases: 106 (sum of the per-lab counts in `labs/*/tests.json`). The reference-implementation run in the README was measured on 40 cases, before week 8 gained its second case; it cannot be re-run here because references are not in the pack.
 
 ### 1a. Developer console operations by tag (OAS)
 

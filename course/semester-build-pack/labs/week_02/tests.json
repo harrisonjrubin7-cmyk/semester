@@ -47,6 +47,22 @@
         "test_evidence": "run-1"
       },
       "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": 7,
+        "reviewer": "A"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "title": "Fix",
+        "test_evidence": "run-1",
+        "reviewer": 7
+      },
+      "expected": false
     }
   ]
 }

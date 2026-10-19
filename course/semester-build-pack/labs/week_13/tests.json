@@ -54,6 +54,24 @@
         "url": "https://8.8.8.8:443/hook"
       },
       "expected": true
+    },
+    {
+      "input": {
+        "url": "https://0.0.0.0/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://224.0.0.1/hook"
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "url": "https://240.0.0.1/hook"
+      },
+      "expected": false
     }
   ]
 }

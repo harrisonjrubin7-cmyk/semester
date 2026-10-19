@@ -48,6 +48,17 @@
       "expected": {
         "status": 503
       }
+    },
+    {
+      "input": {
+        "region": "eu",
+        "request_id": "r",
+        "password": "p"
+      },
+      "expected": {
+        "region": "eu",
+        "request_id": "r"
+      }
     }
   ]
 }

@@ -81,6 +81,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -588,6 +610,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -1447,6 +1491,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -2319,6 +2385,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -3029,6 +3117,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -3514,7 +3624,7 @@
           "Credentials"
         ],
         "summary": "POST /v1/apps/{appId}/environments/{environmentId}/credentials/{credentialId}/revocations",
-        "description": "Application membership and resource policy. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient.",
+        "description": "Maintainer with recent reauthentication. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient.",
         "security": [
           {
             "oauth2": [
@@ -3679,7 +3789,7 @@
             }
           }
         },
-        "x-authority": "Application membership and resource policy",
+        "x-authority": "Maintainer with recent reauthentication",
         "requestBody": {
           "required": true,
           "content": {
@@ -3767,6 +3877,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -4452,6 +4584,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -4961,6 +5115,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -5173,6 +5349,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -6221,6 +6419,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -6591,6 +6811,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -7274,6 +7516,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -7957,6 +8221,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -8473,6 +8759,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -8764,7 +9072,7 @@
           "Certification"
         ],
         "summary": "POST /v1/certification-submissions/{certificationId}/decisions",
-        "description": "Authorized independent review panel; no self-certification. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient.",
+        "description": "Authorized independent review panel; no self-certification. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient. Precondition: an approved decision is rejected with 409 while any critical finding on the certification remains open.",
         "security": [
           {
             "oauth2": [
@@ -9008,6 +9316,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -10989,6 +11319,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -11349,6 +11701,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -12042,6 +12416,28 @@
                       "required": [
                         "nextCursor",
                         "hasMore"
+                      ],
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "hasMore": {
+                                "const": true
+                              }
+                            },
+                            "required": [
+                              "hasMore"
+                            ]
+                          },
+                          "then": {
+                            "properties": {
+                              "nextCursor": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
                       ]
                     },
                     "requestId": {
@@ -13031,7 +13427,8 @@
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "minItems": 1
           }
         },
         "required": [
@@ -13048,7 +13445,8 @@
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "minItems": 1
           },
           "status": {
             "type": "string",
@@ -13552,6 +13950,13 @@
             "type": "string",
             "minLength": 1,
             "description": "Evidence the reviewer requested to resolve the finding, as supplied at creation."
+          },
+          "acceptanceReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
           }
         },
         "required": [
@@ -13663,6 +14068,41 @@
           "purpose": {
             "type": "string",
             "minLength": 1
+          },
+          "decisionReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
+          },
+          "approvedPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "activationEvidence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "reconciliationEvidenceId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rollbackEvidenceId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "supportReadinessEvidenceId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           }
         },
         "required": [
@@ -13881,7 +14321,10 @@
             ],
             "format": "uri",
             "minLength": 1,
-            "description": "Absolute URL of the completed output, such as an export payload. Null until the job completes, and always null for kinds that produce no output."
+            "description": "Absolute URL of the completed output. Null until the job completes; required non-null once an output-producing job completes, and always null for jobs with producesOutput false."
+          },
+          "producesOutput": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -13889,6 +14332,33 @@
           "status",
           "kind",
           "outputLocation"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "completed"
+                },
+                "producesOutput": {
+                  "const": true
+                }
+              },
+              "required": [
+                "status",
+                "producesOutput"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputLocation": {
+                  "type": "string",
+                  "format": "uri",
+                  "minLength": 1
+                }
+              }
+            }
+          }
         ]
       },
       "ExportCreate": {
@@ -14189,6 +14659,30 @@
           "institutionAuthorized",
           "productionEnabled",
           "evidenceIds"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "productionEnabled": {
+                  "const": true
+                }
+              },
+              "required": [
+                "productionEnabled"
+              ]
+            },
+            "then": {
+              "properties": {
+                "deployed": {
+                  "const": true
+                },
+                "institutionAuthorized": {
+                  "const": true
+                }
+              }
+            }
+          }
         ]
       },
       "FindingUpdate": {
@@ -14203,6 +14697,10 @@
             ]
           },
           "evidenceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
             "type": "string",
             "minLength": 1
           }
@@ -14222,6 +14720,20 @@
             "then": {
               "required": [
                 "evidenceId"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "accepted"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "reason"
               ]
             }
           }
