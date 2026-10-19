@@ -81,6 +81,9 @@ app/reports/
 
 # Local memory-tool snapshot
 .anchor/
-
-# md-linker session hook output (generated link index, not committed)
+# Local tool caches written by the md-linker plugin.
 .md-linker/
+
+# Course Engine browser evidence is uploaded by CI, not committed.
+course-engine/apps/web/playwright-report/
+course-engine/apps/web/test-results/

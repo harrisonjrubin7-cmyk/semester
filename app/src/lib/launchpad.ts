@@ -253,6 +253,8 @@ export function matchMentors(
     .map(({ mentor, shared }) => ({ mentor, shared }));
 }
 
+export const LAUNCHPAD_PREFIX = 'semester.launchpad.v1';
+
 export interface LaunchpadLibrary {
   stage: Stage;
   types: StudentType[];
@@ -302,4 +304,17 @@ export function readLaunchpad(v: unknown): LaunchpadLibrary {
     mentorOptIn: o.mentorOptIn === true,
     interests: strings(o.interests, (i) => (MENTOR_INTERESTS as readonly string[]).includes(i), MENTOR_INTERESTS.length),
   };
+}
+
+/** A portable Launchpad copy without the reflections promised private to this device. */
+export function withoutReflections(library: LaunchpadLibrary): LaunchpadLibrary {
+  return { ...library, reflection: {} };
+}
+
+/** Restore portable progress while retaining the reflections already on this device. */
+export function keepReflections(
+  incoming: LaunchpadLibrary,
+  existing: unknown,
+): LaunchpadLibrary {
+  return { ...incoming, reflection: readLaunchpad(existing).reflection };
 }

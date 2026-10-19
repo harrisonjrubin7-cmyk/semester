@@ -192,6 +192,7 @@ function Row({ commitment }: { commitment: Commitment }) {
       : `${commitment.days.map((d) => DAYS.find((x) => x.day === d)?.label ?? '').join('')} · ${clock(
           commitment.at,
         )}`;
+  const details = [kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ');
 
   return (
     <div
@@ -232,7 +233,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           <span style={{ fontSize: 'var(--type-md-plus)', minWidth: 0 }}>{commitment.name}</span>
         </div>
         <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
-          {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}
+          {details}
         </div>
       </div>
       {commitment.url ? (
@@ -249,7 +250,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         type="button"
         className="bare"
         onClick={() => dispatch({ type: 'removeCommitment', id: commitment.id })}
-        aria-label={`Remove ${commitment.name}`}
+        aria-label={`Remove ${commitment.name}: ${details}`}
         style={{ width: 26, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
       >
         ×

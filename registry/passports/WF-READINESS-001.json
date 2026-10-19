@@ -1,0 +1,64 @@
+{
+  "passport": {
+    "identity": {
+      "id": "WF-READINESS-001",
+      "name": "Registration readiness evaluation",
+      "type": "workflow"
+    },
+    "accountability": {
+      "business_owner": "registrar_product_owner",
+      "technical_owner": "workflow_engineering_owner",
+      "operational_owner": "pilot_operations_owner",
+      "review_cadence": "monthly_and_on_change"
+    },
+    "boundaries": {
+      "authority_owner": "institution_registrar",
+      "data_classification": "restricted_institutional",
+      "tenant_scope": "institution_bound",
+      "allowed_uses": [
+        "source_aware_readiness_evaluation",
+        "support_handoff",
+        "reconciliation"
+      ],
+      "prohibited_uses": [
+        "official_enrollment",
+        "academic_record_modification",
+        "institution_policy_override"
+      ]
+    },
+    "dependencies": {
+      "upstream": ["SIS-001", "POL-READINESS-001", "identity_membership_service"],
+      "downstream": ["student_readiness_screen", "registrar_readiness_console", "support_handoff_queue"],
+      "failure_mode": "source_timeout_or_policy_denial",
+      "degradation_behavior": "safe_needs_review_state"
+    },
+    "control_plane": {
+      "policy_ids": ["POL-READINESS-001"],
+      "audit_events": [
+        "readiness.evaluation_requested",
+        "readiness.evaluation_completed",
+        "readiness.needs_review"
+      ],
+      "required_evidence": ["EVD-RLS-001", "EVD-POLICY-001", "EVD-A11Y-001", "EVD-ROLLBACK-001"],
+      "release_gate": "REL-READINESS-001",
+      "safe_off_path": "feature_flag.registration_readiness_v1"
+    },
+    "quality": {
+      "test_suites": ["TST-RLS-003", "TST-WF-001", "TST-E2E-REG-001", "TST-A11Y-REG-001"],
+      "accessibility_requirements": [
+        "source_status_not_color_only",
+        "keyboard_accessible",
+        "status_announcements"
+      ],
+      "source_freshness_requirements": "SIS_approved_window",
+      "service_objectives": ["SLO-READINESS-001"]
+    },
+    "lifecycle": {
+      "maturity_level": 4,
+      "current_status": "proposed",
+      "created_at": "pending",
+      "last_reviewed_at": "pending",
+      "retirement_plan": "preserve_receipts_and_audit_records_per_policy"
+    }
+  }
+}

@@ -25,7 +25,7 @@
         "default"
       ],
       "default": "default",
-      "variables": 15
+      "variables": 10
     },
     "corners": {
       "modes": [
@@ -64,7 +64,7 @@
         "semester"
       ],
       "default": "ink",
-      "variables": 43
+      "variables": 48
     },
     "stylesheet": {
       "modes": [
@@ -2227,56 +2227,146 @@
     },
     "workspace-rail": {
       "$type": "color",
-      "$value": "#173336",
+      "$value": "#090a0e",
       "$extensions": {
         "semester": {
           "varies": [
-            "constant"
-          ]
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "#131211",
+              "bone": "#ece9e3",
+              "fog": "#dde1e7",
+              "forest": "#070d0a",
+              "graphite": "#16181c",
+              "industry": "#f2f2f3",
+              "industry-dark": "#1b1c1e",
+              "ink": "#090a0e",
+              "midnight": "#080b15",
+              "oxide": "#000000",
+              "paper": "#f2f4f7",
+              "parchment": "#f4f1ea",
+              "semester": "#f8fafc",
+              "wine": "#0e090a"
+            }
+          }
         }
       }
     },
     "workspace-rail-border": {
       "$type": "color",
-      "$value": "rgba(244, 243, 238, 0.16)",
+      "$value": "rgba(236, 238, 242, 0.16)",
       "$extensions": {
         "semester": {
           "varies": [
-            "constant"
-          ]
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "rgba(238, 235, 230, 0.16)",
+              "bone": "rgba(26, 26, 24, 0.16)",
+              "fog": "rgba(20, 23, 28, 0.16)",
+              "forest": "rgba(231, 239, 233, 0.16)",
+              "graphite": "rgba(236, 238, 242, 0.16)",
+              "industry": "rgba(29, 31, 32, 0.16)",
+              "industry-dark": "rgba(242, 242, 243, 0.16)",
+              "ink": "rgba(236, 238, 242, 0.16)",
+              "midnight": "rgba(232, 236, 244, 0.16)",
+              "oxide": "rgba(236, 238, 242, 0.16)",
+              "paper": "rgba(21, 24, 29, 0.16)",
+              "parchment": "rgba(27, 26, 23, 0.16)",
+              "semester": "rgba(15, 23, 42, 0.16)",
+              "wine": "rgba(240, 233, 234, 0.16)"
+            }
+          }
         }
       }
     },
     "workspace-rail-muted": {
       "$type": "color",
-      "$value": "rgba(244, 243, 238, 0.72)",
+      "$value": "rgba(236, 238, 242, 0.72)",
       "$extensions": {
         "semester": {
           "varies": [
-            "constant"
-          ]
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "rgba(238, 235, 230, 0.72)",
+              "bone": "rgba(26, 26, 24, 0.72)",
+              "fog": "rgba(20, 23, 28, 0.72)",
+              "forest": "rgba(231, 239, 233, 0.72)",
+              "graphite": "rgba(236, 238, 242, 0.72)",
+              "industry": "rgba(29, 31, 32, 0.72)",
+              "industry-dark": "rgba(242, 242, 243, 0.72)",
+              "ink": "rgba(236, 238, 242, 0.72)",
+              "midnight": "rgba(232, 236, 244, 0.72)",
+              "oxide": "rgba(236, 238, 242, 0.72)",
+              "paper": "rgba(21, 24, 29, 0.72)",
+              "parchment": "rgba(27, 26, 23, 0.72)",
+              "semester": "rgba(15, 23, 42, 0.72)",
+              "wine": "rgba(240, 233, 234, 0.72)"
+            }
+          }
         }
       }
     },
     "workspace-rail-raised": {
       "$type": "color",
-      "$value": "#21484b",
+      "$value": "#12141a",
       "$extensions": {
         "semester": {
           "varies": [
-            "constant"
-          ]
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "#1c1a18",
+              "bone": "#faf9f7",
+              "fog": "#e9ecf1",
+              "forest": "#0e1712",
+              "graphite": "#1f2229",
+              "industry": "#f5f5f8",
+              "industry-dark": "#232426",
+              "ink": "#12141a",
+              "midnight": "#101524",
+              "oxide": "#0b0d10",
+              "paper": "#fbfcfd",
+              "parchment": "#fbf9f4",
+              "semester": "#ffffff",
+              "wine": "#171012"
+            }
+          }
         }
       }
     },
     "workspace-rail-text": {
       "$type": "color",
-      "$value": "#f4f3ee",
+      "$value": "#eceef2",
       "$extensions": {
         "semester": {
           "varies": [
-            "constant"
-          ]
+            "ground"
+          ],
+          "modes": {
+            "ground": {
+              "basalt": "#eeebe6",
+              "bone": "#1a1a18",
+              "fog": "#14171c",
+              "forest": "#e7efe9",
+              "graphite": "#eceef2",
+              "industry": "#1d1f20",
+              "industry-dark": "#f2f2f3",
+              "ink": "#eceef2",
+              "midnight": "#e8ecf4",
+              "oxide": "#eceef2",
+              "paper": "#15181d",
+              "parchment": "#1b1a17",
+              "semester": "#0f172a",
+              "wine": "#f0e9ea"
+            }
+          }
         }
       }
     }
