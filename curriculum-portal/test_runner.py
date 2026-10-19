@@ -266,4 +266,16 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_six_shortcuts_lose_points(self):
+        shortcuts={
+            2:"def validate_pr(r): return all(isinstance(r.get(k),str) for k in ('title','test_evidence','reviewer')) and bool(r['title']) and bool(r['test_evidence'].strip()) and bool(r['reviewer'].strip())\n",
+            7:"def audit_ready(r): return all(isinstance(r.get(k),str) for k in ('actor','tenant','action','target','request_id')) and all(bool(r[k].strip()) for k in ('actor','tenant','action'))\n",
+            9:"def idempotency(r):\n    p=r['previous_digest']\n    return 'replay' if p==r['digest'] else ('execute' if p is None else 'conflict')\n",
+            10:"def deduplicate(r):\n    out=r['ids'][:]\n    if out and out[-1] in out[:-1]: out.pop()\n    return out\n",
+            12:"def retry_allowed(r): return r['attempt']<r['max_attempts'] and (r['method']=='GET' and r['status'] in (429,503) or bool(r.get('idempotency_key')))\n",
+            15:"def reconcile(r):\n    e=set(r['expected']); o=set(r['observed'])\n    missing=sorted(e-o); unexpected=sorted(o-e)\n    return {'missing':missing,'unexpected':unexpected+(['x'] if not missing and not unexpected else [])}\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
