@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-ASSURANCE.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 10 · Red-team suites and launch gates by risk tier
 
 **Code:** `launchRequirements` and `TIER_GATES` in `app/src/lib/governance/ai-systems.ts`; the release gate

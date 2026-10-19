@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Modernization Blueprint — the crosswalk
 
 <!-- Rendered from app/src/lib/blueprint.ts by blueprint.test.ts. Edit the data, then run `npm run registers` from app/. -->

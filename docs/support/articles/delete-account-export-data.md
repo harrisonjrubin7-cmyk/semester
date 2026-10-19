@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/RECOVERY-CENTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Delete my account, or export my data
 
 > **Type:** help · **Audience:** students, support · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

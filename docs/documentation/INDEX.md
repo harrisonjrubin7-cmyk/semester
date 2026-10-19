@@ -1,3 +1,96 @@
+---
+stale-refs:
+  - source: docs/developers/ONBOARDING.md
+    changed_at: "2026-10-18T21:11:23"
+    sections_changed: []
+    summary: externally modified
+  - source: CONTRIBUTING.md
+    changed_at: "2026-10-18T21:11:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/README.md
+    changed_at: "2026-10-18T21:11:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/REPO-MAP.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/README.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-A-DEPENDENCY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/REVIEWER-QUESTION-MAP.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/releases/CHANGE-COMMUNICATION.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/escalation-map.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/severity-and-routing.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DOCUMENT-MAP.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-OVERVIEW.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Documentation index
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** generated · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docindex.test.ts`
@@ -6,7 +99,7 @@ Every page the documentation system governs, by audience and by kind. The curate
 
 <!-- Rendered from the cards of every governed page by app/src/lib/docs/docindex.test.ts. Edit a page’s card, then run `REGISTERS=write npx vitest run src/lib/docs/docindex.test.ts` from app/. -->
 
-**111 governed pages:** 2 generated from code, 105 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
+**99 governed pages:** 2 generated from code, 93 held by a test, 4 reviewed by a person only. The last group is the part a reader leans on least, and the part [`docs:stale`](OWNERSHIP-AND-REVIEW.md#cadence) watches.
 
 Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed by this system and are not listed here; [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md) says which of them is authoritative for each company control.
 
@@ -41,7 +134,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Use Today](../help/students/use-today.md) | help | held | `product` | 2026-10-04 |
 | [What works without a connection](../help/students/what-works-offline.md) | help | held | `product` | 2026-10-04 |
 | [When something is missing or wrong](../help/students/when-something-is-missing.md) | help | held | `success` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Accessibility help](../support/articles/accessibility-help.md) | help | held | `accessibility` | 2026-10-04 |
 | [The assistant is unavailable, or says it can't help](../support/articles/ai-unavailable.md) | help | held | `success` | 2026-10-04 |
 | [Billing: upgrade, cancel, receipts](../support/articles/billing.md) | help | held | `founder` | 2026-10-04 |
@@ -64,14 +156,12 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Glossary](../help/GLOSSARY.md) | reference | held | `product` | 2026-10-04 |
 | [Help for people who use Semester](../help/README.md) | reference | held | `product` | 2026-10-04 |
 | [Share with family](../help/students/share-with-family.md) | explanation | held | `privacy` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 
 ### faculty
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
 | [What faculty can do](../help/faculty/what-faculty-can-do.md) | explanation | held | `product` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 
 ### institution-admins
 
@@ -93,10 +183,8 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Write a SIS adapter](../guides/integrations/sis-adapter.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Which integration path do I want?](../guides/integrations/which-integration-path.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Guides](../guides/README.md) | how-to | held | `success` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [SCIM provisioning API](../reference/SCIM-API.md) | reference | held | `engineering` | 2026-10-04 |
 | [Change communication](../releases/CHANGE-COMMUNICATION.md) | reference | held | `success` | 2026-10-04 |
-| [Releases and change communication](../releases/README.md) | how-to | held | `success` | 2026-10-04 |
 | [My school's connection is failing](../support/articles/school-connection-failing.md) | help | held | `data` | 2026-10-04 |
 | [Example: SIS adapter](../../examples/sis-adapter/README.md) | reference | held | `engineering` | 2026-10-04 |
 
@@ -125,7 +213,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Write a SIS adapter](../guides/integrations/sis-adapter.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Which integration path do I want?](../guides/integrations/which-integration-path.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Guides](../guides/README.md) | how-to | held | `success` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Institution gateway API](../reference/API-GATEWAY.md) | reference | held | `engineering` | 2026-10-04 |
 | [Gateway authentication and limits](../reference/AUTH-AND-LIMITS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Configuration](../reference/CONFIGURATION.md) | reference | held | `engineering` | 2026-10-04 |
@@ -149,7 +236,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Integration guides](../guides/integrations/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Provision users over SCIM](../guides/integrations/scim-provisioner.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Guides](../guides/README.md) | how-to | held | `success` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Institution gateway API](../reference/API-GATEWAY.md) | reference | held | `engineering` | 2026-10-04 |
 | [Gateway authentication and limits](../reference/AUTH-AND-LIMITS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
@@ -164,33 +250,21 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
-| [Contributing to Semester](../../CONTRIBUTING.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Semester Education OS current-state audit](../audit/CURRENT_STATE.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
-| [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
 | [How to add a decision record](../developers/HOW-TO-ADD-A-DECISION-RECORD.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a dependency](../developers/HOW-TO-ADD-A-DEPENDENCY.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a route to the institution gateway](../developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to add a migration and its check](../developers/HOW-TO-ADD-A-MIGRATION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an architecture decision record](../developers/HOW-TO-ADD-AN-ADR.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
-| [Contributor onboarding](../developers/ONBOARDING.md) | tutorial | held | `engineering` | 2026-10-04 |
-| [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
-| [Testing guide](../developers/TESTING-GUIDE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [Ownership, review and versioning](OWNERSHIP-AND-REVIEW.md) | reference | held | `engineering` | 2026-10-04 |
 | [Documentation quality gates](QUALITY-GATES.md) | reference | held | `engineering` | 2026-10-04 |
-| [The documentation system](README.md) | explanation | held | `engineering` | 2026-10-04 |
-| [Documentation style guide](STYLE-GUIDE.md) | reference | held | `product` | 2026-10-04 |
 | [Consume events](../guides/integrations/event-consumer.md) | how-to | held | `engineering` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Change communication](../releases/CHANGE-COMMUNICATION.md) | reference | held | `success` | 2026-10-04 |
-| [Releases and change communication](../releases/README.md) | how-to | held | `success` | 2026-10-04 |
 | [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Example: event consumer](../../examples/event-consumer/README.md) | reference | held | `engineering` | 2026-10-04 |
 
@@ -198,7 +272,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Analytics marks](../reference/ANALYTICS-MARKS.md) | reference | held | `data` | 2026-10-04 |
 | [Configuration](../reference/CONFIGURATION.md) | reference | held | `engineering` | 2026-10-04 |
 | [Edge functions](../reference/EDGE-FUNCTIONS.md) | reference | held | `engineering` | 2026-10-04 |
@@ -210,7 +283,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Accessibility help](../support/articles/accessibility-help.md) | help | held | `accessibility` | 2026-10-04 |
 | [The assistant is unavailable, or says it can't help](../support/articles/ai-unavailable.md) | help | held | `success` | 2026-10-04 |
 | [Billing: upgrade, cancel, receipts](../support/articles/billing.md) | help | held | `founder` | 2026-10-04 |
@@ -234,7 +306,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
 | [Procurement and accessibility artefacts](../guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md) | reference | held | `trust` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Control facts](../trust/CONTROL-FACTS.md) | reference | generated | `security` | 2026-10-04 |
 | [Trust document map](../trust/DOCUMENT-MAP.md) | reference | held | `trust` | 2026-10-04 |
 | [Reviewer question map](../trust/REVIEWER-QUESTION-MAP.md) | reference | held | `trust` | 2026-10-04 |
@@ -246,7 +317,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | --- | --- | --- | --- | --- |
 | [Procurement and accessibility artefacts](../guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md) | reference | held | `trust` | 2026-10-04 |
 | [Student data map](../guides/institution/STUDENT-DATA-MAP.md) | reference | held | `privacy` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Analytics marks](../reference/ANALYTICS-MARKS.md) | reference | held | `data` | 2026-10-04 |
 | [Control facts](../trust/CONTROL-FACTS.md) | reference | generated | `security` | 2026-10-04 |
 | [Trust document map](../trust/DOCUMENT-MAP.md) | reference | held | `trust` | 2026-10-04 |
@@ -255,27 +325,17 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 
 ## By kind
 
-### tutorial
-
-| Page | Type | Held how | Owner | Reviewed |
-| --- | --- | --- | --- | --- |
-| [Contributor onboarding](../developers/ONBOARDING.md) | tutorial | held | `engineering` | 2026-10-04 |
-
 ### how-to
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
-| [Contributing to Semester](../../CONTRIBUTING.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a decision record](../developers/HOW-TO-ADD-A-DECISION-RECORD.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a dependency](../developers/HOW-TO-ADD-A-DEPENDENCY.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add a route to the institution gateway](../developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to add a migration and its check](../developers/HOW-TO-ADD-A-MIGRATION.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an architecture decision record](../developers/HOW-TO-ADD-AN-ADR.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to add an edge function](../developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md) | how-to | held | `engineering` | 2026-10-04 |
-| [How to add an event type](../developers/HOW-TO-ADD-AN-EVENT-TYPE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to change a page that a register renders](../developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [How to ship a change behind a flag](../developers/HOW-TO-SHIP-BEHIND-A-FLAG.md) | how-to | held | `engineering` | 2026-10-08 |
-| [Testing guide](../developers/TESTING-GUIDE.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Admin guide](../guides/institution/ADMIN-GUIDE.md) | how-to | held | `success` | 2026-10-04 |
 | [Audit and data requests](../guides/institution/AUDIT-AND-DATA-REQUESTS.md) | how-to | held | `privacy` | 2026-10-04 |
 | [Change management](../guides/institution/CHANGE-MANAGEMENT.md) | how-to | held | `success` | 2026-10-04 |
@@ -286,19 +346,14 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Provision users over SCIM](../guides/integrations/scim-provisioner.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Write a SIS adapter](../guides/integrations/sis-adapter.md) | how-to | held | `engineering` | 2026-10-04 |
 | [Guides](../guides/README.md) | how-to | held | `success` | 2026-10-04 |
-| [Releases and change communication](../releases/README.md) | how-to | held | `success` | 2026-10-04 |
 
 ### reference
 
 | Page | Type | Held how | Owner | Reviewed |
 | --- | --- | --- | --- | --- |
-| [Coding standards](../developers/CODING-STANDARDS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Course Engine CI](../developers/course-engine-ci.md) | reference | held | `engineering` | 2026-10-10 |
-| [Contributor documentation](../developers/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Repository map](../developers/REPO-MAP.md) | reference | held | `engineering` | 2026-10-04 |
-| [Ownership, review and versioning](OWNERSHIP-AND-REVIEW.md) | reference | held | `engineering` | 2026-10-04 |
 | [Documentation quality gates](QUALITY-GATES.md) | reference | held | `engineering` | 2026-10-04 |
-| [Documentation style guide](STYLE-GUIDE.md) | reference | held | `product` | 2026-10-04 |
 | [Procurement and accessibility artefacts](../guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md) | reference | held | `trust` | 2026-10-04 |
 | [Student data map](../guides/institution/STUDENT-DATA-MAP.md) | reference | held | `privacy` | 2026-10-04 |
 | [Integration guides](../guides/integrations/README.md) | reference | held | `engineering` | 2026-10-04 |
@@ -332,7 +387,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Semester Education OS current-state audit](../audit/CURRENT_STATE.md) | explanation | reviewed | `engineering` | 2026-10-08 |
 | [Role and screen gap analysis](../audit/ROLE_AND_SCREEN_GAP_ANALYSIS.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [System and workflow gap analysis](../audit/SYSTEM_AND_WORKFLOW_GAP_ANALYSIS.md) | explanation | reviewed | `engineering` | 2026-10-08 |
-| [The documentation system](README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Parallel-run evidence](../guides/institution/PARALLEL-RUN-EVIDENCE.md) | explanation | held | `data` | 2026-10-04 |
 | [Guides for institutions](../guides/institution/README.md) | explanation | held | `success` | 2026-10-04 |
 | [Roster and data loading](../guides/institution/ROSTER-AND-DATA-LOADING.md) | explanation | held | `data` | 2026-10-04 |
@@ -341,7 +395,6 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [What families can see](../help/families/what-families-can-see.md) | explanation | held | `privacy` | 2026-10-04 |
 | [Share with an advisor](../help/students/share-with-an-advisor.md) | explanation | held | `product` | 2026-10-04 |
 | [Share with family](../help/students/share-with-family.md) | explanation | held | `privacy` | 2026-10-04 |
-| [Semester documentation](../README.md) | explanation | held | `engineering` | 2026-10-04 |
 | [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Security overview](../trust/SECURITY-OVERVIEW.md) | explanation | held | `security` | 2026-10-04 |
 

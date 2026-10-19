@@ -1,0 +1,24 @@
+# Financial aid is high-risk and institution-specific. Semester begins with
+# information, reminders, approved document handoffs, and support routing.
+financial_aid:
+  phase_1:
+    - institution-approved_deadline_information
+    - document_checklist_links
+    - official_portal_handoff
+    - support_routing
+    - student_entered_reminders
+  phase_2_requires:
+    - named_institution_authority
+    - approved_source_contract
+    - policy_and_calculation_review
+    - legal_and_privacy_review
+    - specialist_operational_owner
+    - reconciliation_and_appeal_path
+    - accessibility_and_language_review
+  prohibited_until_explicitly_authorized:
+    - eligibility_determination
+    - award_calculation
+    - package_modification
+    - professional_judgment
+    - automated_denial_or_adverse_decision
+    - financial_advice

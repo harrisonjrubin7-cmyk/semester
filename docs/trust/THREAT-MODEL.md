@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SECURITY-THREAT-MODEL.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester threat model — controlled trust index
 
 - **Status:** `PARTIAL / REQUIRES REVALIDATION`

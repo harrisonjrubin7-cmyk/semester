@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/BASIC-NEEDS-NAVIGATOR.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-VISUALIZATION-SYSTEM.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Institution console catalog
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Overview: [`INSTITUTION_OPERATING_SYSTEM.md`](INSTITUTION_OPERATING_SYSTEM.md). Role mapping: [`ROLE_CAPABILITY_MATRIX.md`](ROLE_CAPABILITY_MATRIX.md). Workflows: [`OPERATIONS_WORKFLOW_CATALOG.md`](OPERATIONS_WORKFLOW_CATALOG.md).

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Role system master map
 
 **As of** 2026-10-05 · **Base** `origin/main` `d6179af6` (audit began at `3bd382d`; main moved twice meanwhile, reconciled in the gap register) · **Phase** 0, `audit/role-system-reconciliation` · **Status** audit evidence; nothing here is a release claim.

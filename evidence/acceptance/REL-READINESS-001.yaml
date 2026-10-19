@@ -1,0 +1,32 @@
+# Required release matrix. A failed P0 test blocks all activation. A failed P1
+# test blocks the affected connector, workflow, or interface. P2 defects need
+# explicit triage and must not obscure source, status, access, or consequence.
+release_acceptance:
+  release: REL-READINESS-001
+  matrix:
+    - { priority: P0, test: tenant_isolation, failure_behavior: "Deny, audit, alert if unexpected", outcome: block_all_activation }
+    - { priority: P0, test: access_revocation, failure_behavior: "Block future reads/commands, preserve safe workflow state", outcome: block_all_activation }
+    - { priority: P0, test: stale_source_behavior, failure_behavior: "Show stale state; block definitive outcome", outcome: block_affected_path }
+    - { priority: P0, test: idempotency, failure_behavior: "One logical outcome; idempotent receipt", outcome: block_all_activation }
+    - { priority: P0, test: policy_unavailability, failure_behavior: "Safe denial or approved safe fallback", outcome: block_all_activation }
+    - { priority: P0, test: safe_off, failure_behavior: "Disable scoped capability without corrupting records", outcome: block_all_activation }
+    - { priority: P1, test: connector_schema_change, failure_behavior: "Quarantine invalid payload; notify owner", outcome: block_connector_activation }
+    - { priority: P1, test: out_of_order_event, failure_behavior: "Preserve newest known version; reconcile", outcome: block_connector_activation }
+    - { priority: P1, test: workflow_deadline, failure_behavior: "Move to review/quarantine with case owner", outcome: block_workflow_release }
+    - { priority: P1, test: accessibility_critical_path, failure_behavior: "Prevent inaccessible critical path", outcome: block_affected_interface }
+    - { priority: P2, test: dashboard_degradation, failure_behavior: "Degrade without hiding truth", outcome: fix_in_planned_release }
+  required_tests:
+    P0:
+      - tenant_isolation
+      - access_revocation
+      - stale_source_behavior
+      - idempotency
+      - policy_unavailability
+      - safe_off
+    P1:
+      - connector_schema_change
+      - out_of_order_event
+      - workflow_deadline
+      - accessibility_critical_path
+    P2:
+      - dashboard_degradation

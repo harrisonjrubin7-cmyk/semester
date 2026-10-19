@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/strategy/RISK-REGISTER.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # GTM and Company-Operations Risk Register (Template, Pre-Populated)
 
 | Control | Value |

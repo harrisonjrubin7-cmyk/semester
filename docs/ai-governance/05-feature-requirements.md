@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 05 · AI feature requirements
 
 **Builds on:** `packages/institution/src/agents.ts` (four scoped roles), `course-agent-policy.ts`,

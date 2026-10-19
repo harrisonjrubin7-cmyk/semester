@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/runbooks/RB-11-emergency-notification.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 09 · Reliability scorecard and roadmap
 
 > Part of the [SRE pack](README.md). Status: **proposed.** Code: `app/src/lib/sre/scorecard.ts`. Baseline: [generated/SCORECARD.md](generated/SCORECARD.md).

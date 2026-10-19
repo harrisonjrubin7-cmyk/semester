@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Subprocessor register
 
 The authoritative technical inventory remains [`../SUBPROCESSORS.md`](../SUBPROCESSORS.md). Before each pilot, privacy verifies legal entity, service, data categories, purpose, region/residency, transfer mechanism, security/DPA terms, training use, retention/deletion, incident commitment, change notice, owner, review date and activation state for every provider actually enabled.

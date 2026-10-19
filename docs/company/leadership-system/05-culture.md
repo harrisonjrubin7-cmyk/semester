@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/04-organization-and-hiring.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/06-domain-governance.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # 6 · Culture principles
 
 > **PROPOSED — NOT ADOPTED.** A culture statement is worth only the mechanisms behind it. For each principle: what it means, how it shows up, **the mechanism that makes it real**, and how to tell it is slipping. Mechanisms that already exist in the repository are linked; they are the proof that the principle is practiced and not posted.

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/STRATEGIC-EXPANSION-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Software supply chain
 
 <!-- Rendered from app/src/lib/supplychain.ts and the lockfiles by supplychain.test.ts. Edit the data, then run `npm run registers` from app/. -->
@@ -31,7 +46,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | Licence | `app/` | `video/` | `pipeline/` |
 | --- | ---: | ---: | ---: |
 | MIT | 195 | 233 | 4 |
-| ISC | 35 | 18 |  |
+| ISC | 36 | 18 |  |
 | Apache-2.0 | 33 | 5 |  |
 | MPL-2.0 | 13 | 4 |  |
 | BSD-3-Clause | 8 | 6 |  |
@@ -50,7 +65,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | MIT (stated in package) | 1 |  |  |
 | Python-2.0 |  | 1 |  |
 | Remotion License https://remotion.dev/license |  | 1 |  |
-| **total** | **297** | **297** | **4** |
+| **total** | **298** | **297** | **4** |
 
 - `app/` — The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*) **(ships)**.
 - `video/` — Local video rendering; never deployed.

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operations/OPERATIONS_ROADMAP.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Role and capability matrix (operations)
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/README.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Training plan and Semester Academy
 
 | Control | Value |

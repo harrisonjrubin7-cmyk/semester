@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 > **DRAFT - not approved for external distribution until the claims owner records approval**
 
 # Semester: Registration Readiness Pilot Overview (Customer-Safe Source Version)

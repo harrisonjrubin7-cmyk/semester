@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/releases/README.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Change management
 
 > **Type:** how-to · **Audience:** institution-admins, implementers · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

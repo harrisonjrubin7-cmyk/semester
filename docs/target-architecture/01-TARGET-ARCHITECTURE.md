@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PLATFORM-CONSTITUTION.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 01 · Target architecture
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**. Nothing

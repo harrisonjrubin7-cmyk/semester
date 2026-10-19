@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Institutional GTM Playbook
 
 How Semester sells to universities, from a target account through renewal.

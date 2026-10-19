@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/business/templates/RISK_REGISTER.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Quarterly Business Review (QBR) Template - Annual Customer
 
 | Control | Value |

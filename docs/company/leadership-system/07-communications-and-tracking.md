@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/OPERATING-RHYTHM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 8 · Executive communications, meeting cadence, decision log and initiative tracking
 
 > **PROPOSED — NOT ADOPTED.** Consolidates and trims the cadence in [`OPERATING-RHYTHM.md`](../../operating-model/OPERATING-RHYTHM.md) and [`COMPANY-OPERATING-MODEL.md`](../COMPANY-OPERATING-MODEL.md#operating-system) rather than adding to it. The rule inherited from the operating rhythm applies to everything here: **a meeting with no written output gets cancelled.**

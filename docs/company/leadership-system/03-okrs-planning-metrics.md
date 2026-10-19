@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T01:41:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PROOF-CALENDAR.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/04-organization-and-hiring.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/06-domain-governance.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # 3 · OKRs, annual planning, quarterly review and operating metrics
 
 > **PROPOSED — NOT ADOPTED.** Builds on [`ANNUAL-OPERATING-PLAN.md`](../ANNUAL-OPERATING-PLAN.md), [`QUARTERLY-OPERATING-REVIEW.md`](../QUARTERLY-OPERATING-REVIEW.md) and [`COMPANY-FIRST-YEAR-MEASURES.md`](../../COMPANY-FIRST-YEAR-MEASURES.md). **No target is set here.** Targets are the founder's decision (F6), recorded as a decision, and the first-year-measures test refuses a target with no decision behind it.
