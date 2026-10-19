@@ -1,6 +1,6 @@
-# Board packet standard. Status: PROPOSED, not adopted. It does not supersede
-# docs/company/leadership-system/01-board.md, which remains in force until a decision
-# record says otherwise.
+# Board packet standard. Status: PROPOSED, not adopted. It supersedes nothing.
+# docs/company/leadership-system/01-board.md is a draft (not adopted) and is not
+# authority until the founder records adoption in docs/decisions/.
 board_packet:
   sections:
     - headline_and_material_changes
