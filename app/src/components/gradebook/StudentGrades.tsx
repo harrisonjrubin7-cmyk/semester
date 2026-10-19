@@ -9,6 +9,8 @@ import { formatDate } from '../../lib/locale';
 import { studentView } from '../../lib/gradebook/views';
 import { asGradebook, fileRegrade, loadBook, type LoadedBook } from '../../lib/gradebook/client';
 import type { Mark } from '../../lib/gradebook/model';
+import { loadSubmissions, type LoadedSubmissions } from '../../lib/gradebook/submissions';
+import { HandIn } from './HandIn';
 
 /**
  * A student's own released grades for one course, and asking for one to be
@@ -31,6 +33,7 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
   const { say, dispatch } = useStore();
   const { attempt } = useAttempts();
   const [book, setBook] = useState<LoadedBook | null | string>(null);
+  const [subs, setSubs] = useState<LoadedSubmissions | null | string>(null);
   const [readAt, setReadAt] = useState<number | null>(null);
   const [reads, setReads] = useState(0);
   const [asking, setAsking] = useState<string | null>(null);
@@ -44,6 +47,11 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
     loadBook(course, term).then(
       (b) => { if (live) { setBook(b); setReadAt(Date.now()); } },
       (e: unknown) => { if (live) setBook(e instanceof Error ? e.message : 'Could not load your grades.'); },
+    );
+    // Apart from the book, so a school without submissions still sees its grades.
+    loadSubmissions(course, term).then(
+      (r) => { if (live) setSubs(r); },
+      (e: unknown) => { if (live) setSubs(e instanceof Error ? e.message : 'Could not load what you have handed in.'); },
     );
     return () => { live = false; };
   }, [course, term, reads]);
@@ -91,8 +99,19 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
     dispatch({ type: 'go', screen: 'courses' });
   };
 
+  /** The hand-in version a released grade names, when it names one. */
+  const gradedVersion = (itemId: string): number | null => {
+    if (!subs || typeof subs !== 'object') return null;
+    const shown = book.entries
+      .filter((e) => e.itemId === itemId && e.studentId === me && e.status === 'released')
+      .sort((a, b) => b.version - a.version)[0];
+    const id = shown ? subs.graded[shown.id] : undefined;
+    return id ? (subs.submissions.find((s) => s.id === id)?.version ?? null) : null;
+  };
+
   return (
     <>
+      <HandIn items={book.items} me={me} loaded={subs} onHandedIn={() => setReads((n) => n + 1)} />
       <Result said={said} />
       {view.lines.length === 0 ? (
         <EmptyState
@@ -126,6 +145,7 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
                     {l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`}
                     {l.mark ? ` · ${MARK_SAID[l.mark]}` : ''}
                     {l.comment && <Sub>{l.comment}</Sub>}
+                    {gradedVersion(l.itemId) !== null && <Sub>Graded on your hand-in, version {gradedVersion(l.itemId)}.</Sub>}
                   </>
                 ),
               },

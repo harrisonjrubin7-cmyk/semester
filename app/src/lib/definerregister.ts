@@ -234,6 +234,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['join_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
   ['kill_switch_engaged', 'read-helper', ['k.tenant_id is null or k.tenant_id = want_tenant']],
+  ['learning_submit', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
   ['leave_beta', 'self-service', ['private.beta_my_membership']],
   ['leave_organization', 'self-service', ['auth.uid()']],
   ['leave_school', 'self-service', ['auth.uid()']],
@@ -587,6 +588,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    file: '20261019120000_learning_submissions.sql',
+    functions: ['learning_submit'],
   },
 ];
 

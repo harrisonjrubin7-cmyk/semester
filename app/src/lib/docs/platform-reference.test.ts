@@ -1426,6 +1426,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
       // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
       'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
+      // Slice 1: a student's hand-in emits the registry's submission.finalized in its own transaction
+      // (20261019120000_learning_submissions.sql). Nothing drains the outbox yet, so "none published" still holds.
+      'supabase/migrations/20261019120000_learning_submissions.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);

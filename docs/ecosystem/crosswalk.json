@@ -1500,23 +1500,27 @@
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/ledger.ts"
+        "app/src/lib/gradebook/ledger.ts",
+        "app/src/lib/gradebook/submissions.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261019120000_learning_submissions.sql"
       ],
       "tests": [
         "supabase/gradebook.check.sql",
         "app/src/lib/gradebook/gradebook.test.ts",
         "app/src/lib/gradebook/client.test.ts",
-        "app/src/screens/gradebook.test.tsx"
+        "app/src/screens/gradebook.test.tsx",
+        "supabase/learning-submissions.check.sql",
+        "app/src/lib/gradebook/submissions.test.ts"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "InstructorBook enters draft scores per item and student (enterScore), moderates and releases, all persisted through gradebook RPCs.",
-      "gap": "Grading is score-and-comment per item; no submission viewer, rubric or annotation workspace."
+      "note": "InstructorBook enters draft scores per item and student (enterScore), moderates and releases, all persisted through gradebook RPCs. Each student row shows their latest hand-in (fixed text and SHA-256) and which hand-in version the current grade names (learning_submissions, grade_entries.submission_id).",
+      "gap": "Grading is score-and-comment per item beside the hand-in text; no rubric or annotation workspace."
     },
     "#/faculty/home": {
       "status": "code-present",
@@ -1543,22 +1547,30 @@
       "gap": "No real teaching home reading the instructor's courses, grading queue or announcements."
     },
     "#/faculty/inbox": {
-      "status": "code-present",
+      "status": "tested",
       "roles": [
         "faculty"
       ],
-      "screens": [],
-      "modules": [],
+      "screens": [
+        "app/src/components/gradebook/InstructorBook.tsx"
+      ],
+      "modules": [
+        "app/src/lib/gradebook/submissions.ts"
+      ],
       "server": [
         "app/server/institution/sandbox.ts"
       ],
-      "migrations": [],
+      "migrations": [
+        "supabase/migrations/20261019120000_learning_submissions.sql"
+      ],
       "tests": [
+        "supabase/learning-submissions.check.sql",
+        "app/src/lib/gradebook/submissions.test.ts",
         "app/server/institution/sandbox.test.ts"
       ],
       "flags": [],
-      "note": "A submit -> receipt -> grade -> feedback loop exists only as the gateway's labelled sandbox adapter in the gateway, in-memory store, no staff screen.",
-      "gap": "No real assignments or submissions table and no instructor inbox screen."
+      "note": "Students hand in through learning_submit (append-only, versioned, SHA-256, idempotent, emits submission.finalized); the course's graders read every hand-in on the item in InstructorBook. The gateway sandbox adapter still models the full loop in memory.",
+      "gap": "No separate inbox screen or due-date window: hand-ins are listed per item inside the gradebook, and gradebook items have no published state or deadline."
     },
     "#/faculty/lineitem": {
       "status": "code-present",
@@ -4228,23 +4240,28 @@
         "student"
       ],
       "screens": [
-        "app/src/screens/Gradebook.tsx"
+        "app/src/screens/Gradebook.tsx",
+        "app/src/components/gradebook/HandIn.tsx"
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/views.ts"
+        "app/src/lib/gradebook/views.ts",
+        "app/src/lib/gradebook/submissions.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261019120000_learning_submissions.sql"
       ],
       "tests": [
         "app/src/screens/gradebook.test.tsx",
         "app/src/lib/gradebook/client.test.ts",
-        "supabase/gradebook.check.sql"
+        "supabase/gradebook.check.sql",
+        "app/src/components/gradebook/HandIn.test.tsx",
+        "supabase/learning-submissions.check.sql"
       ],
       "flags": [],
-      "note": "Gradebook reads a student's own released grade_entries (and lets the instructor set scheme, release, answer regrades) through lib/gradebook/client.ts.",
+      "note": "Gradebook reads a student's own released grade_entries (and lets the instructor set scheme, release, answer regrades) through lib/gradebook/client.ts. Students hand in work on an item (preview, fixed versioned copy, receipt with fingerprint) and see which hand-in a released grade names.",
       "gap": "Only when the school has turned the gradebook on; otherwise the screen says grades stay in the school's system."
     },
     "#/student/grades": {
