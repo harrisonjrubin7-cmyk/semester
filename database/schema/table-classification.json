@@ -395,6 +395,7 @@
    "school_offboarding",
    "scim_external_identity",
    "scim_group_mapping",
+   "scim_group_mapping_history",
    "seat_watches",
    "skill_claim",
    "skill_claim_evidence",
