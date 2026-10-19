@@ -1,0 +1,1715 @@
+[
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.institution.reconciliation_gate",
+    "workflow_id": "proposed.workflow.institution.reconciliation_gate",
+    "workflow_version": 1,
+    "step_id": "reconciliation_gate",
+    "status": "draft",
+    "handler_registry_key": "proposed.institution.reconciliation_gate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:source-and-target-snapshots"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.institution.reconciliation_gate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:source-and-target-snapshots-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:institution.reconciliation_gate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.institution.reconciliation_gate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:source-and-target-snapshots",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:institution.reconciliation_gate-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:institution.reconciliation_gate-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.institution.reconciliation_gate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Implementation/IT lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.integration.sandbox_validate",
+    "workflow_id": "proposed.workflow.integration.sandbox_validate",
+    "workflow_version": 1,
+    "step_id": "sandbox_validate",
+    "status": "draft",
+    "handler_registry_key": "proposed.integration.sandbox_validate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:scoped-sandbox-fixtures"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.integration.sandbox_validate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:scoped-sandbox-fixtures-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:integration.sandbox_validate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.integration.sandbox_validate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:scoped-sandbox-fixtures",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:integration.sandbox_validate-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:integration.sandbox_validate-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.integration.sandbox_validate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Integration lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.integration.monitoring_enable",
+    "workflow_id": "proposed.workflow.integration.monitoring_enable",
+    "workflow_version": 1,
+    "step_id": "monitoring_enable",
+    "status": "draft",
+    "handler_registry_key": "proposed.integration.monitoring_enable",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:approved-monitoring-configuration"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.integration.monitoring_enable.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:approved-monitoring-configuration-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:integration.monitoring_enable-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.integration.monitoring_enable.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:approved-monitoring-configuration",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:integration.monitoring_enable-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "provisional_write",
+      "commit_proof_ref": "proposed:integration.monitoring_enable-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:integration.monitoring_enable-lookup",
+      "compensation_kind": "provisional_cleanup",
+      "compensation_ref": "proposed:integration.monitoring_enable-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.integration.monitoring_enable.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Reliability lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.integration.rollback_verify",
+    "workflow_id": "proposed.workflow.integration.rollback_verify",
+    "workflow_version": 1,
+    "step_id": "rollback_verify",
+    "status": "draft",
+    "handler_registry_key": "proposed.integration.rollback_verify",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:authorized-recovery-test-environment"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.integration.rollback_verify.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:authorized-recovery-test-environment-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:integration.rollback_verify-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.integration.rollback_verify.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:authorized-recovery-test-environment",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:integration.rollback_verify-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:integration.rollback_verify-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.integration.rollback_verify.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Reliability/implementation lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.ai.intent_identify",
+    "workflow_id": "proposed.workflow.ai.intent_identify",
+    "workflow_version": 1,
+    "step_id": "intent_identify",
+    "status": "draft",
+    "handler_registry_key": "proposed.ai.intent_identify",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:minimized-user-request"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.ai.intent_identify.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:minimized-user-request-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:ai.intent_identify-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.ai.intent_identify.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:minimized-user-request",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:ai.intent_identify-freshness"
+    },
+    "delivery": {
+      "transport": "guarded_inline",
+      "semantics": "synchronous",
+      "outbox_ref": null,
+      "ack_rule": "after_return_inline"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:ai.intent_identify-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.ai.intent_identify.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed AI platform lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.ai.permission_validate",
+    "workflow_id": "proposed.workflow.ai.permission_validate",
+    "workflow_version": 1,
+    "step_id": "permission_validate",
+    "status": "draft",
+    "handler_registry_key": "proposed.ai.permission_validate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:identity-context-and-policy"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.ai.permission_validate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:identity-context-and-policy-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:ai.permission_validate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.ai.permission_validate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:identity-context-and-policy",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:ai.permission_validate-freshness"
+    },
+    "delivery": {
+      "transport": "guarded_inline",
+      "semantics": "synchronous",
+      "outbox_ref": null,
+      "ack_rule": "after_return_inline"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:ai.permission_validate-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.ai.permission_validate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed AI/security lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.ai.response_generate",
+    "workflow_id": "proposed.workflow.ai.response_generate",
+    "workflow_version": 1,
+    "step_id": "response_generate",
+    "status": "draft",
+    "handler_registry_key": "proposed.ai.response_generate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:authorized-minimized-source-bundle"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.ai.response_generate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:authorized-minimized-source-bundle-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:ai.response_generate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.ai.response_generate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:authorized-minimized-source-bundle",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:ai.response_generate-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:ai.response_generate-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:ai.response_generate-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:ai.response_generate-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.ai.response_generate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 10,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed AI platform lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.ai.usage_record",
+    "workflow_id": "proposed.workflow.ai.usage_record",
+    "workflow_version": 1,
+    "step_id": "usage_record",
+    "status": "draft",
+    "handler_registry_key": "proposed.ai.usage_record",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:provider-usage-receipt"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.ai.usage_record.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:provider-usage-receipt-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:ai.usage_record-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.ai.usage_record.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:provider-usage-receipt",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:ai.usage_record-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:ai.usage_record-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:ai.usage_record-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:ai.usage_record-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.ai.usage_record.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed AI/finance lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.support.route",
+    "workflow_id": "proposed.workflow.support.route",
+    "workflow_version": 1,
+    "step_id": "route",
+    "status": "draft",
+    "handler_registry_key": "proposed.support.route",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:minimal-case-routing-context"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.support.route.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:minimal-case-routing-context-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:support.route-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.support.route.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:minimal-case-routing-context",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:support.route-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:support.route-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:support.route-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:support.route-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.support.route.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Service operations lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.migration.validate",
+    "workflow_id": "proposed.workflow.migration.validate",
+    "workflow_version": 1,
+    "step_id": "validate",
+    "status": "draft",
+    "handler_registry_key": "proposed.migration.validate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:migration-staging-and-source-manifest"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.migration.validate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:migration-staging-and-source-manifest-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:migration.validate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.migration.validate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:migration-staging-and-source-manifest",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:migration.validate-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:migration.validate-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.migration.validate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Migration/registrar lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.migration.dual_run",
+    "workflow_id": "proposed.workflow.migration.dual_run",
+    "workflow_version": 1,
+    "step_id": "dual_run",
+    "status": "draft",
+    "handler_registry_key": "proposed.migration.dual_run",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:paired-source-and-shadow-results"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "schedule",
+      "event_type": null,
+      "schedule_ref": "proposed:migration.dual_run-schedule",
+      "input_schema_ref": "proposed:paired-source-and-shadow-results-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:migration.dual_run-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.migration.dual_run.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:paired-source-and-shadow-results",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:migration.dual_run-freshness"
+    },
+    "delivery": {
+      "transport": "scheduled_job",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:migration.dual_run-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.migration.dual_run.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Integration/registrar lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.migration.monitor",
+    "workflow_id": "proposed.workflow.migration.monitor",
+    "workflow_version": 1,
+    "step_id": "monitor",
+    "status": "draft",
+    "handler_registry_key": "proposed.migration.monitor",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:scope-bound-telemetry"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "schedule",
+      "event_type": null,
+      "schedule_ref": "proposed:migration.monitor-schedule",
+      "input_schema_ref": "proposed:scope-bound-telemetry-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:migration.monitor-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.migration.monitor.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:scope-bound-telemetry",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:migration.monitor-freshness"
+    },
+    "delivery": {
+      "transport": "scheduled_job",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:migration.monitor-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.migration.monitor.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Reliability lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.community.listing_filter",
+    "workflow_id": "proposed.workflow.community.listing_filter",
+    "workflow_version": 1,
+    "step_id": "listing_filter",
+    "status": "draft",
+    "handler_registry_key": "proposed.community.listing_filter",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:public-listing-content"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.community.listing_filter.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:public-listing-content-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:community.listing_filter-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.community.listing_filter.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:public-listing-content",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:community.listing_filter-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:community.listing_filter-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:community.listing_filter-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:community.listing_filter-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.community.listing_filter.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Community lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.privacy.audit_retain",
+    "workflow_id": "proposed.workflow.privacy.audit_retain",
+    "workflow_version": 1,
+    "step_id": "audit_retain",
+    "status": "draft",
+    "handler_registry_key": "proposed.privacy.audit_retain",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:classified-audit-record-and-retention-rule"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "schedule",
+      "event_type": null,
+      "schedule_ref": "proposed:privacy.audit_retain-schedule",
+      "input_schema_ref": "proposed:classified-audit-record-and-retention-rule-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:privacy.audit_retain-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.privacy.audit_retain.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:classified-audit-record-and-retention-rule",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:privacy.audit_retain-freshness"
+    },
+    "delivery": {
+      "transport": "scheduled_job",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:privacy.audit_retain-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:privacy.audit_retain-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:privacy.audit_retain-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.privacy.audit_retain.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Privacy/security lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.developer.sandbox_create",
+    "workflow_id": "proposed.workflow.developer.sandbox_create",
+    "workflow_version": 1,
+    "step_id": "sandbox_create",
+    "status": "draft",
+    "handler_registry_key": "proposed.developer.sandbox_create",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:approved-partner-sandbox-request"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.developer.sandbox_create.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:approved-partner-sandbox-request-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:developer.sandbox_create-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.developer.sandbox_create.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:approved-partner-sandbox-request",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:developer.sandbox_create-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "provisional_write",
+      "commit_proof_ref": "proposed:developer.sandbox_create-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:developer.sandbox_create-lookup",
+      "compensation_kind": "provisional_cleanup",
+      "compensation_ref": "proposed:developer.sandbox_create-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.developer.sandbox_create.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Developer platform lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.analytics.instrument_validate",
+    "workflow_id": "proposed.workflow.analytics.instrument_validate",
+    "workflow_version": 1,
+    "step_id": "instrument_validate",
+    "status": "draft",
+    "handler_registry_key": "proposed.analytics.instrument_validate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:allowlisted-event-schema-and-samples"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "event",
+      "event_type": "proposed.analytics.instrument_validate.requested",
+      "schedule_ref": null,
+      "input_schema_ref": "proposed:allowlisted-event-schema-and-samples-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:analytics.instrument_validate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.analytics.instrument_validate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:allowlisted-event-schema-and-samples",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "none",
+      "freshness_policy_ref": "proposed:analytics.instrument_validate-freshness"
+    },
+    "delivery": {
+      "transport": "durable_queue",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "read",
+      "commit_proof_ref": "proposed:analytics.instrument_validate-result-proof",
+      "unknown_outcome_lookup_ref": null,
+      "compensation_kind": "none",
+      "compensation_ref": null
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.analytics.instrument_validate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Analytics/privacy lead"
+  },
+  {
+    "schema_version": "2.0.0",
+    "document_type": "execution_binding",
+    "id": "proposed.binding.analytics.aggregate",
+    "workflow_id": "proposed.workflow.analytics.aggregate",
+    "workflow_version": 1,
+    "step_id": "aggregate",
+    "status": "draft",
+    "handler_registry_key": "proposed.analytics.aggregate",
+    "resolution": {
+      "resolved": false,
+      "code_ref": null,
+      "code_digest": null,
+      "evidence": []
+    },
+    "scope": {
+      "kind": "institution",
+      "tenant_id": "00000000-0000-0000-0000-000000000002",
+      "subject_id": "00000000-0000-0000-0000-000000000001",
+      "resource_refs": [
+        "proposed:authorized-tenant-event-window"
+      ],
+      "access_basis_refs": [
+        "proposed:verified-membership"
+      ]
+    },
+    "trigger": {
+      "kind": "schedule",
+      "event_type": null,
+      "schedule_ref": "proposed:analytics.aggregate-schedule",
+      "input_schema_ref": "proposed:authorized-tenant-event-window-schema"
+    },
+    "identity": {
+      "principal_ref": "proposed:analytics.aggregate-principal",
+      "delegation_ref": "proposed:actor-command-delegation",
+      "capabilities": [
+        "proposed.analytics.aggregate.execute"
+      ],
+      "revalidate_at_execute": true
+    },
+    "authority": {
+      "mode": "assist",
+      "official_write": false,
+      "system_ref": "proposed:authorized-tenant-event-window",
+      "registry_ref": "proposed:authority-registry",
+      "institution_scope_ref": null,
+      "activation_ref": null,
+      "writer_policy": "private_only",
+      "freshness_policy_ref": "proposed:analytics.aggregate-freshness"
+    },
+    "delivery": {
+      "transport": "scheduled_job",
+      "semantics": "at_least_once",
+      "outbox_ref": "ctl.outbox (extension candidate; deployment unverified)",
+      "ack_rule": "after_durable_outcome",
+      "lease": {
+        "lease_seconds": 60,
+        "heartbeat_seconds": 15,
+        "fencing_required": true,
+        "claim_strategy": "transactional_row_claim",
+        "inbox_dedup_ref": "proposed:consumer-inbox"
+      },
+      "retry": {
+        "max_attempts": 3,
+        "base_delay_ms": 1000,
+        "max_delay_ms": 30000,
+        "jitter": "full",
+        "retryable_codes": [
+          "TRANSIENT_CONFIRMED_NO_COMMIT"
+        ],
+        "unknown_outcome_policy": "reconcile_before_retry",
+        "dead_letter_queue_ref": "proposed:owned-exception-queue"
+      },
+      "partition_key_ref": "proposed:tenant-section-command-order"
+    },
+    "idempotency": {
+      "key_scope": "tenant+actor+capability+command-key",
+      "payload_hash_required": true,
+      "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+    },
+    "effect": {
+      "kind": "projection_write",
+      "commit_proof_ref": "proposed:analytics.aggregate-result-proof",
+      "unknown_outcome_lookup_ref": "proposed:analytics.aggregate-lookup",
+      "compensation_kind": "projection_repair",
+      "compensation_ref": "proposed:analytics.aggregate-remediation"
+    },
+    "result": {
+      "accepted_receipt_ref": "proposed:accepted-command-receipt",
+      "committed_receipt_ref": "proposed:committed-result-receipt",
+      "projection_event_refs": [
+        "proposed.analytics.aggregate.completed"
+      ],
+      "exception_queue_ref": "proposed:registrar-exception-queue"
+    },
+    "limits": {
+      "timeout_seconds": 30,
+      "max_payload_bytes": 32768,
+      "max_cost_units": 0,
+      "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+    },
+    "owner": "Proposed Analytics/privacy lead"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "name": "@semester/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./*": "./src/*.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": {
+    "@semester/database": "workspace:*",
+    "@semester/permissions": "workspace:*"
+  },
+  "devDependencies": { "next": "^16.0.0", "typescript": "^5.6.3", "vitest": "^4.1.11" }
+}
