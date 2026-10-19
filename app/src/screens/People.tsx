@@ -242,7 +242,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                             type="button"
                             className="bare"
                             onClick={() => dispatch({ type: 'dropVisit', id: v.id })}
-                            aria-label={`Remove what you recorded on ${new Date(v.at).toDateString().slice(4)}`}
+                            aria-label={`Remove conversation with ${p.name} from ${new Date(v.at).toDateString().slice(4)}: ${v.what}`}
                             style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-lg)', ...secondLine() }}
                           >
                             ×
@@ -557,6 +557,7 @@ function LettersTab() {
                     <button
                       type="button"
                       className="bare"
+                      aria-label={`Remove ${l.forWhat} letter from ${nameOf(l.personId)}: ${l.due ? `due ${l.due}` : 'no deadline set'} · ${ASKS.find((ask) => ask.id === l.stage)?.label ?? l.stage}`}
                       onClick={() => dispatch({ type: 'dropLetter', id: l.id })}
                       style={{ width: 'auto', paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
                     >

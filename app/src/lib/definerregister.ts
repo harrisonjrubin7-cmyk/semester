@@ -227,6 +227,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_revoke_connection', 'integration', ['private.has_capability']],
+  ['integration_revoke_scope', 'integration', ['private.has_capability']],
   ['integration_set_paused', 'integration', ['private.has_capability']],
   ['join_beta', 'self-service', ['auth.uid()', 'private.beta_my_membership', 'private.beta_confirmed_email']],
   ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -241,6 +243,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['make_family_share', 'sharing', ['auth.uid()']],
   ['make_referral_code', 'self-service', ['auth.uid()']],
   ['manage_volunteer', 'moderation', ['private.has_capability']],
+  ['mark_notification_inbox', 'self-service', ['auth.uid()', 'recipient_id = auth.uid()']],
   ['moderate_opportunity', 'moderation', ['private.has_capability']],
   ['move_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['mutual_connections', 'read-helper', ['auth.uid()']],
@@ -273,6 +276,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['open_support_ticket', 'self-service', ['auth.uid()']],
   ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
   ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['privileged_access_review_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
@@ -285,6 +289,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_family_share', 'sharing', ['auth.uid()']],
   ['read_guardian_calendar_projection', 'sharing', ['auth.uid()', 'private.is_minor']],
   ['read_guardian_projection_access_history', 'sharing', ['auth.uid()']],
+  ['read_notification_inbox', 'read-helper', ['auth.uid()', 'i.recipient_id = auth.uid()']],
   ['read_privacy_request_detail', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
   ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
@@ -316,6 +321,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
   ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
+  ['resolve_privileged_access_review_post_decision_change', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -329,6 +335,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['send_help_request', 'self-service', ['auth.uid()', 'private.school_of']],
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
+  ['set_notification_preference', 'self-service', ['auth.uid()', 'p.school_id = want_school']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
   ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
@@ -444,7 +451,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'gradebook_file_regrade',
       'gradebook_moderate',
       'gradebook_queue_passback',
-      'gradebook_release',
       'gradebook_resolve_regrade',
       'gradebook_set_scheme',
     ],
@@ -470,14 +476,23 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * part of the exact register but are not retroactively counted in that
  * historical snapshot.
  */
-export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+/**
+ * `redefines`: the file replaces a function production already runs rather
+ * than adding one, so its row is held to this file (the winning body) but the
+ * function still counts among those applied on production.
+ */
+export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
   },
   {
-    file: '20261011160000_privileged_access_review.sql',
-    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'resolve_privileged_access_review_investigation'],
+    file: '20261011213000_privileged_access_review_hardening.sql',
+    functions: ['begin_privileged_access_review', 'complete_privileged_access_review', 'decide_privileged_access_review_item', 'privileged_access_review', 'privileged_access_review_evidence', 'resolve_privileged_access_review_investigation', 'resolve_privileged_access_review_post_decision_change'],
+  },
+  {
+    file: '20261010150100_notification_inbox_client.sql',
+    functions: ['mark_notification_inbox', 'read_notification_inbox', 'set_notification_preference'],
   },
   {
     file: '20261009230000_guardian_projection_foundation.sql',
@@ -494,6 +509,17 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261012000000_ops_projection_dashboard.sql',
     functions: ['ops_projection_dashboard'],
+  },
+  {
+    // Redefined, not added: the release now emits its outbox event in the
+    // same transaction, so the row is held to the file that last wrote it.
+    file: '20261012010000_gradebook_release_emits_event.sql',
+    functions: ['gradebook_release'],
+    redefines: true,
+  },
+  {
+    file: '20261012055000_provisioning_authority_hardening.sql',
+    functions: ['integration_revoke_connection', 'integration_revoke_scope'],
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',

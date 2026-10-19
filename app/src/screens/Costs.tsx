@@ -170,57 +170,60 @@ function OutOfPocket() {
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
-                {theirs.map((x) => (
-                  <div
-                    key={x.id}
-                    style={{
-                      display: 'flex',
-                      gap: 'var(--sp-4)',
-                      alignItems: 'baseline',
-                      marginTop: 'calc(7px * var(--density, 1))',
-                      paddingLeft: 'var(--sp-5)',
-                      borderLeft: '2px solid var(--app-line)',
-                    }}
-                  >
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
-                      {x.what}
-                      <span style={{ color: 'var(--app-dim)' }}>
-                        {' · '}
-                        {kindOf(x.kind).label}
-                        {x.rented ? ' · rented' : ''}
-                        {x.backCents > 0 ? ` · ${money(x.backCents)} back` : ''}
+                {theirs.map((x) => {
+                  const details = [
+                    kindOf(x.kind).label,
+                    x.rented ? 'rented' : '',
+                    x.backCents > 0 ? `${money(x.backCents)} back` : '',
+                  ].filter(Boolean).join(' · ');
+                  const removalDetails = [courseCode(x.courseId), details, money(x.cents)].join(' · ');
+                  return (
+                    <div
+                      key={x.id}
+                      style={{
+                        display: 'flex',
+                        gap: 'var(--sp-4)',
+                        alignItems: 'baseline',
+                        marginTop: 'calc(7px * var(--density, 1))',
+                        paddingLeft: 'var(--sp-5)',
+                        borderLeft: '2px solid var(--app-line)',
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
+                        {x.what}
+                        <span style={{ color: 'var(--app-dim)' }}> · {details}</span>
                       </span>
-                    </span>
-                    <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
-                      {money(x.cents)}
-                    </span>
-                    {!x.rented && kindOf(x.kind).resellable && x.backCents === 0 ? (
+                      <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
+                        {money(x.cents)}
+                      </span>
+                      {!x.rented && kindOf(x.kind).resellable && x.backCents === 0 ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() => {
+                            const said = window.prompt(`What did you get back for ${x.what}?`, '');
+                            const cents = said === null ? null : readMoney(said);
+                            if (cents !== null) {
+                              dispatch({ type: 'patchCost', id: x.id, patch: { backCents: cents } });
+                            }
+                          }}
+                          style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
+                        >
+                          Sold
+                        </button>
+                      ) : null}
                       <button
                         type="button"
-                        className="btn btn-ghost"
-                        onClick={() => {
-                          const said = window.prompt(`What did you get back for ${x.what}?`, '');
-                          const cents = said === null ? null : readMoney(said);
-                          if (cents !== null) {
-                            dispatch({ type: 'patchCost', id: x.id, patch: { backCents: cents } });
-                          }
-                        }}
-                        style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
+                        className="bare"
+                        aria-label={`Remove ${x.what}: ${removalDetails}`}
+                        onClick={() => dispatch({ type: 'dropCost', id: x.id })}
+                        style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                       >
-                        Sold
+                        ×
                       </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="bare"
-                      aria-label={`Remove ${x.what}`}
-                      onClick={() => dispatch({ type: 'dropCost', id: x.id })}
-                      style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </CustomRow>
             );
           })}

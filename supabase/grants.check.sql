@@ -171,6 +171,10 @@ declare
     -- entry returns only the caller-student's bounded access history.
     'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
     'read_guardian_projection_access_history()',
+    -- 20261010150000: caller-owned preferences and minimized inbox reads.
+    'mark_notification_inbox(want_id uuid, want_status text)',
+    'read_notification_inbox(want_limit integer)',
+    'set_notification_preference(want_school text, want_category text, want_channel text, want_enabled boolean, want_quiet_start time without time zone, want_quiet_end time without time zone, want_time_zone text)',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.
@@ -425,6 +429,10 @@ declare
     -- boolean about a switch key and a school and returns no row.
     'integration_approve_connection(want_connection text, want_direction text)',
     'integration_approve_scope(want_scope uuid)',
+    -- The way back (20261012055000): the same `integration:approve` capability
+    -- the approval took, a reason required, audited by the same trigger.
+    'integration_revoke_connection(want_connection text, want_reason text)',
+    'integration_revoke_scope(want_scope uuid, want_reason text)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
@@ -656,7 +664,9 @@ declare
     'complete_privileged_access_review(want_review text)',
     'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
     'privileged_access_review(want_review text)',
+    'privileged_access_review_evidence(want_review text)',
     'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+    'resolve_privileged_access_review_post_decision_change(want_item text)',
 
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
