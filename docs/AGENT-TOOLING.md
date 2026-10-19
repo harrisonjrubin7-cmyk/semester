@@ -25,4 +25,8 @@ against Semester yet.
   sync). A personal tool for a home directory, not for a repository that holds
   student data.
 - **ponytail**: overlaps the `simplify` skill.
+- **token-optimizer**: its onboarding hook advances on every turn, so in an
+  agent session it answered its questions with notification text and wrote
+  that to `.claude/CLAUDE.md` as project instructions (removed in #1527).
+  Disabled in `.claude/settings.json`.
 - **caddy**, **Modern-CPP-Programming**, **text-to-cad**: no use in this app.
