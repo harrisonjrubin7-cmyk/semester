@@ -760,6 +760,9 @@ describe('examples/event-consumer', () => {
       'app/src/lib/integration/lmsmatrix.ts',
       'app/server/productivity/memory.ts',
       'app/server/productivity/service.ts',
+      // The assignment-submission command builds submission.finalized and grade.posted into the outbox in the same
+      // step as its record. No route or worker imports it yet: it is library code, exercised by its own tests.
+      'packages/institution/src/assignment-submission.ts',
       'packages/platform/src/events/emit.ts',
       'packages/platform/src/seam/institution.ts',
       'packages/platform/src/testing/memory.ts',

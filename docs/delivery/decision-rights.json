@@ -1,0 +1,62 @@
+{
+  "$source": "Semester delivery-management specification, 'Decision-rights matrix'. Role names are from the spec. Holders are not named in the source: each holder is UNASSIGNED until an institution or the company names a person.",
+  "note": "Semester may organize, derive, explain, route, and evidence work; the institution retains authority over official academic decisions.",
+  "decisions": [
+    {
+      "decision": "Pilot scope",
+      "recommends": "product_owner",
+      "approves": "institution_business_owner",
+      "approver_holder": "UNASSIGNED",
+      "must_be_consulted": ["registrar", "support", "platform"],
+      "may_stop_release": ["institution_sponsor"]
+    },
+    {
+      "decision": "Source mapping",
+      "recommends": "integration_owner",
+      "approves": "institutional_data_owner",
+      "approver_holder": "UNASSIGNED",
+      "must_be_consulted": ["registrar", "security"],
+      "may_stop_release": ["data_owner"]
+    },
+    {
+      "decision": "RLS and policy change",
+      "recommends": "platform_security",
+      "approves": "security_owner",
+      "approver_holder": "UNASSIGNED",
+      "must_be_consulted": ["product", "institution_technical_owner"],
+      "may_stop_release": ["security_owner"]
+    },
+    {
+      "decision": "Feature flag enablement",
+      "recommends": "release_manager",
+      "approves": "product_and_institution_owners",
+      "approver_holder": "UNASSIGNED",
+      "must_be_consulted": ["support", "platform"],
+      "may_stop_release": ["named_go_no_go_approver"]
+    },
+    {
+      "decision": "Emergency disable",
+      "recommends": "on_call_operator",
+      "approves": "not_required_to_disable",
+      "approver_holder": "not_applicable",
+      "must_be_consulted": ["institution_owner_notified"],
+      "may_stop_release": ["platform_security_on_call"]
+    },
+    {
+      "decision": "Official academic outcome",
+      "recommends": "semester_may_explain",
+      "approves": "institution_only",
+      "approver_holder": "institution",
+      "must_be_consulted": ["relevant_office"],
+      "may_stop_release": ["institution_only"]
+    },
+    {
+      "decision": "Pilot expansion",
+      "recommends": "product_owner",
+      "approves": "institution_business_owner",
+      "approver_holder": "UNASSIGNED",
+      "must_be_consulted": ["security", "registrar", "support"],
+      "may_stop_release": ["security_or_institution_owner"]
+    }
+  ]
+}

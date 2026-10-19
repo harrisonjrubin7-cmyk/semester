@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-74 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+75 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -79,6 +79,7 @@
 | `pipeline:contrast` | Daily contrast sweep | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:hawkscan` | Dynamic security scan | pipeline | C3 | security | — | — | — | RB-08 |
 | `pipeline:workflow-lab` | Workflow Lab checks (standalone Next.js app) | pipeline | C3 | platform | — | — | — | RB-08 |
+| `pipeline:release-package-ci` | Supplemental release CI (evidence checker and app gates) | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:codeql` | Static analysis of the source (CodeQL) | pipeline | C3 | security | — | — | — | RB-08 |
 
 ## Role holders
