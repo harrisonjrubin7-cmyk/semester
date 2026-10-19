@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: docs/strategy/RISK-REGISTER.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/DISCOVERY_CALL_SCRIPT.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/RISK_REGISTER.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-OVERVIEW.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Existing versus missing: inventory and reconciliation
 
 | Control | Value |

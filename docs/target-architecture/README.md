@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PLATFORM-CONSTITUTION.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester target architecture — CTO pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `7287ddc`.

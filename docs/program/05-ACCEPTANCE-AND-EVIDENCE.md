@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 05 · Cross-functional acceptance and evidence tracking
 
 > Part of the [program pack](README.md). The evidence itself lives under

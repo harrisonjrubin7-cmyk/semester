@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Role readiness scorecard
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** audit evidence. No row is marked ready for pilot, production or authoritative.

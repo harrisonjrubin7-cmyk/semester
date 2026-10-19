@@ -1,3 +1,182 @@
+---
+stale-refs:
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: MONITORING.md
+    changed_at: "2026-10-19T01:41:40"
+    sections_changed: []
+    summary: externally modified
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: SECRETS.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INTEROPERABILITY-ROADMAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MODULE-PRIVACY-MODEL.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-READINESS-PACK.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-REALITY-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RUNBOOKS.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SAAS-LAUNCH-KIT.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/SUPPORT-POLICY-DRAFT.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RISK-GOVERNANCE.md
+    changed_at: "2026-10-19T01:41:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PENETRATION-TEST-PLAN.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/claims/README.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/strategic-boundaries/README.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Launch completeness
 
 <!-- Rendered from app/src/lib/launchcompleteness.ts by launchcompleteness.test.ts. Edit the data, then run `npm run registers` from app/. -->

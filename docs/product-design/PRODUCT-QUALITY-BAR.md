@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Product Quality Bar
 
 | Control | Value |

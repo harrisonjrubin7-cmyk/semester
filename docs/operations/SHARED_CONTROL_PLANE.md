@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INTEGRATION-CONTROL-PLANE.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
+    changed_at: "2026-10-19T01:41:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_ROADMAP.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/05-incident-and-continuity.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Shared Platform Control Plane
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Open decisions are listed in [`OPERATIONS_ROADMAP.md`](OPERATIONS_ROADMAP.md#open-decisions).

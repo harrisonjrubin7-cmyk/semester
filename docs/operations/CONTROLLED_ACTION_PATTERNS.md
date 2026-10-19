@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/OPERATIONS-CONSOLE-MAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Controlled action patterns
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

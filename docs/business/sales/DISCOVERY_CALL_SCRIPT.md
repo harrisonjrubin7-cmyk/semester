@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/strategy/RISK-REGISTER.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Discovery Call Script, Qualification Rubric, Demo Script and Pilot Design-Session Agenda
 
 | Control | Value |

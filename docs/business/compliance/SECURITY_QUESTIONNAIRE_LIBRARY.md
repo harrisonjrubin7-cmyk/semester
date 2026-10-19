@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/REVIEWER-QUESTION-MAP.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Security Questionnaire Library
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-19T01:41:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Parallel-run evidence
 
 > **Type:** explanation · **Audience:** institution-admins, implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONS-CONSOLE-MAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/01-operating-cadence.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # 09 · Operational dashboards and leading indicators
 
 | Control | Value |

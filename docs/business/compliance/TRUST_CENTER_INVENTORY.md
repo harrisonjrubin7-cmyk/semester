@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/trust/REVIEWER-QUESTION-MAP.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DOCUMENT-MAP.md
+    changed_at: "2026-10-19T01:41:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Trust Center Inventory
 
 | Control | Value |

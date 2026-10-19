@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/PRODUCT-STATUS-MAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester data authority matrix
 
 <!-- Rendered from docs/master/tools/domains.py by docs/master/tools/render.py. Edit the data, then run `python3 docs/master/tools/render.py` from the repository root. -->

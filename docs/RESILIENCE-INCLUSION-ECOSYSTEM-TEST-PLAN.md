@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Resilience, inclusion and ecosystem expansion — test plan
 
 The mandatory testing section of the expansion command, mapped onto the gates

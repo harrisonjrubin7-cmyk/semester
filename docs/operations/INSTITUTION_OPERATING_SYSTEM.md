@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
+    changed_at: "2026-10-19T01:41:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/SHARED_CONTROL_PLANE.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Institution Operating System
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Per-console dossiers: [`INSTITUTION_CONSOLE_CATALOG.md`](INSTITUTION_CONSOLE_CATALOG.md). Shared foundations: [`SHARED_CONTROL_PLANE.md`](SHARED_CONTROL_PLANE.md).

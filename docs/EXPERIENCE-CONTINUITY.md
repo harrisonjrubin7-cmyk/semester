@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Experience continuity: where each of the sixteen items stands
 
 **Baseline:** `origin/main` at `cbc6c5a`, 27 Sep 2026.

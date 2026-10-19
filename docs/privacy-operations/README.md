@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
+    changed_at: "2026-10-19T01:41:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Privacy operations pack
 
 **Status `DESIGNED`. Produced 4 October 2026 against `origin/main` at `8e9b746`. Owner: the privacy seat, which is vacant (maturity RM-06); Harrison Rubin holds it on an interim basis with no backup named.**

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Noticing
 
 Everything that has gone wrong with this project so far went wrong quietly.

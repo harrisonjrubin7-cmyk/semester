@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Paid Pilot Framework
 
 How a university pilot is chartered, run and decided. Launch-readiness

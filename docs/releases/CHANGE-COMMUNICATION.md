@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/STYLE-GUIDE.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Change communication
 
 > **Type:** reference · **Audience:** contributors, institution-admins · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/releases.test.ts`

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/STRATEGIC-EXPANSION-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Student Credential Wallet
 
 A student-controlled, portable record of verified learning and experience:

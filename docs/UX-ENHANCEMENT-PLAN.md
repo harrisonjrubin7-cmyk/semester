@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # UX enhancement plan — feature expansion, Phase A
 
 **Baseline:** `semester-unified-platform` at `1c8ab70` (on `origin/main`

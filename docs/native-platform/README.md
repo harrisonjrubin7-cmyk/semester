@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Native platform: where each document lives
 
 The native-first Phase 0 reconciliation landed on `main` under [`docs/master/`](../master/) and [`docs/finish-line/`](../finish-line/) before this folder existed. To keep one authority per fact, nothing is copied here; this page maps the requested names to the real files. Edit those, not this.

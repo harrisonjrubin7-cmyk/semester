@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/PRODUCT-STATUS-MAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/03-RAID.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester master backlog
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Part of** [`SEMESTER_COMPLETE_OPERATING_SYSTEM.md`](SEMESTER_COMPLETE_OPERATING_SYSTEM.md)

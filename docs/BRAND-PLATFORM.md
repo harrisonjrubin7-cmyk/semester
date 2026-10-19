@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: MARKET-POSITION.md
+    changed_at: "2026-10-19T01:41:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/TRADEMARK-CLEARANCE-COUNSEL-REQUEST-DRAFT.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester brand platform
 
 > **DRAFT FOR OWNER REVIEW AND CLAIMS REVIEW.** Nothing here is an approved public

@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_RISK_REGISTER.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RELEASE-CERTIFICATION.md
+    changed_at: "2026-10-19T01:41:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester trust and governance model
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Part of** [`SEMESTER_COMPLETE_OPERATING_SYSTEM.md`](SEMESTER_COMPLETE_OPERATING_SYSTEM.md)

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Accessibility and inclusive design program
 
 **Status: proposal, 2026-10-04. Nothing here is a conformance claim.** Semester has automated accessibility

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # RB-06 · Billing webhook or checkout failing
 
 Class C1 · role billing · alerts `billing:webhook-lag` · components `fn:billing-webhook`, `fn:billing-checkout`, `fn:billing-cancel`, `fn:billing-portal`, `stripe`.

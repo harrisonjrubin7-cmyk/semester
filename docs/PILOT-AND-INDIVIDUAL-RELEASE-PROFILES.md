@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Market-motion release profiles
 
 <!-- Rendered from app/src/lib/governance/release-profiles.ts by release-profiles.test.ts. Edit the data, then run `npm run registers` from app/. -->

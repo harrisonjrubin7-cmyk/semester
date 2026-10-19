@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONS-CONSOLE-MAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
+    changed_at: "2026-10-19T01:41:48"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/SHARED_CONTROL_PLANE.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/05-incident-and-continuity.md
+    changed_at: "2026-10-19T01:41:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Operations Command Center
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. It reconciles with, and does not replace, [`docs/OPERATIONS-CONSOLE-MAP.md`](../OPERATIONS-CONSOLE-MAP.md) (rendered from `app/src/lib/ops/console.ts`; wins on any disagreement) and the Phase 0 audit in [`docs/ops/`](../ops/OPERATIONS_CONSOLE_CURRENT_STATE.md).

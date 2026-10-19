@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester go / no-go decision
 
 | Control | Value |

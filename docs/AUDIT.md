@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PRODUCT-ROADMAP.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Phase 0 audit — Semester unified platform
 
 **Baseline:** `origin/main` `c029822` (26 Sep 2026), audited 27 Sep 2026.

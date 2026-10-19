@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-19T01:41:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Edge functions
 
 > **Type:** reference · **Audience:** implementers, operators · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/platform-reference.test.ts`

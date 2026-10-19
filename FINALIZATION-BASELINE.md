@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester finalization baseline
 
 **Assessment date:** 2026-10-03 (America/Chicago)

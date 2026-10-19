@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T21:26:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/INCIDENT-RESPONSE.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/TABLETOP-CALENDAR.md
+    changed_at: "2026-10-19T01:41:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Incident playbooks
 
 <!-- Rendered from app/src/lib/ops/incidentplaybooks.ts by incidentplaybooks.test.ts. Edit the data, then run `npm run registers` from app/. -->

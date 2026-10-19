@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-19T01:41:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Reliability and operations runbook
 
 **Activation status: RED until named owners and target-environment rehearsals exist.**

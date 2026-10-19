@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T01:41:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
+    changed_at: "2026-10-19T01:41:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 04 · Usability, diary, survey, concept and workflow methods
 
 Interviews are in [`03`](03-INTERVIEW-GUIDES.md). This page covers the other
