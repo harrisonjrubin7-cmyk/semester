@@ -2,10 +2,11 @@
 # tenant isolation, observability, revocation, and connector certification are stable.
 developer_platform:
   stage_0_internal_only:
-    - internal_contract_lab
-    - synthetic_sandbox
-    - API_schema_validation
-    - internal_event_catalog
+    items:
+      - internal_contract_lab
+      - synthetic_sandbox
+      - API_schema_validation
+      - internal_event_catalog
 
   stage_1_design_partners:
     requires_stage: stage_0_internal_only

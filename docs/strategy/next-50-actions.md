@@ -50,7 +50,7 @@ repository.
 - [x] 31. Build tenant implementation workspace. — `app/src/components/console/TenantOperations.tsx` with `supabase/console-tenant-operations.check.sql`
 - [x] 32. Package connector mapping template. — `docs/institutional-readiness/DATA-MAPPING-TEMPLATE.md` with `docs/institutional-implementation/INTEGRATION-WORKBOOK.md`
 - [x] 33. Package configuration change workflow. — `docs/guides/institution/CONFIGURATION-AND-APPROVALS.md` with `docs/CONFIGURATION-STUDIO.md`
-- [ ] 34. Create source-authority review worksheet.
+- [x] 34. Create source-authority review worksheet. — `docs/institutional-readiness/DATA-MAPPING-TEMPLATE.md` (controlled blank: creation only; no source, owner, authority or approval is filled in)
 - [x] 35. Create role-mapping worksheet. — `docs/institutional-readiness/ROLE-AND-PERMISSION-MATRIX.md` (Target approval worksheet)
 - [x] 36. Create institution launch checklist. — `docs/market-readiness/PILOT-LAUNCH-CHECKLIST.md`
 - [ ] 37. Create pilot measurement packet. — controlled blank scorecard at `docs/commercial/PILOT-SCORECARD.md`; populating and approving it for a named pilot is still open
@@ -63,7 +63,7 @@ repository.
 - [ ] 41. Charter degree-scenario planning.
 - [ ] 42. Charter advisor collaboration.
 - [x] 43. Decide whether Course Studio is a near-term wedge. — `docs/decisions/D-1067.md`; Q3 pilot in `docs/product/EDUCATION_OS_BACKLOG.md`
-- [ ] 44. Establish course-source packet standard.
+- [x] 44. Establish course-source packet standard. — `app/src/lib/courserules.ts` (pack shape and authority classes), `docs/COURSE-SOURCE-AUTHORITY.md` (source-authority contract), `supabase/migrations/20260928309000_course_studio.sql` (versioned packs), `app/src/components/StudyStudio.packs.test.tsx` (enforcement). Source storage, upload and deployment remain separate items.
 - [ ] 45. Complete AI evaluation and incident workflow.
 - [ ] 46. Define external-audience identity boundaries.
 - [ ] 47. Prototype developer sandbox internally.

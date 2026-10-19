@@ -4,8 +4,13 @@
 # `required` list of every level in its `inherits`. `prohibited` and `allowed`
 # lists are sandbox-scoped and do not carry forward.
 connector_certification:
+  carry_forward:                  # applies to every inherits merge
+    required: true
+    allowed: false
+    prohibited: false
   levels:
     sandbox:
+      production_use: prohibited
       required:
         - authority_contract
         - delivery_contract
@@ -22,8 +27,7 @@ connector_certification:
 
     validated:
       inherits: [sandbox]
-      # Production use stays prohibited until pilot_approved, which is the only level
-      # that lifts these.
+      production_use: prohibited
       prohibited:
         - production_student_data
         - production_commands
@@ -37,6 +41,7 @@ connector_certification:
 
     pilot_approved:
       inherits: [sandbox, validated]
+      production_use: permitted_when_required_met
       required:
         - tenant_approval
         - production_credential_scope
@@ -48,6 +53,7 @@ connector_certification:
 
     reusable:
       inherits: [sandbox, validated, pilot_approved]
+      production_use: permitted_when_required_met
       required:
         - multiple_successful_implementations
         - documented_variation_model
