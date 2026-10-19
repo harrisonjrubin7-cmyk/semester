@@ -1,6 +1,6 @@
 # Semester ecosystem coverage matrix (generated)
 
-Generated from `platform-route-contracts.json` (122 capabilities) and `public-route-contracts.json` (44 public patterns) by a one-off script on 2026-10-13. Source status for every row is `design source; live implementation not assessed`. The Implementation, Verification and Deployment columns below therefore record what the repository and this session can prove, not what the design promises.
+Generated from `platform-route-contracts.json` (122 capabilities) and `public-route-contracts.json` (44 public patterns) by a one-off script on 2026-10-13. Source status for the 122 capability rows is `design source; live implementation not assessed`; the 44 public rows use `prototype mapping; clean URL proposed` or `proposed extension`. The Implementation, Verification and Deployment columns below therefore record what the repository and this session can prove, not what the design promises.
 
 Status vocabulary: **specified** = design contract only (all rows today); **implemented**, **verified**, **deployed** and **operational** are separate facts and none is claimed here.
 
