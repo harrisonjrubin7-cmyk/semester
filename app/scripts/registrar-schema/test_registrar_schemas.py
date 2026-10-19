@@ -33,6 +33,8 @@ class MigrationTests(unittest.TestCase):
     def test_dot_excludes_ecma_line_terminators(self):
         s=migrate_subset({'type':'string','pattern':'^.$'})
         self.assertTrue(validate(s,'\r'));self.assertTrue(validate(s,' '));self.assertFalse(validate(s,'a'))
+    def test_end_anchor_emits_portable_lookahead(self):
+        self.assertEqual(migrate_subset({'type':'string','pattern':'^a$'})['pattern'],r'^a(?![\s\S])')
     def test_end_anchor_rejects_trailing_newline(self):
         s=migrate_subset({'type':'string','pattern':'^a$'})
         self.assertTrue(validate(s,'a\n'));self.assertFalse(validate(s,'a'))

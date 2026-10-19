@@ -15,7 +15,7 @@ def ecma_pattern(p):
         if in_class and c==']':in_class=False
         elif not in_class and c=='[':in_class=True
         if c=='.' and not in_class:out.append(r'[^\n\r  ]')
-        elif c=='$' and not in_class:out.append(r'\Z')
+        elif c=='$' and not in_class:out.append(r'(?![\s\S])')
         else:out.append(c)
         i+=1
     return ''.join(out)
