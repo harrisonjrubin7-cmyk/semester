@@ -166,6 +166,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // `ticks` keeps both sides' keys rather than letting one map replace the
   // other wholesale.
   started: 'ticks',
+  effort: 'ticks',
+  // The student's own estimate per item. Keyed by deadline id like the rest, so
+  // a value entered on one device is kept alongside the other device's keys.
   // Finished-and-not-handed-in, and handed in. Keyed by deadline id and merged
   // the same way, and here the argument is sharper than it is for `started`:
   // the upload happens on the laptop and the tick often on the phone, so these

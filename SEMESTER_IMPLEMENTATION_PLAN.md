@@ -82,6 +82,11 @@ thing to build.
 
 ## Phase 1 — §91, the record the rest of Part B is waiting on
 
+**Status, 18 October 2026.** Step 1 (status) is already in the code: `lib/stage.ts`
+derives all seven. Step 2 (estimated effort) landed in the batch that carries this
+note: `lib/effort.ts`, `state.effort`, and an estimate field on the item detail.
+Steps 3 (priority), 4 (subtasks) and 5 (attachments) are open.
+
 `Item` in `lib/types.ts:64` is what a deadline is, and against §91 it is
 missing priority, estimated effort, attachments, subtasks, and five of seven
 statuses.

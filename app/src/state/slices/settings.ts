@@ -22,6 +22,7 @@ import { readLeadDays } from '../../lib/runway';
 import { readSettings as readGeocode } from '../../lib/geocode';
 import { toggle as toggleStarted } from '../../lib/underway';
 import { toggleStage } from '../../lib/stage';
+import { setEffort } from '../../lib/effort';
 import { screenForRole } from '../../lib/role';
 
 export function settings(state: State, action: Action): State | null {
@@ -310,6 +311,10 @@ export function settings(state: State, action: Action): State | null {
 
     case 'toggleStarted':
       return { ...state, started: toggleStarted(action.id, state.started, Date.now()) };
+
+    // The student's own estimate of an item. Null clears it. See `lib/effort.ts`.
+    case 'setEffort':
+      return { ...state, effort: setEffort(state.effort, action.id, action.minutes) };
 
     /*
      * Finished but not handed in, and handed in. See `lib/stage.ts`.
