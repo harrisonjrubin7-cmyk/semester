@@ -11,6 +11,14 @@
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:488
 5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:496
 
+# Test fixture in the inception registry's adapter validator: a made-up live
+# key used to prove that a credential in a registry file is refused. Not a
+# credential; pinned to commit, path, rule and line.
+5f5b8a883c0685408a73814db64b2f2106553879:packages/platform-control/tests/inception-validator.test.ts:stripe-access-token:155
+# The same fixture, as the working-tree scan (`gitleaks dir`, which the secrets
+# job runs after the history scan) names it: file, rule and line, no commit.
+packages/platform-control/tests/inception-validator.test.ts:stripe-access-token:155
+
 # The 11 October design handoff's module registry (D-1475): the field
 # field named for access holds the sentence "Enrollment/teaching scope", which
 # says which scope a module's screens are read under. No value, no

@@ -8,6 +8,7 @@ import { validateBacklog } from '../validators/backlog-validator.ts';
 import { validateRegistryRecords } from '../validators/control-validator.ts';
 import { validateContracts } from '../validators/contract-validator.ts';
 import { validateRlsCoverage } from '../validators/rls-validator.ts';
+import { inceptionEvidencePaths, validateInception } from '../validators/inception-validator.ts';
 import { validateRoutes } from '../validators/route-validator.ts';
 import { validateWorkflows } from '../validators/workflow-validator.ts';
 import { validateWorkspaceRegistry } from '../validators/workspace-validator.ts';
@@ -15,7 +16,7 @@ import { repositoryRoot } from './registry-io.ts';
 
 export async function validateEvidence(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
-  const paths = new Set<string>();
+  const paths = new Set<string>(inceptionEvidencePaths(snapshot.inception));
   for (const capability of snapshot.capabilities) for (const values of Object.values(capability.evidence)) for (const reference of values ?? []) {
     if (typeof reference === 'object' && reference !== null && typeof reference.path === 'string' && reference.path.trim()) paths.add(reference.path);
   }
@@ -65,7 +66,8 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
 export async function validateSnapshot(snapshot: RegistrySnapshot): Promise<ValidationIssue[]> {
   return [
     ...validateCapabilities(snapshot), ...validateBacklog(snapshot), ...validateRegistryRecords(snapshot), ...validateWorkflows(snapshot),
-    ...validateWorkspaceRegistry(snapshot), ...validateRoutes(snapshot), ...validateContracts(snapshot), ...validateRlsCoverage(snapshot),
-    ...validateActivationGates(snapshot), ...validateOperationsReadiness(snapshot), ...await validateEvidence(snapshot),
+    ...validateWorkspaceRegistry(snapshot), ...validateRoutes(snapshot), ...validateContracts(snapshot), ...validateRlsCoverage(snapshot), ...validateInception(snapshot),
+    ...validateActivationGates(snapshot), ...validateOperationsReadiness(snapshot),
+    ...await validateEvidence(snapshot),
   ];
 }

@@ -109,6 +109,7 @@ ops-projector-worker
 organizations
 outbox
 payment-inbox
+platform-registry
 privacy-case-actions
 privacy-case-workspace
 privileged-access-review

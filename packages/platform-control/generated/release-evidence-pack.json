@@ -1,0 +1,168 @@
+{
+  "required": 27,
+  "present": 0,
+  "artifacts": [
+    {
+      "artifact": "all-capability-passports.json",
+      "producer": "npm run registry:build (capability-report.json)",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "approvers.json",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "asyncapi-diff.md",
+      "producer": "npm run registry:build (event-catalog.json; no diff step yet)",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "backup-restore-drill.json",
+      "producer": "supabase/restore-drill.sh",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "build-artifacts.json",
+      "producer": "cd app && npm run build",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "container-scan.json",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "database-migrations.json",
+      "producer": "supabase/ledger.snapshot and supabase/migrations/",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "dependency-scan.json",
+      "producer": "npm audit; cd app && npm run sbom",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "feature-config-snapshot.json",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "git-commit.txt",
+      "producer": "git rev-parse HEAD",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "integration-health-snapshot.json",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "migration-checksums.json",
+      "producer": "supabase/fingerprint.sql",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "openapi-diff.md",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "production-smoke-test.json",
+      "producer": "cd app && npm run smoke:production",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "registry-validation.json",
+      "producer": "npm run registry:validate",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "release-manifest.json",
+      "producer": "npm run release:report",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "release-notes.md",
+      "producer": "cd app && npm run release:draft",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "rollback-drill.json",
+      "producer": null,
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "secrets-scan.json",
+      "producer": "CI committed-key job (.github/workflows/ci.yml)",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "staging-smoke-test.json",
+      "producer": "cd app && npm run smoke:institutional",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/accessibility.xml",
+      "producer": "cd app && npm run smoke:a11y",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/e2e.xml",
+      "producer": "cd app && npm run journeys",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/integration.xml",
+      "producer": "cd app && npm run smoke:gateway",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/performance.xml",
+      "producer": "cd app && npm run smoke:performance",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/rls.xml",
+      "producer": "supabase/check.sh",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/security.xml",
+      "producer": "HawkScan against stackhawk.yml",
+      "status": "designed",
+      "present": false
+    },
+    {
+      "artifact": "test-results/unit.xml",
+      "producer": "cd app && npm test",
+      "status": "designed",
+      "present": false
+    }
+  ]
+}

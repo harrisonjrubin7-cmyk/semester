@@ -9,9 +9,9 @@ Satisfied of applicable. This is the baseline; the only direction a cell may mov
 | C0 | 4 | 4/4 | 0/4 | 4/4 | 0/4 | 0/3 | 1/4 |
 | C1 | 19 | 19/19 | 0/19 | 19/19 | 2/19 | 0/2 | 0/19 |
 | C2 | 31 | 31/31 | 0/31 | 31/31 | 2/31 | 0/4 | — |
-| C3 | 21 | 21/21 | 0/21 | 21/21 | — | — | — |
+| C3 | 22 | 22/22 | 0/22 | 22/22 | — | — | — |
 
-Open cells: 156 (owner 0 · backup 75 · runbook 0 · alert 50 · measured 9 · drilled 22).
+Open cells: 157 (owner 0 · backup 76 · runbook 0 · alert 50 · measured 9 · drilled 22).
 
 Single points of failure: platform, data, security, billing, ai, integrations, support.
 

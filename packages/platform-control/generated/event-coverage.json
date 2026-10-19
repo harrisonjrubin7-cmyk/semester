@@ -1,0 +1,326 @@
+[
+  {
+    "os": "admissions",
+    "event": "applicant.converted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "admissions",
+    "event": "application.submitted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "admissions",
+    "event": "decision.released",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "advising",
+    "event": "appointment.booked",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "advising",
+    "event": "plan.updated",
+    "catalog_event": "plan.updated",
+    "status": "implemented"
+  },
+  {
+    "os": "advising",
+    "event": "referral.created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "ai_governance",
+    "event": "ai.request_authorized",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "ai_governance",
+    "event": "ai.request_blocked",
+    "catalog_event": "ai.policy_blocked",
+    "status": "implemented"
+  },
+  {
+    "os": "ai_governance",
+    "event": "ai.response_validated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "campus",
+    "event": "event.rsvp_created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "campus",
+    "event": "service_request.opened",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "career",
+    "event": "application.submitted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "career",
+    "event": "employer.verified",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "career",
+    "event": "opportunity.published",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "community",
+    "event": "moderation.actioned",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "community",
+    "event": "post.published",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "community",
+    "event": "report.received",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "company",
+    "event": "contract.executed",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "company",
+    "event": "deal.stage_changed",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "company",
+    "event": "renewal.updated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "developer",
+    "event": "app.created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "developer",
+    "event": "key.issued",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "developer",
+    "event": "webhook.delivery_failed",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "faculty",
+    "event": "grade_draft.submitted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "faculty",
+    "event": "grade_release.approved",
+    "catalog_event": "grade.posted",
+    "status": "implemented"
+  },
+  {
+    "os": "family",
+    "event": "delegation.granted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "family",
+    "event": "delegation.revoked",
+    "catalog_event": "share.revoked",
+    "status": "implemented"
+  },
+  {
+    "os": "finance",
+    "event": "payment_intent.created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "finance",
+    "event": "payment.receipt_received",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "finance",
+    "event": "refund.completed",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "identity",
+    "event": "account.created",
+    "catalog_event": "identity.user_registered",
+    "status": "implemented"
+  },
+  {
+    "os": "identity",
+    "event": "grant.revoked",
+    "catalog_event": "identity.role_revoked",
+    "status": "implemented"
+  },
+  {
+    "os": "identity",
+    "event": "membership.activated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "institution",
+    "event": "integration.connected",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "institution",
+    "event": "policy.updated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "institution",
+    "event": "tenant.configured",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "learning",
+    "event": "review.resolved",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "learning",
+    "event": "source.extracted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "learning",
+    "event": "study_asset.generated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "marketplace",
+    "event": "dispute.opened",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "marketplace",
+    "event": "listing.published",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "marketplace",
+    "event": "offer.created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "operations",
+    "event": "incident.declared",
+    "catalog_event": "incident.declared",
+    "status": "implemented"
+  },
+  {
+    "os": "operations",
+    "event": "job.quarantined",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "operations",
+    "event": "release.promoted",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "registrar",
+    "event": "override.requested",
+    "catalog_event": "registration.override_requested",
+    "status": "implemented"
+  },
+  {
+    "os": "registrar",
+    "event": "readiness.evaluated",
+    "catalog_event": "registration.readiness_evaluated",
+    "status": "implemented"
+  },
+  {
+    "os": "registrar",
+    "event": "reconciliation.opened",
+    "catalog_event": "registration.readiness_reconciliation_requested",
+    "status": "implemented"
+  },
+  {
+    "os": "security",
+    "event": "access.denied",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "security",
+    "event": "key.rotated",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "security",
+    "event": "security.alert_opened",
+    "catalog_event": "security.alert_opened",
+    "status": "implemented"
+  },
+  {
+    "os": "student",
+    "event": "calendar.event.confirmed",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "student",
+    "event": "course.created",
+    "catalog_event": null,
+    "status": "designed"
+  },
+  {
+    "os": "student",
+    "event": "task.completed",
+    "catalog_event": "task.completed",
+    "status": "implemented"
+  }
+]
