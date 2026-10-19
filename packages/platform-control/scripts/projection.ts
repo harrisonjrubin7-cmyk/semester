@@ -55,7 +55,8 @@ export function renderRegistryProjection(snapshot: RegistrySnapshot): string {
   }
   lines.push('-- 2. Workspaces.');
   for (const os of operatingSystems) {
-    const classification = scopes.get(os.pilot_scopes[0])?.data_classification ?? 'internal';
+    // Every classification the pilot scopes carry, sorted: list order is not policy, and no scope's classification is dropped.
+    const classification = [...new Set(os.pilot_scopes.map((key) => scopes.get(key)?.data_classification).filter((value): value is string => value !== undefined))].sort().join(' + ') || 'internal';
     const status = os.status === 'blocked' ? 'blocked' : WORKSPACE_STATUS[workspaceRank(os.key) - 1];
     lines.push(
       `insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)`,

@@ -1,11 +1,10 @@
-import { access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { capabilityReport } from '../validators/capability-validator.ts';
 import { buildExecutionPlan } from '../validators/backlog-validator.ts';
 import { REQUIRED_RELEASE_ARTIFACTS, inceptionCoverage } from '../validators/inception-validator.ts';
 import { renderRegistryProjection } from './projection.ts';
 import { loadRegistry, repositoryRoot, writeGenerated, writeGeneratedText } from './registry-io.ts';
-import { validateSnapshot } from './validation.ts';
+import { isRegularFileInRepository, resolveInside, validateSnapshot } from './validation.ts';
 import { renderCoverageMarkdown } from './coverage-markdown.ts';
 
 const snapshot = await loadRegistry();
@@ -21,10 +20,13 @@ const coverage = inceptionCoverage(snapshot);
 const eventCoverage = [...inception.events]
   .map(({ os, event, catalog_event, status }) => ({ os, event, catalog_event, status }))
   .sort((a, b) => a.os.localeCompare(b.os) || a.event.localeCompare(b.event));
-const exists = (path: string) => access(resolve(repositoryRoot, path)).then(() => true, () => false);
+const isPresent = (artifact: string) => {
+  const absolute = resolveInside(resolve(repositoryRoot, 'release'), artifact);
+  return absolute !== null && isRegularFileInRepository(absolute);
+};
 const artifacts = await Promise.all([...inception.evidence_pack]
   .sort((a, b) => a.artifact.localeCompare(b.artifact))
-  .map(async ({ artifact, producer, status }) => ({ artifact, producer, status, present: await exists(`release/${artifact}`) })));
+  .map(async ({ artifact, producer, status }) => ({ artifact, producer, status, present: await isPresent(artifact) })));
 const evidencePack = { required: REQUIRED_RELEASE_ARTIFACTS.length, present: artifacts.filter((a) => a.present).length, artifacts };
 
 await Promise.all([

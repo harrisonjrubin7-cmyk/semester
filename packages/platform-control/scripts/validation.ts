@@ -43,6 +43,7 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
     }
   }
   for (const path of [...paths].sort()) {
+    if (path.trim() === '') { issues.push({ code: 'evidence_blank_path', path, message: 'Evidence path is blank; it would resolve to the repository root.' }); continue; }
     const absolute = resolveInside(repositoryRoot, path);
     if (absolute === null) { issues.push({ code: 'evidence_outside_repository', path, message: 'Evidence path resolves outside the repository.' }); continue; }
     try { await access(absolute); }
@@ -63,6 +64,13 @@ export async function validateEvidence(snapshot: RegistrySnapshot): Promise<Vali
     }
   }
   return issues;
+}
+
+/** A regular file inside the checkout. A directory, or a symlink whose target lies outside it, is not evidence even though it exists. */
+export async function isRegularFileInRepository(path: string): Promise<boolean> {
+  const target = await realpath(path).catch(() => null);
+  if (target === null) return false;
+  return target.startsWith((await realpath(repositoryRoot)) + sep) && (await stat(target)).isFile();
 }
 
 /** The absolute location of `path` under `directory`, or null when it is absolute or climbs out of `directory`. */

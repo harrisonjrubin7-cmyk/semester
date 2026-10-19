@@ -138,6 +138,13 @@ begin
     format('update private.registry_capabilities set status = ''active'' where id = %L', cap), 'verified evidence');
   update private.registry_capability_evidence set verified_at = now(), status = 'tested'
     where capability_id = cap and evidence_type = 'test';
+  perform pg_temp.refuses('active is refused when the verified evidence names no verifier',
+    format('update private.registry_capabilities set status = ''active'' where id = %L', cap), 'verified evidence');
+  insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
+  values ('00000000-0000-0000-0000-00000000f00d', '00000000-0000-0000-0000-000000000000', 'authenticated',
+          'authenticated', 'verifier@example.test', now(), now(), now());
+  update private.registry_capability_evidence set verified_by = '00000000-0000-0000-0000-00000000f00d'
+    where capability_id = cap and evidence_type = 'test';
   update private.registry_capabilities set status = 'active' where id = cap;
   perform pg_temp.counted('active once evidence is verified',
     (select count(*) from private.registry_capabilities where id = cap and status = 'active'), 1);

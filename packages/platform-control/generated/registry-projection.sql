@@ -18,16 +18,16 @@ insert into private.registry_workspaces (workspace_key, name, os_family, base_ro
   values ('advising', 'Advising OS', 'Advising OS', '/advising', 'student-success-owner', 'educational-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('ai_governance', 'AI Governance OS', 'AI Governance OS', '/console/ai', 'platform-security', 'tenant-administration', 'draft'::private.registry_status)
+  values ('ai_governance', 'AI Governance OS', 'AI Governance OS', '/console/ai', 'platform-security', 'operational-security-records + student-records + tenant-administration', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('alumni', 'Alumni OS', 'Alumni OS', '/portal/alumni', 'external-experience-owner', 'consent-or-contract-scoped-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('campus', 'Campus OS', 'Campus OS', '/app/campus', 'student-affairs-owner', 'student-records', 'draft'::private.registry_status)
+  values ('campus', 'Campus OS', 'Campus OS', '/app/campus', 'student-affairs-owner', 'sensitive-case-records + student-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('career', 'Career OS', 'Career OS', '/app/career', 'external-experience-owner', 'student-records', 'draft'::private.registry_status)
+  values ('career', 'Career OS', 'Career OS', '/app/career', 'external-experience-owner', 'consent-or-contract-scoped-records + student-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('community', 'Community OS', 'Community OS', '/app/community', 'trust-and-safety-owner', 'community-content', 'draft'::private.registry_status)
@@ -45,16 +45,16 @@ insert into private.registry_workspaces (workspace_key, name, os_family, base_ro
   values ('faculty', 'Faculty OS', 'Faculty OS', '/teach', 'academic-workflows-owner', 'educational-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('family', 'Family OS', 'Family OS', '/app/family', 'external-experience-owner', 'consent-or-contract-scoped-records', 'draft'::private.registry_status)
+  values ('family', 'Family OS', 'Family OS', '/app/family', 'external-experience-owner', 'consent-or-contract-scoped-records + student-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('finance', 'Finance OS', 'Finance OS', '/app/money', 'finance-operations-owner', 'financial-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('housing_dining', 'Housing and Dining OS', 'Housing and Dining OS', '/app/housing', 'student-affairs-owner', 'student-records', 'draft'::private.registry_status)
+  values ('housing_dining', 'Housing and Dining OS', 'Housing and Dining OS', '/app/housing', 'student-affairs-owner', 'sensitive-case-records + student-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('identity', 'Identity OS', 'Identity OS', '/sign-in', 'platform-security', 'student-records', 'draft'::private.registry_status)
+  values ('identity', 'Identity OS', 'Identity OS', '/sign-in', 'platform-security', 'student-records + tenant-administration', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('institution', 'Institution OS', 'Institution OS', '/console', 'institution-success-owner', 'tenant-administration', 'draft'::private.registry_status)
@@ -72,7 +72,7 @@ insert into private.registry_workspaces (workspace_key, name, os_family, base_ro
   values ('operations', 'Operations OS', 'Operations OS', '/ops', 'platform-operations-owner', 'operational-security-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('partner', 'Partner OS', 'Partner OS', '/portal/partner', 'platform-partnerships-owner', 'consent-or-contract-scoped-records', 'draft'::private.registry_status)
+  values ('partner', 'Partner OS', 'Partner OS', '/portal/partner', 'platform-partnerships-owner', 'business-records + consent-or-contract-scoped-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('public', 'Public OS', 'Public OS', '/', 'growth-owner', 'public', 'draft'::private.registry_status)
@@ -81,7 +81,7 @@ insert into private.registry_workspaces (workspace_key, name, os_family, base_ro
   values ('registrar', 'Registrar OS', 'Registrar OS', '/registrar', 'registration-owner', 'high-impact-educational-records', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
-  values ('security', 'Security and Trust OS', 'Security and Trust OS', '/trust', 'platform-security', 'tenant-administration', 'draft'::private.registry_status)
+  values ('security', 'Security and Trust OS', 'Security and Trust OS', '/trust', 'platform-security', 'public + tenant-administration', 'draft'::private.registry_status)
   on conflict (workspace_key) do update set name = excluded.name, os_family = excluded.os_family, base_route = excluded.base_route, owner_team = excluded.owner_team, data_classification = excluded.data_classification, status = excluded.status;
 insert into private.registry_workspaces (workspace_key, name, os_family, base_route, owner_team, data_classification, status)
   values ('student', 'Student OS', 'Student OS', '/app/today', 'student-experience-owner', 'student-records', 'implemented'::private.registry_status)

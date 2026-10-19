@@ -182,6 +182,7 @@ begin
       select 1 from private.registry_capability_evidence e
        where e.capability_id = new.id
          and e.verified_at is not null
+         and e.verified_by is not null
          and e.status in ('implemented', 'tested', 'deployed', 'active')
          and (e.expires_at is null or e.expires_at > now())
     ) then

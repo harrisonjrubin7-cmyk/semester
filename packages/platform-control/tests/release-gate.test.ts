@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 import { renderRegistryProjection } from '../scripts/projection.ts';
 import { loadRegistry, repositoryRoot } from '../scripts/registry-io.ts';
-import { resolveInside } from '../scripts/validation.ts';
+import { resolveInside, validateEvidence } from '../scripts/validation.ts';
 import type { RegistrySnapshot } from '../types.ts';
 import { validateInception } from '../validators/inception-validator.ts';
 import { validateCapabilities } from '../validators/capability-validator.ts';
@@ -95,4 +95,41 @@ test('a verified journey may not name a blank test path', () => {
   journey.status = 'verified';
   journey.tests = [''];
   assert.ok(validateInception(snapshot).some((i) => i.code === 'invalid_record_shape' && i.path === `journeys.${journey.key}.tests`));
+});
+
+test('a journey crosses two distinct operating systems, not one repeated', () => {
+  const snapshot = copy();
+  const journey = snapshot.inception!.journeys[0];
+  const system = snapshot.inception!.operating_systems[0].key;
+  journey.status = 'verified';
+  journey.tests = ['tests/example.test.ts'];
+  journey.crosses = [system, system];
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'journey_single_system' && i.path === `journeys.${journey.key}.crosses`));
+});
+
+test('a blank evidence path is refused rather than resolved to the repository root', async () => {
+  const snapshot = copy();
+  snapshot.inception!.adapters[0].evidence = [''];
+  assert.ok((await validateEvidence(snapshot)).some((i) => i.code === 'evidence_blank_path'));
+});
+
+test('every registered integration has an adapter, so omission cannot empty the roster', () => {
+  const snapshot = copy();
+  const integration = snapshot.inception!.adapters.find((a) => a.integration !== null)!.integration!;
+  snapshot.inception!.adapters = snapshot.inception!.adapters.filter((a) => a.integration !== integration);
+  assert.ok(validateInception(snapshot).some((i) => i.code === 'integration_without_adapter' && i.path === `integrations.${integration}`));
+});
+
+test('a system carries every classification its pilot scopes hold, whatever order they are listed in', () => {
+  const snapshot = copy();
+  const [first, second] = snapshot.workspaces!;
+  first.data_classification = 'restricted';
+  second.data_classification = 'public';
+  const os = snapshot.inception!.operating_systems[0];
+  const workspaceRow = (sql: string) => sql.split('\n').find((line) => line.includes(`values ('${os.key}', `)) ?? '';
+  os.pilot_scopes = [first.key, second.key];
+  const forward = renderRegistryProjection(snapshot);
+  os.pilot_scopes = [second.key, first.key];
+  assert.equal(renderRegistryProjection(snapshot), forward, 'listing order does not change the projection');
+  assert.ok(workspaceRow(forward).includes("'public + restricted'"), `the workspace row carries every classification, sorted: ${workspaceRow(forward)}`);
 });

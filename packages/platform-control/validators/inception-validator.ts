@@ -194,7 +194,10 @@ function validateJourneys(records: JourneyRecord[], systems: OperatingSystemReco
     const path = `journeys.${record.key}`;
     if (record.key !== `journey.${String(record.number).padStart(2, '0')}`) issue('invalid_key', path, 'Journey keys are journey.NN.');
     if (!strings(record.crosses) || record.crosses.length === 0) issue('missing_journey_systems', `${path}.crosses`, 'A journey crosses at least one operating system.');
-    else for (const os of record.crosses) if (!osKeys.has(os)) issue('unknown_os', `${path}.crosses`, `Unknown operating system ${os}.`);
+    else {
+      for (const os of record.crosses) if (!osKeys.has(os)) issue('unknown_os', `${path}.crosses`, `Unknown operating system ${os}.`);
+      if (record.status === 'verified' && new Set(record.crosses.filter((os) => osKeys.has(os))).size < 2) issue('journey_single_system', `${path}.crosses`, 'A verified journey crosses at least two distinct operating systems.');
+    }
     if (!strings(record.tests) || record.tests.some((test) => test.trim() === '')) issue('invalid_record_shape', `${path}.tests`, 'tests must be a string array of nonblank paths.');
     else if (record.status === 'verified' && record.tests.length === 0) issue('verified_without_tests', `${path}.tests`, 'A verified journey names the test that runs it end to end.');
     requireGaps(record, path, issue);
@@ -234,6 +237,12 @@ function validateScreenContracts(records: ScreenContractRecord[], systems: Opera
     if (!text(record.operational_owner)) issue('missing_operational_owner', `${path}.operational_owner`, 'operational_owner is required.');
     if (!text(record.runbook)) issue('missing_runbook', `${path}.runbook`, 'runbook is required.');
   }
+}
+
+/** Every registered integration has an adapter, so omitting one cannot shrink the sandbox-verification roster to 0 of 0. */
+function validateIntegrationRoster(adapters: AdapterRecord[], integrations: ReadonlySet<string>, issue: Issue): void {
+  const deployed = new Set(adapters.map((record) => record.integration));
+  for (const key of [...integrations].sort(compareOrdinal)) if (!deployed.has(key)) issue('integration_without_adapter', `integrations.${key}`, `${key} has no adapter, so no sandbox verification covers it.`);
 }
 
 function validateAdapters(records: AdapterRecord[], systems: OperatingSystemRecord[], integrations: ReadonlySet<string>, issue: Issue): void {
@@ -357,6 +366,7 @@ export function validateInception(snapshot: RegistrySnapshot): ValidationIssue[]
   validateJourneys(inception.journeys, inception.operating_systems, issue);
   validateScreenContracts(inception.screen_contracts, inception.operating_systems, roles, capabilities, catalog, issue);
   validateAdapters(inception.adapters, inception.operating_systems, integrations, issue);
+  validateIntegrationRoster(inception.adapters, integrations, issue);
   validateCadence(inception.cadence, issue);
   validateServiceLevels(inception.service_levels, issue);
   validateEvidencePack(inception.evidence_pack, issue);
