@@ -163,11 +163,15 @@ begin
   away_item := pg_temp.ask(away_prof, $q$select public.gradebook_add_item('HIST 2100', '2026FA', 'essays', 'Essay 2', 100, null, 'ls-away-item')::text$q$)::uuid;
 
   -- ── Handing in ──────────────────────────────────────────────────────────
+  perform pg_temp.said('before handing in, the account counts as untouched',
+    public.lti_account_untouched(maya)::text, 'true');
   r := pg_temp.ask(maya, format(hand_in, essay, 'Draft one of my essay on Reconstruction.', 'ls-maya-v1'))::jsonb;
   perform pg_temp.said('an enrolled student hands in, and it is version 1', r->>'version', '1');
   perform pg_temp.said('the receipt carries the text''s SHA-256', r->>'content_hash',
     encode(sha256(convert_to('Draft one of my essay on Reconstruction.', 'UTF8')), 'hex'));
   first_sub := (r->>'submission')::uuid;
+  perform pg_temp.said('after handing in, it holds the student''s work and is not untouched',
+    public.lti_account_untouched(maya)::text, 'false');
   perform pg_temp.said('the same key and text replays the same receipt',
     (pg_temp.ask(maya, format(hand_in, essay, 'Draft one of my essay on Reconstruction.', 'ls-maya-v1'))::jsonb)->>'submission', first_sub::text);
   perform pg_temp.counted('and wrote one submission', (select count(*) from public.learning_submissions), 1);
