@@ -9971,30 +9971,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Successful authorized operation",
-            "headers": {
-              "X-Request-Id": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "ETag": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Pilot"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Malformed request",
             "content": {
@@ -10090,6 +10066,30 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pilot"
                 }
               }
             }
@@ -11830,30 +11830,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Successful authorized operation",
-            "headers": {
-              "X-Request-Id": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "ETag": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SupportCase"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Malformed request",
             "content": {
@@ -11949,6 +11925,30 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportCase"
                 }
               }
             }
@@ -12216,30 +12216,6 @@
           }
         ],
         "responses": {
-          "201": {
-            "description": "Successful authorized operation",
-            "headers": {
-              "X-Request-Id": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "ETag": {
-                "schema": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Finding"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Malformed request",
             "content": {
@@ -12335,6 +12311,30 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Successful authorized operation",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Finding"
                 }
               }
             }
