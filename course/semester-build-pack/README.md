@@ -14,7 +14,7 @@ Repeat for weeks 1-16. Templates intentionally fail until implemented. Visible t
 Developer-console OpenAPI 3.1 JSON: 71 proposed operations, 54 paths, 57 schemas. No API service is implemented. Run an approved OpenAPI validator and contract tests before release. Authentication URL is a reserved example placeholder.
 
 ## Verification
-16 instructor reference implementations were tested through the grader: 40 visible cases passed (measured before week 8 gained a second case; the pack now has 106). References are not included in the learner pack. Python syntax compiled; schema references and operation IDs checked. No browser end-to-end, full OpenAPI semantic validation, TypeScript capstone tests, production runner security or deployment verification performed.
+16 instructor reference implementations were tested through the grader: 40 visible cases passed (measured before week 8 gained a second case; the pack now has 111). References are not included in the learner pack. Python syntax compiled; schema references and operation IDs checked. No browser end-to-end, full OpenAPI semantic validation, TypeScript capstone tests, production runner security or deployment verification performed.
 
 ## Files
 portal.html, syllabus.md, labs/, grader.py, architecture-guides.md, partner-certification.md, developer-console.openapi.json and verification.json. PDF included in archive.

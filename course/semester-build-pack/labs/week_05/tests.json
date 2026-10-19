@@ -53,6 +53,15 @@
         ]
       },
       "expected": false
+    },
+    {
+      "input": {
+        "active": "false",
+        "scopes": [
+          "tasks:read"
+        ]
+      },
+      "expected": false
     }
   ]
 }

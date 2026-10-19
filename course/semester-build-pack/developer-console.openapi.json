@@ -8367,7 +8367,7 @@
           "Certification"
         ],
         "summary": "POST /v1/apps/{appId}/certification-submissions",
-        "description": "Application membership and resource policy. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient.",
+        "description": "Application membership and resource policy. Tenant, environment, active installation and property policies are enforced server-side. Scope possession alone is insufficient. Precondition: every evidenceId must reference evidence recorded for this app and this releaseId; otherwise 422.",
         "security": [
           {
             "oauth2": [
@@ -12328,7 +12328,7 @@
             }
           }
         },
-        "x-authority": "Assigned independent reviewer",
+        "x-authority": "Support operator; scope possession alone is insufficient",
         "requestBody": {
           "required": true,
           "content": {
@@ -13420,7 +13420,9 @@
         "properties": {
           "url": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "pattern": "^https://",
+            "description": "HTTPS only. The destination must be globally routable; checked at registration and at connection time."
           },
           "eventTypes": {
             "type": "array",
@@ -14325,6 +14327,32 @@
           },
           "producesOutput": {
             "type": "boolean"
+          },
+          "failure": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "description": "Structured, non-sensitive failure details. Required non-null when status is failed.",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "correlationId": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "code",
+              "retryable",
+              "correlationId"
+            ]
           }
         },
         "required": [
@@ -14355,6 +14383,28 @@
                   "type": "string",
                   "format": "uri",
                   "minLength": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "failed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "failure"
+              ],
+              "properties": {
+                "failure": {
+                  "type": "object"
                 }
               }
             }

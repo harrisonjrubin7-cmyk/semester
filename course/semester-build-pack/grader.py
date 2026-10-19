@@ -25,7 +25,7 @@ for case in spec['cases']:
         actual=ns[spec['function']](case['input'])
         passed=(not expects_error) and same(actual,case['expected'])
     except Exception as e:
-        passed=expects_error and type(e) is ValueError
+        passed=expects_error and isinstance(e, ValueError)
     results.append(bool(passed))
 sys.__stdout__.write(json.dumps(results))
 """
