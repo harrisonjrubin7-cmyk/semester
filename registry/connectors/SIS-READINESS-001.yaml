@@ -36,5 +36,5 @@ connector:
 
   owner:
     business: institution_registrar_owner
-    technical: connector_owner
+    technical: integration-platform  # platform-control owner of integrations.sis
     operational: pilot_operations_owner
