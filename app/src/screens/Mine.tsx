@@ -209,7 +209,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           <SectionLabel style={{ margin: '0 0 var(--sp-3)' }}>
             {through.of > 0 ? `Steps · ${through.done} of ${through.of}` : 'Steps'}
           </SectionLabel>
-          {steps.map((sp) => (
+          {steps.map((sp, index) => (
             <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
               <button
                 type="button"
@@ -238,7 +238,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'dropStep', id: t.id, stepId: sp.id })}
-                aria-label={`Remove ${sp.text}`}
+                aria-label={`Remove step ${index + 1} of ${steps.length} from ${t.title}: ${sp.text} · ${sp.done ? 'done' : 'not done'}`}
                 style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', ...secondLine() }}
               >
                 Remove
@@ -288,7 +288,13 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => taskActions.remove(t.id)}
-            aria-label={`Delete ${t.title}`}
+            aria-label={`Delete action ${t.title}: ${[
+              t.courseId ? courseCode(t.courseId) : 'Personal',
+              t.date ? longLabel(isoToDate(t.date)) : 'No date',
+              t.time ? shownTime(t.time) : '',
+              t.repeat ? lowerFirst(describeRepeat(t.repeat)) : '',
+              through.of > 0 ? `${through.done}/${through.of} steps` : '',
+            ].filter(Boolean).join(' · ')}`}
             /* Marked so the assistant's floating button lifts clear of it at
                any overlap rather than at half of it — see `tappable` in
                `ai/Assistant.tsx`. */
@@ -1041,7 +1047,14 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-            aria-label={`Delete ${a.title}`}
+            aria-label={`Delete appointment ${a.title}: ${[
+              longLabel(isoToDate(a.date)),
+              shownTime(a.time),
+              kindOf(a.kind).label,
+              a.where || 'No location',
+              a.at === null ? spanLabel(a.days ?? 1) : lengthLabel(a.minutes ?? 60),
+              a.repeat ? describeRepeat(a.repeat) : '',
+            ].filter(Boolean).join(' · ')}`}
             data-danger=""
             style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >

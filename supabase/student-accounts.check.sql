@@ -133,7 +133,7 @@ end $$;
 do $$
 declare
   off1 uuid; off2 uuid; aid uuid; adm1 uuid; adm2 uuid; student uuid; other uuid; far uuid;
-  charge uuid; wrong uuid; pay uuid; refund uuid; big_refund uuid; schol uuid; rev_part uuid; rev uuid; rev2 uuid; late uuid; waiting uuid; adj uuid;
+  charge uuid; wrong uuid; pay uuid; refund uuid; big_refund uuid; schol uuid; rev_part uuid; rev uuid; rev2 uuid; late uuid; waiting uuid; adj uuid; dup uuid;
   audits bigint;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -211,6 +211,51 @@ begin
   perform pg_temp.says('a refund answers a payment, not a charge', pg_temp.decide(adm2, wrong, 'approved'), 'answers a payment');
   perform pg_temp.runs_clean('so it is rejected', pg_temp.decide(adm2, wrong, 'rejected'));
 
+  -- Phase 5 (stream 15): one provider reference is one money movement. A
+  -- payment the provider reported twice, or a webhook replayed, must not be
+  -- approved into the ledger twice.
+  dup := pg_temp.request(off1, 'payment', 'tuition', 200000, '2026-09-06', null, 'pi_3Nq8xLk2');
+  perform pg_temp.says('a second payment under the same provider reference is not approved', pg_temp.decide(adm1, dup, 'approved'), 'already recorded');
+  perform pg_temp.runs_clean('so it is rejected, and a rejected duplicate leaves the first alone', pg_temp.decide(adm1, dup, 'rejected'));
+  perform pg_temp.counted('the ledger still holds the reference once',
+    (select count(*) from public.student_account_entries where tenant_id = 'sa-u' and kind = 'payment' and provider_ref = 'pi_3Nq8xLk2'), 1);
+  begin
+    insert into public.student_account_entries (tenant_id, student_ref, kind, category, amount_cents, description, provider_ref,
+      effective_on, period, request_id, high_value)
+    values ('sa-u', 'S100', 'payment', 'tuition', -200000, 'replayed', 'pi_3Nq8xLk2', '2026-09-06', '2026-09', dup, false);
+    raise exception 'FAILED: the same payment reference was written twice';
+  exception when unique_violation then
+    raise notice 'ok  and the database holds one payment per provider reference, whoever writes it';
+  end;
+  declare
+    as_refund uuid; as_other uuid;
+  begin
+    -- Another kind under the same reference is a different movement, and the
+    -- same reference at another school is another school's. Probed inside a
+    -- block that is rolled back, so the ledger the rest of the suite counts
+    -- is untouched.
+    -- The request guard speaks for a signed-in caller; this probe writes the
+    -- ledger directly, so only that trigger is off, and only until the
+    -- rollback. The ledger's own trigger and index stay on.
+    alter table public.student_account_requests disable trigger student_account_request_guard;
+    insert into public.student_account_requests (tenant_id, student_ref, kind, category, amount_cents, description, reference_entry_id, provider_ref, effective_on)
+    values ('sa-u', 'S100', 'refund', 'tuition', 100, 'same reference, another kind', pg_temp.entry_of(pay), 'pi_3Nq8xLk2', '2026-09-06') returning id into as_refund;
+    insert into public.student_account_requests (tenant_id, student_ref, kind, category, amount_cents, description, provider_ref, effective_on)
+    values ('sa-other', 'S100', 'payment', 'tuition', 100, 'same reference, another school', 'pi_3Nq8xLk2', '2026-09-06') returning id into as_other;
+    insert into public.student_account_entries (tenant_id, student_ref, kind, category, amount_cents, description, provider_ref,
+      effective_on, period, request_id, high_value)
+    values ('sa-u', 'S100', 'refund', 'tuition', 100, 'same reference, another kind', 'pi_3Nq8xLk2', '2026-09-06', '2026-09', as_refund, false);
+    insert into public.student_account_entries (tenant_id, student_ref, kind, category, amount_cents, description, provider_ref,
+      effective_on, period, request_id, high_value)
+    values ('sa-other', 'S100', 'payment', 'tuition', -100, 'same reference, another school', 'pi_3Nq8xLk2', '2026-09-06', '2026-09', as_other, false);
+    raise exception 'ROLLBACK_PROBE';
+  exception when others then
+    if sqlerrm <> 'ROLLBACK_PROBE' then
+      raise exception 'FAILED: a different kind or school was refused for a shared reference: %', sqlerrm;
+    end if;
+    raise notice 'ok  another kind, or another school, may share a reference';
+  end;
+
   -- ── thresholds ─────────────────────────────────────────────────────────
   schol := pg_temp.request(aid, 'aid_credit', 'scholarship', 150000, '2026-09-10');
   perform pg_temp.says('an officer cannot approve a scholarship at the threshold', pg_temp.decide(off2, schol, 'approved'), 'high-value approver');
@@ -244,6 +289,10 @@ begin
       and prosrc like '%student_account_entry:%' and prosrc like '%pg_advisory_xact_lock(hashtextextended(''student_account_period:%'), 1);
   perform pg_temp.counted('and the close guard the month',
     (select count(*) from pg_proc where proname = 'student_account_close_guard' and prosrc like '%pg_advisory_xact_lock%'), 1);
+  -- Phase 3, domain F: a write that fails leaves no inconsistent record. The
+  -- ledger is counted before the refused write and again after it.
+  declare
+    ledger_before bigint := (select count(*) from public.student_account_entries);
   begin
     insert into public.student_account_entries (tenant_id, student_ref, kind, category, amount_cents, description, reference_entry_id,
       provider_ref, effective_on, period, request_id, high_value)
@@ -251,6 +300,8 @@ begin
     raise exception 'FAILED: a second reversal of one entry was written';
   exception when unique_violation then
     raise notice 'ok  and the database holds one reversal per entry, whoever writes it';
+    perform pg_temp.counted('and the refused write left the ledger exactly as it was',
+      (select count(*) from public.student_account_entries), ledger_before);
   end;
 
   -- ── reconciliation and the monthly close ───────────────────────────────
@@ -311,11 +362,12 @@ begin
   perform pg_temp.counted('and no close', pg_temp.seen(student, 'select * from public.student_account_closes'), 0);
 
   -- ── audit ──────────────────────────────────────────────────────────────
-  -- Fourteen requests written (the four refused at insert wrote nothing),
-  -- thirteen decisions that succeeded, one settings row, three
-  -- reconciliations and one close.
+  -- Fifteen requests written (the four refused at insert wrote nothing; the
+  -- fifteenth is the duplicate payment reference), fourteen decisions that
+  -- succeeded (its rejection is the fourteenth; its refused approval wrote
+  -- nothing), one settings row, three reconciliations and one close.
   select count(*) into audits from public.tenant_policy_audit_event where tenant_id = 'sa-u' and entity_type like 'student_account_%';
-  perform pg_temp.counted('every change is audited, and nothing refused is', audits, 32);
+  perform pg_temp.counted('every change is audited, and nothing refused is', audits, 34);
 
   -- ── an account goes; the record stays ──────────────────────────────────
   perform set_config('request.jwt.claims', '', true);

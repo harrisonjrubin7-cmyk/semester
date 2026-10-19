@@ -43,6 +43,7 @@ a { color: inherit; }
 .mobile-tab[aria-current="page"] { color: white; }
 .context-bar { align-items: center; background: var(--ink-900); color: var(--text-inverse-muted); display: flex; font-size: 0.8125rem; gap: var(--space-4); justify-content: space-between; min-height: 3rem; overflow-x: auto; padding: var(--space-3) var(--space-5); }
 .context-bar strong { color: var(--text-inverse); font-weight: 600; }
+.context-status span { display: none; }
 .command-backdrop { align-items: flex-start; background: rgba(9, 10, 14, 0.72); display: flex; inset: 0; justify-content: center; padding: 10vh var(--space-5); position: fixed; z-index: 90; }
 .command-dialog { background: var(--surface-panel); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); max-width: 40rem; overflow: hidden; width: 100%; }
 .command-input { border: 0; border-bottom: 1px solid var(--border-default); color: var(--text-primary); min-height: 3.5rem; outline: none; padding: 0 var(--space-6); width: 100%; }
@@ -65,6 +66,7 @@ a { color: inherit; }
   .workspace-content { padding: var(--space-7); }
   .mobile-tabs { display: none; }
   .context-bar { padding-inline: var(--space-7); }
+  .context-status span { display: inline; }
 }
 
 @media (prefers-contrast: more) {
