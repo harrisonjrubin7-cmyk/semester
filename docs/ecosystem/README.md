@@ -16,34 +16,31 @@ up only when its evidence is in the repo.
 - **verified**: the repo gates pass on it and the evidence is listed here.
 - **deployed**: running in a named environment. Nothing is deployed yet.
 
-## What is done (this branch)
+## Where the build stands (read from main, 19 October 2026)
 
-| Item | Status | Evidence |
+The stream and phase reports in [`../execute/`](../execute/) are the authority on
+progress. This table only points at them.
+
+| Stream or phase | State | Evidence |
 | --- | --- | --- |
-| Branch fast-forwarded to `origin/main` (was 16 commits behind; no unique commits) | done | `git merge --ff-only origin/main` |
-| `semester-core` ported into `app/src/lib/core/` (the nine logic modules and their test file, `.txt` suffix dropped) | implemented, verified | `npx vitest run src/lib/core`: 15 tests pass |
-| Two `semester-core` imports made type-only (`verbatimModuleSyntax`) | done | `tsc -b` exit 0 |
-| Equity reviews for the two new ranking functions, `lib/core/provenance.ts#rank` and `lib/core/nextaction.ts#order`, plus their rows in `docs/EQUITY-REVIEW.md` | drafted; **not yet a review** | the review gate requires every ranking function to be reviewed or exempt; the named reviewer has not read these (findings P-1 and N-1 say so) |
-| Coverage matrix | superseded | main now carries the generated matrix (`COVERAGE-MATRIX.csv`, 281 routes and 122 capabilities, `npm run ecosystem:build`); see [`INVENTORY.md`](INVENTORY.md) |
+| 00 Repo audit and design-system sync | complete; baseline approved by the founder | [`00-setup-report.md`](../execute/00-setup-report.md), [`D-1287`](../decisions/D-1287.md), [`D-1648`](../decisions/D-1648.md) |
+| 01 Platform core | first slice landed; most of the 33-item work list open | [`01-platform-core-report.md`](../execute/01-platform-core-report.md), [`01-platform-core-diff.md`](../execute/01-platform-core-diff.md) |
+| 02 Identity and SSO | complete in mock form; the remaining gates are human (IdP metadata, test accounts, group names) | [`02-identity-sso-diff.md`](../execute/02-identity-sso-diff.md) |
+| 08 Projection foundation | recommendation and first slice | [`08-projection-foundation-diff.md`](../execute/08-projection-foundation-diff.md) |
+| 30 Phased build, phases 0 to 5 | phase 0's first two deliverables done; phases 1 to 5 each have a report, and none of their exit gates is met | [`30-phase-0`](../execute/30-phase-0-coverage-report.md) to [`35-phase-5`](../execute/35-phase-5-enable-and-replace-report.md), [`capability-register.csv`](../execute/capability-register.csv) |
+| Every other stream (03 to 07, 09 to 29) | not started as a stream; some routes they own exist from earlier work, per the matrix | `COVERAGE-MATRIX.csv` |
 
-### Gates run on this branch (from `app/`, after `npm ci` at the repo root)
+**App target ([`D-1648`](../decisions/D-1648.md)).** `app/` stays Vite + React,
+and the API stays in `app/server`, `app/api`, the Supabase RPCs and the edge
+functions. No Next.js `web/` app is created. Stream 01's diff marked the
+handoff's Next.js routes `drop` because the gateway already does their job.
 
-| Command | Result |
-| --- | --- |
-| `npx tsc -b` | exit 0 |
-| `npm run lint` | exit 0 (warnings are pre-existing, none in the new files) |
-| `npm run check:university` | exit 0 |
-| `npm test` | exit 0: 1527 files passed, 24254 tests passed, 80 skipped |
-| `npm run test:shuffle` | exit 0: 24254 tests passed |
-| `npm run build` | exit 0 |
-
-Not run: `design-system:check` and `design-system:report` (no UI was written, so the
-UI gates do not apply to this change); the Supabase database tests (no local stack);
-and the DAST scan (no running application and no `HAWK_API_KEY`).
-
-Two failures appeared during the work and were fixed rather than skipped: the
-equity ranking gate (fixed by writing the reviews) and the vocabulary rule (the
-word "tasks" is retired in user-facing text; reworded to "other actions").
+**`lib/core` removed ([`D-1648`](../decisions/D-1648.md)).** The nine
+`semester-core` modules that [`D-1502`](../decisions/D-1502.md) placed in
+`app/src/lib/core/` had no caller, and six of them repeat existing repo logic.
+They were removed, along with their two draft equity reviews. The four
+behaviours with no repo counterpart are listed in D-1648 as backlog. Each is to
+be built beside the first screen that needs it.
 
 ## What the handoff contains
 
@@ -98,8 +95,8 @@ follows `screens.json`, the most granular source.
 ## Build streams and their route counts
 
 Streams come from `manifest.json`. Each stream's exit gate is in
-`BUILD.md` §4. Every stream is **not started**, so every route in it is
-`specified`.
+`BUILD.md` §4. Route status is in the generated `COVERAGE-MATRIX.csv`, not in
+this table.
 
 | Stream | File | Routes assigned |
 | --- | --- | --- |
@@ -138,41 +135,33 @@ Streams 00, 01, 02, 06, 08, 09, 10, 12, 13, 14, 16 and 17 own no prototype route
 They are platform work (setup, schema, identity, AI gateway, trust, launch) that
 the routes depend on, and they are in the plan, not skipped.
 
-## Decisions that need the owner (not made here)
+## Decisions still open for the owner
 
-1. **App target.** The repo's `app/` is Vite + React. The handoff's API routes,
-   middleware and migrations are written for Next.js App Router + Supabase. BUILD.md
-   §2 says to keep the Vite app and add a `web/` Next.js app for the platform
-   API. Every API and auth stream depends on this. Nothing in this branch chooses it.
-2. **Where the design archives live.** Copy the 33 MB handoff into `design/`
-   (the handoff's intake), or keep it out and reference it from `docs/`.
-3. **Reconciling the counts.** 25 vs 26 workspaces, 281 routes vs 123 screens in
-   `PHASES.md`, and streams 25 to 30 missing from `manifest.json`. The matrix can
-   be regenerated once the owner picks the source.
-4. **Equity reviews.** The two drafted reviews need the named reviewer to read,
-   correct, and remove the drafting findings before they count.
-5. **Live integration bundle.** Porting it needs a Supabase database to verify the
-   migration against, and a staging project reference. It is not ported in this branch.
+1. **Where the design archives live.** Copy the 33 MB handoff into `design/`
+   or keep referencing it from `docs/handoff/`. Stream 00 kept only `handoff/`
+   ([`D-1287`](../decisions/D-1287.md)).
+2. **Reconciling the counts.** 25 vs 26 workspaces, 281 routes vs 123 screens in
+   `PHASES.md`, and streams 25 to 30 missing from `manifest.json`.
+3. **Live integration bundle.** Porting it needs a Supabase database to verify the
+   migration against, and a staging project reference.
+4. **Product decisions the phase reports name.** Examples: a student submissions
+   model, person-level or office-level ownership of help requests, the coach
+   role for career shares, and family-grant history
+   ([`33-phase-3`](../execute/33-phase-3-cross-role-report.md)).
 
 ## Human-only steps (from BUILD.md §7; the agent stops and asks)
 
 Insurance; DPA and student data privacy addendum; attorney review of
 `docs/legal` drafts; HECVAT; Vanderbilt staging IdP metadata and test accounts;
-IT, registrar and sponsor contacts; approval of the design-system baseline; approval
+IT, registrar and sponsor contacts; approval
 of every PR; production cutover approval; choice and terms of the AI provider.
 
-## Next executable slices, in order
+## Next executable slices
 
-1. Decide decision 1 (app target). It gates streams 01 to 04.
-2. Stream 00: repo audit, design-system baseline, CI check. Needs the baseline approval.
-3. Wire `semester-core` into real screens. Today it has no caller. Start with
-   `order` (Today) and `resolve` (source conflicts), each behind a test that
-   renders the six states.
-4. Stream 01: port the `control-plane/baseline` policies and `access.ts`, reconciled
-   with the repo's `private.has_capability` (BUILD.md §1). Run the database tests
-   on a local Supabase stack.
-5. Port the live-integration bundle once a local database can apply and reset the
-   migrations, and keep it switched off.
+The phase reports each end with "what the next stream needs". The unblocked code
+work there, plus the four backlog behaviours in D-1648, is the queue. Each item
+lands beside the screen that uses it, with tests, and is recorded in
+`capability-register.csv`.
 
 ## Files
 

@@ -45,8 +45,6 @@ says nothing of cause or significance, and nothing feeds it today.
 | `lib/behind.ts#triage` | What to do first in a bad week |
 | `lib/toolnow.ts#suggest` | Tools this fortnight asks for |
 | `lib/triage.ts#orderQueue` | The order of open assignments in the assignment states list |
-| `lib/core/provenance.ts#rank` | Which copy of a fact is shown when sources disagree |
-| `lib/core/nextaction.ts#order` | The order of a student’s next actions on Today and Runway |
 | `community/feed.ts#rankItem` | The community feed |
 | `community/moderation.ts#triage` | Safety triage of reports |
 | `lib/moderation.ts#ordered` | The moderators' queue order |

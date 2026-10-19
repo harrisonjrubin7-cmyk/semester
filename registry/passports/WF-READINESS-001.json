@@ -27,7 +27,7 @@
       ]
     },
     "dependencies": {
-      "upstream": ["SIS-001", "POL-READINESS-001", "identity_membership_service"],
+      "upstream": ["integrations.sis", "POL-READINESS-001", "identity_membership_service"],
       "downstream": ["student_readiness_screen", "registrar_readiness_console", "support_handoff_queue"],
       "failure_mode": "source_timeout_or_policy_denial",
       "degradation_behavior": "safe_needs_review_state"
