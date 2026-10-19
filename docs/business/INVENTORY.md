@@ -140,7 +140,97 @@ stale-refs:
     changed_at: "2026-10-19T01:43:42"
     sections_changed: []
     summary: externally modified
+  - source: 30-60-90-DAY-EXECUTION-PLAN.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: LAUNCH-RISK-REGISTER.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/DATA_SECURITY_CHECKLIST.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/finance/FINANCIAL_MODEL_SPEC.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/finance/UNIT_ECONOMICS.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/gtm/SEMESTER_90_DAY_GTM_PLAN.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/CRM_PIPELINE_DEFINITION.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/MUTUAL_ACTION_PLAN_TEMPLATE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/WEEKLY_REVENUE_REVIEW.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/EXECUTION-PLAN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -84,7 +84,79 @@ stale-refs:
     changed_at: "2026-10-19T01:43:42"
     sections_changed: []
     summary: externally modified
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: RESTORE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/AT-PASS-PROTOCOL.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PROVIDER-TERMS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-TESTING-PLAN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SOC2-READINESS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

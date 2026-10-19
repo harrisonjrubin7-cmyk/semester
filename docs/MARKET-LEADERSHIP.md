@@ -60,7 +60,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:42"
     sections_changed: []
     summary: externally modified
+  - source: docs/accessibility/AT-PASS-PROTOCOL.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

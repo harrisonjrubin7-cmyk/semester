@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:31"
     sections_changed: []
     summary: externally modified
+  - source: docs/CAPABILITY-PARITY-MATRIX.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Adaptive device experience

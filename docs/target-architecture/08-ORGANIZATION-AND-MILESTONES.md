@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:40"
     sections_changed: []
     summary: externally modified
+  - source: docs/target-architecture/03-TECHNOLOGY-DECISIONS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/09-CONVERSION-PLAN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # 08 · Staffing, team topology, milestones, architecture review, technical debt

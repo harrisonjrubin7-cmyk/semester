@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # CLM-018 evidence: source labels on screen

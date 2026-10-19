@@ -20,7 +20,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:35"
     sections_changed: []
     summary: externally modified
+  - source: CHANGELOG.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

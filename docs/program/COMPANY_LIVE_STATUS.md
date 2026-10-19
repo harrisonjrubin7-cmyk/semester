@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:23"
     sections_changed: []
     summary: externally modified
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: commercial/GO_TO_MARKET_READINESS.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # Semester — company live status (Phase 0)

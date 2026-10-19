@@ -4,7 +4,31 @@ stale-refs:
     changed_at: "2026-10-19T01:43:35"
     sections_changed: []
     summary: externally modified
+  - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/README.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 # 04 · Quality gates and CI

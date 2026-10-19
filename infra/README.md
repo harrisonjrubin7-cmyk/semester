@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: infra/changes/README.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Infrastructure as code
 
 Everything that decides **what production is and who can change it** is code

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Share with family
 
 > **Type:** explanation · **Audience:** students, families · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

@@ -4,7 +4,31 @@ stale-refs:
     changed_at: "2026-10-19T01:43:41"
     sections_changed: []
     summary: externally modified
+  - source: docs/ai-governance/03-retrieval-policy.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/06-evaluation-framework.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/README.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 # 01 · AI system inventory and risk tiering

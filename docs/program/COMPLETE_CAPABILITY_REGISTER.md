@@ -4,7 +4,25 @@ stale-refs:
     changed_at: "2026-10-19T01:43:24"
     sections_changed: []
     summary: externally modified
+  - source: docs/program/COMPANY_LIVE_STATUS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/FINAL_BASELINE_AUDIT.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: operations/GO_NO_GO_SCORECARD.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # Semester — complete capability register (Phase 0)

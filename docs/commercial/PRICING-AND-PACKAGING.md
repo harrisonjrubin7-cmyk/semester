@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/market-readiness/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pricing and Packaging
 
 | Control | Value |

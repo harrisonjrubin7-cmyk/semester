@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/finance/10-GO-NO-GO-GATES.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Scenario analysis and sensitivity
 
 | Control | Value |

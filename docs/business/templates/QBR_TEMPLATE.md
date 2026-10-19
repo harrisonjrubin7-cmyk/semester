@@ -12,7 +12,31 @@ stale-refs:
     changed_at: "2026-10-19T01:43:41"
     sections_changed: []
     summary: externally modified
+  - source: docs/business/templates/FINAL_VALUE_REPORT.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/ROI_CALCULATOR_INPUTS.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/WEEKLY_PILOT_REPORT.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

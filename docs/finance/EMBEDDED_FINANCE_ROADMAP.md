@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/finance/FINANCE_RELEASE_GATES.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Embedded finance roadmap
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/accessibility/AT-PASS-PROTOCOL.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Accessibility Readiness
 
 **Status: `IN_PROGRESS`** — stronger than most areas, short of contract-ready.

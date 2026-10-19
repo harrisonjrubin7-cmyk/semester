@@ -8,7 +8,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:29"
     sections_changed: []
     summary: externally modified
+  - source: docs/DESIGN-TOKEN-ARCHITECTURE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 

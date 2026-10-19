@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/gtm/EXECUTION-PLAN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Feature-flag registry
 
 The source of truth is [`app/src/lib/flags.ts`](../app/src/lib/flags.ts). This page is its human copy, and

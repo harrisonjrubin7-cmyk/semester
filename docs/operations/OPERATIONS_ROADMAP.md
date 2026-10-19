@@ -32,7 +32,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:39"
     sections_changed: []
     summary: externally modified
+  - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

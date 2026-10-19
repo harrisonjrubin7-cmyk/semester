@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Data stewardship and the data contract registry
 
 Technical governance already exists: T0–T6 classification, RLS as the authorization boundary, and connection and scope

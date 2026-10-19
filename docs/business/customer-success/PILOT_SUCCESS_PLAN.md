@@ -4,7 +4,25 @@ stale-refs:
     changed_at: "2026-10-19T01:43:31"
     sections_changed: []
     summary: externally modified
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/customer-success/RENEWAL_AND_EXPANSION_PLAYBOOK.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # Pilot Success Plan (template and metric dictionary)

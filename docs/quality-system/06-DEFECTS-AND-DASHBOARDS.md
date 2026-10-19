@@ -4,7 +4,25 @@ stale-refs:
     changed_at: "2026-10-19T01:43:35"
     sections_changed: []
     summary: externally modified
+  - source: docs/quality-system/03-SUITES.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/04-GATES-AND-CI.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/README.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 # 06 · Defects, severity, triage, escape analysis and quality dashboards

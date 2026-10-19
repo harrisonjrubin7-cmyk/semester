@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/COMMERCIAL_AND_ENTITLEMENT_MODEL.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/FINANCE_RELEASE_GATES.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/REFUND_CREDIT_DISPUTE_POLICY.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Native financial platform
 
 | Control | Value |

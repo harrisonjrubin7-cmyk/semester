@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/INSTITUTIONAL-KNOWN-LIMITATIONS.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Institutional Roadmap Communication Standard
 
 | Control | Value |

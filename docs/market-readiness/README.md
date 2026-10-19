@@ -8,7 +8,49 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/market-readiness/DATA-LIFECYCLE-AND-DELETION.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MARKET-READINESS-BASELINE.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRIVACY-OVERVIEW.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/RELIABILITY-AND-OPERATIONS-RUNBOOK.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/SUBPROCESSOR-TEMPLATE.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

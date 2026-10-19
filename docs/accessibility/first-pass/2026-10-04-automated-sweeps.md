@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/accessibility/TESTING-AND-EVIDENCE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Automated sweeps, 2026-10-04
 
 **Sweep evidence for one commit. Not a screen-reader pass and not a WCAG evaluation.** Per

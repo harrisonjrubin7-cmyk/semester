@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 > **MEMO FOR THE OWNER'S DECISION. This is not a decision, and nothing here approves a claim.** It recommends; the owner decides. Trademark and legal questions are for counsel.

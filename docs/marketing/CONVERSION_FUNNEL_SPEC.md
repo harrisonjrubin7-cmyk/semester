@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:23"
     sections_changed: []
     summary: externally modified
+  - source: docs/marketing/INSTITUTIONAL_PILOT_CONVERSION_FLOW.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Conversion funnel specification

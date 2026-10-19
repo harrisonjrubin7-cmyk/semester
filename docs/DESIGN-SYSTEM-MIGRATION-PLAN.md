@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/TYPOGRAPHY-SYSTEM.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Design system migration plan

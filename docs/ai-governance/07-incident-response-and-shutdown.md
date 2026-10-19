@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/ai-governance/01-inventory-and-risk-tiering.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/08-tenant-ai-console.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 07 · AI incident response and feature shutdown
 
 **Builds on:** [`../trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md`](../trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md)

@@ -28,7 +28,25 @@ stale-refs:
     changed_at: "2026-10-19T01:43:36"
     sections_changed: []
     summary: externally modified
+  - source: docs/operations/OPERATIONS_WORKFLOW_CATALOG.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/05-incident-and-continuity.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

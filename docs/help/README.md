@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/help/students/back-up-and-sync.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Help for people who use Semester
 
 > **Type:** reference · **Audience:** students, families · **Owner:** `product` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

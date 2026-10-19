@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:40"
     sections_changed: []
     summary: externally modified
+  - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/STEP_1_RESTORE_DRILL_RUNSHEET.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 # Phase 1 execution backlog

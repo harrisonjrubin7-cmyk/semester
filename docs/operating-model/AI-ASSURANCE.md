@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:23"
     sections_changed: []
     summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # AI assurance: NIST AI RMF and NIST AI 800-1, audit-ready

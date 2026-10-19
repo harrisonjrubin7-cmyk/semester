@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/data-architecture/10-physical-design.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # 7 · Data-quality rules, reconciliation, schema drift and migration verification

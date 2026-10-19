@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:24"
     sections_changed: []
     summary: externally modified
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # Back up, sync and what stays on your device

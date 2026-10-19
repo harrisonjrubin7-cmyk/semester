@@ -12,7 +12,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: docs/decisions/proposed/ADR-0018-establish-incident-response-security-escalation-and-dr-governance.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/proposed/ADR-0022-define-procurement-evidence-trust-center-lifecycle-and-public-claims-approval.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

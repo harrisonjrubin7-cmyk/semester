@@ -4,7 +4,19 @@ stale-refs:
     changed_at: "2026-10-19T01:43:32"
     sections_changed: []
     summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 > **DRAFT FOR OWNER REVIEW. This is an operational procedure, not legal advice. Counsel decides legal conclusions and notification duties; this document does not.**

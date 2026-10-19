@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:40"
     sections_changed: []
     summary: externally modified
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational working list, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction. It states no legal conclusion.**

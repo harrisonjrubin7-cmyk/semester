@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:33"
     sections_changed: []
     summary: externally modified
+  - source: docs/migration/02-SOURCE-INVENTORY-AND-EXTRACTION.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 <!-- Rendered from app/src/lib/migration/workbooks.ts by workbooks.test.ts. Edit the data, then run `MIGRATION_DOCS=write npx vitest run src/lib/migration/workbooks.test.ts` from app/. -->

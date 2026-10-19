@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
+    changed_at: "2026-10-19T01:50:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Design-system governance
 
 Who owns Semester's design system, how a new pattern gets in, how screens are

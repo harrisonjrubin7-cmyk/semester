@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T01:43:33"
     sections_changed: []
     summary: externally modified
+  - source: docs/migration/03-MAPPING-CLEANSING-TRANSFORMATION.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # 02 Source inventory and extraction

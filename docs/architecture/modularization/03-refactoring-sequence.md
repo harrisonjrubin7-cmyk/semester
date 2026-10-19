@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-19T01:50:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 3 · Refactoring sequence, repository restructuring, validation
 
 Principles: additive first; one screen at a time; the old path keeps working
