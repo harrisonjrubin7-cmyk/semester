@@ -218,5 +218,7 @@ create trigger registry_workspace_gate
 
 -- Invoker functions, but a browser role has no business calling them either.
 revoke execute on function private.registry_status_rank(private.registry_status) from public, anon, authenticated;
+-- The gate triggers call the rank helper as service_role, the projection's role; it needs EXECUTE to do so.
+grant execute on function private.registry_status_rank(private.registry_status) to service_role;
 revoke execute on function private.registry_capability_gate() from public, anon, authenticated;
 revoke execute on function private.registry_workspace_gate() from public, anon, authenticated;
