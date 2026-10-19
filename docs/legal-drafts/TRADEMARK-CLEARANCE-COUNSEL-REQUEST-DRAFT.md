@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
@@ -21,6 +21,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

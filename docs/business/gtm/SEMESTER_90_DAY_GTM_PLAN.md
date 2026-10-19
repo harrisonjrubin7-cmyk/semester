@@ -1,23 +1,23 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_GTM_KPI_TREE.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-19T02:00:53"
+    changed_at: "2026-10-19T02:23:43"
     sections_changed: []
     summary: externally modified
   - source: 30-60-90-DAY-EXECUTION-PLAN.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

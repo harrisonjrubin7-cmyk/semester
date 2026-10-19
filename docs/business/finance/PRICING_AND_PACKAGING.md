@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
@@ -25,18 +25,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1154.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/02-PRICING-PACKAGING-ENTITLEMENTS.md
     changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T02:23:41"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/research/01-EVIDENCE-MODEL.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: VALIDATED.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1144.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

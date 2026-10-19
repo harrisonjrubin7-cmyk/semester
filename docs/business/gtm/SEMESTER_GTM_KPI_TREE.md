@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
@@ -21,11 +21,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/README.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
@@ -45,6 +45,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

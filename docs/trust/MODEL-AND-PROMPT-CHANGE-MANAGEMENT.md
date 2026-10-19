@@ -1,14 +1,22 @@
 ---
 stale-refs:
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:43"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
     changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
+  - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
+    changed_at: "2026-10-19T02:23:43"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

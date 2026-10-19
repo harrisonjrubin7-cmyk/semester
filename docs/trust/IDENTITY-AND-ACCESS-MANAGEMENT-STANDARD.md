@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

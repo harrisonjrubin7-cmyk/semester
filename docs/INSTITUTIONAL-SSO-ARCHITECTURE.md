@@ -5,10 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SAML-IMPLEMENTATION-RUNBOOK.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OIDC-IMPLEMENTATION-RUNBOOK.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

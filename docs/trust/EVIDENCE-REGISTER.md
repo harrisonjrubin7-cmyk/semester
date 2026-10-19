@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATIONAL-MATURITY.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:00:53"
+    changed_at: "2026-10-19T02:23:43"
     sections_changed: []
     summary: externally modified
   - source: supabase/DEPLOY.md
@@ -64,7 +64,25 @@ stale-refs:
     changed_at: "2026-10-19T02:14:26"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

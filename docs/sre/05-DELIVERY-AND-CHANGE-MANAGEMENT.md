@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-13-secret-exposed.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:00:49"
+    changed_at: "2026-10-19T02:23:39"
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/README.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
@@ -41,6 +41,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

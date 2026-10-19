@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-PARITY-MATRIX.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/RESPONSIVE-COMPONENT-SPEC.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

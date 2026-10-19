@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ANALYTICS-EVENTS.md
-    changed_at: "2026-10-19T01:43:23"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/07-data-quality-and-migration.md
@@ -20,7 +20,15 @@ stale-refs:
     changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/data-architecture/05-lifecycle-governance.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

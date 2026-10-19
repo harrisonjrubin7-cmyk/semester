@@ -5,46 +5,66 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/academic_records.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/campus_services.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/career.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/courses.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/documents.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/enrollments.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/family.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/finance.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/identity.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/learning_content.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

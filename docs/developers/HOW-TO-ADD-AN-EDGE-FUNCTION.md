@@ -8,7 +8,13 @@ stale-refs:
     changed_at: "2026-10-19T02:14:30"
     sections_changed: []
     summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md
+    changed_at: "2026-10-19T02:23:41"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 

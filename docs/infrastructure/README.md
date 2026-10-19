@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/SECURITY-CONTROLS.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
@@ -17,18 +17,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/DISASTER-RECOVERY.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: infra/README.md
-    changed_at: "2026-10-19T02:00:53"
+    changed_at: "2026-10-19T02:23:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/ACTIVATION.md
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

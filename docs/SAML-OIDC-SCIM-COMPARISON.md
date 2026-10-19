@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OIDC-IMPLEMENTATION-RUNBOOK.md
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # SAML, OIDC, SCIM and LTI compared

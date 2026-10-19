@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T02:23:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pilot Proposal Template
 
 | Control | Value |

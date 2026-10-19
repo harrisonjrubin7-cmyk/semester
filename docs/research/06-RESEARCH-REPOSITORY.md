@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/research/01-EVIDENCE-MODEL.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
@@ -17,6 +17,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
@@ -12,7 +12,15 @@ stale-refs:
     changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
 
 
 

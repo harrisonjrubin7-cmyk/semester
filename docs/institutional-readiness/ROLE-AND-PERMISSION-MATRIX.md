@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-19T01:43:31"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Institutional Role and Permission Matrix

@@ -4,7 +4,13 @@ stale-refs:
     changed_at: "2026-10-19T02:14:28"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/data-architecture/03-schema-conventions.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 # 5 · Classification, retention, deletion, legal hold, backup, export, restore

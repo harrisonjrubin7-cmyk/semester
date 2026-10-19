@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md
-    changed_at: "2026-10-19T01:43:32"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/design-system/HANDOFF-INTEGRATION-CROSSWALK.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

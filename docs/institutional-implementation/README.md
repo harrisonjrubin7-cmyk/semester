@@ -9,27 +9,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/FEEDBACK-AND-ESCALATION.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/MIGRATION-WORKBOOK.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/OFFBOARDING-AND-EXPORT.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/SSO-TENANT-ONBOARDING.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:40"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
@@ -69,10 +69,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/INTEGRATION-WORKBOOK.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

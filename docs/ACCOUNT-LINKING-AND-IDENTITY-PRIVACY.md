@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T02:23:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Account linking and identity privacy
 
 Status: **LTI linking BUILT. SSO first-login binding BUILT. Personal ↔

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/operating-model/QUALITY-MANAGEMENT.md
-    changed_at: "2026-10-19T01:43:35"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
@@ -21,14 +21,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/05-HARNESS-OWNERSHIP-EVIDENCE.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/08-REPOSITORY-AND-FIXTURES.md
-    changed_at: "2026-10-19T02:00:52"
+    changed_at: "2026-10-19T02:23:42"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

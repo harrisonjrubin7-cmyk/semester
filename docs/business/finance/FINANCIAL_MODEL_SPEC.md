@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/business/finance/PRICING_AND_PACKAGING.md
-    changed_at: "2026-10-19T02:00:50"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/business/finance/UNIT_ECONOMICS.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:23:41"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/10-GO-NO-GO-GATES.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

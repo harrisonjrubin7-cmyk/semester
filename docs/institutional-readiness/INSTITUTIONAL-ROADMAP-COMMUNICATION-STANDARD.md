@@ -8,7 +8,13 @@ stale-refs:
     changed_at: "2026-10-19T02:14:29"
     sections_changed: []
     summary: externally modified
+  - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
+    changed_at: "2026-10-19T02:23:43"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
 
 
 
