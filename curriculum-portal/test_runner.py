@@ -318,4 +318,13 @@ class HarnessTests(unittest.TestCase):
         for week,code in shortcuts.items():
             result=self.run_week(week-1,code)
             self.assertLess(result['passed'],result['total'],'week %d'%week)
+    def test_round_eleven_shortcuts_lose_points(self):
+        shortcuts={
+            5:"def authorize(r): return r['active'] is True and any(s.startswith('tasks:read') for s in r['scopes'])\n",
+            6:"def tenant_access(r): return bool(r['principal_tenant']) and r['principal_tenant']==r['resource_tenant'] and r['active'] is True and any(s.startswith('tasks:read') for s in r['scopes'])\n",
+            12:"def retry_allowed(r): return r['attempt']<3 and ((r['status'] in (429,503) and r['method']=='GET') or (r['status'] in (429,503) and (r['method']!='POST' or bool(r.get('idempotency_key')))))\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
