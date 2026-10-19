@@ -1,66 +1,96 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: PILOT.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/research/01-EVIDENCE-MODEL.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/research/02-STAKEHOLDER-RESEARCH-PLAN.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/research/03-INTERVIEW-GUIDES.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/research/04-TESTING-AND-OBSERVATION.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:19"
     sections_changed: []
     summary: externally modified
   - source: docs/research/06-RESEARCH-REPOSITORY.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:19"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: VALIDATED.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/research/05-AUDIT-VALIDATION.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

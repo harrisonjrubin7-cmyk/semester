@@ -1,74 +1,108 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RELEASE-CERTIFICATION.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

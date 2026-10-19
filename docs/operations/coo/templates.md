@@ -1,66 +1,96 @@
 ---
 stale-refs:
   - source: docs/decisions/README.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/06-vendor-quality-change.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/08-marketplace-partner-trust-fulfillment.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/10-tenant-launch-risk-and-readiness.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/11-founder-to-team-transition.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/README.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/service-blueprints.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

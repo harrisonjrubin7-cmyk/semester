@@ -1,30 +1,42 @@
 ---
 stale-refs:
   - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/02-SOURCE-INVENTORY-AND-EXTRACTION.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/03-MAPPING-CLEANSING-TRANSFORMATION.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/04-VALIDATION-AND-RECONCILIATION.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/README.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

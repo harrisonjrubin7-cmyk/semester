@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/GO-LIVE-CHECKLIST.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,22 +1,30 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/program/README.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

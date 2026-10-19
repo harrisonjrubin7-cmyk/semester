@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/DEFINER-RLS-REGISTER.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:19"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

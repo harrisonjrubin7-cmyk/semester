@@ -1,38 +1,60 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/README.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/modularization/README.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0001-local-first-with-supabase.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0011-modular-monolith-before-services.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0003-no-application-server.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0007-policy-decision-point.md
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,22 +1,30 @@
 ---
 stale-refs:
   - source: docs/guides/institution/README.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/README.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/README.md
-    changed_at: "2026-10-19T02:14:29"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
   - source: examples/README.md
-    changed_at: "2026-10-19T02:14:30"
+    changed_at: "2026-10-19T02:31:20"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

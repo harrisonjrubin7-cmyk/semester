@@ -1,74 +1,108 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:23:39"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:16"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-19T02:14:27"
+    changed_at: "2026-10-19T02:31:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATIONAL-MATURITY.md
-    changed_at: "2026-10-19T02:23:42"
+    changed_at: "2026-10-19T02:32:18"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
-    changed_at: "2026-10-19T02:14:30"
+    changed_at: "2026-10-19T02:31:20"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
-    changed_at: "2026-10-19T02:14:30"
+    changed_at: "2026-10-19T02:31:20"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:23:43"
+    changed_at: "2026-10-19T02:32:19"
     sections_changed: []
     summary: externally modified
   - source: supabase/DEPLOY.md
-    changed_at: "2026-10-19T02:14:30"
+    changed_at: "2026-10-19T02:31:20"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: STAGING.md
-    changed_at: "2026-10-19T02:14:26"
+    changed_at: "2026-10-19T02:31:16"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

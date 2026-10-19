@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:31:19"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Change management and adoption

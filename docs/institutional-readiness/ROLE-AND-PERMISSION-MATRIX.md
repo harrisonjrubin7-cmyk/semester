@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

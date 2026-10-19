@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: infra/bootstrap/README.md
-    changed_at: "2026-10-19T02:14:30"
+    changed_at: "2026-10-19T02:31:20"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Activation checklist

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/commercial/GROWTH-FUNNEL-SPEC.md
-    changed_at: "2026-10-19T01:50:45"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Analytics and Metrics Dictionary

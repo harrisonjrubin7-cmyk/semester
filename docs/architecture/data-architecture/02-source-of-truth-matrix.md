@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/03-schema-conventions.md
-    changed_at: "2026-10-19T02:23:40"
+    changed_at: "2026-10-19T02:32:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # 2 · Source of truth and precedence

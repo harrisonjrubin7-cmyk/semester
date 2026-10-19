@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/0003-no-application-server.md
-    changed_at: "2026-10-19T02:14:28"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # 0004 · AI through a server-side metered gateway, tool-based

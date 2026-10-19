@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/design-system/HANDOFF-INTEGRATION-STATUS.md
-    changed_at: "2026-10-19T01:50:46"
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Route identity crosswalk

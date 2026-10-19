@@ -1,10 +1,18 @@
 ---
 stale-refs:
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-19T02:00:51"
+    changed_at: "2026-10-19T02:31:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
+    changed_at: "2026-10-19T02:31:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 # 12 · Data governance operating model
