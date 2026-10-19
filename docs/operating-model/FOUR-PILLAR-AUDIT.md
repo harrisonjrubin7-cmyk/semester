@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
+    changed_at: "2026-10-19T01:43:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # The four-pillar audit
 
 <!-- Rendered from app/src/lib/audit.ts by audit.test.ts. Edit the data, then run `npm run registers` from app/. -->

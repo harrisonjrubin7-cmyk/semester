@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:43:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UX-ENHANCEMENT-PLAN.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Feature-expansion crosswalk: Phases B–O
 
 **Baseline:** `semester-unified-platform` at `1c8ab70`, which is `origin/main`

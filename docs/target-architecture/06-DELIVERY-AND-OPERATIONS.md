@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 06 · CI/CD, release, rollback, migration, secrets, backup/DR, offline sync, observability
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

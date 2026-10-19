@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:43:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-AN-ADR.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # How to add a decision record
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

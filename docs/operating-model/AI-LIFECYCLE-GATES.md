@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
+    changed_at: "2026-10-19T01:43:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # AI lifecycle gates
 
 **Code: `app/src/lib/governance/ai-lifecycle.ts`.** The [AI governance board](AI-GOVERNANCE-BOARD.md) decides. This

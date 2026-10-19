@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: README.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/README.md
+    changed_at: "2026-10-19T01:43:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

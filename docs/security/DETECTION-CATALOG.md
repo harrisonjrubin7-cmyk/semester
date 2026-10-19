@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/security/FINDINGS-REGISTER.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/security/SECURITY-PROGRAM.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Detection catalogue and AI red-team set
 
 > Part of [`SECURITY-PROGRAM.md`](SECURITY-PROGRAM.md). Closes finding F-08 in

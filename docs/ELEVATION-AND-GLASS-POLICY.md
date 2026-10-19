@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DESIGN-TOKENS.md
+    changed_at: "2026-10-19T01:43:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Elevation and glass
 
 ## Surfaces

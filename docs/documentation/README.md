@@ -1,3 +1,66 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PUBLIC-SITE.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/README.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/INDEX.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/QUALITY-GATES.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/STYLE-GUIDE.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/releases/README.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # The documentation system
 
 > **Type:** explanation · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docsystem.test.ts`

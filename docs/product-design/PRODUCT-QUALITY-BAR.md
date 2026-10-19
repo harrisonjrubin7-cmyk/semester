@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T01:43:29"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-19T01:43:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Product Quality Bar
 
 | Control | Value |

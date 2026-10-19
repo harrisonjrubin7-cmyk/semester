@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Launch Readiness Audit — Phase 0
 
 This inventory checks the ten parts of the launch-readiness command against

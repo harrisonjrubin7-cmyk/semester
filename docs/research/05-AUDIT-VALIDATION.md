@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 05 · Repository audit validation
 
 The question: **which existing capabilities solve real needs, and where do

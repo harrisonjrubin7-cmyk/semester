@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester — go-to-market readiness (Phase 0)
 
 **Date:** 2026-10-04 · **Status:** BASELINE ASSESSMENT — approves no price, claim, campaign or sale · **Controlling:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md), [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) · **Company state:** [`docs/program/COMPANY_LIVE_STATUS.md`](../docs/program/COMPANY_LIVE_STATUS.md)

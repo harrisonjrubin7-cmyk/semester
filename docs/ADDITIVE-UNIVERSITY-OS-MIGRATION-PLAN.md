@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Additive University OS — migration plan
 
 Status, 27 September 2026. This is the plan for the "Additive University OS, Integration Gateway, Sync Audit,

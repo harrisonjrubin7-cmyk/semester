@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Inclusive content and plain-language standard
 
 Companion to [PROGRAM.md](PROGRAM.md). **Proposal, 2026-10-04.** For everyone who writes anything a person

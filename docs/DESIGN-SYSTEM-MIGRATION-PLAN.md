@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Design system migration plan
 
 How the design-excellence work landed, what is left, and the order in which

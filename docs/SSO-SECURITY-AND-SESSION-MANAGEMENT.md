@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # SSO security and session management
 
 What protects an institutional session, and where each control is.

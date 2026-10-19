@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/AI-SYSTEM-INVENTORY.md
+    changed_at: "2026-10-19T01:43:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 01 · AI system inventory and risk tiering
 
 **Code:** `app/src/lib/governance/ai-systems.ts`, held by `ai-systems.test.ts`.

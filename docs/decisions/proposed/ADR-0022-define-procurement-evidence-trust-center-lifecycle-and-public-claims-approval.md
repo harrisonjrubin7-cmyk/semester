@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-19T01:43:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # ADR-0022 · A public or procurement statement is made only from approved wording bound to current, retrievable evidence
 
 | Field | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Testing, assistive-technology matrix and conformance evidence
 
 Companion to [PROGRAM.md](PROGRAM.md). **Proposal, 2026-10-04.** It extends

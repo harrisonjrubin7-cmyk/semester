@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/RISK_REGISTER.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:43:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Quarterly Business Review (QBR) Template - Annual Customer
 
 | Control | Value |

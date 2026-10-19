@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # RB-12 · Restore from backup
 
 Class C0 · role data · alerts `recovery:restore-overdue` · components `supabase-db`. The long form is [RESTORE.md](../../../RESTORE.md); this page is the decision and the order.

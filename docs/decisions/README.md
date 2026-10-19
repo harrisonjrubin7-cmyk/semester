@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:43:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/governance/DECISION_RIGHTS.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Decisions
 
 D-001 to D-160 are sections of [`../DECISION-LOG.md`](../DECISION-LOG.md).

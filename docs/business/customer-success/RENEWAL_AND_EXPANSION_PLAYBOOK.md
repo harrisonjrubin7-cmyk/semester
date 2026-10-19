@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/finance/PRICING_AND_PACKAGING.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/QBR_TEMPLATE.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/04-UNIT-ECONOMICS.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Renewal and Expansion Playbook (process, timeline, NRR)
 
 | Control | Value |

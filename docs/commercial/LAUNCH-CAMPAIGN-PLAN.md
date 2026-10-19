@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-TEST-PLAN.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Launch Campaign Plan
 
 | Control | Value |

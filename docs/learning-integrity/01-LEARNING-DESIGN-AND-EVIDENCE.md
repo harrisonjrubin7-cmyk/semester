@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 01 · Learning design principles, study methodology and evidence standards
 
 Deliverables covered: **learning design principles**, **study methodology**,

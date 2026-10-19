@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester — launch critical path (Phase 0)
 
 **Date:** 2026-10-04 · **Builds on, does not replace:** [`02-DEPENDENCIES-AND-CRITICAL-PATH.md`](02-DEPENDENCIES-AND-CRITICAL-PATH.md) (27 nodes, four motions, machine-checked) · **Gaps:** [`READINESS_GAP_MATRIX.md`](READINESS_GAP_MATRIX.md) · **Decisions:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)

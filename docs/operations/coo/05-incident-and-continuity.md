@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: docs/operations/coo/01-operating-cadence.md
+    changed_at: "2026-10-19T01:43:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/03-raci-and-decision-rights.md
+    changed_at: "2026-10-19T01:43:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/04-support-operating-model.md
+    changed_at: "2026-10-19T01:43:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/06-vendor-quality-change.md
+    changed_at: "2026-10-19T01:43:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/09-dashboards-and-indicators.md
+    changed_at: "2026-10-19T01:43:38"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/11-founder-to-team-transition.md
+    changed_at: "2026-10-19T01:43:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/handoffs.md
+    changed_at: "2026-10-19T01:43:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/templates.md
+    changed_at: "2026-10-19T01:43:39"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 05 · Incident management and business continuity
 
 | Control | Value |

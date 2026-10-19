@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 08 · Governance, risks requiring human review, and the requirements trace
 
 Deliverable covered: **risks requiring academic governance and human review**,

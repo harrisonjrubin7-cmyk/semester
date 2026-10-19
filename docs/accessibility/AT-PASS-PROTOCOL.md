@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-19T01:43:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Assistive-technology pass: protocol, results template and WCAG 2.2 AA checklist
 
 > **Status: the manual assistive-technology pass has NOT been done.**

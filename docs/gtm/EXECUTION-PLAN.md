@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/gtm/GROWTH-OPERATING-PLAN.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Go-to-market execution plan — status and where each part lives
 
 The source is the *Semester GTM, Enrollment Marketing, Student Adoption and Higher-Ed Sales Execution Plan*

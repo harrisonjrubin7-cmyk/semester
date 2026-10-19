@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-19T01:43:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 06 · Defects, severity, triage, escape analysis and quality dashboards
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Platform constitution and capability map
 
 <!-- Rendered from app/src/lib/governance/constitution.ts by constitution.test.ts. Edit the data, then run `npm run registers` from app/. -->

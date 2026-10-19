@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ACTION-PLAN.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # The competitor implementation plan, checked against the code — September 2026
 
 The tracked copy of *Semester — Competitor Feature Implementation Plan*

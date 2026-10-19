@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Registration readiness is stale, unavailable or misconfigured
 
 > **Type:** runbook · **Audience:** registration operators · **Owner:** `Registrar pilot owner` · **Truth:** reviewed in repository, not drilled · **Reviewed:** 2026-10-12 · **Held by:** —

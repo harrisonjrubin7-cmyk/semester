@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # What is left to build, and the order to build it in
 
 A completion plan for Semester. Written 15 September 2026, measured against

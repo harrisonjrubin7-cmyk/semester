@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # CLM-018 evidence: source labels on screen
 
 > **PROPOSED — NOT APPROVED.** This is the evidence record for the proposed row

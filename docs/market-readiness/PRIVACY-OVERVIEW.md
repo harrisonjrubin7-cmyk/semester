@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/market-readiness/SUBPROCESSOR-REGISTER.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Privacy overview
 
 Semester’s intended pilot posture is minimum-necessary, purpose-limited, transparent, reversible, and privacy-thresholded. Students must receive clear notice and meaningful control; institutional access must be role-appropriate and auditable; support access must be scoped; AI features must disclose their boundaries; education records must not be used for behavioral advertising or model training without explicit approved authority.

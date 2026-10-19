@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-19T01:43:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-19T01:43:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 <!-- Rendered by supabase/tools/render_inventory.py from a database built by applying every
      migration to a throwaway Postgres 17. Do not edit by hand; regenerate:
        supabase/tools/introspect.sh supabase/tools/inventory.sql > /tmp/inv.out

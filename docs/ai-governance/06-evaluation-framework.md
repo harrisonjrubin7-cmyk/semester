@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/ai-governance/05-feature-requirements.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/10-red-team-and-launch-gates.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 06 · Evaluation framework
 
 **Builds on:** `app/src/lib/governance/model-quality.ts` (the synthetic set and its scoring),

@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: docs/COMPONENT-RELEASE-CHECKLIST.md
+    changed_at: "2026-10-19T01:43:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-FEATURE-FLAG-PLAN.md
+    changed_at: "2026-10-19T01:43:29"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-19T01:43:29"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-TOKENS.md
+    changed_at: "2026-10-19T01:43:29"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Design excellence system
 
 The index for the design-excellence work: the semantic token layer, the shared

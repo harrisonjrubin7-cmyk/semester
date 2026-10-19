@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/business/finance/PRICING_AND_PACKAGING.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Financial model specification: the in-app GTM model
 
 | Control | Value |

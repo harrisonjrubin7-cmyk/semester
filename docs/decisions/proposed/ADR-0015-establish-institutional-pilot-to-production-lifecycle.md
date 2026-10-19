@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-19T01:43:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # ADR-0015 · A school moves from pilot to production only through enforced, evidence-bound lifecycle gates
 
 | Field | Value |

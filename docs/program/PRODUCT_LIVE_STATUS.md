@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETE_CAPABILITY_REGISTER.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester — product live status (Phase 0)
 
 **Date:** 2026-10-04 · **Repository:** `origin/main` @ `c170dcd` · **Rows:** [`COMPLETE_CAPABILITY_REGISTER.md`](COMPLETE_CAPABILITY_REGISTER.md) · **Controlling motion decisions:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)

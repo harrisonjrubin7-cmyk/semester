@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T01:43:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ANALYTICS-EVENTS.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 6 · Analytics architecture that protects privacy and does not become a shadow system of record
 
 ## 6.1 Start from what the repository already promises

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
+    changed_at: "2026-10-19T01:43:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/k12/K12-REQUIREMENTS.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Segment Motions and Buying Committees
 
 | Control | Value |

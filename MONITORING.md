@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: PILOT.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T01:43:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Noticing
 
 Everything that has gone wrong with this project so far went wrong quietly.

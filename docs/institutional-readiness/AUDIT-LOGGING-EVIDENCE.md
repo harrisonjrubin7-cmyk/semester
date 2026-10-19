@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T01:43:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Audit Logging Evidence
 
 | Control | Value |

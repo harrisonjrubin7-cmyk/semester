@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T01:43:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester Refund and Cancellation Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** Urgent: Semester Plus can be

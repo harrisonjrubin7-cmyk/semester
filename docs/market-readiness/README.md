@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/market-readiness/ANALYTICS-PLAN.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/TECHNICAL-READINESS-AUDIT.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Market-readiness operating package
 
 This directory contains the 2026-10-02 market-readiness assessment and the earlier implementation/trust materials it cites. The canonical deliverables requested by the market-readiness mandate use hyphenated filenames; deeper evidence files remain linked rather than duplicated.

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-19T01:43:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pilot to Annual Conversion
 
 How a pilot ends. Launch-readiness Phase 3. It starts at the `decide` stage

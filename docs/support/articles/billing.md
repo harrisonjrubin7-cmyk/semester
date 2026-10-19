@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/delete-account-export-data.md
+    changed_at: "2026-10-19T01:43:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Billing: upgrade, cancel, receipts
 
 > **Type:** help · **Audience:** students, support · **Owner:** `founder` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

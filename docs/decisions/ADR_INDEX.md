@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/decisions/proposed/ADR-0014-define-ai-risk-tiers-evaluations-and-prohibited-actions.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/proposed/ADR-0015-establish-institutional-pilot-to-production-lifecycle.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/proposed/ADR-0017-establish-data-classification-retention-holds-rights-export-offboarding.md
+    changed_at: "2026-10-19T01:43:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # ADR index
 
 > Phase 0 baseline, 2026-10-04. Every ADR below is **Proposed**: drafted from repository evidence, unratified, and awaiting its owner. Owners are roles (one person holds every seat today: `docs/program/RISK_REGISTER.md` R-018). `ADR-nnnn` is a separate namespace from `D-<pr>` records (`docs/decisions/README.md`). No ADR has been accepted, implemented or verified.
