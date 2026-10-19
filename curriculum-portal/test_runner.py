@@ -253,4 +253,17 @@ class HarnessTests(unittest.TestCase):
         for index,name in ((13,'evidence_ready'),(15,'activation_ready')):
             result=self.run_week(index,f'def {name}(r): return False\n')
             self.assertLess(result['passed'],result['total'],MODULES[index]['week'])
+    def test_round_five_shortcuts_lose_points(self):
+        shortcuts={
+            2:"def validate_pr(r): return isinstance(r['title'],str) and bool(r['title'].strip()) and all(isinstance(r.get(k),str) and bool(r.get(k).strip()) for k in ('test_evidence','reviewer'))\n",
+            3:"def validate_task(r): return isinstance(r,dict) and set(r)<={'id','title','status'} and r.get('status') in ('open','completed') and isinstance(r['id'],str) and bool(r['id'].strip()) and isinstance(r['title'],str) and bool(r['title'].strip())\n",
+            8:"def error_model(r): return {'field':r['field'],'message':r['message'],'described_by':r['field'].lower()+'-error'}\n",
+            9:"def idempotency(r):\n    p=r['previous_digest']\n    if p is None: return 'execute'\n    return 'replay' if p is r['digest'] else 'conflict'\n",
+            10:"def deduplicate(r):\n    out=[]\n    for i in r['ids']:\n        if not any(i is o for o in out): out.append(i)\n    return out\n",
+            14:"def evidence_ready(r):\n    t=r.get('tests',{})\n    return all(k in r for k in ('artifact_digest','contract_version','fixture_version')) and t.get('contract') is True and t.get('isolation') is True and t['revocation'] is True and t['accessibility'] is True and t['recovery'] is True\n",
+            15:"def reconcile(r):\n    e,o=r['expected'],r['observed']\n    return {'missing':sorted(x for x in e if not any(x is y for y in o)),'unexpected':sorted(y for y in o if not any(y is x for x in e))}\n",
+        }
+        for week,code in shortcuts.items():
+            result=self.run_week(week-1,code)
+            self.assertLess(result['passed'],result['total'],'week %d'%week)
 if __name__=='__main__': unittest.main()
