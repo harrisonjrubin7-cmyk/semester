@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/INFORMATION-HIERARCHY.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/WORKSPACE-MODES.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

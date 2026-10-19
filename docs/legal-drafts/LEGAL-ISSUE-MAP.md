@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LITIGATION-RESPONSE-PROCEDURE-DRAFT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/COLOR-AND-DARK-MODE-SPEC.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

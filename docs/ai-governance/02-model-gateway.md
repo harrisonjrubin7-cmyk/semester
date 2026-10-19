@@ -21,26 +21,36 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/07-incident-response-and-shutdown.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/09-user-transparency.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:04"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

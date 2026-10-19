@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/FOUNDER-DECISION-LOG.md
@@ -41,10 +41,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

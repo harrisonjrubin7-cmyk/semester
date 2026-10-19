@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
@@ -17,27 +17,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_RETENTION_DELETION_PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/HECVAT_ROADMAP.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/security/SECURITY-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -53,10 +53,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/SECURITY-CONTROLS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/AUDIT-AND-DATA-REQUESTS.md
@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/ACCESS-REVIEW-PROCEDURE.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

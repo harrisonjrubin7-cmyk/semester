@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
@@ -57,14 +57,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

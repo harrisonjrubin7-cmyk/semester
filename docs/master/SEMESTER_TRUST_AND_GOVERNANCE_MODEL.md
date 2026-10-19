@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_MIGRATION_FACTORY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RELEASE-CERTIFICATION.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:03"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

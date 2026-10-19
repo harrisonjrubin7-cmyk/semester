@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: MARKET-POSITION.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
@@ -25,19 +25,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/EVENT-TAXONOMY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:12"
     sections_changed: []
     summary: externally modified
   - source: CHANGELOG.md
@@ -73,10 +73,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

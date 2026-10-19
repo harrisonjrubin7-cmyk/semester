@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-WAR-ROOM.md
@@ -33,11 +33,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/program/README.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
@@ -69,6 +69,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

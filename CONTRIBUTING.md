@@ -9,27 +9,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/CODING-STANDARDS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/ONBOARDING.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/REPO-MAP.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
@@ -41,6 +41,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

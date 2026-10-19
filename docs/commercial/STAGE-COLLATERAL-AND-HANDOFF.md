@@ -13,15 +13,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
@@ -65,11 +65,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
@@ -77,6 +77,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

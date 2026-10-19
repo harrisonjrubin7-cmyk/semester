@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_RELEASE_GATES.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -33,6 +33,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

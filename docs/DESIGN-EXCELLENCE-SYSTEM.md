@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: docs/COMPONENT-RELEASE-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-FEATURE-FLAG-PLAN.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-TOKENS.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
@@ -37,19 +37,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/COLOR-AND-DARK-MODE-SPEC.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/INFORMATION-HIERARCHY.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/WORKSPACE-MODES.md
@@ -57,6 +57,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

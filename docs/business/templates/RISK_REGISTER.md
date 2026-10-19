@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/QBR_TEMPLATE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
@@ -33,6 +33,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

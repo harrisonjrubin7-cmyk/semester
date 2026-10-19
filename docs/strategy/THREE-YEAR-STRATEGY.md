@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: DECISIONS.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:55"
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/ADVISORS.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MARKET-ENTRY-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MOAT-PLAN.md
@@ -37,18 +37,38 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/SCORECARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -45,11 +45,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
@@ -57,6 +57,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

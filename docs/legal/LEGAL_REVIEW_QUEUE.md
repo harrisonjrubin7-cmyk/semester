@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LEGAL-ISSUE-MAP.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

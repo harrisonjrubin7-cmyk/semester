@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DOMAIN_REPLACEMENT_GATES.md
@@ -13,15 +13,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:06"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
@@ -29,6 +29,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

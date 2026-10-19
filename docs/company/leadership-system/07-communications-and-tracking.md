@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/company/leadership-system/01-board.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/09-calendar.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/templates.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
@@ -29,6 +29,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

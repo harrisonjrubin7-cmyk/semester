@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: README.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPLY-CHAIN.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: infra/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: course/semester-build-pack/COVERAGE-MATRIX.md
@@ -25,10 +25,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

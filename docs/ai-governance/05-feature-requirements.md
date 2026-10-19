@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/ai-governance/10-red-team-and-launch-gates.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/01-inventory-and-risk-tiering.md
@@ -21,18 +21,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/07-incident-response-and-shutdown.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/09-user-transparency.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

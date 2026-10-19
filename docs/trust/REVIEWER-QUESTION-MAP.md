@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -29,15 +29,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
@@ -57,19 +57,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -81,27 +81,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
@@ -109,7 +109,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
@@ -121,11 +121,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/THREAT-MODEL.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0001-local-first-with-supabase.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
@@ -133,10 +133,52 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

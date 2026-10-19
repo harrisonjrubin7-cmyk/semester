@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-STATUS-MAP.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_MIGRATION_FACTORY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md
@@ -25,6 +25,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

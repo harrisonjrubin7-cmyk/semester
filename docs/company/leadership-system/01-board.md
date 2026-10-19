@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/company/leadership-system/02-decision-rights.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
@@ -9,19 +9,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/04-organization-and-hiring.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/06-domain-governance.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/templates.md
@@ -33,10 +33,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

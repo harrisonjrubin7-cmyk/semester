@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/10-tenant-launch-risk-and-readiness.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
@@ -33,10 +33,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

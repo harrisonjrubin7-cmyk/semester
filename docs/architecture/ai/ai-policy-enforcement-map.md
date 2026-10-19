@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/README.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

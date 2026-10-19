@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-DATA-USE-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -45,11 +45,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -65,7 +65,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
@@ -93,7 +93,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
@@ -109,11 +109,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-EXPORT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
@@ -125,11 +125,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
@@ -141,14 +141,50 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-19T02:23:41"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

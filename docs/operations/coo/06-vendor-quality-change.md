@@ -21,23 +21,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/QUALITY-MANAGEMENT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:06"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
@@ -49,11 +49,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
@@ -69,10 +69,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

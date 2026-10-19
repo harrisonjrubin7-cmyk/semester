@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-DATA-USE-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BRIDGE-LETTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
@@ -49,11 +49,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/ENTERPRISE-READINESS.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
@@ -69,7 +69,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -81,15 +81,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/REVIEWER-QUESTION-MAP.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
@@ -97,11 +97,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
@@ -113,15 +113,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-EXPORT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
@@ -133,7 +133,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
@@ -141,7 +141,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-TESTING-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
@@ -149,15 +149,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/THREAT-MODEL.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/RISK-TREATMENT-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
@@ -169,6 +169,52 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

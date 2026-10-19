@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

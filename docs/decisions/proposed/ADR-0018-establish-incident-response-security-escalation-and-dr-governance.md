@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

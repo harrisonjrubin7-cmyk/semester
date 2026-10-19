@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/NATIVE_CHECKOUT_SPEC.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/FINANCE_OPERATIONS_CONSOLE.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

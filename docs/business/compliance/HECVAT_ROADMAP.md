@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

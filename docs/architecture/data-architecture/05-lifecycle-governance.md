@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/12-governance-operating-model.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/03-schema-conventions.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/09-ai-data-access.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

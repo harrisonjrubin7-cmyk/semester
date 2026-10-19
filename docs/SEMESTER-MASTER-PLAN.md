@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/L9-CAPABILITY-READINESS.md
@@ -21,14 +21,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ROADMAP-AUDIT.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

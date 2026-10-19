@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/architecture/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/ai/ai-policy-enforcement-map.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal/LEGAL_REVIEW_QUEUE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

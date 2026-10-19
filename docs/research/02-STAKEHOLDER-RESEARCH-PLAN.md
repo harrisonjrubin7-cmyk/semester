@@ -1,27 +1,27 @@
 ---
 stale-refs:
   - source: PILOT.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PROCUREMENT-OPERATING-MAP.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:00"
     sections_changed: []
     summary: externally modified
   - source: docs/research/01-EVIDENCE-MODEL.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/research/03-INTERVIEW-GUIDES.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/research/04-TESTING-AND-OBSERVATION.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/research/06-RESEARCH-REPOSITORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
@@ -37,11 +37,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: VALIDATED.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:03"
     sections_changed: []
     summary: externally modified
   - source: docs/research/05-AUDIT-VALIDATION.md
@@ -49,6 +49,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

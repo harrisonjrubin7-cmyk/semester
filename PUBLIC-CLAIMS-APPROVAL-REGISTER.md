@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:55"
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

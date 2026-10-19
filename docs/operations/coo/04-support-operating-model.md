@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:06"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
@@ -25,19 +25,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/11-founder-to-team-transition.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/README.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:04"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SLO-SLI-DRAFT.md
@@ -57,6 +57,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

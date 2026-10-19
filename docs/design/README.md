@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/design/DESIGN-SYSTEM-PRODUCT-SPEC.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/LAYOUT-CONTRACT.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/INTERACTION-STANDARDS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/DESIGN-DEBT.md
@@ -33,11 +33,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/VISUAL_DEBT_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/DESIGN_SYSTEM_ADOPTION_AUDIT.md
@@ -45,10 +45,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/adr/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

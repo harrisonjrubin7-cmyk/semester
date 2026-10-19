@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
@@ -17,19 +17,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/IMPLEMENTATION-GUIDE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PROCUREMENT-AND-ACCESSIBILITY-ARTEFACTS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/STUDENT-DATA-MAP.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/LTI-SETUP.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/SCIM-PROVISIONING.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/SSO-SETUP.md
@@ -65,6 +65,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

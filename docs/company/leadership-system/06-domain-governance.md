@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-INVENTORY-AND-LINEAGE.md
@@ -29,19 +29,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/01-board.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-ASSURANCE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/README.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
@@ -81,18 +81,38 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/12-governance-operating-model.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

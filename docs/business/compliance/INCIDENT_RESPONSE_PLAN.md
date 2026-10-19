@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
@@ -29,14 +29,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

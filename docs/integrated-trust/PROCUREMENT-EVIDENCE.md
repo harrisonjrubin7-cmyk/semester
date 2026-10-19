@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/DATA-RIGHTS-OPERATIONS.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/DOMAIN-REQUIREMENTS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/TABLETOP-CALENDAR.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
@@ -61,11 +61,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -73,7 +73,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -97,6 +97,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

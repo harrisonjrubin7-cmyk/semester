@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/COMMUNITIES-REGISTER.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/THREAT-MODELS.md
@@ -65,11 +65,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
@@ -81,7 +81,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/strategic-boundaries/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:12"
     sections_changed: []
     summary: externally modified
   - source: LEGAL-REVIEW-QUEUE.md
@@ -105,7 +105,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
@@ -117,7 +117,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
@@ -125,7 +125,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-TESTING-PLAN.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:11"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
@@ -133,11 +133,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
@@ -149,6 +149,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

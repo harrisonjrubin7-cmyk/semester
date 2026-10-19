@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:02"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/COMPANY_CONSOLE_CATALOG.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/CONTROLLED_ACTION_PATTERNS.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/09-dashboards-and-indicators.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

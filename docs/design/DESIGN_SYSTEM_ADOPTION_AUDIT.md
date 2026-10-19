@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/design/VISUAL_DEBT_REGISTER.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/design/adr/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

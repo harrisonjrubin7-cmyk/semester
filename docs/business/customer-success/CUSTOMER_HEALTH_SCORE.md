@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/business/templates/QBR_TEMPLATE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/PILOT_SUCCESS_PLAN.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

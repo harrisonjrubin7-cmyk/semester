@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

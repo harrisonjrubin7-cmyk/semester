@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/INTEROPERABILITY-ROADMAP.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/which-integration-path.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/gateway-client.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
@@ -37,11 +37,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:06"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/09-dashboards-and-indicators.md
@@ -49,15 +49,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/10-tenant-launch-risk-and-readiness.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
@@ -77,6 +77,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

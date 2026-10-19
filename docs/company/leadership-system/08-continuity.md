@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/02-decision-rights.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/04-organization-and-hiring.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/09-calendar.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
@@ -21,10 +21,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

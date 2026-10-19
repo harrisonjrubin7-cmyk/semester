@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:01"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
@@ -25,6 +25,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

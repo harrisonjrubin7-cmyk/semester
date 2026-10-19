@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:56"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/02-SLOS-SLIS-AND-ERROR-BUDGETS.md
@@ -25,6 +25,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

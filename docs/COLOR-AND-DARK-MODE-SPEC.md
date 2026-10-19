@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

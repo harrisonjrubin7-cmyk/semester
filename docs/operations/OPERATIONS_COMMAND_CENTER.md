@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_RELEASE_GATES.md
@@ -21,11 +21,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:06"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_WORKFLOW_CATALOG.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:05"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,23 +5,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CONTRIBUTING.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:55"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/README.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/CODING-STANDARDS.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DEPENDENCY.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-MIGRATION.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-ADR.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EVENT-TYPE.md
@@ -37,15 +37,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/ONBOARDING.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/REPO-MAP.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
@@ -53,11 +53,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T02:32:19"
+    changed_at: "2026-10-19T18:51:09"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-SHIP-BEHIND-A-FLAG.md
@@ -65,10 +65,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

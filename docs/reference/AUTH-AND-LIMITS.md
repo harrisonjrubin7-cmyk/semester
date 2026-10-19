@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ERRORS.md
-    changed_at: "2026-10-19T02:32:18"
+    changed_at: "2026-10-19T18:51:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

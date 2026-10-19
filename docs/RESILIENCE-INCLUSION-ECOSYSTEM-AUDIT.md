@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T02:32:16"
+    changed_at: "2026-10-19T18:50:57"
     sections_changed: []
     summary: externally modified
   - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-TEST-PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
@@ -29,10 +29,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

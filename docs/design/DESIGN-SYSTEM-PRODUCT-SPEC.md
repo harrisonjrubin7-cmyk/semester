@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/design/SEMESTER-UI-CONSTITUTION.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
   - source: docs/DESIGN-TOKEN-ARCHITECTURE.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/GOVERNANCE.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:59"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

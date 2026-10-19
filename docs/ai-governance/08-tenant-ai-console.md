@@ -9,10 +9,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/09-user-transparency.md
-    changed_at: "2026-10-19T02:32:17"
+    changed_at: "2026-10-19T18:50:58"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 
