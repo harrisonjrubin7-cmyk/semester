@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### An office resolves the registration holds it placed, and readiness says when something changed
+
+Only at a school that runs registration through Semester, and only once the database change is applied (it is not yet). On **Registration**, staff whose office can resolve holds get a **Holds** tab listing that office's open holds by student account — never the reason. **Resolve the hold** opens a preview that says plainly this is not enrollment, then shows the receipt; another office's hold is refused. Students see **Your school’s record** in the readiness view: a hold names its office; after an office resolves it, readiness worked out while it stood shows **Something changed — check again**; and a clear check is a dated receipt that says it is not enrollment. Nobody else will notice anything.
+
 ### Mine names the exact action, step or event before removing it
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
