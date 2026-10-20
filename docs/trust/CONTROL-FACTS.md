@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 254 |
-| Tables created in `public` and not later dropped | 347 |
-| … of which enable row-level security in a migration | 347 |
+| Migration files | 255 |
+| Tables created in `public` and not later dropped | 352 |
+| … of which enable row-level security in a migration | 352 |
 | Tables created in `private` and not later dropped | 55 |
 | … of which enable row-level security in a migration | 55 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 279 |
-| Tables with RLS found and no literal policy statement | 123 |
+| Tables named by at least one literal `create policy` statement | 283 |
+| Tables with RLS found and no literal policy statement | 124 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-157 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -189,6 +189,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/tenant-sso-policy.check.sql` | Whether a school requires campus SSO (tenant_sso_policy), its history, and the launch facts that read it. |
 | `supabase/trust-room.check.sql` | The procurement room: an NDA-gated, expiring, logged link to exact versions of the trust packet. |
 | `supabase/workflow-builder.check.sql` | The Workflow Builder (D-1018): who may draft and who may publish a school's workflow definition, that whoever drafted it does not publish it, that a published version is never edited or deleted, that… |
+| `supabase/workspace-objects.check.sql` | who may make, save, read and share a workspace object, that a saved version never changes, and that a grant pinned to one version never reaches the live object. |
 
 **How counted.** Files in `supabase/` whose names end in .check.sql. The text is the first comment paragraph of the file up to its first full stop, with a leading `supabase/<name> —` path removed, cut at 200 characters.
 
@@ -298,14 +299,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 255 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 255 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 68 |
-| Register rows in category `sharing` | 23 |
+| Register rows in category `self-service` | 71 |
+| Register rows in category `sharing` | 26 |
 | Register rows in category `admin` | 99 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |

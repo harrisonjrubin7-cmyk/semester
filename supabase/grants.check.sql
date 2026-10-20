@@ -566,6 +566,18 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20261022120000_workspace_objects.sql: a person's own documents, their
+    -- versions and who they are shared with. Each checks auth.uid() and the
+    -- caller's access to the object through private.workspace_object_access;
+    -- only the owner shares or revokes; `workspace-objects.check.sql` proves
+    -- each refusal.
+    'workspace_object_create(want_kind text, want_title text, want_body text, want_mime text, want_schema text, want_key text)',
+    'workspace_object_save(want_object uuid, want_expected_revision bigint, want_title text, want_body text, want_mime text, want_schema text, want_key text)',
+    'workspace_object_grant(want_object uuid, want_version uuid, want_grantee uuid, want_permission text, want_purpose text, want_expires_at timestamp with time zone, want_key text)',
+    'workspace_object_revoke(want_grant uuid)',
+    'workspace_objects_mine()',
+    'workspace_object_read(want_object uuid, want_version uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

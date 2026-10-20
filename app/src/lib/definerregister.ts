@@ -363,6 +363,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
   ['withdraw_school_request', 'self-service', ['auth.uid()']],
+  ['workspace_object_create', 'self-service', ['auth.uid()', 'private.workspace_mine', 'private.workspace_replay']],
+  ['workspace_object_grant', 'sharing', ['auth.uid()', 'private.workspace_object_access', "access <> 'owner'", 'private.workspace_replay']],
+  ['workspace_object_read', 'sharing', ['auth.uid()', 'private.workspace_object_access']],
+  ['workspace_object_revoke', 'sharing', ['auth.uid()', 'private.workspace_object_access']],
+  ['workspace_object_save', 'self-service', ['auth.uid()', 'private.workspace_object_access', 'private.workspace_replay']],
+  ['workspace_objects_mine', 'self-service', ['auth.uid()']],
 ];
 
 /**
@@ -587,6 +593,17 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    file: '20261022120000_workspace_objects.sql',
+    functions: [
+      'workspace_object_create',
+      'workspace_object_grant',
+      'workspace_object_read',
+      'workspace_object_revoke',
+      'workspace_object_save',
+      'workspace_objects_mine',
+    ],
   },
 ];
 

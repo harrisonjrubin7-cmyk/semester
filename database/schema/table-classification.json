@@ -78,7 +78,9 @@
    "talent_profiles",
    "tasks",
    "usage",
-   "weekly_checkins"
+   "weekly_checkins",
+   "workspace_object_grants",
+   "workspaces"
   ],
   "parent-scoped": [
    "accommodation_access_events",
@@ -146,7 +148,9 @@
    "trust_artifacts",
    "trust_room_access_log",
    "trust_room_grant_items",
-   "trust_room_requests"
+   "trust_room_requests",
+   "workspace_object_versions",
+   "workspace_objects"
   ],
   "service-only": [
    "access_gate",
@@ -268,7 +272,8 @@
    "support_notification_outbox",
    "support_ticket_messages",
    "support_tickets",
-   "trust_room_grants"
+   "trust_room_grants",
+   "workspace_object_operations"
   ],
   "tenant-scoped": [
    "academic_record_changes",

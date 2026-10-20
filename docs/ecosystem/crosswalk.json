@@ -5333,14 +5333,20 @@
         "app/src/lib/docx.ts",
         "app/src/lib/docxin.ts",
         "app/src/lib/docversions.ts",
-        "app/src/lib/pdfout.ts"
+        "app/src/lib/pdfout.ts",
+        "app/src/lib/workspace/objects.ts"
       ],
       "server": [],
-      "migrations": [],
-      "tests": [],
+      "migrations": [
+        "supabase/migrations/20261022120000_workspace_objects.sql"
+      ],
+      "tests": [
+        "supabase/workspace-objects.check.sql",
+        "app/src/lib/workspace/objects.test.ts"
+      ],
       "flags": [],
-      "note": "The document editor keeps versions in the device library and exports DOCX and PDF locally.",
-      "gap": "No server persistence or collaboration."
+      "note": "The document editor keeps versions in the device library and exports DOCX and PDF locally. The server side of keeping a document exists (workspace_objects: immutable versions with SHA-256, optimistic revision, idempotent saves, owner-only sharing of the live object or one pinned version) with a typed client in lib/workspace/objects.ts.",
+      "gap": "The editor does not save to the server yet: no 'Save a version to Semester' action, so no server persistence from the screen and no collaboration."
     },
     "#/studio/export": {
       "status": "code-present",
