@@ -1,7 +1,9 @@
--- supabase/roster-admin-desk.check.sql — a school administrator binds roster
--- people to accounts and decides whether absence ends access; nobody else does.
+-- supabase/roster-admin-desk.check.sql — a school administrator finds, binds
+-- and unbinds roster people's accounts and decides whether absence ends
+-- access; nobody else does.
 --
--- For 20261021090000_roster_admin_desk.sql. One school, ra-u, one class,
+-- For 20261021090000_roster_admin_desk.sql and
+-- 20261021100000_roster_admin_unbind_search.sql. One school, ra-u, one class,
 -- HIST 2100 in 2026FA, with a student (Maya) and a teacher on the roster, and
 -- a roster person who is never bound; a university administrator, an
 -- integration administrator, a registrar, a faculty member and a student at
@@ -22,7 +24,23 @@
 --   * the absence switch refuses a stale `expect`, and turning it on ends the
 --     roster's grant for somebody no longer on a complete roster, says so
 --     beforehand, and says so in its answer;
---   * every write leaves one pseudonymous audit row, and refusals leave none.
+--   * every write leaves one pseudonymous audit row, and refusals leave none;
+--   * the account search answers this school's unbound accounts only — never
+--     another school's (whose administrator finds theirs: the control), never
+--     one already bound, never the caller's own (a colleague finds it) — at
+--     least 3 characters, at most 20 rows, % and _ literal, address masked;
+--   * the bound list is this school's bindings, including somebody who has
+--     left the roster;
+--   * an unbind is refused to a student, faculty, the registrar, another
+--     school's administrator, an administrator naming another school, anon,
+--     a stale expected account and the administrator's own binding (which a
+--     colleague then removes: the control), and no refusal writes;
+--   * naming another school's sourcedId here reaches nothing there;
+--   * an unbind ends the roster's grant and keeps one given outside the
+--     roster, puts the person back on the unbound list, replays by key,
+--     refuses the key for anything else, and is audited once; a later
+--     promotion does not bring the access back, and binding again
+--     re-activates the same grant row.
 --
 -- The control: each refusal comes after the same call working for the right
 -- person, so a refusal is the rule's doing and not a broken fixture.
@@ -154,6 +172,9 @@ declare
   scope constant text := 'ra-u/HIST 2100/2026FA';
   bind constant text := $q$select public.roster_admin_bind('ra-u', %L, %L::uuid, %L)::text$q$;
   absence constant text := $q$select public.roster_admin_set_absence('ra-u', %L::boolean, %L::boolean, %L)::text$q$;
+  unbind constant text := $q$select public.roster_admin_unbind(%L, %L, %L::uuid, %L)::text$q$;
+  find constant text := $q$select * from public.roster_admin_find_accounts(%L, %L)$q$;
+  other_maya uuid;
   r jsonb; again jsonb; audits bigint; ops bigint; st text;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -322,6 +343,147 @@ begin
     $q$select count(*) from private.roster_admin_operation$q$, 'permission denied');
   perform pg_temp.refused('the administrator calling the private binder directly', uadmin,
     format($q$select private.roster_bind_identity('ra-u', 'u-nobody', %L::uuid, 'admin_review', null)$q$, maya2), 'permission denied');
+
+  -- ══ 20261021100000_roster_admin_unbind_search.sql ══════════════════════
+  -- Where things stand: Maya and the teacher are bound (Maya's grant ended
+  -- with absence), u-nobody is not, the switch is off.
+
+  -- ── Searching for the account to bind ──────────────────────────────────
+  other_maya := pg_temp.newuser('maya.other@ra-other.example', 'ra-other');
+  for i in 1..25 loop
+    perform pg_temp.newuser(format('bulk%s@ra-u.example', i), 'ra-u');
+  end loop;
+
+  perform pg_temp.refused('a student searching accounts', student, format(find, 'ra-u', 'maya'), 'roster:administer');
+  perform pg_temp.refused('the registrar searching accounts', registrar, format(find, 'ra-u', 'maya'), 'roster:administer');
+  perform pg_temp.refused('another school''s administrator searching here', away_admin, format(find, 'ra-u', 'maya'), 'roster:administer');
+  perform pg_temp.refused('anon searching accounts', null, format(find, 'ra-u', 'maya'), 'not signed in');
+  perform pg_temp.refused('a two-character search', uadmin, format(find, 'ra-u', 'ma'), 'at least 3 characters');
+  perform pg_temp.refused('a blank-padded two-character search', uadmin, format(find, 'ra-u', '  ma  '), 'at least 3 characters');
+
+  perform pg_temp.said('searching "maya" finds the one unbound Maya at this school, not the bound one or the other school''s',
+    pg_temp.ask(uadmin, format($q$select string_agg(handle, ',' order by handle) from (%s) f$q$, format(find, 'ra-u', 'maya'))), 'maya_two');
+  perform pg_temp.said('control: the other school''s administrator finds their own Maya',
+    pg_temp.ask(away_admin, format($q$select string_agg(handle, ',' order by handle) from (%s) f$q$, format(find, 'ra-other', 'maya'))), 'maya_other');
+  perform pg_temp.said('the address comes back masked to its first letter and domain',
+    pg_temp.ask(uadmin, format($q$select email_hint from (%s) f$q$, format(find, 'ra-u', 'MAYA'))), 'm•••@ra-u.example');
+  perform pg_temp.said('the full address is in no row',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f where row_to_json(f)::text like '%%maya.two@%%'$q$, format(find, 'ra-u', 'maya'))), '0');
+  perform pg_temp.said('the account id comes back, for the binding',
+    pg_temp.ask(uadmin, format($q$select (account = %L::uuid)::text from (%s) f$q$, maya2, format(find, 'ra-u', 'maya'))), 'true');
+  perform pg_temp.said('a search by address fragment finds the account too',
+    pg_temp.ask(uadmin, format($q$select string_agg(handle, ',') from (%s) f$q$, format(find, 'ra-u', 'two@ra-u'))), 'maya_two');
+  perform pg_temp.said('at most 20 accounts come back',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f$q$, format(find, 'ra-u', 'bulk'))), '20');
+  perform pg_temp.said('a search on the school''s domain is still only this school, 20 at most',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f where email_hint not like '%%@ra-u.example'$q$, format(find, 'ra-u', 'example'))), '0');
+  perform pg_temp.said('the caller''s own account is never offered',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f where account = %L::uuid$q$, format(find, 'ra-u', 'admin'), uadmin)), '0');
+  perform pg_temp.said('control: a colleague searching the same word finds that account',
+    pg_temp.ask(iadmin, format($q$select count(*)::text from (%s) f where account = %L::uuid$q$, format(find, 'ra-u', 'admin'), uadmin)), '1');
+  perform pg_temp.said('an account already bound here is not offered',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f$q$, format(find, 'ra-u', 'teacher'))), '0');
+  perform pg_temp.said('% and _ are literal, not wildcards',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f$q$, format(find, 'ra-u', '%%%'))) || ' ' ||
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f$q$, format(find, 'ra-u', '___'))), '0 0');
+
+  -- ── The bound list ─────────────────────────────────────────────────────
+  -- A binding at the other school, made by the service, and one at this
+  -- school that is the integration administrator's own account (by SCIM:
+  -- the desk would refuse it, the service does not).
+  perform private.roster_bind_identity('ra-other', 'o-maya', other_maya, 'scim', null);
+  perform private.roster_bind_identity('ra-u', 'u-nobody', iadmin, 'scim', null);
+
+  perform pg_temp.refused('a student listing bindings', student, $q$select count(*) from public.roster_admin_bound('ra-u')$q$, 'roster:administer');
+  perform pg_temp.refused('another school''s administrator listing bindings here', away_admin, $q$select count(*) from public.roster_admin_bound('ra-u')$q$, 'roster:administer');
+  perform pg_temp.said('the bound list is this school''s three bindings, by name',
+    pg_temp.ask(uadmin, $q$select string_agg(sourced_id || ':' || method, ',' order by sourced_id) from public.roster_admin_bound('ra-u')$q$),
+    'u-maya:admin_review,u-nobody:scim,u-teach:admin_review');
+  perform pg_temp.said('a bound row names the account and its handle',
+    pg_temp.ask(uadmin, format($q$select (account = %L::uuid)::text || ' ' || handle || ' ' || given_name from public.roster_admin_bound('ra-u') where sourced_id = 'u-teach'$q$, teacher)),
+    'true teacher Tess');
+  perform pg_temp.said('a person who has left the roster is still listed, so they can be unbound',
+    pg_temp.ask(uadmin, $q$select coalesce(given_name, '(gone)') from public.roster_admin_bound('ra-u') where sourced_id = 'u-maya'$q$), '(gone)');
+
+  -- ── Unbinding ──────────────────────────────────────────────────────────
+  -- A grant an administrator gave the teacher outside the roster.
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (teacher, 'faculty', 'course', 'ra-u/HIST 3100/2026FA', 'institution');
+
+  perform pg_temp.refused('a student unbinding', student, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-student'), 'roster:administer');
+  perform pg_temp.refused('a faculty member unbinding', faculty, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-faculty'), 'roster:administer');
+  perform pg_temp.refused('the registrar unbinding', registrar, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-registrar'), 'roster:administer');
+  perform pg_temp.refused('another school''s administrator unbinding here', away_admin, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-away'), 'roster:administer');
+  perform pg_temp.refused('this school''s administrator unbinding at another school', uadmin, format(unbind, 'ra-other', 'o-maya', other_maya, 'key-unbind-there'), 'roster:administer');
+  perform pg_temp.refused('anon unbinding', null, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-anon'), 'not signed in');
+  perform pg_temp.refused('an unbind with no expected account', uadmin, format(unbind, 'ra-u', 'u-teach', null, 'key-unbind-null'), 'the account you saw bound');
+  perform pg_temp.refused('an unbind that saw a different account (stale)', uadmin, format(unbind, 'ra-u', 'u-teach', maya2, 'key-unbind-stale'), 'stale');
+  perform pg_temp.refused('the integration administrator unbinding their own account', iadmin, format(unbind, 'ra-u', 'u-nobody', iadmin, 'key-unbind-self'), 'your own account');
+  perform pg_temp.said('no refusal removed a binding',
+    (select count(*)::text from private.roster_identity where tenant_id = 'ra-u'), '3');
+  perform pg_temp.said('no refusal ended the teacher''s grant', pg_temp.grant_of(teacher, 'faculty', scope), 'institution');
+  perform pg_temp.said('no refusal touched the other school',
+    (select count(*)::text from private.roster_identity where tenant_id = 'ra-other' and subject = other_maya), '1');
+  perform pg_temp.said('no refusal was stored or audited',
+    (select count(*)::text from private.roster_admin_operation where kind = 'unbind')
+    || ' ' || (select count(*)::text from public.audit_event where action = 'roster.identity_unbound'), '0 0');
+
+  -- Naming the other school's person at this school reaches nothing.
+  r := pg_temp.ask(uadmin, format(unbind, 'ra-u', 'o-maya', other_maya, 'key-unbind-cross'))::jsonb;
+  perform pg_temp.said('naming another school''s binding here is already-unbound', r ->> 'outcome', 'already-unbound');
+  perform pg_temp.said('and the other school''s binding is still there',
+    (select count(*)::text from private.roster_identity where tenant_id = 'ra-other' and sourced_id = 'o-maya'), '1');
+
+  -- The control for the self refusal: a colleague may.
+  r := pg_temp.ask(uadmin, format(unbind, 'ra-u', 'u-nobody', iadmin, 'key-unbind-scim'))::jsonb;
+  perform pg_temp.said('a colleague unbinds the SCIM binding of the integration administrator',
+    (r ->> 'outcome') || ' ' || (r ->> 'method'), 'unbound scim');
+
+  r := pg_temp.ask(uadmin, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-teacher'))::jsonb;
+  perform pg_temp.said('the administrator unbinds the teacher', r ->> 'outcome', 'unbound');
+  perform pg_temp.said('the answer names the roster grant that ended',
+    (r -> 'revoked')::text, jsonb_build_array(jsonb_build_object('role', 'faculty', 'scope', scope))::text);
+  perform pg_temp.said('the teacher''s roster grant has ended', pg_temp.grant_of(teacher, 'faculty', scope), 'revoked');
+  perform pg_temp.said('the grant an administrator gave outside the roster is kept',
+    pg_temp.grant_of(teacher, 'faculty', 'ra-u/HIST 3100/2026FA'), 'institution');
+  perform pg_temp.said('the teacher is unbound and back on the unbound list',
+    pg_temp.ask(uadmin, $q$select count(*)::text from public.roster_admin_unbound('ra-u') where sourced_id = 'u-teach'$q$)
+    || ' ' || pg_temp.ask(uadmin, $q$select count(*)::text from public.roster_admin_bound('ra-u') where sourced_id = 'u-teach'$q$), '1 0');
+  perform pg_temp.said('and the account can be found to bind again',
+    pg_temp.ask(uadmin, format($q$select count(*)::text from (%s) f$q$, format(find, 'ra-u', 'teacher'))), '1');
+
+  again := pg_temp.ask(uadmin, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-teacher'))::jsonb;
+  perform pg_temp.said('the same key replays the same answer', (again ->> 'outcome') || ' ' || (again ->> 'replayed'), 'unbound true');
+  perform pg_temp.said('with the same grants', (again -> 'revoked')::text, (r -> 'revoked')::text);
+  perform pg_temp.refused('the same key for a different unbind', uadmin, format(unbind, 'ra-u', 'u-maya', maya, 'key-unbind-teacher'), 'different request');
+  perform pg_temp.refused('the same key used for a binding', uadmin, format(bind, 'u-teach', teacher, 'key-unbind-teacher'), 'different request');
+  r := pg_temp.ask(iadmin, format(unbind, 'ra-u', 'u-teach', teacher, 'key-unbind-teacher-2'))::jsonb;
+  perform pg_temp.said('a fresh key for a binding already gone is already-unbound', r ->> 'outcome', 'already-unbound');
+
+  select count(*) into audits from public.audit_event where tenant_id = 'ra-u' and action = 'roster.identity_unbound';
+  perform pg_temp.said('two unbinds, two audit rows (none for replays, already-unbound or refusals)', audits::text, '2');
+  perform pg_temp.said('the audit says the method and how many grants ended, and names nobody',
+    (select string_agg((detail ->> 'method') || ':' || (detail ->> 'revoked'), ',' order by detail ->> 'method')
+       from public.audit_event where tenant_id = 'ra-u' and action = 'roster.identity_unbound'
+        and detail::text not like '%' || teacher::text || '%' and detail::text not like '%u-teach%'), 'admin_review:1,scim:1');
+
+  -- A promotion after the unbind does not bring the access back.
+  st := pg_temp.promote(jsonb_build_array(
+      pg_temp.person('u-teach', 'teacher', 'Tess'),
+      pg_temp.person('u-nobody', 'student', 'Noor'),
+      pg_temp.klass('c-hist', 'HIST 2100', '2026FA'),
+      pg_temp.enrol('u-teach', 'c-hist', 'teacher'),
+      pg_temp.enrol('u-nobody', 'c-hist', 'student')),
+    'three', 'complete', now() - interval '1 hour');
+  perform pg_temp.said('a later roster is promoted', st, 'promoted');
+  perform pg_temp.said('and the unbound teacher''s access stays ended', pg_temp.grant_of(teacher, 'faculty', scope), 'revoked');
+
+  -- Binding again re-activates the same grant.
+  r := pg_temp.ask(iadmin, format(bind, 'u-teach', teacher, 'key-rebind-teacher'))::jsonb;
+  perform pg_temp.said('binding the teacher again works', r ->> 'outcome', 'bound');
+  perform pg_temp.said('and the same faculty grant is live again', pg_temp.grant_of(teacher, 'faculty', scope), 'institution');
+  perform pg_temp.said('one grant row, not two',
+    (select count(*)::text from public.role_grants where subject = teacher and role = 'faculty' and scope_id = scope), '1');
 end $$;
 
 rollback;

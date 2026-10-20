@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 256 |
+| Migration files | 257 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
 | Tables created in `private` and not later dropped | 58 |
@@ -164,7 +164,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/role-grant-audit.check.sql` | Role changes must be append-only, metadata-minimized and tenant-isolated. |
 | `supabase/rolegrants.check.sql` | The role grants, and the two locks that make them mean something. |
 | `supabase/rooms.check.sql` | Reactions, with the second person a reaction needs. |
-| `supabase/roster-admin-desk.check.sql` | a school administrator binds roster people to accounts and decides whether absence ends access; nobody else does. |
+| `supabase/roster-admin-desk.check.sql` | a school administrator finds, binds and unbinds roster people's accounts and decides whether absence ends access; nobody else does. |
 | `supabase/roster-import.check.sql` | Roster import staging: staged not written, manifest-checked, held on a large removal, idempotent, reversible, per school, and closed to every client. |
 | `supabase/roster-projection.check.sql` | a roster becomes course-and-term access, and the ways a roster sync goes wrong at scale do not. |
 | `supabase/school-membership.check.sql` | Course rooms limited to one university at a time (full-beta G-03). |
@@ -300,19 +300,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 253 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 253 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 256 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 256 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 68 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 102 |
+| Register rows in category `admin` | 103 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 34 |
+| Register rows in category `read-helper` | 36 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

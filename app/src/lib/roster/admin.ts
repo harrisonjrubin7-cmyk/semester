@@ -3,12 +3,14 @@ import { serviceError } from '../attempt';
 
 /**
  * The roster desk's client: a school administrator's view of the roster
- * people nobody has bound to an account yet, binding one, and the school's
+ * people nobody has bound to an account yet, finding the account and binding
+ * one, the people who are bound and unbinding one, and the school's
  * absence-means-removal switch.
  *
- * Every call is one of the four definers in
- * `supabase/migrations/20261021090000_roster_admin_desk.sql`, each of which
- * raises unless the caller holds `roster:administer` over the school. What the
+ * Every call is one of the definers in
+ * `supabase/migrations/20261021090000_roster_admin_desk.sql` and
+ * `20261021100000_roster_admin_unbind_search.sql`, each of which raises unless
+ * the caller holds `roster:administer` over the school. What the
  * screen offers follows `rosterAdminAllowed`; what is allowed is the
  * database's (`supabase/roster-admin-desk.check.sql`).
  */
@@ -60,8 +62,23 @@ export interface RosterConfig {
   lastPromotedAt: string | null;
 }
 
+export interface BoundPerson {
+  sourcedId: string;
+  /** The roster's word; empty once the person has left the live roster. */
+  role: string;
+  givenName: string;
+  familyName: string;
+  /** The account the person is bound to, and its chosen handle. */
+  account: string;
+  handle: string;
+  /** How the binding was made: admin_review, scim or sso_subject. */
+  method: string;
+  boundAt: string;
+}
+
 export type RosterDesk =
-  | { state: 'ready'; config: RosterConfig; people: UnboundPerson[] }
+  /** `bound` is null where the unbind migration has not reached the project. */
+  | { state: 'ready'; config: RosterConfig; people: UnboundPerson[]; bound: BoundPerson[] | null }
   | { state: 'not-set-up' }
   | { state: 'denied'; message: string };
 
@@ -93,20 +110,71 @@ export function readPerson(r: Row): UnboundPerson {
   };
 }
 
-/** The desk in one read: the settings and the unbound people, or why there is no desk. */
+export function readBound(r: Row): BoundPerson {
+  return {
+    sourcedId: text(r.sourced_id),
+    role: text(r.role),
+    givenName: text(r.given_name),
+    familyName: text(r.family_name),
+    account: text(r.account),
+    handle: text(r.handle),
+    method: text(r.method),
+    boundAt: text(r.bound_at),
+  };
+}
+
+/** The desk in one read: the settings, the unbound and the bound people, or why there is no desk. */
 export async function loadRosterDesk(tenant: string): Promise<RosterDesk> {
   const db = await cloud();
-  const [config, people] = await Promise.all([
+  const [config, people, bound] = await Promise.all([
     db.rpc('roster_admin_config', { want_tenant: tenant }),
     db.rpc('roster_admin_unbound', { want_tenant: tenant }),
+    db.rpc('roster_admin_bound', { want_tenant: tenant }),
   ]);
   if (notSetUp(config.error) || notSetUp(people.error)) return { state: 'not-set-up' };
-  const refused = config.error ?? people.error;
+  const boundMissing = notSetUp(bound.error);
+  const refused = config.error ?? people.error ?? (boundMissing ? null : bound.error);
   if (refused && denied(refused)) {
     return { state: 'denied', message: serviceError(refused, 'You cannot open the roster desk at this school.').message };
   }
   if (refused) throw serviceError(refused, 'Could not load the roster.');
-  return { state: 'ready', config: readConfig(config.data), people: list(people.data).map(readPerson) };
+  return {
+    state: 'ready',
+    config: readConfig(config.data),
+    people: list(people.data).map(readPerson),
+    bound: boundMissing ? null : list(bound.data).map(readBound),
+  };
+}
+
+/** The server answers at most this many accounts per search. */
+export const SEARCH_LIMIT = 20;
+/** And refuses a search shorter than this. */
+export const SEARCH_MIN = 3;
+
+export interface FoundAccount {
+  account: string;
+  handle: string;
+  /** The address masked to its first letter and domain: `m•••@school.edu`. */
+  emailHint: string | null;
+}
+
+/** Why a search cannot be sent, or null when it can. */
+export function searchProblem(raw: string): string | null {
+  const v = raw.trim();
+  if (v.length < SEARCH_MIN) return `Type at least ${SEARCH_MIN} characters of the person’s handle or school address.`;
+  if (v.length > 100) return 'A search is at most 100 characters.';
+  return null;
+}
+
+/**
+ * Accounts at this school that could be bound: not already bound here, never
+ * the caller's own. At most `SEARCH_LIMIT`.
+ */
+export async function findAccounts(tenant: string, query: string): Promise<FoundAccount[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('roster_admin_find_accounts', { want_tenant: tenant, want_query: query.trim() });
+  if (error) throw serviceError(error, 'The search did not run.');
+  return list(data).map((r) => ({ account: text(r.account), handle: text(r.handle), emailHint: r.email_hint ? text(r.email_hint) : null }));
 }
 
 export interface GrantMade {
@@ -160,18 +228,35 @@ export async function setAbsence(tenant: string, on: boolean, expect: boolean, k
   return { outcome, on: r.on === true, revoked: num(object(r.grants).revoked), replayed: r.replayed === true };
 }
 
+export interface UnbindReceipt {
+  outcome: 'unbound' | 'already-unbound';
+  /** The roster-given course grants that ended with the binding. */
+  revoked: GrantMade[];
+  replayed: boolean;
+}
+
+/**
+ * Remove one roster person's binding. `expect` is the account the
+ * administrator saw bound; if the person is bound to another one now, the
+ * server refuses (`stale`) and nothing is written. The course access the
+ * roster gave that account ends in the same step.
+ */
+export async function unbindPerson(tenant: string, sourcedId: string, expect: string, key: string): Promise<UnbindReceipt> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('roster_admin_unbind', {
+    want_tenant: tenant, want_sourced_id: sourcedId, want_expect: expect, want_key: key,
+  });
+  if (error) throw serviceError(error, 'The binding was not removed.');
+  const r = object(data);
+  return {
+    outcome: r.outcome === 'already-unbound' ? 'already-unbound' : 'unbound',
+    revoked: list(r.revoked).map((g) => ({ role: text(g.role), scope: text(g.scope) })),
+    replayed: r.replayed === true,
+  };
+}
+
 /** The server's "someone changed this since you looked". */
 export const stale = (e: unknown): boolean => e instanceof Error && /^stale\b/i.test(e.message);
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Why a pasted account id cannot be sent, or null when it can. */
-export function accountIdProblem(raw: string): string | null {
-  const v = raw.trim();
-  if (!v) return 'Paste the Semester account id of the person to bind.';
-  if (!UUID.test(v)) return 'That is not an account id. One looks like 1b2c3d4e-0000-4000-8000-000000000000.';
-  return null;
-}
 
 const ROLE_WORD: Record<string, string> = { student: 'student', faculty: 'instructor', teaching_assistant: 'teaching assistant' };
 
@@ -187,4 +272,8 @@ export function scopeLabel(scope: string): string {
 export const grantLabel = (g: GrantMade): string => `${scopeLabel(g.scope)} as ${ROLE_WORD[g.role] ?? g.role}`;
 
 /** "Maya Rostered", or the sourcedId when the roster gave no name. */
-export const personName = (p: UnboundPerson): string => [p.givenName, p.familyName].filter(Boolean).join(' ') || p.sourcedId;
+export const personName = (p: Pick<UnboundPerson, 'givenName' | 'familyName' | 'sourcedId'>): string =>
+  [p.givenName, p.familyName].filter(Boolean).join(' ') || p.sourcedId;
+
+/** "maya_two · m•••@school.edu", or the handle alone. */
+export const accountLabel = (a: Pick<FoundAccount, 'handle' | 'emailHint'>): string => [a.handle, a.emailHint].filter(Boolean).join(' · ');

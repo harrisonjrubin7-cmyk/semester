@@ -60,7 +60,7 @@ A tab appears only when its condition holds. A flag is a build-time setting with
 | `Modules` | You hold `tenant:configure` | Switch modules for your school |
 | `Get help` | `VITE_HUMAN_HELP` is not `off` | Staff help inbox |
 | `Integrations` | `VITE_INTEGRATION_DASHBOARD` is not `off` | Read connection health; the Export health summary button downloads counts and states only |
-| `Roster` | you hold `roster:administer` at your school (university and integration administrators) | Bind roster people to Semester accounts by account id, and turn absence-means-removal on or off. Never your own account; there is no unbind yet |
+| `Roster` | you hold `roster:administer` at your school (university and integration administrators) | Bind roster people to Semester accounts, finding the account by part of its handle or school address (accounts at your school only, 20 at most, address masked); unbind a person, which ends the course access the roster gave that account; turn absence-means-removal on or off. Never your own account |
 | `Operations` | `VITE_INSTITUTIONAL_OPERATIONS` is not `off` and you hold `outcomes:read` | Aggregate measures. Cells under ten are suppressed, and there is no per-student grain |
 | `Demand` | `VITE_DEMAND_FORECASTING` is not `off` | Course-demand counts of ten or more |
 | `Campaigns` | `VITE_CAMPAIGN_MANAGER` is not `off` and you hold a campaign capability | Recruitment and adoption campaigns |

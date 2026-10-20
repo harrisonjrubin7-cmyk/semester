@@ -330,8 +330,11 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
   ['roster_admin_bind', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_subject = me']],
+  ['roster_admin_bound', 'read-helper', ['private.roster_admin_require', 'limit 1000']],
   ['roster_admin_config', 'admin', ['private.roster_admin_require']],
+  ['roster_admin_find_accounts', 'read-helper', ['private.roster_admin_require', 'p.school_id = want_tenant', 'limit 20']],
   ['roster_admin_set_absence', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_expect']],
+  ['roster_admin_unbind', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'was.subject = me', 'want_expect']],
   ['roster_admin_unbound', 'read-helper', ['private.roster_admin_require', 'limit 1000']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['school_enforcement_readiness', 'admin', ['private.is_app_admin', 'private.has_capability']],
@@ -595,6 +598,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261021090000_roster_admin_desk.sql',
     functions: ['roster_admin_bind', 'roster_admin_config', 'roster_admin_set_absence', 'roster_admin_unbound'],
+  },
+  {
+    file: '20261021100000_roster_admin_unbind_search.sql',
+    functions: ['roster_admin_bound', 'roster_admin_find_accounts', 'roster_admin_unbind'],
   },
 ];
 

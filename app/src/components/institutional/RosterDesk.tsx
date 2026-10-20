@@ -9,13 +9,15 @@ import { FieldMessage, fieldProps } from '../FieldMessage';
 import { Field, Result, Row, type Said } from '../academic/Form';
 import { settled, useAttempts } from '../../lib/attempt';
 import {
-  accountIdProblem, bindPerson, courseLabel, grantLabel, loadRosterDesk, personName, setAbsence, stale,
-  type RosterConfig, type RosterDesk as Desk, type UnboundPerson,
+  SEARCH_LIMIT, accountLabel, bindPerson, courseLabel, findAccounts, grantLabel, loadRosterDesk, personName, searchProblem,
+  setAbsence, stale, unbindPerson,
+  type BoundPerson, type FoundAccount, type RosterConfig, type RosterDesk as Desk, type UnboundPerson,
 } from '../../lib/roster/admin';
 
 /**
  * The roster desk: for a school administrator holding `roster:administer`,
- * the roster people nobody has bound to a Semester account, binding one, and
+ * the roster people nobody has bound to a Semester account, finding the
+ * account and binding one, the people who are bound and unbinding one, and
  * the school's absence-means-removal switch.
  *
  * Built from the same parts as the registration hold desk (`HoldDesk`): a
@@ -24,10 +26,13 @@ import {
  * after a lost reply (`useAttempts`); a write's answer is shown once, by
  * `Result`. The list is the shared `Table`, stacked on a phone.
  *
- * Binding names an account by its id, pasted: Semester has no people search
- * for administrators yet. Nothing is matched by email, here or in the
- * database. The rules — who may, which school, never one's own account, no
- * second binding — are the database's (`roster-admin-desk.check.sql`).
+ * Binding names an account the administrator found by searching their own
+ * school (a handle or address fragment; the server answers at most
+ * `SEARCH_LIMIT`, with the address masked). Nothing is matched by email
+ * automatically: a person picks the account. Unbinding ends the course access
+ * the roster gave that account in the same step. The rules — who may, which
+ * school, never one's own account, no second binding, the account the
+ * administrator saw — are the database's (`roster-admin-desk.check.sql`).
  */
 
 /** The server returns at most this many unbound people. */
@@ -72,6 +77,7 @@ export function RosterDesk({ tenantId }: { tenantId: string }) {
     <>
       <Absence tenantId={tenantId} config={desk.config} reload={reload} />
       <Unbound tenantId={tenantId} people={desk.people} reload={reload} />
+      {desk.bound && <Bound tenantId={tenantId} people={desk.bound} reload={reload} />}
     </>
   );
 }
@@ -174,41 +180,62 @@ function Absence({ tenantId, config, reload }: { tenantId: string; config: Roste
 
 // ── People without an account ─────────────────────────────────────────────
 
+type Search =
+  | { state: 'idle' }
+  | { state: 'searching'; query: string }
+  | { state: 'found'; query: string; accounts: FoundAccount[] }
+  | { state: 'failed'; query: string; message: string };
+
 function Unbound({ tenantId, people, reload }: { tenantId: string; people: UnboundPerson[]; reload: () => void }) {
   const { say } = useStore();
   const { attempt } = useAttempts();
   const [choosing, setChoosing] = useState<UnboundPerson | null>(null);
-  const [account, setAccount] = useState('');
+  const [query, setQuery] = useState('');
   const [problem, setProblem] = useState<string | undefined>();
-  const [confirming, setConfirming] = useState(false);
+  const [search, setSearch] = useState<Search>({ state: 'idle' });
+  const [picked, setPicked] = useState<FoundAccount | null>(null);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<Said | null>(null);
 
-  function review() {
-    const p = accountIdProblem(account);
-    setProblem(p ?? undefined);
-    if (!p) setConfirming(true);
+  function start(p: UnboundPerson) {
+    setSaid(null);
+    setProblem(undefined);
+    setQuery('');
+    setSearch({ state: 'idle' });
+    setPicked(null);
+    setChoosing(p);
   }
 
-  async function bind(person: UnboundPerson, id: string): Promise<void> {
+  async function find(q: string): Promise<void> {
+    const p = searchProblem(q);
+    setProblem(p ?? undefined);
+    if (p) return;
+    setSearch({ state: 'searching', query: q.trim() });
+    try {
+      setSearch({ state: 'found', query: q.trim(), accounts: await findAccounts(tenantId, q) });
+    } catch (e) {
+      setSearch({ state: 'failed', query: q.trim(), message: e instanceof Error ? e.message : 'The search did not run.' });
+    }
+  }
+
+  async function bind(person: UnboundPerson, to: FoundAccount): Promise<void> {
     setBusy(true);
     setSaid(null);
     try {
-      const r = await attempt(`roster-bind:${person.sourcedId}:${id}`, (key) => bindPerson(tenantId, person.sourcedId, id, key));
+      const r = await attempt(`roster-bind:${person.sourcedId}:${to.account}`, (key) => bindPerson(tenantId, person.sourcedId, to.account, key));
       const gets = r.grants.length ? `They now have ${r.grants.map(grantLabel).join('; ')}.` : 'The roster gives them no course yet.';
       const text = r.outcome === 'bound'
-        ? `${personName(person)} is bound to account ${id}. ${gets}`
+        ? `${personName(person)} is bound to ${accountLabel(to)}. ${gets}`
         : `${personName(person)} was already bound to that account. Nothing was changed.`;
       setSaid({ tone: 'ok', text: text + (r.replayed ? ' (Already recorded — nothing was sent twice.)' : '') });
       say(text);
-      setConfirming(false);
+      setPicked(null);
       setChoosing(null);
-      setAccount('');
       reload();
     } catch (e) {
       const text = e instanceof Error ? e.message : 'The binding was not made.';
-      setConfirming(false);
-      setSaid(settled(e) ? { tone: 'refused', text: `${text} Nothing was changed.` } : { tone: 'unknown', text, retry: () => void bind(person, id) });
+      setPicked(null);
+      setSaid(settled(e) ? { tone: 'refused', text: `${text} Nothing was changed.` } : { tone: 'unknown', text, retry: () => void bind(person, to) });
     } finally {
       setBusy(false);
     }
@@ -224,8 +251,21 @@ function Unbound({ tenantId, people, reload }: { tenantId: string; people: Unbou
     {
       id: 'act', header: 'Action',
       cell: (p) => (
-        <button type="button" className="btn" disabled={busy} onClick={() => { setSaid(null); setProblem(undefined); setAccount(''); setChoosing(p); }}>
+        <button type="button" className="btn" disabled={busy} onClick={() => start(p)}>
           Bind {personName(p)}
+        </button>
+      ),
+    },
+  ];
+
+  const found: Column<FoundAccount>[] = [
+    { id: 'handle', header: 'Account', rowHeader: true, cell: (a) => a.handle },
+    { id: 'address', header: 'School address', cell: (a) => a.emailHint ?? '—' },
+    {
+      id: 'pick', header: 'Action',
+      cell: (a) => (
+        <button type="button" className="btn" disabled={busy} onClick={() => { setSaid(null); setPicked(a); }}>
+          Choose {a.handle}
         </button>
       ),
     },
@@ -253,49 +293,168 @@ function Unbound({ tenantId, people, reload }: { tenantId: string; people: Unbou
           />
         }
       />
-      {choosing && !confirming && (
+      {choosing && (
         <section aria-label={`Bind ${personName(choosing)}`}>
           <SectionLabel>Bind {personName(choosing)}</SectionLabel>
-          <Field
-            label="Semester account id"
-            hint="The account that is this person. It must be at your school, and it cannot be your own. Semester has no people search for administrators yet, so paste the id; nothing is matched by email."
-          >
-            {(ids) => (
-              <>
-                <input
-                  aria-label="Semester account id"
-                  {...fieldProps(ids.id, problem, ids.hint)}
-                  className="input"
-                  value={account}
-                  autoComplete="off"
-                  spellCheck={false}
-                  onChange={(e) => setAccount(e.target.value)}
+          <form onSubmit={(e) => { e.preventDefault(); void find(query); }}>
+            <Field
+              label="Find their Semester account"
+              hint={`Part of the account’s handle or school address, at least 3 characters. Only accounts at your school that are not bound yet are searched, and never your own. Up to ${SEARCH_LIMIT} are shown.`}
+            >
+              {(ids) => (
+                <>
+                  <input
+                    aria-label="Find their Semester account"
+                    {...fieldProps(ids.id, problem, ids.hint)}
+                    type="search"
+                    className="input"
+                    value={query}
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                  <FieldMessage id={ids.id} error={problem} />
+                </>
+              )}
+            </Field>
+            <Row>
+              <button type="submit" className="btn btn-primary" disabled={busy || search.state === 'searching'}>Search</button>
+              <button type="button" className="btn" disabled={busy} onClick={() => setChoosing(null)}>Cancel</button>
+            </Row>
+          </form>
+          {search.state === 'searching' && <LoadingState what="matching accounts" bars={[30, 30]} />}
+          {search.state === 'failed' && (
+            <ErrorState
+              title="The search did not run"
+              body={`${search.message} Nothing has changed.`}
+              recover={{ label: 'Search again', run: () => void find(search.query) }}
+            />
+          )}
+          {search.state === 'found' && (
+            <>
+              <Notice>
+                {search.accounts.length === 0
+                  ? `No unbound account at your school matches “${search.query}”.`
+                  : search.accounts.length >= SEARCH_LIMIT
+                    ? `The first ${SEARCH_LIMIT} matches for “${search.query}”. Type more to narrow it.`
+                    : `${search.accounts.length === 1 ? '1 account matches' : `${search.accounts.length} accounts match`} “${search.query}”.`}
+              </Notice>
+              {search.accounts.length > 0 && (
+                <Table
+                  caption={`Accounts matching ${search.query}`}
+                  captionHidden
+                  columns={found}
+                  rows={search.accounts}
+                  rowKey={(a) => a.account}
+                  compact="stack"
+                  empty={null}
                 />
-                <FieldMessage id={ids.id} error={problem} />
-              </>
-            )}
-          </Field>
-          <Row>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={review}>Review the binding</button>
-            <button type="button" className="btn" disabled={busy} onClick={() => setChoosing(null)}>Cancel</button>
-          </Row>
+              )}
+            </>
+          )}
         </section>
       )}
-      {choosing && confirming && (
+      {choosing && picked && (
         <ConfirmDialog
           title={`Bind ${personName(choosing)}?`}
           preview={
             <ActionPreview
-              subject={`${personName(choosing)} · ${choosing.sourcedId} → account ${account.trim()}`}
+              subject={`${personName(choosing)} · ${choosing.sourcedId} → ${accountLabel(picked)}`}
               says="Links this roster person to that Semester account. The account gets the course access the roster lists for them, now and on every roster from here on."
               exactly={choosing.courses.length ? choosing.courses.map(courseLabel).join('; ') : 'No course yet: the roster lists none for them.'}
-              doesNotChange="The account’s sign-in, its email and anything already in it. Nothing is matched by email."
-              recovery={{ kind: 'none', how: 'There is no unbind in Semester yet; a wrong binding has to be corrected by Semester support.' }}
+              doesNotChange="The account’s sign-in, its email and anything already in it."
+              recovery={{ kind: 'undo', how: 'Unbind them on this tab; the course access this binding gives ends with it.' }}
             />
           }
           confirmLabel={busy ? 'Binding…' : 'Bind'}
-          onCancel={() => { if (!busy) setConfirming(false); }}
-          onConfirm={() => { if (!busy) void bind(choosing, account.trim()); }}
+          onCancel={() => { if (!busy) setPicked(null); }}
+          onConfirm={() => { if (!busy) void bind(choosing, picked); }}
+        />
+      )}
+    </>
+  );
+}
+
+// ── People with an account ────────────────────────────────────────────────
+
+const METHOD_WORD: Record<string, string> = { admin_review: 'by an administrator', scim: 'by SCIM', sso_subject: 'by single sign-on' };
+
+function Bound({ tenantId, people, reload }: { tenantId: string; people: BoundPerson[]; reload: () => void }) {
+  const { say } = useStore();
+  const { attempt } = useAttempts();
+  const [confirming, setConfirming] = useState<BoundPerson | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState<Said | null>(null);
+
+  async function unbind(person: BoundPerson): Promise<void> {
+    setBusy(true);
+    setSaid(null);
+    try {
+      const r = await attempt(`roster-unbind:${person.sourcedId}:${person.account}`, (key) => unbindPerson(tenantId, person.sourcedId, person.account, key));
+      const ended = r.revoked.length ? `Course access that ended: ${r.revoked.map(grantLabel).join('; ')}.` : 'The roster had given that account no course access.';
+      const text = r.outcome === 'unbound'
+        ? `${personName(person)} is no longer bound to ${person.handle || 'that account'}. ${ended}`
+        : `${personName(person)} was already unbound. Nothing was changed.`;
+      setSaid({ tone: 'ok', text: text + (r.replayed ? ' (Already recorded — nothing was sent twice.)' : '') });
+      say(text);
+      setConfirming(null);
+      reload();
+    } catch (e) {
+      const text = e instanceof Error ? e.message : 'The binding was not removed.';
+      setConfirming(null);
+      if (stale(e)) {
+        setSaid({ tone: 'refused', text: 'This person was bound to a different account since you loaded the desk, so nothing was changed. The desk has been loaded again: check it before trying again.' });
+        reload();
+      } else {
+        setSaid(settled(e) ? { tone: 'refused', text: `${text} Nothing was changed.` } : { tone: 'unknown', text, retry: () => void unbind(person) });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const columns: Column<BoundPerson>[] = [
+    { id: 'name', header: 'Person', rowHeader: true, cell: (p) => <>{personName(p)}<br /><small>{p.sourcedId}{p.role ? '' : ' · no longer on the roster'}</small></> },
+    { id: 'account', header: 'Account', cell: (p) => <>{p.handle || p.account}<br /><small>Bound {METHOD_WORD[p.method] ?? p.method}</small></> },
+    {
+      id: 'act', header: 'Action',
+      cell: (p) => (
+        <button type="button" className="btn" disabled={busy} onClick={() => { setSaid(null); setConfirming(p); }}>
+          Unbind {personName(p)}
+        </button>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <SectionLabel aside={people.length ? `${people.length}${people.length >= LIST_LIMIT ? '+' : ''} bound` : undefined}>People with an account</SectionLabel>
+      <Result said={said} />
+      {people.length >= LIST_LIMIT && <Notice>Showing the first {LIST_LIMIT}, by family name.</Notice>}
+      <Table
+        caption="Roster people bound to a Semester account"
+        captionHidden
+        columns={columns}
+        rows={people}
+        rowKey={(p) => p.sourcedId}
+        compact="stack"
+        empty={<EmptyState inline title="Nobody is bound yet" body="When you bind a roster person to their account, they appear here, and you can unbind them." />}
+      />
+      {confirming && (
+        <ConfirmDialog
+          title={`Unbind ${personName(confirming)}?`}
+          preview={
+            <ActionPreview
+              subject={`${personName(confirming)} · ${confirming.sourcedId} ✕ ${confirming.handle || confirming.account}`}
+              says="Removes the link between this roster person and that Semester account. The course access the roster gave the account ends now, and later rosters do not bring it back."
+              doesNotChange="Access an administrator, an LTI launch or SCIM gave outside the roster. The account itself, its sign-in and its work."
+              subjectTo="If someone has bound this person to a different account since you loaded the desk, nothing is changed."
+              recovery={{ kind: 'undo', how: 'Bind the person to the same account again; the same course access comes back.' }}
+            />
+          }
+          confirmLabel={busy ? 'Unbinding…' : 'Unbind'}
+          onCancel={() => { if (!busy) setConfirming(null); }}
+          onConfirm={() => { if (!busy) void unbind(confirming); }}
         />
       )}
     </>

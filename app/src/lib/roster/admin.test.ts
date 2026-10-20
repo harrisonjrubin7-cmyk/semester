@@ -10,7 +10,8 @@ import { beforeEach, expect, it, vi } from 'vitest';
 const mock = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock('../cloud', () => ({ cloud: () => Promise.resolve({ rpc: mock.rpc }) }));
 const {
-  accountIdProblem, bindPerson, courseLabel, grantLabel, loadRosterDesk, notSetUp, personName, rosterAdminAllowed, setAbsence, stale,
+  accountLabel, bindPerson, courseLabel, findAccounts, grantLabel, loadRosterDesk, notSetUp, personName, rosterAdminAllowed, searchProblem,
+  setAbsence, stale, unbindPerson,
 } = await import('./admin');
 
 beforeEach(() => mock.rpc.mockReset());
@@ -20,6 +21,9 @@ const CONFIG = {
   roster_complete: true, would_end: 2, unbound: 1, last_promoted_at: '2026-10-20T10:00:00Z',
 };
 const PEOPLE = [{ sourced_id: 'u-1', role: 'teacher', given_name: 'Tess', family_name: 'Ng', courses: [{ course: 'HIST 2100', term: '2026FA', role: 'faculty' }] }];
+const BOUND = [{
+  sourced_id: 'u-2', role: 'student', given_name: 'Maya', family_name: 'Ro', account: 'acc-2', handle: 'maya', method: 'admin_review', bound_at: '2026-10-20T11:00:00Z',
+}];
 
 function answers(by: Record<string, { data?: unknown; error?: unknown }>) {
   mock.rpc.mockImplementation((name: string) => Promise.resolve({ data: null, error: null, ...by[name] }));
@@ -30,16 +34,30 @@ it('offers the desk only to roster:administer', () => {
   expect(rosterAdminAllowed(['integration:configure', 'integration:approve'])).toBe(false);
 });
 
-it('loads the settings and the unbound people for one school', async () => {
-  answers({ roster_admin_config: { data: CONFIG }, roster_admin_unbound: { data: PEOPLE } });
+it('loads the settings, the unbound and the bound people for one school', async () => {
+  answers({ roster_admin_config: { data: CONFIG }, roster_admin_unbound: { data: PEOPLE }, roster_admin_bound: { data: BOUND } });
   const desk = await loadRosterDesk('vu');
   expect(mock.rpc).toHaveBeenCalledWith('roster_admin_config', { want_tenant: 'vu' });
   expect(mock.rpc).toHaveBeenCalledWith('roster_admin_unbound', { want_tenant: 'vu' });
+  expect(mock.rpc).toHaveBeenCalledWith('roster_admin_bound', { want_tenant: 'vu' });
   expect(desk).toEqual({
     state: 'ready',
     config: { configured: true, absenceRevokesAccess: false, rosterComplete: true, wouldEnd: 2, unbound: 1, lastPromotedAt: '2026-10-20T10:00:00Z' },
     people: [{ sourcedId: 'u-1', role: 'teacher', givenName: 'Tess', familyName: 'Ng', courses: [{ course: 'HIST 2100', term: '2026FA', role: 'faculty' }] }],
+    bound: [{ sourcedId: 'u-2', role: 'student', givenName: 'Maya', familyName: 'Ro', account: 'acc-2', handle: 'maya', method: 'admin_review', boundAt: '2026-10-20T11:00:00Z' }],
   });
+});
+
+it('still opens the desk, without the bound list, where only the first migration is applied', async () => {
+  answers({ roster_admin_config: { data: CONFIG }, roster_admin_unbound: { data: PEOPLE }, roster_admin_bound: { error: { code: 'PGRST202', message: 'missing' } } });
+  const desk = await loadRosterDesk('vu');
+  expect(desk.state === 'ready' && desk.bound).toBeNull();
+});
+
+it('reads a refused bound list as permission denied too', async () => {
+  const refusal = { code: '42501', message: 'semester: the roster desk needs roster:administer at this school' };
+  answers({ roster_admin_config: { data: CONFIG }, roster_admin_unbound: { data: PEOPLE }, roster_admin_bound: { error: refusal } });
+  await expect(loadRosterDesk('vu')).resolves.toMatchObject({ state: 'denied' });
 });
 
 it.each(['42P01', '42883', 'PGRST202', 'PGRST205'])('reads %s as not set up, not as an error', async (code) => {
@@ -88,13 +106,40 @@ it('recognises the stale refusal', async () => {
   expect(stale(new Error('Something else.'))).toBe(false);
 });
 
-it('checks a pasted account id before sending it', () => {
-  expect(accountIdProblem('')).toMatch(/Paste/);
-  expect(accountIdProblem('maya@school.edu')).toMatch(/not an account id/);
-  expect(accountIdProblem(' 1b2c3d4e-0000-4000-8000-000000000000 ')).toBeNull();
+it('checks a search before sending it', () => {
+  expect(searchProblem('  ma  ')).toMatch(/at least 3 characters/);
+  expect(searchProblem('x'.repeat(101))).toMatch(/at most 100/);
+  expect(searchProblem(' may ')).toBeNull();
+});
+
+it('searches with the tenant and the trimmed fragment, and reads a masked address', async () => {
+  answers({ roster_admin_find_accounts: { data: [{ account: 'acc-3', handle: 'maya_two', email_hint: 'm•••@vu.edu' }, { account: 'acc-4', handle: 'mayo', email_hint: null }] } });
+  const found = await findAccounts('vu', '  maya ');
+  expect(mock.rpc).toHaveBeenCalledWith('roster_admin_find_accounts', { want_tenant: 'vu', want_query: 'maya' });
+  expect(found).toEqual([{ account: 'acc-3', handle: 'maya_two', emailHint: 'm•••@vu.edu' }, { account: 'acc-4', handle: 'mayo', emailHint: null }]);
+  expect(found.map(accountLabel)).toEqual(['maya_two · m•••@vu.edu', 'mayo']);
+});
+
+it('a refused search throws the server’s sentence', async () => {
+  answers({ roster_admin_find_accounts: { error: { code: '23514', message: 'semester: type at least 3 characters of a handle or address' } } });
+  await expect(findAccounts('vu', 'ma')).rejects.toThrow('Type at least 3 characters of a handle or address.');
+});
+
+it('unbinds with the tenant, the person, the account the administrator saw and the key', async () => {
+  answers({ roster_admin_unbind: { data: { outcome: 'unbound', method: 'admin_review', revoked: [{ role: 'student', scope: 'vu/HIST 2100/2026FA' }], replayed: false } } });
+  const r = await unbindPerson('vu', 'u-2', 'acc-2', 'roster-unbind.k1');
+  expect(mock.rpc).toHaveBeenCalledWith('roster_admin_unbind', { want_tenant: 'vu', want_sourced_id: 'u-2', want_expect: 'acc-2', want_key: 'roster-unbind.k1' });
+  expect(r).toEqual({ outcome: 'unbound', revoked: [{ role: 'student', scope: 'vu/HIST 2100/2026FA' }], replayed: false });
+});
+
+it('reads already-unbound, and recognises a stale unbind', async () => {
+  answers({ roster_admin_unbind: { data: { outcome: 'already-unbound', method: null, revoked: [], replayed: true } } });
+  await expect(unbindPerson('vu', 'u-2', 'acc-2', 'k-12345678')).resolves.toEqual({ outcome: 'already-unbound', revoked: [], replayed: true });
+  answers({ roster_admin_unbind: { error: { code: '40001', message: 'semester: stale: this person was bound to a different account since you looked; nothing was changed' } } });
+  expect(stale(await unbindPerson('vu', 'u-2', 'acc-2', 'k-12345678').catch((x: unknown) => x))).toBe(true);
 });
 
 it('names a person and a course plainly', () => {
-  expect(personName({ sourcedId: 'u-9', role: 'student', givenName: '', familyName: '', courses: [] })).toBe('u-9');
+  expect(personName({ sourcedId: 'u-9', givenName: '', familyName: '' })).toBe('u-9');
   expect(courseLabel({ course: 'HIST 2100', term: '2026FA', role: 'teaching_assistant' })).toBe('HIST 2100 · 2026FA as teaching assistant');
 });
