@@ -45,7 +45,7 @@
 --     That module models the same slice in memory (assignment windows,
 --     private drafts, receipts) with no Postgres adapter. This table is the
 --     gradebook-side record a student can use today; joining the two — an
---     assignment's window, its draft store — is named in D-<this PR> as the
+--     assignment's window, its draft store — is named in D-1653 as the
 --     next step, not done here.
 --   * **A grade names its submission.** `grade_entries.submission_id`, set by
 --     a trigger so no existing writer's signature changes: a score that is
