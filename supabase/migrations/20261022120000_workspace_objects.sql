@@ -17,7 +17,7 @@
 --     `content_schema` so the editor's blocks can be stored as JSON without
 --     this table knowing their shape.
 --
--- So these are new tables, and they extend none of those. D-<PR> records why.
+-- So these are new tables, and they extend none of those. D-1661 records why.
 --
 -- What it decides:
 --
@@ -71,7 +71,7 @@
 --
 -- Content is inline text — plain text, Markdown or JSON — with its byte
 -- length, SHA-256, MIME type and content schema, at most 1 MiB per version.
--- Private storage keys for files are a later decision (D-<PR>).
+-- Private storage keys for files are a later decision (D-1661).
 --
 -- Account deletion: `workspaces.owner_id` cascades from `auth.users`, and
 -- everything else cascades from the workspace; a grant also goes with its
