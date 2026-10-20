@@ -1,3 +1,276 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/CRM_PIPELINE_DEFINITION.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-DATA-USE-STANDARD.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-20T15:19:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-EXPORT-STANDARD.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-20T15:19:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PENETRATION-TEST-PLAN.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PROVIDER-TERMS.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-WHITEPAPER.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SOC2-READINESS.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
+    changed_at: "2026-10-19T18:53:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Objection Handling Library (institutional sales)
 
 | Control | Value |

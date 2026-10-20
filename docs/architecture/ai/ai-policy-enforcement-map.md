@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: docs/ai-governance/README.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/AI-USE-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-SYSTEM-INVENTORY.md
+    changed_at: "2026-10-20T15:19:07"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0007-policy-decision-point.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # AI policy enforcement map
 
 | | |

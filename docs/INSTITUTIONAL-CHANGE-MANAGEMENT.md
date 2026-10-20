@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: CHANGELOG.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: PILOT.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Institutional change management
 
 Part 14 of the expansion command. Phase 6. Nothing here is built yet.

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: supabase/DEPLOY.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md
+    changed_at: "2026-10-19T18:54:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # How to add an edge function
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

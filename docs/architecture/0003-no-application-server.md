@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/architecture/0001-local-first-with-supabase.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # 0003 · No application server; edge functions instead
 
 **Status:** Accepted. Will be genuinely tested by Phases 6–15.

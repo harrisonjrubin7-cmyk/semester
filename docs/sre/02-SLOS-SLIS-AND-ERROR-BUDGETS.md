@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: docs/engineering-operations/SLO-SLI-DRAFT.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
+    changed_at: "2026-10-19T02:53:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/runbooks/RB-11-emergency-notification.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 02 · SLOs, SLIs and error budgets
 
 > Part of the [SRE pack](README.md). Status: **proposed targets; achieved values unmeasured.** Code: `app/src/lib/governance/error-budgets.ts` (the objectives and budget maths, unchanged) and `app/src/lib/sre/burn-alerts.ts` (the alerting policy, new). Existing prose: [SLO-SLI-DRAFT.md](../engineering-operations/SLO-SLI-DRAFT.md), [ERROR-BUDGET-DRAFT.md](../engineering-operations/ERROR-BUDGET-DRAFT.md), [SLOS-AND-ERROR-BUDGETS.md](../operating-model/SLOS-AND-ERROR-BUDGETS.md).

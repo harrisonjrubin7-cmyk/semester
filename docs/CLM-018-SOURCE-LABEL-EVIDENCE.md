@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # CLM-018 evidence: source labels on screen
 
 > **PROPOSED — NOT APPROVED.** This is the evidence record for the proposed row

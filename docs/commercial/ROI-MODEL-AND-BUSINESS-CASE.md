@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # ROI Model, Business Case and Proof of Value
 
 | Control | Value |

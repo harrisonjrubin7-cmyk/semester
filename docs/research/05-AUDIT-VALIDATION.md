@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: VALIDATED.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/D-1144.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 05 · Repository audit validation
 
 The question: **which existing capabilities solve real needs, and where do

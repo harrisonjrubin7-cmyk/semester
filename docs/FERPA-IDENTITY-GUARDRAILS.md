@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # FERPA identity guardrails
 
 What each identity flow may carry, and what enforces it. This is an engineering

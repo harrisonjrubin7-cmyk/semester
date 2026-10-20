@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LMS-INTEROPERABILITY-MATRIX.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/QTI-3-ASSESSMENT-AND-MIGRATION.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # LMS and learning roadmap: where the app stands
 
 Three planning documents asked Semester to become the most attractive LMS

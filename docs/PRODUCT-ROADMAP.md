@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/AUDIT.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-EXPANSION-CROSSWALK.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROUTE-AND-FEATURE-CROSSWALK.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UX-ENHANCEMENT-PLAN.md
+    changed_at: "2026-10-20T15:18:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Product roadmap — Semester unified platform
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).

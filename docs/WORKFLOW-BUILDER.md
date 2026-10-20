@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/CONFIGURATION-STUDIO.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Workflow Builder
 
 Item 3 of the platform brief of 30 September

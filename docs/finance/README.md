@@ -1,3 +1,90 @@
+---
+stale-refs:
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/04-UNIT-ECONOMICS.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/10-GO-NO-GO-GATES.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/13-REAL-NUMBERS-INTAKE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/05-BUDGET-GOVERNANCE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/07-SCENARIOS-AND-SENSITIVITY.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/02-PRICING-PACKAGING-ENTITLEMENTS.md
+    changed_at: "2026-10-19T18:54:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester financial operating model
 
 | Control | Value |

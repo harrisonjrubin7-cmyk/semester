@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: README.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: infra/README.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # One operating system
 
 <!-- Rendered from app/src/lib/oneos.ts by oneos.test.ts. Edit the data, then run `npm run registers` from app/. -->

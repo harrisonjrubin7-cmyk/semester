@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: CHANGELOG.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: MONITORING.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/DEFENSIBILITY.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Trust, brand protection and legal horizon scanning
 
 Semester holds trust-sensitive student data and shows up at high-stress moments: registration day, a missed deadline,

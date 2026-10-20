@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/operating-model/DATA-STEWARDSHIP.md
+    changed_at: "2026-10-19T18:53:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 12 · Data governance operating model
 
 **A proposal for the owner to adopt, not a charter.** `docs/DECISION-RIGHTS.md` is explicit that a governance

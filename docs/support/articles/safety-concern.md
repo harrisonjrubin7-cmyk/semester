@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/support/README.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/escalation-map.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # I want to flag something unsafe
 
 > **Type:** help · **Audience:** students, support · **Owner:** `trust` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

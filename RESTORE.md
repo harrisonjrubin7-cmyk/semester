@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T02:53:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Getting the data back
 
 [`ROLLBACK.md`](ROLLBACK.md) is about putting the code back. This is the other

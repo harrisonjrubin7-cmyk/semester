@@ -1,3 +1,88 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/06-analytics-architecture.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/07-data-quality-and-migration.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/08-search-and-retrieval.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/10-physical-design.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/DATA-STEWARDSHIP.md
+    changed_at: "2026-10-19T18:53:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/12-governance-operating-model.md
+    changed_at: "2026-10-19T18:54:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/03-schema-conventions.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/05-lifecycle-governance.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/01-canonical-entity-model.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester data architecture
 
 Canonical entity model, provenance, lifecycle governance, analytics, search, AI data access and

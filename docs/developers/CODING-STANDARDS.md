@@ -1,3 +1,102 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/SEMESTER-UI-CONSTITUTION.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/developers/TESTING-GUIDE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/strategic-boundaries/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T18:54:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Coding standards
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

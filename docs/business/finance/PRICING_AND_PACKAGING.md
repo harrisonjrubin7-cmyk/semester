@@ -1,3 +1,80 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/D-1154.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/02-PRICING-PACKAGING-ENTITLEMENTS.md
+    changed_at: "2026-10-19T18:54:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pricing and Packaging (model inputs, not a price book)
 
 | Control | Value |

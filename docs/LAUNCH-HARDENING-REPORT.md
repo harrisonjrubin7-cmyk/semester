@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Launch hardening report
 
 Launch-readiness Phase 7. Each area the command names gets three answers:

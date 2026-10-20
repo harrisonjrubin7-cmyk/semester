@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # SOC 2 Bridge Letter: Process and Templates
 
 **Not usable yet.** A bridge letter covers the gap between the end of a

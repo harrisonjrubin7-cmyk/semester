@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: ACTION-PLAN.md
+    changed_at: "2026-10-20T15:18:48"
+    sections_changed: []
+    summary: externally modified
+  - source: CLAUDE.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: COMPLETION-PLAN.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: IMPLEMENTATION-PLAN.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # The Top Hat companion, checked against the code — September 2026
 
 The tracked copy of *Top Hat — feature audit, integration reality, and what

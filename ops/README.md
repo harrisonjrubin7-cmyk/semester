@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/claims/README.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/customer-commitments/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/operations-console/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/strategic-boundaries/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ops
 
 The operating registers that are neither product documentation nor the trust

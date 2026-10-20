@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/DOMAIN-REPLACEMENT-REGISTER.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # University OS architecture
 
 Semester is the student's journey and workflow layer over the systems a university already runs. Today it is

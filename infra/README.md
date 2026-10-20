@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: docs/infrastructure/DISASTER-RECOVERY.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/README.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: infra/changes/README.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/ACTIVATION.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Infrastructure as code
 
 Everything that decides **what production is and who can change it** is code

@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/design/SEMESTER-UI-CONSTITUTION.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester layout contract
 
 Every Semester screen uses the same attention architecture. This contract is

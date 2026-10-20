@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CONFIGURATION-STUDIO.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-20T15:18:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SSO-TENANT-ONBOARDING.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/METHODOLOGY.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Tenant configuration workbook
 
 | Control | Value |

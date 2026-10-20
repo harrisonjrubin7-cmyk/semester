@@ -1,3 +1,108 @@
+---
+stale-refs:
+  - source: docs/support/articles/accessibility-help.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/ai-unavailable.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/billing.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/calendar-not-updating.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/cannot-sign-in.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/delete-account-export-data.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/deleted-item-came-back.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/old-version-showing.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/safety-concern.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/school-connection-failing.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/syllabus-did-not-parse.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/sync-waiting-or-conflict.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/escalation-map.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/macro-library.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/severity-and-routing.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/supporter-access.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Triage guide
 
 > **Type:** runbook · **Audience:** support · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

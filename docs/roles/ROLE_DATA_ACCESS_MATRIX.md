@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/MODULE-PRIVACY-MODEL.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DATA_AUTHORITY_MATRIX.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Role data access matrix
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** audit evidence.

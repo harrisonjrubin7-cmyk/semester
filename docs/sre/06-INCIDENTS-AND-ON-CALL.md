@@ -1,3 +1,50 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/OPERATIONS.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/09-SCORECARD-AND-ROADMAP.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/runbooks/RB-11-emergency-notification.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 06 · Incidents, on-call, status and postmortems
 
 > Part of the [SRE pack](README.md). Status: **proposed; no on-call coverage exists.** Controlling documents: [ON-CALL-AND-ESCALATION-POLICY.md](../engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md), [INCIDENT-RECOVERY-PLAYBOOK.md](../INCIDENT-RECOVERY-PLAYBOOK.md), [CRISIS-RESPONSE-RUNBOOK.md](../CRISIS-RESPONSE-RUNBOOK.md), [INCIDENT-COMMUNICATIONS.md](../operating-model/INCIDENT-COMMUNICATIONS.md), [PRODUCTION-SUPPORT-RUNBOOK.md](../engineering-operations/PRODUCTION-SUPPORT-RUNBOOK.md), [SECURITY.md](../../SECURITY.md). Code: `app/src/lib/incident-recovery.ts`, `app/src/lib/governance/incident-comms.ts`.

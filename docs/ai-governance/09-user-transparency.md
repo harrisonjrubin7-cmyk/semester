@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/04-tool-broker.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 09 · User-facing transparency
 
 **Builds on:** [`../trust/AI-TRANSPARENCY-AND-USER-NOTICE.md`](../trust/AI-TRANSPARENCY-AND-USER-NOTICE.md) (the standard, the

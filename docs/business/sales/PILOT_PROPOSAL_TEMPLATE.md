@@ -1,3 +1,148 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/MUTUAL_ACTION_PLAN_TEMPLATE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/FINAL_VALUE_REPORT.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/MIDPOINT_EXECUTIVE_REVIEW.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/PILOT_AGREEMENT_BUSINESS_OUTLINE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/templates/WEEKLY_PILOT_REPORT.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/D-1154.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/DATA-MAPPING-TEMPLATE.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-20T15:19:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/02-PRICING-PACKAGING-ENTITLEMENTS.md
+    changed_at: "2026-10-19T18:54:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/INSTITUTIONAL-PILOT-PROPOSAL-TEMPLATE-DRAFT.md
+    changed_at: "2026-10-19T18:54:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pilot Proposal Template - Registration Readiness Pilot
 
 > **NON-BINDING DISCUSSION DRAFT - NOT AN OFFER - requires counsel review. Paid acceptance is HELD under [`GO-NO-GO-DECISION.md`](../../../GO-NO-GO-DECISION.md) (paid institutional pilot = NO-GO/RED).**

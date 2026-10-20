@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: docs/engineering-operations/TEST-COVERAGE-MATRIX.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/03-SUITES.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/04-GATES-AND-CI.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/README.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 05 · Harnesses, flaky-test management, ownership, coverage, release evidence
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

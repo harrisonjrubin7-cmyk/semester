@@ -1,3 +1,114 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/engineering-operations/SLO-SLI-DRAFT.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/SUPPORT-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
+    changed_at: "2026-10-19T02:53:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/01-operating-cadence.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/03-raci-and-decision-rights.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/05-incident-and-continuity.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/07-knowledge-training-enablement.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/09-dashboards-and-indicators.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/11-founder-to-team-transition.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/handoffs.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/service-blueprints.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/templates.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 04 · Support operating model, service levels and staffing
 
 | Control | Value |

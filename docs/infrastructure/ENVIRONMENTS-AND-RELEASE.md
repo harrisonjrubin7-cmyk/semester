@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: STAGING.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Environments and release
 
 Builds on [`docs/target-architecture/05`](../target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md)

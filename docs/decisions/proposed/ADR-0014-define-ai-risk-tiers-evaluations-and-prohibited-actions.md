@@ -1,3 +1,40 @@
+---
+stale-refs:
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/ai/ai-policy-enforcement-map.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/LEGAL_REVIEW_QUEUE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-SYSTEM-INVENTORY.md
+    changed_at: "2026-10-20T15:19:07"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ADR-0014 · Every AI path gets a risk tier, a pre-activation evaluation record, and a fixed list of actions no model may take
 
 | Field | Value |

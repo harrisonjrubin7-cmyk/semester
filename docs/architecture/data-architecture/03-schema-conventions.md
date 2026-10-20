@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/12-governance-operating-model.md
+    changed_at: "2026-10-19T18:54:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/01-canonical-entity-model.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 3 · Transactional schema conventions
 
 A convention nobody can check is a wish. Each rule below says **what it is, which class of table it binds, how

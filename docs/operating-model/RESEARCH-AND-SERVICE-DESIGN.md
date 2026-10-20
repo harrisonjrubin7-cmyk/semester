@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/operating-model/CONFIGURATION-TIERS.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Continuous user research and service design
 
 Feedback tools collect what people choose to say. A research program goes and finds out what they couldn't do. And

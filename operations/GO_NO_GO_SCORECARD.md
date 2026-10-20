@@ -1,3 +1,64 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPANY_LIVE_STATUS.md
+    changed_at: "2026-10-19T02:53:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETE_CAPABILITY_REGISTER.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_RISK_REGISTER.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/FINAL_BASELINE_AUDIT.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/LAUNCH_CRITICAL_PATH.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/READINESS_GAP_MATRIX.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: operations/LAUNCH_COMMAND_CENTER.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester — go / no-go scorecard (Phase 0)
 
 **Date:** 2026-10-04 · **Repository:** `origin/main` @ `c170dcd` · **Status:** BASELINE SCORECARD — it scores evidence; it grants no approval · **Controlling decision:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md) (2026-10-03). Any conflict resolves to the **more conservative** boundary.

@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester Terms of Service — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft for qualified

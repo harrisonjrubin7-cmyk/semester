@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Budget Process and Purchasing Path
 
 | Control | Value |

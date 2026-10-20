@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-TEST-PLAN.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
+    changed_at: "2026-10-19T18:53:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Launch Campaign Plan
 
 | Control | Value |

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: PILOT.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/PRODUCT_LIVE_STATUS.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Semester — individual student launch readiness (Phase 0)
 
 **Date:** 2026-10-04 · **Status:** BASELINE — authorizes no cohort, price or campaign · **Controlling:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md) (individual acquisition: **CONDITIONAL GO / YELLOW**, invitation-only unpaid validation) · **Beta plan:** [`PILOT.md`](../PILOT.md) (ten-person private beta, owner Harrison Rubin; *not* an institutional pilot) · **Executable profile:** `invitation-only-individual-validation`, `individual-scale` in `app/src/lib/governance/release-profiles.ts`

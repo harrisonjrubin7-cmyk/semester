@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester data inventory — trust control index
 
 - **Status:** `PARTIAL`

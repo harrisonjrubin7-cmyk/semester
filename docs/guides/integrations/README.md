@@ -1,3 +1,96 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/event-consumer.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/gateway-client.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/scim-provisioner.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/sis-adapter.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/which-integration-path.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/README.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/event-consumer/README.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/gateway-client/README.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/scim-provisioner/README.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/sis-adapter/README.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Integration guides
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

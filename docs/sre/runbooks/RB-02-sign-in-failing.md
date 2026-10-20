@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # RB-02 · Sign-in failing
 
 Class C0 · role platform · alerts `burn:sign_in`, `security:auth-failure-rise` · components `supabase-auth`, `web-app`.

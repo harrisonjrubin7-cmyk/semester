@@ -1,3 +1,194 @@
+---
+stale-refs:
+  - source: RESTORE.md
+    changed_at: "2026-10-19T02:53:17"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CREDENTIAL-WALLET.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LMS-LEARNING-ROADMAP.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PROOF-CALENDAR.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/AI-USE-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/SUPPORT-POLICY-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/TERMS-OF-SERVICE-DRAFT.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MIGRATION_PLAYBOOK.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PENETRATION-TEST-PLAN.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SOC2-READINESS.md
+    changed_at: "2026-10-19T02:53:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/COMMUNITY-GUIDELINES-DRAFT.md
+    changed_at: "2026-10-19T18:53:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Claims register
 
 <!-- Rendered from app/src/lib/ops/claims.ts by claims.test.ts. Edit the data, then run `npm run registers` from app/. -->

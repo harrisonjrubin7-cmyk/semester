@@ -1,3 +1,38 @@
+---
+stale-refs:
+  - source: LEGAL-REVIEW-QUEUE.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Privacy review queue: Phase 0 view
 
 > **Not legal advice. Questions for qualified privacy and education counsel; nothing here decides applicability or compliance.**

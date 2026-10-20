@@ -1,3 +1,118 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/BASIC-NEEDS-NAVIGATOR.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINER-RLS-REGISTER.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MODULE-PRIVACY-MODEL.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SAAS-LAUNCH-KIT.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-20T15:18:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/PENETRATION-TEST-PLAN.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Release certification
 
 <!-- Rendered from app/src/lib/governance/certification.ts by certification.test.ts. Edit the data, then run `npm run registers` from app/. -->

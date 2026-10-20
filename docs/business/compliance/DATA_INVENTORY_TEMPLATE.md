@@ -1,3 +1,56 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-INVENTORY-AND-LINEAGE.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/DATA_RETENTION_DELETION_PLAN.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/privacy-operations/01-PROCESSING-REGISTER-AND-CONTROLS.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-INVENTORY.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Data Inventory Template and Starter
 
 | Control | Value |

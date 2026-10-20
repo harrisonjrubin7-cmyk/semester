@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-20T15:18:54"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_ROADMAP.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Role and capability matrix (operations)
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

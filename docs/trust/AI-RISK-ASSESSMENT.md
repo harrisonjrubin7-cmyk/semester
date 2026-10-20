@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-ASSURANCE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # AI Risk Assessment
 
 | Control | Value |

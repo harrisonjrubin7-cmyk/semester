@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
+    changed_at: "2026-10-19T18:54:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Configurability without fragmentation
 
 Semester needs to vary by tenant. Too much configuration, though, turns it into custom software for each university.

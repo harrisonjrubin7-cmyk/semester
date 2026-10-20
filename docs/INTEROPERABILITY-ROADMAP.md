@@ -1,3 +1,56 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CREDENTIAL-WALLET.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LMS-LEARNING-ROADMAP.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
+    changed_at: "2026-10-20T15:18:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-20T15:18:55"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Interoperability roadmap
 
 <!-- Rendered from app/src/lib/interop.ts by interop.test.ts. Edit the data, then run `npm run registers` from app/. -->

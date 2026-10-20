@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: EVIDENCE-REGISTER.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+  - source: EXECUTIVE-FINALIZATION-REPORT.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: LAUNCH-READINESS-CHECKLIST.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester go / no-go decision
 
 | Control | Value |

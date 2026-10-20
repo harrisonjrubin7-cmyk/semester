@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester Data Retention and Deletion Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** The public summary of

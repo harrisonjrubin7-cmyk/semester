@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 2 · Target module graph, dependency rules, boundaries, anti-corruption layers
 
 ## The shape: a modular monolith with a hard inside

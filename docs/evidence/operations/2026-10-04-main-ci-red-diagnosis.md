@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/program/PHASE_1_EXECUTION_BACKLOG.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/RISK_REGISTER.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Why `main` CI was red, read from the run history — 2026-10-04
 
 - **Status:** `DIAGNOSIS — TWO CAUSES READ FROM LOGS; NO CHANGE MADE`

@@ -1,3 +1,52 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-ASSURANCE.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-DATA-USE-STANDARD.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-RISK-ASSESSMENT.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-SYSTEM-INVENTORY.md
+    changed_at: "2026-10-20T15:19:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # AI Governance Program
 
 | Control | Value |

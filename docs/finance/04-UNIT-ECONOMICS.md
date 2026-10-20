@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Unit-economics dashboard
 
 | Control | Value |

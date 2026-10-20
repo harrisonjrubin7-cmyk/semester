@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T02:53:17"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester business continuity and disaster recovery plan — controlled draft
 
 - **Status:** `PARTIAL / TARGET RECOVERY NOT PROVEN`

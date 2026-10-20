@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/TYPOGRAPHY-SYSTEM.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Design system migration plan
 
 How the design-excellence work landed, what is left, and the order in which

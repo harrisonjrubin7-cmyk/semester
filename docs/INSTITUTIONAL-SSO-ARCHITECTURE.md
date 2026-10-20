@@ -1,3 +1,38 @@
+---
+stale-refs:
+  - source: docs/SAML-IMPLEMENTATION-RUNBOOK.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-20T15:18:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OIDC-IMPLEMENTATION-RUNBOOK.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ACCOUNT-LINKING-AND-IDENTITY-PRIVACY.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Institutional SSO architecture
 
 Status: **SAML, SCIM and LTI 1.3 BUILT; OIDC and account linking NOT BUILT; nothing

@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-TEST-PLAN.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Test Coverage Matrix
 
 | Control | Value |

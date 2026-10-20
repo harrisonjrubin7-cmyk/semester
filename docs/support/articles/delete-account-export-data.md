@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RECOVERY-CENTER.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/README.md
+    changed_at: "2026-10-19T02:53:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/deleted-item-came-back.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Delete my account, or export my data
 
 > **Type:** help · **Audience:** students, support · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

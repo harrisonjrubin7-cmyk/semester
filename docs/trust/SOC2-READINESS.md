@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # SOC 2 Readiness: CC1, CC6 and Availability
 
 **Status: `IN_PROGRESS`.** This is a gap assessment, and Semester is not SOC 2

@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/design/DESIGN-DEBT.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Screen quality and regression checklist
 
 A screen is ready only when every applicable item below is evidenced.

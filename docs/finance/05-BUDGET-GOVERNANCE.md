@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Budget governance and spending approval matrix
 
 | Control | Value |

@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-20T15:18:55"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Identity and Provisioning Readiness
 
 | Control | Value |

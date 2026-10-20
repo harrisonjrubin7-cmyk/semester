@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Institutional Implementation Guide
 
 | Control | Value |

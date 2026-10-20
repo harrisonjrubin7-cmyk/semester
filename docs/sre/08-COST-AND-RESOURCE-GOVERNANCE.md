@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/sre/02-SLOS-SLIS-AND-ERROR-BUDGETS.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/04-CAPACITY-PLANNING.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 08 · Cost observability and resource governance
 
 > Part of the [SRE pack](README.md). Status: **proposed; no budget is set.** Code: `app/src/lib/sre/cost.ts`. Existing: MONITORING.md (the AI spend alert), `supabase/health.sql` block 1, [GRADUATION-AND-COST-SIMULATOR.md](../GRADUATION-AND-COST-SIMULATOR.md), the CTO pack's unit-economics inputs.

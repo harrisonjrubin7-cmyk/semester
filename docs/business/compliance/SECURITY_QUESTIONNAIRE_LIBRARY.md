@@ -1,3 +1,40 @@
+---
+stale-refs:
+  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/HECVAT_ROADMAP.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/REVIEWER-QUESTION-MAP.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Security Questionnaire Library
 
 | Control | Value |

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/03-schema-conventions.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 1 · Canonical entity model
 
 The model is **a contract over what exists, not a rewrite of it.** [`unified-education-graph.md`](../unified-education-graph.md)

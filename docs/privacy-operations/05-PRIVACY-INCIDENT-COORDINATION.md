@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 05 · Privacy incident coordination
 
 **Status `DESIGNED / NOT TARGET-EXERCISED`. 4 October 2026. Owner: incident commander, Harrison Rubin; backup `UNASSIGNED`.**
