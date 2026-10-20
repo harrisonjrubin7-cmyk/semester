@@ -108,10 +108,11 @@ describe('SEMESTER_REGISTRATION_READINESS_SAFE_OFF', () => {
     expect(registrationReadinessSafeOff({})).toBe(false);
     expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: '' })).toBe(false);
     expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: 'off' })).toBe(false);
-    expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: ' OFF ' })).toBe(false);
   });
 
-  it('pauses on on, true, and any unexpected value', () => {
+  it('pauses on on, true, and any value that is not exactly off', () => {
+    expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: ' OFF ' })).toBe(true);
+    expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: 'OFF' })).toBe(true);
     expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: 'on' })).toBe(true);
     expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: 'true' })).toBe(true);
     expect(registrationReadinessSafeOff({ SEMESTER_REGISTRATION_READINESS_SAFE_OFF: 'pause' })).toBe(true);

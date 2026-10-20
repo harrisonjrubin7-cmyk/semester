@@ -29,7 +29,7 @@ export interface InstitutionRuntimeDependencies {
  * new evaluations an operator meant to stop.
  */
 export function registrationReadinessSafeOff(env: InstitutionEnvironment): boolean {
-  const value = (env.SEMESTER_REGISTRATION_READINESS_SAFE_OFF ?? '').trim().toLowerCase();
+  const value = env.SEMESTER_REGISTRATION_READINESS_SAFE_OFF ?? '';
   return value !== '' && value !== 'off';
 }
 
