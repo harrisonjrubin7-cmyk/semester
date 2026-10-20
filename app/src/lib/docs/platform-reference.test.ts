@@ -1263,7 +1263,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(65);
+    // 67 since course_request.filed and .decided (20261021120000): no type before them named a request to an instructor.
+    expect(all.length).toBe(67);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1426,6 +1427,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
       // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
       'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
+      // Slice 3: filing and deciding a course request emit course_request.filed / .decided in their own
+      // transaction (20261021120000_course_requests.sql). Nothing drains the outbox yet, so "none published" still holds.
+      'supabase/migrations/20261021120000_course_requests.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);

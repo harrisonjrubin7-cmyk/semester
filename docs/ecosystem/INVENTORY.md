@@ -35,7 +35,7 @@ Prototype routes: 281. Design-registry capabilities: 122.
 | public | 0 | 0 | 5 | 1 | 2 | 0 | 0 | 8 |
 | applicant | 2 | 0 | 2 | 0 | 0 | 0 | 0 | 4 |
 | student | 3 | 0 | 8 | 2 | 49 | 0 | 0 | 62 |
-| faculty | 3 | 0 | 10 | 0 | 4 | 0 | 0 | 17 |
+| faculty | 2 | 0 | 10 | 0 | 5 | 0 | 0 | 17 |
 | institution | 2 | 0 | 2 | 2 | 13 | 0 | 0 | 19 |
 | advisor | 3 | 0 | 3 | 0 | 1 | 0 | 0 | 7 |
 | ta | 1 | 1 | 0 | 0 | 2 | 0 | 0 | 4 |
@@ -58,7 +58,7 @@ Prototype routes: 281. Design-registry capabilities: 122.
 | clubs | 0 | 1 | 3 | 0 | 0 | 0 | 0 | 4 |
 | social | 7 | 0 | 1 | 1 | 4 | 0 | 0 | 13 |
 | studio | 2 | 0 | 18 | 5 | 6 | 0 | 0 | 31 |
-| **all routes** | 51 | 11 | 89 | 18 | 112 | 0 | 0 | 281 |
+| **all routes** | 50 | 11 | 89 | 18 | 113 | 0 | 0 | 281 |
 | **capabilities** | 29 | 7 | 32 | 9 | 45 | 0 | 0 | 122 |
 <!-- generated: counts end -->
 

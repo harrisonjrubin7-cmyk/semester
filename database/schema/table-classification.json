@@ -303,6 +303,8 @@
    "course_ai_rules",
    "course_demand_snapshots",
    "course_guidance",
+   "course_request_actions",
+   "course_requests",
    "course_reviews",
    "customer",
    "data_classification_rules",

@@ -173,6 +173,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['course_request_decide', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay', 'r.student_id = me']],
+  ['course_request_file', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['course_request_respond', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
+  ['course_request_withdraw', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
   ['create_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -587,6 +591,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    file: '20261021120000_course_requests.sql',
+    functions: ['course_request_decide', 'course_request_file', 'course_request_respond', 'course_request_withdraw'],
   },
 ];
 

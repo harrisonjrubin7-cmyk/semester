@@ -565,6 +565,18 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261021120000_course_requests.sql: a student asks the course's
+    -- instructor for an extension, an excused absence or an incomplete, and
+    -- the instructor decides. Each checks auth.uid() and the caller's own
+    -- school; filing and deciding check course_requests:create / :decide on
+    -- the course and term, withdrawing and answering that the request is the
+    -- caller's own. All spend a key on the gradebook ledger, and every change
+    -- after filing names the version read. `course-requests.check.sql` proves
+    -- each refusal.
+    'course_request_file(want_course text, want_term text, want_kind text, want_item uuid, want_requested_due date, want_reason text, want_key text)',
+    'course_request_withdraw(want_request uuid, want_expect integer, want_key text)',
+    'course_request_respond(want_request uuid, want_note text, want_expect integer, want_key text)',
+    'course_request_decide(want_request uuid, want_outcome text, want_granted_due date, want_note text, want_expect integer, want_key text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions

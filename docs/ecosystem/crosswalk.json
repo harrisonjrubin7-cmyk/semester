@@ -1616,18 +1616,33 @@
       "gap": "No faculty grade-posting flow joins a released gradebook to the record ledger."
     },
     "#/faculty/requests": {
-      "status": "specified",
+      "status": "tested",
       "roles": [
         "faculty"
       ],
-      "screens": [],
-      "modules": [],
+      "screens": [
+        "app/src/screens/Gradebook.tsx",
+        "app/src/components/gradebook/RequestQueue.tsx",
+        "app/src/components/gradebook/AskInstructor.tsx"
+      ],
+      "modules": [
+        "app/src/lib/gradebook/requests.ts"
+      ],
       "server": [],
-      "migrations": [],
-      "tests": [],
-      "flags": [],
-      "note": "Searched request/extension/forms in faculty code: the forms tables (supabase/migrations/20260921143455_forms.sql) and components/creation/FormBuilder.tsx are a student's own device-local forms tool, not a faculty request workflow.",
-      "gap": "No student-to-faculty request (extension, excused absence, incomplete) intake or queue."
+      "migrations": [
+        "supabase/migrations/20261021120000_course_requests.sql"
+      ],
+      "tests": [
+        "supabase/course-requests.check.sql",
+        "app/src/lib/gradebook/requests.test.ts",
+        "app/src/components/gradebook/CourseRequests.test.tsx",
+        "app/src/screens/gradebook.test.tsx"
+      ],
+      "flags": [
+        "writeback.lms_grade_passback"
+      ],
+      "note": "Students file extension, excused-absence and incomplete requests (course_request_file, course_requests:create at <school>/<CODE>/<TERM>) from AskInstructor under their released grades; faculty decide them in RequestQueue under the instructor gradebook (course_request_decide: approve with a granted date, deny with a note, or ask a question; expected version, idempotent on the gradebook ledger, emits course_request.filed / .decided). Teaching assistants read the queue (course_requests:view) and do not decide.",
+      "gap": "The gradebook does not honour a granted date: gradebook items have no due date, so an approved extension is recorded on the request only, and an approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate."
     },
     "#/faculty/roster": {
       "status": "code-present",

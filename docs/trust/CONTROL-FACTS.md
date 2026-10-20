@@ -12,13 +12,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 254 |
-| Tables created in `public` and not later dropped | 347 |
-| … of which enable row-level security in a migration | 347 |
+| Migration files | 255 |
+| Tables created in `public` and not later dropped | 349 |
+| … of which enable row-level security in a migration | 349 |
 | Tables created in `private` and not later dropped | 55 |
 | … of which enable row-level security in a migration | 55 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 279 |
+| Tables named by at least one literal `create policy` statement | 281 |
 | Tables with RLS found and no literal policy statement | 123 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-157 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -68,6 +68,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/course-material-metadata.check.sql` | shared course-material metadata, exact policy/grant binding, lifecycle, idempotency and audit rollback proof. |
 | `supabase/course-material-retention-policy.check.sql` | approved, immutable, tenant-bound retention authority for shared course material. |
+| `supabase/course-requests.check.sql` | who asks an instructor for an extension, an excused absence or an incomplete, who reads it, who decides it, and that a decision cannot be made twice or on a closed request. |
 | `supabase/course-source-conflict-resolutions.check.sql` | Durable, private, student-controlled evidence for re-import conflict choices. |
 | `supabase/course-source-derived-snapshots.check.sql` | hash-only extraction receipts and fail-closed re-import binding. |
 | `supabase/course-source-persistence.check.sql` | Private, tenant-bound course-source metadata, correction and recovery proof. |
@@ -251,15 +252,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 65 |
+| All | 67 |
 | retention `operational` | 13 |
-| retention `student_record` | 17 |
+| retention `student_record` | 19 |
 | retention `audit` | 30 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
 | classification `internal` | 23 |
 | classification `student_private` | 27 |
-| classification `education_record` | 15 |
+| classification `education_record` | 17 |
 
 **How counted.** The two constant arrays are imported and printed; event types are counted from the `EVENT_TYPES` catalogue by the retention class and classification floor each declares.
 
@@ -298,15 +299,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 253 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 253 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 68 |
+| Register rows in category `self-service` | 71 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 99 |
+| Register rows in category `admin` | 100 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

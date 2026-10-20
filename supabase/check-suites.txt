@@ -34,6 +34,7 @@ console-security-reads
 console-tenant-operations
 course-material-metadata
 course-material-retention-policy
+course-requests
 course-source-conflict-resolutions
 course-source-derived-snapshots
 course-source-persistence

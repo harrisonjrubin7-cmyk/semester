@@ -11,11 +11,11 @@
     "operational"
   ],
   "counts": {
-    "specified": 51,
+    "specified": 50,
     "schema-present": 11,
     "code-present": 89,
     "connected": 18,
-    "tested": 112,
+    "tested": 113,
     "deployed": 0,
     "operational": 0
   },
@@ -48,11 +48,11 @@
       "operational": 0
     },
     "faculty": {
-      "specified": 3,
+      "specified": 2,
       "schema-present": 0,
       "code-present": 10,
       "connected": 0,
-      "tested": 4,
+      "tested": 5,
       "deployed": 0,
       "operational": 0
     },
@@ -761,10 +761,10 @@
       "blockers": "production app not probed from this session"
     },
     "#/faculty/requests": {
-      "status": "specified",
-      "evidence": "—",
-      "deployment": "nothing to deploy yet",
-      "blockers": "No student-to-faculty request (extension, excused absence, incomplete) intake or queue."
+      "status": "tested",
+      "evidence": "screen app/src/screens/Gradebook.tsx; screen app/src/components/gradebook/RequestQueue.tsx; screen app/src/components/gradebook/AskInstructor.tsx; module app/src/lib/gradebook/requests.ts; test supabase/course-requests.check.sql; test app/src/lib/gradebook/requests.test.ts; test app/src/components/gradebook/CourseRequests.test.tsx; test app/src/screens/gradebook.test.tsx",
+      "deployment": "schema: 1 of 1 cited migration(s) not in the lzrqvlugnawcgywkhqlz listing (20261021120000) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
+      "blockers": "The gradebook does not honour a granted date: gradebook items have no due date, so an approved extension is recorded on the request only, and an approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate.; production app not probed from this session"
     },
     "#/faculty/gradesync": {
       "status": "code-present",

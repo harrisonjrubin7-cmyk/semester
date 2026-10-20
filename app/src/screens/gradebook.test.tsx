@@ -41,6 +41,8 @@ function table(name: string) {
   const self: Record<string, unknown> = {};
   self.select = () => self;
   self.eq = () => self;
+  self.order = () => self;
+  self.in = () => self;
   self.maybeSingle = async () => ({ data: name === 'profiles' && mock.school ? { school_id: mock.school } : null, error: null });
   self.then = (ok: (r: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(ok);
   return self;
@@ -249,6 +251,10 @@ describe('an instructor’s course', () => {
     // One primary: releasing the item.
     expect(buttons().filter((b) => b.classList.contains('btn-primary')).map((b) => b.textContent)).toEqual(['Release grades for Midterm']);
     expect(text()).toContain('Question 2 was marked wrong');
+    // Students' requests (20261021120000) sit under the book, on the same course and term, and add no primary action.
+    // grades:* alone does not open them: reading the queue is course_requests:view.
+    expect(text()).toContain('Student requests');
+    expect(text()).toContain('You cannot read this course’s student requests');
   });
 
   it('asks for a reason before changing a released grade', async () => {
@@ -367,6 +373,8 @@ describe('a student’s course', () => {
     expect(host.querySelector('[data-source="estimated"]')).not.toBeNull();
     expect(host.querySelector('[data-source="institution_verified"]')).not.toBeNull();
     expect(text()).toContain('your instructor’s final grade is the one that counts');
+    // A grades:receive grant alone does not let them file a request: that is course_requests:create.
+    expect(text()).toContain('You cannot file requests on this course');
     expect(buttons().some((b) => b.textContent === 'Release grades for Midterm')).toBe(false);
     await press('Work out what you need on the final');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'courses' });
