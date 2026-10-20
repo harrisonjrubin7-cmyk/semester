@@ -231,7 +231,7 @@ export function RequestQueue({ course, term, caps }: { course: string; term: str
         const d = draftOf(r);
         const says =
           d.outcome === 'approve'
-            ? `Approves the request${r.kind === 'extension' ? `, granting ${dueSaid(d.grantedDue)}` : ''}. The student sees the decision at once.`
+            ? `Approves the request${r.kind === 'extension' ? `, granting ${dueSaid(d.grantedDue)}` : ''}. The student sees the decision at once.${r.kind === 'extension' && r.itemId ? ` ${dueSaid(d.grantedDue)} becomes their due date for ${titleOf(r.itemId) ?? 'the item'}, unless the item’s own date is later.` : ''}`
             : d.outcome === 'deny'
               ? 'Denies the request. The student sees the decision and your note at once.'
               : 'Sends your question to the student. The request waits for their answer, and you can still decide it meanwhile.';
@@ -243,7 +243,13 @@ export function RequestQueue({ course, term, caps }: { course: string; term: str
                 subject={`${what(r)} · student ${shortId(r.studentId)}`}
                 says={says}
                 exactly={d.note.trim() ? `“${d.note.trim()}”` : undefined}
-                doesNotChange="Grades and the course’s deadlines in the gradebook do not change; an approved date is recorded on this request."
+                doesNotChange={
+                  r.kind === 'extension' && r.itemId
+                    ? 'Grades, the item’s own due date and every other student’s date stay as they are.'
+                    : r.kind === 'extension'
+                      ? 'This request names no item, so no due date in the gradebook moves; the approved date is recorded on the request.'
+                      : 'Grades and due dates do not change; the decision is recorded on this request.'
+                }
                 recovery={d.outcome === 'ask' ? { kind: 'undo', how: 'Approve or deny it whenever you are ready.' } : { kind: 'none', how: 'A decided request is closed. The student can file a new one.' }}
               />
             }

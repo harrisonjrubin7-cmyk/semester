@@ -1623,26 +1623,32 @@
       "screens": [
         "app/src/screens/Gradebook.tsx",
         "app/src/components/gradebook/RequestQueue.tsx",
-        "app/src/components/gradebook/AskInstructor.tsx"
+        "app/src/components/gradebook/AskInstructor.tsx",
+        "app/src/components/gradebook/DueDates.tsx"
       ],
       "modules": [
-        "app/src/lib/gradebook/requests.ts"
+        "app/src/lib/gradebook/requests.ts",
+        "app/src/lib/gradebook/duedates.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20261021120000_course_requests.sql"
+        "supabase/migrations/20261021120000_course_requests.sql",
+        "supabase/migrations/20261021130000_gradebook_due_dates.sql"
       ],
       "tests": [
         "supabase/course-requests.check.sql",
+        "supabase/gradebook-due-dates.check.sql",
         "app/src/lib/gradebook/requests.test.ts",
+        "app/src/lib/gradebook/duedates.test.ts",
         "app/src/components/gradebook/CourseRequests.test.tsx",
+        "app/src/components/gradebook/DueDates.test.tsx",
         "app/src/screens/gradebook.test.tsx"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "Students file extension, excused-absence and incomplete requests (course_request_file, course_requests:create at <school>/<CODE>/<TERM>) from AskInstructor under their released grades; faculty decide them in RequestQueue under the instructor gradebook (course_request_decide: approve with a granted date, deny with a note, or ask a question; expected version, idempotent on the gradebook ledger, emits course_request.filed / .decided). Teaching assistants read the queue (course_requests:view) and do not decide.",
-      "gap": "The gradebook does not honour a granted date: gradebook items have no due date, so an approved extension is recorded on the request only, and an approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate."
+      "note": "Students file extension, excused-absence and incomplete requests (course_request_file, course_requests:create at <school>/<CODE>/<TERM>) from AskInstructor under their released grades; faculty decide them in RequestQueue under the instructor gradebook (course_request_decide: approve with a granted date, deny with a note, or ask a question; expected version, idempotent on the gradebook ledger, emits course_request.filed / .decided). Teaching assistants read the queue (course_requests:view) and do not decide. Gradebook items carry an optional due date (gradebook_set_due, grades:release, expected version); an approved extension on an item becomes that student's due date for it (gradebook_due_dates, security invoker), shown as \"Extended to\" on the student's side and per student on the instructor's (DueDates).",
+      "gap": "An approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate."
     },
     "#/faculty/roster": {
       "status": "code-present",

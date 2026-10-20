@@ -54,11 +54,11 @@
 --     `private.emit_domain_event` in the same transaction. Payloads carry ids,
 --     the course, the term, the kind and the outcome word — never the student,
 --     the reason, or the note.
---   * **The gradebook does not yet honour a granted date.** Gradebook items
---     have no due date at all, so there is nothing per-student to move. An
---     approved extension is the request's `granted_due` and nothing else; an
---     approved excused absence or incomplete does not mark a grade. Both are
---     named as not done in D-1658.
+--   * **A granted date moves a due date only through the next file.**
+--     Gradebook items have no due date here; `20261021130000_gradebook_due_dates.sql`
+--     gives them one and reads an approved extension's `granted_due` as that
+--     student's date for the item. An approved excused absence or incomplete
+--     does not mark a grade; that is named as not done in D-1658.
 --
 -- Account deletion: a student's requests cascade from `auth.users`, and their
 -- actions with them; an instructor deleting theirs clears who decided and

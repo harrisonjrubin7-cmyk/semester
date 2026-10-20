@@ -209,6 +209,8 @@ describe('the instructor’s side', () => {
     act(() => button(/Review the decision/)!.click());
     expect(mock.rpc).not.toHaveBeenCalled();
     expect(document.querySelector('[role="dialog"]')!.textContent).toContain('A decided request is closed.');
+    // An extension on an item moves that student's due date for it (20261021130000), and the preview says so.
+    expect(document.querySelector('[role="dialog"]')!.textContent).toMatch(/Nov.*9.*becomes their due date for Essay 2, unless the item’s own date is later/);
     act(() => button(/^Approve$/)!.click());
     await flush();
     expect(mock.rpc.mock.calls[0]).toEqual([

@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 255 |
+| Migration files | 256 |
 | Tables created in `public` and not later dropped | 349 |
 | … of which enable row-level security in a migration | 349 |
 | Tables created in `private` and not later dropped | 55 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+159 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -95,6 +95,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/forms.check.sql` | The second table in this schema a stranger is meant to be able to reach, and the first one they are meant to be able to *write* to. |
 | `supabase/gateway-journal.check.sql` | Shared action state must remain tenant-scoped, atomic and conservative. |
 | `supabase/governance.check.sql` | Governance registries: every rule 20260927235000_governance_registries.sql claims, walked as the account it is about, and every refusal attempted as the account that should be refused. |
+| `supabase/gradebook-due-dates.check.sql` | who sets a gradebook item's due date, and which date each student's work is due once an extension is approved. |
 | `supabase/gradebook.check.sql` | who enters, moderates, releases and reads a grade, and that no grade is ever rewritten. |
 | `supabase/grants.check.sql` | Which functions a client may call at all. |
 | `supabase/groups.check.sql` | Four people and two groups, without needing four people. |
@@ -299,15 +300,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 253 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 253 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 254 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 254 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 71 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 100 |
+| Register rows in category `admin` | 101 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

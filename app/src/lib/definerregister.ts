@@ -221,6 +221,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gradebook_queue_passback', 'integration', ['auth.uid()', 'private.gradebook_require', "public.kill_switch_engaged('kill.writeback', school)", "e.status = 'released'"]],
   ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
+  ['gradebook_set_due', 'admin', ['private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay', 'it.due_version <> want_expect']],
   ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
@@ -595,6 +596,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261021120000_course_requests.sql',
     functions: ['course_request_decide', 'course_request_file', 'course_request_respond', 'course_request_withdraw'],
+  },
+  {
+    file: '20261021130000_gradebook_due_dates.sql',
+    functions: ['gradebook_set_due'],
   },
 ];
 

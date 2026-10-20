@@ -577,6 +577,15 @@ declare
     'course_request_withdraw(want_request uuid, want_expect integer, want_key text)',
     'course_request_respond(want_request uuid, want_note text, want_expect integer, want_key text)',
     'course_request_decide(want_request uuid, want_outcome text, want_granted_due date, want_note text, want_expect integer, want_key text)',
+    -- 20261021130000_gradebook_due_dates.sql: setting an item's due date
+    -- checks auth.uid(), the caller's own school and grades:release on the
+    -- item's course and term (who adds items), spends a key on the gradebook
+    -- ledger and names the version read. Reading the dates is security
+    -- invoker: the item and request tables' own policies decide every row, so
+    -- a student reads their own extension and no other.
+    -- `gradebook-due-dates.check.sql` proves each refusal and each reader.
+    'gradebook_set_due(want_item uuid, want_due timestamp with time zone, want_expect integer, want_key text)',
+    'gradebook_due_dates(want_course text, want_term text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions

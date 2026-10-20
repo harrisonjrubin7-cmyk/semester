@@ -62,6 +62,7 @@ forms
 gateway-journal
 governance
 gradebook
+gradebook-due-dates
 grants
 groups
 gtm
