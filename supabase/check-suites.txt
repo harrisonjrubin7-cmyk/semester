@@ -121,6 +121,7 @@ projection-outbox-operations
 rate-limits
 records
 referrals
+registration-hold-resolution
 registration-readiness-store
 registration_swap
 registration_transaction

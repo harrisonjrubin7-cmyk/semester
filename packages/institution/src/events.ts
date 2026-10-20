@@ -117,12 +117,15 @@ export const EVENT_TYPES = {
   'ai.incident_detected': spec(1, 'internal', 'audit'),
   'ai.kill_switch_changed': spec(1, 'internal', 'audit'),
   // Registration. Payloads carry ids and versions, not the checklist or the reason.
+  // `hold_resolved` (20261020120000) is its own type: nothing else names a hold, and `source.updated` is
+  // `internal`, below the education-record floor a student's hold is. Its payload is the hold and its office.
   'registration.readiness_viewed': spec(1, 'education_record', 'audit'),
   'registration.readiness_requested': spec(1, 'education_record', 'audit'),
   'registration.readiness_evaluated': spec(1, 'education_record', 'student_record'),
   'registration.readiness_reconciliation_requested': spec(1, 'education_record', 'audit'),
   'registration.override_requested': spec(1, 'education_record', 'audit'),
   'registration.override_granted': spec(1, 'education_record', 'audit'),
+  'registration.hold_resolved': spec(1, 'education_record', 'audit'),
   // Support and security
   'support.ticket_created': spec(1, 'student_private', 'operational'),
   'support.access_granted': spec(1, 'student_private', 'audit'),

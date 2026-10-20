@@ -268,6 +268,25 @@ describe('who may see it', () => {
     expect(buttons().filter((b) => b.classList.contains('btn-primary')).map((b) => b.textContent)).toEqual(['Grant override']);
   });
 
+  it('offers an office its holds only for an office grant at this school, and not the registrar’s half', async () => {
+    mock.caps.mockResolvedValue([
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'other/bursar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'school', scopeId: 'vu' },
+    ]);
+    await render();
+    expect(host.querySelector('[role="tablist"]')).toBeNull();
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    mock.caps.mockResolvedValue([{ capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu/bursar' }]);
+    await render();
+    const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
+    expect(tabs).toEqual(['Your registration', 'Holds']);
+    const tab = [...host.querySelectorAll('[role="tab"]')].find((t) => t.textContent === 'Holds') as HTMLElement;
+    await act(async () => tab.click());
+    await flush();
+    expect(text()).toContain('Holds placed by bursar');
+  });
+
   it('says so when the permission check fails, keeps the student’s half, and checks again on request', async () => {
     mock.caps.mockRejectedValueOnce(new Error('Could not reach your school’s account service.'));
     await render();

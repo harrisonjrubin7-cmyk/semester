@@ -6,10 +6,11 @@ import { ModuleGateState } from '../components/ModuleGateState';
 import { Field } from '../components/academic/Form';
 import { StudentRegistration } from '../components/enrollment/StudentRegistration';
 import { RegistrarDesk } from '../components/enrollment/RegistrarDesk';
+import { HoldDesk } from '../components/enrollment/HoldDesk';
 import { useModuleGate } from '../lib/modulegate';
 import { loadMyCapabilitiesOrThrow, type Grant } from '../lib/capabilities';
 import { FLAG } from '../lib/enrollment/service';
-import { REGISTRAR_CAPABILITY, holdsRegistrar, loadTerms, type TermCalendar } from '../lib/enrollment/client';
+import { REGISTRAR_CAPABILITY, holdOffices, holdsRegistrar, loadTerms, type TermCalendar } from '../lib/enrollment/client';
 import { termOf } from '../lib/gradebook/client';
 
 /**
@@ -30,7 +31,9 @@ import { termOf } from '../lib/gradebook/client';
  *
  * The registrar's half is offered only when `my_capabilities` says the caller
  * holds `registration:administer` over this school; the database refuses
- * every registrar write to anyone else regardless.
+ * every registrar write to anyone else regardless. An office's holds are
+ * offered the same way, to a caller holding `registration_hold:resolve` over
+ * one of this school's office scopes.
  */
 
 export const BLURB = 'Enroll, join a waitlist, drop or withdraw in your school’s registration, and see whether a hold is in the way.';
@@ -38,7 +41,7 @@ export const BLURB = 'Enroll, join a waitlist, drop or withdraw in your school�
 const OFF =
   'Your school has not turned on registration in Semester, so enrolling, dropping and withdrawing still happen in your school’s own registration system — your plan on the Registration screen is unaffected.';
 
-type View = 'mine' | 'registrar';
+type View = 'mine' | 'registrar' | 'holds';
 
 /** The term to open on: the first whose withdrawal deadline has not passed, else the newest. */
 export function openingTerm(terms: readonly TermCalendar[], now: Date): TermCalendar | null {
@@ -114,6 +117,7 @@ function Desk({ school }: { school: string }) {
 
   const grantsFailed = typeof grants === 'string';
   const registrar = !grantsFailed && holdsRegistrar(grants, school);
+  const offices = grantsFailed ? [] : holdOffices(grants, school);
   const calendar = terms.find((t) => t.term === term) ?? null;
   // A registrar with no term yet still needs the desk, to create one.
   const deskTerm = term || termOf(now);
@@ -128,14 +132,15 @@ function Desk({ school }: { school: string }) {
           </button>
         </>
       )}
-      {registrar && (
+      {(registrar || offices.length > 0) && (
         <TabList
           label="Enrollment views"
           value={view}
           onChange={setView}
           tabs={[
-            { id: 'mine', label: 'Your registration' },
-            { id: 'registrar', label: 'Registrar' },
+            { id: 'mine' as const, label: 'Your registration' },
+            ...(registrar ? [{ id: 'registrar' as const, label: 'Registrar' }] : []),
+            ...(offices.length > 0 ? [{ id: 'holds' as const, label: 'Holds' }] : []),
           ]}
         />
       )}
@@ -152,7 +157,9 @@ function Desk({ school }: { school: string }) {
           )}
         </Field>
       )}
-      {view === 'registrar' && registrar ? (
+      {view === 'holds' && offices.length > 0 ? (
+        <HoldDesk offices={offices} />
+      ) : view === 'registrar' && registrar ? (
         <RegistrarDesk key={deskTerm} term={deskTerm} calendar={calendar} onTermSaved={() => setReads((n) => n + 1)} />
       ) : terms.length === 0 ? (
         <EmptyState

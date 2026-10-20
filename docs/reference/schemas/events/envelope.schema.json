@@ -74,6 +74,7 @@
         "registration.readiness_reconciliation_requested",
         "registration.override_requested",
         "registration.override_granted",
+        "registration.hold_resolved",
         "support.ticket_created",
         "support.access_granted",
         "support.access_revoked",

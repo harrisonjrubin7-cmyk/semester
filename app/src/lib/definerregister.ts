@@ -263,6 +263,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_registration_readiness', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_sessions', 'read-helper', ['auth.uid()']],
   ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
@@ -307,6 +308,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
   ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_hold_resolve', 'admin', ['auth.uid()', 'private.registration_school', 'private.has_capability', 'private.registration_key']],
+  ['registration_holds_for_office', 'admin', ['private.registration_school', 'private.has_capability']],
   ['registration_swap', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
@@ -587,6 +590,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    file: '20261020120000_registration_hold_resolution.sql',
+    functions: ['my_registration_readiness', 'registration_hold_resolve', 'registration_holds_for_office'],
   },
 ];
 

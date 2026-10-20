@@ -733,6 +733,16 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+    -- The three in 20261020120000_registration_hold_resolution.sql. The
+    -- resolver raises unless the caller holds registration_hold:resolve over
+    -- exactly the hold's owning office scope, finds holds at the caller's
+    -- school only, and takes an idempotency key and the state the office saw;
+    -- the office list raises the same way; the readiness read returns the
+    -- caller's own evaluations. `registration-hold-resolution.check.sql`
+    -- attempts each refusal.
+    'registration_hold_resolve(want_hold uuid, want_key text, want_expect text)',
+    'registration_holds_for_office(want_office text)',
+    'my_registration_readiness()',
 
     -- The two productivity workspace functions recovered from production.
     -- Saving is security invoker and can only mutate the caller's RLS-owned

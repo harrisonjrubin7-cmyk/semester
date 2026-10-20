@@ -308,7 +308,13 @@ begin
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
   -- Privileged access review then added access_review:manage for
   -- platform_admin and trust_officer.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 187);
+  -- 187 before hold resolution (20261020120000_registration_hold_resolution.sql)
+  -- gave registration_hold:resolve to the seven roles that already publish
+  -- holds as institution actions: registrar, financial_aid_officer,
+  -- student_accounts_officer, international_student_advisor,
+  -- veterans_certifying_official, athletics_compliance_officer and
+  -- residence_life_staff.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 194);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

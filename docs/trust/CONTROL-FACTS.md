@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 254 |
+| Migration files | 255 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
 | Tables created in `private` and not later dropped | 55 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-157 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -155,6 +155,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |
+| `supabase/registration-hold-resolution.check.sql` | the office that placed a registration hold resolves it, nobody else does, and readiness that was worked out while it stood stops counting as current. |
 | `supabase/registration-readiness-store.check.sql` | The registration-readiness durable store (20261009160000). |
 | `supabase/registration_swap.check.sql` | the atomic swap (REG-6.3). |
 | `supabase/registration_transaction.check.sql` | the official registration transaction. |
@@ -251,15 +252,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 65 |
+| All | 66 |
 | retention `operational` | 13 |
 | retention `student_record` | 17 |
-| retention `audit` | 30 |
+| retention `audit` | 31 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
 | classification `internal` | 23 |
 | classification `student_private` | 27 |
-| classification `education_record` | 15 |
+| classification `education_record` | 16 |
 
 **How counted.** The two constant arrays are imported and printed; event types are counted from the `EVENT_TYPES` catalogue by the retention class and classification floor each declares.
 
@@ -298,19 +299,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 252 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 252 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 68 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 99 |
+| Register rows in category `admin` | 101 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 33 |
+| Register rows in category `read-helper` | 34 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

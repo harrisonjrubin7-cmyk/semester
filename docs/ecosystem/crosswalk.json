@@ -2284,7 +2284,8 @@
       ],
       "screens": [
         "app/src/screens/Registration.tsx",
-        "app/src/components/enrollment/RegistrarDesk.tsx"
+        "app/src/components/enrollment/RegistrarDesk.tsx",
+        "app/src/components/enrollment/HoldDesk.tsx"
       ],
       "modules": [
         "app/src/lib/enrollment/client.ts",
@@ -2292,18 +2293,22 @@
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929300000_registration_transaction.sql"
+        "supabase/migrations/20260929300000_registration_transaction.sql",
+        "supabase/migrations/20261020120000_registration_hold_resolution.sql"
       ],
       "tests": [
         "supabase/registration_transaction.check.sql",
         "app/src/screens/registration.test.tsx",
-        "app/src/lib/enrollment/client.test.ts"
+        "app/src/lib/enrollment/client.test.ts",
+        "supabase/registration-hold-resolution.check.sql",
+        "app/src/components/enrollment/HoldDesk.test.tsx"
       ],
       "flags": [
         "writeback.registration_submit",
-        "capability registration:administer"
+        "capability registration:administer",
+        "capability registration_hold:resolve (office scope)"
       ],
-      "note": "RegistrarDesk: pending approval requests (registrar_decide), overrides, term and section setup, shown only when my_capabilities holds registration:administer.",
+      "note": "RegistrarDesk: pending approval requests (registrar_decide), overrides, term and section setup, shown only when my_capabilities holds registration:administer. Beside it, an office holding registration_hold:resolve over its own office scope lists its open holds and resolves one (HoldDesk, registration_hold_resolve) behind a preview that says it is not enrollment.",
       "gap": "No registration audit viewer, waitlist reorder, hold placement or faculty assignment."
     },
     "#/institution/regops": {
@@ -4789,7 +4794,8 @@
       ],
       "screens": [
         "app/src/screens/Registration.tsx",
-        "app/src/components/enrollment/StudentRegistration.tsx"
+        "app/src/components/enrollment/StudentRegistration.tsx",
+        "app/src/components/RegistrationReadiness.tsx"
       ],
       "modules": [
         "app/src/lib/enrollment/client.ts",
@@ -4798,19 +4804,22 @@
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929300000_registration_transaction.sql"
+        "supabase/migrations/20260929300000_registration_transaction.sql",
+        "supabase/migrations/20261020120000_registration_hold_resolution.sql"
       ],
       "tests": [
         "app/src/lib/enrollment/client.test.ts",
         "app/src/lib/path-readiness.test.ts",
         "app/src/screens/registration.test.tsx",
-        "supabase/registration_transaction.check.sql"
+        "supabase/registration_transaction.check.sql",
+        "app/src/components/RegistrationReadiness.hold.test.tsx",
+        "supabase/registration-hold-resolution.check.sql"
       ],
       "flags": [
         "writeback.registration_submit"
       ],
-      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated. Phase 3: the readiness headline refuses Ready on a catalog imported more than 30 days ago.",
-      "gap": "Behind the enrollment module/writeback flag, off unless a school turns it on; holds have no list screen (REPO_AUDIT B-018)."
+      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated. Phase 3: the readiness headline refuses Ready on a catalog imported more than 30 days ago. Slice 2: when the owning office resolves a hold, the server marks readiness worked out while it stood as stale (my_registration_readiness) and the readiness view says \"Something changed — check again\"; a clear check is a receipt that says it is not enrollment.",
+      "gap": "Behind the enrollment module/writeback flag, off unless a school turns it on; the student sees one hold at a time and no list; nothing re-runs a stale readiness evaluation yet (no evaluator calls the readiness store)."
     },
     "#/student/regplan": {
       "status": "tested",

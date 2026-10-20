@@ -77,19 +77,19 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `disability_services_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `accommodation:verify` | — | `expansion.check.sql` | — | — | Issue/revoke functional accommodation passport | Diagnoses in Semester; unrestricted academic records |
-| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read`<br>`registration:administer`<br>`grades:export`<br>`override:record`<br>`override:review`<br>`config:publish`<br>`config:view`<br>`workflow:publish`<br>`workflow:view` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`configuration-studio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`registration_swap.check.sql`<br>`registration_transaction.check.sql`<br>`school-offboarding.check.sql`<br>`workflow-builder.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
+| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read`<br>`registration:administer`<br>`grades:export`<br>`override:record`<br>`override:review`<br>`config:publish`<br>`config:view`<br>`workflow:publish`<br>`workflow:view`<br>`registration_hold:resolve` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`configuration-studio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`registration-hold-resolution.check.sql`<br>`registration_swap.check.sql`<br>`registration_transaction.check.sql`<br>`school-offboarding.check.sql`<br>`workflow-builder.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
 | `department_chair` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read` | — | `demand.check.sql`<br>`gradebook.check.sql` | — | — | View allowed aggregate demand/outcomes for scope | Individual records |
 | `dean` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:approve`<br>`migration:view`<br>`record:approve`<br>`record:read` | — | `academic-record.check.sql` | — | — | View allowed school-level aggregates and decisions | Individual records without explicit authorization |
 | `institutional_researcher` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:view`<br>`config:view`<br>`workflow:view` | — | `academic-record.check.sql`<br>`configuration-studio.check.sql`<br>`expansion.check.sql`<br>`migration-center.check.sql`<br>`workflow-builder.check.sql` | — | — | View governed, aggregate, suppressed analytics | Individual student records |
-| `financial_aid_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:read` | — | `officeactions.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited official actions/checklists | Student plans/cost scenarios unless specifically authorized |
-| `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:approve`<br>`finance:read` | — | `ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
-| `international_student_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish compliance actions under approved scope | Private student segments beyond approved source/need |
-| `veterans_certifying_official` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish certification actions under approved scope | Private plans or unrelated data |
+| `financial_aid_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:read`<br>`registration_hold:resolve` | — | `officeactions.check.sql`<br>`registration-hold-resolution.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited official actions/checklists | Student plans/cost scenarios unless specifically authorized |
+| `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:approve`<br>`finance:read`<br>`registration_hold:resolve` | — | `ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`registration-hold-resolution.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
+| `international_student_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish`<br>`registration_hold:resolve` | — | — | — | — | Publish compliance actions under approved scope | Private student segments beyond approved source/need |
+| `veterans_certifying_official` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish`<br>`registration_hold:resolve` | — | — | — | — | Publish certification actions under approved scope | Private plans or unrelated data |
 | `dining_staff` | provisionable | ✓ ✓ ✓ · ✓ · · | `dining:operate` | — | `dining.check.sql` | — | — | Work one school’s mobile-order queue, pause a location, read the shared-swipe pool as totals (dining:operate) | A student’s balance or plan, or who gave or used a shared swipe |
-| `residence_life_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish residence/action information under scope | Roommate detail, precise location, academic records |
+| `residence_life_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish`<br>`registration_hold:resolve` | — | — | — | — | Publish residence/action information under scope | Roommate detail, precise location, academic records |
 | `resident_assistant` | provisionable | ✓ ✓ ✓ · ✓ · · | `resource:publish` | — | `officeactions.check.sql` | — | — | Publish approved resource/event information | Resident academic or private data |
 | `counseling_liaison` | provisionable | ✓ ✓ ✓ · · · · | `resource:publish` | — | — | — | — | Publish resource-only actions | Student records or private wellbeing data |
-| `athletics_compliance_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish` | — | `supportshares.check.sql` | — | — | Publish approved compliance actions | Health, injury, private study behavior, motivation inference |
+| `athletics_compliance_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`registration_hold:resolve` | — | `supportshares.check.sql` | — | — | Publish approved compliance actions | Health, injury, private study behavior, motivation inference |
 | `career_center_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish career-office actions and events to the students they reach (D-048) | Individual private plans, grades, or who acted on an action below a group of ten |
 | `disability_services_staff` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish disability-services resources and events (D-048) | Accommodation records, health information, or which student opened a resource |
 | `study_abroad_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish study-abroad actions, deadlines and events (D-048) | A student’s own study-abroad plan unless the student shares it |
@@ -225,6 +225,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `registrar` | `config:view` | — | — |
 | `registrar` | `workflow:publish` | — | — |
 | `registrar` | `workflow:view` | — | — |
+| `registrar` | `registration_hold:resolve` | — | — |
 | `department_chair` | `demand:read` | — | — |
 | `dean` | `demand:read` | — | — |
 | `dean` | `outcomes:read` | — | — |
@@ -240,17 +241,23 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `financial_aid_officer` | `institution_action:publish` | — | — |
 | `financial_aid_officer` | `finance:request` | — | — |
 | `financial_aid_officer` | `finance:read` | — | — |
+| `financial_aid_officer` | `registration_hold:resolve` | — | — |
 | `student_accounts_officer` | `institution_action:publish` | — | — |
 | `student_accounts_officer` | `finance:request` | — | — |
 | `student_accounts_officer` | `finance:approve` | — | — |
 | `student_accounts_officer` | `finance:read` | — | — |
+| `student_accounts_officer` | `registration_hold:resolve` | — | — |
 | `international_student_advisor` | `institution_action:publish` | — | — |
+| `international_student_advisor` | `registration_hold:resolve` | — | — |
 | `veterans_certifying_official` | `institution_action:publish` | — | — |
+| `veterans_certifying_official` | `registration_hold:resolve` | — | — |
 | `dining_staff` | `dining:operate` | — | — |
 | `residence_life_staff` | `institution_action:publish` | — | — |
+| `residence_life_staff` | `registration_hold:resolve` | — | — |
 | `resident_assistant` | `resource:publish` | — | — |
 | `counseling_liaison` | `resource:publish` | — | — |
 | `athletics_compliance_officer` | `institution_action:publish` | — | — |
+| `athletics_compliance_officer` | `registration_hold:resolve` | — | — |
 | `career_center_staff` | `institution_action:publish` | — | — |
 | `disability_services_staff` | `institution_action:publish` | — | — |
 | `study_abroad_advisor` | `institution_action:publish` | — | — |
