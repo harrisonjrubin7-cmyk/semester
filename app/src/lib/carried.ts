@@ -146,7 +146,13 @@ export function rememberCarried(
 ): void {
   readerKnows = known;
   const fields = remote ? unknownFields(remote, CARRIED_BASELINE) : {};
-  const held: Held = { account, fields, at: versionOf(version) };
+  // No state row has no version, and 0 would rank below the copy of the row
+  // before it. The absence was seen after every copy this tab knows, so it
+  // ranks with the newest of them, and on a tie this tab's copy stands.
+  const disk = remote ? null : stored();
+  const after = (copy: Held | null) => (copy && copy.account === account && Number.isFinite(copy.at) ? copy.at : 0);
+  const at = remote ? versionOf(version) : Math.max(after(memory), after(disk));
+  const held: Held = { account, fields, at };
   memory = held;
   inStep = false;
   try {

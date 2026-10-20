@@ -143,6 +143,24 @@ describe('fields this build cannot read', () => {
     expect([...CARRIED_BASELINE].filter((f) => !persisted.has(f)), 'retire a field here only on purpose').toEqual([]);
   });
 
+  // Found reviewing f31ef80: a pull that finds no state row stored its empty
+  // copy at version 0, so the copy from the row before outranked it and the
+  // next push put the removed fields back.
+  it('lets a pull that finds no state row clear the copy from the row before', () => {
+    rememberCarried('u1', { later: 'old' }, known, '2026-10-12T10:00:00.000+00:00');
+    rememberCarried('u1', null, known);
+    expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
+  });
+
+  it('clears it even when storage refuses the empty copy', () => {
+    rememberCarried('u1', { later: 'old' }, known, '2026-10-12T10:00:00.000+00:00');
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    rememberCarried('u1', null, known);
+    expect(withCarried('u1', { notes: [] })).toEqual({ notes: [] });
+  });
+
   it('says when storage refused the copy memory holds, until a write lands', () => {
     const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('full', 'QuotaExceededError');
