@@ -22,6 +22,17 @@ export interface InstitutionRuntimeDependencies {
   registrationReadinessEvaluator?: RegistrationReadinessEvaluator;
 }
 
+/**
+ * `SEMESTER_REGISTRATION_READINESS_SAFE_OFF`: unset or exactly `off` leaves
+ * readiness evaluations open. Any other value pauses them, so a typo or an
+ * unexpected word fails toward the pause rather than toward a school receiving
+ * new evaluations an operator meant to stop.
+ */
+export function registrationReadinessSafeOff(env: InstitutionEnvironment): boolean {
+  const value = (env.SEMESTER_REGISTRATION_READINESS_SAFE_OFF ?? '').trim().toLowerCase();
+  return value !== '' && value !== 'off';
+}
+
 export function exactAppOrigin(env: InstitutionEnvironment): string {
   const origin = env.SEMESTER_APP_ORIGIN || '';
   const parsed = new URL(origin);
@@ -107,6 +118,7 @@ export function createProductionInstitutionRuntime(
     rateLimiter,
     intelligence,
     registrationReadiness,
+    registrationReadinessSafeOff: () => registrationReadinessSafeOff(env),
     // Match the long-running process: only the exact operator value `on`
     // freezes writes, and the callback is re-read for every request.
     readOnly: () => (env.SEMESTER_READ_ONLY || '').trim().toLowerCase() === 'on',

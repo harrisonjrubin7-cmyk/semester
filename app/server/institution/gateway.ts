@@ -107,6 +107,14 @@ interface Config {
   rateLimiter?: RateLimiter;
   readiness?: () => Promise<ReadinessResult>;
   registrationReadiness?: RegistrationReadinessCommandBoundary;
+  /**
+   * Registration-readiness safe-off: when this returns true, new evaluations
+   * are refused with a 503 `registration_readiness_paused` before any
+   * membership refresh or evaluator work. Asked each request, like `readOnly`,
+   * so an operator can pause without a restart. Read-only reads of prior
+   * results are not part of this gateway surface yet.
+   */
+  registrationReadinessSafeOff?: () => boolean;
   telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
   /**
    * Read-only mode: every write is refused with a 503 `read_only` that says
@@ -360,6 +368,13 @@ export function createGateway(config: Config) {
       const readinessStart = path === '/v1/registration-readiness/evaluations';
       const readinessEvaluate = /^\/v1\/registration-readiness\/evaluations\/([^/]+)\/evaluate$/.exec(path);
       if (request.method === 'POST' && (readinessStart || readinessEvaluate)) {
+        if (config.registrationReadinessSafeOff?.()) {
+          return refuse(
+            503,
+            'registration_readiness_paused',
+            'Registration readiness is paused by your university. Your existing results are unchanged; try again later.',
+          );
+        }
         context.request = readinessCommandContext(context.request!, request);
         if (!config.registrationReadiness) {
           fail(503, 'Registration readiness is not configured for this university.');

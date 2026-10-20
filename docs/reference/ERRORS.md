@@ -73,6 +73,7 @@ The "Emitted" column is `yes` when some call in the gateway source can produce t
 | `refused` | 400 | yes | The adapter said no and wrote nothing. The message is the adapter's own sentence. |
 | `outcome_uncertain` | 409, 502 | yes | 502: execute failed and the school may have acted. 409: reconcile asked and the school has not answered. |
 | `read_only` | 503 | yes | Read-only mode is on and the call is a write. |
+| `registration_readiness_paused` | 503 | yes | The operator has paused registration readiness (`SEMESTER_REGISTRATION_READINESS_SAFE_OFF`). New evaluations are refused before membership is refreshed or any evaluator runs. Existing results are unchanged. |
 | `adapter_not_configured` | 503 | yes | No adapter is installed for the caller's institution and area. |
 | `idempotency_unavailable` | 503 | yes | A keyed action commit cannot reach its durable replay store, so nothing is sent to the institution. |
 | `policy-disabled` | 503 | yes | No intelligence service is configured on this gateway. Note the hyphen: this code is spelled like the intelligence codes. |
