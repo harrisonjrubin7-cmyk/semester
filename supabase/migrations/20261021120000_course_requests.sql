@@ -21,7 +21,7 @@
 --   * **Who answers.** `course_requests:decide`, held by `faculty` only.
 --     Teaching assistants hold `course_requests:view`: they read the queue
 --     and do not decide it. That split is an owner decision recorded in
---     D-<pull request> — an extension or an incomplete changes what the
+--     D-1658 — an extension or an incomplete changes what the
 --     course of record expects of a student, which is the instructor's call.
 --     Nobody decides a request they filed.
 --   * **Who reads.** The student their own; holders of `:decide` or `:view`
@@ -58,7 +58,7 @@
 --     have no due date at all, so there is nothing per-student to move. An
 --     approved extension is the request's `granted_due` and nothing else; an
 --     approved excused absence or incomplete does not mark a grade. Both are
---     named as not done in D-<pull request>.
+--     named as not done in D-1658.
 --
 -- Account deletion: a student's requests cascade from `auth.users`, and their
 -- actions with them; an instructor deleting theirs clears who decided and
