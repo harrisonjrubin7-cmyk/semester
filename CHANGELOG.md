@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
+
+Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. The gradebook's own deadlines do not move — an approved date is recorded on the request. Nobody else will notice anything.
+
 ### Mine names the exact action, step or event before removing it
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
