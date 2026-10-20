@@ -435,7 +435,12 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
   const mounts = new Set<string>();
   for (const dir of dirs) {
     const base = dir.split('/').pop() as string;
-    const importsIt = new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
+    // The institution package is matched by its producer file, not its name. Its barrel is imported across the app, and the
+    // app's own server/institution folder shares the name, so a package-name match would call all of them mounts. The
+    // barrel does not export the producer; the tripwire in the producer test fails if that ever changes.
+    const importsIt = dir === 'packages/institution'
+      ? /from\s+['"][^'"]*\/assignment-submission(?:\.ts)?['"]/
+      : new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
     for (const f of files) {
       if (f.path.startsWith(`${dir}/`) || !importsIt.test(f.text)) continue;
       // The institution gateway takes the error envelope, correlation ids and request context from the platform package
@@ -1389,6 +1394,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(uses.map((u) => u.file)).toEqual([
       'app/server/productivity/memory.ts',
       'app/server/productivity/service.ts',
+      // The assignment-submission command writes submission.finalized and grade.posted in the same step as its record.
+      // Nothing mounts it: no route or worker imports it, so the page's "off by default" claim is about this too.
+      'packages/institution/src/assignment-submission.ts',
       'packages/platform/src/events/emit.ts',
       'packages/platform/src/isolation/layers.ts',
       'packages/platform/src/testing/memory.ts',
@@ -1411,9 +1419,17 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261009160000_registration_readiness_store.sql',
       // The expansion RPC preserves the same atomic minimized outbox emission while accepting rolling clients.
       'supabase/migrations/20261010140000_registration_readiness_timeout_contract.sql',
+      // Phase 3, domain A: a grade release emits gradebook.grades_released in its own transaction (D-1475 §13).
+      // The gradebook RPC is callable by instructors today, so this is the first producer a signed-in user reaches;
+      // nothing drains the outbox yet, so "none published" still holds.
+      'supabase/migrations/20261012010000_gradebook_release_emits_event.sql',
+      // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
+      // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
+      'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
-    expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
+    expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);
+    expect(read('packages/institution/src/index.ts'), 'the barrel now exports the producer: the mount rule must match it').not.toContain('assignment-submission');
     expect(facts.mounts, 'something else now imports the producer').toEqual([
       'app/api/productivity/[...path].ts',
       'app/server/institution/vercel-service.ts',
@@ -1436,6 +1452,14 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const near = [{ path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" }, { path: 'app/src/a.ts', text: "import { k } from '../../packages/kit/src/index.ts'" }];
     expect(producerFactsOf(pkg, near)).toEqual({ dirs: ['packages/kit'], mounts: ['app/src/a.ts'], drainCallers: [] });
     expect(producerFactsOf(uses, files.slice(0, 1))).toEqual({ dirs: ['app/server/thing'], mounts: [], drainCallers: [] });
+    // The institution package: the barrel is not a mount of its producer file, the file itself is. (control)
+    const submission = [{ file: 'packages/institution/src/assignment-submission.ts', why: 'calls the library' }];
+    const barrel = [
+      { path: 'app/server/institution/gateway.ts', text: "import { Refusal } from '../../../packages/institution/src/index.ts'" },
+      { path: 'app/src/lib/x.ts', text: "import { y } from '@semester/institution'" },
+      { path: 'app/src/lib/z.ts', text: "import { w } from '../../../packages/institution/src/assignment-submission.ts'" },
+    ];
+    expect(producerFactsOf(submission, barrel).mounts).toEqual(['app/src/lib/z.ts']);
   });
 
   it('the outbox numbers the page quotes are the ones in the source', () => {

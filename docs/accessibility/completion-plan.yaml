@@ -1,0 +1,24 @@
+# Source: "Accessibility completion plan" section of the brief.
+accessibility_completion:
+  foundation:
+    - enforce_AA_contrast_for_shippable_reader_grounds
+    - retain_visible_labels_and_accessible_names
+    - enforce_focus_order_and_focus_return
+    - support_keyboard_operation_for_all_controls
+    - ensure_status_not_color_only
+    - provide_reduced_motion_and_reduced_transparency_fallbacks
+  screen_level:
+    - heading_hierarchy
+    - landmark_regions
+    - form_error_association
+    - live_status_announcements
+    - table_headers_and_row_context
+    - mobile_reflow
+    - empty_error_offline_forbidden_states
+  release_gate:
+    blocks:
+      - keyboard_trap
+      - inaccessible_critical_action
+      - status_only_expressed_by_color
+      - insufficient_contrast_in_shipped_mode
+      - missing_error_or_confirmation_explanation

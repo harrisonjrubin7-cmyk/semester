@@ -243,6 +243,19 @@ describe('ai.retrieve_source', () => {
     expect(decide(r, NOW).allow).toBe(true);
   });
 
+  it('refuses a share that has been revoked or has expired, as task.read already does', () => {
+    // The control is the test above: the same share, live, is accepted.
+    const share = { id: 'share-1', kind: 'share' as const, grantedBy: 'student-b', grantedTo: 'student-a', scopes: ['source:src-9'], expiresAt: later(60) };
+    let r = retrieval();
+    r.context.roleGrants = [];
+    r.context.consentGrants = [{ ...share, revokedAt: later(-5) }];
+    refused(r, 'not_enrolled');
+    r = retrieval();
+    r.context.roleGrants = [];
+    r.context.consentGrants = [{ ...share, expiresAt: later(-1) }];
+    refused(r, 'not_enrolled');
+  });
+
   it('refuses a revoked, deleted or quarantined source with a safe alternative', () => {
     for (const state of ['revoked', 'deleted', 'quarantined', undefined]) {
       const r = retrieval();

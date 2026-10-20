@@ -163,6 +163,7 @@ const ROWS: Row[] = [
   ['pipeline:ci', 'CI (the merge gate)', 'pipeline', 'C2', 'platform', '', 'github-pages', 'Nothing ships; production keeps running what it has.', null, 'RB-08', '.github/workflows/ci.yml'],
   ['pipeline:course-engine', 'Course Engine source gate', 'pipeline', 'C3', 'platform', '', '', 'Course Engine source changes cannot merge; no deployed service is affected.', null, 'RB-08', '.github/workflows/course-engine.yml'],
   ['pipeline:pages', 'Deploy to Pages', 'pipeline', 'C2', 'platform', '', 'github-pages', 'A fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/pages.yml'],
+  ['pipeline:starter-ci', 'Starter monorepo CI', 'pipeline', 'C3', 'platform', '', '', 'The starter backbone cannot merge; no deployed service is affected.', null, 'RB-08', '.github/workflows/starter-ci.yml'],
   ['pipeline:functions', 'Deploy Edge Functions', 'pipeline', 'C2', 'platform', '', 'supabase-edge-runtime', 'A function fix cannot ship by the normal route.', null, 'RB-08', '.github/workflows/functions.yml'],
   ['pipeline:schema-deploy', 'Schema deploy (Supabase Branching, db push)', 'pipeline', 'C1', 'data', '', 'supabase-db', 'Production silently stops receiving migrations; the repository stays green. This failed unseen for three days on 18 September.', null, 'RB-09', 'supabase/DEPLOY.md'],
   ['pipeline:production-smoke', 'Hourly production probe (the only automated monitor)', 'pipeline', 'C1', 'platform', '', 'github-pages supabase-db', 'Nobody is told the app is down; the next signal is a student message.', null, 'RB-01', '.github/workflows/production-smoke.yml'],
@@ -174,6 +175,7 @@ const ROWS: Row[] = [
   ['pipeline:contrast', 'Daily contrast sweep', 'pipeline', 'C3', 'platform', '', '', 'A colour regression ships a day later than it could be found.', null, 'RB-08', '.github/workflows/contrast.yml'],
   ['pipeline:hawkscan', 'Dynamic security scan', 'pipeline', 'C3', 'security', '', '', 'Scans pause; no runtime effect.', null, 'RB-08', '.github/workflows/hawkscan.yml'],
   ['pipeline:workflow-lab', 'Workflow Lab checks (standalone Next.js app)', 'pipeline', 'C3', 'platform', '', '', 'The Workflow Lab app loses its automated typecheck, lint, test and build; the Semester app is unaffected.', null, 'RB-08', '.github/workflows/workflow-lab.yml'],
+  ['pipeline:release-package-ci', 'Supplemental release CI (evidence checker and app gates)', 'pipeline', 'C3', 'platform', '', '', 'Release evidence checks and the release-package tests stop running on pull requests; the app gates in the other workflows still run.', null, 'RB-08', '.github/workflows/release-package-ci.yml'],
   ['pipeline:codeql', 'Static analysis of the source (CodeQL)', 'pipeline', 'C3', 'security', '', '', 'Source analysis pauses; no runtime effect. Skipped, not red, where code scanning is unavailable.', null, 'RB-08', '.github/workflows/codeql.yml'],
 ];
 

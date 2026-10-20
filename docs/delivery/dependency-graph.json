@@ -1,0 +1,42 @@
+{
+  "$source": "Semester delivery-management specification, 'Dependency graph' flowchart and the hard/soft dependency lists in RDY-INC-003. Edge direction: 'from' must precede 'to'. Node statuses are the delivery state of each component; all are 'proposed' until evidence shows otherwise.",
+  "$note": "Edges and statuses are a starting point. Edges marked as inferred were not drawn in the source: student_notification_service -> receipts_support_handoff. 'alerting' is a hard dependency of RDY-INC-003 but has no edge in the source flowchart, so it is a node with no edges.",
+  "nodes": [
+    {"id": "institution_activation", "label": "Institution activation", "status": "proposed"},
+    {"id": "identity_context", "label": "Identity and role mapping", "status": "proposed"},
+    {"id": "source_authority_register", "label": "Source-authority register", "status": "proposed"},
+    {"id": "policy_enforcement", "label": "Policy enforcement", "status": "proposed"},
+    {"id": "SIS_adapter", "label": "Source adapters (SIS)", "status": "proposed"},
+    {"id": "readiness_case_workflow", "label": "Readiness case workflow", "status": "proposed"},
+    {"id": "read_model_student_screen", "label": "Read model and student screen", "status": "proposed"},
+    {"id": "registrar_queue", "label": "Registrar stale-case queue", "status": "proposed"},
+    {"id": "receipts_support_handoff", "label": "Receipts and support handoff", "status": "proposed"},
+    {"id": "reconciliation", "label": "Reconciliation", "status": "proposed"},
+    {"id": "audit_event_store", "label": "Audit and evidence", "status": "proposed"},
+    {"id": "alerting", "label": "Alerting", "status": "proposed"},
+    {"id": "student_notification_service", "label": "Student notification service", "status": "proposed"},
+    {"id": "release_gate", "label": "Release gate", "status": "proposed"},
+    {"id": "feature_flag_activation", "label": "Feature flag activation", "status": "proposed"},
+    {"id": "hypercare_pilot_measurement", "label": "Hypercare and pilot measurement", "status": "proposed"}
+  ],
+  "edges": [
+    {"from": "institution_activation", "to": "identity_context", "type": "hard"},
+    {"from": "institution_activation", "to": "source_authority_register", "type": "hard"},
+    {"from": "identity_context", "to": "policy_enforcement", "type": "hard"},
+    {"from": "source_authority_register", "to": "SIS_adapter", "type": "hard"},
+    {"from": "policy_enforcement", "to": "readiness_case_workflow", "type": "hard"},
+    {"from": "SIS_adapter", "to": "readiness_case_workflow", "type": "hard"},
+    {"from": "readiness_case_workflow", "to": "read_model_student_screen", "type": "hard"},
+    {"from": "readiness_case_workflow", "to": "registrar_queue", "type": "hard"},
+    {"from": "read_model_student_screen", "to": "receipts_support_handoff", "type": "hard"},
+    {"from": "registrar_queue", "to": "reconciliation", "type": "hard"},
+    {"from": "SIS_adapter", "to": "reconciliation", "type": "hard"},
+    {"from": "policy_enforcement", "to": "audit_event_store", "type": "hard"},
+    {"from": "reconciliation", "to": "audit_event_store", "type": "hard"},
+    {"from": "receipts_support_handoff", "to": "release_gate", "type": "hard"},
+    {"from": "audit_event_store", "to": "release_gate", "type": "hard"},
+    {"from": "release_gate", "to": "feature_flag_activation", "type": "hard"},
+    {"from": "feature_flag_activation", "to": "hypercare_pilot_measurement", "type": "hard"},
+    {"from": "student_notification_service", "to": "receipts_support_handoff", "type": "soft"}
+  ]
+}

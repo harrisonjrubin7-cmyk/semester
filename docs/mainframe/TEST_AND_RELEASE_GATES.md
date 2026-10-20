@@ -42,3 +42,99 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 A green typecheck is not production readiness. Deployment readiness for the device plan stays `not-deployed`. Record authority stays `device-local`.
 
 Do not weaken `keyless.test.tsx`. The syllabus door stays first. The by-hand door stays keyless-only.
+
+## Handoff intake and coverage matrix (11 October 2026, #1475)
+
+| Command | Working directory | Result |
+| --- | --- | --- |
+| `npx vitest run src/lib/path-readiness.test.ts` | `app/` | 5 new tests failed first (`unmatched` undefined); exit 0 after the change, 20 tests passed. |
+| `npx vitest run src/lib/docs/ecosystem.test.ts` | `app/` | Exit 0. 12 tests passed; `problems: []` over 281 routes and 122 capabilities. Controls prove a missing path, an over-claimed status and a ghost route are each reported. |
+| `npx tsc -b` | `app/` | Exit 0, before and after the rebase onto `ccf2d45f`. |
+| `npm run lint` | `app/` | Exit 0. Styles, labels and terms passed. |
+| `npm run check:university` | `app/` | Exit 0. |
+| `npm run design-system:check` | `app/` | Exit 0. 69 tests passed. |
+| `npm test` | `app/` | 1516 files passed, 4 failed, 1 skipped; 24192 tests passed, 4 failed, 69 skipped. One failure was plugin debris at the repository root (`.md-linker`, `.ruff_cache`; removed). Three reproduce on the untouched base `a4742f6b`: `src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`. |
+| `npm run test:shuffle` | `app/` | Seed `1791757697990`. 1517 files passed, 3 failed, 1 skipped; 24196 tests passed, 3 failed. The same three. No ordering failure. |
+| `npm run build` | `app/` | Exit 0 after the rebase. |
+| Read-only SQL on production `lzrqvlugnawcgywkhqlz` | Supabase MCP | 234 applied migrations, md5 of the ordered version list `b3f233cab6a321ee41bdc2d7716fb64f`, equal to the repository's. Nothing applied. |
+| `curl` and the authorized Vercel fetch on the branch preview | — | 302 (Vercel Authentication) and 403 (team not authorized for this connection). Preview built, not seen. |
+
+Not run: `verify.sh` (no Docker), HawkScan locally (no `HAWK_API_KEY`), a browser walk (one sentence changed in an existing list), any remote migration.
+
+## Phase 1 foundation hardening, first pass (11 October 2026, #1475, second push)
+
+Recorded from `docs/execute/31-phase-1-foundation-report.md`; the full-suite figures below are filled from the gate run on this head.
+
+| Gate | Result |
+| --- | --- |
+| `npx vitest run server/institution/gateway.test.ts` | 48 passed (2 new; both watched red first) |
+| `npx vitest run src/lib/docs/check-suites.test.ts` | 3 passed (red on a dropped manifest line) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh gradebook` | ✓ 145 checks on PostgreSQL 16, local; red run: "a registrar whose grant was revoked exporting 2026FA — was allowed" |
+| `npm run ecosystem:build` / `ecosystem:check` | 12 passed, twice |
+| `REGISTERS=write` trust docs | 38 passed; CONTROL-FACTS.md regenerated |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1521 passed, 1 skipped (1522); Tests 24204 passed, 69 skipped (24273) |
+
+## Phase 2 daily loop, first pass (12 October 2026, #1475, third push)
+
+| Gate | Result |
+| --- | --- |
+| `npx vitest run ../packages/institution/src/policy.test.ts` | 56 passed (1 new; red first: the revoked share was allowed) |
+| `npx vitest run src/state/reducer.test.ts` | 117 passed (4 new; red when refresh appended: 2 failed) |
+| `npx vitest run src/state/storage.test.ts` | 33 passed (3 new; red before `onb` was persisted: 3 failed) |
+| `npx vitest run src/state` | 42 files, 556 passed |
+| CI run 38185868815 on `0d1c2c11` | Typecheck, Lint, Design-system gates, Test, Test in other timezones, Test in a different order, Build, Install PostgreSQL 17, Check the database policies (152 suites) all passed; Performance budgets failed (main's overrun, D-1475 §8) |
+| Local, merged head after `1799c0cf` (12 Oct) | `tsc -b`, `lint`, `check:university`, `design-system:check` (69), `budgets` (Export 69.4 KB, Recovery 67.3 KB, ok), `test` 1522 files / 24232 tests passed (2 files, 76 tests skipped), `build`, `check.sh` every policy suite (gradebook 148, releasing with a 200-character key) all passed |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 1 skipped (1523); Tests 24227 passed, 69 skipped (24296). A first run failed `export.test.ts`, `merge.test.ts`, `privacy.test.ts` on the new persisted field until the three tables named it. |
+
+## Phase 3 cross-role workflows, first pass (12 October 2026, #1475, fourth push)
+
+| Gate | Result |
+| --- | --- |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh gradebook help-requests student-accounts` | ✓ 148, ✓ 76, ✓ 70 checks on PostgreSQL 16, local; red run with the emit removed: "the release wrote one outbox event, and the replay none — expected 1, got 0" |
+| `npx vitest run src/lib/path-readiness.test.ts src/components/RegistrationReadiness` | 22 passed (1 new; red first) |
+| `REGISTERS=write` trust docs | 38 passed; 237 migration files |
+| `npm run ecosystem:build` | 12 passed |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm test` | all exit 0; design-system 69 tests; suite: Test Files 1522 passed, 2 skipped (1524); Tests 24232 passed, 76 skipped (24308). A first run found the new migration's version taken by main's `20261012000000_ops_projection_dashboard.sql` and the definer register, EVENTS producers and migration-order guards all red on it; renamed to `20261012010000`, modelled as a redefinition, registers regenerated. |
+
+## Phase 4 institutional operation, first pass (12 October 2026, #1475, fifth push)
+
+| Gate | Result |
+| --- | --- |
+| Merged head (`c47a32db`, main +104) before any Phase 4 change: `tsc -b`, `lint`, `check:university`, `design-system:check` (69), `build`, `budgets`, `registers` (1985), `ecosystem:check` (12), `npm test` | all exit 0 except `npm test`: 2 files failed of 1530 (CONTROL-FACTS.md said 237 migration files, the tree had 238; `MOCKS_MODULES` listed `src/components/MyRules.test.tsx` twice after the merge). Both repaired in this push. |
+| `time SEMESTER_CHECK_PG_ANY=1 supabase/restore.sh` | six comparisons ✓ on 342 tables; dump 0.6 s / 3,679,195 bytes; restore 7.6 s; 28.3 s wall; PostgreSQL 16 local — filed in `docs/evidence/restore/2026-10-12-logical-rehearsal.md` |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh identity-provisioning integration-control-plane offboarding-grants` | red before `20261012055000` existed (three distinct failures, quoted in the report); then ✓ 31 (was 19), ✓ 96 (was 76), ✓ 15 (was 13) checks |
+| `REGISTERS=write` definer, control-facts, role-launch, classification, isolation, platform-reference, check-suites, migration-order guards | 137 passed; three generated registers rewritten; `scim_group_mapping_history` added to `table-classification.json` |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest, 153) | first run: 151 ✓, `grants` ✗ (the two revoke functions were callable by a signed-in account and not on the deliberate list) and `indexes` ✗ (`integration_scopes(proposed_by)` had no covering index); both guards did their job, the index and the list entry were added, and `grants` 13 / `indexes` 4 / `integration-control-plane` 96 re-ran green |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check` (69), `npm run build`, `budgets` (Export 61.3 KB, Recovery 58.5 KB, ok), `npm test`, `npm run test:shuffle` (seed 1791814444693) | all exit 0; suite: Test Files 1528 passed, 2 skipped (1530); Tests 24270 passed, 80 skipped (24350), in file order and shuffled. The first whole-head run was red in five guard files, each correctly: the definer register wanted rows for the two revoke functions (and refused a `redefines` entry for `integration_approve_scope`, which the advisor's 151 already count); `RETENTION.md` wanted an answer for `scim_group_mapping_history` (and refused a back-ticked `admin` it read as a table); the evidence register wanted the new restore file; CONTROL-FACTS followed the definer count; and the repository map refused `.md-linker/`, a directory a local plugin writes, which is deleted and not committed. |
+| Merged head after main moved again (`d7d5c9e0`, main +16, `operator/` workspace added; `npm ci` rerun): `tsc -b`, `lint`, `check:university`, `design-system:check`, `build`, `budgets ok`, `registers`, `check.sh` (153 suites), `npm test`, `test:shuffle` (seed 1791815086155) | all exit 0; Test Files 1528 passed, 2 skipped (1530); Tests 24270 passed, 80 skipped (24350), in order and shuffled |
+| After the Vercel Agent review of `40215865` (history trigger aborted the foreign keys' own work): `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh identity-provisioning` | red first: `Tenant SSO policy history is immutable.` on `delete from auth.users`; then ✓ 38 checks (was 31); `tenant-sso-policy` 14, `k12-guardians` 66, `integration-control-plane` 96, `offboarding-grants` 15, `grants` 13, `indexes` 4 unchanged and green; every suite and the register guards re-run below |
+
+## Phase 5 enable and replace by domain, first pass (12 October 2026, #1475, sixth push)
+
+| Gate | Result |
+| --- | --- |
+| Whole-head `npm test` on the merged head (`05113d39`, main +9 since the fifth push) before any Phase 5 change | 2 files failed of 1533, each correctly: `scripts/edge-access-saga.test.ts` (the generated Edge copy of `policy.ts` predated Phase 2's retrieval fix) and `developers.test.ts` (the plugin cache directory `.anchor/`, deleted). The copy was regenerated with `node scripts/edge-access-saga.ts`. |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center student-accounts` | red before `20261012060000` / `20261012070000` existed (`expected "does not approve two areas", got "<NULL>"`; `expected "already recorded", got "<NULL>"`); then ✓ 86 (was 85) and ✓ 75 (was 70) checks. Three fixture faults in the new student-accounts probe were found and fixed on the way (foreign key on a made-up request id, the request guard speaking for a signed-in caller, the audit tally 32 → 34). |
+| `REGISTERS=write` definer-register and trust-docs guards | 46 passed; `CONTROL-FACTS.md` rewritten for the new migration count |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest, 154) | every policy check passed, exit 0 (PostgreSQL 16, local) |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run build`, `budgets` (first load 467.5 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791819496054) | all exit 0; Test Files 1531 passed, 2 skipped (1533); Tests 24302 passed, 81 skipped (24383), in file order and shuffled |
+
+## Phase 5 enable and replace by domain, second pass (12 October 2026, #1475, seventh push)
+
+| Gate | Result |
+| --- | --- |
+| Merged head before any change (main +2 merges: two migrations shared `20261012040000`; `killswitch-release` unlisted in `check-suites.txt`) | version-uniqueness and `check-suites.test.ts` both red on main itself; main moved the kill-switch release to `20261012050000`, so this branch's provisioning migration moved to `20261012055000`; the suite is listed |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center` | red before `20261012090000` existed (`expected 13, got 0`; the first attempt's literal 12 was my miscount, the audit trail shows 13 moves); then ✓ 90 checks (was 86) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center` after the advisory lock on `migration_approval_stamp` (D-1475 §21) | red first (`expected 1, got 0` advisory locks after an approval); then ✓ 100 checks. Lock presence only; no two-session race was driven |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest) | 155 suites ✓, `every policy check passed`, exit 0 (PostgreSQL 16, local); `killswitch-release` 17 checks |
+| `REGISTERS=write` docs, definer-register, role-launch and master-register guards | 880 passed; `CONTROL-FACTS.md` and `EVENTS.md` regenerated |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run build`, `budgets` (first load 471.1 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791835478685) | all exit 0; Test Files 1534 passed, 2 skipped (1536); Tests 24390 passed, 81 skipped (24471), in file order and shuffled |
+
+## Phase 5 enable and replace by domain, back-move reason (12 October 2026, #1475, eighth push)
+
+| Gate | Result |
+| --- | --- |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh migration-center` | red before `20261012100000` existed (`expected "needs a reason", got "<NULL>"`); then ✓ 99 checks (was 90) |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` (every suite on the manifest) | 155 suites ✓, `every policy check passed`, exit 0 (PostgreSQL 16, local) |
+| Control for the two new screen tests | with the reason validation in `GoBack` disabled: 2 failed of 17; restored: 17 passed |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run design-system:check`, `npm run design-system:report`, `npm run build`, `budgets` (first load 471.1 KB of 479.0 KB, largest file 435.7 KB of 480.0 KB, 93 routes), `npm test`, `npm run test:shuffle` (seed 1791837030642) | all exit 0; Test Files 1534 passed, 2 skipped (1536); Tests 24395 passed, 81 skipped (24476), in file order and shuffled |

@@ -1,0 +1,59 @@
+# Source: "Learn and Study Studio" and "Course source packet" sections of the brief.
+capability:
+  id: CAP-LEARN-001
+  title: Study Studio
+  placement: native
+  modes:
+    - notes
+    - cards
+    - reading
+    - field_guide
+    - quiz
+    - figures
+    - cases
+    - cram
+    - listen
+    - teach_it_back
+    - weekly_plan
+  privacy:
+    default: private_to_student
+    sharing_requires: explicit_student_choice
+  ai:
+    allowed:
+      - summarize_student_provided_material
+      - generate_study_questions
+      - explain_concepts_using_approved_course_sources
+      - cite_or_link_to_available_sources
+      - draft_private_study_aids
+    prohibited:
+      - submit_coursework_as_student
+      - bypass_course_AI_policy
+      - fabricate_source_citations
+      - access_restricted_student_records
+      - represent_generated_work_as_instructor_feedback
+  course_rule_behavior:
+    - show_course_AI_policy_before_assistance
+    - restrict_tools_when_course_policy_requires
+    - label_every_response_AI_assisted
+    - retain_student_control_over_export_and_deletion
+
+course_source_packet:
+  course_id: required
+  term_id: required
+  owner: course_instructor_or_authorized_staff
+  sources:
+    allowed:
+      - syllabus
+      - instructor_uploaded_material
+      - public_course_page
+      - student_selected_personal_notes
+    prohibited:
+      - other_students_private_work
+      - hidden_grading_material
+      - restricted_accommodation_information
+      - unrelated_student_records
+  ai_policy:
+    status: required
+    rules_url: required
+    permitted_assistance: required
+    disclosure_requirements: required

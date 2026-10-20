@@ -1,0 +1,17 @@
+flowchart TD
+ Shell[One account/search/workspace/Action Center] --> Discovery[Scoped workspace discovery]
+ Discovery --> Console[Existing console extended]
+ Console --> Inbox[Work and approvals]
+ Inbox --> Gate[Existing governance / proposed 14-check contract]
+ Gate --> Commands[Exact digest / idempotent domain commands]
+ Commands --> Data[Canonical state / audit / outbox]
+ Data --> Worker[Publisher / retry / DLQ]
+ Worker --> Rail[Regulated rail / approved adapter]
+ Rail --> Reconcile[Authoritative receipt / reconciliation]
+ Reconcile --> Data
+ Data --> Projection[Scoped source/freshness read models]
+ Projection --> Console
+ Projection --> Portal[Immutable audience packages]
+ Projection --> Agents[12 proposed observe agents]
+ Agents --> Draft[Bounded drafts / handoffs]
+ Draft --> Inbox
