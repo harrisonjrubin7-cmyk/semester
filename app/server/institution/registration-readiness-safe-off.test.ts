@@ -32,8 +32,11 @@ function request(path: string, body: unknown) {
   });
 }
 
-function commands(): RegistrationReadinessCommandBoundary & { start: ReturnType<typeof vi.fn>; evaluate: ReturnType<typeof vi.fn> } {
-  return { start: vi.fn(), evaluate: vi.fn() };
+function commands() {
+  const start = vi.fn();
+  const evaluate = vi.fn();
+  const boundary: RegistrationReadinessCommandBoundary = { start, evaluate };
+  return { boundary, start, evaluate };
 }
 
 function gateway(boundary: RegistrationReadinessCommandBoundary, safeOff: () => boolean) {
@@ -53,7 +56,7 @@ function gateway(boundary: RegistrationReadinessCommandBoundary, safeOff: () => 
 
 describe('registration-readiness safe-off', () => {
   it('refuses new evaluations before membership refresh or evaluator work', async () => {
-    const boundary = commands();
+    const { boundary, start } = commands();
     const { handle, refresh } = gateway(boundary, () => true);
 
     const response = await handle(request('/v1/registration-readiness/evaluations', { termId: '2027-spring' }));
@@ -63,11 +66,11 @@ describe('registration-readiness safe-off', () => {
       error: { code: 'registration_readiness_paused' },
     });
     expect(refresh).not.toHaveBeenCalled();
-    expect(boundary.start).not.toHaveBeenCalled();
+    expect(start).not.toHaveBeenCalled();
   });
 
   it('also pauses the evaluator follow-up route', async () => {
-    const boundary = commands();
+    const { boundary, evaluate } = commands();
     const { handle } = gateway(boundary, () => true);
 
     const response = await handle(request(
@@ -76,13 +79,13 @@ describe('registration-readiness safe-off', () => {
     ));
 
     expect(response.status).toBe(503);
-    expect(boundary.evaluate).not.toHaveBeenCalled();
+    expect(evaluate).not.toHaveBeenCalled();
   });
 
   it('is read on each request so an operator can resume without a restart', async () => {
     let paused = true;
-    const boundary = commands();
-    boundary.start.mockResolvedValue({
+    const { boundary, start } = commands();
+    start.mockResolvedValue({
       evaluationId: 'readiness-evaluation-1',
       id: 'readiness-command-0001',
       status: 'pending',
@@ -96,7 +99,7 @@ describe('registration-readiness safe-off', () => {
     expect((await handle(request('/v1/registration-readiness/evaluations', { termId: '2027-spring' }))).status).toBe(503);
     paused = false;
     expect((await handle(request('/v1/registration-readiness/evaluations', { termId: '2027-spring' }))).status).toBe(202);
-    expect(boundary.start).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledTimes(1);
   });
 });
 
