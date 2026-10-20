@@ -48,6 +48,7 @@ demand
 dining
 emit-domain-event
 erasure-clears-consent-snapshots
+event-relay
 evidence-graphs
 expansion
 export-withholds-guardian-restrictions

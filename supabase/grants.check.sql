@@ -565,6 +565,13 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261022090000_grade_release_student_actions.sql: a student's Action
+    -- Center items from released grades. The feed is security invoker over the
+    -- student's own rows and their own released grade versions; the settle is a
+    -- definer that checks auth.uid() owns the action, the version read and the
+    -- key. `event-relay.check.sql` proves each refusal.
+    'my_student_actions()',
+    'settle_student_action(want_action uuid, want_state text, want_version integer, want_key text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions

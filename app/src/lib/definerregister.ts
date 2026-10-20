@@ -339,6 +339,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_notification_preference', 'self-service', ['auth.uid()', 'p.school_id = want_school']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
   ['set_support_email_notice', 'self-service', ['auth.uid()']],
+  ['settle_student_action', 'self-service', ['auth.uid()', 'x.student_id = me', 'a.version <> want_version']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['skip_onboarding_step', 'self-service', ['auth.uid()']],
@@ -508,10 +509,6 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['read_tenant_projection'],
   },
   {
-    file: '20261012000000_ops_projection_dashboard.sql',
-    functions: ['ops_projection_dashboard'],
-  },
-  {
     // Redefined, not added: the release now emits its outbox event in the
     // same transaction, so the row is held to the file that last wrote it.
     file: '20261012010000_gradebook_release_emits_event.sql',
@@ -532,10 +529,6 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261008223000_privileged_role_mfa.sql',
     functions: ['privileged_mfa_required'],
-  },
-  {
-    file: '20261008190500_projection_outbox_operations.sql',
-    functions: ['replay_domain_event'],
   },
   {
     file: '20261008190000_console_postmerge_safety.sql',
@@ -587,6 +580,14 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    // `settle_student_action` is new. The other two are held here because this
+    // file last wrote them: the dashboard learned the student_actions source,
+    // and replay accepts one consumer's parked delivery as well as a parked
+    // event. Neither was in the second reading, so neither is `redefines`.
+    file: '20261022090000_grade_release_student_actions.sql',
+    functions: ['ops_projection_dashboard', 'replay_domain_event', 'settle_student_action'],
   },
 ];
 

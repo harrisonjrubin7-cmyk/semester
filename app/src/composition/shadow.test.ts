@@ -14,8 +14,9 @@ const view = (over: Partial<TodayView> = {}): TodayView => ({ on: '2026-10-08', 
 const entry = (id: string, kind: 'appointment' | 'deadline' | 'class') => ({ id, title: id, kind, on: '2026-10-08', startMin: null, durationMin: 0, provenance: 'student_entered' as const, done: false });
 
 describe('the known gaps', () => {
-  it('are empty: every source the Action Center ranks, the domain layer now has', () => {
-    expect(KNOWN_GAPS).toEqual([]);
+  it('excuse released feedback and nothing else: every other source the Action Center ranks, the domain layer has', () => {
+    expect(KNOWN_GAPS.map(([re]) => re.source)).toEqual(['^feedback:']);
+    expect(diffToday(side(['a']), side(['feedback:9', 'a']), KNOWN_GAPS).unexplained).toEqual([]);
   });
 
   // The control: what used to be excused is now a finding. A comparator that

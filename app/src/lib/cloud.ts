@@ -1354,6 +1354,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+  // The Action Center items released grades made for you
+  // (`20261022090000_grade_release_student_actions.sql`): named by
+  // `student_id` with `on delete cascade`, and gone with a grade version too.
+  { table: 'student_actions', column: 'student_id' },
 ];
 
 /**

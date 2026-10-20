@@ -1426,6 +1426,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
       // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
       'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
+      // Not a producer: the grade-release relay reads gradebook.grades_released and writes only its own receipts,
+      // delivery rows and student actions. It drains one event type for one consumer and publishes nothing, and no
+      // scheduler calls its tick, so "none published" still holds.
+      'supabase/migrations/20261022090000_grade_release_student_actions.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);

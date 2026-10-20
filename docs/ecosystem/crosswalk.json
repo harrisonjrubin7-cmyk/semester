@@ -3647,23 +3647,29 @@
       ],
       "modules": [
         "app/src/lib/office-actions.ts",
-        "app/src/lib/office-actions-remote.ts"
+        "app/src/lib/office-actions-remote.ts",
+        "app/src/lib/student-actions.ts",
+        "app/src/lib/student-actions-remote.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260928302000_office_action_feed.sql"
+        "supabase/migrations/20260928302000_office_action_feed.sql",
+        "supabase/migrations/20261022090000_grade_release_student_actions.sql"
       ],
       "tests": [
         "app/src/components/ActionCenter.test.tsx",
         "app/src/components/TodayActionCenter.test.tsx",
-        "app/src/lib/office-actions.test.ts"
+        "app/src/lib/office-actions.test.ts",
+        "app/src/components/TodayActionCenter.feedback.test.tsx",
+        "app/src/lib/student-actions.test.ts",
+        "supabase/event-relay.check.sql"
       ],
       "flags": [
         "today_action_center",
         "office_action_feed"
       ],
-      "note": "Ranked action list on Today, folding in office actions read by rpc my_office_actions when the feed flag is on.",
-      "gap": "Both flags default off per experience-flags.ts."
+      "note": "Ranked action list on Today, folding in office actions read by rpc my_office_actions when the feed flag is on, and released feedback read by rpc my_student_actions (rows the grade-release relay writes from gradebook.grades_released) and settled by rpc settle_student_action.",
+      "gap": "Both flags default off per experience-flags.ts. The grade-release relay's tick (run_student_action_relay) has no scheduler, so released feedback appears only after an operator runs it."
     },
     "#/student/activities": {
       "status": "tested",

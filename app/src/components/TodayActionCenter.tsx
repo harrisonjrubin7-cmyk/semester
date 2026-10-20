@@ -12,6 +12,8 @@ import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
 import { freshnessLine, freshnessState, SOURCE_TEXT, type SourceLabel } from '../lib/source';
 import { officeActionToAction } from '../lib/office-actions';
 import { useOfficeActions } from '../lib/office-actions.hook';
+import { feedbackRowId, isFeedbackAction, studentActionToAction, withServerState } from '../lib/student-actions';
+import { useStudentActions, type FeedbackState } from '../lib/student-actions.hook';
 import { registrationActions } from '../lib/registration-actions';
 import { useRegistrationPlan } from '../lib/registration-plan';
 import { ownedScope } from '../lib/standing';
@@ -26,11 +28,11 @@ import {
 } from '../lib/today-center';
 import { pathSnapshot } from '../lib/today-decision';
 import { useNow, useStore } from '../state/store';
-import { ActionCenter } from './ActionCenter';
+import { ActionCenter, type RemoteActions } from './ActionCenter';
 import { QuickActions } from './QuickActions';
 import { SourceBadge } from './SourceBadge';
 import { shadowEnabled } from '../composition/shadow';
-import { Meter } from './ui';
+import { Meter, Notice } from './ui';
 
 /** How far ahead the commitment rows look. "In 9 days" is the furthest the brief's example reaches. */
 const HORIZON_DAYS = 10;
@@ -59,6 +61,28 @@ function sourceWords(source: SourceLabel | undefined): string {
   return source === 'needs_review' ? ` · ${SOURCE_TEXT[source]} · date not checked` : ` · ${SOURCE_TEXT[source]}`;
 }
 
+/**
+ * Released feedback's own states, under the Action Center. Empty needs nothing
+ * here: the Action Center already says when nothing needs the student.
+ */
+function FeedbackStatus({ state, reload }: { state: FeedbackState; reload: () => void }) {
+  if (state.kind === 'loading') {
+    return <p className="today-sync-status" role="status">Checking for released feedback…</p>;
+  }
+  if (state.kind === 'error') {
+    return (
+      <Notice alert>
+        Released feedback could not be loaded, so it is missing from this list. Your grades are unaffected.{' '}
+        <button type="button" className="workspace-text-button" onClick={reload}>Try again</button>
+      </Notice>
+    );
+  }
+  if (state.kind === 'ready' && state.stale) {
+    return <Notice>Released feedback changed on another device. This list now shows the latest.</Notice>;
+  }
+  return null;
+}
+
 /** Phase 2 of the Today migration: the domain layer run beside this one, drawing nothing. Off unless the build opts in. */
 const TodayShadow = lazy(() => import('../composition/TodayShadow'));
 
@@ -66,7 +90,14 @@ export function TodayActionCenter({
   registrationDay = false,
   officeActions = false,
   officeAccountId,
-}: { registrationDay?: boolean; officeActions?: boolean; officeAccountId?: string | null } = {}) {
+  feedbackAccountId,
+}: {
+  registrationDay?: boolean;
+  officeActions?: boolean;
+  officeAccountId?: string | null;
+  /** The signed-in account for released feedback, for tests; the store's otherwise. */
+  feedbackAccountId?: string | null;
+} = {}) {
   const { state, dispatch, catalog, account, sync } = useStore();
   const now = useNow();
   const wide = useMedia(DESKTOP);
@@ -74,7 +105,6 @@ export function TodayActionCenter({
   // leads with and whether the day is done. `useDeviceLibrary` keeps the two
   // readers in step through its change event.
   const library = useDeviceLibrary(`${ACTIONS_PREFIX}:${account?.id || 'device'}`, readActionChoices, EMPTY_ACTION_CHOICES);
-  const choices = library.value.choices;
 
   const path = useMemo(() => pathSnapshot(state.requirements, state.taken), [state.requirements, state.taken]);
   const ownIds = useMemo(() => state.courses.map((c) => c.course.id), [state.courses]);
@@ -92,6 +122,21 @@ export function TodayActionCenter({
   // student marked done in the feed stay out.
   const office = useOfficeActions(officeActions, officeAccountId);
   const officeList = office.state.kind === 'ready' ? office.state.actions : null;
+  // Released feedback (B14): the server's rows, shown whenever the Action
+  // Center is, to a signed-in student. Their done and dismissed are the
+  // server's, so the device's choices are read with the server's laid over.
+  const feedback = useStudentActions(true, feedbackAccountId !== undefined ? feedbackAccountId : (account?.id ?? null));
+  const feedbackRows = feedback.state.kind === 'ready' ? feedback.state.actions : null;
+  const choices = useMemo(() => withServerState(library.value.choices, feedbackRows), [library.value.choices, feedbackRows]);
+  const { settle: settleFeedback } = feedback;
+  const remote = useMemo<RemoteActions>(
+    () => ({
+      owns: isFeedbackAction,
+      settle: (actionId, to) => settleFeedback(feedbackRowId(actionId), to),
+      choices: (local) => withServerState(local, feedbackRows),
+    }),
+    [settleFeedback, feedbackRows],
+  );
   const actions = useMemo(
     () => [
       ...todayActions({
@@ -101,8 +146,9 @@ export function TodayActionCenter({
       // Registration readiness (Phase C), only while the mode is showing.
       ...(registrationDay ? registrationActions(registration.data, registration.cart, registration.catalog, now) : []),
       ...(officeList ?? []).filter((a) => a.doneAt === null).map((a) => officeActionToAction(a, now.getTime())),
+      ...(feedbackRows ?? []).map(studentActionToAction),
     ],
-    [path, upcoming, state.done, reviewDue, scope.empty, state.maintenance, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList],
+    [path, upcoming, state.done, reviewDue, scope.empty, state.maintenance, registrationDay, registration.data, registration.cart, registration.catalog, now, officeList, feedbackRows],
   );
   const top = useMemo(() => rank(actions, choices, now.getTime()).mostImportant, [actions, choices, now]);
   const leadingRoute = top ? fromHash(top.action.primary.target) : null;
@@ -218,7 +264,8 @@ export function TodayActionCenter({
               Focus on this
             </button>
           </div>
-          <ActionCenter actions={actions} closure={showClosure} />
+          <ActionCenter actions={actions} closure={showClosure} remote={remote} />
+          <FeedbackStatus state={feedback.state} reload={feedback.reload} />
         </section>
 
         <section className="action-panel action-panel-secondary" aria-labelledby="action-path-heading">
