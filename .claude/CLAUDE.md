@@ -1,10 +1,7 @@
 # semester
-Language / platform: yes
-Market: continue
 
-# AI strategy
-Use Haiku for simple tasks; Sonnet for main dev; Opus for complex arch or if Sonnet fails 2x.
-Keep context low: Grep before Read, targeted reads only.
+Web app for students, faculty and staff.
 
-# Rules
-Concise responses. No overengineering. No unrequested extras.
+- Stack: TypeScript, React + Vite (`app/`); PostgreSQL via Supabase (`supabase/`).
+- Student records are covered by FERPA: no student data in logs, fixtures, issues or commits.
+- Gates, design system and working rules: the root `CLAUDE.md`.

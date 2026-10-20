@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { act, useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { loadSeed } from '../data/seed';
@@ -16,6 +16,9 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  // The seed dates are fixed; Mine orders by today, so today is fixed too.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 19, 12));
   localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
@@ -25,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
 function SeedMine() {

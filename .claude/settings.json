@@ -1,4 +1,8 @@
 {
+  "enabledPlugins": {
+    "token-optimizer@synced": false,
+    "token-optimizer@claudetokensap-marketplace": false
+  },
   "permissions": {
     "deny": [
       "Read(node_modules/**)",
