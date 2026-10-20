@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 0007 · One policy decision point, asked in one vocabulary
 
 **Status:** Accepted for the vocabulary and the evaluator; **adoption by route is

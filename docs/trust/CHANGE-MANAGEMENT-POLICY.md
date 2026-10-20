@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T18:54:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester change management policy — controlled draft
 
 - **Status:** `PARTIAL / NOT FULLY OPERATED`

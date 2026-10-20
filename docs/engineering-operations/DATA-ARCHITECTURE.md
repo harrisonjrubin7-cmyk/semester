@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/trust/DATA-INVENTORY.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-20T15:19:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Data Architecture
 
 | Control | Value |

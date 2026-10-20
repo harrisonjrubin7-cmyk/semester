@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Accessibility overview
 
 Semester maintains automated accessibility checks, design guidance, issue tracking, and a critical-path conformance plan. Current evidence supports an accessibility program and self-assessment—not a claim of WCAG 2.2 AA conformance or a completed VPAT/ACR.

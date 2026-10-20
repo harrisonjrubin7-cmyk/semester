@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/developers/HOW-TO-SHIP-BEHIND-A-FLAG.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # How to add a route to the institution gateway
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`

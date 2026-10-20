@@ -1,3 +1,40 @@
+---
+stale-refs:
+  - source: RESTORE.md
+    changed_at: "2026-10-19T02:53:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md
+    changed_at: "2026-10-19T02:53:20"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/infrastructure/DISASTER-RECOVERY.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/04-CAPACITY-PLANNING.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 07 · Resilience, backup and restore, disaster recovery, dependency and regional failure, chaos
 
 > Part of the [SRE pack](README.md). Status: **proposed; recovery is unmeasured.** Code: `app/src/lib/sre/catalog.ts` (class targets) and `chaos.ts`. Controlling documents: [RESTORE.md](../../RESTORE.md), [DISASTER-RECOVERY-TEST-PLAN.md](../engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md), [DEGRADED-MODE-MAP.md](../DEGRADED-MODE-MAP.md), [INCIDENT-RECOVERY-PLAYBOOK.md](../INCIDENT-RECOVERY-PLAYBOOK.md). Experiments: [generated/EXPERIMENTS.md](generated/EXPERIMENTS.md).

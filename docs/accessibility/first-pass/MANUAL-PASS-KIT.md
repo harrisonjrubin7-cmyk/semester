@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/accessibility/AT-PASS-PROTOCOL.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/first-pass/2026-10-04-automated-sweeps.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Manual assistive-technology pass: kit for the first run
 
 **Status: prepared 2026-10-04. The pass has NOT been run.** This folder holds working records, not registered evidence: the dated, signed result of the pass is filed as `docs/evidence/accessibility-baseline.md`, the artifact `docs/PROOF-CALENDAR.md` already names for it, and registered in `app/src/lib/ops/evidence.ts` in the same change. Every result cell below is `Not tested`. This is the kit

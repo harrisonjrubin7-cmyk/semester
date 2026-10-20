@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester encryption and key-management standard — controlled draft
 
 - **Status:** `PARTIAL / PROVIDER-DEPENDENT`

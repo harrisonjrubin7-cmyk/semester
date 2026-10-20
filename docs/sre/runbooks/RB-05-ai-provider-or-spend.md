@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # RB-05 · AI provider failing, or spend running away
 
 Class C2 · role ai · alerts `burn:ask_semester`, `ai:spend-half-cap`, `ai:kill-switch-engaged` · components `fn:claude`, `anthropic`, `openai`, `institution-gateway`.

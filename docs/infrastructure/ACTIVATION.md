@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: infra/bootstrap/README.md
+    changed_at: "2026-10-20T15:19:13"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Activation checklist
 
 Nothing in `infra/` has run. Do these in order; each is its own change record.

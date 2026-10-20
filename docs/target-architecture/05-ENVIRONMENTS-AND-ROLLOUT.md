@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 05 · Environment strategy: local, preview, integration, staging, production, canary, tenant rings
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

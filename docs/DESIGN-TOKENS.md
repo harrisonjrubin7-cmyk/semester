@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/DATA-VISUALIZATION-SYSTEM.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-TOKEN-ARCHITECTURE.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Design tokens — reference
 
 Every token in `app/src/styles/tokens.css`, with the value it resolves to, and

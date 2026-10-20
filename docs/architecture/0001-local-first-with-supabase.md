@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 0001 · Local-first working copy, Supabase as the second copy
 
 **Status:** Accepted — and **under review**, because the transformation command

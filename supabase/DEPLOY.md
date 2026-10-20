@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Deploying the backend
 
 Edge Functions, the SQL they read, and a scheduler. No function needs the app

@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/GROWTH-OPERATING-PLAN.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Go-to-market execution plan — status and where each part lives
 
 The source is the *Semester GTM, Enrollment Marketing, Student Adoption and Higher-Ed Sales Execution Plan*

@@ -1,3 +1,64 @@
+---
+stale-refs:
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/02-target-architecture.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/03-refactoring-sequence.md
+    changed_at: "2026-10-20T15:19:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/05-legacy-retirement.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/D-1144.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/D-1156.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Modularizing Semester
 
 Measured at `origin/main` `7287ddc`, pull request

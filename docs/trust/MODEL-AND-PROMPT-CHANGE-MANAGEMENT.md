@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-RISK-ASSESSMENT.md
+    changed_at: "2026-10-20T15:19:07"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Model and Prompt Change Management
 
 | Control | Value |

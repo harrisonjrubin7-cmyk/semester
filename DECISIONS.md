@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-19T02:53:16"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Decisions that are made
 
 A decision is only made if it is written down. Two things in this project have

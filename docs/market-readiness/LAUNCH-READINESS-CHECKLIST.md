@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/market-readiness/GO-NO-GO-CHECKLIST.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Launch-readiness checklist
 
 **Assessment date:** 2026-10-02. `PASS` means evidenced at the assessed scope; repository design alone is normally `PARTIAL` for a live launch. Estimates begin only after the named owner and environment/customer prerequisites exist.

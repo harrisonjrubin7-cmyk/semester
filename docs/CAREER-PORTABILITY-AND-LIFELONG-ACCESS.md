@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T19:20:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Career portability and lifelong access
 
 Part 10 of the expansion command. Phase 5. Nothing here is built yet; much of

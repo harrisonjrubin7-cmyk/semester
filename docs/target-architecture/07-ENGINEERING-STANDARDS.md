@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/target-architecture/01-TARGET-ARCHITECTURE.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-20T15:19:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T19:20:35"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 07 · Engineering standards
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

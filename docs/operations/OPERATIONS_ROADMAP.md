@@ -1,3 +1,84 @@
+---
+stale-refs:
+  - source: docs/master/SEMESTER_12_MONTH_EXECUTION_PLAN.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_MASTER_BACKLOG.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_RISK_REGISTER.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
+    changed_at: "2026-10-19T02:53:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/SHARED_CONTROL_PLANE.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/08-marketplace-partner-trust-fulfillment.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/11-founder-to-team-transition.md
+    changed_at: "2026-10-20T15:19:05"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Operations roadmap
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** a proposal, not a commitment; records no decision. This page is the program-level answer to the brief: backlog, first 25 actions, first 10 branches, three horizons, risks, and a readiness scorecard. It **reconciles with** (does not replace) [`docs/ops/OPERATIONS_CONSOLE_BACKLOG.md`](../ops/OPERATIONS_CONSOLE_BACKLOG.md) (phased console backlog P1-01…), [`docs/master/SEMESTER_MASTER_BACKLOG.md`](../master/SEMESTER_MASTER_BACKLOG.md), [`SEMESTER_EXECUTION_ROADMAP.md`](../master/SEMESTER_EXECUTION_ROADMAP.md) (ten-branch sequence) and [`SEMESTER_12_MONTH_EXECUTION_PLAN.md`](../master/SEMESTER_12_MONTH_EXECUTION_PLAN.md). Where they disagree on a fact, the source rows win.

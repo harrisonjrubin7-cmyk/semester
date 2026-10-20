@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: docs/ai-governance/01-inventory-and-risk-tiering.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/02-model-gateway.md
+    changed_at: "2026-10-20T15:18:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/08-tenant-ai-console.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
+    changed_at: "2026-10-19T18:53:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 07 · AI incident response and feature shutdown
 
 **Builds on:** [`../trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md`](../trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md)

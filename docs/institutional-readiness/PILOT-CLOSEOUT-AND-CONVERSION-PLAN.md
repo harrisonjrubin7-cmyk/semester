@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Pilot Closeout and Conversion Plan
 
 | Control | Value |

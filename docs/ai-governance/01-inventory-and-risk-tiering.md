@@ -1,3 +1,58 @@
+---
+stale-refs:
+  - source: docs/ai-governance/03-retrieval-policy.md
+    changed_at: "2026-10-20T15:19:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/06-evaluation-framework.md
+    changed_at: "2026-10-19T19:20:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-20T15:19:00"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/README.md
+    changed_at: "2026-10-20T15:19:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
+    changed_at: "2026-10-19T02:53:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-SYSTEM-INVENTORY.md
+    changed_at: "2026-10-20T15:19:07"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 01 · AI system inventory and risk tiering
 
 **Code:** `app/src/lib/governance/ai-systems.ts`, held by `ai-systems.test.ts`.

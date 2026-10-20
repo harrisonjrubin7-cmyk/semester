@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROUTE-AND-FEATURE-CROSSWALK.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MARKET-READINESS-BASELINE.md
+    changed_at: "2026-10-19T02:53:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester finalization baseline
 
 **Assessment date:** 2026-10-03 (America/Chicago)

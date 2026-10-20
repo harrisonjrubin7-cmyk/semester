@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/design/VISUAL_DEBT_REGISTER.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/adr/README.md
+    changed_at: "2026-10-20T15:19:03"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Design system adoption audit (phase D0)
 
 Status: **D0, audit only.** No product behaviour, style or component was

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/help/families/what-families-can-see.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-19T02:53:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Share with family
 
 > **Type:** explanation · **Audience:** students, families · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

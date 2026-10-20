@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-20T15:18:49"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester 30-60-90 day execution plan
 
 | Control | Value |

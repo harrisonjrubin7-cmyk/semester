@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/accessibility/INCLUSIVE-CONTENT-STANDARD.md
+    changed_at: "2026-10-19T02:53:19"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-20T15:18:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Accessibility acceptance criteria
 
 Companion to [PROGRAM.md](PROGRAM.md). **Proposal, 2026-10-04.** These are the criteria a story must carry to

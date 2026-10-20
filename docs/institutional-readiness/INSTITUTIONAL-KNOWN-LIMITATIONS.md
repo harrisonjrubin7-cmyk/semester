@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
+    changed_at: "2026-10-20T15:19:04"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/GO-LIVE-CHECKLIST.md
+    changed_at: "2026-10-19T18:53:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Institutional Known Limitations
 
 | Control | Value |

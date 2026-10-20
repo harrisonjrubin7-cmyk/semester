@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T19:20:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-19T19:20:34"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 > **MEMO FOR THE OWNER'S DECISION. This is not a decision, and nothing here approves a claim.** It recommends; the owner decides. Trademark and legal questions are for counsel.
 
 # Tagline decision memo (B-12)

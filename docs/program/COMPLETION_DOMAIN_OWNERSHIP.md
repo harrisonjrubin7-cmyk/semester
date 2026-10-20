@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-20T15:18:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester — domain ownership: source-of-truth decisions (completion baseline)
 
 **Date:** 2026-10-04 · **Does not replace:** [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../OWNER-AND-ACCOUNTABILITY-MATRIX.md) (owners, escalation), [`docs/DECISION-RIGHTS.md`](../DECISION-RIGHTS.md) · **Target architecture:** [`docs/target-architecture/`](../target-architecture/) (D-1144, a **proposal, not built**)

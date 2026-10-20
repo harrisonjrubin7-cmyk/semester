@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T02:53:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # How to ship a change behind a flag
 
 > **Type:** how-to · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-08 · **Held by:** `app/src/lib/docs/developers.test.ts`
