@@ -27,10 +27,20 @@
  * expiry; the security seat approves it; `console_act()` writes the mandatory
  * audit event and only then the grant, and fails closed if the event cannot be
  * written (`supabase/console-approvals.check.sql`). No SSO claim and no SCIM
- * group assigns an app role, and the test still asserts that from the code: a
- * second writer of `role_grants` turns it red and says which paragraph to
- * rewrite. Every role therefore reaches `provisionable` through the same path,
- * and the register's right-hand column counts what each holds beyond it.
+ * group assigns an app role.
+ *
+ * Since `20261020013100_roster_completeness_and_projection.sql` there is a
+ * second path, deliberately narrow: the school's promoted roster. It assigns
+ * three roles only — `student`, `faculty` and `teaching_assistant` — and only
+ * on a course-and-term scope, only to a roster person explicitly bound to an
+ * account at that school (never by email), with provenance `institution`. It
+ * revokes only grants it gave itself, on an explicit inactive status or, when
+ * the school has approved it, on absence from a complete roster
+ * (`supabase/roster-projection.check.sql`). Those three rows cite both paths;
+ * every other role reaches `provisionable` through the console alone. The
+ * test asserts both writers from the code: a third turns it red and says
+ * which paragraph to rewrite. The register's right-hand column counts what
+ * each role holds beyond provisioning.
  */
 
 export const ROLE_STATES = [
@@ -200,10 +210,10 @@ type Seed = Omit<RoleRow, 'provisioning' | 'runbook' | 'training' | 'approved'> 
   Partial<Pick<RoleRow, 'runbook' | 'training'>>;
 
 /**
- * The one provisioning path. It serves every role the same way — a request, an
+ * The console path. It serves every role the same way — a request, an
  * approval by somebody other than the requester, an audit event that must be
  * written first — so every row cites it, and `rolelaunch.test.ts` asserts that
- * nothing else writes `role_grants`.
+ * nothing but it and the roster projection writes `role_grants`.
  */
 export const CONSOLE_PROVISIONING: readonly RoleEvidence[] = [
   { path: 'supabase/migrations/20260929110000_console_approvals_and_break_glass.sql', shows: 'console_act(): the role-grant duty writes role_grants after its audit event, and fails closed without it' },
@@ -211,8 +221,21 @@ export const CONSOLE_PROVISIONING: readonly RoleEvidence[] = [
   { path: 'app/src/screens/Console.tsx', shows: 'the Approvals view: request, decide, act' },
 ];
 
+/**
+ * The roster path: a promoted school roster grants these course-and-term roles
+ * to bound roster people, and takes back only what it gave.
+ */
+export const ROSTER_PROVISIONING: readonly RoleEvidence[] = [
+  { path: 'supabase/migrations/20261020013100_roster_completeness_and_projection.sql', shows: 'roster_project_grants(): a promoted roster grants student, faculty and teaching_assistant on <school>/<CODE>/<TERM> to explicitly bound roster people, and revokes only its own grants' },
+  { path: 'supabase/roster-projection.check.sql', shows: 'binding never by email or across schools; partial rosters remove nobody; absence removes only when the school approves; administrator grants are never revoked by the roster' },
+];
+
+/** The roles the roster path may assign. */
+export const ROSTER_ROLES: ReadonlySet<string> = new Set(['student', 'faculty', 'teaching_assistant']);
+
 function row(seed: Seed): RoleRow {
-  return { runbook: [], training: [], ...seed, provisioning: [...CONSOLE_PROVISIONING], approved: false };
+  const provisioning = ROSTER_ROLES.has(seed.role) ? [...CONSOLE_PROVISIONING, ...ROSTER_PROVISIONING] : [...CONSOLE_PROVISIONING];
+  return { runbook: [], training: [], ...seed, provisioning, approved: false };
 }
 
 export const ROLES: readonly RoleRow[] = [

@@ -212,9 +212,22 @@ begin
   perform pg_temp.expect_refused('a scope on the never list (grades)', integ,
     format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose)
               values ('icp-a', %L, 'scope.lms.grades_read', 'read', 'x')$q$, conn));
-  perform pg_temp.expect_refused('a scope on the never list (roster)', integ,
+  -- Roster scopes left the never list on 20 October 2026 (owner decision,
+  -- 20261020013100): read or event only, declared at the education-record
+  -- ceiling T3, and still approved only through integration_approve_scope.
+  perform pg_temp.expect_refused('a roster scope at the default T0 ceiling', integ,
     format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose)
               values ('icp-a', %L, 'scope.sis.roster', 'read', 'x')$q$, conn));
+  perform pg_temp.expect_refused('a roster scope that writes', integ,
+    format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose, data_classification_ceiling)
+              values ('icp-a', %L, 'scope.sis.roster', 'write', 'x', 'T3')$q$, conn));
+  perform pg_temp.expect_allowed('a roster read scope declared at T3 is proposed', integ,
+    format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose, data_classification_ceiling)
+              values ('icp-a', %L, 'scope.sis.roster', 'read', 'Course access from the school roster', 'T3')$q$, conn));
+  if (select approved from public.integration_scopes where scope_key = 'scope.sis.roster' and connection_id = conn) then
+    raise exception 'FAILED: a proposed roster scope arrived approved';
+  end if;
+  raise notice 'ok  a proposed roster scope waits for approval';
   perform pg_temp.expect_allowed('a minimum-data scope is proposed', integ,
     format($q$insert into public.integration_scopes (tenant_id, connection_id, scope_key, scope_type, purpose)
               values ('icp-a', %L, 'scope.lms.assignment_dates_read', 'read', 'Show due dates on Today')$q$, conn));

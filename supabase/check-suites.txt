@@ -131,6 +131,7 @@ role-grant-audit
 rolegrants
 rooms
 roster-import
+roster-projection
 school-membership
 school-offboarding
 schools

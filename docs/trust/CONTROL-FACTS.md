@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 254 |
+| Migration files | 255 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
-| Tables created in `private` and not later dropped | 55 |
-| … of which enable row-level security in a migration | 55 |
+| Tables created in `private` and not later dropped | 57 |
+| … of which enable row-level security in a migration | 57 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 279 |
-| Tables with RLS found and no literal policy statement | 123 |
+| Tables with RLS found and no literal policy statement | 125 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-157 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -165,6 +165,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/rolegrants.check.sql` | The role grants, and the two locks that make them mean something. |
 | `supabase/rooms.check.sql` | Reactions, with the second person a reaction needs. |
 | `supabase/roster-import.check.sql` | Roster import staging: staged not written, manifest-checked, held on a large removal, idempotent, reversible, per school, and closed to every client. |
+| `supabase/roster-projection.check.sql` | a roster becomes course-and-term access, and the ways a roster sync goes wrong at scale do not. |
 | `supabase/school-membership.check.sql` | Course rooms limited to one university at a time (full-beta G-03). |
 | `supabase/school-offboarding.check.sql` | A school leaves in steps (full-beta gate G3, 20260930200000). |
 | `supabase/schools.check.sql` | What removing a university does to the people who studied there. |

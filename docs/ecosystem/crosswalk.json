@@ -1640,23 +1640,26 @@
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/ledger.ts"
+        "app/src/lib/gradebook/ledger.ts",
+        "packages/institution/src/roster-source.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261020013100_roster_completeness_and_projection.sql"
       ],
       "tests": [
         "supabase/gradebook.check.sql",
         "app/src/lib/gradebook/gradebook.test.ts",
         "app/src/lib/gradebook/client.test.ts",
-        "app/src/screens/gradebook.test.tsx"
+        "app/src/screens/gradebook.test.tsx",
+        "supabase/roster-projection.check.sql"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "The only instructor roster is the gradebook's grades:receive roster, read inside InstructorBook when entering grades.",
-      "gap": "No roster screen and no accommodation instructions; the roster is derived from gradebook grants rather than a section enrolment feed."
+      "note": "The instructor roster is the gradebook's grades:receive roster, read inside InstructorBook when entering grades. Since 20261020013100 those grants can come from the school's promoted roster (SIS, OneRoster or Clever-style source): bound roster people get student, faculty or teaching_assistant on <school>/<CODE>/<TERM>.",
+      "gap": "No roster screen and no accommodation instructions; no live source connector yet (the roster feed is staged by a service worker that is not built), and no admin screen for identity bindings."
     },
     "#/family/billing": {
       "status": "code-present",
