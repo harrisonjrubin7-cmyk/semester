@@ -19,6 +19,7 @@ const flushNow = vi.fn(async (_signal?: AbortSignal) => true);
 const acknowledgeRemoteWrite = vi.fn(async () => true);
 const rollbackRemoteWrite = vi.fn(async (_target: unknown) => true);
 const pull = vi.fn();
+const releaseHeldNote = vi.fn(async () => {});
 
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -42,7 +43,7 @@ vi.mock('./persist', () => ({
   persist: (...args: unknown[]) => persist(...args),
   flushNow: (signal?: AbortSignal) => flushNow(signal),
   flushOnLeave: () => {},
-  releaseHeldNote: async () => {},
+  releaseHeldNote: () => releaseHeldNote(),
   rollbackRemoteWrite: (target: unknown) => rollbackRemoteWrite(target),
   whileWriting: () => {},
   load: async () => null,
@@ -120,6 +121,7 @@ beforeEach(async () => {
   acknowledgeRemoteWrite.mockReset().mockResolvedValue(true);
   rollbackRemoteWrite.mockReset().mockResolvedValue(true);
   pull.mockReset();
+  releaseHeldNote.mockClear();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -184,6 +186,20 @@ describe('an account change during a refresh', () => {
     expect(store.asking).toBeNull();
     expect(store.state.tasks.some((task) => task.id === 'a-task')).toBe(false);
     expect(localStorage.getItem(SEEN_KEY)).toBeNull();
+  });
+
+  // Found reviewing 80dce17: the switch cleared the ingress note in memory and
+  // in localStorage, but a note the database held stayed, and the next load
+  // gave the new account the old one's suppressed deletions.
+  it('takes the old account\u2019s held ingress note out of the database on a switch', async () => {
+    localStorage.setItem('semester.syncedAs', 'account-a');
+    pull.mockImplementation((id: string) => Promise.resolve(remote(id === 'account-a' ? 'a' : 'b')));
+    await mount();
+    releaseHeldNote.mockClear();
+
+    await changeAccount(accountB);
+
+    expect(releaseHeldNote).toHaveBeenCalled();
   });
 
   it('keeps suppressing duplicate pulls within one account generation', async () => {

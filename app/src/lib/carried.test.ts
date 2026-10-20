@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_PERSISTED } from '../state/shape';
-import { CARRIED_BASELINE, CARRIED_KEY, forgetCarried, rememberCarried, unknownFields, withCarried } from './carried';
+import { CARRIED_BASELINE, CARRIED_KEY, carriedInStep, forgetCarried, rememberCarried, unknownFields, withCarried } from './carried';
 
 /*
  * A field a newer build wrote goes back up with this build's push.
@@ -141,6 +141,26 @@ describe('fields this build cannot read', () => {
   it('holds back only fields every build from this one on can read', () => {
     const persisted = new Set([...Object.keys(DEFAULT_PERSISTED), 'courses']);
     expect([...CARRIED_BASELINE].filter((f) => !persisted.has(f)), 'retire a field here only on purpose').toEqual([]);
+  });
+
+  it('says when storage refused the copy memory holds, until a write lands', () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    rememberCarried('u1', { later: 1 }, known, '2026-10-12T10:00:00.000+00:00');
+    expect(carriedInStep()).toBe(false);
+    spy.mockRestore();
+    rememberCarried('u1', { later: 2 }, known, '2026-10-12T10:05:00.000+00:00');
+    expect(carriedInStep()).toBe(true);
+  });
+
+  // Found reviewing 80dce17: `onb` was persisted but missing here, so the first
+  // build to retire it would have read it as unknown and pushed it back forever.
+  // A field added after the baseline goes in this list, never in the baseline.
+  const ADDED_AFTER_BASELINE: string[] = [];
+  it('holds back every field this build persists', () => {
+    const persisted = [...Object.keys(DEFAULT_PERSISTED), 'courses'];
+    expect(persisted.filter((f) => !CARRIED_BASELINE.has(f) && !ADDED_AFTER_BASELINE.includes(f))).toEqual([]);
   });
 
   // Found reviewing df5dd87: after an account switch whose storage writes were

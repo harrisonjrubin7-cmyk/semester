@@ -56,7 +56,7 @@ export const CARRIED_BASELINE: ReadonlySet<string> = new Set([
   'hue', 'iconShape', 'keyOpen', 'labels', 'lastSync', 'letters', 'lineHeight', 'linkUrls',
   'liveSession', 'mailDrafts', 'mailMarks', 'mailPane', 'mailRules', 'maintenance', 'mathGiven',
   'mathWorking', 'mutedCourses', 'myName', 'myRules', 'mySchools', 'nav', 'notes', 'notifs',
-  'opened', 'operatingWorkspace', 'payments', 'people', 'pieces', 'pinned', 'places', 'plans',
+  'onb', 'opened', 'operatingWorkspace', 'payments', 'people', 'pieces', 'pinned', 'places', 'plans',
   'plots', 'pretested', 'progress', 'pronounce', 'quiet', 'readingWidth', 'ready', 'recent',
   'registered', 'registrar', 'regradeWindows', 'requirements', 'residences', 'rest', 'returned',
   'reviews', 'role', 'sample', 'saved', 'scale', 'schemaVersion', 'schoolId', 'schoolPack',
@@ -75,6 +75,18 @@ interface Held {
 
 /** This session's copy. Storage wins only when something pulled later wrote it. */
 let memory: Held | null = null;
+
+/**
+ * Whether storage holds what memory does. While it does not, no tab may be
+ * told of the version memory came from: one that read the new stamp beside
+ * the old stored copy would push stale fields past the version check.
+ */
+let inStep = true;
+
+/** False while the last carried copy was refused by storage; the stamp it goes with waits (`markSeen`). */
+export function carriedInStep(): boolean {
+  return inStep;
+}
 
 /** The fields this build knows, from the last `rememberCarried`. Never put back. */
 let readerKnows: ReadonlySet<string> = new Set();
@@ -136,12 +148,17 @@ export function rememberCarried(
   const fields = remote ? unknownFields(remote, CARRIED_BASELINE) : {};
   const held: Held = { account, fields, at: versionOf(version) };
   memory = held;
+  inStep = false;
   try {
     // Never over a copy another tab stored from a newer version.
     const disk = stored();
-    if (disk && disk.account === account && disk.at > held.at) return;
+    if (disk && disk.account === account && disk.at > held.at) {
+      inStep = true;
+      return;
+    }
     // Even when empty: another tab holding the field must learn it is gone.
     localStorage.setItem(CARRIED_KEY, JSON.stringify(held));
+    inStep = true;
   } catch {
     // Kept in memory above, for this session's pushes.
   }
@@ -159,8 +176,10 @@ export function forgetCarried(): void {
   // Not null: a stored copy a blocked removal left behind must not come back.
   // Outranks any stored copy, which belongs to the account being left.
   memory = { account: '', fields: {}, at: Number.POSITIVE_INFINITY };
+  inStep = false;
   try {
     localStorage.removeItem(CARRIED_KEY);
+    inStep = true;
   } catch {
     // Blocked storage: memory is already clear.
   }

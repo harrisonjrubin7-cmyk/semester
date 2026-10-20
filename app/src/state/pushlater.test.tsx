@@ -26,7 +26,11 @@ const session = {
   access_token: 'tok-abc',
 } as unknown as Session;
 
-const { pushes } = vi.hoisted(() => ({ pushes: [] as Record<string, unknown>[] }));
+const { pushes, stamp } = vi.hoisted(() => ({
+  pushes: [] as Record<string, unknown>[],
+  /** What a push says the account now stands at; null as a push that reports nothing. */
+  stamp: { value: null as null | { state: string; courses: Record<string, string> } },
+}));
 
 vi.mock('../lib/cloud', async (original) => ({
   ...(await original<typeof import('../lib/cloud')>()),
@@ -40,7 +44,7 @@ vi.mock('../lib/cloud', async (original) => ({
   pull: async () => ({ state: null, courses: [], seen: null, updated: 0 }),
   push: async (_id: string, rest: Record<string, unknown>) => {
     pushes.push(rest);
-    return null;
+    return stamp.value;
   },
 }));
 
@@ -63,6 +67,8 @@ vi.mock('./persist', async (original) => ({
 const { StoreProvider, useStore } = await import('./store');
 const { setSessionToken } = await import('../lib/token');
 const { loadSeed } = await import('../data/seed');
+const { SEEN_KEY } = await import('./shape');
+const { CARRIED_KEY } = await import('../lib/carried');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -100,6 +106,8 @@ afterEach(() => {
   setSessionToken(null);
   host.remove();
   dbUp = true;
+  stamp.value = null;
+  vi.restoreAllMocks();
 });
 
 /** Wait, in real time, until `ok` holds or `ms` runs out. */
@@ -167,5 +175,35 @@ describe('a change after sign-in goes up to the account', () => {
     act(() => dispatch({ type: 'setMeTab', tab: 'task' }));
     await wait(3500);
     expect(pushes.length).toBe(first);
+  }, 25_000);
+});
+
+/*
+ * Found reviewing 80dce17: the push published its new stamp to every tab while
+ * the carried copy it goes with was refused by storage and kept only here, so
+ * another tab could push its stale carried fields past the version check.
+ */
+describe('the stamp a push records', () => {
+  async function pushedWith(refuseCarried: boolean) {
+    stamp.value = { state: 'after-push', courses: {} };
+    const setItem = Storage.prototype.setItem;
+    if (refuseCarried) {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+        if (key === CARRIED_KEY) throw new DOMException('full', 'QuotaExceededError');
+        setItem.call(this, key, value);
+      });
+    }
+    await signedInThenChanged();
+    return localStorage.getItem(SEEN_KEY);
+  }
+
+  it('is not published while the carried copy it goes with could not be stored', async () => {
+    dbUp = false;
+    expect(await pushedWith(true) ?? '').not.toContain('after-push');
+  }, 25_000);
+
+  it('CONTROL: is published when the carried copy was stored', async () => {
+    dbUp = false;
+    expect(await pushedWith(false)).toContain('after-push');
   }, 25_000);
 });

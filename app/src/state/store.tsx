@@ -98,7 +98,7 @@ import {
   type Conflict,
 } from '../lib/conflicts';
 import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions, withIngressNote } from '../lib/deletions';
-import { forgetCarried, rememberCarried, withCarried } from '../lib/carried';
+import { carriedInStep, forgetCarried, rememberCarried, withCarried } from '../lib/carried';
 import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
@@ -861,6 +861,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const was = syncedAs();
         if (was && was !== s.user.id) {
           forgetSyncMemory();
+          // The note in memory is gone now, so this takes the database's copy off too.
+          void releaseHeldNote();
           setReview([]);
           // Keep the previous owner written down until the student explicitly
           // decides what the new account may do with this device's semester.
@@ -1141,7 +1143,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * which has nothing to forget and a question of its own to ask.
        */
       if (!hasRemote && seen !== null && (seen.state || Object.keys(seen.courses).length > 0)) {
-        markSeen(remote.seen);
+        if (carriedInStep()) markSeen(remote.seen);
         writeBase({});
       }
 
@@ -1285,7 +1287,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           skipPersistenceThrough.current = persistenceRender.current;
           showTaken();
           showFailedRemote = null;
-          markSeen(remote.seen);
+          if (carriedInStep()) markSeen(remote.seen);
           // The version both sides now agree on is the account's — including
           // for the fields held back, whose difference here is still to go up,
           // and for what this device deleted, which the account still holds
@@ -1578,11 +1580,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
           inFlight.current = false;
-          markSeen(seen);
           // The account's row is now what was sent, at the version this push
           // made, so the carried copy is too: a tab of an older build reading
           // it must not send the fields of the pull before this push.
           rememberCarried(account.id, outgoing, KNOWN_FIELDS, seen?.state);
+          // The stamp goes out only beside that copy (`carriedInStep`).
+          if (carriedInStep()) markSeen(seen);
           // And the account now holds what was sent.
           writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
           // Only if nothing changed while it was on its way: an edit made
@@ -2075,7 +2078,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // The account's fields this build cannot read are not carried up
         // either: that push replaces the account, as the question promised.
         forgetCarried();
-        markSeen(remote.seen);
+        if (carriedInStep()) markSeen(remote.seen);
       } else {
         const theirs = {
           ...(remote.state as Partial<Persisted>),
@@ -2154,7 +2157,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           skipPersistenceThrough.current = persistenceRender.current;
           if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
           dispatch({ type: 'hydrate', persisted: theirs });
-          markSeen(remote.seen);
+          if (carriedInStep()) markSeen(remote.seen);
           // The first version this device and the account agree on.
           writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
           // Merged or taken whole, the account's copies are back: rows lost
