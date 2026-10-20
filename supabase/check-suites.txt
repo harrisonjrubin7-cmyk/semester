@@ -130,6 +130,7 @@ rls-coverage
 role-grant-audit
 rolegrants
 rooms
+roster-admin-desk
 roster-import
 roster-projection
 school-membership

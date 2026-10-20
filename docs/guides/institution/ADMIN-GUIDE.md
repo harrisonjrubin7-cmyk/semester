@@ -8,9 +8,9 @@ This guide tells an institution administrator which role does what, where each t
 
 <!-- status: Tenant admin console = IMPLEMENTED_NOT_RELEASED -->
 <!-- status: Tenants, memberships, roles, scopes = IMPLEMENTED_NOT_RELEASED -->
-<!-- capabilities: tenant:configure, tenant:implement, audit:read, integration:approve, integration:view, integration:configure, integration:sync, integration:replay, killswitch:engage, breakglass:request, ai:configure, migration:approve, migration:manage, config:manage, config:publish, config:view, workflow:manage, workflow:publish, record:approve, data_request:handle, console:operate, approval:decide, platform:configure, outcomes:read -->
+<!-- capabilities: tenant:configure, tenant:implement, audit:read, integration:approve, integration:view, integration:configure, integration:sync, integration:replay, roster:administer, killswitch:engage, breakglass:request, ai:configure, migration:approve, migration:manage, config:manage, config:publish, config:view, workflow:manage, workflow:publish, record:approve, data_request:handle, console:operate, approval:decide, platform:configure, outcomes:read -->
 <!-- roles: university_admin, implementation_manager, integration_admin, registrar, data_steward, incident_responder, platform_admin -->
-<!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts -->
+<!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Roster, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts -->
 <!-- labels: app/src/lib/console/workspaces.ts :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Connected ecosystem, Releases and flags, Launch readiness, Trust controls, Evidence, Views -->
 <!-- labels: app/src/components/SchoolClaim.tsx :: For this university's staff -->
 
@@ -60,6 +60,7 @@ A tab appears only when its condition holds. A flag is a build-time setting with
 | `Modules` | You hold `tenant:configure` | Switch modules for your school |
 | `Get help` | `VITE_HUMAN_HELP` is not `off` | Staff help inbox |
 | `Integrations` | `VITE_INTEGRATION_DASHBOARD` is not `off` | Read connection health; the Export health summary button downloads counts and states only |
+| `Roster` | you hold `roster:administer` at your school (university and integration administrators) | Bind roster people to Semester accounts by account id, and turn absence-means-removal on or off. Never your own account; there is no unbind yet |
 | `Operations` | `VITE_INSTITUTIONAL_OPERATIONS` is not `off` and you hold `outcomes:read` | Aggregate measures. Cells under ten are suppressed, and there is no per-student grain |
 | `Demand` | `VITE_DEMAND_FORECASTING` is not `off` | Course-demand counts of ten or more |
 | `Campaigns` | `VITE_CAMPAIGN_MANAGER` is not `off` and you hold a campaign capability | Recruitment and adoption campaigns |

@@ -818,6 +818,8 @@ const MOCKS_MODULES = [
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',
   'src/components/institutional/RecordLedger.test.tsx',
+  'src/components/institutional/RosterDesk.test.tsx',
+  'src/lib/roster/admin.test.ts',
   'src/components/institutional/StudentAccounts.test.tsx',
   'src/components/MyStudentAccount.test.tsx',
   'src/components/nav/institutional-nav.test.tsx',

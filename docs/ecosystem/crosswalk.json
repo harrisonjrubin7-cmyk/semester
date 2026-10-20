@@ -1659,7 +1659,7 @@
         "writeback.lms_grade_passback"
       ],
       "note": "The instructor roster is the gradebook's grades:receive roster, read inside InstructorBook when entering grades. Since 20261020013100 those grants can come from the school's promoted roster (SIS, OneRoster or Clever-style source): bound roster people get student, faculty or teaching_assistant on <school>/<CODE>/<TERM>.",
-      "gap": "No roster screen and no accommodation instructions; no live source connector yet (the roster feed is staged by a service worker that is not built), and no admin screen for identity bindings."
+      "gap": "No roster screen and no accommodation instructions; no live source connector yet (the roster feed is staged by a service worker that is not built); identity bindings are made at the Roster tab of the University screen (#/institution/integrations), by pasted account id."
     },
     "#/family/billing": {
       "status": "code-present",
@@ -2117,25 +2117,31 @@
       ],
       "screens": [
         "app/src/screens/University.tsx",
-        "app/src/components/institutional/IntegrationDashboard.tsx"
+        "app/src/components/institutional/IntegrationDashboard.tsx",
+        "app/src/components/institutional/RosterDesk.tsx"
       ],
       "modules": [
         "app/src/lib/integration/dashboard.ts",
-        "app/src/lib/integration/freshness.ts"
+        "app/src/lib/integration/freshness.ts",
+        "app/src/lib/roster/admin.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260927170000_integration_control_plane.sql"
+        "supabase/migrations/20260927170000_integration_control_plane.sql",
+        "supabase/migrations/20261021090000_roster_admin_desk.sql"
       ],
       "tests": [
         "supabase/integration-control-plane.check.sql",
-        "app/src/components/institutional/IntegrationDashboard.test.tsx"
+        "app/src/components/institutional/IntegrationDashboard.test.tsx",
+        "supabase/roster-admin-desk.check.sql",
+        "app/src/lib/roster/admin.test.ts",
+        "app/src/components/institutional/RosterDesk.test.tsx"
       ],
       "flags": [
         "EXPERIENCE_FLAGS.integrationDashboard (VITE_INTEGRATION_DASHBOARD)"
       ],
-      "note": "IntegrationDashboard lists connections, mappings, sync runs, conflicts, dead letters and replay requests from the integration control plane.",
-      "gap": "Scopes, owners and kill switches are read-only; no connection setup wizard or credential configuration."
+      "note": "IntegrationDashboard lists connections, mappings, sync runs, conflicts, dead letters and replay requests from the integration control plane. Since 20261021090000 the Roster tab (RosterDesk, roster:administer at the school) lists roster people with no account bound, binds one to a pasted account id, and turns absence-means-removal on or off with an expected-value check.",
+      "gap": "Scopes, owners and kill switches are read-only; no connection setup wizard or credential configuration. Roster binding takes a pasted account id (no admin people search) and has no unbind."
     },
     "#/institution/onbverify": {
       "status": "tested",

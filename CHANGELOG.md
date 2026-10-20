@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### School administrators get a Roster tab for binding roster people to accounts
+
+Only for university and integration administrators, and only once the database change is applied (it is not yet). On **University**, a **Roster** tab lists the people on your school's roster who have no Semester account bound, with the courses a binding would give them. **Bind** takes the person's account id (pasted — there is no people search yet), previews exactly what they will get, then shows the receipt; your own account, an account at another school and a second account for the same person are refused. There is no unbind yet. The same tab shows whether **absence-means-removal** is on; turning it on says how many roster-given course grants would end and asks you to confirm. Nobody else will notice anything.
+
 ### Mine names the exact action, step or event before removing it
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.

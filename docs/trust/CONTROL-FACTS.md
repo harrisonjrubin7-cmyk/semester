@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 255 |
+| Migration files | 256 |
 | Tables created in `public` and not later dropped | 347 |
 | … of which enable row-level security in a migration | 347 |
-| Tables created in `private` and not later dropped | 57 |
-| … of which enable row-level security in a migration | 57 |
+| Tables created in `private` and not later dropped | 58 |
+| … of which enable row-level security in a migration | 58 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 279 |
-| Tables with RLS found and no literal policy statement | 125 |
+| Tables with RLS found and no literal policy statement | 126 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+159 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -164,6 +164,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/role-grant-audit.check.sql` | Role changes must be append-only, metadata-minimized and tenant-isolated. |
 | `supabase/rolegrants.check.sql` | The role grants, and the two locks that make them mean something. |
 | `supabase/rooms.check.sql` | Reactions, with the second person a reaction needs. |
+| `supabase/roster-admin-desk.check.sql` | a school administrator binds roster people to accounts and decides whether absence ends access; nobody else does. |
 | `supabase/roster-import.check.sql` | Roster import staging: staged not written, manifest-checked, held on a large removal, idempotent, reversible, per school, and closed to every client. |
 | `supabase/roster-projection.check.sql` | a roster becomes course-and-term access, and the ways a roster sync goes wrong at scale do not. |
 | `supabase/school-membership.check.sql` | Course rooms limited to one university at a time (full-beta G-03). |
@@ -299,19 +300,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 249 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 249 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 253 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 253 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 68 |
 | Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 99 |
+| Register rows in category `admin` | 102 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 33 |
+| Register rows in category `read-helper` | 34 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

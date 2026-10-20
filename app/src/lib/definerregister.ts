@@ -329,6 +329,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
   ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
+  ['roster_admin_bind', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_subject = me']],
+  ['roster_admin_config', 'admin', ['private.roster_admin_require']],
+  ['roster_admin_set_absence', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_expect']],
+  ['roster_admin_unbound', 'read-helper', ['private.roster_admin_require', 'limit 1000']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['school_enforcement_readiness', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['school_purge_eligibility', 'admin', ['private.is_app_admin', 'private.has_capability']],
@@ -587,6 +591,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261018120000_registration_swap.sql',
     functions: ['registration_swap'],
+  },
+  {
+    file: '20261021090000_roster_admin_desk.sql',
+    functions: ['roster_admin_bind', 'roster_admin_config', 'roster_admin_set_absence', 'roster_admin_unbound'],
   },
 ];
 

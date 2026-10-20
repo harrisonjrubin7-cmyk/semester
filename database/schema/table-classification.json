@@ -252,6 +252,7 @@
    "private.registration_readiness_evaluations",
    "private.registration_readiness_receipts",
    "private.registration_readiness_tasks",
+   "private.roster_admin_operation",
    "private.roster_current",
    "private.roster_grant",
    "private.roster_identity",

@@ -308,7 +308,9 @@ begin
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
   -- Privileged access review then added access_review:manage for
   -- platform_admin and trust_officer.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 187);
+  -- 187 before the roster desk (20261021090000_roster_admin_desk.sql) gave
+  -- roster:administer to integration_admin and university_admin.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 189);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
