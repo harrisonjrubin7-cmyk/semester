@@ -23,7 +23,7 @@ Maturity labels used below:
 | Repository | `harrisonjrubin7-cmyk/semester`, working branch `claude/nice-knuth-lj38ll` | `git branch --show-current` |
 | Commit at baseline | `706de357` (origin/main at the time of inspection) | `git log origin/main -1` |
 | Node | v22.22.0. The root `package.json` requires `>=22`, and `app/package.json` has no `engines` field. `npm ci` printed an `EBADENGINE` warning for a stricter range (`^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`) that comes from a transitive dependency, not from the repository. The warning did not fail the install. | `npm ci` output; `package.json:12` |
-| Package manager | npm workspaces (`app/`, `packages/*`), single root lockfile | `package.json`, `CLAUDE.md` |
+| Package manager | npm workspaces (`app/`, `packages/*`, `operator`), single root lockfile | `package.json`, `CLAUDE.md` |
 | Install | `npm ci` from repo root, 237 packages added | executed, exit 0 |
 
 Install from the root, not `app/`. `app/` has no `@semester/*` links unless the root install ran (per `CLAUDE.md`).
@@ -63,7 +63,7 @@ These failed on the commit before any change in this session. They are recorded,
 | Root component and routing | `app/src/App.tsx` (1,643 lines), `app/src/screens.tsx` (247 lines) | Single large root; screen registry lives in `screens.tsx` |
 | Application state | `app/src/state/store.tsx` (2,275 lines), `state/reducer.ts`, `state/slices/`, `state/persist/` | Single store with reducer, slices, local fallback (`localfallback.ts`), sync retry and sync-state tests |
 | Screens | `app/src/screens/` | About 175 entries including tests. Many are named for a student feature (Today, Calendar, Gradebook, Registration, Mine, Advising-style screens) |
-| Shared components | `app/src/components/` (includes `ActionCenter.tsx`, `TodayActionCenter.tsx`) | Two Action Center components exist; which one the Today screen uses is **Open** (see E) |
+| Shared components | `app/src/components/` (includes `ActionCenter.tsx`, `TodayActionCenter.tsx`) | Two Action Center components exist. They are composed layers, not alternatives: `TodayActionCenter` renders `ActionCenter` (see D.1) |
 | Design authority | `app/src/lib/look.ts` (1,867 lines), `app/src/styles/tokens.css` (266 lines), `app/design-tokens/` (generated export, do not edit) | Precedence order is defined in the root `CLAUDE.md` |
 | Backend contracts | `app/api/` (institution, productivity), `app/server/` (course-sources, institution, integration, productivity) | Server-side code is outside the browser bundle |
 | Database | `supabase/` with 254 migrations and about 150 `*.check.sql` suites | Schema and RLS checks are SQL, run outside the frontend test suite |
@@ -99,7 +99,7 @@ Journey register. Status reflects evidence in this session only. Nothing here is
 
 | ID | Journey | Primary roles | Entry point observed | Status | Gap |
 |---|---|---|---|---|---|
-| A | Student Action Center (deadlines, tasks, blockers, freshness, next permitted action) | Student | `components/TodayActionCenter.tsx`, `screens/Today.tsx`, `components/ActionCenter.tsx` | Observed; two components, not verified | Which component is canonical; end-to-end test absent in this session |
+| A | Student Action Center (deadlines, tasks, blockers, freshness, next permitted action) | Student | `components/TodayActionCenter.tsx`, `screens/Today.tsx`, `components/ActionCenter.tsx` | Observed; composition recorded (D.1), not verified | End-to-end trace of the feature-flagged route absent in this session |
 | B | Registration (plan, eligibility, holds, approvals, enrollment outcome, schedule) | Student, registrar | `screens/Registration.tsx`, `screens/Registrar.tsx`, `registration*.test.tsx` | Observed | No end-to-end verification run |
 | C | Coursework (course, assignment, private draft, submission revision, receipt, grading, release) | Student, faculty | `screens/Courses.tsx`, `screens/Gradebook.tsx`, `screens/Grades.tsx`, `screens/Write.tsx` | Observed | Submission revision and release receipts not traced |
 | D | Advising and support (request, consent-aware context, referral, owner, resolution) | Student, advisor | `screens/Support.tsx`, `screens/Help.tsx`, `help-requests.check.sql` | Observed (SQL check exists) | UI-to-backend path not traced |
@@ -138,7 +138,7 @@ Not verified: query-key scoping by identity and tenant, request cancellation on 
 
 ## G. Authorization, privacy, and AI boundaries
 
-Not verified in this session. Frontend checks are advisory. Authorization must be enforced by the backend and the RLS suites in `supabase/`. The following were not checked: direct-route denial, search-result permissions, file-preview permissions, export permissions, realtime subscription scoping, and AI-assistant source scoping (`src/ai/`, `Assistant.tsx` is referenced by `Mine.tsx`).
+Not verified in this session. Frontend checks are advisory. Authorization must be enforced by the backend and the RLS suites in `supabase/`. Client-side route denial is covered by `state/reducer.test.ts` (see B.1), but backend enforcement of direct routes was not checked. The following were not checked: backend direct-route denial, search-result permissions, file-preview permissions, export permissions, realtime subscription scoping, and AI-assistant source scoping (`src/ai/`, `Assistant.tsx` is referenced by `Mine.tsx`).
 
 Telemetry, URLs, browser storage, and cached previews have not been audited against the restricted-information rules.
 
@@ -166,7 +166,7 @@ Section D's register does not define pass/fail acceptance criteria or required e
 
 Not evaluated. The following are blocking for a frontend release and currently open:
 
-1. WI-FE-002 (red test) and WI-FE-003 / WI-FE-004 (red generated-doc and docs-table tests): the suite is not green on the baseline.
+1. The three baseline red tests (WI-FE-002, WI-FE-003, WI-FE-004) are resolved on `main` at `62de6bfc`, and were not failing after the merge into this branch (`d27534e3`). CI has not been re-run for this document's head.
 2. `npm run build` not executed in this session.
 3. No journey has end-to-end evidence.
 4. No error-monitoring, support-recovery or feature-flag verification was performed.
@@ -182,17 +182,17 @@ Deployment status: **none**. Nothing in this session was deployed, migrated, or 
 | ID | Domain / roles | Dependencies | Current maturity | Acceptance criteria | Evidence | Owner role | Blockers | Continuation |
 |---|---|---|---|---|---|---|---|---|
 | WI-FE-001 | Baseline, all | none | **Executed** | install, `tsc -b`, `lint`, full test run recorded (A.2) | A.2 table; log kept outside the repo | Frontend architect | none | done |
-| WI-FE-002 | Student, task rows (Journey C/A) | WI-FE-001 | **Open**, defect confirmed deterministically; cause identified as test selection | `mine.removal-labels` test green, with the assertion strength unchanged | A.3 | Frontend engineer; QA | none known | In the test, select the task by context rather than by `edits[0]`: the *Plan review* row dated 2026-10-20 that has steps. Do not change `TaskRow`. Re-run the single file, then the full suite |
-| WI-FE-003 | Docs / SRE register | WI-FE-001 | **Open** | `sre.test.ts` green | A.3 | Docs owner | bulk regeneration needs review | Run `npm run registers`, read the diff, commit only the regenerated `docs/sre/generated/*` files |
-| WI-FE-004 | Docs / CI | WI-FE-001 | **Open** | `developers.test.ts` green | A.3 | Docs owner | none | Update the stale assertion at `developers.test.ts:534` to the actual row count (15), or derive it from `.github/workflows`. Do not edit the table |
-| WI-FE-005 | Student Action Center (Journey A) | WI-FE-002 recommended first | **Open**, not started | the composed layers are recorded; the feature-flagged route is traced end to end; tests for loading, empty, error, stale, permission | D.1 | Frontend architect, backend, QA | none | Record the `TodayDecisionSurface` → `TodayActionCenter` → `ActionCenter` relationship, then trace the feature-flagged route |
-| WI-FE-008 | Shared: required frontend CI gates not run | WI-FE-001 | **Open** | each gate below executed and recorded with its exit status | A.2 | Release engineer | none | Run `npm run check:video`, `npm run test:zones`, `npm run budgets`, `npm run smoke:cold`, `npm run smoke:a11y`, `npm run smoke:golden`, and `npm run smoke:registration-states`, recording exit status and any blocking result for each |
+| WI-FE-002 | Student, task rows (Journey C/A) | WI-FE-001 | **Resolved on main** (`a680a73d`, `51f7393d`); `mine.removal-labels` passed after the merge (99 SRE and removal-label tests green) | `mine.removal-labels` test green, with the assertion strength unchanged | A.3 | Frontend engineer; QA | none known | In the test, select the task by context rather than by `edits[0]`: the *Plan review* row dated 2026-10-20 that has steps. Do not change `TaskRow`. Re-run the single file, then the full suite |
+| WI-FE-003 | Docs / SRE register | WI-FE-001 | **Resolved on main** (`5eb5d102`); `sre.test.ts` passed after the merge | `sre.test.ts` green | A.3 | Docs owner | none | Done. Re-run `npm run registers` only if the generated docs drift |
+| WI-FE-004 | Docs / CI | WI-FE-001 | **Resolved on main** (`5eb5d102`); `developers.test.ts` passed after the merge (834 docs tests green) | `developers.test.ts` green | A.3 | Docs owner | none | Done. The assertion was updated on main; do not edit the table |
+| WI-FE-005 | Student Action Center (Journey A) | WI-FE-002 (resolved) | **Open**, not started; composition recorded in D.1 | the feature-flagged route is traced end to end; tests for loading, empty, error, stale, permission | D.1 | Frontend architect, backend, QA | none | Trace the feature-flagged route: route → context → data → action → receipt → recovery |
+| WI-FE-008 | Shared: required frontend CI gates not run | WI-FE-001 | **Open** | each gate below executed and recorded with its exit status | A.2 | Release engineer | none | Run `npm run check:video`, `npm run test:zones`, `npm run budgets`, `npm run smoke:cold`, `npm run smoke:a11y`, `npm run smoke:golden`, and `npm run smoke:registration-states`. Also run the two CI variants that are not the ordinary golden smoke: `smoke:golden` with `VITE_HUMAN_HELP=preview` and `SMOKE_EXPECT_HUMAN_HELP=1` against a preview build, and `smoke:registration-handoff` against its separately built Registration Day configuration (`.github/workflows/ci.yml`, `build` job). Record exit status and any blocking result for each |
 | WI-FE-006 | Shared: component census | none | **Open** | section C classification table | C | Design systems | none | `npm run census:design`, then classify |
 | WI-FE-007 | Shared: gates not run | WI-FE-001 | **Open** | `npm run build`, `design-system:check`, `design-system:report`, `check:university`, `test:shuffle` executed and recorded | A.2 | Release engineer | none | Run each and record exit status here. The required CI `build` job runs further gates, listed in WI-FE-008 |
 
 ### K.2 Checkpoint
 
 - **Completed in this session**: baseline install and the three commands in A.2 that were executed; the failing-test diagnosis in A.3; this document.
-- **Changed files**: `docs/engineering/FRONTEND-ENGINEERING.md` (new). No application source was changed.
-- **Next dependency-ordered task**: WI-FE-002. It is a confirmed, student-facing, deterministic failure on the path to Journey A, and it is smaller than the journey itself.
+- **Changed files on this branch**: `docs/engineering/FRONTEND-ENGINEERING.md` (new); `docs/developers/REPO-MAP.md` (the `.anchor/` row removed, `11aecdcd`); `.anchor/session-state.md` untracked (`3eca03cd`), not deleted from disk; merge of `origin/main` (`d27534e3`). No application source was changed.
+- **Next dependency-ordered task**: WI-FE-005. Its prerequisite, WI-FE-002, is resolved on main.
 - **Not to be treated as done**: any journey in D, any gate in J, and the claim that the frontend is "complete".
