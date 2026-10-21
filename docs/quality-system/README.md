@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-READINESS-TEST-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-TEST-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester quality system — QA and Quality Engineering pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `dac31c9`.

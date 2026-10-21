@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/business/templates/RISK_REGISTER.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Midpoint Executive Review
 
 | Control | Value |

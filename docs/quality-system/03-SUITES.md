@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/RESILIENCE-INCLUSION-ECOSYSTEM-TEST-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 03 · The ten suites
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

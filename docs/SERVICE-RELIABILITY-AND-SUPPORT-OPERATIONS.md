@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Service reliability and support operations
 
 Part 5 of the expansion command. Phase 3. **Waits for #779 (kill switches) and

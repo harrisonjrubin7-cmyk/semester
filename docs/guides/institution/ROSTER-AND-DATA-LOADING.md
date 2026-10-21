@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Roster and data loading
 
 > **Type:** explanation · **Audience:** implementers, institution-admins · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/institution-guides.test.ts`

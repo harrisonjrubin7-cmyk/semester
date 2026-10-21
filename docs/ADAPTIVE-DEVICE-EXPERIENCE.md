@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Adaptive device experience
 
 **The rule:** a student can do the same things on a phone, a tablet or a

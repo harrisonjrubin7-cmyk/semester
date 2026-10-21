@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Domain replacement register
 
 <!-- Rendered from app/src/lib/replaceregister.ts by replaceregister.test.ts. Edit the data, then run `npm run registers` from app/. -->

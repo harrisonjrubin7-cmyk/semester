@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/04-RITUALS-STATUS-ESCALATION.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_RISK_REGISTER.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester — launch command center (Phase 0)
 
 **Date:** 2026-10-04 · **Status:** OPERATING VIEW — it sequences work; it approves no launch · **Builds on:** [`docs/program/04-RITUALS-STATUS-ESCALATION.md`](../docs/program/04-RITUALS-STATUS-ESCALATION.md) (weekly review, escalation ladder; next weekly report due 2026-10-11), [`docs/program/02-DEPENDENCIES-AND-CRITICAL-PATH.md`](../docs/program/02-DEPENDENCIES-AND-CRITICAL-PATH.md), [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md) · **Rule:** [`NO_MORE_UNSCOPED_BUILD_RULE.md`](../docs/program/NO_MORE_UNSCOPED_BUILD_RULE.md) (proposal)

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Component release checklist
 
 What a new or changed component or screen must show before its pull request

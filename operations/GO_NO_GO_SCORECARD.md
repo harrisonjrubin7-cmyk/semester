@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETE_CAPABILITY_REGISTER.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_RISK_REGISTER.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester — go / no-go scorecard (Phase 0)
 
 **Date:** 2026-10-04 · **Repository:** `origin/main` @ `c170dcd` · **Status:** BASELINE SCORECARD — it scores evidence; it grants no approval · **Controlling decision:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md) (2026-10-03). Any conflict resolves to the **more conservative** boundary.

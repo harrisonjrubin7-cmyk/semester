@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Decisions that are made
 
 A decision is only made if it is written down. Two things in this project have

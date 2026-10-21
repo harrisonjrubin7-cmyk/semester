@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/INCIDENT-RESPONSE.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/integrated-trust/TABLETOP-CALENDAR.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Incident Response Plan (consolidated working view)
 
 | Control | Value |

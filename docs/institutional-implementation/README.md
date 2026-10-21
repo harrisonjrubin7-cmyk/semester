@@ -1,3 +1,48 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-WAR-ROOM.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CONFIGURATION-STUDIO.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/FEEDBACK-AND-ESCALATION.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/MIGRATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/OFFBOARDING-AND-EXPORT.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Institutional implementation and customer success system
 
 | Control | Value |

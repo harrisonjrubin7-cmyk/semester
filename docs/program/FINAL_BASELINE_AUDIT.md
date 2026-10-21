@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETE_CAPABILITY_REGISTER.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester — final baseline audit (Phase 0)
 
 | Control | Value |

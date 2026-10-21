@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester — company live status (Phase 0)
 
 **Date:** 2026-10-04 · **Companion:** [`../../commercial/GO_TO_MARKET_READINESS.md`](../../commercial/GO_TO_MARKET_READINESS.md) · **Controlling:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md), [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../OWNER-AND-ACCOUNTABILITY-MATRIX.md)

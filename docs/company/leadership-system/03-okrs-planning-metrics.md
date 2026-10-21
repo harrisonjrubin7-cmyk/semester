@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PROOF-CALENDAR.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/04-organization-and-hiring.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/01-board.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/05-culture.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/06-domain-governance.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/08-continuity.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 3 · OKRs, annual planning, quarterly review and operating metrics
 
 > **PROPOSED — NOT ADOPTED.** Builds on [`ANNUAL-OPERATING-PLAN.md`](../ANNUAL-OPERATING-PLAN.md), [`QUARTERLY-OPERATING-REVIEW.md`](../QUARTERLY-OPERATING-REVIEW.md) and [`COMPANY-FIRST-YEAR-MEASURES.md`](../../COMPANY-FIRST-YEAR-MEASURES.md). **No target is set here.** Targets are the founder's decision (F6), recorded as a decision, and the first-year-measures test refuses a target with no decision behind it.

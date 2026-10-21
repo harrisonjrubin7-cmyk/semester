@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Mutual Action Plan Template
 
 | Control | Value |

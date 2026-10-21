@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Contract review checklist: Phase 0 view
 
 > **Not legal advice. A checklist of what exists and what counsel must review; it approves no contract term. Every row requires qualified counsel.**
