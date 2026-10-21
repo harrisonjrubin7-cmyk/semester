@@ -200,8 +200,10 @@ Organizations and Events: absent entirely. Courses: **Built**.
 | Blocking | **Built** — `public.blocks`, RLS-enforced |
 | Reporting | **Partly** — messages and Community posts are stored and reviewed; users, organizations and events cannot be reported yet (§58) |
 | Shared courses | **Built** — the room *is* the shared course |
-| Connection requests, accept, decline, remove | **Absent** — no table |
-| Following, followers, mutual connections | **Absent** — no table |
+| Connection requests, accept, remove | **Built** — `public.connections` with `request_connection`, `accept_connection`, `remove_connection` (`20260922003000_connections.sql`) |
+| Decline a connection request | **Absent** — no `decline_connection` function; the addressee can only `remove_connection`, which deletes the row for either party, pending or accepted |
+| Mutual connections, connected-with lookup | **Built** — `public.mutual_connections`, `public.connected_with` (same migration) |
+| Following, followers | **Absent** — no table |
 | Shared organizations | **Absent** — no organizations |
 
 ## §47.9 Direct messaging — **Absent** as specified
