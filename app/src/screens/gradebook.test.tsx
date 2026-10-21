@@ -419,7 +419,7 @@ describe('a student’s course', () => {
     await press('Ask about Midterm');
     expect(document.activeElement?.textContent).toBe('Ask for Midterm to be looked at again');
     expect(must('Send the regrade request').disabled).toBe(true);
-    type(host.querySelector('textarea'), 'Question 2 was marked wrong');
+    type(host.querySelector('section[aria-labelledby="regrade-head"] textarea'), 'Question 2 was marked wrong');
     await press('Send the regrade request');
     expect(mock.regrade).toHaveBeenCalledWith('mid', 'Question 2 was marked wrong', expect.stringMatching(/^regrade:mid:/));
     expect(mock.say).toHaveBeenCalledWith(expect.stringMatching(/^Your regrade request for Midterm is sent/));
