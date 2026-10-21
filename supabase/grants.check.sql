@@ -565,6 +565,11 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261019120000_learning_submissions.sql: a student hands in work on a
+    -- gradebook item. Checks auth.uid(), the caller's own school and
+    -- submissions:create on the item's course and term, and spends a key on
+    -- the gradebook ledger; `learning-submissions.check.sql` proves each refusal.
+    'learning_submit(want_item uuid, want_body text, want_key text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
@@ -733,6 +738,16 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+    -- The three in 20261020120000_registration_hold_resolution.sql. The
+    -- resolver raises unless the caller holds registration_hold:resolve over
+    -- exactly the hold's owning office scope, finds holds at the caller's
+    -- school only, and takes an idempotency key and the state the office saw;
+    -- the office list raises the same way; the readiness read returns the
+    -- caller's own evaluations. `registration-hold-resolution.check.sql`
+    -- attempts each refusal.
+    'registration_hold_resolve(want_hold uuid, want_key text, want_expect text)',
+    'registration_holds_for_office(want_office text)',
+    'my_registration_readiness()',
     -- The four in 20261021090000_roster_admin_desk.sql. Each raises unless
     -- the caller holds roster:administer over exactly the named school; the
     -- binder refuses the caller's own account, an account at another school

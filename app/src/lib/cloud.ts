@@ -1344,8 +1344,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'dining_orders', column: 'student' },
 
   // ── The official registration ledger and gradebook ──────────────────────
-  // Your enrollments (`lib/enrollment/client.ts`), and every version of your
-  // grades and your regrade requests (`lib/gradebook/client.ts`). Each names
+  // Your enrollments (`lib/enrollment/client.ts`), every version of your
+  // grades and your regrade requests (`lib/gradebook/client.ts`), and the work
+  // you handed in (`lib/gradebook/submissions.ts`,
+  // `20261019120000_learning_submissions.sql`). Each names
   // you by a column that references `auth.users` with `on delete cascade`
   // (`20260929300000_registration_transaction.sql`,
   // `20260929310000_gradebook.sql`), so they go with the account; a regrade's
@@ -1354,6 +1356,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+  { table: 'learning_submissions', column: 'student_id' },
 ];
 
 /**

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EMPTY_MEETINGS, meetingKey, meetingWithNamedAgenda, readMeetings } from '../lib/advisor-meeting';
 import { useDeviceLibrary } from '../lib/device-library';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
@@ -6,8 +6,13 @@ import { hasPathProfile } from '../lib/path-profile';
 import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput, type PathReadinessItem } from '../lib/path-readiness';
 import { useRegistrationPlan } from '../lib/registration-plan';
 import { useStore } from '../state/store';
+import { cloudConfigured } from '../lib/cloud';
+import { formatDateTime } from '../lib/locale';
+import { useModuleGate } from '../lib/modulegate';
+import { FLAG } from '../lib/enrollment/service';
+import { loadMyHold, loadMyReadiness, staleTerms, type HoldNotice, type ReadinessStanding } from '../lib/enrollment/client';
 import { usePathProfile } from './PathProfileForm';
-import { SectionLabel } from './ui';
+import { Notice, SectionLabel } from './ui';
 
 const stateText = { ready: 'Ready', attention: 'Needs attention', not_started: 'Not started' } as const;
 
@@ -85,6 +90,8 @@ export function RegistrationReadiness({ onPrepareMeeting }: { onPrepareMeeting?:
         })}
       </ol>
 
+      {cloudConfigured && <SchoolRecordCheck />}
+
       <details className="path-readiness-systems">
         <summary>Institution connections and official actions</summary>
         <dl>
@@ -96,5 +103,101 @@ export function RegistrationReadiness({ onPrepareMeeting }: { onPrepareMeeting?:
         </dl>
       </details>
     </section>
+  );
+}
+
+/** Nothing is read from the school unless it runs registration through Semester. */
+function SchoolRecordCheck() {
+  const gate = useModuleGate(FLAG);
+  return gate.status === 'on' ? <HoldStanding /> : null;
+}
+
+type Reading = { hold: HoldNotice; standing: ReadinessStanding[]; at: number };
+
+const clock = (at: number) => formatDateTime(new Date(at), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+/**
+ * What the school's own record says, beside the preparation above: whether a
+ * hold stops the student adding courses, and whether the server still counts
+ * their readiness as current.
+ *
+ * When an office resolves a hold, the server marks any readiness worked out
+ * while the hold stood as `stale` (`my_registration_readiness`). This shows
+ * that as "Something changed — check again" rather than leaving an old answer
+ * looking current, and "Check again" reads both afresh. A clear reading is a
+ * receipt that says when it was checked and that it is not enrollment.
+ */
+export function HoldStanding() {
+  const [reading, setReading] = useState<Reading | null | string>(null);
+  const [reads, setReads] = useState(0);
+  const [asked, setAsked] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    Promise.all([loadMyHold(), loadMyReadiness()]).then(
+      ([hold, standing]) => { if (live) setReading({ hold, standing, at: Date.now() }); },
+      (e: unknown) => { if (live) setReading(e instanceof Error ? e.message : 'Could not check your school’s registration record.'); },
+    );
+    return () => { live = false; };
+  }, [reads]);
+
+  const again = () => {
+    setAsked(true);
+    setReading(null);
+    setReads((n) => n + 1);
+  };
+  const checkAgain = (
+    <button type="button" className="balance-button" onClick={again}>
+      Check again
+    </button>
+  );
+
+  if (reading === null) {
+    return <p role="status">Checking your school’s registration record…</p>;
+  }
+  if (typeof reading === 'string') {
+    return (
+      <div>
+        <Notice alert>{reading} Nothing has changed.</Notice>
+        {checkAgain}
+      </div>
+    );
+  }
+
+  const stale = staleTerms(reading.standing);
+  const office = reading.hold.office || 'The office that placed it';
+  return (
+    <div data-hold-standing={stale.length ? 'stale' : reading.hold.held ? 'held' : 'clear'}>
+      <SectionLabel>Your school’s record</SectionLabel>
+      {stale.length > 0 && (
+        <>
+          <Notice>
+            <strong>Something changed — check again.</strong> Your readiness for {stale.join(', ')} was worked out before
+            something on your record changed, such as a hold being cleared, so it no longer counts as ready.
+            {asked ? ` Checked ${clock(reading.at)}: your school has not worked it out again yet.` : ''}
+          </Notice>
+          {checkAgain}
+        </>
+      )}
+      {reading.hold.held ? (
+        <p>
+          <strong>A hold stops you adding courses.</strong> {office} can clear it; you can still drop or withdraw.
+          {reading.hold.link && (
+            <>
+              {' '}
+              <a href={reading.hold.link} target="_blank" rel="noopener noreferrer">
+                Contact {reading.hold.office || 'the office'} (opens outside Semester)
+              </a>
+            </>
+          )}
+        </p>
+      ) : (
+        <p>
+          <strong>Checked {clock(reading.at)}.</strong> No hold stops you adding courses. This is not enrollment: you are not
+          registered in any course until you enroll and your school confirms it.
+        </p>
+      )}
+      {stale.length === 0 && checkAgain}
+    </div>
   );
 }

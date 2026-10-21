@@ -308,9 +308,18 @@ begin
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
   -- Privileged access review then added access_review:manage for
   -- platform_admin and trust_officer.
-  -- 187 before the roster desk (20261021090000_roster_admin_desk.sql) gave
+  -- 187 before submissions (20261019120000_learning_submissions.sql) added
+  -- four: submissions:create for student, undergraduate_student,
+  -- graduate_student and transfer_student — the roles carrying grades:receive.
+  -- Hold resolution (20261020120000_registration_hold_resolution.sql) then
+  -- gave registration_hold:resolve to the seven roles that already publish
+  -- holds as institution actions: registrar, financial_aid_officer,
+  -- student_accounts_officer, international_student_advisor,
+  -- veterans_certifying_official, athletics_compliance_officer and
+  -- residence_life_staff.
+  -- The roster desk (20261021090000_roster_admin_desk.sql) then gave
   -- roster:administer to integration_admin and university_admin.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 189);
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 200);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
