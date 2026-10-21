@@ -1,0 +1,48 @@
+{
+  "engine": "SQLite in-memory mock; not PostgreSQL or live HTTP",
+  "auth": "mock expiry/scope only; no JWT signature verification",
+  "cases": [
+    {
+      "case": "idempotent schema/data sync",
+      "passed": true
+    },
+    {
+      "case": "incremental source revision",
+      "passed": true
+    },
+    {
+      "case": "pre-write mismatch rollback",
+      "passed": true
+    },
+    {
+      "case": "old writer fenced",
+      "passed": true
+    },
+    {
+      "case": "post-write hold preserves native writes",
+      "passed": true
+    },
+    {
+      "case": "expired mock credentials",
+      "passed": true
+    },
+    {
+      "case": "wrong tenant",
+      "passed": true
+    },
+    {
+      "case": "invalid swap payload",
+      "passed": true
+    },
+    {
+      "case": "duplicate and conflicting command",
+      "passed": true
+    },
+    {
+      "case": "timeout after dispatch never duplicates",
+      "passed": true
+    }
+  ],
+  "passed": 10,
+  "total": 10
+}
