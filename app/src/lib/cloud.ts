@@ -1390,6 +1390,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'career_evidence', column: null, cascadesFrom: 'workspaces' },
   { table: 'career_evidence_grants', column: null, cascadesFrom: 'workspaces' },
   { table: 'career_evidence_grant_items', column: null, cascadesFrom: 'workspaces' },
+  // The roles your account holds (`20260921223000_role_grants.sql`). The app
+  // reads your own to decide whether to offer an employer's "Shared with you"
+  // list (`lib/workspace/evidence.ts`, `employerScopes`) and never writes one.
+  // A grant names you by `subject` with `on delete cascade`, so it goes too.
+  { table: 'role_grants', column: 'subject' },
 ];
 
 /**
