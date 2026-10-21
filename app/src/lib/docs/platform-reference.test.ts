@@ -1437,6 +1437,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Slice 3: filing and deciding a course request emit course_request.filed / .decided in their own
       // transaction (20261021120000_course_requests.sql). Nothing drains the outbox yet, so "none published" still holds.
       'supabase/migrations/20261021120000_course_requests.sql',
+      // Not a producer: the grade-release relay reads gradebook.grades_released and writes only its own receipts,
+      // delivery rows and student actions. It drains one event type for one consumer and publishes nothing, and no
+      // scheduler calls its tick, so "none published" still holds.
+      'supabase/migrations/20261022090000_grade_release_student_actions.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);

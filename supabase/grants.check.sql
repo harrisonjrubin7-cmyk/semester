@@ -591,6 +591,13 @@ declare
     -- `gradebook-due-dates.check.sql` proves each refusal and each reader.
     'gradebook_set_due(want_item uuid, want_due timestamp with time zone, want_expect integer, want_key text)',
     'gradebook_due_dates(want_course text, want_term text)',
+    -- 20261022090000_grade_release_student_actions.sql: a student's Action
+    -- Center items from released grades. The feed is security invoker over the
+    -- student's own rows and their own released grade versions; the settle is a
+    -- definer that checks auth.uid() owns the action, the version read and the
+    -- key. `event-relay.check.sql` proves each refusal.
+    'my_student_actions()',
+    'settle_student_action(want_action uuid, want_state text, want_version integer, want_key text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions

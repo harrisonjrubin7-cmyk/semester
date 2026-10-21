@@ -807,6 +807,7 @@ const MOCKS_MODULES = [
   'src/components/gradebook/CourseRequests.test.tsx',
   'src/lib/gradebook/duedates.test.ts',
   'src/components/gradebook/DueDates.test.tsx',
+  'src/components/TodayActionCenter.feedback.test.tsx',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',

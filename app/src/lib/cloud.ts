@@ -1364,6 +1364,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `student_id` with `on delete cascade`, and its history goes with it.
   { table: 'course_requests', column: 'student_id' },
   { table: 'course_request_actions', column: null, cascadesFrom: 'course_requests' },
+
+  // The Action Center items released grades made for you
+  // (`20261022090000_grade_release_student_actions.sql`): named by
+  // `student_id` with `on delete cascade`, and gone with a grade version too.
+  { table: 'student_actions', column: 'student_id' },
 ];
 
 /**
