@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/TRAINING-PLAN-AND-ACADEMY.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/HECVAT_ROADMAP.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
@@ -25,14 +25,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/GO-NO-GO-CHECKLIST.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

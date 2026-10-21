@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/02-model-gateway.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/08-tenant-ai-console.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-INVENTORY-AND-LINEAGE.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
@@ -41,11 +41,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/01-board.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/08-continuity.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-LIFECYCLE-GATES.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
@@ -77,7 +77,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/README.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
@@ -93,6 +93,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

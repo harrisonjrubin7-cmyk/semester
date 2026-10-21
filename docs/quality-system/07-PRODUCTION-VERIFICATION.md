@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SLO-SLI-DRAFT.md
@@ -9,14 +9,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/README.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

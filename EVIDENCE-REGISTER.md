@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/product-design/FIRST-WIN-SPECIFICATION.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
@@ -29,6 +29,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

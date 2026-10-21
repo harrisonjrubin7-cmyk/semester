@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/README.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
@@ -21,26 +21,44 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-13-secret-exposed.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-16-infrastructure-drift.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: supabase/DEPLOY.md
-    changed_at: "2026-10-21T13:53:50"
+    changed_at: "2026-10-21T15:01:39"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

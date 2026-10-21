@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1154.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/02-PRICING-PACKAGING-ENTITLEMENTS.md
@@ -37,10 +37,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

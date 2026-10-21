@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
@@ -9,23 +9,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_SALES_EMAIL_SEQUENCES.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/STAGE-COLLATERAL-AND-HANDOFF.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
@@ -33,10 +33,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

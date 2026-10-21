@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-INVENTORY-AND-LINEAGE.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_RETENTION_DELETION_PLAN.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/01-PROCESSING-REGISTER-AND-CONTROLS.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-INVENTORY.md
@@ -21,10 +21,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-21T13:53:50"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

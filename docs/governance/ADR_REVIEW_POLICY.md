@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T13:53:44"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/LEGAL_REVIEW_QUEUE.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

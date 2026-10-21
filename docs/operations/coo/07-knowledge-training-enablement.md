@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/11-founder-to-team-transition.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
@@ -33,6 +33,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

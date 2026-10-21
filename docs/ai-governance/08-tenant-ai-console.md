@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/CONFIGURATION-STUDIO.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/09-user-transparency.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

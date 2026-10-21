@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CONFIGURATION-STUDIO.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-PERMISSION-MATRIX.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/SSO-TENANT-ONBOARDING.md
@@ -17,10 +17,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

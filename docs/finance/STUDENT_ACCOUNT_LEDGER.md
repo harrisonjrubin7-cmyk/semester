@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/finance/FINANCE_RELEASE_GATES.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/EMBEDDED_FINANCE_ROADMAP.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

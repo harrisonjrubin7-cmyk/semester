@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/program/02-DEPENDENCIES-AND-CRITICAL-PATH.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/program/READINESS_GAP_MATRIX.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: operations/LAUNCH_COMMAND_CENTER.md
-    changed_at: "2026-10-21T13:53:50"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

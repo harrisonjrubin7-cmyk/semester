@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -21,10 +21,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/marketing/LEAD_INTAKE_AND_CONSENT_SPEC.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: DECISIONS.md
-    changed_at: "2026-10-21T13:53:44"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MARKET-ENTRY-PLAN.md
-    changed_at: "2026-10-21T13:53:49"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MOAT-PLAN.md
@@ -45,10 +45,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

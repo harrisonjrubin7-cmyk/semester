@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T13:53:45"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/ACCEPTABLE-USE-POLICY-DRAFT.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LEGAL-ISSUE-MAP.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:37"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LITIGATION-RESPONSE-PROCEDURE-DRAFT.md
@@ -37,6 +37,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

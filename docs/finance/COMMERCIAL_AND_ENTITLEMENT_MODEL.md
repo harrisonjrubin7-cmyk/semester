@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T13:53:47"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/which-integration-path.md
-    changed_at: "2026-10-21T13:53:48"
+    changed_at: "2026-10-21T15:01:36"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
@@ -17,6 +17,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

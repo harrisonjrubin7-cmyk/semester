@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
-    changed_at: "2026-10-21T13:53:50"
+    changed_at: "2026-10-21T15:01:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

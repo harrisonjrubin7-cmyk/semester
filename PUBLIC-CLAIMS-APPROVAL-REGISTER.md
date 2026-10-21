@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T13:53:44"
+    changed_at: "2026-10-21T15:01:34"
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
   - source: docs/CLM-018-SOURCE-LABEL-EVIDENCE.md
-    changed_at: "2026-10-21T13:53:46"
+    changed_at: "2026-10-21T15:01:35"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 
