@@ -60,6 +60,10 @@ if (process.argv[1]?.endsWith('design-system-report.mjs')) {
   writeFileSync(out, md);
   writeFileSync(out.replace(/\.md$/, '.json'), JSON.stringify({ ...result, contracts }, null, 2) + '\n');
   console.log('Wrote ' + out);
+  if (Object.values(contracts).includes('fail') || !result.ok) {
+    console.error('design-system: audit ok=' + result.ok + ', violations=' + result.violations.length);
+    console.error('design-system: contracts ' + JSON.stringify(contracts));
+  }
   if (Object.values(contracts).includes('fail')) process.exit(1);
   process.exit(result.ok ? 0 : 1);
 }
