@@ -15,7 +15,11 @@ export function contractStatus(files) {
   for (const f of files) {
     const p = spawnSync('npx', ['vitest', 'run', f], { cwd: appDir, encoding: 'utf8' });
     out[f] = p.status === 0 ? 'pass' : 'fail';
-    if (p.status !== 0) console.error(`design-system: ${f} exited ${p.status}${p.error ? ` (${p.error.message})` : ''}\n${String(p.stderr || p.stdout || '').split('\n').slice(-12).join('\n')}`);
+    // Node's module errors put the message above the stack, so keep the
+    // error lines as well as the tail.
+    const lines = String(p.stderr || p.stdout || '').split('\n');
+    const errors = lines.filter((l) => /error|cannot find|not found/i.test(l)).slice(0, 6);
+    if (p.status !== 0) console.error(`design-system: ${f} exited ${p.status}${p.error ? ` (${p.error.message})` : ''}\n${[...errors, '...', ...lines.slice(-12)].join('\n')}`);
   }
   return out;
 }
