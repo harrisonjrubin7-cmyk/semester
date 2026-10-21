@@ -13,7 +13,7 @@ repository.
 - [x] 3. Create the contract-lab submission template. — `docs/engineering/contract-lab.yaml`
 - [ ] 4. Validate all existing record-envelope schemas.
 - [x] 5. Add tenant-isolation simulation to CI. — `packages/platform/src/isolation/isolation.test.ts` (in the app test include, `app/vite.config.ts`)
-- [ ] 6. Add policy-reference checks to CI.
+- [ ] 6. Add policy-reference checks to CI. — partial: `app/src/lib/registry/references.test.ts` (runs in `npm test`) ratchets passport references. 15 stay open, each listed with its reason, because no POL, EVD, TST, REL or SLO record exists yet.
 - [ ] 7. Add API and event compatibility checks.
 - [x] 8. Add release-evidence expiration rules. — `app/src/lib/governance/release-profiles.test.ts` (fails closed on stale, failed, revoked or expired evidence)
 - [ ] 9. Add correlation IDs end to end.

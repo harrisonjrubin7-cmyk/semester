@@ -2,8 +2,11 @@
 
 Machine-checked records that tie a product component to its owners, boundaries,
 dependencies, controls, tests, and lifecycle. The first slice is the **component
-passport**. Only shape is enforced here; whether the named owners, policies,
-tests, and evidence exist is not yet checked.
+passport**. Shape is enforced by `app/src/lib/registry/passport.ts`. Reference
+resolution is enforced by `app/src/lib/registry/references.ts`: a policy, evidence,
+release, test or SLO identifier must name a passport, or appear in the open list in
+`references.test.ts` with its reason. Owners, and the evidence, test, release and SLO
+records themselves, are not yet checked.
 
 ## Passports
 
