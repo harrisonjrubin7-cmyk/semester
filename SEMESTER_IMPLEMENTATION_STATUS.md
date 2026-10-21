@@ -200,9 +200,9 @@ Organizations and Events: absent entirely. Courses: **Built**.
 | Blocking | **Built** — `public.blocks`, RLS-enforced |
 | Reporting | **Partly** — messages and Community posts are stored and reviewed; users, organizations and events cannot be reported yet (§58) |
 | Shared courses | **Built** — the room *is* the shared course |
-| Connection requests, accept, remove | **Built** — `public.connections` with `request_connection`, `accept_connection`, `remove_connection` (`20260922003000_connections.sql`) |
-| Decline a connection request | **Absent** — no `decline_connection` function; the addressee can only `remove_connection`, which deletes the row for either party, pending or accepted |
-| Mutual connections, connected-with lookup | **Built** — `public.mutual_connections`, `public.connected_with` (same migration) |
+| Connection requests, accept, decline, remove — backend | **Built** — `public.connections` with `request_connection`, `accept_connection`, `remove_connection` (`20260922003000_connections.sql`). `remove_connection` is also the decline: the addressee calling it refuses a pending request, and either party calling it withdraws or removes |
+| Connection requests, accept, decline, remove — student UI | **Absent** — no application code calls these RPCs (`app/src/lib/definerregister.ts` only registers them); a student cannot request, accept, decline or remove a connection |
+| Mutual connections, connected-with — backend | **Built** — `public.mutual_connections`, `public.connected_with` (same migration); no application call site yet |
 | Following, followers | **Absent** — no table |
 | Shared organizations | **Absent** — no organizations |
 
