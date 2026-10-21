@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Faculty with a connected course get a Teaching workspace on Account, and a publication that fails to load says so
+
+Opening Teaching from Account now shows a Teaching workspace: personal course preparation, your connected Course Studio, and a plain list of what it does not do (no rosters, submissions or grades). If the publication for a course cannot be read, Course Studio shows "Could not read what is published" with a Try again button instead of an empty, editable draft. Nothing changes for students.
+
 ### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
 
 Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. An approved extension on an assignment now moves that student's due date for it (see below). Nobody else will notice anything.
