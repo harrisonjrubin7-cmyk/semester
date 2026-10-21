@@ -287,8 +287,8 @@ begin
   perform pg_temp.refused('the pinned grantee reading the live object', pinned, format(rd, obj, null), 'no such object here');
   perform pg_temp.refused('the pinned grantee reading the current version by id', pinned, format(rd, obj, v2), 'no such object here');
   perform pg_temp.counted('the pinned grantee sees no object row', pg_temp.seen(pinned, 'select * from public.workspace_objects'), 0);
-  perform pg_temp.counted('and exactly one version', pg_temp.seen(pinned, 'select * from public.workspace_object_versions'), 1);
-  perform pg_temp.said('which is version 1', (pg_temp.ask(pinned, 'select to_jsonb(v.id) from public.workspace_object_versions v'))#>>'{}', v1::text);
+  perform pg_temp.counted('and no version row by direct select: content comes only through the audited read',
+    pg_temp.seen(pinned, 'select * from public.workspace_object_versions'), 0);
   perform pg_temp.counted('and their own grant', pg_temp.seen(pinned, 'select * from public.workspace_object_grants'), 1);
 
   r := pg_temp.ask(owner, format(save, obj, 2, 'Essay on Hume (final)', 'Third draft.', 'text/plain', 'semester.text/1', 'wo-save-0002'));
@@ -310,7 +310,7 @@ begin
   perform pg_temp.said('a live grantee reads the current version', pg_temp.ask(live, format(rd, obj, null))->>'body', 'Third draft.');
   perform pg_temp.said('and sees the live revision', pg_temp.ask(live, format(rd, obj, null))->>'revision', '3');
   perform pg_temp.counted('and the object row', pg_temp.seen(live, 'select * from public.workspace_objects'), 1);
-  perform pg_temp.counted('and only the current version', pg_temp.seen(live, 'select * from public.workspace_object_versions'), 1);
+  perform pg_temp.counted('and no version row by direct select', pg_temp.seen(live, 'select * from public.workspace_object_versions'), 0);
   perform pg_temp.refused('a live grantee reading an earlier version', live, format(rd, obj, v1), 'no such object here');
   perform pg_temp.refused('a read grantee saving', live,
     format(save, obj, 3, 'Essay on Hume (final)', 'My edit.', 'text/plain', 'semester.text/1', 'wo-live-save'),
