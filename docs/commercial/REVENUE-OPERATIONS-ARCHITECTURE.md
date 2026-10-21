@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:12"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
@@ -21,6 +21,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

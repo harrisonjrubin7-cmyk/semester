@@ -1,22 +1,30 @@
 ---
 stale-refs:
   - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
-    changed_at: "2026-10-21T15:27:36"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
-    changed_at: "2026-10-21T15:27:36"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-21T15:27:40"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

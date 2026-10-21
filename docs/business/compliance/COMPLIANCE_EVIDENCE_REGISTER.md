@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:12"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_SECURITY_CHECKLIST.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/HECVAT_ROADMAP.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/INCIDENT_RESPONSE_PLAN.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
@@ -49,11 +49,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
@@ -61,6 +61,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

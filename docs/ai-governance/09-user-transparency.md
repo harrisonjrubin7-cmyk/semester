@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/ai-governance/07-incident-response-and-shutdown.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

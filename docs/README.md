@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:12"
     sections_changed: []
     summary: externally modified
   - source: CONTRIBUTING.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T15:27:36"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
@@ -81,15 +81,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/README.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/audit/CURRENT_STATE.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/compliance/README.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
@@ -97,15 +97,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/README.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/README.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/INDEX.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/README.md
@@ -113,7 +113,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/README.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/README.md
@@ -125,23 +125,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/help/README.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/README.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/README.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/README.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/releases/README.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/support/README.md
@@ -153,7 +153,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-21T15:27:40"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
@@ -169,6 +169,40 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/02-source-of-truth-matrix.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

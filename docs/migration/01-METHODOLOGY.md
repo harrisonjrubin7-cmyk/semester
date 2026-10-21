@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/02-SOURCE-INVENTORY-AND-EXTRACTION.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/README.md
@@ -25,6 +25,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

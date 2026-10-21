@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:12"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

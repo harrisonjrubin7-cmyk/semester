@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PILOT.md
-    changed_at: "2026-10-21T15:27:35"
+    changed_at: "2026-10-21T15:51:13"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CONFIGURATION-TIERS.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
@@ -33,6 +33,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

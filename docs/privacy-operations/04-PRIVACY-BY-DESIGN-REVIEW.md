@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
-    changed_at: "2026-10-21T15:27:36"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-RISK-ASSESSMENT.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

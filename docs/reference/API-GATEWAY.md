@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/reference/AUTH-AND-LIMITS.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ERRORS.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

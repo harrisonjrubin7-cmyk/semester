@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-21T15:27:36"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
@@ -13,14 +13,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/RENEWAL_AND_EXPANSION_PLAYBOOK.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

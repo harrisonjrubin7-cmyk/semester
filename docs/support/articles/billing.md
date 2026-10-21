@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
   - source: docs/support/README.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/delete-account-export-data.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

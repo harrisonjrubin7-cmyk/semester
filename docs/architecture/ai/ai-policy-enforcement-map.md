@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/ai-governance/README.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/AI-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:17"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
@@ -17,10 +17,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:14"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

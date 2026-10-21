@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/finance/FINANCE_RELEASE_GATES.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
-    changed_at: "2026-10-21T15:27:38"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

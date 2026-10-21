@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/product-design/FIRST-WIN-SPECIFICATION.md
-    changed_at: "2026-10-21T15:27:39"
+    changed_at: "2026-10-21T15:51:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

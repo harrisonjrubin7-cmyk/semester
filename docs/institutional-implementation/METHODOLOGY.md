@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
-    changed_at: "2026-10-21T15:27:37"
+    changed_at: "2026-10-21T15:51:15"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/CUTOVER-ROLLBACK-GO-LIVE.md
@@ -57,6 +57,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 
