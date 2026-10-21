@@ -1,3 +1,10 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_STATUS.md
+    changed_at: "2026-10-21T12:49:04"
+    sections_changed: ["§47.8 Social graph — **Partly**"]
+---
+
 # Semester — implementation plan
 
 What to build, in dependency order, for the requirements in

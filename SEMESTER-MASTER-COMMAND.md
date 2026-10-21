@@ -1,3 +1,10 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_STATUS.md
+    changed_at: "2026-10-21T12:49:04"
+    sections_changed: ["§47.8 Social graph — **Partly**"]
+---
+
 # Semester — Master Product Transformation & Implementation Command
 
 The product specification, as supplied. Everything below this header is the
