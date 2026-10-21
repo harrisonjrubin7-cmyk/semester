@@ -1,3 +1,34 @@
+# One app — the thirty-sixth pass: the counted inventory (partial)
+
+Against `origin/main` at `162cd31d`. **63 destinations** in `DESTINATIONS` in `lib/nav.ts`, not the 59 in the request. **No code changed.** This pass records counts for Step 1 and the two requested tables that can be counted now. No merge, subsume, keep or cut verdict is recorded yet.
+
+## What was counted
+
+1. **Named ids.** The request names 22 ids. 12 are destinations (`home`, `brief`, `mine`, `calendar`, `ask`, `proof`, `me`, `help`, `import`, `edit`, `update`, `announce`). 10 are not a `DESTINATIONS` row: `weekly`, `ahead`, `tonight`, `chat`, `grades`, `standing`, `worked`, `everything`, `springboard`, `check`. Of those 10, only `grades`, `worked` and `springboard` are members of the `Screen` union in `lib/types.ts`. `weekly`, `ahead`, `tonight`, `chat`, `standing`, `everything` and `check` are in neither the union nor the registry. They are either names for something else or do not exist. Each one needs tracing before any merge is claimed.
+2. **Literal route counts.** Non-test `type: 'go', screen: '<id>'` dispatches: 164, of which 82 use a variable instead of a literal id and are not yet attributed to a destination. Literal top ten: `home` 16, `courses` 12, `account` 12, `degree` 9, `import` 8, `edit` 8, `calendar` 8, `profile` 7, `privacy` 7, `help` 7, `essay` 7.
+3. **Settings writers.** Non-test files dispatching each action (`type: '<action>'`):
+   - `setLook`: 17 files, **14 outside `screens/settings/`**. Those 14 are `components/unity/QuickActions`, `unity/modes`, `unity/CommandCenter`, `unity/SystemContextBar`, `components/Appearance`, `desk/Customize`, `desk/AppsPanel`, `TodayActionCenter`, `AccessModes`, `TodayDecisionSurface`, `lib/tools`, `screens/Springboard`, `screens/Directory`, `screens/Support`. This breaks the rule that appearance lives in `screens/settings/`.
+   - `setNav`: 3 files (`Appearance`, `desk/Customize`, `state/shape`).
+   - `setTabs`: 2 (`TabChooser`, `state/shape`).
+   - `setScale`: 2 (`GpaScale`, `state/shape`).
+   - `setDayBudget`: 3 (`Clashes`, `lib/tools`, `state/shape`).
+   - `setCutoffs`: 2 (`Cutoffs`, `state/shape`).
+   `state/shape.ts` normalises saved state. Its matches are counted here but it is not a control.
+4. **Not yet counted.** Hand-rolled list rows, headers, chip rows and empty states (the request asks for these re-counted). `countScreens`. The survivor inputs from `DEFAULT_TABS`. The saved-state migration in `state/shape.ts`.
+
+## Verdicts
+
+None recorded. The counts above do support one action without further tracing: the 14 `setLook` writers outside `screens/settings/` should be replaced with a link to the setting. That is a control change, so it lands as its own commit after the audit.
+
+## Next
+
+1. Attribute the 82 variable-id `go` dispatches to destinations.
+2. Trace the 10 absent ids: find the string the directory and `taskTags` use for each.
+3. Count hand-rolled rows, headers, chip rows and empty states.
+4. Merge, one per commit, each green, starting with the `setLook` consolidation.
+
+---
+
 # One app — the thirty-fifth pass: the audit before the merge (partial)
 
 Against `origin/main` at `fb51d663`. **63 destinations** in `lib/nav.ts`, not the 59 in the request. **No code changed.** This pass is Step 1 of "Make the app one app", and it is only partly done.
