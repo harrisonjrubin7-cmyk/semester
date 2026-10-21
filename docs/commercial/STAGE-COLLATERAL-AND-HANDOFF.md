@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:39:00"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/PRIVACY-OVERVIEW.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:06"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
@@ -77,6 +77,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

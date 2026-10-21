@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:59"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/CUSTOMER_HEALTH_SCORE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/PILOT_SUCCESS_PLAN.md
@@ -41,15 +41,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/EXECUTIVE-BUSINESS-REVIEW.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/HYPERCARE-AND-HANDOFF.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/INTEGRATION-WORKBOOK.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
@@ -57,23 +57,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/SUCCESS-SYSTEM.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/TENANT-CONFIGURATION-WORKBOOK.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/TRAINING-PLAN-AND-ACADEMY.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/pilot/FIRST-DAY-CHECKLIST.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
@@ -81,6 +81,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

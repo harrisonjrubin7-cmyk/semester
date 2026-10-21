@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SLO-SLI-DRAFT.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/09-dashboards-and-indicators.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
@@ -53,10 +53,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

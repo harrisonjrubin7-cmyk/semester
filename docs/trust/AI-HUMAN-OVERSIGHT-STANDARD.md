@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

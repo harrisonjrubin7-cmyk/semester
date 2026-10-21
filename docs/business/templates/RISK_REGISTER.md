@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/QBR_TEMPLATE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/WEEKLY_REVENUE_REVIEW.md
@@ -21,18 +21,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/13-REAL-NUMBERS-INTAKE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

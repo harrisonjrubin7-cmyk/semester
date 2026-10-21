@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:38:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

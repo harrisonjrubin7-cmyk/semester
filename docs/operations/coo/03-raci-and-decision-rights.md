@@ -5,27 +5,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/09-dashboards-and-indicators.md
@@ -41,10 +41,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

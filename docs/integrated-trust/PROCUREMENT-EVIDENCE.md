@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -17,39 +17,39 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/SYSTEM-ARCHITECTURE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/ACCESSIBILITY-PROGRAM.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/DATA-RIGHTS-OPERATIONS.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/DOMAIN-REQUIREMENTS.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-RESPONSE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
@@ -57,11 +57,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/TABLETOP-CALENDAR.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
@@ -93,10 +93,40 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
-    changed_at: "2026-10-19T02:53:26"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

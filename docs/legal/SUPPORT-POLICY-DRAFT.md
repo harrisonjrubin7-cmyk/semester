@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

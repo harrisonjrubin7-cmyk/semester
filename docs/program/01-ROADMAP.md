@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -29,19 +29,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-WAR-ROOM.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1144.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/program/02-DEPENDENCIES-AND-CRITICAL-PATH.md
@@ -69,6 +69,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

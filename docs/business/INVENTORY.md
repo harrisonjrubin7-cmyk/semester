@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: 30-60-90-DAY-EXECUTION-PLAN.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:52"
     sections_changed: []
     summary: externally modified
   - source: EVIDENCE-REGISTER.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-RETENTION-EXPORT-DELETION.md
@@ -25,19 +25,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_RETENTION_DELETION_PLAN.md
@@ -57,11 +57,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
@@ -69,11 +69,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/customer-success/ONBOARDING_WORKFLOW.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/finance/FINANCIAL_MODEL_SPEC.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/finance/PRICING_AND_PACKAGING.md
@@ -81,15 +81,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/finance/UNIT_ECONOMICS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_90_DAY_GTM_PLAN.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_GTM_KPI_TREE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
@@ -97,7 +97,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK_CUSTOMER_SAFE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/CRM_PIPELINE_DEFINITION.md
@@ -129,7 +129,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/RISK_REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/WEEKLY_REVENUE_REVIEW.md
@@ -157,7 +157,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
@@ -165,7 +165,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/EXECUTION-PLAN.md
@@ -173,15 +173,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-INVENTORY.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
@@ -189,15 +189,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
@@ -209,7 +209,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/07-SCENARIOS-AND-SENSITIVITY.md
@@ -229,6 +229,56 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

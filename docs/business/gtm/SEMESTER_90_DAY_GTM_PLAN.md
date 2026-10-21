@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: 30-60-90-DAY-EXECUTION-PLAN.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:52"
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
@@ -13,15 +13,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:59"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_GTM_KPI_TREE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

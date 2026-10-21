@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:59"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

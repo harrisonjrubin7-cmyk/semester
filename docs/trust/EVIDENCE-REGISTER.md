@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -29,27 +29,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATIONAL-MATURITY.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -65,10 +65,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

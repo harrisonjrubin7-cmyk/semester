@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/design/DESIGN_SYSTEM_ADOPTION_AUDIT.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Design ADRs 0030-0040

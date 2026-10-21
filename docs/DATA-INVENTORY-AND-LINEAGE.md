@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
@@ -9,18 +9,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINER-RLS-REGISTER.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-19T18:53:02"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

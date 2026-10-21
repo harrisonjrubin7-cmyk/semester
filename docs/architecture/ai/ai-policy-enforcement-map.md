@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
@@ -21,6 +21,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

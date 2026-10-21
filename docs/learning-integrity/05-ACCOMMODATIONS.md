@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/AT-PASS-PROTOCOL.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

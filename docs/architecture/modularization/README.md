@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/modularization/05-legacy-retirement.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1144.md
@@ -25,10 +25,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

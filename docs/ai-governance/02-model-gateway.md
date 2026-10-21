@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/06-evaluation-framework.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/07-incident-response-and-shutdown.md
@@ -25,22 +25,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/09-user-transparency.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

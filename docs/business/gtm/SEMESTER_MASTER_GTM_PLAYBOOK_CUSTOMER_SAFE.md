@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/CLM-018-SOURCE-LABEL-EVIDENCE.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/GROWTH-FUNNEL-SPEC.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/EXECUTION-PLAN.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
@@ -45,6 +45,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

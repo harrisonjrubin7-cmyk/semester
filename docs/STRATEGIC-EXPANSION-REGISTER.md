@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:56"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
-    changed_at: "2026-10-19T18:54:28"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

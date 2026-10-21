@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/ADR_INDEX.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/governance/ADR_REVIEW_POLICY.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/governance/DECISION_RIGHTS.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

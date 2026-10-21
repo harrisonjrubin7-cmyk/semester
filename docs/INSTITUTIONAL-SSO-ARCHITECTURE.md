@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/SAML-IMPLEMENTATION-RUNBOOK.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/OIDC-IMPLEMENTATION-RUNBOOK.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:56"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/ACCOUNT-LINKING-AND-IDENTITY-PRIVACY.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

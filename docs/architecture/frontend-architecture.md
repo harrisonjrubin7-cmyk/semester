@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/ROLE-LAUNCH-REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/offline-sync-contract.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

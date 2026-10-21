@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_DOMAIN_CATALOG.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/README.md
@@ -29,14 +29,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

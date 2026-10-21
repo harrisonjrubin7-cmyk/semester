@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/01-board.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/04-organization-and-hiring.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/07-communications-and-tracking.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/08-continuity.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
@@ -57,6 +57,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

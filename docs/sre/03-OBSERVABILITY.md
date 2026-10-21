@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/02-SLOS-SLIS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/04-CAPACITY-PLANNING.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
@@ -21,10 +21,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

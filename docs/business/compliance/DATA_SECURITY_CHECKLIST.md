@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/HECVAT_ROADMAP.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
@@ -33,6 +33,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

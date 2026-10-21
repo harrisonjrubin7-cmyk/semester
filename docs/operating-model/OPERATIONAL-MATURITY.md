@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:52"
     sections_changed: []
     summary: externally modified
   - source: MARKET-POSITION.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -41,11 +41,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-HARDENING-REPORT.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
@@ -61,11 +61,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
   - source: docs/RUNBOOKS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
@@ -73,7 +73,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/README.md
@@ -93,7 +93,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DEFENSIBILITY.md
@@ -105,7 +105,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/TRUST-BRAND-AND-LEGAL.md
@@ -125,10 +125,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

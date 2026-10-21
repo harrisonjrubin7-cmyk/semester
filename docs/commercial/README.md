@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:39:00"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
@@ -41,11 +41,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
@@ -61,6 +61,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
@@ -13,31 +13,31 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/ACCEPTANCE-CRITERIA.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/ACCESSIBILITY-STATEMENT-DRAFT.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/AT-PASS-PROTOCOL.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/INCLUSIVE-CONTENT-STANDARD.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/ISSUE-PROCESS.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/TESTING-AND-EVIDENCE.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
@@ -49,6 +49,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,19 +5,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:01"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/QUALITY-MANAGEMENT.md
@@ -29,10 +29,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-19T18:53:02"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-PARITY-MATRIX.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-LAUNCH-REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

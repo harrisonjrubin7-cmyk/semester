@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
@@ -33,10 +33,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

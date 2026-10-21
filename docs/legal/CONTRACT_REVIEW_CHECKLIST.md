@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
@@ -13,10 +13,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

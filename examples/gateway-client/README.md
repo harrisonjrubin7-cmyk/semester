@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/guides/integrations/gateway-client.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: examples/sis-adapter/README.md
-    changed_at: "2026-10-19T02:53:26"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

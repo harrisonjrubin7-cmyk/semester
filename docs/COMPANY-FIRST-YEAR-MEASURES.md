@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:52"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:01"
     sections_changed: []
     summary: externally modified
   - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:09"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
@@ -37,10 +37,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -37,19 +37,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-KNOWN-LIMITATIONS.md
-    changed_at: "2026-10-19T18:54:28"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ACCESSIBILITY-PACKAGE.md
@@ -61,6 +61,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,19 +5,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/LTI-SETUP.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/ROSTER-AND-DATA-LOADING.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/SSO-SETUP.md
@@ -37,14 +37,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/vanderbilt/L5-NAMED-TENANT-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

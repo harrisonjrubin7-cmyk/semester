@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/program/RISK_REGISTER.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/program/STEP_1_RESTORE_DRILL_RUNSHEET.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

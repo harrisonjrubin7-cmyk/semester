@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:38:58"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
@@ -53,6 +53,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

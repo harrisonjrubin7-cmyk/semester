@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -33,19 +33,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/WEEKLY_PILOT_REPORT.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1154.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/DATA-MAPPING-TEMPLATE.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
@@ -77,6 +77,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/decisions/proposed/ADR-0014-define-ai-risk-tiers-evaluations-and-prohibited-actions.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0015-establish-institutional-pilot-to-production-lifecycle.md
@@ -17,22 +17,36 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0018-establish-incident-response-security-escalation-and-dr-governance.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0022-define-procurement-evidence-trust-center-lifecycle-and-public-claims-approval.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0023-define-mobile-device-security-local-encryption-revocation-and-offline-lifecycle.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/proposed/ADR-0021-define-multi-tenant-search-storage-queue-cache-analytics-and-vector-boundaries.md
     changed_at: "2026-10-19T18:53:00"
     sections_changed: []
     summary: externally modified
+  - source: docs/decisions/proposed/ADR-0019-define-records-gradebook-registration-and-ledger-source-of-truth-rules.md
+    changed_at: "2026-10-21T01:39:04"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

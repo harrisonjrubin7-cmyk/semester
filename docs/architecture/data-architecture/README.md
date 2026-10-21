@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/06-analytics-architecture.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/07-data-quality-and-migration.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/08-search-and-retrieval.md
-    changed_at: "2026-10-19T02:53:19"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/10-physical-design.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DATA-STEWARDSHIP.md
-    changed_at: "2026-10-19T18:53:02"
+    changed_at: "2026-10-21T01:39:10"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/12-governance-operating-model.md
-    changed_at: "2026-10-19T18:54:26"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/03-schema-conventions.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/05-lifecycle-governance.md
@@ -48,7 +48,27 @@ stale-refs:
     changed_at: "2026-10-20T15:19:02"
     sections_changed: []
     summary: externally modified
+  - source: docs/architecture/data-architecture/09-ai-data-access.md
+    changed_at: "2026-10-21T01:39:03"
+    sections_changed: []
+    summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

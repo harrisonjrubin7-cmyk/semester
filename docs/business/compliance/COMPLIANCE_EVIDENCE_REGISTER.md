@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_SECURITY_CHECKLIST.md
@@ -33,11 +33,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
@@ -57,10 +57,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

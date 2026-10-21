@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/04-CAPACITY-PLANNING.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: RETENTION.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-INVENTORY-AND-LINEAGE.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

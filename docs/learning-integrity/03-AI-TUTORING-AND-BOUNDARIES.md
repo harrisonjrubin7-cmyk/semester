@@ -9,22 +9,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/06-POLICY-CONFIGURATION-AND-WORKFLOWS.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/08-GOVERNANCE-AND-REQUIREMENTS-TRACE.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T01:39:05"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

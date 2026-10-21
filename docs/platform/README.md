@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/PLATFORM-CONSTITUTION.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:01"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/EVENTS-AND-OUTBOX.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/GATEWAY-STANDARDS.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/MIGRATION.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
@@ -37,6 +37,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

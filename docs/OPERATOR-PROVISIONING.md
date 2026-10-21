@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:38:57"
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-LAUNCH-REGISTER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:02"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

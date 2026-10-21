@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/platform/EVENTS-AND-OUTBOX.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Primitive contracts

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/help/students/export-or-delete-your-data.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Control what the AI sees

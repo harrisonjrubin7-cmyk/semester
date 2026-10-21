@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-19T19:20:31"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/06-vendor-quality-change.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/08-marketplace-partner-trust-fulfillment.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/handoffs.md
@@ -61,6 +61,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

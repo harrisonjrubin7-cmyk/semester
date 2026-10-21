@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:38:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/CONTROLLED_ACTION_PATTERNS.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
@@ -37,10 +37,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

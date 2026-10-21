@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
@@ -13,10 +13,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

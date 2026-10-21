@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INTEROPERABILITY-ROADMAP.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
@@ -17,19 +17,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/README.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/event-consumer.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/gateway-client.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/scim-provisioner.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/sis-adapter.md
@@ -49,14 +49,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: examples/README.md
-    changed_at: "2026-10-19T02:53:26"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

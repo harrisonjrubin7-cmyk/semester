@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/program/READINESS_GAP_MATRIX.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T01:39:11"
     sections_changed: []
     summary: externally modified
   - source: operations/GO_NO_GO_SCORECARD.md
-    changed_at: "2026-10-19T02:53:26"
+    changed_at: "2026-10-21T01:39:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

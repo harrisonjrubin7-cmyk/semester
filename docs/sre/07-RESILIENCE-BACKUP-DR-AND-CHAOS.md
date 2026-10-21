@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: RESTORE.md
-    changed_at: "2026-10-19T02:53:17"
+    changed_at: "2026-10-21T01:38:53"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md
@@ -13,14 +13,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/04-CAPACITY-PLANNING.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

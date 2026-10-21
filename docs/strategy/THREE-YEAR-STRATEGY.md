@@ -13,19 +13,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:54"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/ADVISORS.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MARKET-ENTRY-PLAN.md
@@ -33,15 +33,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MOAT-PLAN.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/SCORECARD.md
-    changed_at: "2026-10-19T19:20:35"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
@@ -49,6 +49,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

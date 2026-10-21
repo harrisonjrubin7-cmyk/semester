@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:12"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-13-secret-exposed.md
@@ -41,6 +41,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

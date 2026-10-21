@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-19T19:20:32"
+    changed_at: "2026-10-21T01:38:55"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:01"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/04-organization-and-hiring.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/README.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T01:39:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
@@ -41,10 +41,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-19T19:20:34"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

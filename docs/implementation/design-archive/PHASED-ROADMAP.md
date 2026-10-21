@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/design-system/HANDOFF-INTEGRATION-STATUS.md
-    changed_at: "2026-10-19T02:53:20"
+    changed_at: "2026-10-21T01:39:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Phased roadmap
