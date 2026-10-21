@@ -1566,6 +1566,20 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 37 update — distinguishable Sheet rule removals (slice 166)
+
+- [x] Distinguish duplicate conditional-colour and cell-validation rule removals with position and represented rule facts.
+- [x] Preserve stable-ID filtering so removing the second duplicate leaves the first rule intact.
+- [x] Pass the recovered 40/40 focused Sheet tests.
+- [ ] Reconcile current `origin/main`, rerun combined-head gates and record the exact final SHA.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — runtime, API key, app host and live target are unavailable; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps after current-main reconciliation.
+- [ ] Keep device-side workbook rules, provider data and institutional records as separate authorities.
+
 ## Automation pass 26 update — distinguishable exact-duplicate emergency-contact removals (slice 155)
 
 - [x] Start from clean required-branch head `b35714eae`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Support history/current code for overlap.

@@ -19,6 +19,15 @@ Phase 0 reconciliation is complete for the archive populations and includes the 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 37 / integration slice 166
+
+- The interrupted runner selected a bounded Sheet accessibility gap: otherwise identical colour and cell rules exposed indistinguishable removal names.
+- Each removal now includes its position and represented rule facts while preserving stable-ID filtering and local workbook ownership.
+- Recovered focused verification passes 40/40 Sheet tests. Final combined-head verification remains required after current-main reconciliation.
+- HawkScan stops at preflight because Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This slice changes only local Sheet rule identification. It does not change an institutional record, provider system, deployment, approval or production-readiness state.
+
 ## Evidence locked in automation pass 30 / integration slice 159
 
 - Required-branch head `82a1a5218` was clean before selection and already included current `origin/main` `caa9967fb`; exact Costs history/current-code inspection found the earlier fact-complete removal names, stable-id reducer and bounded Undo, but no exact-duplicate cost identity guard.

@@ -1500,3 +1500,15 @@ No route, navigation, shared component, dependency, schema, policy, provider con
 | Final upstream reconciliation | Slice `23b750f68`; `origin/main` `955d9e06e`; merge `42bb130b8` | Existing and verified for this slice | The upstream edge-error-envelope files do not overlap SchoolPicker or integration controls. The combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates. |
 
 No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish live school data, institution-pack approval, deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 37 mapping — distinguishable Sheet rule removals (slice 166)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated Sheet rules remain distinguishable at removal | `app/src/screens/Sheet.tsx`; `app/src/screens/sheet.test.tsx` | Existing but incomplete → existing and verified locally for this slice | Colour-rule names include position, condition, colour and placement; cell-rule names include position, constraint and empty-cell policy. |
+| Preserve exact local mutation | Stable rule IDs and existing `onRules` / `onChecks` callbacks | Existing and unchanged | Removing the second duplicate filters only its stable ID and leaves the first rule represented. |
+| Preserve spreadsheet authority boundaries | Device Sheet workspace | Intentionally unchanged | This is local workbook configuration; no institutional record, provider system, schema or server operation changes. |
+| Regression and focused verification | Extended Sheet regression | Existing and verified locally for this slice | The interrupted runner left a coherent two-file change; recovered verification passes 40/40 Sheet tests. Final combined-head gates remain required after upstream reconciliation. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker runtimes, API key, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.

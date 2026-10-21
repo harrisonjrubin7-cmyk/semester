@@ -1478,6 +1478,12 @@ The new guard failed against the former position-only labels. Focused Advisor Me
 
 The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` are unset, and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists. No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Automation pass 37 — distinguishable Sheet rule removals (slice 166)
+
+The interrupted runner found that duplicate conditional-colour and cell-validation rules exposed the same accessible removal name. The bounded fix includes position and represented condition, colour, placement, constraint and empty-cell policy while keeping the existing stable-ID local mutation.
+
+The recovered Sheet regression passes 40/40. Final combined-head gates remain required after current-main reconciliation. This does not alter workbook persistence, server authority, provider data or institutional records. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.
+
 ## Automation pass 36 — distinguishable exact-duplicate custom-school removal (slice 165)
 
 Required-branch head `14eb02a63` was clean before selection and already included current `origin/main` `802c97c70`. Exact upstream and branch history/current-code inspection found the existing custom-school stable IDs and shared eight-second Undo over `mySchools` plus `schoolId`, but two student-created profiles with the same name exposed identical Forget action names.
