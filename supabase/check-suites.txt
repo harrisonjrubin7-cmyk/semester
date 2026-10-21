@@ -83,6 +83,7 @@ intelligence-policy
 invites
 k12-guardians
 killswitch-release
+learning-submissions
 ledger-chains
 ledger-seals
 legal-holds
@@ -132,6 +133,7 @@ role-grant-audit
 rolegrants
 rooms
 roster-import
+roster-projection
 school-membership
 school-offboarding
 schools
