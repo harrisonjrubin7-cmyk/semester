@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed onboarding command payload",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operation": {
+      "type": "string",
+      "enum": [
+        "save_preference",
+        "complete_step",
+        "request_activation_evaluation",
+        "pause",
+        "resume"
+      ]
+    },
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "journey_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "step_version": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expected_progress_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "skip_requested": {
+      "type": "boolean"
+    },
+    "verified_domain_receipt_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "server_verification_policy_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "operation",
+    "assignment_id",
+    "journey_version",
+    "step_id",
+    "step_version",
+    "expected_progress_version",
+    "input_ref",
+    "skip_requested",
+    "verified_domain_receipt_refs",
+    "server_verification_policy_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "complete_step",
+              "save_preference"
+            ]
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "step_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "request_activation_evaluation"
+          }
+        },
+        "required": [
+          "operation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "skip_requested": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

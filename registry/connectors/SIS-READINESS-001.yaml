@@ -1,0 +1,40 @@
+# Connector record for the readiness source. It is not a component passport: the
+# passport validator reads only registry/passports/*.json, so this file carries no
+# machine-checked status. This is the same connector as the
+# platform-control key `integrations.sis`
+# (packages/platform-control/registry/integrations/sis.json), which the implemented
+# registration.readiness capability depends on. Use that key; do not add a second one.
+connector:
+  id: integrations.sis
+  name: Student information system (readiness source)
+  type: institution_system
+
+  authority:
+    authoritative_for:
+      - approved_readiness_inputs
+      - term_context
+      - official_blocker_context_when_available
+    not_authoritative_for:
+      - enrollment_confirmation_by_Semester
+      - institution_policy_override
+
+  delivery:
+    mode: approved_institution_connection
+    event_or_polling_model: institution_agreed
+    idempotency_strategy: source_record_version_and_event_identity
+
+  freshness:
+    expected_window: institution_agreed
+    safe_behavior_when_stale: >
+      Show stale status, prevent definitive readiness outcome, and offer
+      refresh or staff review.
+
+  failures:
+    quarantine_invalid_payload: true
+    reconcile_after_recovery: true
+    safe_off: disable_evaluation_and_preserve_receipts
+
+  owner:
+    business: institution_registrar_owner
+    technical: integration-platform  # platform-control owner of integrations.sis
+    operational: pilot_operations_owner

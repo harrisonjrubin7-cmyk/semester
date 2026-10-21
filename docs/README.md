@@ -23,7 +23,9 @@ true today](#what-is-true-today) first.
 
 Looking for something and not finding it above? [`INDEX.md`](documentation/INDEX.md)
 lists every page this system governs by audience and by kind, and
-`grep -ril "<word>" docs` from the repository root finds the rest.
+`grep -ril "<word>" docs` from the repository root finds the rest. The
+2026-10-13 ecosystem package reconciliation is a working note, not a governed
+page: [`ecosystem/PACKAGE-RECONCILIATION-2026-10-13.md`](ecosystem/PACKAGE-RECONCILIATION-2026-10-13.md).
 
 ## What is true today
 

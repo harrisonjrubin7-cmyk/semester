@@ -1,0 +1,103 @@
+{
+  "schema_version": "2.0.0",
+  "document_type": "execution_binding",
+  "id": "proposed.binding.registration.commit",
+  "workflow_id": "registration.enroll",
+  "workflow_version": 1,
+  "step_id": "commit",
+  "status": "draft",
+  "handler_registry_key": "proposed.registration.commit",
+  "resolution": {
+    "resolved": false,
+    "code_ref": null,
+    "code_digest": null,
+    "evidence": []
+  },
+  "scope": {
+    "kind": "institution",
+    "tenant_id": "00000000-0000-0000-0000-000000000002",
+    "subject_id": "00000000-0000-0000-0000-000000000001",
+    "resource_refs": [
+      "proposed:section-001"
+    ],
+    "access_basis_refs": [
+      "proposed:verified-membership"
+    ]
+  },
+  "trigger": {
+    "kind": "event",
+    "event_type": "proposed.registration.command.requested",
+    "schedule_ref": null,
+    "input_schema_ref": "proposed:registration-request-schema"
+  },
+  "identity": {
+    "principal_ref": "proposed:registration-worker-principal",
+    "delegation_ref": "proposed:actor-command-delegation",
+    "capabilities": [
+      "registration.enroll.execute"
+    ],
+    "revalidate_at_execute": true
+  },
+  "authority": {
+    "mode": "authoritative",
+    "official_write": true,
+    "system_ref": "proposed:registration-authority",
+    "registry_ref": "proposed:authority-registry",
+    "institution_scope_ref": "proposed:tenant-registration-scope",
+    "activation_ref": "proposed:activation-required",
+    "writer_policy": "native_single_writer",
+    "freshness_policy_ref": "proposed:eligibility-freshness"
+  },
+  "delivery": {
+    "transport": "durable_queue",
+    "semantics": "at_least_once",
+    "outbox_ref": "ctl.outbox (existing handoff definition; deployment unverified)",
+    "ack_rule": "after_durable_outcome",
+    "lease": {
+      "lease_seconds": 60,
+      "heartbeat_seconds": 15,
+      "fencing_required": true,
+      "claim_strategy": "transactional_row_claim",
+      "inbox_dedup_ref": "proposed:consumer-inbox"
+    },
+    "retry": {
+      "max_attempts": 3,
+      "base_delay_ms": 1000,
+      "max_delay_ms": 30000,
+      "jitter": "full",
+      "retryable_codes": [
+        "TRANSIENT_CONFIRMED_NO_COMMIT"
+      ],
+      "unknown_outcome_policy": "reconcile_before_retry",
+      "dead_letter_queue_ref": "proposed:owned-exception-queue"
+    },
+    "partition_key_ref": "proposed:tenant-section-command-order"
+  },
+  "idempotency": {
+    "key_scope": "tenant+actor+capability+command-key",
+    "payload_hash_required": true,
+    "dedup_transaction_ref": "proposed:business-effect-and-inbox-transaction"
+  },
+  "effect": {
+    "kind": "official_write",
+    "commit_proof_ref": "proposed:authoritative-registration-receipt",
+    "unknown_outcome_lookup_ref": "proposed:authoritative-command-lookup",
+    "compensation_kind": "authorized_correction",
+    "compensation_ref": "proposed:registrar-correction"
+  },
+  "result": {
+    "accepted_receipt_ref": "proposed:accepted-command-receipt",
+    "committed_receipt_ref": "proposed:committed-result-receipt",
+    "projection_event_refs": [
+      "proposed:enrollment.committed"
+    ],
+    "exception_queue_ref": "proposed:registrar-exception-queue"
+  },
+  "limits": {
+    "timeout_seconds": 30,
+    "max_payload_bytes": 32768,
+    "max_cost_units": 0,
+    "sensitive_payload_policy_ref": "proposed:no-sensitive-queue-payload"
+  },
+  "owner": "Proposed registrar/integration leads"
+}

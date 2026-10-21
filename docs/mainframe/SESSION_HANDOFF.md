@@ -1,39 +1,54 @@
 # Session handoff
 
-**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Rebased onto** `origin/main` at `7b9ae1c2`. **Push** follows this commit.
+**Date** 2026-10-12. **Branch** `claude/epic-galileo-aq26dg`, rebased onto `origin/main` at `ccf2d45f` (#1470). **Pull request** harrisonjrubin7-cmyk/semester#1475, draft. **Decision** [`D-1475`](../decisions/D-1475.md).
 
 ## Objective that was completed
 
-From the readiness checklist, a course the student named can be placed on that student’s own advisor-meeting agenda. The line is the code and the term. Notes, questions, and attachments are not changed. Nothing is shared. No advisee grant is created.
+**Sixth pass (Phase 5 start, same branch).** `docs/execute/35-phase-5-enable-and-replace-report.md` and D-1475 §17–18. Three audits placed Phase 5's 78 clauses (`P5-R1`–`P5-N30`): 15 tested, 48 partial, 2 untested, 13 absent; the exit gate is institutional per domain and no domain can meet it (no eight-stage ladder exists; `DOMAIN-REPLACEMENT-REGISTER.md` still says 0 of 14). Built: `20261012060000_migration_approval_distinct_areas.sql` (one person cannot approve two areas of one cutover) and `20261012070000_student_account_provider_ref_once.sql` (one provider reference once per school and kind on the student ledger), each watched red first and neither applied to production; the Edge copy of the access saga policy regenerated. Next unblocked gap, needing a product decision first: couple Core to a completed cutover (`P5-R3`). Owner-only list: `EXECUTION_BACKLOG.md` 0d.
 
-The meeting surface is `AdvisorMeeting` on My Path. It is shown only when `advisor_meeting_mode` is on. Screen `meet` is glossary word-overlap and is not this handoff.
+**Seventh pass (Phase 5, second pass, same branch).** D-1475 §19. Merged main again (it carried two migrations at `20261012040000`; main moved the kill-switch release to `20261012050000`; the Phase 4 provisioning migration is now `20261012055000`; `killswitch-release` is listed in `supabase/check-suites.txt`). Built: `20261012090000_migration_stage_changed_event.sql` — every Migration Center stage move emits `migration.stage_changed` in its own transaction (`P5-R6` stays `partial`: module-mode flips have no event and nothing consumes this one). Red first, then `migration-center` 90 checks. Not applied to production. Also built (D-1475 §20): `20261012100000_migration_back_move_needs_reason.sql` — a Migration Center back-move needs a new reason (10–500 characters), asked for on the screen; `migration-center` 99 checks. Next unblocked: a usernames primitive with a reserved list (`P5-S33`, needs a product decision on the format), a consent column on `site_leads`, an attempt limit for `consume_handoff`; owner-only list unchanged (`EXECUTION_BACKLOG.md` 0d).
 
-## Working tree at the start
+**Fifth pass (Phase 4 start, same branch).** `docs/execute/34-phase-4-institutional-operation-report.md` and D-1475 §15–16. Main merged a fourth time (`c47a32db`, 104 commits, clean); the merged head failed two tests (CONTROL-FACTS migration count; a duplicated `MOCKS_MODULES` entry main carried) and both are repaired. Built: `20261012055000_provisioning_authority_hardening.sql` (not applied to production): group → role mappings stamped and kept in an immutable history; integration approval revocable with the approver's capability and a two-person rule on scopes; deprovisioning ends the person's sessions. Register rows `P4-I1`–`P4-L7`: 3 tested, 22 partial, 1 untested, 5 absent. The restore rehearsal ran on the merged head and is filed in `docs/evidence/restore/2026-10-12-logical-rehearsal.md` as a local PG16 run, not staging. Phase 4's exit gate (G01/O01/O02 `Authorized`) is a founder decision on IDs nothing defines; the owner-only list is `EXECUTION_BACKLOG.md` 0c.
 
-Clean at `3623c117`. `origin/main` had moved to `7b9ae1c2` and already had `overallReadiness` and `uncheckedSections` in `path-readiness.ts`. It did not have a named-course row or `meetingWithNamedAgenda`.
+**Fourth pass (Phase 3 start, same branch).** `docs/execute/33-phase-3-cross-role-report.md` and D-1475 §13–14. Built: grade release emits its outbox event in the same transaction (new migration `20261012010000`, not applied to production); the readiness headline refuses Ready on a catalog older than 30 days. Proved: the help-request acknowledge step; a refused finance write leaves the ledger unchanged. Register rows `P3-A1`–`P3-F3`: 12 tested, 7 partial, 2 absent; the absent and most partial clauses are unbuilt product needing decisions or vendor access (see the report). Main merged three times; the third (`1799c0cf`, #1473 landed) replaced the ported budget fix with main's own, so the `build` budgets step has nothing left to fail on from this branch. The pull request's `pull_request` workflows did not run on `bad5bd9e` or `53c8ecfd` because the base had moved and GitHub reported the head unmergeable (`mergeable_state: dirty`); the merge restores them.
+
+
+**Third pass (Phase 2 start, same branch).** `docs/execute/32-phase-2-daily-loop-report.md` and D-1475 §11–12. Fixed: a revoked or expired share still allowed AI retrieval (`packages/institution/src/policy.ts`); interrupted onboarding restarted at step 0 (`state.onb` now persisted). Added: feed refresh/failure reducer tests. Register rows `P2-H1`–`P2-H8`, `P2-C1`–`P2-C11` (provisional IDs). CI on `0d1c2c11` ran the PostgreSQL 17 policy suites for the first time on this PR and passed all 152; only the budgets step is red.
+
+
+**Second pass (Phase 1 start, same branch).** `docs/execute/31-phase-1-foundation-report.md` and D-1475 §8–10. T01/F01/F02 audited by surface into the provisional `docs/execute/capability-register.csv` (23 IDs from the plan; 20 have no title because the prototype register was not supplied). Added: the second-tenant sweep over every gateway route (`app/server/institution/gateway.test.ts`), revoked/expired grants refused at `gradebook_export` (`supabase/gradebook.check.sql`), and the policy-suite manifest (`supabase/check-suites.txt`, enforced by `check.sh` and `app/src/lib/docs/check-suites.test.ts`). Ported #1473 for main's budget overrun; `build` stays red on budgets until the founder decides (report, "CI on the pull request").
+
+**First pass.**
+
+1. The 11 October design export was taken into `docs/handoff/` (445 non-PDF files added, 8 updated; PDFs excluded as D-1287 decided). `docs/handoff/IN-THIS-REPO.md` says what came in and what did not.
+2. Phase 0 of `docs/handoff/execute/30-phased-build.md`: the ecosystem coverage matrix. `docs/ecosystem/INVENTORY.md` (systems, applications, workspaces, roles, modules, screens, workflows, entities, APIs, jobs, integrations, deployment state, human-only gates), `docs/ecosystem/COVERAGE-MATRIX.csv` (281 prototype routes + 122 design capabilities, fifteen columns), `docs/registry-status.json`, generated by `app/src/lib/docs/ecosystem.ts` from `docs/ecosystem/crosswalk.json` and held in step by `ecosystem.test.ts`.
+3. Backlog item 1, first half: the `named` readiness row lists codes absent from the imported catalog as unmatched (`unmatchedNamed`, `app/src/lib/path-readiness.ts`).
 
 ## What the next session should read first
 
-1. This file.
-2. `EXECUTION_BACKLOG.md` next item: unmatched named codes stay visible after a catalog import. Do not invent seats.
-3. `app/src/lib/advisor-meeting.ts` `meetingWithNamedAgenda` and `app/src/lib/path-readiness.ts` id `named`.
+1. This file, then [`D-1475`](../decisions/D-1475.md), then `docs/execute/33-phase-3-cross-role-report.md`, `32-phase-2-daily-loop-report.md` and `31-phase-1-foundation-report.md` ("What the next stream needs" in each).
+2. `docs/ecosystem/INVENTORY.md` §10 and `docs/ecosystem/deployed.json`: the schema is verified against production by digest; the app is not. Establishing the production app URL (repository variable `SEMESTER_PRODUCTION_APP_URL`) and probing it is what moves rows to `deployed`.
+3. `EXECUTION_BACKLOG.md` next items: the second half of cart freshness, then matrix rows chosen by the phased plan's Phase 1 and 2 exit gates.
+4. The pull request's CI. Three tests were red on main itself at `a4742f6b` (`src/isolation.test.ts`, `src/lib/docs/trust-docs.test.ts`, `src/components/unity/rollout-c.test.tsx`) and main's CI had failed on them for five runs; this branch's third commit fixes them (isolation list, regenerated `CONTROL-FACTS.md`, two-step revoke in the test). After it merges, main's `build` job should be green again; if it is not, the failure is new.
 
-## Rebase note
+## How to change the matrix
 
-This branch now includes main’s `uncheckedSections`, `readinessFacts`, and `overallReadiness`. The headline ignores id `named` while that row is `not_started`, and counts it when it is `attention` or `ready`. A catalog with no named course can still read Ready. A named course that is not yet an agenda line keeps the headline short of Ready. Main’s “no meeting times” unavailable state is unchanged.
+Edit `docs/ecosystem/crosswalk.json` (a route's `status`, `screens`, `modules`, `server`, `migrations`, `tests`, `flags`, `note`, `gap`, or a capability's `routes`), then from `app/`: `npm run ecosystem:build`, and commit the three regenerated files with it. A path that does not exist or a status the evidence does not reach fails `npm run ecosystem:check`, which the suite runs.
 
 ## Do not redo
 
-- Do not navigate this handoff to screen `meet`.
-- Do not copy grades, notes, requirements, or the rest of the record onto the agenda.
-- Do not call `shareWithAdvisor` from the checklist button.
-- Do not create an advisee grant.
-- Do not apply migrations or call Stripe.
+- Do not re-import the archive's PDFs; the `.txt` twins are in.
+- Do not hand-edit `COVERAGE-MATRIX.csv`, `registry-status.json` or the counts block of `INVENTORY.md`.
+- Do not mark a row `deployed` without a probe of the running app; `deployed.json` is where that fact goes.
+- Do not add a seat to the cart from a catalog match; the row is visibility only.
+- Do not apply migrations, change secrets, or deploy. Nothing of the kind was done this session; `20261012010000_gradebook_release_emits_event.sql` is in the repository and awaits the normal approved apply.
+- Do not raise `app/perf-budgets.json` to absorb an overrun that is main's; a raise was rejected on #1473 (D-1475 §8). A route this branch's own feature code pushes over is re-recorded with the reason, as the script asks and as `33f7b9e4` did (Degree, D-1475 §8 closing note).
+- Do not add a `*.check.sql` suite without adding its name to `supabase/check-suites.txt`; `check.sh` and the Vitest guard both refuse the disagreement.
 
 ## Checks recorded
 
-See `TEST_AND_RELEASE_GATES.md`. After this handoff: `npx tsc -b` exit 0, `npm run lint` exit 0, `npm test` exit 0 (23326 passed, 69 skipped). Both browser walks had an empty `pageerror` list.
+See `TEST_AND_RELEASE_GATES.md`, "Handoff intake and coverage matrix".
 
 ## Unverified
 
-Hosted Supabase project, applied migrations, production audit rows, SSO for a named tenant, and any customer. The operations roadmap’s “no production audit row” sentence was not re-queried.
+The production app and its URL; Vercel deployments (the listing refused this session's credentials, 403); Edge Function versions in production; any customer or tenant. The three main-branch test failures above were reproduced on the base commit, not diagnosed.

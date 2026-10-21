@@ -242,6 +242,16 @@ begin
   -- ── answering ──────────────────────────────────────────────────────────
   perform pg_temp.expect_refused('the student answers their own request', student,
     format($q$select public.answer_help_request(%L, 'closed', '')$q$, req));
+  -- Phase 3, domain C: the office acknowledges, that is recorded with who did
+  -- it, and the student can see it before any reply is written.
+  perform pg_temp.expect_allowed('the advisor acknowledges it', advisor,
+    format($q$select public.answer_help_request(%L, 'acknowledged', '')$q$, req));
+  perform pg_temp.counted('the student sees the request acknowledged',
+    pg_temp.seen(student, format($q$select * from public.help_requests where id = %L and status = 'acknowledged'$q$, req)), 1);
+  perform pg_temp.counted('and the acknowledgement is an event the student reads, with the advisor as its actor',
+    pg_temp.seen(student, format($q$select * from public.help_request_events where request_id = %L and kind = 'acknowledged' and actor_id = %L$q$, req, advisor)), 1);
+  perform pg_temp.expect_refused('acknowledging it a second time', advisor,
+    format($q$select public.answer_help_request(%L, 'acknowledged', '')$q$, req));
   perform pg_temp.expect_allowed('the advisor schedules it', advisor,
     format($q$select public.answer_help_request(%L, 'scheduled', 'Tuesday 2pm, bring your plan')$q$, req));
   perform pg_temp.become(advisor);

@@ -1,0 +1,34 @@
+# Source: "Admissions-to-alumni lifecycle" section of the brief.
+student_lifecycle:
+  phases:
+    - prospect
+    - applicant
+    - admitted
+    - deposited_or_intending
+    - onboarding
+    - enrolled
+    - active_student
+    - completion_or_stop_out
+    - graduate
+    - alumni
+  rule: >
+    A change in lifecycle state must identify the authoritative source, the
+    receiving system, effective time, permitted downstream effects, and whether
+    access or disclosure rules change.
+  state_transition_requirements:
+    - authority_receipt
+    - tenant_scope
+    - policy_check
+    - event_contract
+    - audit_event
+    - downstream_subscriber_rules
+    - reversal_or_correction_path
+  examples:
+    applicant_to_admitted:
+      authority: institution_admissions_system
+      semester_use: show_approved_next_steps
+      prohibited: infer_or_override_admission_decision
+    active_student_to_alumni:
+      authority: institution_record_or_alumni_activation_policy
+      semester_use: switch_to_alumni_context_after_approved_transition
+      prohibited: continue_active_student_service_access_without_basis

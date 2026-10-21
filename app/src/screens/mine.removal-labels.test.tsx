@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { act, useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { loadSeed } from '../data/seed';
@@ -16,6 +16,11 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  // The seeded dates are fixed, so today must be too: once the local date
+  // passes 20 October the first task turns overdue, reorders, and the first
+  // Edit button opens the other one.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 20, 8, 0));
   localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
@@ -25,6 +30,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
 function SeedMine() {
