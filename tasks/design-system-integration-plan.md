@@ -1482,7 +1482,7 @@ The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills st
 
 The interrupted runner found that duplicate conditional-colour and cell-validation rules exposed the same accessible removal name. The bounded fix includes position and represented condition, colour, placement, constraint and empty-cell policy while keeping the existing stable-ID local mutation.
 
-The recovered Sheet regression passes 40/40. Final combined-head gates remain required after current-main reconciliation. This does not alter workbook persistence, server authority, provider data or institutional records. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.
+The recovered Sheet regression passes 40/40. Slice `f2799d738` merges current `origin/main` `7ca3b0ff9` cleanly as `48ca5f85b`; the combined head passes 302/302 app tests and 181/181 domain/institution package tests, both app TypeScript gates, lint and production build. This does not alter workbook persistence, server authority, provider data or institutional records. HawkScan remains open because its runtime, credentials, app host and live target are unavailable; no DAST pass is claimed.
 
 ## Automation pass 36 — distinguishable exact-duplicate custom-school removal (slice 165)
 

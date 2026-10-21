@@ -1571,7 +1571,7 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [x] Distinguish duplicate conditional-colour and cell-validation rule removals with position and represented rule facts.
 - [x] Preserve stable-ID filtering so removing the second duplicate leaves the first rule intact.
 - [x] Pass the recovered 40/40 focused Sheet tests.
-- [ ] Reconcile current `origin/main`, rerun combined-head gates and record the exact final SHA.
+- [x] Commit as `f2799d738`, merge current `origin/main` `7ca3b0ff9` cleanly as `48ca5f85b`, then pass 302/302 app tests, 181/181 domain/institution package tests, both app TypeScript gates, lint and production build.
 - [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
 - [ ] HawkScan DAST — runtime, API key, app host and live target are unavailable; no scan, finding result, fix/rescan loop or security pass exists.
 

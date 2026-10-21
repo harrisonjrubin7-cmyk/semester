@@ -1,6 +1,6 @@
 # Handoff integration status
 
-**Automation pass** 36 of 120 · **Integration slice** 165 · **Date** 2026-10-17 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `14eb02a63` · **Latest observed `origin/main`** `955d9e06e`
+**Automation pass** 37 of 120 · **Integration slice** 166 · **Date** 2026-10-21 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice commit** `f2799d738` · **Latest observed `origin/main`** `7ca3b0ff9`
 
 ## State
 
@@ -23,7 +23,7 @@ This local slice does not prove deployment, production execution, provider conne
 
 - The interrupted runner selected a bounded Sheet accessibility gap: otherwise identical colour and cell rules exposed indistinguishable removal names.
 - Each removal now includes its position and represented rule facts while preserving stable-ID filtering and local workbook ownership.
-- Recovered focused verification passes 40/40 Sheet tests. Final combined-head verification remains required after current-main reconciliation.
+- Recovered focused verification passes 40/40 Sheet tests. Slice `f2799d738` merges current `origin/main` `7ca3b0ff9` cleanly as `48ca5f85b`; the combined head passes 302/302 app tests and 181/181 domain/institution package tests, both app TypeScript gates, lint and production build.
 - HawkScan stops at preflight because Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
 
 This slice changes only local Sheet rule identification. It does not change an institutional record, provider system, deployment, approval or production-readiness state.
