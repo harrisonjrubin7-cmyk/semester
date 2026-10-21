@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { act, useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { loadSeed } from '../data/seed';
@@ -7,6 +7,14 @@ import { StoreProvider, useStore } from '../state/store';
 import { Mine } from './Mine';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+// Mine groups tasks by today, and the labels below are fixed calendar days. Pin the
+// clock to the day the fixture was written for, so a later run does not turn the
+// seeded dates overdue. Only Date is faked; timers stay real for React.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 20, 12));
+});
 
 let host: HTMLDivElement;
 let root: Root;
@@ -25,6 +33,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
 function SeedMine() {
