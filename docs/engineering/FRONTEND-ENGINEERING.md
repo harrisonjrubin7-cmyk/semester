@@ -49,8 +49,8 @@ These failed on the commit before any change in this session. They are recorded,
 | Test | Symptom | Diagnosis so far | Work item |
 |---|---|---|---|
 | `src/lib/sre/sre.test.ts` › generated pages match the registers › *scorecard baseline* and *service catalog* | `docs/sre/generated/*.md` is stale | Generated-doc drift. Documented fix is `npm run registers`. That script rewrites many registers at once and was not run here to avoid an unreviewed bulk diff. | WI-FE-003 |
-| `src/lib/docs/developers.test.ts` › *names the other workflows by their file, name and trigger* | expected 14 table rows under "Other workflows", got 15 | Docs-table vs `.github/workflows` drift. Owned by docs/CI, not the frontend. | WI-FE-004 |
-| `src/screens/mine.removal-labels.test.tsx` › *distinguishes repeated steps and same-title actions before removal* | `Remove step 1 of 2 from Plan review: Draft outline · not done` not found after clicking *Edit Plan review* | Fails deterministically when the file runs alone, so it is not a load-timing flake. The label template at `src/screens/Mine.tsx:241` matches the expected string, so the defect is upstream of the label: the step rows are not rendered after the edit toggle in this seed. Not yet root-caused. | WI-FE-002 |
+| `src/lib/docs/developers.test.ts` › *names the other workflows by their file, name and trigger* | expected 14 table rows under "Other workflows", got 15 | The hard-coded `expect(table.length).toBe(14)` at `developers.test.ts:534` is stale. The "Other workflows" table has 15 data rows, and `.github/workflows` has 16 files including `ci.yml`, so the table is consistent with the repository. Owned by docs/CI, not the frontend. | WI-FE-004 |
+| `src/screens/mine.removal-labels.test.tsx` › *distinguishes repeated steps and same-title actions before removal* | `Remove step 1 of 2 from Plan review: Draft outline · not done` not found after clicking *Edit Plan review* | Fails deterministically when the file runs alone. The label template at `src/screens/Mine.tsx:241` matches the expected string. The cause is test selection, not `TaskRow`: the seed holds two tasks titled *Plan review*. The one with steps is dated 2026-10-20 and the other, with no steps, is dated 2026-10-22. `Mine` lists the 10-22 "Coming up" task before the 10-20 "Overdue" task, so `edits[0]` opens the stepless duplicate. Not yet fixed. | WI-FE-002 |
 
 ---
 
@@ -70,15 +70,15 @@ These failed on the commit before any change in this session. They are recorded,
 
 ### B.1 Responsibilities, as they stand
 
-- **Bootstrap**: `main.tsx`. Single entry, no route-level code splitting observed (not measured).
-- **Route protection**: not separated into a module. Access checks are spread through screens. **Open**: needs an inventory before any claim of route-level authorization.
+- **Bootstrap**: `main.tsx`. Single entry. Route-level code splitting exists: `app/src/screens.tsx` declares 100 screens with `lazy(() => import(...))`, and its header states that each registry row remains a separate chunk. Bundle sizes were not measured.
+- **Route protection (advisory, frontend)**: `screenForRole` in `app/src/lib/role.ts` redirects inapplicable screens to `home`. The navigation reducer applies it to ordinary navigation, workspace navigation, typed URLs, and role changes. `state/reducer.test.ts` covers denial of hidden internal navigation and typed URLs. This is a usability gate only. Backend authorization remains **Open** (section G).
 - **Server state vs local state**: the store mixes both. Separation is **Open**; the sync tests (`syncretry`, `syncstates`, `localfallback`) show intent but not a written contract.
 - **Design primitives**: `components/ui.tsx`, `components/Page.tsx`, `components/unity/`, `components/FieldMessage.tsx`, and state components `EmptyState`, `Notice`, `ErrorState`, `LoadingState`, `PermissionNotice` are named in `CLAUDE.md` as the shared set. Duplication against `components/semester-design/` (JSX, not TSX) was **not** inventoried.
 - **Feature entitlement**: not inspected in this session.
 
 ### B.2 Import boundaries
 
-Not enforced by a lint rule that this session confirmed. **Open.** A circular-dependency check was not run.
+Enforced by test: `app/src/lib/importboundaries.test.ts` walks the real `packages`, `app` and `supabase/functions` import graph, calls `checkBoundaries(real)`, and includes controls that prove each rule can fail. It was part of the passing full-suite run. The separate circular-dependency census was **not** run in this session and remains **Open**.
 
 ---
 
@@ -110,7 +110,7 @@ Journey register. Status reflects evidence in this session only. Nothing here is
 
 ### D.1 Journey selected for the next slice
 
-**Journey A (Student Action Center)** is the first high-value incomplete journey: it is the cross-role entry point for the other journeys and it currently has two implementations. The first step is a decision, not code: choose the canonical component and retire the other, then trace route → context → data → action → receipt → recovery.
+**Journey A (Student Action Center)** is the first high-value incomplete journey: it is the cross-role entry point for the other journeys. Its two Action Center components are composed layers, not competing implementations. `screens/Today.tsx` renders `TodayDecisionSurface`, which lazy-loads `TodayActionCenter`. `TodayActionCenter` renders `ActionCenter` and adds the path, commitments, freshness and quick-action surfaces around it. Removing either would discard functionality. The first step is to record this relationship and trace the existing feature-flagged route, then route → context → data → action → receipt → recovery.
 
 The smallest verified defect on the path is WI-FE-002 (the red `mine.removal-labels` test), because it is a student-facing task row and a confirmed failure, not a theoretical gap.
 
@@ -124,7 +124,7 @@ canonical entity · stable identifier · tenant and owner scope · source and au
 
 Known contract surfaces, observed only: `app/api/institution`, `app/api/productivity`, `app/server/*`, and about 150 `supabase/*.check.sql` suites (for example `console-scoped-tenant-access.check.sql`, `registration-readiness-store.check.sql`, `support-tickets.check.sql`). Mapping them to screens is **Open**.
 
-No runtime schema validator was found in the frontend bundle in this session. **Open**: determine whether `app/server` validates request payloads, and whether the browser validates responses.
+The frontend has hand-written runtime validators for some responses. `readIncidents(value: unknown)` in `app/src/lib/statusnotice.ts` backs `StatusNotice`, and `readOfficeActions(rows: unknown)` in `app/src/lib/office-actions.ts` validates Supabase RPC rows before display. No general schema library is used. **Open**: inventory which responses are validated this way, which are not, and whether `app/server` validates request payloads.
 
 ---
 
@@ -158,7 +158,7 @@ Executed: full Vitest suite on the baseline (A.2). Result: 24,689 passed, 81 ski
 
 Not executed: `test:shuffle`, end-to-end browser tests, visual screenshot review, performance budgets (`npm run budgets`), and the Playwright smoke scripts.
 
-Acceptance criteria per journey are defined in section D's register; none is yet met with evidence.
+Section D's register does not define pass/fail acceptance criteria or required evidence for any journey, so no journey can yet be judged met or not met. The criteria must be written before any journey status changes. Until then, no journey in this document is verified.
 
 ---
 
@@ -182,12 +182,13 @@ Deployment status: **none**. Nothing in this session was deployed, migrated, or 
 | ID | Domain / roles | Dependencies | Current maturity | Acceptance criteria | Evidence | Owner role | Blockers | Continuation |
 |---|---|---|---|---|---|---|---|---|
 | WI-FE-001 | Baseline, all | none | **Executed** | install, `tsc -b`, `lint`, full test run recorded (A.2) | A.2 table; log kept outside the repo | Frontend architect | none | done |
-| WI-FE-002 | Student, task rows (Journey C/A) | WI-FE-001 | **Open**, defect confirmed deterministically | `mine.removal-labels` test green, with the test unchanged or strengthened, not loosened | A.3 | Frontend engineer; QA | root cause not yet found; step rows absent after edit toggle | Run the single file, dump `host.innerHTML` after `click(edits[0])`, find which branch of `TaskRow` renders the steps, fix the branch, re-run, then confirm the test still asserts the label format |
+| WI-FE-002 | Student, task rows (Journey C/A) | WI-FE-001 | **Open**, defect confirmed deterministically; cause identified as test selection | `mine.removal-labels` test green, with the assertion strength unchanged | A.3 | Frontend engineer; QA | none known | In the test, select the task by context rather than by `edits[0]`: the *Plan review* row dated 2026-10-20 that has steps. Do not change `TaskRow`. Re-run the single file, then the full suite |
 | WI-FE-003 | Docs / SRE register | WI-FE-001 | **Open** | `sre.test.ts` green | A.3 | Docs owner | bulk regeneration needs review | Run `npm run registers`, read the diff, commit only the regenerated `docs/sre/generated/*` files |
-| WI-FE-004 | Docs / CI | WI-FE-001 | **Open** | `developers.test.ts` green | A.3 | Docs owner | ambiguous: table or workflows may be the stale side | Compare the 15 workflow files with the 14-row table before editing either |
-| WI-FE-005 | Student Action Center (Journey A) | WI-FE-002 recommended first | **Open**, not started | single canonical component; route → data → action → receipt traced; tests for loading, empty, error, stale, permission | D.1 | Frontend architect, backend, QA | canonical component choice | Decide between `components/ActionCenter.tsx` and `components/TodayActionCenter.tsx`, record the decision, then trace |
+| WI-FE-004 | Docs / CI | WI-FE-001 | **Open** | `developers.test.ts` green | A.3 | Docs owner | none | Update the stale assertion at `developers.test.ts:534` to the actual row count (15), or derive it from `.github/workflows`. Do not edit the table |
+| WI-FE-005 | Student Action Center (Journey A) | WI-FE-002 recommended first | **Open**, not started | the composed layers are recorded; the feature-flagged route is traced end to end; tests for loading, empty, error, stale, permission | D.1 | Frontend architect, backend, QA | none | Record the `TodayDecisionSurface` → `TodayActionCenter` → `ActionCenter` relationship, then trace the feature-flagged route |
+| WI-FE-008 | Shared: required frontend CI gates not run | WI-FE-001 | **Open** | each gate below executed and recorded with its exit status | A.2 | Release engineer | none | Run `npm run check:video`, `npm run test:zones`, `npm run budgets`, `npm run smoke:cold`, `npm run smoke:a11y`, `npm run smoke:golden`, and `npm run smoke:registration-states`, recording exit status and any blocking result for each |
 | WI-FE-006 | Shared: component census | none | **Open** | section C classification table | C | Design systems | none | `npm run census:design`, then classify |
-| WI-FE-007 | Shared: gates not run | WI-FE-001 | **Open** | `npm run build`, `design-system:check`, `design-system:report`, `check:university`, `test:shuffle` executed and recorded | A.2 | Release engineer | none | Run each and record exit status here |
+| WI-FE-007 | Shared: gates not run | WI-FE-001 | **Open** | `npm run build`, `design-system:check`, `design-system:report`, `check:university`, `test:shuffle` executed and recorded | A.2 | Release engineer | none | Run each and record exit status here. The required CI `build` job runs further gates, listed in WI-FE-008 |
 
 ### K.2 Checkpoint
 
