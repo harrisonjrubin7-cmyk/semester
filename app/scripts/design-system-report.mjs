@@ -12,7 +12,11 @@ const appDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** Runs the existing contract tests and records pass/fail — never weakens or rewrites them. */
 export function contractStatus(files) {
   const out = {};
-  for (const f of files) { const p = spawnSync('npx', ['vitest', 'run', f], { cwd: appDir, encoding: 'utf8' }); out[f] = p.status === 0 ? 'pass' : 'fail'; }
+  for (const f of files) {
+    const p = spawnSync('npx', ['vitest', 'run', f], { cwd: appDir, encoding: 'utf8' });
+    out[f] = p.status === 0 ? 'pass' : 'fail';
+    if (p.status !== 0) console.error(`design-system: ${f} exited ${p.status}${p.error ? ` (${p.error.message})` : ''}\n${String(p.stderr || p.stdout || '').split('\n').slice(-12).join('\n')}`);
+  }
   return out;
 }
 const CONTRACTS = ['src/lib/tokenexport.test.ts', 'src/styles/tokens.test.ts', 'src/styles/hex.test.ts', 'src/styles/stacking.test.ts', 'src/styles/taps.test.ts', 'src/styles/breakpoints.test.ts', 'src/styles/motion.test.ts', 'src/styles/scale.test.ts'];
