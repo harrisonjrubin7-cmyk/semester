@@ -1,3 +1,5 @@
+import { csvCell } from '../csvcell';
+
 /**
  * The academic-record ledger: a school's record of each student's enrollment,
  * grades, credits, requirements, transfer credit, standing and degree
@@ -237,8 +239,6 @@ export function proposalProblems(p: Proposal, entries: readonly LedgerEntry[]): 
 }
 
 // ── Export ──────────────────────────────────────────────────────────────────
-
-const csvCell = (s: string) => (/[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
 
 /**
  * The record on a date as CSV, with its own heading line saying what it is

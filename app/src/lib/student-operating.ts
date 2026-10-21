@@ -1,3 +1,4 @@
+import { csvCell } from './csvcell';
 /** Student-entered planning only. Never passed to routine AI or institutional analytics. */
 export const MANUAL_VERSION = 1;
 export type Structure = 'low' | 'medium' | 'high' | 'none';
@@ -83,8 +84,7 @@ export function operatingMarkdown(w: OperatingWorkspace): string {
 export function operatingCsv(w: OperatingWorkspace): string {
   const columns: (keyof OperatingEntry)[] = ['kind','title','status','done','next','deadline','owner','context','obstacle','response','assumptions','reflection','support','steps','submitted','reviewed'];
   // Spreadsheet formulas must not execute when a student opens an export.
-  const cell = (value: string) => '"' + (/^[\s]*[=+@-]/.test(value) ? "'" + value : value).replaceAll('"','""') + '"';
-  return [columns.join(','), ...w.entries.map(e => columns.map(k => cell(e[k])).join(','))].join('\r\n');
+  return [columns.join(','), ...w.entries.map(e => columns.map(k => csvCell(e[k])).join(','))].join('\r\n');
 }
 export const PLAYBOOKS = {
   'Quantitative exam': 'List concepts from approved sources\nDo five retrieval questions\nMark uncertain concepts\nPrepare analogous practice\nWrite one office-hours question\nChoose two later reviews',

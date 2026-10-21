@@ -43,6 +43,7 @@ import {
   styleOf,
   styledDisplay,
   toCsv,
+  toHandoffCsv,
   toMarkdown,
   washOn,
   weighted,
@@ -1458,7 +1459,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         )
       : filled(sheet, over);
     if (!rows.length) return;
-    handOver('analyse', 'text', toCsv(rows), {
+    handOver('analyse', 'text', toHandoffCsv(rows), {
       from: `From ${sheet.title}${many(sel) ? `, ${rangeLabel(sel)}` : ''}.`,
     });
     dispatch({ type: 'go', screen: 'analyse' });
