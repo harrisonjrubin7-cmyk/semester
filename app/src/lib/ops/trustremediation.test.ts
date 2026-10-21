@@ -58,6 +58,34 @@ describe('the sequence', () => {
     }
   });
 
+  it('does not prescribe work that the integrated controls already implement', () => {
+    expect(item('TR-02')?.files).toMatch(/9.*10.*11 October 2026/i);
+
+    expect(item('TR-04')?.finding).toMatch(/Edge Function inventory/i);
+    expect(item('TR-04')?.finding).not.toMatch(/thirteen|sixteen|seventeen|eighteen/i);
+
+    expect(item('TR-15')?.sources).toContain('.github/workflows/codeql.yml');
+    expect(item('TR-15')?.finding).toMatch(/CodeQL.*security-extended/i);
+    expect(item('TR-15')?.fix).not.toMatch(/add a code-scanning workflow/i);
+    expect(item('TR-15')?.fix).not.toMatch(/\bsixteen\b/i);
+
+    expect(item('TR-20')?.finding).toMatch(/assign.*identity verification.*lifecycle actions.*overdue UI/i);
+    expect(item('TR-20')?.fix).toMatch(/scheduled notifications.*production.*counsel/i);
+
+    expect(item('TR-23')?.finding).toMatch(/financial.*tombstone.*journal.*hold/i);
+    expect(item('TR-23')?.fix).toMatch(/provider backup.*device deletion/i);
+
+    expect(item('TR-32')?.finding).toMatch(/dollar.*provider.*budget/i);
+    expect(item('TR-32')?.fix).toMatch(/browser BYOK.*parity.*production.*reconciliation/i);
+
+    expect(item('TR-37')?.sources).toContain('docs/launch-readiness/2026-10-03-support-production-uat.md');
+    expect(item('TR-37')?.sources).toContain('supabase/support-retention.check.sql');
+    expect(item('TR-37')?.finding).toMatch(/October 3.*in-app.*180-day/i);
+    expect(item('TR-37')?.fix).toMatch(/email vendor.*inbox receipt.*coverage hours/i);
+
+    expect(item('TR-45')?.finding).toMatch(/server JSON export.*combined device.*archive/i);
+  });
+
   it('depends only on items that exist, on none due later, and has no cycle', () => {
     for (const i of ITEMS) {
       for (const n of i.needs ?? []) {
