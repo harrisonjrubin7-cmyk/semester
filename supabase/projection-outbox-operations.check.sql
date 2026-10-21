@@ -292,7 +292,11 @@ begin
   end if;
   message := pg_temp.attempt(operator, false, format(
     'select public.replay_domain_event(%L, %L, %L)', ev, 'ops.projector', approval));
-  if message not ilike '%Fresh MFA%' then
+  -- Privileged-role capability projection now hides console:operate at AAL1,
+  -- so the request may fail at the capability gate before the function's own
+  -- freshness check. Both are fail-closed denials of the same unauthenticated
+  -- replay; a null message would mean the replay actually ran.
+  if message is null or (message not ilike '%Fresh MFA%' and message not ilike '%console:operate%') then
     raise exception 'FAILED: replay without fresh MFA was not refused (%)', message;
   end if;
   message := pg_temp.attempt(operator, true, format(

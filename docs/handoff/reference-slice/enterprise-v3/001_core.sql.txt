@@ -1,0 +1,21 @@
+-- 001_core.sql: fresh Supabase database only; trusted migration owner.
+BEGIN;
+SET LOCAL lock_timeout='5s';
+CREATE SCHEMA sem_core;
+CREATE SCHEMA sem_private;
+CREATE SCHEMA sem_billing;
+REVOKE ALL ON SCHEMA sem_core,sem_private,sem_billing FROM PUBLIC,anon,authenticated;
+GRANT USAGE ON SCHEMA sem_core,sem_private,sem_billing TO authenticated;
+CREATE TABLE sem_core.tenants(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text NOT NULL,kind text NOT NULL CHECK(kind IN ('company','institution')),status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','closed')));
+CREATE TABLE sem_private.memberships(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES sem_core.tenants(id),user_id uuid NOT NULL REFERENCES auth.users(id),status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','ended')),UNIQUE(tenant_id,user_id),UNIQUE(tenant_id,id));
+CREATE TABLE sem_private.permissions(code text PRIMARY KEY);
+CREATE TABLE sem_private.roles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES sem_core.tenants(id),code text NOT NULL,UNIQUE(tenant_id,code),UNIQUE(tenant_id,id));
+CREATE TABLE sem_private.role_permissions(role_id uuid NOT NULL REFERENCES sem_private.roles(id),permission_code text NOT NULL REFERENCES sem_private.permissions(code),PRIMARY KEY(role_id,permission_code));
+CREATE TABLE sem_private.role_assignments(tenant_id uuid NOT NULL,membership_id uuid NOT NULL,role_id uuid NOT NULL,expires_at timestamptz,PRIMARY KEY(tenant_id,membership_id,role_id),FOREIGN KEY(tenant_id,membership_id) REFERENCES sem_private.memberships(tenant_id,id),FOREIGN KEY(tenant_id,role_id) REFERENCES sem_private.roles(tenant_id,id));
+CREATE TABLE sem_private.audit_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES sem_core.tenants(id),actor_id uuid REFERENCES auth.users(id),action text NOT NULL,resource_id uuid NOT NULL,occurred_at timestamptz NOT NULL DEFAULT now(),details jsonb NOT NULL DEFAULT '{}');
+CREATE TABLE sem_private.outbox(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES sem_core.tenants(id),event_type text NOT NULL,payload jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),delivered_at timestamptz);
+CREATE TABLE sem_private.inbox_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),provider text NOT NULL,provider_account text NOT NULL,external_event_id text NOT NULL,verified_at timestamptz NOT NULL,processing_status text NOT NULL CHECK(processing_status IN ('pending','processed','failed')),payload_reference text NOT NULL,UNIQUE(provider,provider_account,external_event_id));
+INSERT INTO sem_private.permissions VALUES ('billing.read'),('billing.manage'),('catalog.read'),('entitlement.read');
+CREATE FUNCTION sem_private.can(t uuid,p text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+SELECT EXISTS(SELECT 1 FROM sem_private.memberships m JOIN sem_core.tenants t0 ON t0.id=m.tenant_id JOIN sem_private.role_assignments a ON a.tenant_id=m.tenant_id AND a.membership_id=m.id JOIN sem_private.role_permissions rp ON rp.role_id=a.role_id WHERE m.tenant_id=t AND m.user_id=auth.uid() AND m.status='active' AND t0.status='active' AND rp.permission_code=p AND (a.expires_at IS NULL OR a.expires_at>now())); $$;
+COMMIT;

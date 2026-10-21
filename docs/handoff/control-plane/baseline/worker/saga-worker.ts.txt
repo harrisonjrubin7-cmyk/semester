@@ -1,0 +1,224 @@
+// Baseline saga worker: one durable operation per tick, explicit cleanup states (REVOKE_PA → REMOVE_PEP → VERIFY_CLEANUP).
+// From uploads/Build a NIST Zero Trust Open Policy Agent suite -.pdf. NOT compiled. Strip .txt when copying.
+// Store must atomically persist state, audit and outbox; remote adapters must implement persistent idempotency.
+
+export type State =
+  | "EVALUATE"
+  | "WAIT"
+  | "PREPARE"
+  | "INSTALL"
+  | "INSPECT"
+  | "ACTIVE"
+  | "REVOKE_PA"
+  | "REMOVE_PEP"
+  | "VERIFY_CLEANUP"
+  | "DENIED"
+  | "CLOSED";
+export interface Saga {
+  id: string;
+  tenantId: string;
+  state: State;
+  revision: number;
+  generation: number;
+  requestDigest: string;
+  cancelled: boolean;
+  nextAttemptAt: number;
+  provisioningDeadline: number;
+  grantExpiresAt?: number;
+  grantId?: string;
+  decisionId?: string;
+}
+export interface Claim {
+  saga: Saga;
+  fencingToken: string;
+}
+export type Reply = {
+  operationKey: string;
+  verified: boolean;
+  tenantId: string;
+  generation: number;
+  status:
+  | "allow"
+  | "deny"
+  | "wait"
+  | "prepared"
+  | "installed"
+  | "valid"
+  4. TypeScript saga worker
+  | "absent"
+  | "conflict"
+  | "unknown"
+  | "revoked"
+  | "cleanup_confirmed";
+  grantId?: string;
+  decisionId?: string;
+  expiresAt?: number;
+};
+export interface Store {
+  claim(id: string): Promise<Claim | null>;
+  // Must verify fencing + current revision, and commit state/audit/outbox.
+  commit(
+    claim: Claim,
+    expectedRevision: number,
+    next: Saga,
+    reason: string
+  ): Promise<void>;
+  release(claim: Claim): Promise<void>;
+}
+export interface Participants {
+  // Bounded timeout; durable same-key receipt recovery;
+  // verified reply bindings; current authorization and revocation checks.
+  execute(saga: Saga, operationKey: string): Promise<Reply>;
+}
+export class RemoteFailure extends Error {
+  constructor(
+    public code: string,
+    public retryable: boolean,
+    public outcomeUnknown: boolean
+  ) {
+    super(code);
+  }
+}
+function operationKey(s: Saga): string {
+  return `${s.id}:${s.generation}:${s.state}`;
+}
+function nextFromReply(s: Saga, r: Reply): Partial<Saga> {
+  switch (s.state) {
+    case "EVALUATE":
+    if (r.status === "allow" && r.decisionId) {
+      return {state: "PREPARE", decisionId: r.decisionId};
+    }
+    if (r.status === "deny") return {state: "DENIED"};
+    if (r.status === "wait") return {state: "WAIT"};
+    break;
+    case "PREPARE":
+    if (
+      r.status === "prepared" &&
+      r.grantId &&
+      r.expiresAt !== undefined
+    ) {
+      return {
+        state: "INSTALL",
+        grantId: r.grantId,
+        grantExpiresAt: r.expiresAt
+      };
+    }
+    break;
+    case "INSTALL":
+    if (r.status === "installed") return {state: "INSPECT"};
+    if (r.status === "unknown") return {state: "INSPECT"};
+    break;
+    case "INSPECT":
+    if (r.status === "valid") return {state: "ACTIVE"};
+    if (r.status === "unknown") return {};
+    if (r.status === "absent" || r.status === "conflict") {
+      return {state: "REVOKE_PA", cancelled: true};
+    }
+    break;
+    case "REVOKE_PA":
+    if (r.status === "revoked") return {state: "REMOVE_PEP"};
+    if (r.status === "unknown") return {};
+    break;
+    case "REMOVE_PEP":
+    if (r.status === "absent") return {state: "VERIFY_CLEANUP"};
+    if (r.status === "unknown") return {};
+    break;
+    case "VERIFY_CLEANUP":
+    if (r.status === "cleanup_confirmed") {
+      return {state: "CLOSED"};
+    }
+    if (r.status === "unknown") return {};
+    if (r.status === "conflict") {
+      return {state: "REVOKE_PA", cancelled: true};
+    }
+    break;
+  }
+  throw new RemoteFailure("INVALID_PARTICIPANT_RESULT", false, true);
+}
+export class SagaWorker {
+  constructor(
+    private store: Store,
+    private participants: Participants,
+    private now = Date.now
+  ) {}
+  async tick(id: string): Promise<void> {
+    const claim = await this.store.claim(id);
+    if (!claim) return;
+    const s = claim.saga;
+    try {
+      if (s.state === "CLOSED" || s.state === "DENIED") return;
+      if (s.nextAttemptAt > this.now()) return;
+      const cleanupStates: State[] = [
+        "REVOKE_PA", "REMOVE_PEP", "VERIFY_CLEANUP"
+      ];
+      const expired =
+      (s.state !== "ACTIVE" &&
+        this.now() >= s.provisioningDeadline) ||
+      (s.grantExpiresAt !== undefined &&
+        this.now() >= s.grantExpiresAt);
+      if (
+        (s.cancelled || expired) &&
+        !cleanupStates.includes(s.state)
+      ) {
+        await this.store.commit(claim, s.revision, {
+            ...s,
+            state: "REVOKE_PA",
+            cancelled: true,
+            revision: s.revision + 1,
+            nextAttemptAt: 0
+          }, "CANCELLATION_OR_EXPIRY");
+        return;
+      }
+      if (s.state === "ACTIVE" || s.state === "WAIT") return;
+      const key = operationKey(s);
+      let patch: Partial<Saga>;
+      let reason: string;
+      try {
+        const reply = await this.participants.execute(s, key);
+        if (
+          !reply.verified ||
+          reply.operationKey !== key ||
+          reply.tenantId !== s.tenantId ||
+          reply.generation !== s.generation
+        ) {
+          throw new RemoteFailure(
+            "REPLY_BINDING_MISMATCH",
+            false,
+            true
+          );
+        }
+        patch = nextFromReply(s, reply);
+        reason = `RESULT_${reply.status}`;
+      } catch (error) {
+        const failure = error instanceof RemoteFailure
+        ? error
+        : new RemoteFailure("REMOTE_OUTCOME_UNKNOWN", true, true);
+        if (cleanupStates.includes(s.state)) {
+          patch = {};
+        } else if (s.state === "INSTALL" && failure.outcomeUnknown) {
+          patch = {state: "INSPECT"};
+        } else if (failure.retryable) {
+          patch = {};
+        } else {
+          patch = {state: "REVOKE_PA", cancelled: true};
+        }
+        reason = failure.code;
+      }
+      const continuingSameStep =
+      patch.state === undefined || patch.state === s.state;
+      const next: Saga = {
+        ...s,
+        ...patch,
+        revision: s.revision + 1,
+        nextAttemptAt: continuingSameStep
+        ? this.now() + 1_000 + Math.floor(Math.random() * 4_000)
+        : 0
+      };
+      // Database errors propagate; they are NOT remote-operation failures.
+      await this.store.commit(claim, s.revision, next, reason);
+    } finally {
+      await this.store.release(claim);
+    }
+  }
+}
+

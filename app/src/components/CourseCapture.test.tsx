@@ -78,11 +78,70 @@ describe('CourseCapture', () => {
       input.dispatchEvent(new Event('change', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    await vi.waitFor(() => expect(host.querySelector('[aria-label="Remove problem.png"]')).toBeTruthy());
-    const remove = host.querySelector('[aria-label="Remove problem.png"]') as HTMLButtonElement;
+    await vi.waitFor(() => expect(host.querySelector('[aria-label^="Remove capture 1 of 1, problem.png:"]')).toBeTruthy());
+    const remove = host.querySelector('[aria-label^="Remove capture 1 of 1, problem.png:"]') as HTMLButtonElement;
     act(() => remove.click());
-    expect(host.querySelector('[aria-label="Remove problem.png"]')).toBeNull();
+    expect(host.querySelector('[aria-label^="Remove capture "]')).toBeNull();
     expect(host.querySelector('[role="status"]')?.textContent).toContain('was removed');
+  });
+
+  it('distinguishes duplicate filenames and removes only the selected persisted copy', async () => {
+    const onFiles = vi.fn(async () => [{ id: 'stored-first' }, { id: 'stored-second' }]);
+    const onRemovePersisted = vi.fn(async () => undefined);
+    mount({ onFiles, onRemovePersisted });
+    consent();
+    const input = host.querySelector('input[type="file"]') as HTMLInputElement;
+    const first = new File(['first'], 'lecture.png', { type: 'image/png' });
+    const second = new File(['other'], 'lecture.png', { type: 'image/png' });
+    Object.defineProperty(input, 'files', { configurable: true, value: [first, second] });
+
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await vi.waitFor(() => expect(onFiles).toHaveBeenCalledWith([first, second]));
+    });
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove capture "]')];
+    expect(removals).toHaveLength(2);
+    expect(removals[0].ariaLabel).toMatch(/^Remove capture 1 of 2, lecture\.png: image\/png · 5 bytes · hash /);
+    expect(removals[1].ariaLabel).toMatch(/^Remove capture 2 of 2, lecture\.png: image\/png · 5 bytes · hash /);
+    expect(removals[0].ariaLabel).not.toBe(removals[1].ariaLabel);
+
+    await act(async () => {
+      removals[0].click();
+      await Promise.resolve();
+    });
+
+    expect(onRemovePersisted).toHaveBeenCalledTimes(1);
+    expect(onRemovePersisted).toHaveBeenCalledWith(['stored-first']);
+    expect(host.querySelectorAll('.course-capture-original')).toHaveLength(1);
+    expect(host.textContent).toContain('lecture.png');
+  });
+
+  it('keeps the represented original when persisted removal is refused', async () => {
+    const onRemovePersisted = vi.fn(async () => { throw new Error('storage unavailable'); });
+    const onFiles = vi.fn(async () => [{ id: 'stored-1' }]);
+    mount({ onFiles, onRemovePersisted });
+    consent();
+    const input = host.querySelector('input[type="file"]') as HTMLInputElement;
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [new File(['notes'], 'notes.txt', { type: 'text/plain' })],
+    });
+    await act(async () => {
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    await vi.waitFor(() => expect(onFiles).toHaveBeenCalled());
+    await vi.waitFor(() => expect(host.querySelector('[aria-label^="Remove capture 1 of 1, notes.txt:"]')).toBeTruthy());
+
+    await act(async () => {
+      (host.querySelector('[aria-label^="Remove capture 1 of 1, notes.txt:"]') as HTMLButtonElement).click();
+      await Promise.resolve();
+    });
+
+    expect(onRemovePersisted).toHaveBeenCalledWith(['stored-1']);
+    expect(host.querySelector('[aria-label^="Remove capture 1 of 1, notes.txt:"]')).toBeTruthy();
+    expect(host.querySelector('[role="status"]')?.textContent).toContain('remain available; try again');
   });
 
   it('withdrawal clears persisted originals and prevents in-flight work from repopulating', async () => {

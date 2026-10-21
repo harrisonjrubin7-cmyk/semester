@@ -1,0 +1,155 @@
+-- 210 · Company and application-operations domains still proposed in the capability registry:
+-- cofin (company invoices, payments, credits, expenses), people (restricted workforce), vend, sales, mkt, cms, exec, legal,
+-- product, research, it, analytics, ai, dev, search, sec, ops (services, jobs, deployments, flags, backups, usage).
+-- Company data is visible only to Semester staff via capabilities on the platform tenant. Not applied or tested.
+create schema if not exists cofin; create schema if not exists people; create schema if not exists vend; create schema if not exists sales;
+create schema if not exists mkt; create schema if not exists cms; create schema if not exists exec; create schema if not exists legal;
+create schema if not exists product; create schema if not exists research; create schema if not exists it; create schema if not exists analytics;
+create schema if not exists ai; create schema if not exists dev; create schema if not exists search; create schema if not exists sec;
+
+-- ---------- Company finance (separate from institution student finance; shares fin.ledger via posting commands only)
+create table if not exists cofin.invoices(id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, subscription_id uuid references commerce.subscriptions, number text unique not null, state text not null default 'draft' check (state in ('draft','issued','paid','partially_paid','void','written_off')), issued_on date, due_on date, currency text not null default 'USD', total_cents bigint not null default 0, journal_id uuid);
+create table if not exists cofin.invoice_lines(id uuid primary key default gen_random_uuid(), invoice_id uuid not null references cofin.invoices on delete cascade, description text not null, quantity numeric(12,2) not null check (quantity > 0), unit_cents bigint not null, amount_cents bigint generated always as ((quantity * unit_cents)::bigint) stored);
+create table if not exists cofin.payments(id uuid primary key default gen_random_uuid(), invoice_id uuid not null references cofin.invoices, amount_cents bigint not null check (amount_cents > 0), received_on date not null, method text not null, provider_ref text unique, journal_id uuid);
+create table if not exists cofin.credits(id uuid primary key default gen_random_uuid(), invoice_id uuid not null references cofin.invoices, amount_cents bigint not null check (amount_cents > 0), reason text not null, approved_by uuid not null, journal_id uuid);
+create table if not exists cofin.expense_claims(id uuid primary key default gen_random_uuid(), employee_id uuid not null references auth.users default auth.uid(), amount_cents bigint not null check (amount_cents > 0), category text not null, receipt_file_id uuid references comms.files, state text not null default 'submitted' check (state in ('submitted','approved','rejected','reimbursed')), approver_id uuid references auth.users, submitted_at timestamptz not null default now(), check (approver_id is null or approver_id <> employee_id));
+-- Posted history can't be edited from the client; corrections are new credit/journal rows.
+create or replace function cofin.deny_paid_edit() returns trigger language plpgsql as $$ begin if old.state in ('paid','void','written_off') then raise exception 'POSTED_HISTORY_IS_IMMUTABLE'; end if; return new; end $$;
+drop trigger if exists inv_immutable on cofin.invoices; create trigger inv_immutable before update on cofin.invoices for each row execute function cofin.deny_paid_edit();
+
+-- ---------- People (restricted). Compensation is its own table with its own capability.
+create table if not exists people.positions(id uuid primary key default gen_random_uuid(), title text not null, team text not null, level text, state text not null default 'open' check (state in ('draft','open','filled','closed')));
+create table if not exists people.candidates(id uuid primary key default gen_random_uuid(), position_id uuid references people.positions, name text not null, email text not null, stage text not null default 'applied' check (stage in ('applied','screen','interview','offer','hired','rejected','withdrawn')), consent_retain_until date, created_at timestamptz not null default now());
+create table if not exists people.employees(id uuid primary key default gen_random_uuid(), person_id uuid unique references auth.users, position_id uuid references people.positions, manager_id uuid references people.employees, start_on date not null, end_on date, classification text not null check (classification in ('employee','contractor','advisor')), state text not null default 'onboarding' check (state in ('onboarding','active','leave','offboarding','ended')));
+create table if not exists people.training_records(employee_id uuid not null references people.employees on delete cascade, course text not null, completed_on date not null, expires_on date, primary key (employee_id, course, completed_on));
+create table if not exists people.compensation_records(id uuid primary key default gen_random_uuid(), employee_id uuid not null references people.employees on delete cascade, effective_on date not null, base_cents bigint not null, equity_shares bigint, approved_by uuid not null, board_consent_document_id uuid references docs.documents);
+
+-- ---------- Vendors and procurement
+create table if not exists vend.vendors(id uuid primary key default gen_random_uuid(), account_id uuid references biz.accounts, name text not null, tier int not null check (tier between 1 and 3), touches_student_data boolean not null default false, owner_id uuid references auth.users, renews_on date);
+create table if not exists vend.vendor_reviews(id uuid primary key default gen_random_uuid(), vendor_id uuid not null references vend.vendors on delete cascade, reviewed_on date not null, reviewer_id uuid not null default auth.uid(), soc2_ref text, findings text, decision text not null check (decision in ('approved','approved_with_conditions','rejected')), next_review_on date not null);
+create table if not exists vend.purchase_orders(id uuid primary key default gen_random_uuid(), vendor_id uuid not null references vend.vendors, requester_id uuid not null default auth.uid(), amount_cents bigint not null check (amount_cents > 0), purpose text not null, state text not null default 'requested' check (state in ('requested','approved','rejected','ordered','closed')), approver_id uuid references auth.users, check (approver_id is null or approver_id <> requester_id));
+
+-- ---------- Sales, marketing, content
+create table if not exists sales.quotes(id uuid primary key default gen_random_uuid(), opportunity_id uuid not null references biz.opportunities, price_version_id uuid references commerce.price_versions, quantity int not null check (quantity > 0), discount_pct numeric(5,2) not null default 0 check (discount_pct between 0 and 60), state text not null default 'draft' check (state in ('draft','pending_approval','approved','sent','accepted','expired','rejected')), expires_on date, approval_request_id uuid references ctl.action_requests);
+create table if not exists sales.requirements(id uuid primary key default gen_random_uuid(), opportunity_id uuid not null references biz.opportunities on delete cascade, area text not null, requirement text not null, fit text check (fit in ('meets','partial','gap','roadmap')), evidence text);
+create table if not exists mkt.campaigns(id uuid primary key default gen_random_uuid(), name text not null, audience text not null, starts_on date, ends_on date, budget_cents bigint, state text not null default 'draft' check (state in ('draft','approved','live','ended')), approved_by uuid);
+create table if not exists cms.approved_claims(id uuid primary key default gen_random_uuid(), claim text not null, evidence_ref text not null, approved_by uuid not null, approved_on date not null, expires_on date);
+create table if not exists cms.pages(id uuid primary key default gen_random_uuid(), path text unique not null, title text not null, state text not null default 'draft' check (state in ('draft','in_review','published','retired')), body jsonb not null default '{}'::jsonb, published_at timestamptz, claim_ids uuid[] not null default '{}');
+
+-- ---------- Executive, legal, product, research, IT
+create table if not exists exec.objectives(id uuid primary key default gen_random_uuid(), period text not null, title text not null, owner_id uuid references auth.users, metric text, target numeric, actual numeric, status text not null default 'on_track' check (status in ('on_track','at_risk','off_track','done')));
+create table if not exists exec.decisions(id uuid primary key default gen_random_uuid(), decided_on date not null, title text not null, context text, decision text not null, owner_id uuid references auth.users, revisit_on date);
+create table if not exists legal.entities(id uuid primary key default gen_random_uuid(), name text not null, jurisdiction text not null, kind text not null, formed_on date, registered_agent text);
+create table if not exists legal.matters(id uuid primary key default gen_random_uuid(), title text not null, kind text not null check (kind in ('contract','dispute','ip','regulatory','employment','other')), state text not null default 'open', counsel text, privileged boolean not null default true, opened_on date not null default current_date);
+create table if not exists product.feedback(id uuid primary key default gen_random_uuid(), source text not null, account_id uuid references biz.accounts, body text not null check (length(body) <= 4000), theme text, state text not null default 'new' check (state in ('new','triaged','planned','done','declined')), created_at timestamptz not null default now());
+create table if not exists product.requirements(id uuid primary key default gen_random_uuid(), capability_id text not null, title text not null, acceptance text not null, state text not null default 'proposed' check (state in ('proposed','accepted','in_build','shipped','dropped')));
+create table if not exists research.records(id uuid primary key default gen_random_uuid(), title text not null, method text not null, summary text not null, recorded_on date not null);
+create table if not exists research.experiments(id uuid primary key default gen_random_uuid(), hypothesis text not null, metric text not null, starts_on date, ends_on date, result text, decision text);
+create table if not exists it.assets(id uuid primary key default gen_random_uuid(), kind text not null check (kind in ('laptop','phone','license','hardware_key')), tag text unique not null, assigned_to uuid references people.employees, encrypted boolean not null default true, mdm_enrolled boolean not null default false, retired_on date);
+
+-- ---------- Analytics, AI ops, developer, search
+create table if not exists analytics.metrics(code text primary key, name text not null, definition text not null, owner_id uuid, source_table text not null, privacy text not null default 'aggregate' check (privacy in ('aggregate','suppressed_under_10')));
+create table if not exists analytics.datasets(code text primary key, description text not null, tables text[] not null, min_group_size int not null default 10);
+create table if not exists analytics.reports(id uuid primary key default gen_random_uuid(), institution_id uuid references core.institutions, dataset_code text not null references analytics.datasets, params jsonb not null default '{}'::jsonb, requested_by uuid not null default auth.uid(), state text not null default 'queued' check (state in ('queued','running','ready','failed')), file_id uuid references comms.files, created_at timestamptz not null default now());
+create table if not exists ai.model_configs(id uuid primary key default gen_random_uuid(), name text not null, provider text not null, model text not null, max_tokens int not null, allowed_tools text[] not null default '{}', active boolean not null default false, approved_by uuid);
+create table if not exists ai.evaluations(id uuid primary key default gen_random_uuid(), model_config_id uuid not null references ai.model_configs, suite text not null, passed int not null, failed int not null, run_at timestamptz not null default now(), report_ref text, blocks_release boolean generated always as (failed > 0) stored);
+create table if not exists dev.credentials(id uuid primary key default gen_random_uuid(), app_id uuid not null references biz.partner_apps on delete cascade, key_prefix text not null, key_hash text not null unique, scopes text[] not null, created_at timestamptz not null default now(), rotated_at timestamptz, revoked_at timestamptz);
+-- Permission-aware search index: one row per (document, reader scope). Search queries filter by the caller's scopes.
+create table if not exists search.documents(id bigserial primary key, institution_id uuid references core.institutions, source_table text not null, source_id uuid not null, title text not null, body_tsv tsvector not null, readers text not null check (readers in ('self','section','institution','office','company_staff')), reader_ref text, unique (source_table, source_id, readers, reader_ref));
+create index if not exists search_tsv on search.documents using gin (body_tsv);
+
+-- ---------- Security, ops
+create table if not exists sec.findings(id uuid primary key default gen_random_uuid(), source text not null, severity text not null check (severity in ('critical','high','medium','low')), title text not null, state text not null default 'open' check (state in ('open','accepted_risk','fixed','verified')), owner_id uuid, due_on date, fixed_on date, verified_by uuid, check (state <> 'verified' or verified_by is not null));
+create table if not exists sec.investigations(id uuid primary key default gen_random_uuid(), title text not null, lead_id uuid not null, opened_at timestamptz not null default now(), incident_id uuid references opsx.incidents, privileged boolean not null default true, closed_at timestamptz);
+create table if not exists ops.services(id uuid primary key default gen_random_uuid(), name text unique not null, owner_team text not null, tier int not null check (tier between 1 and 3), runbook_ref text);
+create table if not exists ops.dependencies(service_id uuid not null references ops.services on delete cascade, depends_on uuid not null references ops.services, primary key (service_id, depends_on), check (service_id <> depends_on));
+create table if not exists ops.objectives(id uuid primary key default gen_random_uuid(), service_id uuid not null references ops.services on delete cascade, sli text not null, target numeric not null, window_days int not null default 28);
+create table if not exists ops.telemetry(id bigserial primary key, service_id uuid not null references ops.services, at timestamptz not null, metric text not null, value numeric not null);
+create table if not exists ops.alerts(id bigserial primary key, service_id uuid references ops.services, severity text not null, title text not null, fired_at timestamptz not null default now(), acked_by uuid, resolved_at timestamptz, incident_id uuid references opsx.incidents);
+create table if not exists ops.builds(id uuid primary key default gen_random_uuid(), commit_sha text not null, branch text not null, state text not null check (state in ('running','passed','failed')), created_at timestamptz not null default now());
+create table if not exists ops.deployments(id uuid primary key default gen_random_uuid(), build_id uuid not null references ops.builds, environment text not null check (environment in ('dev','staging','production')), state text not null default 'pending_approval' check (state in ('pending_approval','deploying','live','rolled_back','failed')), approved_by uuid, deployed_at timestamptz, check (environment <> 'production' or approved_by is not null or state = 'pending_approval'));
+create table if not exists ops.feature_flags(key text primary key, description text not null, default_on boolean not null default false, per_tenant jsonb not null default '{}'::jsonb, owner text not null, expires_on date);
+create table if not exists ops.jobs(id uuid primary key default gen_random_uuid(), kind text not null, payload jsonb not null, state text not null default 'queued' check (state in ('queued','running','succeeded','failed','dead')), attempts int not null default 0, next_run_at timestamptz not null default now(), dedupe_key text unique);
+create table if not exists ops.job_attempts(id bigserial primary key, job_id uuid not null references ops.jobs on delete cascade, started_at timestamptz not null default now(), finished_at timestamptz, error text);
+create table if not exists ops.migrations(version text primary key, applied_at timestamptz not null default now(), checksum text not null, applied_by text not null);
+create table if not exists ops.repair_requests(id uuid primary key default gen_random_uuid(), description text not null, sql_ref text not null, requested_by uuid not null default auth.uid(), approved_by uuid, executed_at timestamptz, action_request_id uuid references ctl.action_requests, check (approved_by is null or approved_by <> requested_by));
+create table if not exists ops.backups(id uuid primary key default gen_random_uuid(), taken_at timestamptz not null, kind text not null, location_ref text not null, verified boolean not null default false);
+create table if not exists ops.restore_exercises(id uuid primary key default gen_random_uuid(), backup_id uuid not null references ops.backups, performed_on date not null, rto_minutes int, rpo_minutes int, passed boolean not null, report_ref text not null);
+create table if not exists ops.tenant_lifecycle_requests(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, action text not null check (action in ('provision','suspend','reactivate','offboard')), reason text not null, action_request_id uuid references ctl.action_requests, state text not null default 'requested', created_at timestamptz not null default now());
+create table if not exists ops.usage_records(id bigserial primary key, institution_id uuid references core.institutions, resource text not null, period date not null, quantity numeric not null, cost_cents bigint, unique (institution_id, resource, period));
+
+-- ---------- RLS: deny by default; read through capabilities on the platform tenant.
+do $$ declare s text; t text; begin foreach s in array array['cofin','people','vend','sales','mkt','cms','exec','legal','product','research','it','analytics','ai','dev','search','sec'] loop
+  for t in select tablename from pg_tables where schemaname = s loop execute format('alter table %I.%I enable row level security', s, t); end loop;
+  execute format('revoke insert, update, delete on all tables in schema %I from anon, authenticated', s); execute format('grant usage on schema %I to authenticated', s); execute format('grant select on all tables in schema %I to authenticated', s); end loop;
+  for t in select tablename from pg_tables where schemaname = 'ops' and tablename in ('services','dependencies','objectives','telemetry','alerts','builds','deployments','feature_flags','jobs','job_attempts','migrations','repair_requests','backups','restore_exercises','tenant_lifecycle_requests','usage_records') loop execute format('alter table ops.%I enable row level security', t); end loop; end $$;
+create or replace function biz.staff_any(p text[]) returns boolean language sql stable security definer set search_path = '' as $$ select exists (select 1 from unnest(p) c where ctl.can(c, '00000000-0000-0000-0000-000000000000')) $$;
+create policy inv_r on cofin.invoices for select using (biz.staff_any('{finance:read}'));
+create policy il_r on cofin.invoice_lines for select using (biz.staff_any('{finance:read}'));
+create policy pay_r on cofin.payments for select using (biz.staff_any('{finance:read}'));
+create policy cr_r on cofin.credits for select using (biz.staff_any('{finance:read}'));
+create policy ex_self on cofin.expense_claims for select using (employee_id = auth.uid() or approver_id = auth.uid() or biz.staff_any('{finance:read}'));
+create policy pos_r on people.positions for select using (biz.staff_any('{people:read,biz:read}'));
+create policy cand_r on people.candidates for select using (biz.staff_any('{people:recruit}'));
+create policy emp_self on people.employees for select using (person_id = auth.uid() or biz.staff_any('{people:read}'));
+create policy tr_self on people.training_records for select using (exists (select 1 from people.employees e where e.id = employee_id and e.person_id = auth.uid()) or biz.staff_any('{people:read}'));
+create policy comp_r on people.compensation_records for select using (biz.staff_any('{compensation.read}'));   -- not people:read
+create policy v_r on vend.vendors for select using (biz.staff_any('{biz:read}'));
+create policy vr_r on vend.vendor_reviews for select using (biz.staff_any('{biz:read}'));
+create policy po_r on vend.purchase_orders for select using (requester_id = auth.uid() or approver_id = auth.uid() or biz.staff_any('{finance:read}'));
+create policy q_r on sales.quotes for select using (biz.staff_any('{biz:read}'));
+create policy sq_r on sales.requirements for select using (biz.staff_any('{biz:read}'));
+create policy mc_r on mkt.campaigns for select using (biz.staff_any('{marketing:read}'));
+create policy ac_pub on cms.approved_claims for select using (expires_on is null or expires_on > current_date);
+create policy pg_pub on cms.pages for select using (state = 'published' or biz.staff_any('{marketing:read}'));
+grant select on cms.pages, cms.approved_claims to anon;
+create policy ob_r on exec.objectives for select using (biz.staff_any('{biz:read}'));
+create policy dc_r on exec.decisions for select using (biz.staff_any('{biz:read}'));
+create policy le_r on legal.entities for select using (biz.staff_any('{legal:read}'));
+create policy lm_r on legal.matters for select using (biz.staff_any('{legal:read}'));
+create policy pf_r on product.feedback for select using (biz.staff_any('{biz:read}'));
+create policy pr_r on product.requirements for select using (biz.staff_any('{biz:read}'));
+create policy rr_r on research.records for select using (biz.staff_any('{biz:read}'));
+create policy re_r on research.experiments for select using (biz.staff_any('{biz:read}'));
+create policy as_r on it.assets for select using (exists (select 1 from people.employees e where e.id = assigned_to and e.person_id = auth.uid()) or biz.staff_any('{it:admin}'));
+create policy am_r on analytics.metrics for select using (true);
+create policy ad_r on analytics.datasets for select using (true);
+create policy ar_self on analytics.reports for select using (requested_by = auth.uid());
+create policy mcfg_r on ai.model_configs for select using (biz.staff_any('{ai.configure}'));
+create policy ev_r on ai.evaluations for select using (biz.staff_any('{ai.configure}'));
+create policy dk_r on dev.credentials for select using (biz.staff_any('{biz:read}'));          -- developers see their own via the portal RPC, never key_hash
+create policy sd_r on search.documents for select using (
+  (readers = 'self' and reader_ref = auth.uid()::text) or (readers = 'institution' and institution_id = core.my_institution()) or
+  (readers = 'section' and acad.enrolled(reader_ref::uuid)) or (readers = 'section' and acad.can_teach(reader_ref::uuid)) or
+  (readers = 'office' and ctl.can('request.assign', institution_id, null, 'office', reader_ref)) or (readers = 'company_staff' and biz.staff_any('{biz:read}')));
+create policy sf_r on sec.findings for select using (biz.staff_any('{security:read}'));
+create policy si_r on sec.investigations for select using (lead_id = auth.uid() or biz.staff_any('{security:investigate}'));
+create policy ops_read_services on ops.services for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_deps on ops.dependencies for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_obj on ops.objectives for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_tel on ops.telemetry for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_alerts on ops.alerts for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_builds on ops.builds for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_deploys on ops.deployments for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_flags on ops.feature_flags for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_jobs on ops.jobs for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_attempts on ops.job_attempts for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_mig on ops.migrations for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_repair on ops.repair_requests for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_backups on ops.backups for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_restore on ops.restore_exercises for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+create policy ops_read_tlr on ops.tenant_lifecycle_requests for select using (ctl.can('tenant:implement', institution_id));
+create policy ops_read_usage on ops.usage_records for select using (ctl.can('console:operate', '00000000-0000-0000-0000-000000000000'));
+revoke insert, update, delete on ops.services, ops.dependencies, ops.objectives, ops.telemetry, ops.alerts, ops.builds, ops.deployments, ops.feature_flags, ops.jobs, ops.job_attempts, ops.migrations, ops.repair_requests, ops.backups, ops.restore_exercises, ops.tenant_lifecycle_requests, ops.usage_records from anon, authenticated;
+grant select on ops.services, ops.dependencies, ops.objectives, ops.telemetry, ops.alerts, ops.builds, ops.deployments, ops.feature_flags, ops.jobs, ops.job_attempts, ops.migrations, ops.repair_requests, ops.backups, ops.restore_exercises, ops.tenant_lifecycle_requests, ops.usage_records to authenticated;
+
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+  ('finance:read','Read company finance', false, '{}', 0), ('people:read','Read workforce records (not compensation)', false, '{}', 0), ('people:recruit','Work candidates', false, '{}', 0),
+  ('compensation.read','Read compensation records', true, '{}', 0), ('marketing:read','Read marketing workspace', false, '{}', 0), ('legal:read','Read legal entities and matters', true, '{}', 0),
+  ('it:admin','Administer company devices', false, '{}', 0), ('ai.configure','Configure AI models and evaluations', true, '{ai.approve}', 1),
+  ('security:read','Read security findings', false, '{}', 0), ('security:investigate','Run privileged investigations', true, '{}', 0),
+  ('membership.invite','Invite members to an institution', false, '{}', 0), ('access_review.run','Run access reviews', false, '{}', 0),
+  ('application.review','Review admissions applications', true, '{}', 0), ('request.assign','Work service requests for an office', false, '{}', 0),
+  ('charge.adjust','Adjust student account charges', true, '{refund.approve}', 1), ('award.review','Review financial aid awards', true, '{}', 0),
+  ('rollout.approve','Approve institution rollout steps', false, '{}', 0), ('proposal.review','Review academic proposals', false, '{}', 0)
+on conflict (key) do nothing;

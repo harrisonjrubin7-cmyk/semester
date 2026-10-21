@@ -1,3 +1,36 @@
+> ## Read this first (consolidated 6 Oct 2026)
+> **One rule settles every conflict below: the live repo wins.** Everything in `handoff/` is a reference to port *into* the repo's conventions, never a parallel system.
+>
+> 1. **Authorization core: the repo's.**
+>    - **What it is:** `public.app_roles`, `app_capabilities`, `role_capabilities`, `role_grants` and `private.has_capability`.
+>    - **Port these ideas into it:**
+>      - typed relationships: teaching assignment, advisor assignment, case assignment, delegation
+>      - purpose drawn from the workflow
+>      - record classification
+>      - field scope
+>    - **Where they're specified:** `reference-slice/enterprise-v4/user/014_*`, `011_*` (authorize) and `course-permission-evaluator.ts.txt`.
+>    - **Never stand up a second core:** not `ctl.can`, `sx_private.can` or `semester.has_permission`. Treat those as specifications. Run `handoff/role-reconcile.sh` first; see `docs/system/ROLE_SYSTEM_RECONCILIATION.md`.
+> 2. **Schema: extend the repo's 185+ migrations.**
+>    - **Domains with no repo equivalent** (admissions, housing, dining, degree audit, LTI/AGS, memberships, governance): use `user/semester_campus_portals.sql` plus `user/014–018` and `001–019` as the reference design.
+>    - **Install order and do-not-apply list:** `handoff/INDEX.md`.
+>    - **`handoff/semester-platform/`:** migrations 010–120 there are specs only.
+> 3. **Build order:** `handoff/PHASES.md` (20 workspaces, 123 screens, 5 phases, a definition of done and exit criteria). Per-capability detail: `registry/capabilities.json` and `registry/PROMPT.md`. Status ladder: `REPO-CROSSWALK.md`.
+> 4. **Interactive reference:** `ui_kits/semester-app/` (281 routes in 25 workspaces, plus `mobile.html`; inventory in `handoff/prototype/SCREEN-INVENTORY.md`, streams 19–24 cover the newest areas). Its demo data and screens are the acceptance reference, not production code.
+> 5. **Security: no evidence, no release.**
+>    - **Governing documents:** `handoff/assurance/user/*` (yours).
+>    - **Gap-fillers:** `handoff/assurance/00–10`.
+>    - **Before every merge:** the PR template.
+>    - **Tests:** run all 16 AC tests as `authenticated`, never as postgres or the service role.
+> 6. **Integrations:**
+>    - **LTI and AGS:** `reference-slice/enterprise-v4/LTI-ADAPTERS.md`. One queue (019), and the standalone verifier is the preferred code.
+>    - **Payments:** `006` plus your Stripe webhook.
+>    - **Access saga:** `handoff/control-plane/baseline/` only, reconciled with the repo's `access-saga.ts`.
+> 7. **Already in the repo, so extend it, don't duplicate it:**
+>    - **Operations Console:** `#/console`. Add the grant-aware entry from `ops-console-visibility/PROMPT.md`; never create `/ops`.
+>    - **Readiness:** `RegistrationReadiness.tsx`.
+>    - **Other:** onboarding, commerce, billing, approvals, gradebook, GTM and trust-room tables.
+> 8. **Human-only:** everything under `docs/legal/` (26 drafts and the Contract Playbook), price approval (`approved_at`), the LTI shared-vs-tenant registration decision, trademark clearance for the name (risk R-006), insurance, and the pilot SSO test accounts. **The agent stops and asks.**
+
 # BUILD.md — the single entry point for Claude Code or Codex
 
 Read this whole file before doing anything. It is written so an agent can build Semester without guessing. When anything here conflicts with another file, **this file wins**, then `execute/00-INDEX.md`, then stream files, then design docs.
@@ -57,7 +90,7 @@ APP=<app|web> bash design/handoff/verify.sh                      # must end with
 Then add the stream's own exit gates. Paste the full output into the report.
 
 ## 7. Human-only steps (the agent stops and asks)
-- Bind cyber + E&O insurance · sign the DPA/FERPA addendum · submit HECVAT Full · attorney review of docs/legal/*
+- Bind cyber + E&O insurance · sign the DPA and Student Data Privacy Addendum · attorney review of all 26 docs/legal drafts and the Contract Playbook limits · submit HECVAT Full · attorney review of docs/legal/*
 - Provide the Vanderbilt staging IdP metadata and test accounts · name IT, registrar and sponsor contacts
 - Approve the design-system baseline · approve every PR · approve production cutover (docs/launch/Cutover Plan.html)
 - Choose the AI provider and sign its data terms (no training, no retention)
@@ -83,10 +116,16 @@ All of: streams on the pilot-critical path merged; `verify.sh` green on main; la
 | Platform maturity, strategy, business OS, system docs | Programs and standards | 13 (plus monthly review) | docs/platform, docs/strategy, docs/business, docs/system |
 | Master catalog, every screen, gap screens, role pages, workflow runner, atlas, role lens, wireframes | The full inventory (673 screens, 17 workflows, 319 steps, 49 roles) | Acceptance list for 03–08: each catalogued screen and workflow step must exist in the app or be listed as deferred in the PR | ui_kits/master-catalog, every-screen, gap-screens, role-pages, workflow-runner, docs/master |
 | Architecture, read models, environments | System design | 01 | ui_kits/architecture, guidelines/arch-*.html |
+| Operations entry, console gate | Grant-aware entry to the existing #/console | 08 | ui_kits/console-entry, handoff/ops-console-visibility |
+| Access control (PE/PA/PEP, saga, workers) | Governed access provisioning and revocation | 01 (policies), 08 (operator views) | handoff/control-plane/baseline, ui_kits/governance-backbone |
+| Registration readiness pilot | Student checklist with honest states | 03 | ui_kits/readiness-pilot, components/data/ReadinessState |
+| Connection and readiness states | ConnectionState, ReadinessState components | 00 maps to app; 03–08 use them | components/data/ConnectionState.*, ReadinessState.* |
+| Ecosystem, screen atlas | Connections between environments; every screen in six states | Acceptance reference for 03–08 | ui_kits/ecosystem, ui_kits/screen-atlas |
+| Company workflows, contracts | Deal, renewal, hiring, vendor, partner, research | Not code: human-run; console modules in 08 later | ui_kits/company-workflows, docs/legal |
 | Decks, reports, teaser, poster, research brief, vision deck | Sales and launch materials | Not code: export from the design project (PDF/PPTX) | templates/* |
 | Business workspace, operating manual, finance model, hiring | Running the company | Not code: used by the founder; /ops modules in 08 | ui_kits/business, docs/run |
 
 **Completeness rule:** at the end of streams 03–08 the agent runs a coverage check: every screen in docs/master/SEMESTER_SCREEN_CATALOG.md and every step in SEMESTER_WORKFLOW_CATALOG.md is either implemented (route + test) or listed as deferred with a reason and priority. Nothing is silently skipped.
 
 ## 9. Where things are
-`execute/` stream prompts · `semester-platform/` DB, API, tests · `semester-core/` decision logic · `claude-code-toolkit/` design-system tooling · `manifest.json` every file and its destination · design references in `../ui_kits`, `../templates`, `../docs`.
+`execute/` stream prompts · `control-plane/baseline/` access-control reference · `ops-console-visibility/` console prompt · `semester-platform/` DB, API, tests · `semester-core/` decision logic · `claude-code-toolkit/` design-system tooling · `manifest.json` every file and its destination · design references in `../ui_kits`, `../templates`, `../docs`.

@@ -1,0 +1,7 @@
+window,priority,delivery,owner_roles,gate
+Days 1–15,P0,Inventory/routes/grants/authority/named owners,Engineering/Product,Pinned inventory; no duplicate shell
+Days 16–30,P0,Controlled-action slice; inbox/approval/audit/receipt; finance sandbox,Backend/Security/Finance,Forged-scope/self-approval/retry/audit-failure tests
+Days 31–45,P0,Ledger/refunds/entitlements/outbox/reconciliation/alerts,Finance/Platform/SRE,Balanced posting; replay/order; operated controls
+Days 46–60,P1,Company workflows and console read models,Frontend/Operations,Scoped deep links; accessible journeys
+Days 61–75,P1,Portal/observe agents/workflow runner,Reporting/AI/Security,Immutable audiences; bounded handoffs
+Days 76–90,P1/P2 prep,Independent review/UAT/target/drills/decision,Reviewers/Customer/Operations,Current authority and staffed recovery; no schedule guarantee

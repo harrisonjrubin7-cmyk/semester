@@ -1,0 +1,61 @@
+schema,field,required,type,format,enum,nullable
+LifecycleSnapshot,institutionPersonId,True,string,,"""""",False
+LifecycleSnapshot,state,True,string,,"[""prospect"", ""applicant"", ""application_complete"", ""under_review"", ""admitted"", ""waitlisted"", ""denied"", ""offer_accepted"", ""deferred"", ""matriculation_pending"", ""active"", ""leave"", ""withdrawn"", ""transferred"", ""completion_pending"", ""conferred"", ""alumni""]",False
+LifecycleSnapshot,effectiveAt,True,string,date-time,"""""",False
+LifecycleSnapshot,authorityReceiptId,True,string,,"""""",False
+EnrollmentSnapshot,institutionPersonId,True,string,,"""""",False
+EnrollmentSnapshot,termId,True,string,,"""""",False
+EnrollmentSnapshot,sectionId,True,string,,"""""",False
+EnrollmentSnapshot,status,True,string,,"[""enrolled"", ""waitlisted"", ""dropped"", ""withdrawn"", ""denied""]",False
+EnrollmentSnapshot,effectiveAt,True,string,date-time,"""""",False
+EnrollmentSnapshot,authorityReceiptId,True,string,,"""""",False
+ActionSnapshot,institutionPersonId,True,string,,"""""",False
+ActionSnapshot,actionKey,True,string,,"""""",False
+ActionSnapshot,title,True,string,,"""""",False
+ActionSnapshot,state,True,string,,"[""open"", ""blocked"", ""awaiting_approval"", ""submitted"", ""outcome_unknown"", ""fulfilled"", ""cancelled""]",False
+ActionSnapshot,obligation,True,string,,"[""required"", ""personal"", ""suggested""]",False
+ActionSnapshot,dueAt,True,"['string', 'null']",date-time,"""""",True
+ActionSnapshot,receiptId,True,"['string', 'null']",,"""""",True
+SyncBatch,schemaVersion,True,enum/compound,,"""1""",False
+SyncBatch,events,True,array,,"""""",False
+SyncAccepted,jobId,True,string,uuid,"""""",False
+SyncAccepted,status,True,enum/compound,,"""accepted""",False
+SyncAccepted,acceptedAt,True,string,date-time,"""""",False
+SyncJob,jobId,True,string,uuid,"""""",False
+SyncJob,status,True,string,,"[""accepted"", ""processing"", ""completed"", ""partial_failure"", ""failed""]",False
+SyncJob,results,True,array,,"""""",False
+Problem,type,True,string,uri,"""""",False
+Problem,title,True,string,,"""""",False
+Problem,status,True,integer,,"""""",False
+Problem,code,True,string,,"""""",False
+Problem,correlationId,True,string,uuid,"""""",False
+Problem,retryable,True,boolean,,"""""",False
+Problem,outcomeUnknown,True,boolean,,"""""",False
+ActionView,id,True,string,uuid,"""""",False
+ActionView,workspaceId,True,string,uuid,"""""",False
+ActionView,state,True,string,,"[""open"", ""blocked"", ""awaiting_approval"", ""submitted"", ""outcome_unknown"", ""fulfilled"", ""cancelled""]",False
+ActionView,title,True,string,,"""""",False
+ActionView,obligation,True,enum/compound,,"[""required"", ""personal"", ""suggested""]",False
+ActionView,origin,True,enum/compound,,"[""institution"", ""connected"", ""student"", ""ai""]",False
+ActionView,freshness,True,enum/compound,,"[""current"", ""stale"", ""unknown"", ""conflicting""]",False
+ActionView,revision,True,integer,,"""""",False
+ActionView,dueAt,True,"['string', 'null']",date-time,"""""",True
+ActionPage,items,True,array,,"""""",False
+ActionPage,nextCursor,True,"['string', 'null']",,"""""",True
+PreferencePatch,expectedRevision,True,integer,,"""""",False
+PreferencePatch,pinned,False,boolean,,"""""",False
+PreferencePatch,snoozedUntil,False,"['string', 'null']",date-time,"""""",True
+PreferenceView,itemId,True,string,uuid,"""""",False
+PreferenceView,revision,True,integer,,"""""",False
+PreferenceView,pinned,True,boolean,,"""""",False
+PreferenceView,snoozedUntil,True,"['string', 'null']",date-time,"""""",True
+SyncEvent.common,eventId,True,string,uuid,,False
+SyncEvent.common,tenantId,True,string,uuid,,False
+SyncEvent.common,connectionId,True,string,uuid,,False
+SyncEvent.common,sourceObjectId,True,string,,,False
+SyncEvent.common,sourceRevision,True,integer,,,False
+SyncEvent.common,occurredAt,True,string,date-time,,False
+SyncEvent.common,observedAt,True,string,date-time,,False
+SyncEvent.common,purposeCode,True,string,,,False
+SyncEvent.common,accessBasisId,True,string,uuid,,False
+SyncEvent.common,policyVersion,True,string,,,False

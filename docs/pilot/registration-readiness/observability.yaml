@@ -1,0 +1,76 @@
+# Observability package (artifact 9). Every request, workflow, worker job,
+# integration pull, policy decision and receipt shares a correlation ID.
+correlation:
+  required_headers:
+    - x-request-id
+    - x-correlation-id
+  propagation:
+    - browser_request
+    - server_action_or_route_handler
+    - policy_decision
+    - database_audit_event
+    - outbox_event
+    - worker_job
+    - provider_adapter
+    - receipt
+
+logs:
+  mandatory_fields:
+    - timestamp
+    - level
+    - environment
+    - service
+    - tenant_id
+    - correlation_id
+    - event_or_command
+    - actor_type
+    - outcome
+  prohibited_fields:
+    - access_tokens
+    - session_tokens
+    - raw_passwords
+    - full_restricted_record_payloads
+
+traces:
+  sample_policy:
+    normal: "10 percent"
+    errors: "100 percent"
+    consequential_commands: "100 percent"
+
+alerts:
+  - name: readiness_source_stale
+    trigger: "freshness_age > policy_threshold"
+    severity: SEV-3
+    owner: integration_on_call
+  - name: policy_decision_failures
+    trigger: "error_rate > agreed_threshold"   # agreed_threshold: TBD
+    severity: SEV-2
+    owner: platform_on_call
+  - name: unauthorized_access_attempt_spike
+    trigger: "deny_rate_anomaly"
+    severity: SEV-2
+    owner: security_on_call
+  - name: readiness_reconciliation_backlog
+    trigger: "oldest_open_case > agreed_SLA"   # agreed_SLA: TBD
+    severity: SEV-3
+    owner: registrar_operations
+
+dashboards:
+  pilot_health:
+    panels: [active_pilot_flag, evaluations, readiness_states, source_freshness, failures, queue_age]
+    primary_user: pilot_lead
+  integration_health:
+    panels: [last_success, watermark_lag, provider_errors, retries, dead_letters, reconciliation_backlog]
+    primary_user: integration_owner
+  security_health:
+    panels: [denials, role_or_grant_changes, session_revocations, break_glass_use, suspicious_patterns]
+    primary_user: security_owner
+  student_trust:
+    panels: [stale_disclosures, review_outcomes, support_contact_rate, receipt_delivery, source_detail_views]
+    primary_user: product_owner
+  registrar_operations:
+    panels: [cases_by_state, aging, referrals, override_requests, office_workload, sla_breaches]
+    primary_user: registrar_owner
+  release_health:
+    panels: [version, deployment_time, feature_flags, error_trend, rollback_readiness, evidence_status]
+    primary_user: release_manager

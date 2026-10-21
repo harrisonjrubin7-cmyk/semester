@@ -1,0 +1,23 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+site:
+  title: Semester
+  structure:
+    - type: space
+      key: space-semester-docs
+      title: Semester documentation
+      path: docs
+      default: true
+      content:
+        directory: ./docs
+    - type: space
+      key: space-course-engine
+      title: Course Engine
+      path: course-engine
+      content:
+        directory: ./course-engine/docs
+    - type: space
+      key: space-workflow-lab
+      title: Workflow Lab
+      path: workflow-lab
+      content:
+        directory: ./workflow-lab/docs

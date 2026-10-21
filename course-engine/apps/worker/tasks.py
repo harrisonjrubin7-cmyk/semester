@@ -8,7 +8,7 @@ from threading import Event, Thread
 from uuid import UUID, uuid4
 
 from celery import Celery
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -142,14 +142,26 @@ def recover_expired_jobs() -> dict:
         db.close()
 
     redelivered = 0
+    failed = 0
     for job_id, job_type in jobs:
-        if job_type == "extract":
-            celery.send_task("extract_document", args=[str(job_id)])
-            redelivered += 1
-        elif job_type.startswith(("generate:", "regenerate:")):
-            celery.send_task("generate_study_asset", args=[str(job_id)])
-            redelivered += 1
-    return {"redelivered": redelivered}
+        try:
+            if job_type == "extract":
+                celery.send_task(
+                    "extract_document",
+                    args=[str(job_id)],
+                    task_id=str(job_id),
+                )
+                redelivered += 1
+            elif job_type.startswith(("generate:", "regenerate:")):
+                celery.send_task(
+                    "generate_study_asset",
+                    args=[str(job_id)],
+                    task_id=str(job_id),
+                )
+                redelivered += 1
+        except Exception:
+            failed += 1
+    return {"redelivered": redelivered, "failed": failed}
 
 
 def invalidate_document_assets(db, document: SourceDocument) -> None:
@@ -187,6 +199,29 @@ def _mark_extracting(document: SourceDocument, detected_mime: str) -> None:
     }
 
 
+def classification_sample(materialized_rows: list[dict]) -> str:
+    """Keep every archive member represented while sampling page-granular text."""
+    rows_by_source: dict[str, list[dict]] = {}
+    for row in materialized_rows:
+        rows_by_source.setdefault(str(row["source_label"]), []).append(row)
+
+    sampled: list[dict] = []
+    for rows in rows_by_source.values():
+        seen_pages: set[int] = set()
+        member_sample: list[dict] = []
+        for row in rows:
+            page_number = row["page_number"]
+            if page_number is not None:
+                if page_number in seen_pages:
+                    continue
+                seen_pages.add(page_number)
+            member_sample.append(row)
+            if len(member_sample) == 5:
+                break
+        sampled.extend(member_sample)
+    return " ".join(str(row["content"])[:4000] for row in sampled).lower()
+
+
 def _commit_extraction(
     db,
     document_id: UUID,
@@ -201,9 +236,11 @@ def _commit_extraction(
         ReviewItem.document_id == document.id,
         ReviewItem.item_type.in_((
             "extracted_evidence",
+            "extraction_failed",
             "low_confidence_extraction",
             "unsupported_file",
             "no_extractable_content",
+            "extraction_failed",
         )),
     ))
     for unsupported_path in unsupported:
@@ -244,7 +281,7 @@ def _commit_extraction(
             },
         ))
     if document.classification == "other" and materialized_rows:
-        sample = " ".join(row["content"] for row in materialized_rows[:5]).lower()
+        sample = classification_sample(materialized_rows)
         filename = document.filename.lower()
         if "syllabus" in filename or ("grading" in sample and "schedule" in sample):
             document.classification = "syllabus"
@@ -375,6 +412,7 @@ def extract_document(job_id: str) -> dict:
                 "cell_range": row.cell_range,
                 "start_seconds": row.start_seconds,
                 "end_seconds": row.end_seconds,
+                "bounding_box": row.bounding_box,
                 "confidence": row.confidence,
                 "metadata_json": metadata,
             })
@@ -486,8 +524,25 @@ def generate_study_asset(job_id: str) -> dict:
         heartbeat_started = True
         if not update_job_progress(db, lease, utc_now(), JOB_LEASE_TTL, 10):
             return {"status": "lease_lost"}
-        evidence = db.execute(
-            select(Citation, SourceChunk, SourceDocument)
+        evidence_order = (
+            SourceDocument.id,
+            SourceChunk.page_number,
+            SourceChunk.slide_number,
+            SourceChunk.sheet_name,
+            SourceChunk.start_seconds,
+            SourceChunk.chunk_index,
+        )
+        bucketed_evidence = (
+            select(
+                Citation.id.label("citation_id"),
+                SourceDocument.id.label("document_id"),
+                SourceChunk.page_number.label("page_number"),
+                SourceChunk.slide_number.label("slide_number"),
+                SourceChunk.sheet_name.label("sheet_name"),
+                SourceChunk.start_seconds.label("start_seconds"),
+                SourceChunk.chunk_index.label("chunk_index"),
+                func.ntile(50).over(order_by=evidence_order).label("sample_bucket"),
+            )
             .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
             .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
             .where(
@@ -495,7 +550,29 @@ def generate_study_asset(job_id: str) -> dict:
                 Citation.status == ReviewStatus.confirmed,
                 SourceDocument.deleted_at.is_(None),
             )
-            .limit(50)
+            .subquery()
+        )
+        ranked_evidence = select(
+            bucketed_evidence,
+            func.row_number().over(
+                partition_by=bucketed_evidence.c.sample_bucket,
+                order_by=(
+                    bucketed_evidence.c.document_id,
+                    bucketed_evidence.c.page_number,
+                    bucketed_evidence.c.slide_number,
+                    bucketed_evidence.c.sheet_name,
+                    bucketed_evidence.c.start_seconds,
+                    bucketed_evidence.c.chunk_index,
+                ),
+            ).label("bucket_row"),
+        ).subquery()
+        evidence = db.execute(
+            select(Citation, SourceChunk, SourceDocument)
+            .join(SourceChunk, Citation.chunk_id == SourceChunk.id)
+            .join(SourceDocument, SourceChunk.document_id == SourceDocument.id)
+            .join(ranked_evidence, ranked_evidence.c.citation_id == Citation.id)
+            .where(ranked_evidence.c.bucket_row == 1)
+            .order_by(*evidence_order)
         ).all()
         db.commit()
         if not evidence:

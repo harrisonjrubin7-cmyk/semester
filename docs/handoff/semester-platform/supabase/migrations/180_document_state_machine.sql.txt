@@ -1,0 +1,121 @@
+-- 180 · Document version state machine + transition command (from "Build a unified enterprise architecture blueprint").
+-- Content versions stay immutable (170 trigger). Lifecycle state lives here, one row per version, revisioned.
+-- Requested changes create a NEW version; nothing previously reviewed or signed is rewritten.
+create table if not exists docs.version_states(
+  version_id uuid primary key references docs.document_versions on delete restrict, document_id uuid not null references docs.documents,
+  state text not null default 'draft' check (state in ('draft','in_review','changes_requested','approved','awaiting_signature','effective','rejected','superseded','archived')),
+  revision int not null default 0, requires_signature boolean not null default false, updated_at timestamptz not null default now());
+create unique index if not exists one_effective_per_doc on docs.version_states(document_id) where state = 'effective';
+create table if not exists docs.review_tasks(
+  id uuid primary key default gen_random_uuid(), version_id uuid not null references docs.document_versions, reviewer_id uuid not null references auth.users,
+  required boolean not null default true, status text not null default 'open' check (status in ('open','approved','changes_requested','rejected','withdrawn')), due_at timestamptz,
+  unique (version_id, reviewer_id));
+create table if not exists docs.transition_events(
+  id bigserial primary key, version_id uuid not null references docs.document_versions, from_state text not null, to_state text not null,
+  action text not null, actor uuid not null, reason text, idempotency_key text not null unique, occurred_at timestamptz not null default now());
+alter table docs.version_states enable row level security; alter table docs.review_tasks enable row level security; alter table docs.transition_events enable row level security;
+create policy vs_read on docs.version_states for select using (docs.can_read(document_id));
+create policy rt_read on docs.review_tasks for select using (reviewer_id = auth.uid() or exists (select 1 from docs.document_versions v where v.id = version_id and docs.can_read(v.document_id)));
+create policy te_read on docs.transition_events for select using (exists (select 1 from docs.document_versions v where v.id = version_id and docs.can_read(v.document_id)));
+grant select on docs.version_states, docs.review_tasks, docs.transition_events to authenticated;
+
+-- Allowed edges: action → (from, to). Anything else is refused.
+create or replace function docs.edge(p_action text, p_from text) returns text language sql immutable as $$
+  select case
+    when p_action = 'submit' and p_from = 'draft' then 'in_review'
+    when p_action = 'request_changes' and p_from = 'in_review' then 'changes_requested'
+    when p_action = 'reject' and p_from = 'in_review' then 'rejected'
+    when p_action = 'approve' and p_from = 'in_review' then 'approved'
+    when p_action = 'request_signatures' and p_from = 'approved' then 'awaiting_signature'
+    when p_action = 'make_effective' and p_from = 'approved' then 'effective'
+    when p_action = 'record_execution' and p_from = 'awaiting_signature' then 'effective'
+    when p_action = 'supersede' and p_from = 'effective' then 'superseded'
+    when p_action = 'archive' and p_from in ('effective','rejected','superseded') then 'archived'
+  end $$;
+
+create or replace function api.transition_document(p_version uuid, p_action text, p_expected text, p_reason text, p_idem text) returns text language plpgsql security definer set search_path = '' as $$
+declare s docs.version_states; d docs.documents; w core.workspaces; nxt text; prior text; begin
+  -- 0. Idempotent replay returns the recorded outcome; never repeats the transition.
+  select to_state into prior from docs.transition_events where idempotency_key = p_idem and actor = auth.uid();
+  if prior is not null then return prior; end if;
+  -- Contract alias (handoff/api/api_contracts.ts): 'activate' = make_effective from approved, record_execution from awaiting_signature.
+  if p_action = 'activate' then p_action := case p_expected when 'approved' then 'make_effective' when 'awaiting_signature' then 'record_execution' else 'activate' end; end if;
+  -- 1-3. Resolve, authorize, lock.
+  select * into s from docs.version_states where version_id = p_version for update;
+  if s.version_id is null then raise exception 'NOT_FOUND'; end if;
+  select * into d from docs.documents where id = s.document_id; select * into w from core.workspaces where id = d.workspace_id;
+  if not docs.can_read(d.id) then raise exception 'NOT_FOUND'; end if;
+  -- 4. Expected state and allowed edge.
+  if s.state <> p_expected then raise exception 'STATE_CONFLICT' using detail = format('expected %s, got %s', p_expected, s.state); end if;
+  nxt := docs.edge(p_action, s.state); if nxt is null then raise exception 'INVALID_TRANSITION' using detail = format('%s from %s', p_action, s.state); end if;
+  -- 5. Authority and preconditions per edge.
+  if p_action = 'submit' then
+    if not (d.owner_id = auth.uid() or ctl.can('document.submit', w.organization_id)) then raise exception 'FORBIDDEN'; end if;
+    if not exists (select 1 from docs.review_tasks where version_id = p_version and required) then raise exception 'INVALID_REQUEST' using detail = 'reviewers required'; end if;
+  elsif p_action in ('approve','request_changes','reject') then
+    if not exists (select 1 from docs.review_tasks where version_id = p_version and reviewer_id = auth.uid() and status = 'open') then raise exception 'REVIEW_ASSIGNMENT_REQUIRED'; end if;
+    if d.owner_id = auth.uid() then raise exception 'SELF_REVIEW_FORBIDDEN'; end if;
+    if p_action <> 'approve' and coalesce(length(p_reason), 0) < 3 then raise exception 'INVALID_REQUEST' using detail = 'reason required'; end if;
+    update docs.review_tasks set status = case p_action when 'approve' then 'approved' when 'reject' then 'rejected' else 'changes_requested' end where version_id = p_version and reviewer_id = auth.uid();
+    if p_action = 'approve' and exists (select 1 from docs.review_tasks where version_id = p_version and required and status <> 'approved') then
+      insert into docs.transition_events(version_id, from_state, to_state, action, actor, reason, idempotency_key) values (p_version, s.state, s.state, 'approve_partial', auth.uid(), p_reason, p_idem);
+      perform audit.log('document.approval_recorded', p_version::text, null, null);
+      return s.state;                                                     -- waits for remaining required approvals
+    end if;
+  elsif p_action = 'request_signatures' then
+    if not ctl.can('document.execute', w.organization_id) then raise exception 'FORBIDDEN'; end if;
+    if not s.requires_signature or not exists (select 1 from docs.signature_requests where document_version_id = p_version) then raise exception 'INVALID_REQUEST' using detail = 'signers required'; end if;
+  elsif p_action = 'make_effective' then
+    if s.requires_signature then raise exception 'VERIFIED_SIGNATURES_REQUIRED'; end if;
+    if not ctl.can('document.execute', w.organization_id) then raise exception 'FORBIDDEN'; end if;
+  elsif p_action = 'record_execution' then
+    if exists (select 1 from docs.signature_requests r where r.document_version_id = p_version and not exists (select 1 from docs.signature_evidence e where e.signature_request_id = r.id and e.document_version_id = p_version)) then raise exception 'VERIFIED_SIGNATURES_REQUIRED'; end if;
+  elsif p_action = 'archive' then
+    if not ctl.can('document.archive', w.organization_id) then raise exception 'FORBIDDEN'; end if;
+    if d.legal_hold or exists (select 1 from docs.legal_holds h where h.document_id = d.id and h.released_at is null) then raise exception 'LEGAL_HOLD'; end if;
+  elsif p_action = 'supersede' then
+    if not ctl.can('document.execute', w.organization_id) then raise exception 'FORBIDDEN'; end if;
+  end if;
+  -- Becoming effective supersedes the previous effective version of the same document.
+  if nxt = 'effective' then update docs.version_states set state = 'superseded', revision = revision + 1, updated_at = now() where document_id = d.id and state = 'effective' and version_id <> p_version; end if;
+  -- 6-8. Record, update, outbox.
+  update docs.version_states set state = nxt, revision = revision + 1, updated_at = now() where version_id = p_version;
+  update docs.documents set status = case nxt when 'effective' then 'effective' when 'in_review' then 'in_review' when 'approved' then 'approved' else status end where id = d.id;
+  insert into docs.transition_events(version_id, from_state, to_state, action, actor, reason, idempotency_key) values (p_version, s.state, nxt, p_action, auth.uid(), p_reason, p_idem);
+  perform audit.log('document.' || p_action, p_version::text, to_jsonb(s.state), to_jsonb(nxt));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('document.transitioned', w.organization_id, jsonb_build_object('version', p_version, 'from', s.state, 'to', nxt, 'action', p_action));
+  return nxt; end $$;   -- 9. commit; notifications and signing requests run after commit from the outbox.
+grant execute on function api.transition_document(uuid,text,text,text,text) to authenticated;
+
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+  ('document.submit','Submit documents for review', false, '{}', 0), ('document.execute','Run signature and effective-date steps', true, '{}', 0), ('document.archive','Archive eligible documents', false, '{}', 0)
+on conflict (key) do nothing;
+
+-- Create a document (or the next version of one). The server must already have verified a tenant-authorized,
+-- immutable upload and computed its SHA-256; this function trusts p_storage_ref and p_sha256 only from the API layer.
+create table if not exists docs.command_receipts(actor uuid not null, idempotency_key text not null, result jsonb not null, at timestamptz not null default now(), primary key (actor, idempotency_key));
+alter table docs.command_receipts enable row level security;  -- no client policy
+create or replace function api.create_document_version(p_workspace uuid, p_document uuid, p_title text, p_type text, p_storage_ref text, p_sha256 text, p_requires_signature boolean, p_idem text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare r jsonb; w core.workspaces; d uuid; v uuid; n int; begin
+  select result into r from docs.command_receipts where actor = auth.uid() and idempotency_key = p_idem;
+  if r is not null then return r; end if;                                             -- safe retry
+  if p_sha256 !~ '^[0-9a-f]{64}$' then raise exception 'INVALID_REQUEST' using detail = 'sha256 hex required'; end if;
+  if p_document is null then
+    select * into w from core.workspaces where id = p_workspace;
+    if w.id is null or not ((w.kind = 'personal' and w.owner_user_id = auth.uid()) or (w.kind <> 'personal' and ctl.can('document.create', w.organization_id))) then raise exception 'FORBIDDEN'; end if;
+    insert into docs.documents(workspace_id, title, type, owner_id) values (p_workspace, p_title, p_type, auth.uid()) returning id into d; n := 1;
+  else
+    select id into d from docs.documents where id = p_document for update;
+    if d is null or not docs.can_read(d) then raise exception 'NOT_FOUND'; end if;
+    if not exists (select 1 from docs.documents x join core.workspaces ww on ww.id = x.workspace_id where x.id = d and (x.owner_id = auth.uid() or ctl.can('document.revise', ww.organization_id))) then raise exception 'FORBIDDEN'; end if;
+    select coalesce(max(version), 0) + 1 into n from docs.document_versions where document_id = d;
+  end if;
+  insert into docs.document_versions(document_id, version, checksum, storage_ref) values (d, n, p_sha256, p_storage_ref) returning id into v;
+  insert into docs.version_states(version_id, document_id, requires_signature) values (v, d, p_requires_signature);
+  r := jsonb_build_object('documentId', d, 'versionId', v, 'versionNumber', n, 'state', 'draft');
+  insert into docs.command_receipts(actor, idempotency_key, result) values (auth.uid(), p_idem, r);
+  perform audit.log('document.version_created', v::text, null, r);
+  return r; end $$;
+grant execute on function api.create_document_version(uuid,uuid,text,text,text,text,boolean,text) to authenticated;
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values ('document.create','Create documents in a workspace', false, '{}', 0), ('document.revise','Add versions to a document', false, '{}', 0) on conflict (key) do nothing;

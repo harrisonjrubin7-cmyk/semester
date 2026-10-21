@@ -22,11 +22,12 @@ import { migrationApi, type MigrationApi, type ProjectPatch } from '../../lib/mi
 import {
   APPROVAL_AREAS, APPROVAL_LABEL, CLASSIFICATIONS, DOMAINS, DOMAIN_LABEL, DUPLICATE_LABEL, DUPLICATE_RULES, GATE_TEXT, SLASH_ORDER_LABEL, STAGES,
   STAGE_DOES, STAGE_LABEL, STAGE_RUN, TRANSFORMS, TRANSFORM_LABEL,
-  canGoBack, gateFailures, mapsEditable, nextStage, parseTable, preview, reconcile, sha256,
+  BACK_REASON_MAX, backReasonProblem, canGoBack, gateFailures, mapsEditable, nextStage, parseTable, preview, reconcile, sha256,
   type ApprovalArea, type DuplicateRule, type FieldMap, type MigrationApproval, type MigrationDomain, type MigrationProject,
   type MigrationRun, type Preview, type Reconciliation, type RunKind, type SlashOrder, type Stage, type Transform,
 } from '../../lib/migration/center';
 import { ActionButton, EmptyState, FilePick, Notice, SectionLabel } from '../ui';
+import { FieldMessage, useFieldErrors } from '../FieldMessage';
 
 export interface MigrationCenterProps {
   tenantId: string;
@@ -330,7 +331,7 @@ function MigrationDetail({
         </ActionButton>
       )}
       {manage && canGoBack(row.stage) && (
-        <GoBack stages={earlier} busy={busy} onGo={(s) => act(() => api.move(row.id, s), 'Could not move the migration back.')} />
+        <GoBack stages={earlier} busy={busy} lastReason={row.stage_back_reason} onGo={(s, why) => act(() => api.move(row.id, s, why), 'Could not move the migration back.')} />
       )}
 
       <RecordForm row={row} editable={manage} busy={busy} onSave={(patch) => act(() => api.save(row.id, patch), 'Could not save.')} />
@@ -368,8 +369,18 @@ function MigrationDetail({
   );
 }
 
-function GoBack({ stages, busy, onGo }: { stages: readonly Stage[]; busy: boolean; onGo: (s: Stage) => void }) {
+function GoBack({ stages, busy, lastReason, onGo }: {
+  stages: readonly Stage[]; busy: boolean; lastReason: string | null; onGo: (s: Stage, reason: string) => void;
+}) {
   const [to, setTo] = useState<Stage>(stages[stages.length - 1]);
+  const [why, setWhy] = useState('');
+  const fields = useFieldErrors(['reason'] as const);
+  const submit = () => {
+    const problem = backReasonProblem(why)
+      ?? (lastReason !== null && why.trim() === lastReason ? 'Give a new reason: the last move back already said this.' : null);
+    if (!fields.check({ reason: problem ?? '' })) return;
+    onGo(to, why.trim());
+  };
   return (
     <div style={grid}>
       <label style={label}>
@@ -378,7 +389,20 @@ function GoBack({ stages, busy, onGo }: { stages: readonly Stage[]; busy: boolea
           {stages.map((s) => <option key={s} value={s}>{STAGE_LABEL[s]}</option>)}
         </select>
       </label>
-      <ActionButton disabled={busy} onClick={() => onGo(to)}>
+      <label htmlFor={fields.message('reason').id} style={label}>
+        Why it is going back (kept with the migration and its audit record)
+      </label>
+      <textarea
+        aria-label="Why it is going back"
+        className="input"
+        rows={3}
+        maxLength={BACK_REASON_MAX + 50}
+        value={why}
+        {...fields.control('reason')}
+        onChange={(e) => { setWhy(e.target.value); fields.clear('reason'); }}
+      />
+      <FieldMessage {...fields.message('reason')} />
+      <ActionButton disabled={busy} onClick={submit}>
         Go back to {STAGE_LABEL[to].toLowerCase()}
       </ActionButton>
     </div>

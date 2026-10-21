@@ -390,6 +390,64 @@ select cron.alter_job(
   active := true
 );
 
+-- ── Institution: the access saga worker ───────────────────────────────────
+--
+-- Every five minutes, pg_net calls the `access-saga-tick` Edge Function, which
+-- asks the database which access sagas are due (`public.access_saga_due`,
+-- 20261012030000) and runs one runner tick for each
+-- (`app/server/institution/access-saga-tick.ts`). Minutes 1, 6, 11 … 56: clear
+-- of `push` (:00, :15, :30, :45) and `integration-sync` (:07, :22, :37, :52),
+-- so no two ticks are in flight together. The runner's lease is 30 s and the
+-- tick's budget 20 s, both well inside the gap.
+--
+-- The bearer token is `access_saga_cron_secret`, generated below like
+-- `integration_cron_secret`, and like it never set on the function: the
+-- function asks the database whether a token matches
+-- (`public.access_saga_tick_authorized`, 20261012040000), so Vault is its
+-- only home and rotating it is one update to one row.
+--
+-- Nothing moves until participants are registered in
+-- `app/server/institution/access-saga-registry.ts`, which holds null; each
+-- tick then answers `outcome: unregistered` with the count of due sagas and
+-- claims none of them.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'access_saga_cron_secret') then
+    perform vault.create_secret(
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'access_saga_cron_secret',
+      'Bearer token the access-saga-worker pg_cron job sends to the access-saga-tick Edge Function, which checks it against this row.',
+      null
+    );
+  end if;
+end $$;
+
+select cron.schedule(
+  'access-saga-worker',
+  '1-56/5 * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/access-saga-tick',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'access_saga_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 60000
+    );
+  $job$
+);
+
+-- Parked until the function is deployed and the runbook's test request has
+-- answered 200 with `outcome: unregistered` (DEPLOY.md → access-saga-worker),
+-- as `integration-sync` was. The one statement that unparks it is there.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'access-saga-worker'),
+  active := false
+);
+
 -- ── Housekeeping the code was already waiting for ─────────────────────────
 --
 -- Three functions were written to be called on a schedule and never were.

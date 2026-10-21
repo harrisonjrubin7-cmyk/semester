@@ -33,6 +33,19 @@
 
 import type { ChangeSource, CoursesTab, HomeTab, ReportGrain, Screen, StudyMode } from './types';
 
+export type WorkspaceView = 'course-studio' | 'overview' | 'drafts';
+
+/** Subviews that may be named from the shared Workspace entry. */
+export const WORKSPACE_VIEWS: Partial<Record<Screen, readonly WorkspaceView[]>> = {
+  account: ['course-studio'],
+  university: ['overview', 'drafts'],
+};
+
+function workspaceViewFor(screen: Screen, raw: string | null | undefined): WorkspaceView | undefined {
+  if (!raw) return undefined;
+  return WORKSPACE_VIEWS[screen]?.includes(raw as WorkspaceView) ? (raw as WorkspaceView) : undefined;
+}
+
 /** What a screen is currently about, if anything. */
 export interface Route {
   screen: Screen;
@@ -40,6 +53,8 @@ export interface Route {
   id: string;
   /** Only for a guide: which way it is being read. */
   mode?: StudyMode;
+  /** A typed, allowlisted destination inside an existing workspace screen. */
+  view?: WorkspaceView;
   /**
    * Which part of a merged screen a retired link meant.
    *
@@ -218,9 +233,14 @@ export function toHash(route: Route): string {
   const parts = ['#', route.screen];
   if (NAMED[route.screen] && route.id) parts.push(safe(route.id));
   const hash = parts.join('/');
+  const params = new URLSearchParams();
   // The mode rides on the guide only. Anywhere else it would be a parameter
   // nothing reads, which is worse than not having one.
-  return route.screen === 'guide' && route.mode ? `${hash}?mode=${route.mode}` : hash;
+  if (route.screen === 'guide' && route.mode) params.set('mode', route.mode);
+  const view = workspaceViewFor(route.screen, route.view);
+  if (view) params.set('view', view);
+  const query = params.toString();
+  return query ? `${hash}?${query}` : hash;
 }
 
 /**
@@ -279,11 +299,14 @@ export function fromHash(hash: string): Route | null {
   const screen = (moved?.screen ?? named) as Screen;
 
   const id = parts[1] ? readId(parts[1]) : '';
-  const mode = new URLSearchParams(query ?? '').get('mode');
+  const params = new URLSearchParams(query ?? '');
+  const mode = params.get('mode');
+  const view = workspaceViewFor(screen, params.get('view'));
   return {
     screen,
     id: NAMED[screen] ? id : '',
     ...(screen === 'guide' && mode ? { mode: mode as StudyMode } : {}),
+    ...(view ? { view } : {}),
     ...(moved?.opens ? { opens: moved.opens } : {}),
   };
 }
@@ -297,13 +320,13 @@ export function fromHash(hash: string): Route | null {
  */
 export function replaces(from: Route | null, to: Route): boolean {
   if (!from) return true;
-  return from.screen === to.screen && from.id === to.id;
+  return from.screen === to.screen && from.id === to.id && (from.view ?? '') === (to.view ?? '');
 }
 
 /** The same route, for comparing without caring about key order. */
 export function same(a: Route | null, b: Route | null): boolean {
   if (!a || !b) return a === b;
-  return a.screen === b.screen && a.id === b.id && (a.mode ?? '') === (b.mode ?? '');
+  return a.screen === b.screen && a.id === b.id && (a.mode ?? '') === (b.mode ?? '') && (a.view ?? '') === (b.view ?? '');
 }
 
 

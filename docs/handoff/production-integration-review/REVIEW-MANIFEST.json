@@ -1,0 +1,21 @@
+{
+  "repository": "harrisonjrubin7-cmyk/semester",
+  "baseline_commit": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a",
+  "change_type": "additive documentation and local test orchestration",
+  "remote_applied": false,
+  "database_migrations": 0,
+  "application_e2e_executed": false,
+  "runner_unit_tests_passed": 12,
+  "files": {
+    "docs/production-integration/README.md": "bb0d8cd5aee510d4667ca62ecd8d8c4f16aae3769a657bb121eb0dbec9978403",
+    "docs/production-integration/ARCHITECTURE.md": "5033b8ee52de245ab2e8699f945b71f53b84e787f78843bfc526928d186fa6ff",
+    "docs/production-integration/ONBOARDING.md": "581d0b35c38c25f3a98fa5563bf561bb74bcc816506a676e12c0df6e0c62358f",
+    "docs/production-integration/MIGRATION.md": "e924934de1edced934bba02f0508725f7ac3dd9fb6877f3bd03f003ac4f15fee",
+    "docs/production-integration/TEST-COVERAGE.md": "f7c237b937791ef49950a34ad5b779afb494e81f0517bdd9ce9db9ba81fabac8",
+    "docs/production-integration/DEPLOYMENT-ROLLBACK.md": "4ec8cf69041c284ff2f472021089251ea71e01200356f9fac21358326911bd05",
+    "docs/production-integration/run_integration.py": "878250efb7869e100d9c635b1482ed77c46039ea69bfa83a515f9c74b900cbab",
+    "docs/production-integration/test_run_integration.py": "838413603be3b2ca702b6a807d610f5fdee82388dc44d9651d69233a22478e44"
+  },
+  "patch_sha256": "6cc62f08645d43708c7c7cae7929583831d029ea2ce609299e69efa62bce9a88",
+  "validation": "git apply --check and content equality in clean temporary repository; production baseline applicability not executed"
+}

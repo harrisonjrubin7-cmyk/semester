@@ -1,0 +1,65 @@
+# Every institutional or external connection is a product component with an
+# authority contract, a delivery contract, a failure contract, a reconciliation
+# plan, and an owner. Each level requires its own `required` list plus the
+# `required` list of every level in its `inherits`. `prohibited` and `allowed`
+# lists are sandbox-scoped and do not carry forward.
+connector_certification:
+  carry_forward:                  # applies to every inherits merge
+    required: true
+    allowed: false
+    prohibited: false
+  levels:
+    sandbox:
+      production_use: prohibited
+      required:
+        - authority_contract
+        - delivery_contract
+        - failure_contract
+        - reconciliation_plan
+        - named_owner
+      allowed:
+        - synthetic_data
+        - contract_validation
+        - manual_mapping_review
+      prohibited:
+        - production_student_data
+        - production_commands
+
+    validated:
+      inherits: [sandbox]
+      production_use: prohibited
+      prohibited:
+        - production_student_data
+        - production_commands
+      required:
+        - schema_contract_test
+        - field_mapping_review
+        - authorization_scope_test
+        - stale_source_behavior
+        - duplicate_and_out_of_order_test
+        - error_and_quarantine_behavior
+
+    pilot_approved:
+      inherits: [sandbox, validated]
+      production_use: permitted_when_required_met
+      required:
+        - sandbox_readback_from_approved_provider   # dated readback, sandbox-validated stage
+        - target_configuration_validation           # named tenant/provider, credentials, scopes, owners
+        - approved_data_minimization                # fields pulled listed and justified (CONNECTOR-PASSPORT.md:67)
+        - tenant_approval
+        - production_credential_scope
+        - monitoring
+        - reconciliation_owner
+        - incident_runbook
+        - safe_off_test
+        - activation_evidence
+
+    reusable:
+      inherits: [sandbox, validated, pilot_approved]
+      production_use: permitted_when_required_met
+      required:
+        - multiple_successful_implementations
+        - documented_variation_model
+        - implementation_playbook
+        - regression_suite
+        - support_pattern

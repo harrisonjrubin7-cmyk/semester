@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Operations inbox screen" description="Unified operator inbox: tabs, type filters, SLA timers, item detail with consequence preview and two-person approval; empty/loading/error, responsive, dark" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style></helmet>
+<div data-theme="{{ theme }}" style="display:flex;min-height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><div style="width:248px;flex:none;position:sticky;top:0;height:100vh"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="inbox" groups="{{ railGroups }}" foot="Semester Operations" hint-size="248px,100%"></x-import></div></sc-if>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 20px;background:#0f1117;color:rgba(236,238,242,.64);font-size:11px;border-bottom:1px solid rgba(236,238,242,.1)"><span>Operator <b style="color:#eceef2;font-weight:500">r.alvarez · Support lead</b></span><span>MFA <b style="color:#eceef2;font-weight:500">Fresh</b></span><span>Student records <b style="color:#eceef2;font-weight:500">⊘ No access</b></span><span style="margin-left:auto">◌ Sample data</span></div>
+<main style="flex:1;width:100%;max-width:1280px;margin:0 auto;padding:22px 20px 64px;box-sizing:border-box;display:grid;gap:16px;align-content:start">
+<div><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Operations</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:4px 0 2px">Inbox</h1><p style="margin:0;font-size:14px;color:var(--text-secondary)">Everything waiting on an operator, oldest risk first.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Tabs" items="{{ tabs }}" current="{{ tab }}" on-change="{{ setTab }}" label="Inbox views" hint-size="100%,42px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.FilterChips" options="{{ typeOpts }}" selected="{{ types }}" on-toggle="{{ toggleType }}" on-clear="{{ clearTypes }}" label="Item type" hint-size="100%,36px"></x-import>
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.LoadingState" what="your inbox" hint-size="100%,180px"></x-import></sc-if>
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ErrorState" title="The inbox couldn't refresh" body="You're seeing items as of 10:42. Actions are paused until it reconnects so nothing is done twice." recover-label="Reconnect" reference="OPS-1180" hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.EmptyState" title="Nothing waiting on you" body="New items appear here as they arrive. Approvals you requested are under Approvals." hint-size="100%,160px"></x-import></sc-if>
+<sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start">
+<div style="border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base);overflow:hidden">
+<sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+<button type="button" onClick="{{ it.open }}" aria-pressed="{{ it.selected }}" style="all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;width:100%;padding:12px 14px;border-bottom:1px solid var(--border-subtle);position:relative;background:transparent" style-hover="background:var(--action-secondary)">
+<sc-if value="{{ it.selected }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;inset:0;background:var(--action-secondary);pointer-events:none"></span></sc-if>
+<sc-if value="{{ it.danger }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--status-danger-line)"></span></sc-if>
+<sc-if value="{{ it.pending }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--status-pending-line)"></span></sc-if>
+<span style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ it.kind }} · {{ it.ref }}</span><span>{{ it.sla }}</span>
+<span style="font-size:14px;font-weight:500;grid-column:1 / -1">{{ it.title }}</span>
+<span style="font-size:12.5px;color:var(--text-secondary);grid-column:1 / -1">{{ it.meta }}</span>
+</button>
+</sc-for>
+<sc-if value="{{ noMatch }}" hint-placeholder-val="{{ false }}"><div style="padding:20px 14px;font-size:14px;color:var(--text-secondary)">No items match these filters. <button type="button" onClick="{{ clearTypes }}" style="all:unset;cursor:pointer;color:var(--text-link);text-decoration:underline">Clear filters</button></div></sc-if>
+</div>
+<section style="border:1px solid var(--border-default);border-radius:10px;background:var(--surface-base);padding:18px 20px;display:grid;gap:14px">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ sel.kind }} · {{ sel.ref }}</div><h2 style="font-family:var(--font-heading);font-weight:600;font-size:21px;margin:4px 0 0">{{ sel.title }}</h2></div>
+<dl style="margin:0;display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px;font-size:14px"><dt style="color:var(--text-secondary)">Institution</dt><dd style="margin:0">{{ sel.inst }}</dd><dt style="color:var(--text-secondary)">Requested by</dt><dd style="margin:0">{{ sel.by }}</dd><dt style="color:var(--text-secondary)">Capability</dt><dd style="margin:0;font-family:ui-monospace,monospace;font-size:12.5px">{{ sel.cap }}</dd></dl>
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:12px 14px;display:grid;gap:4px;font-size:14px"><b style="font-family:var(--font-heading);font-weight:600;font-size:15px">What happens</b><div>{{ sel.what }}</div><div style="color:var(--text-secondary);font-size:12.5px">{{ sel.undo }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ApprovalBanner" state="{{ sel.approval }}" what="{{ sel.title }}" approver="{{ sel.approver }}" on-approve="{{ approve }}" on-reject="{{ reject }}" hint-size="100%,90px"></x-import>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="secondary" icon="clock" hint-size="110px,44px">Snooze</x-import><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" icon="notes" hint-size="110px,44px">Add note</x-import></div>
+</section>
+</div>
+</sc-if>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;viewState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ready&quot;,&quot;Loading&quot;,&quot;Empty&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Ready&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { tab: 'mine', types: [], sel: 'RF-2031', decided: {}, wide: true };
+  componentDidMount() { this.onR = () => this.setState({ wide: window.innerWidth >= 900 }); this.onR(); window.addEventListener('resize', this.onR); }
+  componentWillUnmount() { window.removeEventListener('resize', this.onR); }
+  renderVals() {
+    const vs = this.props.viewState ?? 'Ready';
+    const NS = window.SemesterDesignSystem_e9f3ba || {};
+    const sla = (o) => NS.SlaTimer ? React.createElement(NS.SlaTimer, o) : o.remaining;
+    const all = [
+      { ref: 'RF-2031', kind: 'Refund', tab: 'approvals', title: 'Refund $69.00 · Student Premium annual', inst: 'Consumer', by: 'Support agent M. Chen', cap: 'billing.refund.approve', what: 'Returns $69.00 to the original card and ends Premium today.', undo: 'Refunds over $50 need a second approver. Can’t be reversed once settled (2–5 days).', approver: 'Finance · J. Ito', s: { remaining: '3 h 10 m', target: '8 h' }, edge: 'var(--status-pending-line)' },
+      { ref: 'IN-0412', kind: 'Incident', tab: 'mine', title: 'StarRez sync behind 6 h · housing holds stale', inst: 'Vanderbilt University', by: 'Monitor', cap: 'ops.incident.manage', what: 'Opens SEV-2, shows the freshness banner to affected students and pauses housing reminders.', undo: 'Close the incident to remove the banner.', approver: 'On-call lead', s: { remaining: '40 m', state: 'soon' }, edge: 'var(--status-danger-line)' },
+      { ref: 'SP-8890', kind: 'Support', tab: 'mine', title: 'Advisor can’t see caseload after role change', inst: 'Vanderbilt University', by: 'Advisor K. Lee', cap: 'support.ticket.respond', what: 'Replies with the role-grant path; no access is changed from here.', undo: 'Institution admins own role grants.', approver: 'None needed', s: { remaining: '1 h 50 m', target: '4 h' }, edge: 'transparent' },
+      { ref: 'AC-0077', kind: 'Access', tab: 'approvals', title: 'Break-glass request · 2 h · tenant config', inst: 'Vanderbilt University', by: 'Engineer D. Ruiz', cap: 'ctl.breakglass.grant', what: 'Grants read access to tenant configuration for 2 hours. No student records.', undo: 'Expires automatically; revoke any time.', approver: 'Founder', s: { remaining: '2 h', state: 'breach' }, edge: 'var(--status-danger-line)' },
+      { ref: 'TS-3302', kind: 'Report', tab: 'mine', title: 'Marketplace listing reported: exam answers', inst: 'Vanderbilt University', by: 'Student report', cap: 'trust.listing.moderate', what: 'Hides the listing and notifies the seller with the guideline.', undo: 'Seller can appeal within 14 days.', approver: 'None needed', s: { paused: true }, edge: 'transparent' },
+    ];
+    const t = this.state.tab, ty = this.state.types;
+    const items = all.filter((i) => (t === 'all' || i.tab === t) && (!ty.length || ty.includes(i.kind)));
+    const selRaw = all.find((i) => i.ref === this.state.sel) || all[0];
+    const dec = this.state.decided[selRaw.ref];
+    const twoPerson = selRaw.approver !== 'None needed';
+    return {
+      theme: this.props.dark ? 'dark' : 'light', wide: this.state.wide, tab: t, setTab: (id) => this.setState({ tab: id }),
+      isLoading: vs === 'Loading', isError: vs === 'Error', isEmpty: vs === 'Empty', isReady: vs === 'Ready',
+      tabs: [{ id: 'mine', label: 'My work', count: all.filter((i) => i.tab === 'mine').length }, { id: 'approvals', label: 'Approvals', count: all.filter((i) => i.tab === 'approvals').length }, { id: 'all', label: 'All' }],
+      typeOpts: ['Incident', 'Support', 'Refund', 'Access', 'Report'], types: ty,
+      toggleType: (id) => this.setState((s) => ({ types: s.types.includes(id) ? s.types.filter((x) => x !== id) : [...s.types, id] })),
+      clearTypes: () => this.setState({ types: [] }),
+      railGroups: [{ items: [{ id: 'inbox', label: 'Inbox', icon: 'inbox', count: 5 }, { id: 'incidents', label: 'Incidents', icon: 'announce' }, { id: 'support', label: 'Support', icon: 'support' }] }, { label: 'Govern', items: [{ id: 'access', label: 'Access & break-glass', icon: 'privacy' }, { id: 'audit', label: 'Audit log', icon: 'proof' }] }],
+      items: items.map((i) => ({ ...i, sla: sla(i.s), meta: i.inst + ' · ' + i.by, selected: i.ref === selRaw.ref, danger: i.edge.includes('danger'), pending: i.edge.includes('pending'), open: () => this.setState({ sel: i.ref }) })),
+      noMatch: items.length === 0,
+      sel: { ...selRaw, approval: dec || (twoPerson ? 'pending' : 'approved') },
+      approve: () => this.setState((s) => ({ decided: { ...s.decided, [selRaw.ref]: 'approved' } })),
+      reject: () => this.setState((s) => ({ decided: { ...s.decided, [selRaw.ref]: 'rejected' } })),
+    };
+  }
+}
+</script>
+</body>
+</html>

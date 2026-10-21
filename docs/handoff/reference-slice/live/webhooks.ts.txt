@@ -1,0 +1,74 @@
+import {createHmac,randomUUID,timingSafeEqual} from 'node:crypto';
+import {pool,tx,permissions,requirePermission} from './db.js';
+import {WorkflowError} from './transition.js';
+const MAX_ATTEMPTS=5;
+export function retryable(status:number){return status===0||status===408||status===429||status>=500;}
+export function retryDelay(attempt:number,retryAfter:string|null){
+ const jitter=Math.floor(Math.random()*Math.min(60000,1000*2**(attempt-1)));
+ if(!retryAfter)return jitter;
+ const seconds=Number(retryAfter);const value=Number.isFinite(seconds)?seconds*1000:Date.parse(retryAfter)-Date.now();
+ return Math.max(jitter,Number.isFinite(value)?Math.max(0,Math.min(value,86400000)):0);
+}
+export function verifyCustomWebhook(raw:Buffer,timestamp:string,signature:string,secret:string){
+ if(!/^\d+$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>300||!/^[0-9a-f]{64}$/.test(signature))return false;
+ const expected=createHmac('sha256',secret).update(timestamp+'.').update(raw).digest();
+ return timingSafeEqual(expected,Buffer.from(signature,'hex'));
+}
+// Receiver verification only: durable receipt dedupe and provider-specific callbacks
+// must be implemented before receiving real signatures or financial events.
+export async function recoverExpiredLeases(){return tx(async db=>{
+ const expired=await db.query(`SELECT id,lease_token,attempts FROM semester_live.deliveries WHERE status='processing' AND lease_until<now() FOR UPDATE SKIP LOCKED`);
+ for(const row of expired.rows){
+  await db.query(`UPDATE semester_live_private.delivery_attempts SET outcome='abandoned',completed_at=now(),diagnostic='Worker lease expired' WHERE lease_token=$1 AND outcome='started'`,[row.lease_token]);
+  await db.query(`UPDATE semester_live.deliveries SET status=$2,lease_token=NULL,lease_until=NULL,due_at=now(),diagnostic='Worker lease expired',updated_at=now() WHERE id=$1`,[row.id,row.attempts>=MAX_ATTEMPTS?'dead_letter':'retry_wait']);
+ }return expired.rowCount;
+});}
+export async function claimDelivery(){return tx(async db=>{
+ const token=randomUUID();
+ const claimed=await db.query(`WITH candidate AS (SELECT id FROM semester_live.deliveries WHERE status IN ('pending','retry_wait') AND due_at<=now() AND attempts<$1 ORDER BY due_at,id FOR UPDATE SKIP LOCKED LIMIT 1) UPDATE semester_live.deliveries d SET status='processing',attempts=attempts+1,lease_token=$2,lease_until=now()+interval '60 seconds',updated_at=now() FROM candidate c WHERE d.id=c.id RETURNING d.*`,[MAX_ATTEMPTS,token]);
+ if(!claimed.rowCount)return null;
+ const job=claimed.rows[0];
+ await db.query(`INSERT INTO semester_live_private.delivery_attempts(delivery_id,lease_token,attempt) VALUES($1,$2,$3)`,[job.id,token,job.attempts]);
+ return job;
+});}
+export async function processWebhook(){
+ const job=await claimDelivery();if(!job)return false;
+ let status=0;let diagnostic='Network or timeout failure';let after:string|null=null;let permanent=false;
+ try{
+  const data=await pool.query(`SELECT e.url,e.secret_ref,e.enabled,o.body FROM semester_live_private.endpoints e JOIN semester_live_private.outbox o ON o.tenant_id=e.tenant_id AND o.id=$3 WHERE e.tenant_id=$1 AND e.id=$2`,[job.tenant_id,job.endpoint_id,job.event_id]);
+  if(!data.rowCount||!data.rows[0].enabled){permanent=true;throw new Error('Endpoint disabled');}
+  const endpoint=data.rows[0];const url=new URL(endpoint.url);
+  const allowed=(process.env.WEBHOOK_ALLOWED_HOSTS??'').split(',').map(s=>s.trim()).filter(Boolean);
+  const secret=process.env[endpoint.secret_ref];
+  if(url.protocol!=='https:'||url.username||url.password||(url.port&&url.port!=='443')||!allowed.includes(url.hostname)||!secret){permanent=true;throw new Error('Endpoint configuration invalid');}
+  // REQUIRED: deploy behind egress controls denying private/loopback/metadata IPs.
+  // Host allowlisting alone is not a complete DNS-rebinding/SSRF defense.
+  const timestamp=Math.floor(Date.now()/1000).toString();
+  const signature=createHmac('sha256',secret).update(timestamp+'.'+endpoint.body).digest('hex');
+  const response=await fetch(url,{method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json','Idempotency-Key':job.event_id,'X-Semester-Event-Id':job.event_id,'X-Semester-Timestamp':timestamp,'X-Semester-Signature':signature},body:endpoint.body});
+  status=response.status;diagnostic=`HTTP ${status}`;after=response.headers.get('retry-after');
+  if(response.body)await response.body.cancel().catch(()=>undefined);
+ }catch{if(permanent)diagnostic='Endpoint disabled or rejected configuration';}
+ const success=status>=200&&status<300;
+ const next=success?'delivered':!permanent&&retryable(status)&&job.attempts<MAX_ATTEMPTS?'retry_wait':'dead_letter';
+ const due=new Date(Date.now()+(next==='retry_wait'?retryDelay(job.attempts,after):0));
+ // Fenced completion. DB errors propagate; do not misclassify them as HTTP errors.
+ await tx(async db=>{
+  const changed=await db.query(`UPDATE semester_live.deliveries SET status=$3,due_at=$4,diagnostic=$5,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=$1 AND status='processing' AND lease_token=$2 AND lease_until>now() RETURNING id`,[job.id,job.lease_token,next,due,diagnostic]);
+  if(!changed.rowCount)throw new WorkflowError('LEASE_LOST','Delivery lease expired or reassigned');
+  await db.query(`UPDATE semester_live_private.delivery_attempts SET outcome=$2,http_status=$3,diagnostic=$4,completed_at=now() WHERE lease_token=$1 AND outcome='started'`,[job.lease_token,next,status,diagnostic]);
+ });return true;
+}
+export async function listDeadLetters(tenant:string,user:string){return tx(async db=>{requirePermission(await permissions(db,tenant,user),'webhook.read');return (await db.query(`SELECT id,event_id,endpoint_id,attempts,replays,diagnostic,updated_at FROM semester_live.deliveries WHERE tenant_id=$1 AND status='dead_letter' ORDER BY updated_at DESC LIMIT 100`,[tenant])).rows;});}
+export async function processDeadLetter(tenant:string,user:string,id:string,decision:'replay'|'dismiss',reason:string){
+ if(!reason.trim()||reason.length>2000)throw new WorkflowError('INVALID_REQUEST','Review reason required');
+ return tx(async db=>{
+  requirePermission(await permissions(db,tenant,user),decision==='replay'?'webhook.replay':'webhook.dismiss');
+  const row=await db.query(`SELECT d.*,e.enabled FROM semester_live.deliveries d JOIN semester_live_private.endpoints e ON e.tenant_id=d.tenant_id AND e.id=d.endpoint_id WHERE d.tenant_id=$1 AND d.id=$2 FOR UPDATE OF d`,[tenant,id]);
+  if(!row.rowCount||row.rows[0].status!=='dead_letter')throw new WorkflowError('STATE_CONFLICT','Dead-letter item required');
+  if(decision==='replay'&&(!row.rows[0].enabled||row.rows[0].replays>=3))throw new WorkflowError('REPLAY_BLOCKED','Enable/fix endpoint and remain within replay budget');
+  await db.query(`INSERT INTO semester_live_private.dlq_decisions(tenant_id,delivery_id,actor_id,decision,reason) VALUES($1,$2,$3,$4,$5)`,[tenant,id,user,decision,reason]);
+  await db.query(`UPDATE semester_live.deliveries SET status=$3,attempts=CASE WHEN $3='pending' THEN 0 ELSE attempts END,replays=replays+CASE WHEN $3='pending' THEN 1 ELSE 0 END,due_at=now(),lease_token=NULL,lease_until=NULL,updated_at=now() WHERE tenant_id=$1 AND id=$2`,[tenant,id,decision==='replay'?'pending':'dismissed']);
+  return {id,status:decision==='replay'?'pending':'dismissed'};
+ });
+}

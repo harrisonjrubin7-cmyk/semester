@@ -1,0 +1,18 @@
+# Production launch and activation contract
+This pack is not a complete build or deployment. No external state changed.
+## Verified baseline
+Gateway, auth, startup and adapters read at pinned commit. Routes are source-defined, not live-probed. Approved adapters array is empty. start.ts only adds sandbox adapters when explicitly enabled. Registration-readiness dependency is absent from inspected startup config. /health/ready can be green with zero adapters. Current runtime may differ and must be inspected.
+## Setup
+Use existing root npm lockfile and Node >=22 commands; npm ci; npm run dev --workspace app; npm run test --workspace app; npm run build --workspace app; npm run registry:validate; npm run platform-control:test; npm run release:check; npm run release:report. They were not run in this environment. Existing setup includes optional personal account sync; institutional gateway requires server-resolved SSO memberships.
+## Gateway server values — from start.ts
+SEMESTER_APP_ORIGIN exact HTTPS origin (loopback HTTP for development); SEMESTER_JOURNAL_KEY 32 random bytes hex server-only; SEMESTER_AUTH_URL/PUBLIC_KEY/SERVICE_KEY; SEMESTER_GATEWAY_STORE=postgres needs auth URL/service key; SSO domain/label loader; server-only model/provider/budget configuration. Never put secrets in VITE variables. Default gateway loopback port 8787; TLS/exposure topology requires an explicit deployment decision. No secrets are provided by this pack.
+## Migration
+Resolve sole approved database/project and executor; compare remote ledger/object fingerprint with repository migration hashes; design backward-compatible expand change; test fresh and existing-state migration, RLS denials, old/new app compatibility and recovery; approve exact SQL/target/owner; sole executor applies; inspect ledger and objects; reconcile; enable domain; later independent contract cleanup. No DDL in this patch. Do not apply SQLite reference schema to Supabase.
+## Deployment
+PR CI → isolated preview/auth stack → schema rehearsal → immutable release manifest → blocking release gate/approval → compatible database expand → functions/API → app → observed smoke/role workflows → staged domain authorization → evidence. Existing Vercel, Pages, Edge Functions and Supabase integration require current mapping; do not add a second executor. A READY deployment or healthy database does not prove product completeness.
+## Rollback
+Contain authorized writes → choose tested compatible prior app/function versions → verify current schema compatibility → roll back the selected delivery surface → check actual page and caches/service worker → auth/write/read/reconciliation tests → record incident. No automatic destructive database down migration. Server read-only excludes /actions/reconcile by design; preserve recovery. Application rollback and database recovery are separate.
+## Entire ecosystem activation
+For every cataloged domain/role/capability: owner; implementation path; data authority; grants; UI states; positive/negative tests; failure recovery; deployment/config fingerprint; source freshness; institutional approval where required; production evidence. Preserve overall scope but enable only verified domains. Missing artifacts block capabilities, not justify sample success.
+## Stakeholder deliverables
+Signed release manifest; target map; schema diff/migration hash; role-workflow evidence; accessibility results; provider approval; tenant/grant evidence; restore/rollback receipts; incident/support contacts; financial/disclosure review; per-domain activation receipts. No invented certifications, deployment URLs or institution permissions.

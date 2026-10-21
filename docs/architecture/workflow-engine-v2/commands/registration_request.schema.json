@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed registration request payload",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "command": {
+      "type": "string",
+      "enum": [
+        "enroll",
+        "waitlist_accept",
+        "drop",
+        "withdraw",
+        "swap"
+      ]
+    },
+    "term_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "section_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "original_enrollment_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "waitlist_offer_ref": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "override_grant_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "expected_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "preview_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "policy_version_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "student_confirmation_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "command",
+    "term_ref",
+    "section_ref",
+    "original_enrollment_ref",
+    "waitlist_offer_ref",
+    "override_grant_refs",
+    "expected_version",
+    "preview_hash",
+    "policy_version_ref",
+    "student_confirmation_ref"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "enroll",
+              "waitlist_accept",
+              "swap"
+            ]
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "section_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "drop",
+              "withdraw",
+              "swap"
+            ]
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "original_enrollment_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "waitlist_accept"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "waitlist_offer_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "enroll"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "original_enrollment_ref": {
+            "type": "null"
+          },
+          "waitlist_offer_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "waitlist_accept"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "original_enrollment_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "drop",
+              "withdraw"
+            ]
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "waitlist_offer_ref": {
+            "type": "null"
+          },
+          "section_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "swap"
+          }
+        },
+        "required": [
+          "command"
+        ]
+      },
+      "then": {
+        "properties": {
+          "waitlist_offer_ref": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

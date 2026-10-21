@@ -41,6 +41,13 @@ if (process.argv.includes('--print')) {
   process.exit(0);
 }
 
+const receiptRoutes = ['src/screens/Export.tsx', 'src/screens/Recovery.tsx'] as const;
+console.log(
+  `route receipt: ${receiptRoutes
+    .map((route) => `${route} ${m.routes[route]} bytes (${(m.routes[route] / 1024).toFixed(1)} KB)`)
+    .join('; ')}`,
+);
+
 const budgets: Budgets = JSON.parse(readFileSync(join(app, 'perf-budgets.json'), 'utf8'));
 const over = overBudget(m, budgets);
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;

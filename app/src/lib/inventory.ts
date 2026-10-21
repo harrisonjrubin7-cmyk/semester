@@ -73,6 +73,7 @@ const LABELS: Record<string, string> = {
   costs: 'What things cost',
   balances: 'Meal plan balances',
   residences: 'Housing',
+  maintenance: 'Repairs reported to housing',
   extraLinks: 'Links you added',
   linkUrls: 'Corrected addresses',
   windows: 'Work windows',

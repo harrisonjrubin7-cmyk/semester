@@ -1,0 +1,223 @@
+// Durable worker around access-runbook.ts (v4.1). From uploads/State machine runbook_ NIST Zero Trust saga flows,.pdf.
+// NOT compiled or run. Strip the .txt suffix when copying into the repo.
+// Corrections vs the PDF (needed for it to type-check):
+//   - ParticipantReply gains tenantId and generation (replyEvidence reads them).
+//   - ParticipantAdapter.execute input gains operation (tick passes it).
+// The worker distinguishes four outcomes: remote-operation failure, unknown outcome, policy rejection, persistence failure.
+// Treating all four as "retry" can duplicate effects or lose control of access.
+
+import {
+  Saga,
+  Operation,
+  Result,
+  Failure,
+  nextInstruction,
+  applyResult,
+  applyFailure
+} from "./access-runbook";
+
+export interface Lease {
+  token: string;
+  fencingToken: number;
+  saga: Saga;
+}
+
+export interface TransitionEvidence {
+  source: "system" | "participant" | "verified_signal";
+  participantVerified: boolean;
+  commandMatched: boolean;
+  tenantMatched: boolean;
+  generationMatched: boolean;
+  expectedOperation: boolean;
+  cleanupVerified: boolean;
+}
+
+export interface DurableStore {
+  /** Claim only due work. Use a database lease and fencing token. */
+  claim(id: string, leaseMs: number): Promise<Lease | null>;
+  /**
+   * Atomic transaction:
+   * - confirm lease, fencing token, and expected revision
+   * - persist next state
+   * - append audit and outbox
+   * - schedule next wake-up
+   * Throws PersistenceConflict when another owner advanced the saga.
+   */
+  commit(lease: Lease, expectedRevision: number, next: Saga, reason: string, evidence: TransitionEvidence): Promise<void>;
+  /** Requires current fencing token. Records and schedules operational recovery; never marks cleanup complete. */
+  flagRecovery(lease: Lease, code: string, operation?: Operation): Promise<void>;
+  release(lease: Lease): Promise<void>;
+}
+
+export interface ParticipantReply {
+  sagaId: string;
+  tenantId: string;
+  generation: number;
+  operationKey: string;
+  producerVerified: boolean;
+  result: Result;
+}
+
+export interface ParticipantAdapter {
+  /** Idempotency and receipts must be durable at the participant. Same key + different payload must be rejected. */
+  execute(input: { saga: Saga; operation: Operation; operationKey: string; signal: AbortSignal }): Promise<ParticipantReply>;
+}
+
+export interface TransitionPolicy {
+  /** Backed by policies/saga.rego (data.semester.saga.allow). Policy-service failure must return false. */
+  authorize(input: { contextVerified: true; current: Saga; next: Saga; evidence: TransitionEvidence }): Promise<boolean>;
+}
+
+export class OperationFault extends Error {
+  constructor(public code: string, public retryable: boolean, public outcomeUnknown: boolean) {
+    super(code);
+  }
+}
+
+export class PersistenceConflict extends Error {}
+
+/** Illustrative engineering starting points, not measured Semester SLOs. */
+const TIMEOUT_MS: Record<Operation, number> = {
+  evaluate: 5_000,
+  prepare: 8_000,
+  install: 8_000,
+  inspect: 5_000,
+  revoke_pa: 8_000,
+  remove_pep: 8_000,
+  verify_cleanup: 5_000
+};
+
+function retryDelay(): number {
+  // Illustrative jitter. Production retry state should track attempts,
+  // operation deadline, escalation threshold, and next eligible time.
+  return 1_000 + Math.floor(Math.random() * 4_000);
+}
+
+/** A client timeout does not stop remote execution. Participant idempotency and revocation barriers remain necessary. */
+async function withTimeout<T>(timeoutMs: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      run(controller.signal),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new OperationFault("OPERATION_TIMEOUT", true, true));
+        }, timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function systemEvidence(): TransitionEvidence {
+  return {
+    source: "system",
+    participantVerified: false,
+    commandMatched: false,
+    tenantMatched: false,
+    generationMatched: false,
+    expectedOperation: false,
+    cleanupVerified: false
+  };
+}
+
+function replyEvidence(saga: Saga, operation: Operation, operationKey: string, reply: ParticipantReply): TransitionEvidence {
+  return {
+    source: "participant",
+    participantVerified: reply.producerVerified,
+    commandMatched: reply.operationKey === operationKey,
+    tenantMatched: reply.tenantId === saga.tenantId,
+    generationMatched: reply.generation === saga.generation,
+    expectedOperation: reply.sagaId === saga.id && reply.result.operation === operation,
+    cleanupVerified:
+      reply.result.operation === "verify_cleanup" &&
+      reply.result.paRevoked &&
+      reply.result.pepAbsent
+  };
+}
+
+function verifiedReply(e: TransitionEvidence): boolean {
+  return e.participantVerified && e.commandMatched && e.tenantMatched && e.generationMatched && e.expectedOperation;
+}
+
+export class AccessWorker {
+  constructor(
+    private store: DurableStore,
+    private participants: ParticipantAdapter,
+    private policy: TransitionPolicy,
+    private now: () => number = Date.now
+  ) {}
+
+  private async persist(lease: Lease, next: Saga, reason: string, evidence: TransitionEvidence): Promise<void> {
+    const allowed = await this.policy.authorize({ contextVerified: true, current: lease.saga, next, evidence });
+    if (!allowed) {
+      await this.store.flagRecovery(lease, "TRANSITION_POLICY_REJECTED");
+      return;
+    }
+    await this.store.commit(lease, lease.saga.revision, next, reason, evidence);
+  }
+
+  async tick(id: string): Promise<void> {
+    const lease = await this.store.claim(id, 30_000);
+    if (!lease) return;
+    try {
+      const instruction = nextInstruction(lease.saga, this.now());
+      if (instruction.kind === "wait") return;
+      if (instruction.kind === "persist") {
+        await this.persist(lease, instruction.saga, instruction.reason, systemEvidence());
+        return;
+      }
+
+      let reply: ParticipantReply;
+      try {
+        reply = await withTimeout(TIMEOUT_MS[instruction.operation], (signal) =>
+          this.participants.execute({
+            saga: lease.saga,
+            operation: instruction.operation,
+            operationKey: instruction.key,
+            signal
+          })
+        );
+      } catch (error) {
+        const fault = error instanceof OperationFault
+          ? error
+          : new OperationFault("UNCLASSIFIED_OPERATION_FAILURE", true, true);
+        const failure: Failure = {
+          operation: instruction.operation,
+          code: fault.code,
+          retryable: fault.retryable,
+          outcomeUnknown: fault.outcomeUnknown
+        };
+        const candidate = applyFailure(lease.saga, failure, this.now() + retryDelay());
+        await this.persist(lease, candidate, fault.code, systemEvidence());
+        return;
+      }
+
+      const evidence = replyEvidence(lease.saga, instruction.operation, instruction.key, reply);
+      if (!verifiedReply(evidence)) {
+        await this.store.flagRecovery(lease, "UNTRUSTED_OR_MISMATCHED_REPLY", instruction.operation);
+        return;
+      }
+
+      const candidate = applyResult(lease.saga, reply.result);
+      candidate.nextAttemptAt =
+        candidate.state === "RECOVERY_REQUIRED" || candidate.state === "RECONCILING"
+          ? this.now() + retryDelay()
+          : 0;
+      await this.persist(lease, candidate, `RESULT_${instruction.operation}`, evidence);
+    } catch (error) {
+      if (error instanceof PersistenceConflict) {
+        // Another valid owner or cancellation advanced the saga.
+        // Do not overwrite it or reinterpret this as remote failure.
+        return;
+      }
+      // Supervisor must record this failure and reconcile outstanding work.
+      throw error;
+    } finally {
+      await this.store.release(lease);
+    }
+  }
+}

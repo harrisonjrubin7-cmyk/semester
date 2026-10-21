@@ -1,0 +1,21 @@
+{
+  "id": null,
+  "domain_id": null,
+  "capability_ids": [],
+  "scope": {
+    "included": [],
+    "excluded": [],
+    "authority": null
+  },
+  "named_owner": null,
+  "backup": null,
+  "acceptance_authority": null,
+  "dependencies": [],
+  "implementation_paths_verified": [],
+  "test_ids": [],
+  "artifact_ids": [],
+  "release_target": null,
+  "blockers": [],
+  "status": "BLOCKED",
+  "evidence": []
+}

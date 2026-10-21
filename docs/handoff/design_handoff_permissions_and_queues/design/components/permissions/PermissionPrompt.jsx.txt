@@ -1,0 +1,19 @@
+import React from 'react';
+/** Semester's own pre-prompt, shown before the system permission dialog. Why, when, fallback, what's kept. */
+export function PermissionPrompt({ capability, glyph = '?', why, when, fallback, kept, allowLabel = 'Continue', onAllow, onNotNow, state = 'ask' }) {
+  const S = { ask: null, granted: ['✓', 'On. You can turn this off in Privacy › Device.'], blocked: ['⊘', 'Blocked in your device settings. Semester can’t ask again; change it in Settings › Semester.'] };
+  const s = S[state];
+  return (
+    <section className="perm-prompt" data-state={state} aria-labelledby="perm-t">
+      <div className="perm-head"><span className="perm-glyph" aria-hidden="true">{glyph}</span><div><div className="perm-kicker">Semester will ask your device</div><h3 id="perm-t" className="perm-title">Use your {capability}?</h3></div></div>
+      <dl className="perm-facts">
+        <div><dt>Why</dt><dd>{why}</dd></div>
+        {when && <div><dt>When</dt><dd>{when}</dd></div>}
+        {fallback && <div><dt>If you say no</dt><dd>{fallback}</dd></div>}
+        {kept && <div><dt>What's kept</dt><dd>{kept}</dd></div>}
+      </dl>
+      {s ? <p className="perm-result" role="status"><span aria-hidden="true">{s[0]}</span> {s[1]}</p> :
+      <div className="perm-actions"><button type="button" className="btn btn-primary" onClick={onAllow}><span>{allowLabel}</span></button><button type="button" className="btn btn-ghost" onClick={onNotNow}><span>Not now</span></button></div>}
+    </section>
+  );
+}

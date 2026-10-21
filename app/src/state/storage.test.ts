@@ -48,6 +48,30 @@ const LISTS = [
   'sittings', 'sources', 'registrar', 'spent', 'windows', 'costs', 'balances', 'residences',
 ] as const;
 
+describe('onboarding that was interrupted', () => {
+  /*
+   * Phase 2 hardening: interrupted onboarding resumes. The step is part of
+   * what is saved, so closing the app on step 3 and opening it again lands on
+   * step 3, not on the welcome screen again. Whether onboarding has been
+   * finished was always saved; which step it had reached was not.
+   */
+  it('saves the step with the rest of the persisted half', () => {
+    const state: State = { ...DEFAULT_PERSISTED, ...initialEphemeral(), onb: 3 };
+    expect(pickPersisted(state).onb).toBe(3);
+  });
+
+  it('loads the step it was saved at, and nothing stranger than a count', () => {
+    expect(withStorage(JSON.stringify({ seenOnboarding: false, onb: 3 }), () => loadPersisted()).onb).toBe(3);
+    for (const bad of ['"three"', '-1', '2.5', 'null', '{}']) {
+      expect(withStorage(`{"onb":${bad}}`, () => loadPersisted()).onb, bad).toBe(0);
+    }
+  });
+
+  it('starts at the first step on a fresh device', () => {
+    expect(DEFAULT_PERSISTED.onb).toBe(0);
+  });
+});
+
 describe('opening the app on damaged storage', () => {
   it.each([
     ['a string where a list belongs', '{"tasks":"none","notes":"gone"}'],

@@ -1,6 +1,6 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 21:27 UTC on 29 September 2026. Every function, billing-cancel included,
-# last deployed by the platform at 21:10:28Z.
+# 14:23 UTC on 17 October 2026. Every function, access-saga-tick included,
+# last deployed by the platform at 14:22:49Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -75,30 +75,23 @@
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-claude            244  platform  2026-09-29T21:10:28Z
-push              198  platform  2026-09-29T21:10:28Z
-calendar          195  platform  2026-09-29T21:10:28Z
-fetchcal          239  platform  2026-09-29T21:10:28Z
-canvas            230  platform  2026-09-29T21:10:28Z
-lti               232  platform  2026-09-29T21:10:28Z
-integration-tick   88  platform  2026-09-29T21:10:28Z
-ops-projector       -  pending   2026-10-08T21:00:00Z
-trust-room         95  platform  2026-09-29T21:10:28Z
-delete-account     72  platform  2026-09-29T21:10:28Z
-billing-cancel      2  platform  2026-09-29T21:10:28Z
-billing-checkout   32  platform  2026-09-29T21:10:28Z
-# Added in the billing-availability release. Replace this pending row with the
-# Management API reading after the gated main deploy completes.
-billing-portal      -  pending   2026-10-03T07:31:00Z
-billing-webhook    32  platform  2026-09-29T21:10:28Z
-lead-intake        32  platform  2026-09-29T21:10:28Z
-
-# productivity-sourcecheck first deployed through the Management API connector.
-# Its entrypoint is /tmp/user_fn_.../source/productivity-sourcecheck/index.ts,
-# so provenance is manual, not a fabricated platform/runner reading. On merge,
-# the continuous platform deploy should replace this first reading.
-productivity-sourcecheck  2  manual  2026-10-01T16:05:17Z first
-# Dashboard reading on 3 October: deployment count 5, updated with the full
-# platform function set. The dashboard exposed the deploy time to minute
-# precision (14:22 UTC) rather than seconds.
-support-reply-notify      5  platform 2026-10-03T14:22:00Z
+# Management API reading on 17 October. Every function reported an `/app/...`
+# entrypoint and the same update instant: the continuous platform deploy.
+claude                    694  platform  2026-10-17T15:52:20Z
+push                      642  platform  2026-10-17T15:52:20Z
+calendar                  638  platform  2026-10-17T15:52:20Z
+fetchcal                  683  platform  2026-10-17T15:52:20Z
+canvas                    680  platform  2026-10-17T15:52:20Z
+lti                       682  platform  2026-10-17T15:52:20Z
+integration-tick          539  platform  2026-10-17T15:52:20Z
+access-saga-tick           58  platform  2026-10-17T15:52:20Z
+ops-projector             148  platform  2026-10-17T15:52:20Z
+trust-room                541  platform  2026-10-17T15:52:20Z
+delete-account            518  platform  2026-10-17T15:52:20Z
+billing-cancel            453  platform  2026-10-17T15:52:20Z
+billing-checkout          482  platform  2026-10-17T15:52:20Z
+billing-portal            341  platform  2026-10-17T15:52:20Z
+billing-webhook           482  platform  2026-10-17T15:52:20Z
+lead-intake               481  platform  2026-10-17T15:52:20Z
+productivity-sourcecheck  372  platform  2026-10-17T15:52:20Z
+support-reply-notify      350  platform  2026-10-17T15:52:20Z

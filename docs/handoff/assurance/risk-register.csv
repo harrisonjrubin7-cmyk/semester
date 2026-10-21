@@ -1,0 +1,7 @@
+risk_id,risk,likelihood,impact,treatment,owner,due,closure_proof
+R-001,Read policies untested against a real database,High,High,Run 014 tests in a local Supabase,[Engineering],[date],
+R-002,Full LTI launch-validator suite missing,Medium,High,Write and run it in each LMS sandbox,[Engineering],[date],
+R-003,Shared vs tenant-scoped LTI registration undecided,Medium,Medium,Decide and document,[Founder],[date],
+R-004,Cyber and E&O insurance not held,High,High,Bind before the pilot,[Founder],[date],
+R-005,Staff write policies not yet written,High,Medium,Commands first; reviewed policies after,[Engineering],[date],
+R-006,"Name conflict: an existing Android app, ""Semester AI – Reader, Tutors"" (Bawano Technologies, tech.bawano.semester), offers AI PDF reading, notes, course communities and tutoring",Medium,High,"Run a trademark clearance search (USPTO, state, common law) and get counsel advice before launch marketing; consider a distinctive mark",[Founder],[date],

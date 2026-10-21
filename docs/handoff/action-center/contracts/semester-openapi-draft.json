@@ -1,0 +1,962 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Semester Lifecycle Sync and Action Center Draft API",
+    "version": "0.1.0",
+    "description": "Proposed contract; no deployed endpoints asserted. Reconcile existing domain primitives before implementation."
+  },
+  "paths": {
+    "/v1/sync/batches": {
+      "post": {
+        "operationId": "acceptSyncBatch",
+        "description": "Internal workload only. Acceptance is not application. All entries must match the authenticated connection scope.",
+        "security": [
+          {
+            "workloadToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Durably accepted, not applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncAccepted"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe failure; no sensitive payload echo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/jobs/{jobId}": {
+      "get": {
+        "operationId": "getSyncJob",
+        "security": [
+          {
+            "workloadToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection-scoped job state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncJob"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe failure; no sensitive payload echo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/action-center/items": {
+      "get": {
+        "operationId": "listActionItems",
+        "security": [
+          {
+            "userToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy-filtered page; no unfiltered count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe failure; no sensitive payload echo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/action-center/items/{itemId}/preferences": {
+      "patch": {
+        "operationId": "updateActionPreference",
+        "security": [
+          {
+            "userToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated presentation only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenceView"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe failure; no sensitive payload echo",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "userToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "User session; rejected on workload endpoints."
+      },
+      "workloadToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Dedicated short-lived workload token; producer, audience, tenant and connection bound."
+      }
+    },
+    "schemas": {
+      "LifecycleSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "institutionPersonId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "prospect",
+              "applicant",
+              "application_complete",
+              "under_review",
+              "admitted",
+              "waitlisted",
+              "denied",
+              "offer_accepted",
+              "deferred",
+              "matriculation_pending",
+              "active",
+              "leave",
+              "withdrawn",
+              "transferred",
+              "completion_pending",
+              "conferred",
+              "alumni"
+            ]
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "authorityReceiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "institutionPersonId",
+          "state",
+          "effectiveAt",
+          "authorityReceiptId"
+        ]
+      },
+      "EnrollmentSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "institutionPersonId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "termId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "sectionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "enrolled",
+              "waitlisted",
+              "dropped",
+              "withdrawn",
+              "denied"
+            ]
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "authorityReceiptId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "institutionPersonId",
+          "termId",
+          "sectionId",
+          "status",
+          "effectiveAt",
+          "authorityReceiptId"
+        ]
+      },
+      "ActionSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "institutionPersonId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "actionKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "blocked",
+              "awaiting_approval",
+              "submitted",
+              "outcome_unknown",
+              "fulfilled",
+              "cancelled"
+            ]
+          },
+          "obligation": {
+            "type": "string",
+            "enum": [
+              "required",
+              "personal",
+              "suggested"
+            ]
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "receiptId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "institutionPersonId",
+          "actionKey",
+          "title",
+          "state",
+          "obligation",
+          "dueAt",
+          "receiptId"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "state": {
+                  "const": "fulfilled"
+                }
+              },
+              "required": [
+                "state"
+              ]
+            },
+            "then": {
+              "properties": {
+                "receiptId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SyncEvent": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "connectionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sourceObjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "sourceRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "occurredAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "purposeCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "accessBasisId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "policyVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "eventType": {
+                "const": "lifecycle.snapshot"
+              },
+              "payload": {
+                "$ref": "#/components/schemas/LifecycleSnapshot"
+              }
+            },
+            "required": [
+              "eventId",
+              "tenantId",
+              "connectionId",
+              "sourceObjectId",
+              "sourceRevision",
+              "occurredAt",
+              "observedAt",
+              "purposeCode",
+              "accessBasisId",
+              "policyVersion",
+              "eventType",
+              "payload"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "connectionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sourceObjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "sourceRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "occurredAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "purposeCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "accessBasisId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "policyVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "eventType": {
+                "const": "enrollment.snapshot"
+              },
+              "payload": {
+                "$ref": "#/components/schemas/EnrollmentSnapshot"
+              }
+            },
+            "required": [
+              "eventId",
+              "tenantId",
+              "connectionId",
+              "sourceObjectId",
+              "sourceRevision",
+              "occurredAt",
+              "observedAt",
+              "purposeCode",
+              "accessBasisId",
+              "policyVersion",
+              "eventType",
+              "payload"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "connectionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sourceObjectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "sourceRevision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "occurredAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "purposeCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "accessBasisId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "policyVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "eventType": {
+                "const": "action.snapshot"
+              },
+              "payload": {
+                "$ref": "#/components/schemas/ActionSnapshot"
+              }
+            },
+            "required": [
+              "eventId",
+              "tenantId",
+              "connectionId",
+              "sourceObjectId",
+              "sourceRevision",
+              "occurredAt",
+              "observedAt",
+              "purposeCode",
+              "accessBasisId",
+              "policyVersion",
+              "eventType",
+              "payload"
+            ]
+          }
+        ]
+      },
+      "SyncBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schemaVersion": {
+            "const": "1"
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/SyncEvent"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "events"
+        ]
+      },
+      "SyncAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "const": "accepted"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "acceptedAt"
+        ]
+      },
+      "SyncJob": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "processing",
+              "completed",
+              "partial_failure",
+              "failed"
+            ]
+          },
+          "results": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "eventId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "applied",
+                    "duplicate",
+                    "superseded",
+                    "quarantined",
+                    "failed"
+                  ]
+                },
+                "reasonCode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 100
+                }
+              },
+              "required": [
+                "eventId",
+                "status",
+                "reasonCode"
+              ]
+            }
+          }
+        },
+        "required": [
+          "jobId",
+          "status",
+          "results"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "outcomeUnknown": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "correlationId",
+          "retryable",
+          "outcomeUnknown"
+        ]
+      },
+      "ActionView": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "blocked",
+              "awaiting_approval",
+              "submitted",
+              "outcome_unknown",
+              "fulfilled",
+              "cancelled"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "obligation": {
+            "enum": [
+              "required",
+              "personal",
+              "suggested"
+            ]
+          },
+          "origin": {
+            "enum": [
+              "institution",
+              "connected",
+              "student",
+              "ai"
+            ]
+          },
+          "freshness": {
+            "enum": [
+              "current",
+              "stale",
+              "unknown",
+              "conflicting"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "state",
+          "title",
+          "obligation",
+          "origin",
+          "freshness",
+          "revision",
+          "dueAt"
+        ]
+      },
+      "ActionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ActionView"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "PreferencePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "snoozedUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "expectedRevision"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "pinned"
+            ]
+          },
+          {
+            "required": [
+              "snoozedUntil"
+            ]
+          }
+        ]
+      },
+      "PreferenceView": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "snoozedUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "itemId",
+          "revision",
+          "pinned",
+          "snoozedUntil"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+import React from 'react';
+/** A signed-in device or session, with remote sign-out. */
+export function SessionRow({ device, place, lastActive, method, current = false, onSignOut }) {
+  return (
+    <div className="perm-row" data-current={current || undefined}>
+      <div className="perm-row-main"><div className="perm-row-name">{device}{current && <span className="perm-tag">This device</span>}</div><div className="perm-row-use">{[place, lastActive, method].filter(Boolean).join(' · ')}</div></div>
+      {!current && onSignOut && <button type="button" className="btn btn-sm" onClick={onSignOut}><span>Sign out</span></button>}
+    </div>
+  );
+}

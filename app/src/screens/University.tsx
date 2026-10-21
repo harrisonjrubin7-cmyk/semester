@@ -57,6 +57,7 @@ import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
 import { workflowsAllowed } from '../lib/workflow/allowed';
 import { studioAllowed } from '../lib/config/allowed';
+import { rosterAdminAllowed } from '../lib/roster/admin';
 import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
@@ -71,6 +72,7 @@ const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
 const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
+const RosterDesk = lazy(() => import('../components/institutional/RosterDesk').then((m) => ({ default: m.RosterDesk })));
 const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
@@ -167,6 +169,9 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
     ? [{ id: 'integrations' as const, label: 'Integrations' }]
     : []),
+  // Only for roster:administer at this school; every call is refused to anyone
+  // else (supabase/roster-admin-desk.check.sql).
+  ...(rosterAdminAllowed(verified) ? [{ id: 'roster' as const, label: 'Roster' }] : []),
   // Staff only in practice, and governed in code: aggregates at n >= 10, no
   // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
   ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
@@ -208,7 +213,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts' | 'roster';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -350,9 +355,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const TABS = tabsFor(verified);
 
   // An Action Center "Ask for help" lands here with a seed waiting; open on it.
-  const [tab, setTab] = useState<Tab>(() =>
-    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
-  );
+  const [tab, setTab] = useState<Tab>(() => {
+    if (EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting()) return 'help';
+    return state.workspaceView === 'drafts' ? 'drafts' : 'overview';
+  });
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- browser Back/Forward is an external navigation into this local tab set
+    if (state.workspaceView === 'drafts' || state.workspaceView === 'overview') setTab(state.workspaceView);
+  }, [state.workspaceView]);
   const [intent, setIntent] = useState<UniversityRole>(state.role);
   const [area, setArea] = useState<UniversityArea>('courses');
 
@@ -675,7 +685,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 : t.label,
         }))}
         value={tab}
-        onChange={setTab}
+        onChange={(next) => {
+          setTab(next);
+          dispatch({
+            type: 'setWorkspaceView',
+            view: next === 'drafts' ? 'drafts' : next === 'overview' ? 'overview' : null,
+          });
+        }}
         style={{ marginBlock: 'var(--sp-5)' }}
       />
 
@@ -700,7 +716,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <ActionButton
               onClick={() => {
                 if (drafts.length >= DRAFT_LIMITS.drafts) return;
-                setDrafts((ds) => [removed, ...ds]);
+                if (!setDrafts((ds) => [removed, ...ds])) return;
                 setRemoved(null);
                 setNotice('Draft restored.');
               }}
@@ -860,6 +876,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'roster' && rosterAdminAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <RosterDesk tenantId={school.id} />
+        </Suspense>
+      )}
 
       {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
         <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />
@@ -1064,7 +1086,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>
                 Readiness checklist
               </SectionLabel>
-              {draft.steps.map((s) => (
+              {draft.steps.map((s, index) => (
                 <ItemRow
                   key={s.id}
                   leading={
@@ -1084,7 +1106,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     <button
                       type="button"
                       className="bare tappable"
-                      aria-label={`Remove step: ${s.text}`}
+                      aria-label={`Remove readiness step ${index + 1} of ${draft.steps.length}, ${s.text} · ${s.done ? 'done' : 'not done'}`}
                       onClick={() => patch({ steps: draft.steps.filter((x) => x.id !== s.id) })}
                       style={{ ...secondLine() }}
                     >
@@ -1140,8 +1162,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </ActionButton>
                 <ActionButton
                   onClick={() => {
+                    if (!setDrafts((ds) => ds.filter((d) => d.id !== selected))) return;
                     setRemoved(draft);
-                    setDrafts((ds) => ds.filter((d) => d.id !== selected));
                     setSelected('');
                     setNotice('Draft removed. You can undo this.');
                   }}

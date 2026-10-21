@@ -125,6 +125,29 @@ def test_unmeasured_extraction_confidence_has_no_numeric_default():
     assert ExtractedChunk("Text").confidence is None
 
 
+def test_archive_classification_sample_keeps_pdf_and_non_pdf_members():
+    worker = _worker_module()
+    rows = [
+        {
+            "source_label": "appendix.pdf",
+            "content": f"PDF heading {index}",
+            "page_number": 1,
+        }
+        for index in range(8)
+    ]
+    rows.append({
+        "source_label": "syllabus.txt",
+        "content": "Grading schedule and final exam",
+        "page_number": None,
+    })
+
+    sample = worker.classification_sample(rows)
+
+    assert "pdf heading 0" in sample
+    assert "pdf heading 1" not in sample
+    assert "grading schedule and final exam" in sample
+
+
 def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path: Path):
     testing_session = _database()
     source = tmp_path / "syllabus.txt"
@@ -147,6 +170,13 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
         )
         session.add(document)
         session.flush()
+        session.add(ReviewItem(
+            course_id=course.id,
+            document_id=document.id,
+            item_type="extraction_failed",
+            title="Extraction failed for syllabus.txt",
+            payload={"error": "old parser failure"},
+        ))
         job = BackgroundJob(course_id=course.id, document_id=document.id, job_type="extract")
         session.add(job)
         session.commit()
@@ -245,6 +275,7 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
         def fail_after_review_cleanup(_db, _document):
             raise ValueError("replacement failed")
 
+        original_invalidator = worker.invalidate_document_assets
         worker.invalidate_document_assets = fail_after_review_cleanup
         with pytest.raises(ValueError, match="replacement failed"):
             worker.extract_document.run(str(replacement_id))
@@ -252,6 +283,28 @@ def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path
             assert session.get(ReviewItem, review_id) is not None
             assert session.get(SourceChunk, chunk.id) is not None
             assert session.get(Citation, citation_id) is not None
+            failed_review = session.scalar(select(ReviewItem).where(
+                ReviewItem.document_id == document_id,
+                ReviewItem.item_type == "extraction_failed",
+            ))
+            assert failed_review is not None
+
+        with testing_session() as session:
+            successful_retry = BackgroundJob(
+                course_id=course_id,
+                document_id=document_id,
+                job_type="extract",
+            )
+            session.add(successful_retry)
+            session.commit()
+            successful_retry_id = successful_retry.id
+        worker.invalidate_document_assets = original_invalidator
+        worker.extract_document.run(str(successful_retry_id))
+        with testing_session() as session:
+            assert session.scalar(select(ReviewItem).where(
+                ReviewItem.document_id == document_id,
+                ReviewItem.item_type == "extraction_failed",
+            )) is None
     finally:
         app.dependency_overrides.clear()
 

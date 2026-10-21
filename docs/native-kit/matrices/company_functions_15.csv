@@ -1,0 +1,16 @@
+function,owner_role,workflow,metric_definition,controls
+Corporate governance,Founder/counsel,Entity/resolutions/authority,Accepted obligations,Signing/disclosure
+Strategy/product,Product,Roadmap/requirements,Accepted capability completion,Scope/change
+Engineering/release,Engineering,Build/ship/recover,Defined change-failure/lead-time,CI/rollback
+Security/privacy/accessibility,Trust,Assess/remediate/respond,Blocker age/reviews,Least privilege/qualified review
+Sales/RevOps,RevOps,Deal/procurement,Stage-qualified conversion,Price/signing/claims
+Marketing/social,Marketing,Draft/review/publish,Qualified consented demand,Consent/claim review
+Implementation,Implementation,Configure/migrate/activate,Accepted milestones,UAT/cutover
+Customer success,Success,Health/QBR/renewal,Accepted outcome denominators,Transparent inputs
+Support,Support,Triage/resolve/escalate,Severity-based acknowledgement,Minimum context/coverage
+Trust & Safety,T&S,Report/action/appeal,Policy response/appeals,Human authority
+Finance,Finance/CPA,Bill/reconcile/close,Reconciled cash/AR/cost,Balanced ledger/approval
+Legal/vendor,Counsel/Founder,Contract/review/renew,Obligation completion,Versioned terms
+People,People,Hire/onboard/offboard,Hiring/access closure,Employment/revocation
+Data/research,Data/research,Define/measure/review,Definition/data quality,Purpose/aggregation
+Partners/developer,Platform/Partners,Review/integrate/certify,Compatibility,Scopes/sandbox/revoke

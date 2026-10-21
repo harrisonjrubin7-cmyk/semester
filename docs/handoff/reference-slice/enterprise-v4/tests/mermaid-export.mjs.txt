@@ -1,0 +1,86 @@
+// Extracted from "Show the remaining verification logic" PDF (6 Oct). PDF text: indentation lost; prose between blocks may remain.
+// NOT compiled or run. Strip .txt and reformat (e.g. prettier) before use. Depends on node-jose; ESM.
+
+export function exportSequence(events) {
+const participants = {
+browser: "Browser",
+lms: "LMS",
+tool: "Semester",
+store: "Launch Store",
+ags: "AGS"
+};
+function cleanLabel(value) {
+return String(value)
+.replace(/[\r\n]/g, " ")
+.replace(/[^a-zA-Z0-9 .,():_\/-]/g, " ")
+.slice(0, 160);
+}
+const lines = [
+"sequenceDiagram",
+...Object.entries(participants).map(
+([id, label]) =>
+` 	participant ${id} as ${label}`
+)
+];
+for (const event of events) {
+if (
+!participants[event.from] ||
+!participants[event.to]
+) {
+throw new Error("TRACE_PARTICIPANT_INVALID");
+}
+const arrow = event.response ? "-->>" : "->>";
+lines.push(
+` 	${event.from}${arrow}${event.to}: ` +
+cleanLabel(event.label)
+);
+}
+return lines.join("\n") + "\n";
+}
+Usage:
+import { writeFile } from "node:fs/promises";
+import { exportSequence } from "./mermaid-export.mjs";
+
+
+const events = [
+{
+from: "lms",
+to: "tool",
+label: "Login initiation"
+},
+{
+from: "tool",
+to: "store",
+label: "Save browser-bound state and nonce"
+},
+{
+from: "tool",
+to: "lms",
+label: "OIDC authorization redirect"
+},
+{
+from: "lms",
+to: "tool",
+label: "Signed launch callback",
+response: true
+},
+{
+from: "tool",
+to: "tool",
+label: "Verify signature claims and permissions"
+},
+{
+from: "tool",
+to: "store",
+label: "Atomically consume transaction"
+},
+{
+from: "tool",
+to: "ags",
+label: "Post approved score and reconcile result"
+}
+];
+await writeFile(
+"launch-sequence.mmd",
+exportSequence(events)
+);

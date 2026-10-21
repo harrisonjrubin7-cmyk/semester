@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum,
@@ -19,6 +20,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -52,6 +54,86 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
+
+
+class Institution(Base, TimestampMixin):
+    __tablename__ = "institutions"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(240))
+    slug: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+
+
+class WorkspaceGrant(Base, TimestampMixin):
+    __tablename__ = "workspace_grants"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "user_id", "role", name="uq_workspace_grant"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    institution_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("institutions.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    role: Mapped[str] = mapped_column(String(40))
+    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TenantCapability(Base, TimestampMixin):
+    __tablename__ = "tenant_capabilities"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "capability", name="uq_tenant_capability"),
+        CheckConstraint(
+            "enabled = false OR approval_reference IS NOT NULL",
+            name="ck_enabled_capability_has_approval",
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    institution_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("institutions.id", ondelete="CASCADE"), index=True
+    )
+    capability: Mapped[str] = mapped_column(String(120))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    approval_reference: Mapped[str | None] = mapped_column(String(320))
+    enabled_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    kill_switch_active: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CommandReceipt(Base, TimestampMixin):
+    __tablename__ = "command_receipts"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "idempotency_key", name="uq_command_idempotency"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    institution_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("institutions.id", ondelete="CASCADE"), index=True
+    )
+    actor_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    command_type: Mapped[str] = mapped_column(String(120), index=True)
+    idempotency_key: Mapped[str] = mapped_column(String(240))
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(40), default="accepted")
+
+
+class OutboxEvent(Base, TimestampMixin):
+    __tablename__ = "outbox_events"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    institution_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("institutions.id", ondelete="CASCADE"), index=True
+    )
+    receipt_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("command_receipts.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    event_type: Mapped[str] = mapped_column(String(120), index=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class Course(Base, TimestampMixin, SoftDeleteMixin):
@@ -255,6 +337,7 @@ class StudySession(Base, TimestampMixin):
     course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), index=True)
     study_asset_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("study_assets.id", ondelete="SET NULL"))
     mode: Mapped[str] = mapped_column(String(40))
+    result: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -312,3 +395,16 @@ class UploadCompletion(Base, TimestampMixin):
 
 Index("ix_calendar_course_date", CalendarEvent.course_id, CalendarEvent.event_date)
 Index("ix_asset_course_type", StudyAsset.course_id, StudyAsset.asset_type)
+Index(
+    "uq_background_jobs_active_extract_document",
+    BackgroundJob.document_id,
+    unique=True,
+    postgresql_where=text(
+        "document_id IS NOT NULL AND job_type = 'extract' "
+        "AND status IN ('queued', 'running') AND revoked_at IS NULL"
+    ),
+    sqlite_where=text(
+        "document_id IS NOT NULL AND job_type = 'extract' "
+        "AND status IN ('queued', 'running') AND revoked_at IS NULL"
+    ),
+)

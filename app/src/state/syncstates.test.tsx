@@ -31,6 +31,10 @@ class Stale extends Error {
 
 const pull = vi.fn();
 const push = vi.fn();
+const persist = vi.fn();
+const flushNow = vi.fn(async (..._args: unknown[]) => true);
+const acknowledgeRemoteWrite = vi.fn(async () => true);
+const rollbackRemoteWrite = vi.fn(async (..._args: unknown[]) => true);
 let db = true;
 
 vi.mock('../lib/cloud', () => ({
@@ -51,9 +55,12 @@ vi.mock('../lib/cloud', () => ({
 // which path the store believes it is on.
 vi.mock('./persist', () => ({
   available: () => db,
-  persist: () => {},
-  flushNow: async () => {},
+  persist: (...args: unknown[]) => persist(...args),
+  flushNow: (...args: unknown[]) => flushNow(...args),
+  acknowledgeRemoteWrite: () => acknowledgeRemoteWrite(),
+  rollbackRemoteWrite: (...args: unknown[]) => rollbackRemoteWrite(...args),
   flushOnLeave: () => {},
+  releaseHeldNote: async () => {},
   whileWriting: () => {},
   load: async () => null,
 }));
@@ -61,6 +68,7 @@ vi.mock('./persist', () => ({
 const { StoreProvider, useStore, FOCUS_PULL_MS } = await import('./store');
 const { SEEN_KEY, UNPUSHED_KEY } = await import('./shape');
 const { loadSeed } = await import('../data/seed');
+const { clearIngressDrops, ingressDrops } = await import('../lib/deletions');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -123,6 +131,13 @@ beforeEach(async () => {
   db = true;
   pull.mockReset();
   push.mockReset();
+  persist.mockReset();
+  flushNow.mockReset();
+  flushNow.mockResolvedValue(true);
+  acknowledgeRemoteWrite.mockReset();
+  acknowledgeRemoteWrite.mockResolvedValue(true);
+  rollbackRemoteWrite.mockReset();
+  rollbackRemoteWrite.mockResolvedValue(true);
   localStorage.clear();
   localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true }));
   localStorage.setItem(SEEN_KEY, JSON.stringify({ state: 's1', courses: {} }));
@@ -138,10 +153,221 @@ afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
   vi.useRealTimers();
+  clearIngressDrops();
   localStorage.clear();
 });
 
 describe('an edit goes up on the database path', () => {
+  it('does not push a new device before its first account pull finishes', async () => {
+    let release: (value: ReturnType<typeof snapshot>) => void = () => {};
+    pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => {
+      release = resolve;
+    }));
+
+    await mount();
+    await wait(3_000);
+
+    expect(pull).toHaveBeenCalledOnce();
+    expect(push, 'the local copy must not overwrite an account it has not read').not.toHaveBeenCalled();
+
+    await act(async () => release(snapshot('s1')));
+    await wait(3_000);
+
+    expect(push).toHaveBeenCalledOnce();
+  });
+
+  it('retries a transient first pull while keeping account uploads fenced', async () => {
+    const unavailable = Object.assign(new Error('Account copy unavailable'), {
+      code: 'INTEGRATION_UNAVAILABLE',
+    });
+    pull
+      .mockRejectedValueOnce(unavailable)
+      .mockResolvedValue(snapshot('s1'));
+
+    await mount();
+    await addTask('Kept on this device');
+    await wait(4_000);
+
+    expect(pull).toHaveBeenCalledOnce();
+    expect(push, 'a failed first pull must keep the account upload fence closed').not.toHaveBeenCalled();
+    expect(store.sync.error).toMatch(/try the account again by itself/);
+
+    await wait(2_000);
+
+    expect(pull).toHaveBeenCalledTimes(2);
+    expect(push, 'the upload still waits for its ordinary debounce after the pull').not.toHaveBeenCalled();
+
+    await wait(3_000);
+
+    expect(push).toHaveBeenCalledOnce();
+    expect(store.sync.status).toBe('synced');
+  });
+
+  it('keeps auth and focus refreshes in one pull at a time', async () => {
+    let release: (value: ReturnType<typeof snapshot>) => void = () => {};
+    pull.mockImplementationOnce(() => new Promise<ReturnType<typeof snapshot>>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(500);
+    expect(pull).toHaveBeenCalledOnce();
+
+    await expect(store.refresh()).resolves.toBe('Semester is already syncing.');
+    expect(pull).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      release(snapshot('s1'));
+      await Promise.resolve();
+    });
+  });
+
+  it('makes an automatic pull durable before recording the account copy as seen', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let seenWhenFlushed = '';
+    flushNow.mockImplementationOnce(async () => {
+      seenWhenFlushed = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state ?? '';
+      return true;
+    });
+
+    await mount();
+    await wait(3_000);
+
+    const written = persist.mock.calls.find(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id))?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id)).toContain(remote.id);
+    expect(flushNow).toHaveBeenCalled();
+    expect(seenWhenFlushed).toBe('s1');
+    expect(store.asking).toBeNull();
+  });
+
+  it('does not queue a pre-pull render behind an automatic durable write', async () => {
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    let release: (landed: boolean) => void = () => {};
+    flushNow.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+
+    await mount();
+    await wait(3_000);
+
+    const exact = persist.mock.calls.findIndex(([value]) => (
+      value as { tasks?: { id: string }[] }
+    ).tasks?.some((task) => task.id === remote.id));
+    expect(exact).toBeGreaterThanOrEqual(0);
+    expect(
+      persist.mock.calls.slice(exact + 1).every(([value]) => (
+        value as { tasks?: { id: string }[] }
+      ).tasks?.some((task) => task.id === remote.id)),
+      'a render queued the empty pre-pull copy after the exact remote write',
+    ).toBe(true);
+
+    await act(async () => {
+      release(true);
+      await Promise.resolve();
+    });
+  });
+
+  it('does not mark an automatic account pull as seen when its durable write fails', async () => {
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).not.toBe('account-v2');
+    expect(store.state.tasks.some((task) => task.id === 'remote')).toBe(true);
+  });
+
+  it('makes an accepted account copy durable before recording it as seen', async () => {
+    const local = {
+      id: 'local-task', title: 'Already here', date: null, time: '', note: '',
+      courseId: null, done: false, created: 1,
+    };
+    const remote = {
+      id: 'remote-task', title: 'From the account', date: null, time: '', note: '',
+      courseId: null, done: true, created: 2,
+    };
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, tasks: [local] }),
+    );
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [remote] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+    persist.mockClear();
+
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+
+    const written = persist.mock.calls.at(-1)?.[0] as { tasks?: { id: string }[] } | undefined;
+    expect(written?.tasks?.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(flushNow).toHaveBeenCalledOnce();
+    expect(store.state.tasks.map((task) => task.id).sort()).toEqual(['local-task', 'remote-task']);
+    expect(JSON.parse(localStorage.getItem(SEEN_KEY) || '{}').state).toBe('account-v2');
+    expect(store.asking).toBeNull();
+  });
+
+  it('does not mark an accepted account copy as seen when its durable write fails', async () => {
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({
+        schemaVersion: 6,
+        seenOnboarding: true,
+        registered: true,
+        tasks: [{ id: 'local', title: 'Already here', done: false, created: 1 }],
+      }),
+    );
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({
+      state: { tasks: [{ id: 'remote', title: 'From the account', done: true, created: 2 }] },
+      courses: [],
+      updated: 2,
+      seen: { state: 'account-v2', courses: {} },
+    });
+    flushNow.mockResolvedValue(false);
+
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+
+    await act(async () => {
+      await expect(store.settle('merge', null)).rejects.toThrow('could not be saved');
+    });
+
+    expect(localStorage.getItem(SEEN_KEY)).toBeNull();
+    expect(store.asking).not.toBeNull();
+  });
+
   it('pushes after an edit, not only at sign-in', async () => {
     await mount();
     await wait(3_000);
@@ -396,6 +622,44 @@ describe('what the review found', () => {
     expect(localStorage.getItem(UNPUSHED_KEY)).toBe('1');
   });
 
+  it('does not send a previous account’s semester to an empty new account without consent', async () => {
+    const previous = {
+      id: 'previous-account-task',
+      title: 'Private to the previous account',
+      date: null,
+      time: '',
+      note: '',
+      courseId: null,
+      done: false,
+      created: 1,
+    };
+    localStorage.setItem(
+      'semester.v1',
+      JSON.stringify({
+        schemaVersion: 6,
+        seenOnboarding: true,
+        registered: true,
+        tasks: [previous],
+      }),
+    );
+    localStorage.setItem('semester.syncedAs', 'u0');
+    pull.mockResolvedValue({ state: null, courses: [], updated: 0, seen: { courses: {} } });
+
+    await mount();
+    await wait(3_000);
+
+    expect(store.asking?.sides).toMatchObject({ cloud: 0, local: 1 });
+    expect(push, 'the previous account’s task must wait for an explicit ownership choice').not.toHaveBeenCalled();
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u0');
+
+    await act(async () => store.settle('merge', null));
+    await wait(3_000);
+
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
+    expect(push).toHaveBeenCalled();
+    expect((push.mock.calls[0]![1] as { tasks?: { id: string }[] }).tasks?.map((task) => task.id)).toContain(previous.id);
+  });
+
   it('does not carry one account’s sync memory into another', async () => {
     // Another account was signed in on this device before: its stamps, its
     // agreed versions and a choice waiting on its review list.
@@ -411,8 +675,212 @@ describe('what the review found', () => {
     await wait(3_000); // the session arrives after first paint
     expect(store.review).toEqual([]);
     expect(localStorage.getItem('semester.review')).toBeNull();
-    // The first push for this account names no stamp from the other one.
+    // An account switch waits for an explicit ownership choice before any
+    // push, even when this account's remote copy has no authored rows.
+    expect(store.asking).not.toBeNull();
+    expect(push).not.toHaveBeenCalled();
+    expect(localStorage.getItem('semester.syncedAs')).toBe('u0');
+
+    await act(async () => store.settle('merge', null));
+    await wait(3_000);
+
+    // The first push for this account names its own pulled stamp, never the
+    // previous account's sync memory.
     expect((push.mock.calls[0]![4] as { state?: string } | null)?.state).toBe('t1');
     expect(localStorage.getItem('semester.syncedAs')).toBe('u1');
   });
 });
+
+/*
+ * Rows this device could not read back, and fields it cannot read at all.
+ * Both were found reviewing #1501, and both lost account data from a device
+ * that did nothing but sync.
+ */
+describe('what a sync must not lose', () => {
+  const good = { id: 'n-good', title: 'Lab notes', body: 'kept on the account', created: 1, updated: 1 };
+  const damaged = { title: 'Lab notes', body: 'kept on the account', created: 1, updated: 1 };
+
+  // Its own stored copy lost the id (kept, unaddressable), or the row became
+  // a hole the reader drops, leaving nothing behind at all.
+  async function seedDamaged(row: unknown = damaged) {
+    const { baseOf } = await import('../lib/conflicts');
+    // This device last agreed with the account on the good note.
+    localStorage.setItem('semester.v1', JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, notes: [row] }));
+    localStorage.setItem('semester.base', JSON.stringify(baseOf({ notes: [good] })));
+  }
+
+  const sentNotes = () => ((push.mock.calls[0]![1] as { notes?: { id?: string }[] }).notes ?? []).map((n) => n.id);
+
+  it('takes the account copy back before pushing, when the account has not moved', async () => {
+    await seedDamaged();
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    await addTask('anything, so there is a push');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    expect(sentNotes(), 'the good note goes back up').toContain(good.id);
+    expect(localStorage.getItem('semester.ingress-drops')).toBeNull();
+  });
+
+  for (const [said, row] of [['kept without its id', damaged], ['dropped as a hole', null]] as const) {
+    it(`does not delete the good copy from an account that moved on (${said})`, async () => {
+      await seedDamaged(row);
+      pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 2, seen: { state: 's2', courses: {} } });
+      await mount();
+      await wait(3_000);
+      await addTask('anything, so there is a push');
+      await wait(3_000);
+      expect(push).toHaveBeenCalled();
+      expect(sentNotes()).toContain(good.id);
+    });
+  }
+
+  // Found reviewing c714dc3: a first sign-in asks before taking anything, so
+  // the pull that would clear the note returned early, and the student's
+  // merge restored the rows without clearing it.
+  it('forgets the note once the student merges the account copy in', async () => {
+    await seedDamaged();
+    localStorage.removeItem(SEEN_KEY);
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(store.asking).not.toBeNull();
+    expect(ingressDrops(), 'held while the question is open').toEqual(['notes']);
+    await act(async () => {
+      await store.settle('merge', null);
+    });
+    expect(store.state.notes.map((n) => n.id)).toContain(good.id);
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing c714dc3: without a database the healed copy is saved after
+  // the pull, and the note went first. A save refused for room lost the only
+  // record that the gap was damage, and the boot after it read the gap clean.
+  for (const refused of [false, true]) {
+    it(`without a database, keeps the note until the healed copy is saved (${refused ? 'refused' : 'control'})`, async () => {
+      db = false;
+      await seedDamaged();
+      pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+      const real = Storage.prototype.setItem;
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+        if (refused && key === 'semester.v1' && value.includes(good.id)) throw new DOMException('full', 'QuotaExceededError');
+        return real.call(this, key, value);
+      });
+      await mount();
+      await wait(3_000);
+      expect(store.state.notes.map((n) => n.id)).toContain(good.id);
+      expect(ingressDrops()).toEqual(refused ? ['notes'] : []);
+      vi.mocked(Storage.prototype.setItem).mockRestore();
+    });
+  }
+
+  // Found reviewing afe376f: a heal that changed nothing left the saved copy
+  // as it was, so no save ran to clear the note and it held deletions for good.
+  it('without a database, forgets the note when the heal has nothing to add', async () => {
+    db = false;
+    await seedDamaged(null);
+    pull.mockResolvedValue({ state: { notes: [] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(store.state.notes).toEqual([]);
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing 36c7453: storage at its quota refused the note but took the
+  // smaller saved copy, and a close before the pull left the gap with no note.
+  const refuseNote = () => {
+    const real = Storage.prototype.setItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+      if (key === 'semester.ingress-drops') throw new DOMException('full', 'QuotaExceededError');
+      return real.call(this, key, value);
+    });
+  };
+  const savedCarriesNote = () => localStorage.getItem('semester.v1')!.includes('heldIngressDrops');
+
+  for (const refused of [true, false]) {
+    it(`without a database, the saved copy carries a note storage refused (${refused ? 'refused' : 'control'})`, async () => {
+      db = false;
+      await seedDamaged(null);
+      if (refused) refuseNote();
+      pull.mockReturnValue(new Promise(() => {}));
+      await mount();
+      await addTask('saved before any pull lands');
+      await wait(1_000);
+      expect(savedCarriesNote()).toBe(refused);
+      vi.mocked(Storage.prototype.setItem).mockRestore?.();
+    });
+  }
+
+  it('without a database, drops the carried note from the saved copy once healed', async () => {
+    db = false;
+    await seedDamaged(null);
+    refuseNote();
+    pull.mockResolvedValue({ state: { notes: [good] }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    expect(ingressDrops()).toEqual([]);
+    expect(savedCarriesNote()).toBe(false);
+    vi.mocked(Storage.prototype.setItem).mockRestore();
+  });
+
+  // Found reviewing 301db55: "Use this device" promises the account becomes
+  // this device's copy, and the account's newer fields went up anyway.
+  for (const choice of ['device', 'merge'] as const) {
+    it(`at the first sign-in, ${choice === 'device' ? 'using this device sends none of the account\u2019s newer fields' : 'a merge carries them (control)'}`, async () => {
+      const later = [{ id: 'f1', said: 'written by a build from the future' }];
+      localStorage.setItem(
+        'semester.v1',
+        JSON.stringify({ schemaVersion: 6, seenOnboarding: true, registered: true, notes: [{ id: 'mine', title: 'Mine', body: 'here', created: 1, updated: 1 }] }),
+      );
+      localStorage.removeItem(SEEN_KEY);
+      pull.mockResolvedValue({ state: { notes: [good], fromANewerBuild: later }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+      await mount();
+      await wait(3_000);
+      expect(store.asking).not.toBeNull();
+      await act(async () => {
+        await store.settle(choice, null);
+      });
+      await addTask('an edit after choosing');
+      await wait(3_000);
+      expect(push).toHaveBeenCalled();
+      const sent = push.mock.calls.at(-1)![1] as { fromANewerBuild?: unknown };
+      expect(sent.fromANewerBuild).toEqual(choice === 'device' ? undefined : later);
+    });
+  }
+
+  // Found reviewing 746bbbd: a push moved the account on, and the carried copy
+  // still named the pull before it, so a tab of an older build that took it
+  // later could send its stale fields at the new version.
+  it('records what it pushed as the carried copy, at the version the push made', async () => {
+    const later = [{ id: 'f1', said: 'written by a build from the future' }];
+    pull.mockResolvedValue({
+      state: { fromANewerBuild: later },
+      courses: [],
+      updated: 1,
+      seen: { state: '2026-10-12T10:00:00.000+00:00', courses: {} },
+    });
+    push.mockImplementation(async () => ({ state: '2026-10-12T10:05:00.000+00:00', courses: {} }));
+    await mount();
+    await wait(3_000);
+    await addTask('an edit that goes up');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    const stored = JSON.parse(localStorage.getItem('semester.carried')!) as { at: number; fields: Record<string, unknown> };
+    expect(stored.at).toBe(Date.parse('2026-10-12T10:05:00.000+00:00') * 1000);
+    expect(stored.fields.fromANewerBuild).toEqual(later);
+  });
+
+  it('pushes back a field a newer build wrote, untouched', async () => {
+    // A name no build has, so the test still means this once the field is real.
+    const later = [{ id: 'f1', said: 'written by a build from the future' }];
+    pull.mockResolvedValue({ state: { fromANewerBuild: later }, courses: [], updated: 1, seen: { state: 's1', courses: {} } });
+    await mount();
+    await wait(3_000);
+    await addTask('an edit on the older build');
+    await wait(3_000);
+    expect(push).toHaveBeenCalled();
+    expect((push.mock.calls.at(-1)![1] as { fromANewerBuild?: unknown }).fromANewerBuild).toEqual(later);
+  });
+});
+

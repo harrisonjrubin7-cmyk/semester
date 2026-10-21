@@ -1,0 +1,46 @@
+# Environment promotion policy (artifact 8). Each step needs an evidence gate.
+# The PDF's staging block had mis-indented items; they are normalized here.
+environments:
+  local:
+    data: synthetic_only
+    access: developer
+    promotion_to: preview
+
+  preview:
+    data: synthetic_or_approved_masked
+    access: team_and_named_reviewers
+    promotion_to: staging
+    required:
+      - unit_tests
+      - contract_validation
+      - UI_state_review
+
+  staging:
+    data: synthetic_or_institution_approved_nonproduction
+    access: limited_pilot_team
+    promotion_to: production
+    required:
+      - migration_rehearsal
+      - RLS_suite
+      - integration_sandbox_verification
+      - failure_drill
+      - accessibility_check
+      - release_candidate_approval
+
+  production:
+    data: approved_pilot_scope_only
+    access: least_privilege
+    required:
+      - signed_go_no_go
+      - feature_flag
+      - alert_routes_verified
+      - rollback_exercised
+      - named_on_call
+
+promotion_invariants:
+  - "Production data never appears in local or preview."
+  - "Schema migration is rehearsed before production."
+  - "A feature flag exists for every pilot capability."
+  - "A release can be disabled without data deletion."
+  - "No direct production database mutation occurs outside an approved break-glass process."
+  - "A deployment references a release decision and evidence bundle."

@@ -3,8 +3,9 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { cloudConfigured } from '../lib/cloud';
-import { loadMyCapabilities, type Grant } from '../lib/capabilities';
+import { useCapabilityDiscovery, type Grant } from '../lib/capabilities';
 import { environment } from '../lib/environment';
+import { ErrorState } from '../components/unity/States';
 import {
   holdsConsole,
   loadPreferences,
@@ -66,6 +67,7 @@ const Releases = lazy(() => import('../components/console/Releases').then((m) =>
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
 const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
@@ -73,27 +75,9 @@ const BLURB = 'Live operational exceptions, approvals, break-glass, the audit ch
 const PREF_TAB = 'console.tab';
 const PREF_VIEWS = 'console.views';
 
-/**
- * The caller's grants: `null` until read, so "no grant" is never shown while
- * reading, and not read at all when there is nothing to read them from.
- */
-function useGrants(enabled: boolean): Grant[] | null {
-  const [grants, setGrants] = useState<Grant[] | null>(null);
-  useEffect(() => {
-    if (!enabled) return;
-    let live = true;
-    loadMyCapabilities().then(
-      (g) => { if (live) setGrants(g); },
-      () => { if (live) setGrants([]); },
-    );
-    return () => { live = false; };
-  }, [enabled]);
-  return grants;
-}
-
 export function Console() {
   const { account } = useStore();
-  const grants = useGrants(cloudConfigured && account !== null);
+  const access = useCapabilityDiscovery(cloudConfigured ? account?.id ?? '' : '');
   if (!cloudConfigured || !account) {
     return (
       <Page blurb={BLURB}>
@@ -101,13 +85,25 @@ export function Console() {
       </Page>
     );
   }
-  if (grants === null) {
+  if (access.status === 'loading') {
     return (
       <Page blurb={BLURB}>
         <p role="status">Reading your grants…</p>
       </Page>
     );
   }
+  if (access.status === 'error') {
+    return (
+      <Page blurb={BLURB}>
+        <ErrorState
+          title="Could not read your grants"
+          body={access.error}
+          recover={{ label: 'Try again', run: access.retry }}
+        />
+      </Page>
+    );
+  }
+  const grants = access.grants;
   if (!holdsConsole(grants)) {
     return (
       <Page blurb={BLURB}>
@@ -144,7 +140,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     setNow(new Date());
   }, []);
 
-  // The context bar and the preferences: account-backed, read once at open.
+  const mfaKnown = mfa !== null;
+
+  // Read assurance before mounting a workspace. The app-level privileged MFA
+  // boundary keeps platform_admin and support_agent out at aal1; ordinary
+  // console roles are deliberately allowed through by the database.
   useEffect(() => {
     let live = true;
     mfaLevel().then(
@@ -155,6 +155,16 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       },
       (e: unknown) => { if (live) setMfa(said(e, 'Could not read')); },
     );
+    return () => { live = false; };
+  }, []);
+
+  // The context bar and preferences are account-backed and protected by the
+  // same role boundary as the workspaces. Do not ask for them until the first
+  // assurance read settles; ordinary console roles may legitimately remain at
+  // aal1 or continue read-only work while that assurance read is unavailable.
+  useEffect(() => {
+    if (!mfaKnown) return;
+    let live = true;
     sessionExpiry().then(
       (at) => { if (live) setSession(at ?? 'No session'); },
       (e: unknown) => { if (live) setSession(said(e, 'Could not read')); },
@@ -176,7 +186,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, [workspaces]);
+  }, [mfaKnown, workspaces]);
 
   const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
@@ -220,9 +230,22 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
   const viewProps = { env, scope, filter, onStatus, privileged };
 
+  if (mfa === null) {
+    return (
+      <Page blurb={BLURB}>
+        <p role="status">Checking the operator session’s second factor…</p>
+      </Page>
+    );
+  }
   return (
     <Page blurb={BLURB}>
       <ContextBar context={{ env, scope, operator, grants, mfa, session, support, now }} />
+      {typeof mfa === 'string' && (
+        <Notice>
+          {mfa}. Ordinary console work remains available, but sensitive changes still require a verified second factor.{' '}
+          <button type="button" className="btn" onClick={() => void readMfa()}>Try again</button>
+        </Notice>
+      )}
       {status && (
         <p role="status" style={{ marginBlock: 0, marginBottom: 'var(--sp-4)' }}>
           {status}
@@ -263,6 +286,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'finance' && (
           <Suspense fallback={<p role="status">Loading the finance model…</p>}>
             <FinancialModel />
+          </Suspense>
+        )}
+        {tab === 'ecosystem' && (
+          <Suspense fallback={<p role="status">Loading the connected ecosystem…</p>}>
+            <Ecosystem filter={filter} />
           </Suspense>
         )}
         {tab === 'releases' && (

@@ -119,6 +119,7 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
           done: s.state.done,
           reviewDue: Object.values(s.state.reviews).filter((r) => r.due <= at).length,
           catalogEmpty: scope.empty,
+          maintenance: { requests: s.state.maintenance, now: at },
         },
         choices: s.choices,
         registration: s.registration,

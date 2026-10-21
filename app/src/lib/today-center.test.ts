@@ -102,6 +102,13 @@ describe('done for today', () => {
     expect(doneForToday({ upcoming: [item('q', 1), item('later', 4)], done: {}, now: NOW }, choices)?.line)
       .toBe('You are set for today. Your next deadline is in 4 days.');
   });
+
+  it('is not shown while a repair follow-up is still open, and is once none is', () => {
+    const base = { upcoming: [item('today', 0)], done: { today: true }, now: NOW };
+    expect(doneForToday({ ...base, alsoDue: ['maintenance:mr1:reported:1'] }, {})).toBeNull();
+    expect(doneForToday({ ...base, alsoDue: [] }, {})?.line)
+      .toBe('You are set for today. Nothing else is recorded as due.');
+  });
 });
 
 describe('time first', () => {

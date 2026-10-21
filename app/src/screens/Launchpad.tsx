@@ -12,6 +12,7 @@ import {
   EMPTY_LAUNCHPAD,
   EXPLAINERS,
   GLOSSARY,
+  LAUNCHPAD_PREFIX,
   MENTOR_INTERESTS,
   REFLECTION_PROMPTS,
   STAGES,
@@ -48,7 +49,7 @@ type Tab = (typeof TABS)[number]['id'];
 
 export function Launchpad() {
   const { account } = useStore();
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.launchpad.v1:${account?.id || 'device'}`} />;
+  return <Workspace key={account?.id || 'device'} storageKey={`${LAUNCHPAD_PREFIX}:${account?.id || 'device'}`} />;
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {

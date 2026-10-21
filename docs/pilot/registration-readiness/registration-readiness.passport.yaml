@@ -1,0 +1,85 @@
+# Component passport: registration readiness (artifact 2 of the pilot package).
+# Single source of truth for this consequential workflow. Required by
+# docs/pilot/registration-readiness/README.md. Values not yet confirmed by a
+# named owner are marked TBD and block go/no-go (see go-no-go.yaml).
+component:
+  key: registration_readiness
+  version: 0.1.0
+  class: consequential_workflow
+  lifecycle: pilot
+  owner:
+    product: registrar_product_owner        # TBD: named person
+    engineering: platform_owner             # TBD: named person
+    operations: pilot_operations_owner      # TBD: named person
+    institution: named_registrar_owner      # TBD: named person at pilot institution
+
+  purpose: >
+    Help a student and authorized staff understand whether the information
+    needed for registration planning is current and complete. It does not
+    enroll a student or replace the institution's registrar system.
+
+  authority:
+    decision_owner: institution
+    derived_state_owner: semester
+    official_systems:
+      - SIS
+      - registrar_policy_system
+    prohibited_claims:
+      - "Semester confirms enrollment."
+      - "Semester is the official registrar record."
+
+  interfaces:
+    routes:
+      - /app/registration
+      - /registrar/readiness
+      - /registrar/readiness/:caseId
+    commands:
+      - readiness.evaluate
+      - readiness.refresh
+      - readiness.case.route
+      - referral.create
+    events:
+      - readiness.evaluated
+      - readiness.source_stale
+      - readiness.case_referred
+      - receipt.created
+    reads:
+      - student_readiness_summary
+      - registrar_readiness_queue
+
+  dependencies:
+    hard:
+      - identity_and_membership
+      - policy_enforcement_point
+      - audit_log
+      - SIS_adapter
+      - durable_job_runner
+    soft:
+      - notification_service
+      - analytics_pipeline
+
+  safety:
+    fail_mode: fail_closed_for_definitive_actions
+    safe_fallback: >
+      Display the latest known source status, identify uncertainty, and
+      provide an institution-owned escalation path.
+    rollback: disable_feature_flag_to_read_only_status
+    retention_class: restricted
+
+  health:
+    indicators:
+      - evaluation_success_rate
+      - SIS_freshness_age
+      - reconciliation_backlog
+      - policy_decision_error_rate
+      - queue_SLA_breach_count
+
+  evidence:
+    required:
+      - rls_suite
+      - workflow_transition_suite
+      - idempotency_suite
+      - stale_source_drill
+      - accessibility_review
+      - incident_drill
+      - pilot_owner_approval

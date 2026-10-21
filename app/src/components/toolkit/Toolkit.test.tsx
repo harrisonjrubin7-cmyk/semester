@@ -170,7 +170,7 @@ it('previews every irreversible local Toolkit deletion before removing anything'
   dialog = host.querySelector('[role="dialog"]')!;
   expect(dialog.textContent).toContain('Deletes this project, its evidence matrix, claims and search plan from this device.');
   expect(dialog.textContent).toContain('Original sources and files outside Semester stay where they are.');
-  click('Delete it');
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Delete project') as HTMLButtonElement).click());
   expect(host.textContent).toContain('Start a research project');
 
   importPasted(2, 'x,y\n1,2\n');
@@ -191,6 +191,141 @@ it('will not verify a source until the student says they opened the original', (
   click('Mark verified');
   expect(host.textContent).toContain('Open the original source and confirm you read it.');
   expect(host.textContent).not.toContain('Marked verified.');
+});
+
+it('previews research-source removal and preserves it when cancelled', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  const claim = [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('A claim you want to make'))!.querySelector('input')!;
+  type(claim, 'The source supports this claim.');
+  click('Add claim');
+  act(() => (host.querySelector('fieldset input[type="checkbox"]') as HTMLInputElement).click());
+
+  click('Remove source');
+  const dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Removes this source and detaches it from every claim in this research project.');
+  expect(dialog.textContent).toContain('The research question, search plan, other sources and original files stay unchanged.');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before removal.');
+  expect(dialog.textContent).toContain('linked to 1 claim.');
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+
+  click('Cancel');
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+
+  click('Remove source');
+  act(() => ([...host.querySelectorAll('[role="dialog"] button')].find((candidate) => candidate.textContent?.trim() === 'Remove source') as HTMLButtonElement).click());
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(0);
+  expect(host.textContent).toContain('The source supports this claim.');
+  expect(host.textContent).toContain('Source removed from this device.');
+});
+
+it('keeps a research source represented when device storage refuses removal', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  act(() => (host.querySelector('details.toolkit-evidence') as HTMLDetailsElement).setAttribute('open', ''));
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+
+  click('Remove source');
+  act(() => ([...host.querySelectorAll('[role="dialog"] button')].find((candidate) => candidate.textContent?.trim() === 'Remove source') as HTMLButtonElement).click());
+
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(host.textContent).not.toContain('Source removed from this device.');
+});
+
+it('previews research-claim removal and preserves it when storage refuses the write', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  click('Add a source');
+  const claim = [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('A claim you want to make'))!.querySelector('input')!;
+  type(claim, 'The evidence supports this conclusion.');
+  click('Add claim');
+  act(() => (host.querySelector('fieldset input[type="checkbox"]') as HTMLInputElement).click());
+
+  click('Remove claim');
+  let dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Removes this claim and its links to supporting sources from this research project.');
+  expect(dialog.textContent).toContain('The linked sources, research question, search plan and other claims stay unchanged.');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before removal.');
+  expect(dialog.textContent).toContain('linked to 1 source.');
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+
+  click('Cancel');
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+  click('Remove claim');
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Remove claim') as HTMLButtonElement).click());
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(host.textContent).toContain('The evidence supports this conclusion.');
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(host.textContent).not.toContain('Claim removed from this device.');
+
+  vi.restoreAllMocks();
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Remove claim') as HTMLButtonElement).click());
+  expect(host.querySelector('fieldset')).toBeNull();
+  expect(host.querySelectorAll('details.toolkit-evidence')).toHaveLength(1);
+  expect(host.textContent).toContain('Claim removed from this device.');
+});
+
+it('keeps a research project represented until device storage confirms deletion', () => {
+  mount();
+  tab('Research Studio');
+  click('Start a research project');
+  const question = () => [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('1. Research question'))!.querySelector('textarea')!;
+  type(question(), 'The project that should remain');
+  click('Start another project');
+  type(question(), 'The project to remove');
+  click('Add a source');
+  const claim = [...host.querySelectorAll('label')].find((label) => label.textContent?.startsWith('A claim you want to make'))!.querySelector('input')!;
+  type(claim, 'A claim that belongs to this project.');
+  click('Add claim');
+
+  click('Delete project');
+  let dialog = host.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('1 source · 1 claim');
+  expect(dialog.textContent).toContain('Your other research project');
+  expect(dialog.textContent).toContain('Restore it from a device workspace backup created before deletion.');
+  click('Cancel');
+  expect(host.textContent).toContain('The project to remove');
+
+  const real = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
+    if (key === toolkitKey()) throw new Error('quota');
+    return real.call(this, key, value);
+  });
+  click('Delete project');
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Delete project') as HTMLButtonElement).click());
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+  expect(host.textContent).toContain('The project to remove');
+  expect(host.textContent).toContain('Changes could not be saved: quota');
+  expect(host.textContent).not.toContain('Research project deleted from this device.');
+
+  vi.restoreAllMocks();
+  dialog = host.querySelector('[role="dialog"]')!;
+  act(() => ([...dialog.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === 'Delete project') as HTMLButtonElement).click());
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
+  expect(host.textContent).toContain('The project that should remain');
+  expect(host.textContent).not.toContain('The project to remove');
+  expect(host.textContent).toContain('Research project deleted from this device.');
 });
 
 it('hides the research and data sections when their flags are off', () => {

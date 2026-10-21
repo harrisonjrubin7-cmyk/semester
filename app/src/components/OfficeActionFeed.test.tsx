@@ -233,7 +233,11 @@ describe('with office_action_feed on', () => {
   });
 
   it('ranks an office action in the Action Center, and leaves out one marked done', async () => {
-    feed = readOfficeActions([row(), row({ id: 'a2', title: 'Housing deposit confirmed', done_at: new Date().toISOString() })]);
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString();
+    feed = readOfficeActions([
+      row({ due_at: tomorrow }),
+      row({ id: 'a2', title: 'Housing deposit confirmed', due_at: tomorrow, done_at: new Date().toISOString() }),
+    ]);
     await render(<TodayActionCenter officeActions officeAccountId="u1" />);
     expect(text()).toContain('FAFSA verification documents are due October 15');
     expect(text()).not.toContain('Housing deposit confirmed');

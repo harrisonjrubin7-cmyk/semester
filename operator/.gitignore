@@ -1,0 +1,2 @@
+# Live runtime state. The committed evidence of a run lives under evidence/.
+.state/

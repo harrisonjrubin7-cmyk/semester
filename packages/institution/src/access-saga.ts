@@ -434,7 +434,7 @@ export class AccessSagaRunner {
       };
 
       /** A participant call: bounded by its timeout, and any failure is classified as the participant's. */
-      const call = async <T>(operation: AccessOperation, run: (signal: AbortSignal) => Promise<T>): Promise<T> => {
+      const participant = async <T>(operation: AccessOperation, run: (signal: AbortSignal) => Promise<T>): Promise<T> => {
         try {
           return await withTimeout(this.timeouts[operation], run);
         } catch (error) {
@@ -459,12 +459,12 @@ export class AccessSagaRunner {
             return;
 
           case 'VALIDATING':
-            await call('validate', (signal) => this.services.validate(s, operationKey(s, 'validate'), signal));
+            await participant('validate', (signal) => this.services.validate(s, operationKey(s, 'validate'), signal));
             await move('EVALUATING', { attempts: 0, nextAttemptAt: 0 });
             return;
 
           case 'EVALUATING': {
-            const d = await call('evaluate', (signal) => this.services.evaluate(s, operationKey(s, 'evaluate'), signal));
+            const d = await participant('evaluate', (signal) => this.services.evaluate(s, operationKey(s, 'evaluate'), signal));
             // A denial ends the request, but not what an earlier generation may have left at the administrator.
             const target = d.outcome === 'deny' && s.staleGrantPossible ? 'REVOKING' : OUTCOME_STATE[d.outcome];
             await move(target, { decisionId: d.id, attempts: 0, nextAttemptAt: 0 });
@@ -477,25 +477,25 @@ export class AccessSagaRunner {
             return;
 
           case 'PREPARING': {
-            const grant = await call('prepare', (signal) => this.services.prepare(s, operationKey(s, 'prepare'), signal));
+            const grant = await participant('prepare', (signal) => this.services.prepare(s, operationKey(s, 'prepare'), signal));
             await move('INSTALLING', { grantId: grant.id, grantExpiresAt: grant.expiresAt, attempts: 0, nextAttemptAt: 0 });
             return;
           }
 
           case 'INSTALLING':
-            await call('install', (signal) => this.services.install(s, operationKey(s, 'install'), signal));
+            await participant('install', (signal) => this.services.install(s, operationKey(s, 'install'), signal));
             await move('VERIFYING', { attempts: 0, nextAttemptAt: 0 });
             return;
 
           case 'VERIFYING': {
-            const observed = await call('inspect', (signal) => this.services.inspect(s, signal));
+            const observed = await participant('inspect', (signal) => this.services.inspect(s, signal));
             if (observed.status === 'installed') await move('ACTIVE', { attempts: 0, nextAttemptAt: 0 });
             else await move(observed.status === 'conflict' ? 'REVOKING' : 'RECONCILING', { nextAttemptAt: 0 });
             return;
           }
 
           case 'RECONCILING': {
-            const observed = await call('inspect', (signal) => this.services.inspect(s, signal));
+            const observed = await participant('inspect', (signal) => this.services.inspect(s, signal));
             if (observed.status === 'installed') await move('VERIFYING', { nextAttemptAt: 0 });
             else if (observed.status === 'absent') {
               // A new evaluation at a new generation: a stale decision must not be reused.
@@ -525,15 +525,15 @@ export class AccessSagaRunner {
             const unconfirmed = (code: string) =>
               move('RECOVERY_REQUIRED', { attempts: s.attempts + 1, nextAttemptAt: this.now() + backoff(s.attempts + 1, this.random) }, code);
             if (!done.paRevoked) {
-              if ((await call('revoke_pa', (signal) => this.services.revokePa(s, operationKey(s, 'revoke_pa'), signal))) === 'confirmed') {
+              if ((await participant('revoke_pa', (signal) => this.services.revokePa(s, operationKey(s, 'revoke_pa'), signal))) === 'confirmed') {
                 await move('REVOKING', { compensation: { ...done, paRevoked: true }, attempts: 0, nextAttemptAt: 0 });
               } else await unconfirmed('REVOCATION_UNCONFIRMED');
             } else if (!done.pepRemoved) {
-              if ((await call('remove_pep', (signal) => this.services.removePep(s, operationKey(s, 'remove_pep'), signal))) === 'confirmed') {
+              if ((await participant('remove_pep', (signal) => this.services.removePep(s, operationKey(s, 'remove_pep'), signal))) === 'confirmed') {
                 await move('REVOKING', { compensation: { ...done, pepRemoved: true }, attempts: 0, nextAttemptAt: 0 });
               } else await unconfirmed('REMOVAL_UNCONFIRMED');
             } else {
-              const v = await call('verify_cleanup', (signal) => this.services.verifyCleanup(s, signal));
+              const v = await participant('verify_cleanup', (signal) => this.services.verifyCleanup(s, signal));
               if (v.paRevoked && v.pepAbsent) await move('REVOKED', { nextAttemptAt: 0 });
               else {
                 // Verification disagrees with what was confirmed: reopen only the side that failed.

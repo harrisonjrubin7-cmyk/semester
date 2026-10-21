@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ErrorState, LoadingState } from './unity/States';
 import { ActionPreview } from './unity/ActionPreview';
+import { SemesterDesignSurface, SessionRow as DesignSessionRow } from './semester-design';
 import { dateFormatter } from '../lib/locale';
-import { deviceLabel, endSession, listSessions, type SessionRow } from '../lib/devices';
+import { deviceLabel, endSession, listSessions, type SessionRow as DeviceSession } from '../lib/devices';
 
-type Load = { status: 'loading' } | { status: 'ready'; rows: SessionRow[] } | { status: 'error' };
+type Load = { status: 'loading' } | { status: 'ready'; rows: DeviceSession[] } | { status: 'error' };
 
 const LINE = { fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' } as const;
 
@@ -27,12 +28,12 @@ export function SignedInDevices({
   list = listSessions,
   end = endSession,
 }: {
-  list?: () => Promise<SessionRow[]>;
+  list?: () => Promise<DeviceSession[]>;
   end?: (id: string) => Promise<boolean>;
 }) {
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
-  const [confirm, setConfirm] = useState<SessionRow | null>(null);
+  const [confirm, setConfirm] = useState<DeviceSession | null>(null);
   const [note, setNote] = useState('');
   const [failure, setFailure] = useState('');
 
@@ -51,7 +52,7 @@ export function SignedInDevices({
     setAttempt((n) => n + 1);
   }, []);
 
-  const ending = async (row: SessionRow) => {
+  const ending = async (row: DeviceSession) => {
     setConfirm(null);
     setNote('');
     setFailure('');
@@ -86,30 +87,17 @@ export function SignedInDevices({
         <>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {load.rows.map((row) => (
-              <li key={row.id} style={{ paddingBlock: 'var(--sp-4)', borderBottom: '1px solid var(--app-line-soft)' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                  <strong>{deviceLabel(row.userAgent)}</strong>
-                  {row.isCurrent ? (
-                    <span className="status-chip" data-tone="ok">
-                      <span className="status-glyph" aria-hidden="true">✓</span>
-                      This device
-                    </span>
-                  ) : null}
-                </div>
-                <p style={{ ...LINE, color: 'var(--app-dim)', marginBlock: 'var(--sp-2) 0' }}>
-                  Signed in {when(row.startedAt)}. Last active {when(row.lastActiveAt)}.
-                </p>
-                {row.isCurrent ? null : (
-                  <button
-                    type="button"
-                    className="btn"
-                    style={{ marginTop: 'var(--sp-3)' }}
-                    aria-label={`Sign out ${deviceLabel(row.userAgent)}, signed in ${when(row.startedAt)}`}
-                    onClick={() => setConfirm(row)}
-                  >
-                    Sign out
-                  </button>
-                )}
+              <li key={row.id}>
+                <SemesterDesignSurface label={`${deviceLabel(row.userAgent)} session`}>
+                  <DesignSessionRow
+                    device={deviceLabel(row.userAgent)}
+                    lastActive={`Signed in ${when(row.startedAt)}. Last active ${when(row.lastActiveAt)}.`}
+                    current={row.isCurrent}
+                    onSignOut={row.isCurrent ? undefined : () => setConfirm(row)}
+                    confirmInline={false}
+                    signOutLabel={`Sign out ${deviceLabel(row.userAgent)}, signed in ${when(row.startedAt)}`}
+                  />
+                </SemesterDesignSurface>
               </li>
             ))}
           </ul>

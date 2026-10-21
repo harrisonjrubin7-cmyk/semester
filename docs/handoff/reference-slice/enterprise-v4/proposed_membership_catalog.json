@@ -1,0 +1,72 @@
+{
+  "status": "DRAFT_NOT_APPROVED_NOT_LIVE",
+  "currency": "USD",
+  "aiUnit": "governed request credits; action costs disclosed before execution",
+  "plans": {
+    "free": {
+      "name": "Semester Free",
+      "monthlyUsd": 0,
+      "yearlyUsd": 0,
+      "personalStorageGb": 2,
+      "aiCreditsPerMonth": 30,
+      "features": [
+        "personal_planner",
+        "personal_notes",
+        "basic_study",
+        "basic_search"
+      ]
+    },
+    "plus": {
+      "name": "Semester Plus",
+      "monthlyUsd": 8.99,
+      "yearlyUsd": 69,
+      "personalStorageGb": 50,
+      "aiCreditsPerMonth": 250,
+      "features": [
+        "personal_planner",
+        "personal_notes",
+        "basic_study",
+        "basic_search",
+        "advanced_study",
+        "calendar_sync",
+        "advanced_search",
+        "personal_analytics"
+      ]
+    },
+    "pro": {
+      "name": "Semester Pro",
+      "monthlyUsd": 17.99,
+      "yearlyUsd": 149,
+      "personalStorageGb": 100,
+      "aiCreditsPerMonth": 750,
+      "features": [
+        "personal_planner",
+        "personal_notes",
+        "basic_study",
+        "basic_search",
+        "advanced_study",
+        "calendar_sync",
+        "advanced_search",
+        "personal_analytics",
+        "research_workspace",
+        "workflow_automation",
+        "priority_support"
+      ]
+    },
+    "institution": {
+      "name": "Semester Institution",
+      "annualUsdPerEnrolledStudent": 18,
+      "annualMinimumUsd": 30000,
+      "institutionStorageGbPerEnrolledStudent": 25,
+      "aiCreditsPerEnrolledStudentPerYear": 2400,
+      "features": [
+        "sponsored_learning_bundle",
+        "institution_identity",
+        "approved_integrations",
+        "institution_admin",
+        "governed_reporting",
+        "contracted_modules"
+      ]
+    }
+  }
+}

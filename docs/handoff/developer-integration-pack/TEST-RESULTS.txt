@@ -1,0 +1,25 @@
+test_atomic_validation (test_course_studio.CourseTests.test_atomic_validation) ... ok
+test_audit (test_course_studio.CourseTests.test_audit) ... ok
+test_create (test_course_studio.CourseTests.test_create) ... ok
+test_cross_tenant (test_course_studio.CourseTests.test_cross_tenant) ... ok
+test_foreign_keys (test_course_studio.CourseTests.test_foreign_keys) ... ok
+test_migration_idempotence (test_course_studio.CourseTests.test_migration_idempotence) ... ok
+test_no_membership (test_course_studio.CourseTests.test_no_membership) ... ok
+test_persistence (test_course_studio.CourseTests.test_persistence) ... ok
+test_publish (test_course_studio.CourseTests.test_publish) ... ok
+test_repeat_publish (test_course_studio.CourseTests.test_repeat_publish) ... ok
+test_save (test_course_studio.CourseTests.test_save) ... ok
+test_snapshot_immutable (test_course_studio.CourseTests.test_snapshot_immutable) ... ok
+test_snapshot_preserved (test_course_studio.CourseTests.test_snapshot_preserved) ... ok
+test_stale_publish (test_course_studio.CourseTests.test_stale_publish) ... ok
+test_stale_save (test_course_studio.CourseTests.test_stale_save) ... ok
+test_student_draft_denied (test_course_studio.CourseTests.test_student_draft_denied) ... ok
+test_student_published (test_course_studio.CourseTests.test_student_published) ... ok
+test_student_write_denied (test_course_studio.CourseTests.test_student_write_denied) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.074s
+
+OK
+
+Demo smoke: successful local create/publish/student read. No production code or external state was changed.

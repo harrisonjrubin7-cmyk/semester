@@ -254,6 +254,34 @@ export function library(state: State, action: Action): State | null {
         updates: [...state.updates, { ...action.update, id: newId(), created: Date.now() }],
       };
 
+    /*
+     * Take one student-added course source back out as one store change.
+     *
+     * The screen used to delete the update and then replace the course in two
+     * separate dispatches. That left an intermediate state where the source
+     * was gone but its dates were still present, and the shared Undo contract
+     * could not restore the pair. `addedItems` is written when the material is
+     * accepted, so it is the exact removal boundary: other course deadlines,
+     * other courses and the files that supplied the material stay untouched.
+     */
+    case 'removeUpdate': {
+      const update = state.updates.find((u) => u.id === action.id);
+      if (!update) return state;
+      const added = new Set(update.addedItems ?? []);
+      return {
+        ...state,
+        updates: state.updates.filter((u) => u.id !== action.id),
+        courses:
+          added.size === 0
+            ? state.courses
+            : state.courses.map((course) =>
+                course.course.id === update.courseId
+                  ? { ...course, items: course.items.filter((item) => !added.has(item.id)) }
+                  : course,
+              ),
+      };
+    }
+
     case 'deleteUpdate':
       return { ...state, updates: state.updates.filter((u) => u.id !== action.id) };
 

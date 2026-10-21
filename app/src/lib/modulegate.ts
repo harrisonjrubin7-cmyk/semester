@@ -4,6 +4,7 @@ import { narrowingAdmits, readNarrowing, type Narrowing } from './featurepolicy'
 import { flagDefinition } from './flags';
 import { claimedSchoolOrThrow } from './schoolclaim';
 import { forSchool, loadMyCapabilitiesOrThrow } from './capabilities';
+import { offline } from './offline';
 
 /**
  * Whether a writeback module is on for the caller's school, read the way the
@@ -42,6 +43,8 @@ export type ModuleGate =
   | { status: 'loading' }
   /** No account service in this build, or the school has not set the flag to production. */
   | { status: 'off' }
+  /** The browser has positively reported that this device has no connection. */
+  | { status: 'offline' }
   /** A kill switch that stops this flag is engaged. */
   | { status: 'stopped'; switch: string }
   /** Nobody is signed in. */
@@ -86,6 +89,7 @@ export function decideGate(
  */
 export async function readModuleGate(flag: string, exemptCapability?: string): Promise<ModuleGate> {
   if (!cloudConfigured) return { status: 'off' };
+  if (offline()) return { status: 'offline' };
   const db = await cloud();
   const { data: who, error: whoError } = await db.auth.getUser();
   if (whoError && whoError.name !== 'AuthSessionMissingError') {

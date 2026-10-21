@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createOfflineSdk, type SdkConfig } from './sdk.ts'
-import { memoryStore } from './memory-store.ts'
+import { memoryStore, type StoreSnapshot } from './memory-store.ts'
 import { ReferenceGateway } from './testing/reference-gateway.ts'
 import { STATE_COPY, SYNC_STATES } from './status.ts'
 import type { LeaseState, WipePorts } from './device.ts'
@@ -23,6 +23,93 @@ function make(o: Partial<SdkConfig> = {}) {
 }
 
 describe('the SDK read model', () => {
+  it('purges prohibited data at readiness even when the session requires reauthentication', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: { score: 90 }, confirmed: { score: 90 }, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const staleLease: LeaseState = { grant: { deviceId: 'd', tenantId: 't1', userId: 'u1', issuedAt: NOW, hardExpiresAt: NOW + 90 * DAY, policyVersion: '1', permissionEpoch: 0, accessTokenTtlMs: 900_000 }, verifiedAt: NOW - 8 * DAY, highWaterWall: NOW, lastActiveAt: NOW }
+    const { sdk } = make({ store, lease: staleLease })
+    await sdk.ready()
+    expect(await store.entities.all()).toEqual([])
+    expect((await sdk.sync()).stopped).toBe('reauth')
+  })
+
+  it('notifies subscribers when explicit enforcement changes visible state', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const { sdk } = make({ store })
+    let notifications = 0
+    sdk.onChange(() => { notifications++ })
+    await sdk.enforceStoragePolicy()
+    expect(notifications).toBe(1)
+  })
+
+  it('notifies after primary deletion even when dependent cleanup fails', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const { sdk } = make({ store, onPolicyPurge: async () => { throw new Error('secondary cleanup failed') } })
+    let notifications = 0
+    sdk.onChange(() => { notifications++ })
+    await expect(sdk.enforceStoragePolicy()).rejects.toThrow(/secondary cleanup failed/)
+    expect(await store.entities.all()).toEqual([])
+    expect(notifications).toBe(1)
+  })
+
+  it('does not durably rewrite a clean store for point or list reads', async () => {
+    let commits = 0
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'task', id: 't', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} }, onCommit: async () => { commits++ } })
+    const { sdk } = make({ store })
+    await sdk.ready()
+    const afterReadiness = commits
+    await sdk.read('task', 't')
+    await sdk.list('task')
+    await store.flush()
+    expect(commits).toBe(afterReadiness)
+  })
+
+  it('waits for durable policy cleanup before readiness resolves', async () => {
+    let persisted!: () => void
+    let release!: () => void
+    const started = new Promise<void>((resolve) => { persisted = resolve })
+    const blocked = new Promise<void>((resolve) => { release = resolve })
+    const store = memoryStore({
+      initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} },
+      onCommit: async () => { persisted(); await blocked },
+    })
+    const { sdk } = make({ store })
+    let ready = false
+    const waiting = sdk.ready().then(() => { ready = true })
+    await started
+    await Promise.resolve()
+    expect(ready).toBe(false)
+    release()
+    await waiting
+    expect(ready).toBe(true)
+  })
+
+  it('retries a failed readiness commit and is clean after restart', async () => {
+    let disk: StoreSnapshot = {
+      entities: [{ dataClass: 'grade', id: 'g', value: { score: 91 }, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never,
+      outbox: [],
+      cursors: {},
+    }
+    let attempts = 0
+    const store = memoryStore({ initial: disk, onCommit: async (snapshot) => {
+      if (attempts++ === 0) throw new Error('temporary disk failure')
+      disk = structuredClone(snapshot)
+    } })
+    const { sdk } = make({ store })
+    await expect(sdk.ready()).rejects.toThrow('temporary disk failure')
+    expect(disk.entities).toHaveLength(1)
+    await expect(sdk.ready()).resolves.toBeUndefined()
+    expect(memoryStore({ initial: disk }).snapshot().entities).toEqual([])
+    expect(JSON.stringify(disk)).not.toContain('score')
+  })
+
+  it('executes a mandatory wipe even when the policy cleanup hook throws', async () => {
+    const store = memoryStore({ initial: { entities: [{ dataClass: 'grade', id: 'g', value: {}, version: 1, phase: 'reconciled', fetchedAt: NOW }] as never, outbox: [], cursors: {} } })
+    const expired: LeaseState = { grant: { deviceId: 'd', tenantId: 't1', userId: 'u1', issuedAt: NOW - 100 * DAY, hardExpiresAt: NOW - 1, policyVersion: '1', permissionEpoch: 0, accessTokenTtlMs: 900_000 }, verifiedAt: NOW - 100 * DAY, highWaterWall: NOW, lastActiveAt: NOW }
+    const { sdk, log } = make({ store, lease: expired, onPolicyPurge: async () => { throw new Error('secondary cleanup failed') } })
+    await expect(sdk.sync()).resolves.toMatchObject({ stopped: 'wiped' })
+    expect(log).toEqual(expect.arrayContaining(['key', 'cred', 'db', 'files', 'tomb:access_expired']))
+  })
+
   it('cannot return a value without its state and the words for it', async () => {
     const { sdk } = make()
     const v = await sdk.write({ dataClass: 'task', entityId: 'T', op: 'create', payload: { title: 'x' } })

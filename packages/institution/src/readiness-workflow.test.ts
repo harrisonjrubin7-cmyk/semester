@@ -67,6 +67,7 @@ describe('registration readiness evaluation workflow', () => {
     expect(replay.record).toBe(first.record);
     expect(replay.receipt).toEqual(first.receipt);
     expect(replay.event).toEqual(first.event);
+    expect(first.event.eventType).toBe('registration.readiness_requested');
 
     expect(() => transitionRegistrationReadinessEvaluation(first.record, {
       expectedVersion: 2,
@@ -107,6 +108,43 @@ describe('registration readiness evaluation workflow', () => {
     expect(ready.event.eventType).toBe('registration.readiness_evaluated');
   });
 
+  it('records a deadline as unknown before opening reconciliation', () => {
+    const evaluating = transitionRegistrationReadinessEvaluation(start().record, {
+      expectedVersion: 1,
+      targetState: 'evaluating',
+      idempotencyKey: testKey('evaluate'),
+      correlationId: 'corr-0123456789',
+      at: '2026-10-08T20:01:00.000Z',
+    });
+    const timedOut = transitionRegistrationReadinessEvaluation(evaluating.record, {
+      expectedVersion: 2,
+      targetState: 'unknown',
+      reason: 'evaluator_timeout',
+      idempotencyKey: testKey('timeout'),
+      correlationId: 'corr-0123456789',
+      at: '2026-10-08T20:02:00.000Z',
+    });
+    expect(timedOut.record).toMatchObject({ state: 'unknown', version: 3 });
+    expect(timedOut.receipt).toMatchObject({ status: 'completed', state: 'unknown' });
+    expect(timedOut.event).toMatchObject({
+      eventType: 'registration.readiness_evaluated',
+      payload: { reason: 'evaluator_timeout' },
+    });
+
+    const reconciling = transitionRegistrationReadinessEvaluation(timedOut.record, {
+      expectedVersion: 3,
+      targetState: 'reconciling',
+      idempotencyKey: testKey('reconcile'),
+      correlationId: 'corr-0123456789',
+      at: '2026-10-08T20:03:00.000Z',
+    });
+    expect(reconciling.record).toMatchObject({ state: 'reconciling', version: 4 });
+    expect(reconciling.record.reconciliationTasks).toEqual([
+      expect.objectContaining({ state: 'open', generation: 1 }),
+    ]);
+    expect(reconciling.event.eventType).toBe('registration.readiness_reconciliation_requested');
+  });
+
   it('requires a newer projection for every evaluated outcome', () => {
     const evaluating = transitionRegistrationReadinessEvaluation(start().record, {
       expectedVersion: 1, targetState: 'evaluating', idempotencyKey: testKey('evaluate'),
@@ -114,6 +152,11 @@ describe('registration readiness evaluation workflow', () => {
     });
     expect(() => transitionRegistrationReadinessEvaluation(evaluating.record, {
       expectedVersion: 2, targetState: 'blocked', idempotencyKey: testKey('result'),
+      correlationId: 'corr-0123456789', at: '2026-10-08T20:02:00.000Z',
+    })).toThrow(/projection version/i);
+
+    expect(() => transitionRegistrationReadinessEvaluation(evaluating.record, {
+      expectedVersion: 2, targetState: 'unknown', idempotencyKey: testKey('unknown-without-source'),
       correlationId: 'corr-0123456789', at: '2026-10-08T20:02:00.000Z',
     })).toThrow(/projection version/i);
 

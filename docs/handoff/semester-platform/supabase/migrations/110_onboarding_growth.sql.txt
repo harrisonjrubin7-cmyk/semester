@@ -1,0 +1,144 @@
+-- 110_onboarding_growth.sql — entry context, consent versions, leads, onboarding journeys/progress, activation events.
+-- RECONCILE FIRST with any existing auth/profile/lead/onboarding tables in the repo. Extend, never duplicate.
+-- Analytics events carry no names, emails or free text. Query params never grant role, tenant or entitlement.
+create schema if not exists growth;
+create schema if not exists onboard;
+
+create table if not exists growth.entry_contexts(
+  id uuid primary key default gen_random_uuid(), person_id uuid references auth.users, anon_id text,
+  source text not null check (source in ('organic_search','paid_campaign','social','youtube','email','referral','institution_invite','partner','direct')),
+  campaign_id text, content_id text, referral_code text,
+  intended_role text check (intended_role in ('student','applicant','faculty','advisor','institution_admin','institution_buyer','guardian','partner','developer')),
+  tenant_hint text, continue_to text check (continue_to ~ '^/app(/[a-z0-9/-]{0,120})?$'),   -- validated server-side again on use
+  created_at timestamptz not null default now());
+
+create table if not exists growth.consent_documents(id text primary key, kind text not null check (kind in ('terms','privacy','institution_notice','developer_terms','marketing','guardian_scope')), version text not null, tenant_id uuid, published_at timestamptz not null default now(), body_hash text not null);
+create table if not exists growth.consent_records(id bigserial primary key, person_id uuid not null references auth.users default auth.uid(), document_id text not null references growth.consent_documents, accepted boolean not null, at timestamptz not null default now(), unique (person_id, document_id));
+
+create table if not exists growth.leads(
+  id uuid primary key default gen_random_uuid(), name text not null, work_email text not null, organization text not null, role_title text, use_case text,
+  follow_up_consent boolean not null, email_verified boolean not null default false, matched_account text, routed_to text, sla_due timestamptz,
+  status text not null default 'new' check (status in ('new','verified','routed','discovery_booked','qualified','disqualified','opportunity')),
+  entry_context_id uuid references growth.entry_contexts, created_at timestamptz not null default now());
+
+create table if not exists onboard.journeys(id text primary key, audience text not null, description text not null);
+create table if not exists onboard.journey_versions(journey_id text references onboard.journeys, version text not null, steps jsonb not null, activation_definition text not null, published_at timestamptz, primary key (journey_id, version));
+create table if not exists onboard.activation_definitions(id text primary key, audience text not null, description text not null, event_names text[] not null);
+create table if not exists onboard.assignments(
+  person_id uuid not null references auth.users, tenant_id uuid, journey_id text not null, version text not null,
+  state text not null default 'not_started' check (state in ('not_started','identity_incomplete','verification_pending','institution_context_pending','required_consent_pending','profile_minimum_complete','setup_in_progress','first_action_pending','activation_achieved','expanded_adoption','paused','support_required','completed')),
+  current_step text, assigned_at timestamptz not null default now(), activated_at timestamptz,
+  primary key (person_id, journey_id), foreign key (journey_id, version) references onboard.journey_versions);
+create table if not exists onboard.progress(person_id uuid not null, journey_id text not null, step_id text not null, status text not null check (status in ('completed','skipped')), at timestamptz not null default now(), primary key (person_id, journey_id, step_id));
+create table if not exists onboard.support_handoffs(id uuid primary key default gen_random_uuid(), person_id uuid not null default auth.uid(), journey_id text, step_id text, created_at timestamptz not null default now(), status text not null default 'open');
+-- Privacy-aware analytics: event name + small enum props only.
+create table if not exists onboard.events(id bigserial primary key, person_id uuid, anon_id text, tenant_id uuid, name text not null check (name ~ '^[a-z_]{3,40}$'), props jsonb not null default '{}' check (pg_column_size(props) < 512), at timestamptz not null default now());
+create table if not exists onboard.activation_events(person_id uuid not null, definition_id text not null references onboard.activation_definitions, at timestamptz not null default now(), primary key (person_id, definition_id));
+
+-- Journey assignment is server-side: identity + verified membership + role from the institution + entitlements + intent.
+create or replace function api.assign_journey(p_intent text) returns text language plpgsql security definer set search_path = '' as $$
+declare r text; j text; v text; t uuid; begin
+  select core.my_role(), core.my_institution() into r, t;                    -- from verified membership, never from the client
+  j := case
+    when r = 'student' and t is not null then 'campus_student'
+    when r is null and p_intent = 'applicant' then 'applicant'
+    when r is null then 'student'
+    when r = 'faculty' then 'faculty' when r = 'advisor' then 'advisor' when r in ('it_admin','institution_admin') then 'admin'
+    else 'student' end;
+  select version into v from onboard.journey_versions where journey_id = j and published_at is not null order by published_at desc limit 1;
+  if v is null then raise exception 'no published version for journey %', j; end if;
+  insert into onboard.assignments(person_id, tenant_id, journey_id, version, state) values (auth.uid(), t, j, v, 'profile_minimum_complete')
+    on conflict (person_id, journey_id) do nothing;
+  return j; end $$;
+
+create or replace function api.complete_step(p_journey text, p_step text, p_skipped boolean default false) returns text language plpgsql security definer set search_path = '' as $$
+declare a onboard.assignments; steps jsonb; s jsonb; begin
+  select * into a from onboard.assignments where person_id = auth.uid() and journey_id = p_journey for update;
+  if a is null then raise exception 'no assignment'; end if;
+  select jv.steps into steps from onboard.journey_versions jv where jv.journey_id = a.journey_id and jv.version = a.version;
+  select x into s from jsonb_array_elements(steps) x where x->>'id' = p_step;
+  if s is null then raise exception 'unknown step %', p_step; end if;
+  if p_skipped and coalesce((s->>'skippable')::boolean, false) = false then raise exception 'step % is required', p_step; end if;
+  insert into onboard.progress(person_id, journey_id, step_id, status) values (auth.uid(), p_journey, p_step, case when p_skipped then 'skipped' else 'completed' end)
+    on conflict (person_id, journey_id, step_id) do update set status = excluded.status, at = now();
+  update onboard.assignments set current_step = p_step, state = case when state in ('paused','support_required') then 'setup_in_progress' else 'setup_in_progress' end where person_id = auth.uid() and journey_id = p_journey;
+  return 'ok'; end $$;
+
+create or replace function api.record_activation(p_definition text) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  insert into onboard.activation_events(person_id, definition_id) values (auth.uid(), p_definition) on conflict do nothing;
+  update onboard.assignments set state = 'activation_achieved', activated_at = coalesce(activated_at, now())
+    where person_id = auth.uid() and journey_id in (select v.journey_id from onboard.journey_versions v where v.activation_definition = p_definition);
+end $$;
+
+-- Lead intake is the only anonymous write, rate-limited at the edge, through a function.
+create or replace function api.submit_lead(p_name text, p_email text, p_org text, p_role text, p_use text, p_consent boolean) returns uuid language plpgsql security definer set search_path = '' as $$
+declare id uuid; begin
+  if not p_consent then raise exception 'follow-up consent required'; end if;
+  if p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' or length(p_name) not between 1 and 120 or length(p_org) not between 1 and 200 then raise exception 'invalid lead'; end if;
+  insert into growth.leads(name, work_email, organization, role_title, use_case, follow_up_consent, routed_to, sla_due, status)
+    values (p_name, lower(p_email), p_org, left(p_role, 120), left(p_use, 500), true, 'founder', now() + interval '1 day', 'new') returning growth.leads.id into id;
+  return id; end $$;
+
+alter table growth.entry_contexts enable row level security; alter table growth.consent_documents enable row level security; alter table growth.consent_records enable row level security; alter table growth.leads enable row level security;
+alter table onboard.journeys enable row level security; alter table onboard.journey_versions enable row level security; alter table onboard.activation_definitions enable row level security;
+alter table onboard.assignments enable row level security; alter table onboard.progress enable row level security; alter table onboard.support_handoffs enable row level security; alter table onboard.events enable row level security; alter table onboard.activation_events enable row level security;
+create policy ctx_self on growth.entry_contexts for select using (person_id = auth.uid());
+create policy docs_read on growth.consent_documents for select using (true);
+create policy consent_self_read on growth.consent_records for select using (person_id = auth.uid());
+create policy consent_self_write on growth.consent_records for insert with check (person_id = auth.uid());
+create policy leads_ops on growth.leads for select using (exists (select 1 from ops.staff where id = auth.uid() and role in ('ceo','sales','revops')));
+create policy j_read on onboard.journeys for select using (true);
+create policy jv_read on onboard.journey_versions for select using (published_at is not null);
+create policy ad_read on onboard.activation_definitions for select using (true);
+create policy as_self on onboard.assignments for select using (person_id = auth.uid());
+create policy pr_self on onboard.progress for select using (person_id = auth.uid());
+create policy sh_self on onboard.support_handoffs for select using (person_id = auth.uid());
+create policy sh_insert on onboard.support_handoffs for insert with check (person_id = auth.uid());
+create policy ev_insert on onboard.events for insert with check (person_id is null or person_id = auth.uid());
+create policy ae_self on onboard.activation_events for select using (person_id = auth.uid());
+-- Ops read for onboarding analytics is aggregate-only through a view, never row-level person data.
+create or replace view onboard.funnel_daily with (security_invoker = false) as
+  select date_trunc('day', at) as day, name, count(*) as n from onboard.events group by 1, 2;
+revoke all on onboard.funnel_daily from anon, authenticated;
+grant usage on schema growth, onboard to authenticated, anon;
+grant select on growth.consent_documents, onboard.journeys, onboard.journey_versions, onboard.activation_definitions to anon, authenticated;
+grant select, insert on growth.consent_records, onboard.support_handoffs to authenticated; grant insert on onboard.events to anon, authenticated;
+grant select on onboard.assignments, onboard.progress, onboard.activation_events, growth.entry_contexts, growth.leads to authenticated;
+grant execute on function api.assign_journey(text), api.complete_step(text,text,boolean), api.record_activation(text) to authenticated;
+grant execute on function api.submit_lead(text,text,text,text,text,boolean) to anon, authenticated;
+
+-- Seed: published journeys from ui_kits/journey/journey-data.js, activation definitions, consent documents.
+insert into onboard.activation_definitions(id, audience, description, event_names) values
+ ('student_first_action', 'student', 'Completes a real task, plan or registration-readiness step', '{first_action_completed}'),
+ ('applicant_plan_saved', 'applicant', 'Saves a pathway plan', '{first_action_completed}'),
+ ('faculty_course_configured', 'faculty', 'Publishes a real course item', '{first_action_completed}'),
+ ('advisor_workflow_completed', 'advisor', 'Completes a check-in, referral, plan or appointment', '{first_action_completed}'),
+ ('admin_governed_action', 'admin', 'Completes a governed tenant action (SSO, role, module)', '{first_action_completed}'),
+ ('guardian_viewed_shared', 'guardian', 'Views what the student shared', '{first_action_completed}'),
+ ('buyer_discovery_milestone', 'buyer', 'Books discovery or requests a pilot plan', '{first_action_completed}'),
+ ('developer_test_event', 'developer', 'Sends a successful sandbox API call or webhook', '{first_action_completed}')
+on conflict do nothing;
+insert into onboard.journeys(id, audience, description) values
+ ('student', 'student', 'Student (self-serve)'),
+ ('campus_student', 'campus_student', 'Student (institution-linked)'),
+ ('applicant', 'applicant', 'Applicant'),
+ ('faculty', 'faculty', 'Faculty'),
+ ('advisor', 'advisor', 'Advisor'),
+ ('admin', 'admin', 'Institution admin'),
+ ('guardian', 'guardian', 'Family'),
+ ('buyer', 'buyer', 'Institution buyer'),
+ ('developer', 'developer', 'Developer')
+on conflict do nothing;
+insert into onboard.journey_versions(journey_id, version, steps, activation_definition, published_at) values
+ ('student', 'student.v3', '[{"id":"goal","title":"What would make this semester easier?","type":"choice","skippable":false,"event":"goal_selected"},{"id":"context","title":"Which term?","type":"choice","skippable":true,"event":"context_confirmed"},{"id":"setup","title":"Add one course","type":"form","skippable":false,"event":"academic_object_created"}]'::jsonb, 'student_first_action', now()),
+ ('campus_student', 'campus_student.v2', '[{"id":"official","title":"Your official information is in","type":"official","skippable":false,"event":"official_data_viewed"},{"id":"goal","title":"What do you want to do first?","type":"choice","skippable":false,"event":"goal_selected"}]'::jsonb, 'student_first_action', now()),
+ ('applicant', 'applicant.v1', '[{"id":"goal","title":"What are you working toward?","type":"choice","skippable":false,"event":"goal_selected"},{"id":"interest","title":"Programs you''re considering","type":"form","skippable":false,"event":"program_saved"}]'::jsonb, 'applicant_plan_saved', now()),
+ ('faculty', 'faculty.v2', '[{"id":"course","title":"Choose a course to set up","type":"choice","skippable":false,"event":"course_selected"},{"id":"policy","title":"Review the course AI rules","type":"choice","skippable":false,"event":"course_policy_reviewed"},{"id":"team","title":"Invite your teaching team","type":"form","skippable":true,"event":"team_invited"}]'::jsonb, 'faculty_course_configured', now()),
+ ('advisor', 'advisor.v2', '[{"id":"caseload","title":"Your caseload is confirmed","type":"info","skippable":false,"event":"caseload_confirmed"},{"id":"notify","title":"How should we reach you?","type":"choice","skippable":false,"event":"preference_saved"}]'::jsonb, 'advisor_workflow_completed', now()),
+ ('admin', 'admin.v2', '[{"id":"auth","title":"Administrative access confirmed","type":"info","skippable":false,"event":"admin_validated"},{"id":"policy","title":"Review policy defaults","type":"choice","skippable":false,"event":"policy_reviewed"}]'::jsonb, 'admin_governed_action', now()),
+ ('guardian', 'guardian.v1', '[{"id":"scope","title":"What your student shared","type":"info","skippable":false,"event":"scope_viewed"}]'::jsonb, 'guardian_viewed_shared', now()),
+ ('buyer', 'buyer.v1', '[]'::jsonb, 'buyer_discovery_milestone', now()),
+ ('developer', 'developer.v1', '[{"id":"sandbox","title":"Create your sandbox","type":"choice","skippable":false,"event":"sandbox_created"},{"id":"app","title":"Register an app","type":"form","skippable":false,"event":"app_registered"}]'::jsonb, 'developer_test_event', now())
+on conflict do nothing;
+insert into growth.consent_documents(id, kind, version, body_hash) values ('terms-2026-10','terms','2026-10','pending-attorney-review'),('privacy-2026-10','privacy','2026-10','pending-attorney-review'),('dev-terms-0.3','developer_terms','0.3','pending-attorney-review') on conflict do nothing;

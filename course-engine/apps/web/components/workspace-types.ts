@@ -12,7 +12,27 @@ export type Asset = {
   title: string;
   status: string;
   content: Record<string, unknown>;
+  generation_version: number;
   updated_at: string;
+};
+
+export type CitationDetail = { label: string; quote?: string };
+
+export type GuideSection = {
+  heading: string;
+  explanation: string;
+  key_points?: string[];
+  examples?: string[];
+  citation_ids: string[];
+};
+
+export type Flashcard = {
+  id: string;
+  front: string;
+  back: string;
+  difficulty: number;
+  unit?: string | null;
+  citation_ids: string[];
 };
 
 export type Event = {
@@ -21,6 +41,8 @@ export type Event = {
   event_type: string;
   event_date?: string;
   start_at?: string;
+  end_at?: string;
+  all_day?: boolean;
   status: string;
   time_unspecified: boolean;
 };
@@ -44,6 +66,20 @@ export type SourceFile = {
   page_count?: number;
 };
 
+export type BackgroundJob = {
+  id: string;
+  course_id: string;
+  document_id?: string | null;
+  target_id?: string | null;
+  job_type: string;
+  status: "queued" | "running" | "completed" | "failed";
+  progress: number;
+  error?: string | null;
+  revoked_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type SourceChunk = {
   id: string;
   chunk_index: number;
@@ -55,6 +91,16 @@ export type SourceChunk = {
   cell_range?: string | null;
   start_seconds?: number | null;
   end_seconds?: number | null;
+  bounding_box?: {
+    coordinate_space: "normalized";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+  review_item_id?: string | null;
+  review_status?: string | null;
+  preview_available?: boolean;
   confidence: number | null;
 };
 
@@ -76,6 +122,6 @@ export type WorkspaceData = {
 };
 
 export type Progress = {
-  items: Array<{ id: string; mastery_score: number; attempts: number; correct_attempts: number; next_review_at?: string }>;
+  items: Array<{ id: string; kind?: "concept" | "quiz"; mastery_score: number; attempts: number; correct_attempts: number; next_review_at?: string }>;
   average_mastery: number;
 };

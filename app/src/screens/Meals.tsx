@@ -21,8 +21,16 @@ import {
   readMoney,
   readSwipes,
   staleLine,
+  type Balance,
 } from '../lib/meals';
 import { formatDate } from '../lib/locale';
+
+function balanceReadingLine(reading: Balance): string {
+  return [
+    reading.swipes >= 0 ? `${reading.swipes} swipes` : 'No meal swipes recorded',
+    cashLine(reading),
+  ].filter(Boolean).join(' · ');
+}
 
 /**
  * Swipes, Commodore Cash, and the week they run out.
@@ -42,9 +50,9 @@ import { formatDate } from '../lib/locale';
  * one balance is a fact about today and says nothing about eating.
  */
 export function Meals() {
- const {state}=useStore();
+ const {state,account}=useStore();
  const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
- return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+ return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={`${account?.id||'device'}:${state.term}`} choice={choice} term={state.term} accountId={account?.id??null}/>}</div>;
 }
 function MealsDetails() {
   const { state, dispatch, school } = useStore();
@@ -265,20 +273,19 @@ function MealsDetails() {
 
       {mine.length > 0 && (
         <Group header="What you have logged" framed={false}>
-          {mine.map((r) => (
+          {mine.map((r, index) => (
             <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {formatDate(r.at)}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
-                {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}
-                {r.cashCents > 0 ? ` · ${money(r.cashCents)}` : ''}
+                {balanceReadingLine(r)}
               </span>
               <button
                 type="button"
                 className="bare"
-                aria-label="Remove this reading"
+                aria-label={`Remove balance reading ${index + 1} of ${mine.length} from ${formatDate(r.at)}: ${balanceReadingLine(r)}`}
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
                 style={{ flex: 'none', width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >

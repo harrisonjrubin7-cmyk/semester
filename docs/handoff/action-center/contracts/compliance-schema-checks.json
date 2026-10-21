@@ -1,0 +1,17 @@
+{
+  "valid_consent": "passed",
+  "valid_emergency_accounting_record": "passed",
+  "negative_cases": {
+    "empty_record_scope": true,
+    "empty_recipient_scope": true,
+    "caller_supplied_signature": true,
+    "invalid_expiry": true,
+    "emergency_without_threat_evidence": true
+  },
+  "limits": [
+    "No OpenAPI structural lint",
+    "No running API or database tests",
+    "No authentication or authorization verification",
+    "No legal compliance determination"
+  ]
+}

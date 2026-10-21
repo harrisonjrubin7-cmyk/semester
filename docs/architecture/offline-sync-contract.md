@@ -64,7 +64,7 @@ PBKDF2/SQLCipher parameters must not be selected from a desktop-only paper bench
 
 ## Required tests
 
-- Prohibited classifications never enter offline storage, logs, crash reports, backups, or notification previews.
+- Prohibited classifications never enter offline storage, logs, crash reports, backups, or notification previews. The central classifier and purge hook in `packages/offline-sync/src/storage-policy.ts` enforce this for the reference store; the server feed cannot broaden device storage.
 - Logout, revoke, tenant change, and account deletion remove all local material and keys.
 - Device wall-clock manipulation cannot win a conflict.
 - Two-device edits converge; revoked collaborators cannot append updates.

@@ -1,5 +1,5 @@
 import { dateToIso } from '../lib/date';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AthleticsLibrary } from '../lib/athletics';
 import {
   NOT_RECORDED,
@@ -19,7 +19,9 @@ import { cloudConfigured } from '../lib/cloud';
 import { localMinute } from '../lib/familyshare';
 import { ATHLETE_NEVER_SHARED, ATHLETE_SHAREABLE, SHARE_MAX_DAYS, type AthleteShareable } from '../lib/sharing';
 import { useNow, useStore } from '../state/store';
+import { ConfirmDialog } from './ConfirmDialog';
 import { SectionLabel } from './ui';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * What the recipient sees, and what the athlete previews: one component, so
@@ -119,6 +121,9 @@ export function AthleteShare({ library, today = dateToIso(new Date()) }: { libra
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [mine, setMine] = useState<MySupportShare[]>([]);
+  const [stopping, setStopping] = useState<MySupportShare | null>(null);
+  const [stopError, setStopError] = useState('');
+  const stoppingNow = useRef(false);
   const signedIn = cloudConfigured && !!account;
 
   const refresh = () => {
@@ -141,6 +146,23 @@ export function AthleteShare({ library, today = dateToIso(new Date()) }: { libra
   const problems = supportProblems(chosen, sharedAs, email, ends, today);
   const payload = supportPayload(chosen, sharedAs, library, catalog, today, ends || today, now);
   const toggle = (k: AthleteShareable) => setChosen((c) => (c.includes(k) ? c.filter((x) => x !== k) : [...c, k]));
+  const stop = async () => {
+    if (!stopping || stoppingNow.current) return;
+    stoppingNow.current = true;
+    setBusy(true);
+    setStopError('');
+    try {
+      await revokeSupportShare(stopping.id);
+      setStopping(null);
+      setSaid('Academic support can no longer open this share.');
+      refresh();
+    } catch (e) {
+      setStopError(e instanceof Error ? e.message : 'That did not work.');
+    } finally {
+      stoppingNow.current = false;
+      setBusy(false);
+    }
+  };
 
   return (
     <section aria-labelledby="athlete-share-title" className="family-invite">
@@ -254,7 +276,7 @@ export function AthleteShare({ library, today = dateToIso(new Date()) }: { libra
                     <button
                       type="button"
                       className="btn btn-ghost"
-                      onClick={() => void revokeSupportShare(s.id).then(refresh, (e: Error) => setSaid(`Could not stop it: ${e.message}`))}
+                      onClick={() => { setStopError(''); setStopping(s); }}
                     >
                       Stop this share
                     </button>
@@ -265,6 +287,25 @@ export function AthleteShare({ library, today = dateToIso(new Date()) }: { libra
           </ul>
         </>
       )}
+      {stopping ? (
+        <ConfirmDialog
+          title="Stop this support share?"
+          preview={
+            <>
+              <ActionPreview
+                subject={`Share created ${stopping.createdAt.slice(0, 10)}`}
+                says="Athletic academic support loses access immediately."
+                doesNotChange="The share and its read history stay in your account. Your athletics plan, courses, deadlines, other shares and official school records stay unchanged."
+                recovery={{ kind: 'none', how: 'You can make a new share later.' }}
+              />
+              {stopError ? <p role="alert">{stopError} You can try again or cancel.</p> : null}
+            </>
+          }
+          confirmLabel={busy ? 'Stopping…' : 'Stop access'}
+          onConfirm={() => void stop()}
+          onCancel={() => { if (!stoppingNow.current) setStopping(null); }}
+        />
+      ) : null}
     </section>
   );
 }

@@ -32,7 +32,11 @@ import { takeFromUrl } from './lib/referral';
 import { takeHandoff } from './lib/ltiarrival';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
 import type { ProviderId } from './lib/connect';
-import { load as loadFromDb, prime as primeDb } from './state/persist';
+import {
+  load as loadFromDb,
+  OfflineRecoveryRequired,
+  prime as primeDb,
+} from './state/persist';
 import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
 
@@ -183,6 +187,8 @@ function finishAnyLaunch(): Promise<void> {
     });
 }
 
+let recoveryBlocked = false;
+
 finishAnyLaunch()
   .then(finishAnyRedirect)
   .then((result) => {
@@ -206,7 +212,10 @@ finishAnyLaunch()
   // A device that will not open a database gets null, and the app falls
   // straight back to the localStorage path it has always had. See
   // `state/persist/`.
-  .then(() => loadFromDb().catch(() => null))
+  .then(() => loadFromDb().catch((error: unknown) => {
+    if (error instanceof OfflineRecoveryRequired) recoveryBlocked = true;
+    return null;
+  }))
   .then((state) => {
     primePersisted(state);
     // The first diff has to be against what was just read, or the first write
@@ -215,6 +224,30 @@ finishAnyLaunch()
   })
   .catch(() => primePersisted(null))
   .finally(() => {
+    if (recoveryBlocked) {
+      createRoot(document.getElementById('root')!).render(
+        <div
+          role="alert"
+          style={{
+            maxWidth: '38rem',
+            margin: '12vh auto',
+            padding: '2rem',
+            fontFamily: 'system-ui, sans-serif',
+            lineHeight: 'var(--leading-relaxed)',
+          }}
+        >
+          <p><strong>Your semester is still on this device</strong></p>
+          <p>
+            Semester could not finish restoring a protected offline update, so it has
+            kept the app read-only instead of opening a second copy that could hide
+            your work. Nothing was deleted.
+          </p>
+          <p>Reload to retry. If this continues, keep this device as-is and contact support.</p>
+          <button type="button" onClick={() => window.location.reload()}>Retry safely</button>
+        </div>,
+      );
+      return;
+    }
     // The worker is what makes this installable as its own window, and what
     // keeps a lesson playable with no signal. Only in a build: in dev it would
     // serve yesterday's bundle back to you.

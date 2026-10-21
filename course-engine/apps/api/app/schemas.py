@@ -27,6 +27,16 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class InstitutionCommandRequest(BaseModel):
+    command_type: Literal[
+        "registration.add",
+        "registration.drop",
+        "grades.submit_final",
+        "records.hold_release",
+    ]
+    payload: dict[str, Any]
+
+
 class UserOut(ORMModel):
     id: UUID
     email: EmailStr
@@ -149,11 +159,19 @@ class Flashcard(BaseModel):
 
 class CardReview(BaseModel):
     course_id: UUID
+    asset_id: UUID
     concept_id: UUID | None = None
     correct: bool
     confidence: int = Field(ge=1, le=5)
 
 
+class QuizAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_index: int = Field(ge=0)
+    correct: bool
+
+
 class QuizAttempt(BaseModel):
     course_id: UUID
-    answers: list[dict[str, Any]]
+    answers: list[QuizAnswer]

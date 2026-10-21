@@ -170,6 +170,7 @@ export interface TimeBudget {
 
 export const EMPTY_BUDGET: TimeBudget = { classes: 15, study: 30, work: 0, commute: 0, caregiving: 0, sleep: 56, other: 0 };
 export const EMPTY_OPPORTUNITIES: OpportunityLibrary = { items: [], budget: EMPTY_BUDGET };
+export const OPPORTUNITIES_PREFIX = 'semester.opportunities.v1';
 
 export const LIMITS = { items: 200, evidence: 30, references: 10, text: 2000, title: 160 } as const;
 
@@ -325,5 +326,32 @@ export function readOpportunities(v: unknown): OpportunityLibrary {
   return {
     items: (Array.isArray(o.items) ? o.items : []).map(readOne).filter((x): x is Opportunity => x !== null).slice(0, LIMITS.items),
     budget,
+  };
+}
+
+/** Portable opportunity work, without the private work-study choice. */
+export function withoutWorkStudy(library: OpportunityLibrary) {
+  return {
+    ...library,
+    items: library.items.map((item) => {
+      const { workStudy, ...portable } = item;
+      void workStudy;
+      return portable;
+    }),
+  };
+}
+
+/** Restore portable work while keeping work-study choices already on this device. */
+export function keepWorkStudy(incoming: unknown, existing: unknown): OpportunityLibrary {
+  const portable = readOpportunities(incoming);
+  const privateChoices = new Map(
+    readOpportunities(existing).items.map((item) => [item.id, item.workStudy]),
+  );
+  return {
+    ...portable,
+    items: portable.items.map((item) => ({
+      ...item,
+      workStudy: privateChoices.get(item.id) ?? false,
+    })),
   };
 }
