@@ -1263,8 +1263,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    // 67 since course_request.filed and .decided (20261021120000): no type before them named a request to an instructor.
-    expect(all.length).toBe(67);
+    // 66 since registration.hold_resolved (20261020120000): no type before it named a hold.
+    // 68 since course_request.filed and .decided (20261021120000): no type before them named a request to an instructor.
+    expect(all.length).toBe(68);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1427,6 +1428,12 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Phase 5 second pass: a Migration Center stage move emits migration.stage_changed in the move's own transaction
       // (P5-R6, D-1475 §19). Nothing drains it yet, so "none published" still holds.
       'supabase/migrations/20261012090000_migration_stage_changed_event.sql',
+      // Slice 1: a student's hand-in emits the registry's submission.finalized in its own transaction
+      // (20261019120000_learning_submissions.sql). Nothing drains the outbox yet, so "none published" still holds.
+      'supabase/migrations/20261019120000_learning_submissions.sql',
+      // Slice 2: an office resolving a registration hold emits registration.hold_resolved in the release's own
+      // transaction, and the file carries the readiness save forward with its emission unchanged. Nothing drains it.
+      'supabase/migrations/20261020120000_registration_hold_resolution.sql',
       // Slice 3: filing and deciding a course request emit course_request.filed / .decided in their own
       // transaction (20261021120000_course_requests.sql). Nothing drains the outbox yet, so "none published" still holds.
       'supabase/migrations/20261021120000_course_requests.sql',

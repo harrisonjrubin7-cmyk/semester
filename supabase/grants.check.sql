@@ -565,6 +565,11 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261019120000_learning_submissions.sql: a student hands in work on a
+    -- gradebook item. Checks auth.uid(), the caller's own school and
+    -- submissions:create on the item's course and term, and spends a key on
+    -- the gradebook ledger; `learning-submissions.check.sql` proves each refusal.
+    'learning_submit(want_item uuid, want_body text, want_key text)',
     -- 20261021120000_course_requests.sql: a student asks the course's
     -- instructor for an extension, an excused absence or an incomplete, and
     -- the instructor decides. Each checks auth.uid() and the caller's own
@@ -754,6 +759,35 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+    -- The three in 20261020120000_registration_hold_resolution.sql. The
+    -- resolver raises unless the caller holds registration_hold:resolve over
+    -- exactly the hold's owning office scope, finds holds at the caller's
+    -- school only, and takes an idempotency key and the state the office saw;
+    -- the office list raises the same way; the readiness read returns the
+    -- caller's own evaluations. `registration-hold-resolution.check.sql`
+    -- attempts each refusal.
+    'registration_hold_resolve(want_hold uuid, want_key text, want_expect text)',
+    'registration_holds_for_office(want_office text)',
+    'my_registration_readiness()',
+    -- The four in 20261021090000_roster_admin_desk.sql. Each raises unless
+    -- the caller holds roster:administer over exactly the named school; the
+    -- binder refuses the caller's own account, an account at another school
+    -- and anybody not on the live roster, and both writes take an
+    -- idempotency key (the switch also the value the administrator saw).
+    -- `roster-admin-desk.check.sql` attempts each refusal.
+    'roster_admin_unbound(want_tenant text)',
+    'roster_admin_bind(want_tenant text, want_sourced_id text, want_subject uuid, want_key text)',
+    'roster_admin_config(want_tenant text)',
+    'roster_admin_set_absence(want_tenant text, want_on boolean, want_expect boolean, want_key text)',
+    -- The three in 20261021100000_roster_admin_unbind_search.sql, behind the
+    -- same roster_admin_require. The unbinder refuses the caller's own
+    -- binding and an account other than the one the administrator saw, and
+    -- takes an idempotency key; the search answers this school's unbound
+    -- accounts only, 20 at most, address masked. `roster-admin-desk.check.sql`
+    -- attempts each refusal.
+    'roster_admin_bound(want_tenant text)',
+    'roster_admin_unbind(want_tenant text, want_sourced_id text, want_expect uuid, want_key text)',
+    'roster_admin_find_accounts(want_tenant text, want_query text)',
 
     -- The two productivity workspace functions recovered from production.
     -- Saving is security invoker and can only mutate the caller's RLS-owned
