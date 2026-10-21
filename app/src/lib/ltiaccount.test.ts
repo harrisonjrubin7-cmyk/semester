@@ -214,6 +214,14 @@ const NOT_CONTENT = new Set([
   'institution_action_audiences',
   'institution_action_progress',
   /*
+   * Released feedback (`20261022090000_grade_release_student_actions.sql`).
+   * The grade-release relay writes a row because an instructor released a
+   * grade; the student's only act on it is done or dismissed. The same
+   * category as `grade_entries` and `institution_action_progress`: about the
+   * person, and a tick, not their work.
+   */
+  'student_actions',
+  /*
    * A private beta's membership, feedback and exit record. Not because they
    * are nothing — the feedback is the person's words — but because an account
    * this flow could retire can never have them: joining needs an invitation

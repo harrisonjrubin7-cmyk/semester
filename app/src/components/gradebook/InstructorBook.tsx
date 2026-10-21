@@ -21,6 +21,8 @@ import {
   setScheme,
   type LoadedBook,
 } from '../../lib/gradebook/client';
+import { handIns, loadSubmissions, shortHash, type LoadedSubmissions } from '../../lib/gradebook/submissions';
+import { formatDateTime } from '../../lib/locale';
 
 /**
  * The instructor's gradebook of record for one course and term.
@@ -90,6 +92,7 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
   const { say } = useStore();
   const { attempt } = useAttempts();
   const [book, setBook] = useState<LoadedBook | null | string>(null);
+  const [subs, setSubs] = useState<LoadedSubmissions | null | string>(null);
   const [reads, setReads] = useState(0);
   const [said, setSaid] = useState<Said | null>(null);
   const [busy, setBusy] = useState(false);
@@ -119,6 +122,11 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
         );
       },
       (e: unknown) => { if (live) setBook(e instanceof Error ? e.message : 'Could not load this gradebook.'); },
+    );
+    // Apart from the book, so the gradebook still loads where submissions are not set up.
+    loadSubmissions(course, term).then(
+      (r) => { if (live) setSubs(r); },
+      (e: unknown) => { if (live) setSubs(e instanceof Error ? e.message : 'Could not load the work handed in.'); },
     );
     return () => { live = false; };
   }, [course, term, reads]);
@@ -159,7 +167,13 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
 
   const item = book.items.find((i) => i.id === itemId) ?? null;
   const categories = book.scheme?.categories ?? [];
-  const students = [...new Set([...book.entries.map((e) => e.studentId), ...extra])].sort();
+  const handedIn = subs && typeof subs === 'object' ? subs : null;
+  const students = [...new Set([
+    ...book.entries.map((e) => e.studentId),
+    // A student who handed in this item is somebody to grade, before any score exists.
+    ...(handedIn && item ? handedIn.submissions.filter((x) => x.itemId === item.id).map((x) => x.studentId) : []),
+    ...extra,
+  ])].sort();
   const open = book.regrades.filter((r) => !book.resolutions.some((x) => x.requestId === r.id));
 
   const draftOf = (student: string): Draft => {
@@ -390,6 +404,8 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
                     const who = `student ${shortId(s)}`;
                     const needsReason = !!shown;
                     const canModerate = can('grades:moderate') && cur?.status === 'draft' && cur.gradedBy !== me;
+                    const theirs = handedIn ? handIns(handedIn.submissions, item.id, s) : [];
+                    const gradedOn = cur && handedIn ? handedIn.submissions.find((x) => x.id === handedIn.graded[cur.id]) : undefined;
                     return (
                       <tr key={s}>
                         <th scope="row">{shortId(s)}</th>
@@ -403,6 +419,21 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
                             </>
                           ) : (
                             'No grade yet'
+                          )}
+                          {gradedOn && <Sub>Graded on hand-in version {gradedOn.version}.</Sub>}
+                          {theirs.length > 0 ? (
+                            <details>
+                              <summary>
+                                Read hand-in version {theirs[0].version} ({formatDateTime(new Date(theirs[0].at))})
+                              </summary>
+                              <Sub>
+                                Fingerprint <code title={theirs[0].contentHash}>{shortHash(theirs[0].contentHash)}</code>. This is the copy the student handed in; their later edits never change it.
+                                {gradedOn && gradedOn.id !== theirs[0].id ? ` They have handed in again since the version this grade names (${gradedOn.version}).` : ''}
+                              </Sub>
+                              <p style={{ whiteSpace: 'pre-wrap' }}>{theirs[0].body}</p>
+                            </details>
+                          ) : (
+                            handedIn && <Sub>Nothing handed in through Semester.</Sub>
                           )}
                         </td>
                         <td>
@@ -479,6 +510,11 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
             </Row>
           )}
         </>
+      )}
+
+      {typeof subs === 'string' && <Notice alert>{subs} Scores and releases still work; reload to see hand-ins.</Notice>}
+      {subs && typeof subs === 'object' && !subs.available && (
+        <Notice>Handing in work through Semester is not set up at your school yet, so scores here are not linked to a hand-in.</Notice>
       )}
 
       <SectionLabel aside={open.length ? `${open.length} open` : undefined}>Regrade requests</SectionLabel>

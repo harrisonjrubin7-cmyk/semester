@@ -1,0 +1,38 @@
+{
+  "screen_id": null,
+  "domain_id": null,
+  "canonical_object_types": [],
+  "design_route": null,
+  "verified_runtime_route": null,
+  "verified_component_path": null,
+  "roles": [],
+  "capabilities": [],
+  "authority": null,
+  "classification": null,
+  "source_freshness": null,
+  "states": [
+    "loading",
+    "empty",
+    "ready",
+    "denied",
+    "stale",
+    "offline",
+    "conflict",
+    "error",
+    "held"
+  ],
+  "workflow_steps": [],
+  "controlled_commands": [],
+  "accessibility_contract": null,
+  "tests": [],
+  "owner": null,
+  "branch": null,
+  "maturity": {
+    "designed": "DRAFT",
+    "implemented": "NOT VERIFIED",
+    "tested": "NOT RUN",
+    "deployed": "NOT VERIFIED",
+    "institution_authorized": "NOT VERIFIED",
+    "production_enabled": "HELD"
+  }
+}

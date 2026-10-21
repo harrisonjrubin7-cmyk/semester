@@ -1,0 +1,35 @@
+# Operating plan object 10: daily pilot health record (template).
+# Copy one record per active day. Values are placeholders until the pilot runs.
+daily_pilot_health:
+  date: YYYY-MM-DD
+  tenant: TBD
+  release: REL-READINESS-001
+
+  service:
+    application: green_or_status
+    source_connector: green_or_status
+    workflow_worker: green_or_status
+    policy_service: green_or_status
+
+  workflow:
+    requests: count
+    completed: count
+    ready: count
+    blocked: count
+    needs_review: count
+    stale: count
+    unknown: count
+    failed: count
+    cancelled: count
+
+  operations:
+    open_support_cases: count
+    open_reconciliation_cases: count
+    P0: count
+    P1: count
+    P2: count
+
+  decision:
+    # paused: activation stopped, release still in place. rolled_back: release reverted. safe_off: safe-off invoked.
+    activation_status: active_or_limited_or_paused_or_rolled_back_or_safe_off
+    notes: required

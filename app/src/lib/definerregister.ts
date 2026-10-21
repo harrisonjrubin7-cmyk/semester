@@ -147,6 +147,13 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['block_community_author', 'self-service', ['auth.uid()', 'private.community_role']],
   ['can_manage_escalation_agreements', 'admin', ['private.has_capability']],
   ['cancel_offboarding', 'admin', ['private.is_app_admin', 'private.has_capability']],
+  ['career_evidence_add', 'self-service', ['auth.uid()', 'private.workspace_replay', 'private.career_bump']],
+  ['career_evidence_grant', 'sharing', ['auth.uid()', 'private.age_cleared', 'private.career_employer_holds', 'private.workspace_replay', 'private.career_bump']],
+  ['career_evidence_mine', 'self-service', ['auth.uid()']],
+  ['career_evidence_read', 'sharing', ['auth.uid()', 'private.career_grant_live']],
+  ['career_evidence_revoke', 'sharing', ['auth.uid()', 'private.workspace_replay', 'private.career_bump']],
+  ['career_evidence_shared_with_me', 'sharing', ['auth.uid()', 'private.career_grant_live']],
+  ['career_evidence_withdraw', 'self-service', ['auth.uid()', 'private.workspace_replay', 'private.career_bump']],
   ['case_author_safety', 'moderation', ['private.has_capability']],
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -173,6 +180,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['course_request_decide', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay', 'r.student_id = me']],
+  ['course_request_file', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['course_request_respond', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
+  ['course_request_withdraw', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
   ['create_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -217,6 +228,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gradebook_queue_passback', 'integration', ['auth.uid()', 'private.gradebook_require', "public.kill_switch_engaged('kill.writeback', school)", "e.status = 'released'"]],
   ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
+  ['gradebook_set_due', 'admin', ['private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay', 'it.due_version <> want_expect']],
   ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
@@ -227,11 +239,14 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['integration_approve_connection', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_approve_scope', 'integration', ['auth.uid()', 'private.has_capability']],
   ['integration_request_replay', 'integration', ['auth.uid()', 'private.has_capability']],
+  ['integration_revoke_connection', 'integration', ['private.has_capability']],
+  ['integration_revoke_scope', 'integration', ['private.has_capability']],
   ['integration_set_paused', 'integration', ['private.has_capability']],
   ['join_beta', 'self-service', ['auth.uid()', 'private.beta_my_membership', 'private.beta_confirmed_email']],
   ['join_community', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['join_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
   ['kill_switch_engaged', 'read-helper', ['k.tenant_id is null or k.tenant_id = want_tenant']],
+  ['learning_submit', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
   ['leave_beta', 'self-service', ['private.beta_my_membership']],
   ['leave_organization', 'self-service', ['auth.uid()']],
   ['leave_school', 'self-service', ['auth.uid()']],
@@ -261,6 +276,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_registration_readiness', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_sessions', 'read-helper', ['auth.uid()']],
   ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
@@ -305,6 +321,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registrar_put_term', 'admin', ['auth.uid()', 'private.registration_registrar']],
   ['registration_drop', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
+  ['registration_hold_resolve', 'admin', ['auth.uid()', 'private.registration_school', 'private.has_capability', 'private.registration_key']],
+  ['registration_holds_for_office', 'admin', ['private.registration_school', 'private.has_capability']],
+  ['registration_swap', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
   ['replay_domain_event', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
@@ -326,6 +345,13 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
   ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
+  ['roster_admin_bind', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_subject = me']],
+  ['roster_admin_bound', 'read-helper', ['private.roster_admin_require', 'limit 1000']],
+  ['roster_admin_config', 'admin', ['private.roster_admin_require']],
+  ['roster_admin_find_accounts', 'read-helper', ['private.roster_admin_require', 'p.school_id = want_tenant', 'limit 20']],
+  ['roster_admin_set_absence', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'want_expect']],
+  ['roster_admin_unbind', 'admin', ['private.roster_admin_require', 'private.roster_admin_replay', 'was.subject = me', 'want_expect']],
+  ['roster_admin_unbound', 'read-helper', ['private.roster_admin_require', 'limit 1000']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['school_enforcement_readiness', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['school_purge_eligibility', 'admin', ['private.is_app_admin', 'private.has_capability']],
@@ -336,6 +362,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_notification_preference', 'self-service', ['auth.uid()', 'p.school_id = want_school']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
   ['set_support_email_notice', 'self-service', ['auth.uid()']],
+  ['settle_student_action', 'self-service', ['auth.uid()', 'x.student_id = me', 'a.version <> want_version']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['skip_onboarding_step', 'self-service', ['auth.uid()']],
@@ -360,6 +387,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
   ['withdraw_school_request', 'self-service', ['auth.uid()']],
+  ['workspace_object_create', 'self-service', ['auth.uid()', 'private.workspace_mine', 'private.workspace_replay']],
+  ['workspace_object_grant', 'sharing', ['auth.uid()', 'private.workspace_object_access', "access <> 'owner'", 'private.workspace_replay']],
+  ['workspace_object_read', 'sharing', ['auth.uid()', 'private.workspace_object_access']],
+  ['workspace_object_revoke', 'sharing', ['auth.uid()', 'private.workspace_object_access']],
+  ['workspace_object_save', 'self-service', ['auth.uid()', 'private.workspace_object_access', 'private.workspace_replay']],
+  ['workspace_objects_mine', 'self-service', ['auth.uid()']],
 ];
 
 /**
@@ -449,7 +482,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'gradebook_file_regrade',
       'gradebook_moderate',
       'gradebook_queue_passback',
-      'gradebook_release',
       'gradebook_resolve_regrade',
       'gradebook_set_scheme',
     ],
@@ -475,7 +507,12 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * part of the exact register but are not retroactively counted in that
  * historical snapshot.
  */
-export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+/**
+ * `redefines`: the file replaces a function production already runs rather
+ * than adding one, so its row is held to this file (the winning body) but the
+ * function still counts among those applied on production.
+ */
+export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
@@ -501,16 +538,26 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['read_tenant_projection'],
   },
   {
-    file: '20261012000000_ops_projection_dashboard.sql',
-    functions: ['ops_projection_dashboard'],
+    // Redefined, not added: the release now emits its outbox event in the
+    // same transaction, so the row is held to the file that last wrote it.
+    file: '20261012010000_gradebook_release_emits_event.sql',
+    functions: ['gradebook_release'],
+    redefines: true,
+  },
+  {
+    file: '20261012055000_provisioning_authority_hardening.sql',
+    functions: ['integration_revoke_connection', 'integration_revoke_scope'],
+  },
+  {
+    // Held to the file that last wrote it. Not `redefines`: the first definition
+    // (20261006000000) is not on production either, so production still lacks
+    // the function and it stays in the count of rows production does not run.
+    file: '20261012110000_handoff_attempt_limit_and_revoker.sql',
+    functions: ['consume_handoff'],
   },
   {
     file: '20261008223000_privileged_role_mfa.sql',
     functions: ['privileged_mfa_required'],
-  },
-  {
-    file: '20261008190500_projection_outbox_operations.sql',
-    functions: ['replay_domain_event'],
   },
   {
     file: '20261008190000_console_postmerge_safety.sql',
@@ -553,11 +600,70 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['set_support_email_notice'],
   },  {
     file: '20261006000000_onboarding_journeys_and_handoff.sql',
-    functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
+    functions: ['complete_onboarding_step', 'skip_onboarding_step', 'start_onboarding'],
   },
   {
     file: '20261006160000_my_sessions.sql',
     functions: ['end_my_session', 'my_sessions'],
+  },
+  {
+    file: '20261018120000_registration_swap.sql',
+    functions: ['registration_swap'],
+  },
+  {
+    file: '20261019120000_learning_submissions.sql',
+    functions: ['learning_submit'],
+  },
+  {
+    file: '20261020120000_registration_hold_resolution.sql',
+    functions: ['my_registration_readiness', 'registration_hold_resolve', 'registration_holds_for_office'],
+  },
+  {
+    file: '20261021090000_roster_admin_desk.sql',
+    functions: ['roster_admin_bind', 'roster_admin_config', 'roster_admin_set_absence', 'roster_admin_unbound'],
+  },
+  {
+    file: '20261021100000_roster_admin_unbind_search.sql',
+    functions: ['roster_admin_bound', 'roster_admin_find_accounts', 'roster_admin_unbind'],
+  },
+  {
+    file: '20261021120000_course_requests.sql',
+    functions: ['course_request_decide', 'course_request_file', 'course_request_respond', 'course_request_withdraw'],
+  },
+  {
+    file: '20261021130000_gradebook_due_dates.sql',
+    functions: ['gradebook_set_due'],
+  },
+  {
+    // `settle_student_action` is new. The other two are held here because this
+    // file last wrote them: the dashboard learned the student_actions source,
+    // and replay accepts one consumer's parked delivery as well as a parked
+    // event. Neither was in the second reading, so neither is `redefines`.
+    file: '20261022090000_grade_release_student_actions.sql',
+    functions: ['ops_projection_dashboard', 'replay_domain_event', 'settle_student_action'],
+  },
+  {
+    file: '20261022120000_workspace_objects.sql',
+    functions: [
+      'workspace_object_create',
+      'workspace_object_grant',
+      'workspace_object_read',
+      'workspace_object_revoke',
+      'workspace_object_save',
+      'workspace_objects_mine',
+    ],
+  },
+  {
+    file: '20261023120000_career_evidence.sql',
+    functions: [
+      'career_evidence_add',
+      'career_evidence_grant',
+      'career_evidence_mine',
+      'career_evidence_read',
+      'career_evidence_revoke',
+      'career_evidence_shared_with_me',
+      'career_evidence_withdraw',
+    ],
   },
 ];
 

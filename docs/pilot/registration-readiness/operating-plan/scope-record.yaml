@@ -1,0 +1,63 @@
+# Operating plan object 3: scope record.
+# The institution and Semester sign this before configuration begins.
+# Status is UNSIGNED. Every TBD needs a named person; a commit cannot sign it.
+scope:
+  status: unsigned
+  tenant: TBD
+  term: TBD
+  signatures:
+    institution_pilot_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
+    semester_product_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
+    semester_operations_owner: {name: TBD, signed: false, signed_at: TBD, signature_ref: TBD}
+
+  named_owners:   # stage 1 exit requires a name and contact for every role
+    pilot_sponsor: TBD
+    registrar_or_source_owner: TBD
+    connector_owner: TBD
+    advising_or_registrar_lead: TBD
+    IT_or_security_owner: TBD
+    semester_implementation_lead: TBD
+    semester_support_lead: TBD
+    semester_security_owner: TBD
+    executive_sponsor: TBD
+    authorized_institutional_owner: TBD
+    product_sponsor: TBD
+    product_or_engineering_owner: TBD
+    contacts: TBD
+
+  cohort:
+    cohort_reference: TBD   # immutable roster or query reference, frozen at first-two-weeks step 2
+    cohort_version: TBD     # changes after freeze require change control and invalidate the release
+    inclusion:
+      - approved_student_population
+      - active_authenticated_membership
+    exclusion:
+      - students_outside_approved_cohort
+      - records_without_authorized_source_context
+      - cases_requiring_institutional_decision_outside_pilot_scope
+
+  roles:
+    student:
+      permissions: [request_self_evaluation, view_own_receipts, route_self_to_approved_support]
+    advisor:
+      permissions: [view_assigned_or_scoped_handoffs, respond_or_route]
+    registrar:
+      permissions: [view_office_scoped_exceptions, reconcile_status_when_authorized]
+    semester_operator:
+      permissions: [operate_technical_support, monitor_health]
+      excluded_permissions: [make_institutional_academic_decisions]
+
+  approved_sources:
+    - name: TBD
+      owner: TBD
+      note: source to be named by the institution
+      allowed_fields: TBD   # field allowlist, or reference to an immutable field-level source mapping; required before activation
+
+  goal_and_outcome_definitions: TBD   # approved goal and exact meaning of each readiness outcome, or an immutable reference; frozen at first-two-weeks step 2
+
+  prohibited_actions:
+    - enrollment_execution
+    - official_record_change
+    - institution_policy_override
+    - unrestricted_staff_lookup
+    - model_training_on_student_records

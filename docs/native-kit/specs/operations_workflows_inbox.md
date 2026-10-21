@@ -1,0 +1,12 @@
+# Operations OS, workflow runner and Inbox
+Extend existing #/console, Console.tsx, console client and grant/approval/audit paths; do not create a second permission system. Design /app/ops/* routes are not deployed endpoints. Custom route.ts hash routing requires verified mapping. Historical console assessment identifies scoped grants, request_approval, decide_approval, console_act, fresh MFA, independent approvers and fail-closed audit. Reverify actual code and runtime before activation.
+
+Controlled action: request -> validate current authority -> retrieve source state -> exact impact preview -> approval -> canonical action digest -> dispatch recheck -> fail-closed durable audit -> atomic mutation/outbox -> reconciliation -> receipt/history/notifications -> authorized compensation. Changes to target/amount/recipient/scope/payload/preconditions invalidate approval. Proposed fourteen checks in matrix are reconciliation contract, not recovered exact runtime chain.
+
+Workflow steps pin ID/version, actor lane, allowed route/screen, input/output schemas, capability/policy, source authority, approval/MFA, dependencies, idempotency/version, failure/retry, compensation and evidence. Replace regex prototype actor heuristics with explicit versioned mappings. Clickable simulation does not create official completion.
+
+Inbox canonical work_item: scope, source event, kind/severity, queue/person, required capability, deadline/calendar/timezone, correlation/version, evidence and action refs. No copied student payload. My Work/team/unassigned/overdue/held/completed; atomic claim/reassignment; accepted server-time SLA; backup escalation; minimal notifications; receipt-linked resolution.
+
+Entry: sign-in -> server workspace discovery -> show Operations if eligible -> existing console -> screen/API recheck -> scoped views. Loading/denied/expired/revoked/break-glass explicit. Reconcile my_capabilities role-grant view with database break-glass decision using scoped server evaluation; menu visibility never grants access. Test direct deep links, wrong scope, self-approval, MFA, duplicate action and audit failure.
+
+Read models carry canonical/source/authority/freshness/version/watermark/correlation/completeness. Outbox publisher, retries/DLQ, checkpoints, bootstrap and monitoring are runtime requirements. P0 shared controls/inbox/support/release/finance foundations; P1 complete domain operations; P2 authoritative migration/advanced regulated capabilities. Sequence does not remove scope.
