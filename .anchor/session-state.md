@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 09:01:44_  ·  branch: `claude/charming-meitner-1r8tzw`
+_Updated: 2026-10-21 09:03:32_  ·  branch: `claude/charming-meitner-1r8tzw`
 
 ## Uncommitted changes
 ```
@@ -15,14 +15,14 @@ Diff stat:
 
 ## Recent commits
 ```
+012da714 docs(simplify): withdraw the proof-vs-brief premise in the audit
+d89d52fb chore: update the auto-saved session state snapshot
 abd0f14a chore: update the auto-saved session state snapshot
 675c78ab chore: update the auto-saved session state snapshot
 6c959bfd chore: update the auto-saved session state snapshot
 d4b0e701 chore: update the auto-saved session state snapshot
 eb0d43f9 chore: update the auto-saved session state snapshot
 f5ff9908 chore: update the auto-saved session state snapshot
-984aea4b chore: update the auto-saved session state snapshot
-62733d6f chore: update the auto-saved session state snapshot
 ```
 
 ## Resume
