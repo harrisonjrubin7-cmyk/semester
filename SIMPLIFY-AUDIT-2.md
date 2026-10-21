@@ -104,3 +104,25 @@ and is left open.
 
 Done bar (`npm run lint && npm test && npm run build`) was not run because no
 code changed in this commit.
+
+## 8. Re-check against main (2026-10-21)
+
+Branch `claude/charming-meitner-1r8tzw` already contains `origin/main` (0
+commits behind, 1382 ahead), so nothing was merged from main.
+
+- **Already landed, not in this audit's counts:** the Today screen's This week
+  and Hours tabs replaced `ahead` and `tonight` (`nav.ts` `home` comment,
+  lines 206–216). The Everything screen merged into Progress (`nav.ts`
+  `me` comment, lines 834–840). The `mine` blurb and `taskTags` were
+  rewritten to match. Recorded as landed; §3 rows for these are stale.
+- **Still open, confirmed by reading code:** `screens/me/You.tsx` has its own
+  "This week" section (line 441), and `screens/Today.tsx` has its own week
+  and late items (7 matches for `This week` / `late`). This is the overlap
+  the first proposed merge targets. Not merged: the survivor is `home`, but
+  which copy of each item wins is a product call, and the merge touches
+  `Today.tsx`, `me/You.tsx` and their tests.
+- **Snapshot loop:** `a47c03a6` stopped tracking `.anchor/session-state.md`
+  and `b0e0486b` (#1646) gitignored it. The loop in earlier turns is fixed on
+  main; no further change made here.
+- **Open decisions, unchanged:** keep both audit files; the find-a-screen
+  survivor (`help` or `springboard`); re-audit of the where-I-stand row.
