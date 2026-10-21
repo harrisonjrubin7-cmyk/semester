@@ -12,13 +12,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 255 |
-| Tables created in `public` and not later dropped | 352 |
-| … of which enable row-level security in a migration | 352 |
+| Migration files | 256 |
+| Tables created in `public` and not later dropped | 356 |
+| … of which enable row-level security in a migration | 356 |
 | Tables created in `private` and not later dropped | 55 |
 | … of which enable row-level security in a migration | 55 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 283 |
+| Tables named by at least one literal `create policy` statement | 287 |
 | Tables with RLS found and no literal policy statement | 124 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-158 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+159 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -49,6 +49,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/calendar.check.sql` | The one table in this schema a stranger is meant to be able to read. |
 | `supabase/canonical-display.check.sql` | What an imported fact may say, and who may take a student's away. |
 | `supabase/capabilities.check.sql` | The permission matrix, and the four things that make it a matrix rather than a ladder. |
+| `supabase/career-evidence.check.sql` | a student picks exact versions of their work as portfolio evidence, and an employer reads them only through a grant the student made to them, scoped to those items, while it is live. |
 | `supabase/classmates.check.sql` | Two people in one room, without needing two people. |
 | `supabase/client-privileges.check.sql` | The browser's roles hold no table privilege that row-level security does not govern. |
 | `supabase/commercial-automation.check.sql` | The commercial core's moving parts (20260929080000_commercial_automation): checkout, the webhook's writes, the dunning worker, contract → tenant, site lead intake and the nightly account-health job. |
@@ -299,14 +300,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 255 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 255 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 262 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 262 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 71 |
-| Register rows in category `sharing` | 26 |
+| Register rows in category `self-service` | 74 |
+| Register rows in category `sharing` | 30 |
 | Register rows in category `admin` | 99 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |

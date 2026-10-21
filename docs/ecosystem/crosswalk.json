@@ -3885,22 +3885,27 @@
       "modules": [
         "app/src/lib/career.ts",
         "app/src/lib/career-evidence.ts",
-        "app/src/lib/skills-graph.ts"
+        "app/src/lib/skills-graph.ts",
+        "app/src/lib/workspace/evidence.ts"
       ],
       "server": [
         "app/server/institution/career.ts"
       ],
-      "migrations": [],
+      "migrations": [
+        "supabase/migrations/20261023120000_career_evidence.sql"
+      ],
       "tests": [
         "app/src/screens/career.test.tsx",
         "app/src/components/CareerEvidence.test.tsx",
-        "app/src/lib/career.test.ts"
+        "app/src/lib/career.test.ts",
+        "supabase/career-evidence.check.sql",
+        "app/src/lib/workspace/evidence.test.ts"
       ],
       "flags": [
         "career_evidence"
       ],
-      "note": "Career workspace with evidence, skills graph, resume, contacts and fairs; persists through the local store synced by lib/cloud.ts push() into public.state/public.courses (20260901000100_schema.sql, sync.check.sql); employer-side postings exist only in the sandbox gateway.",
-      "gap": "No live job feed or outcomes; applications/offers are sandbox-only (REPO_AUDIT J-011, J-023)."
+      "note": "Career workspace with evidence, skills graph, resume, contacts and fairs; persists through the local store synced by lib/cloud.ts push() into public.state/public.courses (20260901000100_schema.sql, sync.check.sql); employer-side postings exist only in the sandbox gateway. The server side of sharing portfolio evidence with an employer exists (career_evidence: pinned workspace versions, grants to one employer-role account scoped to named items, at most 180 days, revocable, every employer read audited, no grade data), with a typed client.",
+      "gap": "No live job feed or outcomes; applications/offers are sandbox-only (REPO_AUDIT J-011, J-023). Evidence sharing has no screen: nothing in the app saves a document to Semester yet, so there is nothing to choose."
     },
     "#/student/changes": {
       "status": "tested",

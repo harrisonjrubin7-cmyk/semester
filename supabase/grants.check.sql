@@ -578,6 +578,19 @@ declare
     'workspace_objects_mine()',
     'workspace_object_read(want_object uuid, want_version uuid)',
 
+    -- 20261023120000_career_evidence.sql: portfolio evidence and employer
+    -- shares. The student's five check auth.uid() against the workspace owner;
+    -- the employer's two re-check the grant, the employer role and the
+    -- student's age at every call; `career-evidence.check.sql` proves each
+    -- refusal.
+    'career_evidence_add(want_version uuid, want_label text, want_expected_revision bigint, want_key text)',
+    'career_evidence_withdraw(want_evidence uuid, want_expected_revision bigint, want_key text)',
+    'career_evidence_grant(want_employer_email text, want_employer_scope text, want_evidence uuid[], want_shared_as text, want_purpose text, want_expires_at timestamp with time zone, want_expected_revision bigint, want_key text)',
+    'career_evidence_revoke(want_grant uuid, want_expected_revision bigint, want_key text)',
+    'career_evidence_mine()',
+    'career_evidence_shared_with_me()',
+    'career_evidence_read(want_grant uuid, want_evidence uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

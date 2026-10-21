@@ -125,7 +125,7 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `employer` | secure | ✓ ✓ ✓ ✓ ✓ · · | `talent:search`<br>`opportunity:publish` | `app/src/components/ListingDesk.tsx` | `expansion.check.sql`<br>`listings.check.sql`<br>`lti-capability.check.sql` | — | — | Search only opted-in, unexpired talent profiles; publish opportunities if approved | Non-opted-in profiles, grades, plans, student records |
+| `employer` | secure | ✓ ✓ ✓ ✓ ✓ · · | `talent:search`<br>`opportunity:publish` | `app/src/components/ListingDesk.tsx` | `career-evidence.check.sql`<br>`expansion.check.sql`<br>`listings.check.sql`<br>`lti-capability.check.sql` | — | — | Search only opted-in, unexpired talent profiles; publish opportunities if approved | Non-opted-in profiles, grades, plans, student records |
 | `scholarship_provider` | usable | ✓ ✓ ✓ ✓ · · · | `opportunity:publish` | `app/src/components/ListingDesk.tsx` | — | — | — | Publish/maintain own approved listing | Student education records |
 | `marketplace_partner` | usable | ✓ ✓ ✓ ✓ · · · | `opportunity:publish` | `app/src/components/ListingDesk.tsx` | — | — | — | Publish approved deals/housing listings | Student data absent authorized interaction |
 | `transfer_partner_admin` | provisionable | ✓ ✓ ✓ · ✓ · · | `articulation:propose` | — | `expansion.check.sql` | — | — | Propose equivalencies within partner scope | Approve own proposals or inspect student records |

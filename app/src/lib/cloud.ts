@@ -1367,6 +1367,14 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'workspace_object_versions', column: null, cascadesFrom: 'workspaces' },
   { table: 'workspace_object_grants', column: null, cascadesFrom: 'workspaces' },
   { table: 'workspace_object_operations', column: null, cascadesFrom: 'workspaces' },
+  // Portfolio evidence chosen from those versions, and the employers it was
+  // shared with (`lib/workspace/evidence.ts`, `20261023120000_career_evidence.sql`).
+  // All of it names your workspace and cascades from it; a share made to you
+  // as an employer goes with your account through `grantee`.
+  { table: 'career_portfolios', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence_grants', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence_grant_items', column: null, cascadesFrom: 'workspaces' },
 ];
 
 /**

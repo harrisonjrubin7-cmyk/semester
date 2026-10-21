@@ -800,6 +800,7 @@ const MOCKS_MODULES = [
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
   'src/lib/workspace/objects.test.ts',
+  'src/lib/workspace/evidence.test.ts',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
