@@ -103,8 +103,10 @@ export const ROLES: RoleInfo[] = [
     id: 'payer',
     label: 'Parent or payer',
     blurb: 'The part of a student’s bill they have chosen to share with you.',
-    ready: true,
-    live: 'Keep payment questions, deadlines and handoff preparation together now.',
+    // Held back until a payer workspace exists; see rolejourney.ts. A role
+    // without a usable workspace cannot be chosen.
+    ready: false,
+    live: 'Not available on this device yet. Payment handoff waits on an authorized-payer grant.',
     needs:
       'Billing details and payment actions require a current authorized-payer relationship granted by the institution.',
   },
@@ -146,6 +148,16 @@ export const DEFAULT_ROLE: Role = 'student';
 
 export function roleOf(id: string): RoleInfo {
   return ROLES.find((r) => r.id === id) ?? ROLES[0];
+}
+
+/**
+ * The role a stored value opens the app as. A role held back from the picker
+ * (payer, until its workspace exists) falls back to the student: a saved copy
+ * of it has no option to select, so keeping it would desync the picker.
+ */
+export function choosableRole(id: string): Role {
+  const info = roleOf(id);
+  return info.ready ? info.id : DEFAULT_ROLE;
 }
 
 /** Every role with a usable workspace. Kept as a predicate so a future role cannot ship half-built. */
