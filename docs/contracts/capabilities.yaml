@@ -1,0 +1,153 @@
+# Capability registry for the registration-readiness pilot.
+#
+# A capability is the unit of release. Every route, record, command, event and
+# audit key it names must exist in the sibling contract files; the contract test
+# (app/src/contracts/contracts.test.ts) fails the build when they do not.
+#
+# The backend store (private.registration_readiness_* and its save RPC, merged
+# on main in 20261009160000 and 20261010140000) is the source of truth. Nothing
+# user-facing exists yet: every route below is `not_built`.
+#
+# status: specified | in_progress | blocked | implemented | verified | deployed
+# A capability is `deployed` only with an approved release decision in
+# release-evidence.yaml. Nothing here is deployed.
+
+capabilities:
+  - key: student.readiness.read
+    title: Read registration readiness
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - student
+    routes:
+      - /app/registration
+    records:
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+      - registration_readiness_receipts
+    permissions:
+      - readiness.case.read
+    commands: []
+    events:
+      - registration.readiness_evaluated
+      - registration.readiness_requested
+    audits:
+      - registration.readiness_viewed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: student.readiness.refresh
+    title: Refresh registration readiness
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - student
+    routes:
+      - /app/registration
+    records:
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+      - registration_readiness_receipts
+    permissions:
+      - readiness.case.refresh
+    commands:
+      - readiness.transition
+    events:
+      - registration.readiness_evaluated
+      - registration.readiness_reconciliation_requested
+    audits:
+      - registration.readiness_transition
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: advisor.readiness.caseload.read
+    title: Read readiness for an assigned caseload
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - advisor
+    routes:
+      - /advisor/readiness
+    records:
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+    permissions:
+      - readiness.caseload.read
+    commands: []
+    events: []
+    audits:
+      - registration.readiness_viewed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: registrar.readiness.queue.read
+    title: Read the registrar readiness queue
+    domain: registration_readiness
+    impact: moderate
+    sensitivity: high
+    status: specified
+    actors:
+      - registrar
+    routes:
+      - /registrar/readiness
+    records:
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+    permissions:
+      - readiness.queue.read
+    commands: []
+    events: []
+    audits:
+      - registration.readiness_viewed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - stale_source_test
+      - accessibility_test
+      - source_copy_review
+      - operator_runbook
+
+  - key: institution_admin.readiness.audit.read
+    title: Read the readiness audit trail
+    domain: registration_readiness
+    impact: high
+    sensitivity: high
+    status: specified
+    actors:
+      - institution_admin
+    routes:
+      - /institution/readiness/audit
+    records:
+      - gateway_audit
+    permissions:
+      - readiness.audit.read
+    commands: []
+    events: []
+    audits:
+      - registration.readiness_viewed
+    release_requirements:
+      - rls_test
+      - route_authorization_test
+      - accessibility_test
+      - operator_runbook

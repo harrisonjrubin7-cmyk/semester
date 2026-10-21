@@ -1,0 +1,49 @@
+# Domain events for the registration-readiness pilot.
+#
+# The envelope and the three event types are taken from the save RPC and the
+# TypeScript workflow on main (packages/institution/src/readiness-workflow.ts).
+# Payload fields are not yet specified in code: `payload_status: unverified` and
+# `payload_required` is empty until the save RPC's payload is documented.
+#
+# Each event's `producer_commands` must equal the commands whose `publishes`
+# list names it (checked in both directions by the contract test).
+
+event_envelope:
+  required:
+    - eventType
+    - aggregateId
+    - idempotencyKey
+    - correlationId
+    - payload
+  source: private.registration_readiness_receipts.event_payload (via the save RPC)
+
+events:
+  registration.readiness_requested:
+    aggregate_type: registration_readiness_evaluation
+    producer_commands:
+      - readiness.start
+    payload_status: unverified
+    payload_required: []
+
+  registration.readiness_evaluated:
+    aggregate_type: registration_readiness_evaluation
+    producer_commands:
+      - readiness.transition
+    payload_status: unverified
+    payload_required: []
+
+  registration.readiness_reconciliation_requested:
+    aggregate_type: registration_readiness_evaluation
+    producer_commands:
+      - readiness.transition
+    payload_status: unverified
+    payload_required: []
+
+examples:
+  - event_type: registration.readiness_requested
+    envelope:
+      eventType: registration.readiness_requested
+      aggregateId: evaluation-id
+      idempotencyKey: example-idempotency-key
+      correlationId: request-id-0001
+      payload: {}

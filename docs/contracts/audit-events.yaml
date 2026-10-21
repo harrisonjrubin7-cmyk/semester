@@ -1,0 +1,32 @@
+# Stable audit keys for readiness. Free-form audit strings are not allowed.
+#
+# `registration.readiness_viewed` is the sensitive-read key named in
+# docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md (workflow W-31). Nothing
+# emits it yet.
+#
+# `registration.readiness_transition` names the audit that the save RPC writes
+# for every accepted transition. The exact key string is not yet confirmed from
+# the RPC's audit call; treat it as provisional until it is.
+
+common_required_fields:
+  - tenant_id
+  - actor_account_id
+  - entity_id
+  - correlation_id
+
+audit_events:
+  - key: registration.readiness_viewed
+    actor: registrar
+    entity: registration_readiness_evaluation
+    severity: moderate
+    required_fields: []
+    status: not_built
+
+  - key: registration.readiness_transition
+    actor: student
+    entity: registration_readiness_evaluation
+    severity: moderate
+    required_fields:
+      - prior_state
+      - next_state
+    status: provisional
