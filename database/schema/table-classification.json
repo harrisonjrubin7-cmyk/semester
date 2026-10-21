@@ -362,6 +362,7 @@
    "integration_sync_errors",
    "integration_sync_runs",
    "integration_webhook_events",
+   "learning_submissions",
    "legal_holds",
    "mentor_requests",
    "migration_approvals",
