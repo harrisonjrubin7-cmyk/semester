@@ -29,7 +29,7 @@ export interface Piece {
 export function blobOf(piece: Piece): Blob {
   return piece.body instanceof Blob
     ? piece.body
-    : new Blob([piece.body], { type: `${piece.mime};charset=utf-8` });
+    : new Blob([new TextEncoder().encode(piece.body)], { type: `${piece.mime};charset=utf-8` });
 }
 
 /**
