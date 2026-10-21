@@ -253,6 +253,8 @@
    "private.registration_readiness_receipts",
    "private.registration_readiness_tasks",
    "private.roster_current",
+   "private.roster_grant",
+   "private.roster_identity",
    "private.roster_import_batch",
    "private.roster_import_config",
    "private.roster_snapshot",
