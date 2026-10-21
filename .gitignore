@@ -81,3 +81,8 @@ app/reports/
 
 # Auto-saved session checkpoint (regenerated on every stop; not source)
 .anchor/
+
+# Local Claude Code and tooling config, not shared with the repository
+.claude/CLAUDE.md
+.claude/settings.json
+.claudeignore
