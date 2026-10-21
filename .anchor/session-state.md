@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 20:41:08_  ·  branch: `claude/brave-pasteur-kpyg4w`
+_Updated: 2026-10-21 20:42:02_  ·  branch: `claude/brave-pasteur-kpyg4w`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+42bca0ff chore: update the auto-saved session state snapshot
 4ac15ddf docs(simplify): audit the screen overlap before merging
 8170df3a fix(role): hold payer back until a payer workspace exists
 162cd31d docs(integration): reconcile Sheet rule slice
@@ -22,7 +23,6 @@ Diff stat:
 f2799d73 fix(sheet): distinguish duplicate rule removals
 7ca3b0ff Merge pull request #1519 from harrisonjrubin7-cmyk/claude/sync-keeps-unknown-and-ingress-drops
 5cf374d2 Merge pull request #1668 from harrisonjrubin7-cmyk/claude/happy-mccarthy-e6g5tt
-79c61a70 perf: record the University route measurement and derive its budget from it
 ```
 
 ## Resume
