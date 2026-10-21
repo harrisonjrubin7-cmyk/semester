@@ -1,0 +1,9 @@
+method,path,operation_id,coverage_status,live_read_runner_eligible,source
+POST,/pep/access-requests,createAccessRequest,not_evidenced,false,handoff/control-plane/access.openapi.yaml
+GET,/pep/access-requests/{requestId},getAccessRequest,not_evidenced,true,handoff/control-plane/access.openapi.yaml
+POST,/pe/evaluations,evaluatePolicy,not_evidenced,false,handoff/control-plane/access.openapi.yaml
+POST,/pa/grants,prepareGrant,not_evidenced,false,handoff/control-plane/access.openapi.yaml
+PUT,/pep/grants/{grantId},installGrant,not_evidenced,false,handoff/control-plane/access.openapi.yaml
+GET,/pep/grants/{grantId},inspectEnforcement,not_evidenced,true,handoff/control-plane/access.openapi.yaml
+POST,/pa/grants/{grantId}/revocations,revokeGrant,not_evidenced,false,handoff/control-plane/access.openapi.yaml
+POST,/evidence/observations,recordObservation,not_evidenced,false,handoff/control-plane/access.openapi.yaml
