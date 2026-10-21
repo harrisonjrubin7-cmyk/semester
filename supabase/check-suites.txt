@@ -162,3 +162,4 @@ tenant-rollout-projection
 tenant-sso-policy
 trust-room
 workflow-builder
+workspace-objects

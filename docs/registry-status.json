@@ -1818,9 +1818,9 @@
     },
     "#/studio/doc": {
       "status": "code-present",
-      "evidence": "screen app/src/screens/Write.tsx; screen app/src/screens/write/Paper.tsx; module app/src/lib/docx.ts; module app/src/lib/docxin.ts; module app/src/lib/docversions.ts; module app/src/lib/pdfout.ts",
-      "deployment": "app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
-      "blockers": "No server persistence or collaboration.; production app not probed from this session"
+      "evidence": "screen app/src/screens/Write.tsx; screen app/src/screens/write/Paper.tsx; module app/src/lib/docx.ts; module app/src/lib/docxin.ts; module app/src/lib/docversions.ts; module app/src/lib/pdfout.ts; module app/src/lib/workspace/objects.ts; test supabase/workspace-objects.check.sql; test app/src/lib/workspace/objects.test.ts",
+      "deployment": "schema: 1 of 1 cited migration(s) not in the lzrqvlugnawcgywkhqlz listing (20261022120000) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
+      "blockers": "The editor does not save to the server yet: no 'Save a version to Semester' action, so no server persistence from the screen and no collaboration.; production app not probed from this session"
     },
     "#/studio/sheet": {
       "status": "code-present",

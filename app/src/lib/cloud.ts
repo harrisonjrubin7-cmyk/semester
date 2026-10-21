@@ -1369,6 +1369,19 @@ export const OWNED_TABLES: OwnedTable[] = [
   // (`20261022090000_grade_release_student_actions.sql`): named by
   // `student_id` with `on delete cascade`, and gone with a grade version too.
   { table: 'student_actions', column: 'student_id' },
+
+  // ── Your documents in Semester ──────────────────────────────────────────
+  // Objects you keep on the server, every version you saved, who you shared
+  // them with, and the keys your saves spent (`lib/workspace/objects.ts`,
+  // `20261022120000_workspace_objects.sql`). Your personal workspace names you
+  // by `owner_id`, which cascades from `auth.users`; every other table names
+  // the workspace and cascades from it. A grant somebody gave you goes with
+  // your account too.
+  { table: 'workspaces', column: 'owner_id' },
+  { table: 'workspace_objects', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_versions', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_grants', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_operations', column: null, cascadesFrom: 'workspaces' },
 ];
 
 /**
