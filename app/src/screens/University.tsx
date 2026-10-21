@@ -57,6 +57,7 @@ import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
 import { workflowsAllowed } from '../lib/workflow/allowed';
 import { studioAllowed } from '../lib/config/allowed';
+import { rosterAdminAllowed } from '../lib/roster/admin';
 import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
@@ -71,6 +72,7 @@ const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
 const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
+const RosterDesk = lazy(() => import('../components/institutional/RosterDesk').then((m) => ({ default: m.RosterDesk })));
 const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
@@ -167,6 +169,9 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
     ? [{ id: 'integrations' as const, label: 'Integrations' }]
     : []),
+  // Only for roster:administer at this school; every call is refused to anyone
+  // else (supabase/roster-admin-desk.check.sql).
+  ...(rosterAdminAllowed(verified) ? [{ id: 'roster' as const, label: 'Roster' }] : []),
   // Staff only in practice, and governed in code: aggregates at n >= 10, no
   // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
   ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
@@ -208,7 +213,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts' | 'roster';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -871,6 +876,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'roster' && rosterAdminAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <RosterDesk tenantId={school.id} />
+        </Suspense>
+      )}
 
       {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
         <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />

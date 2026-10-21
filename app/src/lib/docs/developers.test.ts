@@ -531,9 +531,9 @@ describe('the testing guide', () => {
 
   it('names the other workflows by their file, name and trigger', () => {
     const table = rows(section(guide, '## What CI runs').split('Other workflows:')[1]);
-    // Every workflow but ci.yml is named, once: a new file must get a row here.
-    const others = readdirSync(at('.github/workflows')).filter((f) => f !== 'ci.yml').sort();
-    expect(table.map(([, file]) => file.replace(/`/g, '')).sort()).toEqual(others);
+    // Every workflow but ci.yml has a row, and no row names a file that is gone.
+    const others = readdirSync(at('.github/workflows')).filter((f) => f.endsWith('.yml') && f !== 'ci.yml');
+    expect(table.map((r) => r[1].replace(/`/g, '')).sort()).toEqual(others.sort());
     for (const [name, file, trigger] of table) {
       const f = file.replace(/`/g, '');
       const yml = read(`.github/workflows/${f}`);

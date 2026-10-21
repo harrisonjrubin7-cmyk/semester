@@ -35,12 +35,19 @@ const mock = vi.hoisted(() => ({
   download: vi.fn(),
   dispatch: vi.fn(),
   say: vi.fn(),
+  // What gradebook_due_dates answers (20261021130000): one item with a date, and student-1's extension on it.
+  dues: [
+    { item_id: 'mid', title: 'Midterm', student_id: null, item_due: '2026-11-07T05:59:00Z', due_version: 1, granted_due: null, request_id: null, effective_due: '2026-11-07T05:59:00Z', extended: false },
+    { item_id: 'mid', title: 'Midterm', student_id: 'student-1', item_due: '2026-11-07T05:59:00Z', due_version: 1, granted_due: '2026-11-12', request_id: 'r1', effective_due: '2026-11-13T11:59:59Z', extended: true },
+  ] as unknown[],
 }));
 
 function table(name: string) {
   const self: Record<string, unknown> = {};
   self.select = () => self;
   self.eq = () => self;
+  self.order = () => self;
+  self.in = () => self;
   self.maybeSingle = async () => ({ data: name === 'profiles' && mock.school ? { school_id: mock.school } : null, error: null });
   self.then = (ok: (r: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(ok);
   return self;
@@ -52,7 +59,10 @@ vi.mock('../lib/cloud', () => ({
   },
   cloud: async () => ({
     auth: { getUser: async () => ({ data: { user: mock.user ? { id: mock.user } : null }, error: null }) },
-    rpc: async (name: string) => ({ data: name === 'feature_state' ? mock.flag : name === 'feature_narrowing' ? [] : null, error: null }),
+    rpc: async (name: string) => ({
+      data: name === 'feature_state' ? mock.flag : name === 'feature_narrowing' ? [] : name === 'gradebook_due_dates' ? mock.dues : null,
+      error: null,
+    }),
     from: (name: string) => table(name),
   }),
 }));
@@ -249,6 +259,13 @@ describe('an instructor’s course', () => {
     // One primary: releasing the item.
     expect(buttons().filter((b) => b.classList.contains('btn-primary')).map((b) => b.textContent)).toEqual(['Release grades for Midterm']);
     expect(text()).toContain('Question 2 was marked wrong');
+    // Students' requests (20261021120000) sit under the book, on the same course and term, and add no primary action.
+    // grades:* alone does not open them: reading the queue is course_requests:view.
+    expect(text()).toContain('Student requests');
+    expect(text()).toContain('You cannot read this course’s student requests');
+    // Item due dates (20261021130000) sit under the book; faculty hold grades:release, so they may set one, and the extension shows.
+    expect(text()).toContain('Due dates');
+    expect(buttons().some((b) => b.textContent === 'Change the due date for Midterm')).toBe(true);
   });
 
   it('asks for a reason before changing a released grade', async () => {
@@ -367,6 +384,11 @@ describe('a student’s course', () => {
     expect(host.querySelector('[data-source="estimated"]')).not.toBeNull();
     expect(host.querySelector('[data-source="institution_verified"]')).not.toBeNull();
     expect(text()).toContain('your instructor’s final grade is the one that counts');
+    // A grades:receive grant alone does not let them file a request: that is course_requests:create.
+    expect(text()).toContain('You cannot file requests on this course');
+    // A student reads the date that applies to them, and cannot change it.
+    expect(text()).toContain('Due dates');
+    expect(buttons().some((b) => /due date for/.test(b.textContent ?? ''))).toBe(false);
     expect(buttons().some((b) => b.textContent === 'Release grades for Midterm')).toBe(false);
     await press('Work out what you need on the final');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'courses' });
@@ -397,7 +419,7 @@ describe('a student’s course', () => {
     await press('Ask about Midterm');
     expect(document.activeElement?.textContent).toBe('Ask for Midterm to be looked at again');
     expect(must('Send the regrade request').disabled).toBe(true);
-    type(host.querySelector('textarea'), 'Question 2 was marked wrong');
+    type(host.querySelector('section[aria-labelledby="regrade-head"] textarea'), 'Question 2 was marked wrong');
     await press('Send the regrade request');
     expect(mock.regrade).toHaveBeenCalledWith('mid', 'Question 2 was marked wrong', expect.stringMatching(/^regrade:mid:/));
     expect(mock.say).toHaveBeenCalledWith(expect.stringMatching(/^Your regrade request for Midterm is sent/));

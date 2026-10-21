@@ -151,8 +151,20 @@ useDefault = true
 #      is a prose cell in docs/native-kit/matrices/company_functions_15.csv;
 #      gitleaks reads the word "access" nearby as a key. Value-scoped, so the
 #      same text anywhere else remains visible.
+#
+#   8. **Roster desk idempotency labels in a unit test.**
+#      app/src/lib/roster/admin.test.ts passes `roster-bind.k1`,
+#      `roster-unbind.k1` and `roster-absence.k1` as `want_key`, the
+#      idempotency key the RPC takes. gitleaks reads `key` plus a dotted value
+#      as a credential. They authorize nothing. Value-scoped to that prefix and
+#      a small decimal suffix.
+#
+#   9. **Career evidence idempotency labels in a unit test.**
+#      app/src/lib/workspace/evidence.test.ts passes `withdraw.key-1` as the
+#      idempotency key of a withdrawal. gitleaks reads `key` plus a dotted
+#      value as a credential. It authorizes nothing. Value-scoped.
 [allowlist]
-description = 'Seven string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
+description = 'Nine string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
@@ -162,4 +174,6 @@ regexes = [
   '''^eyJhbGciOiJub25lIn0\.eyJzdWIiOiJ0ZXN0In0\.c2ln$''',
   '''^(?:corr-material-(?:plan|policy)-[0-9]+|corr-material-withdraw(?:-[0-9]+)?|material-withdraw-key-[0-9]+)$''',
   '''^Employment/revocation$''',
+  '''^roster-(?:bind|unbind|absence)\.k[0-9]+$''',
+  '''^withdraw\.key-[0-9]+$''',
 ]

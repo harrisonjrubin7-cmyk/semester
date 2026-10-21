@@ -16,10 +16,11 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  // The seeded tasks are dated in October 2026. Pin the clock before them, so
-  // "Today" and "Overdue" do not move them between groups as real time passes.
+  // The seeded dates are fixed, so today must be too: once the local date
+  // passes 20 October the first task turns overdue, reorders, and the first
+  // Edit button opens the other one.
   vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date(2026, 9, 19, 12));
+  vi.setSystemTime(new Date(2026, 9, 20, 8, 0));
   localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
