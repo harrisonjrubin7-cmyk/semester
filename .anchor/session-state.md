@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 01:36:13_  ·  branch: `claude/charming-meitner-1r8tzw`
+_Updated: 2026-10-21 01:36:47_  ·  branch: `claude/charming-meitner-1r8tzw`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+4df01217 chore: update the auto-saved session state snapshot
 b0859918 chore: update the auto-saved session state snapshot
 83a2d05b chore: update the auto-saved session state snapshot
 2377619f chore: update the auto-saved session state snapshot
@@ -22,7 +23,6 @@ b0859918 chore: update the auto-saved session state snapshot
 6a1cd509 registry: ratchet passport references against the open list
 706de357 Merge pull request #1536 from harrisonjrubin7-cmyk/claude/blissful-franklin-ixpmdc
 bde60fcd docs(strategy): add maturity registries and the 50-action backlog (#1578)
-b1d17c7a docs(registrar): record remote migration state in capability register (#1639)
 ```
 
 ## Resume
