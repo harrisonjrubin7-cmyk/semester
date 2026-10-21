@@ -669,7 +669,9 @@ describe('exports', () => {
     expect(csvCell('a,b')).toBe('"a,b"');
     expect(csvCell('say "hi"')).toBe('"say ""hi"""');
     expect(csvCell('=SUM(A1)')).toBe("'=SUM(A1)");
-    expect(csvCell('+1')).toBe("'+1");
+    expect(csvCell('+1')).toBe('+1');
+    expect(csvCell('-12.50')).toBe('-12.50');
+    expect(csvCell('-1+1')).toBe("'-1+1");
     expect(csvCell('@x')).toBe("'@x");
     expect(csvCell('plain')).toBe('plain');
     expect(csvCell(null)).toBe('');

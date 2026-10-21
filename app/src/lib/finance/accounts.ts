@@ -1,3 +1,5 @@
+import { csvCell } from '../csvcell';
+
 /**
  * Student accounts: a school's financial record of what each student owes and
  * has paid, kept under the controls the brief of 29 September asks for
@@ -263,8 +265,6 @@ export function statement(entries: readonly AccountEntry[], studentRef: string, 
   const opening = balance(before);
   return { number: `ST-${studentRef}-${period}`, student_ref: studentRef, period, opening_cents: opening, lines, closing_cents: opening + balance(lines) };
 }
-
-const csvCell = (s: string) => (/[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
 
 export function statementCsv(st: Statement): string {
   const rows = [

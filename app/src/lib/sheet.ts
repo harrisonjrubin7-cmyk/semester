@@ -46,6 +46,7 @@ import type { CondRule } from './condfmt';
 import type { DataRule } from './validate';
 import type { SheetFilter } from './filter';
 import type { Pivot } from './pivot';
+import { csvCell } from './csvcell';
 // The two factories that moved out of this file, so it can still use them —
 // and re-export them, below, beside the note saying why they left.
 import { NEW_COLS, NEW_ROWS, blankSheet } from './blank';
@@ -3650,7 +3651,7 @@ export function toCsv(rows: string[][]): string {
   return rows
     .map((row) =>
       row
-        .map((cell) => (/[",\n\r]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell))
+        .map(csvCell)
         .join(','),
     )
     .join('\r\n');

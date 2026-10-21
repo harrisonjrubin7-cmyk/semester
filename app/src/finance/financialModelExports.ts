@@ -2,6 +2,9 @@ import { FIELDS, GROUPS, START_MONTH } from './financialModelFields';
 import { scenarioById, type ScenarioSummary } from './financialModelScenarios';
 import { formatPct, formatPrice, formatUsdExact } from './financialModelFormat';
 import type { Assumptions, ModelResult, MonthRow, ScenarioId } from './financialModelTypes';
+import { csvCell } from '../lib/csvcell';
+
+export { csvCell };
 
 /**
  * Exports of the current scenario: CSV, JSON, Markdown, an assumptions prompt
@@ -20,13 +23,6 @@ export const SCHEMA = 'semester.gtm-financial-model.v1';
 
 // ── CSV ────────────────────────────────────────────────────────────────────
 
-/** Quote a cell, and defuse spreadsheet formulas in any text that begins like one. */
-export function csvCell(v: string | number | null): string {
-  if (v === null) return '';
-  if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '';
-  const guarded = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
-  return /[",\n\r]/.test(guarded) ? `"${guarded.replace(/"/g, '""')}"` : guarded;
-}
 
 const row = (cells: (string | number | null)[]) => cells.map(csvCell).join(',');
 const usd = (n: number) => Math.round(n);
