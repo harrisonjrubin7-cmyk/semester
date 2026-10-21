@@ -353,8 +353,8 @@ describe('the assistant button, and what it sits on', () => {
     // One per row editor — a task's and an appointment's.
     expect(mine.match(/data-danger=""/g) ?? []).toHaveLength(2);
     for (const label of [
-      '`Delete action ${t.title}: ${[',
-      '`Delete appointment ${a.title}: ${[',
+      '`Delete action ${position} of ${total}, ${t.title}: ${[',
+      '`Delete appointment ${position} of ${total}, ${a.title}: ${[',
     ]) {
       const at = mine.indexOf(label);
       expect(at, `${label} is still there`).toBeGreaterThan(-1);
