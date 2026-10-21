@@ -103,9 +103,13 @@ export function createProductionInstitutionRuntime(
     refreshIdentity: async (_identity, token) => authenticate(token),
     adapters,
     journal,
+    idempotency: journal,
     rateLimiter,
     intelligence,
     registrationReadiness,
+    // Match the long-running process: only the exact operator value `on`
+    // freezes writes, and the callback is re-read for every request.
+    readOnly: () => (env.SEMESTER_READ_ONLY || '').trim().toLowerCase() === 'on',
     readiness: () => institutionReadiness({
       journal,
       monitoringConfigured: env.SEMESTER_MONITORING_READY === '1',

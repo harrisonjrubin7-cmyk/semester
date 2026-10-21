@@ -1,0 +1,97 @@
+scenario_id,domain,scenario,details_basis,runner_binding,status
+D01-FLOW-01,Identity and onboarding,Cross-device persistence,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D01-FLOW-02,Identity and onboarding,Forged identity denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D01-FLOW-03,Identity and onboarding,SSO deactivation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D01-FLOW-04,Identity and onboarding,Export/erasure/legal hold,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D01-FLOW-05,Identity and onboarding,Interrupted sync retry,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D01-FLOW-06,Identity and onboarding,Scoped share revocation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-01,Planning and degree,Nested prerequisites,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-02,Planning and degree,Catalog-year change,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-03,Planning and degree,Transfer/substitution,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-04,Planning and degree,Schedule conflicts,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-05,Planning and degree,Record access revocation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D02-FLOW-06,Planning and degree,Official audit reconciliation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-01,Registration,Last-seat race,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-02,Registration,Idempotent replay,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-03,Registration,Timeout after commit,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-04,Registration,Eligibility change,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-05,Registration,Swap failure,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D03-FLOW-06,Registration,Kill queued commands,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-01,Courses and teaching,Draft visibility,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-02,Courses and teaching,Roster removal,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-03,Courses and teaching,Conflicting syllabus extraction,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-04,Courses and teaching,TA capabilities,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-05,Courses and teaching,Import conversion,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D04-FLOW-06,Courses and teaching,Archive/export,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-01,Assignments and work,Canonical deadline,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-02,Assignments and work,Interrupted submission,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-03,Assignments and work,Offline conflicts,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-04,Assignments and work,Stable nested-tab links,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-05,Assignments and work,Selective sharing,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D05-FLOW-06,Assignments and work,Tree keyboard navigation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-01,Study and tutoring,Grounded answers,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-02,Study and tutoring,Retrieved prompt injection,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-03,Study and tutoring,Course AI restriction,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-04,Study and tutoring,Booking race,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-05,Study and tutoring,Timezone reschedule,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D06-FLOW-06,Study and tutoring,Tutor escalation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-01,Grades and progress,Weighted grade fixtures,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-02,Grades and progress,Unauthorized release,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-03,Grades and progress,Passback replay/order,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-04,Grades and progress,Approved corrections,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-05,Grades and progress,Private/official labels,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D07-FLOW-06,Grades and progress,N-1 compatibility,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-01,Advising and support,Caseload denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-02,Advising and support,Share expiry,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-03,Advising and support,Case reassignment,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-04,Advising and support,Backup escalation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-05,Advising and support,Sensitive record exclusion,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D08-FLOW-06,Advising and support,Referral closeout/export,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-01,Career and portfolio,Selective publication,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-02,Career and portfolio,Employer revoke,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-03,Career and portfolio,Posting review,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-04,Career and portfolio,Export fidelity,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-05,Career and portfolio,Credential tampering,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D09-FLOW-06,Career and portfolio,Mentor deauthorization,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-01,Campus and community,Nonmember denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-02,Campus and community,Block consistency,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-03,Campus and community,Report escalation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-04,Campus and community,Appeals,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-05,Campus and community,Event changes,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D10-FLOW-06,Campus and community,Safe pseudonymity rollback,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-01,"Housing, dining, services",Allocation race,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-02,"Housing, dining, services",Duplicate orders,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-03,"Housing, dining, services",Provider uncertain outcome,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-04,"Housing, dining, services",Kill with refund path,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-05,"Housing, dining, services",Residence privacy,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D11-FLOW-06,"Housing, dining, services",Database/file restore,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-01,Money and finance,Webhook replay/order,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-02,Money and finance,Renewal failure,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-03,Money and finance,Refund/dispute,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-04,Money and finance,Financial owner forgery,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-05,Money and finance,Provider/ERP reconcile,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D12-FLOW-06,Money and finance,Checkout approval denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-01,Institution OS,Provision/deprovision,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-02,Institution OS,Two-person approval,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-03,Institution OS,Workflow retry,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-04,Institution OS,Dual run,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-05,Institution OS,Core held mode,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D13-FLOW-06,Institution OS,Offboarding,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-01,Company OS,Quote change reapproval,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-02,Company OS,Invoice reconciliation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-03,Company OS,Student-record denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-04,Company OS,Monthly close,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-05,Company OS,Backup paging,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D14-FLOW-06,Company OS,Claim approval,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-01,Developer and partner,Token/scope denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-02,Developer and partner,Webhook forgery/replay,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-03,Developer and partner,Sandbox separation,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-04,Developer and partner,Key revoke,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-05,Developer and partner,Version compatibility,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D15-FLOW-06,Developer and partner,Scope expansion approval,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-01,Governed AI,All-callsite gateway,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-02,Governed AI,Restricted-data denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-03,Governed AI,Injection/action denial,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-04,Governed AI,Budget race,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-05,Governed AI,Global/tenant kill,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN
+D16-FLOW-06,Governed AI,Invalid citations,Prior completion kit/conversation; bind approved fixtures and exact UI/API/DB assertions,UNBOUND,NOT RUN

@@ -1,0 +1,11 @@
+layer,name,scope
+1,Identity and authority,Existing grants and scope isolation
+2,Canonical business graph,Stable customer/deal/contract/task IDs
+3,Document/obligation lifecycle,Versioned terms and approval
+4,Controlled workflow engine,Fourteen-check proposed contract
+5,Commercial and finance,Catalog/invoice/ledger/rail
+6,Delivery/customer lifecycle,Implementation/support/renewal
+7,People/vendor/partner,Onboarding/risk/offboarding
+8,Reliability/security/privacy,Incident/restore/rights
+9,Analytics/reporting/governance,Immutable audience snapshots
+10,Master Control/agents,Registry and bounded oversight

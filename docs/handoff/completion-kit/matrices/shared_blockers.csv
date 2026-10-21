@@ -1,0 +1,11 @@
+id,blocker,affected_scope,closure_work,owner,gate
+B01,Unverified candidate and hosted target,All,Pin exact release; map hosting/service/DB targets; collect fingerprints,Engineering / Release,G-DEP-01
+B02,Incomplete server authorization and tenant negatives,All data-bearing domains,Enforce PDP at every entry; DB grants/definers/runtime-role review; negative suites,Security / Backend,G-IMP-02
+B03,Local/blob/duplicate record paths,Most product domains,Canonical per-entity storage; migration; governed offline recovery; retire duplicates,Data / Product,G-IMP-03
+B04,Adapters and async execution not proven live,Connected domains; platform foundation,Approved adapters; outbox publisher; DLQ; health/reconcile; source authority,Integrations,FLOW / G-DEP-02
+B05,AI bypass and absent runtime broker/evaluation gates,AI consumers across domains,Single policy gateway; broker; budget; classification; all-callsite tests,AI / Security,D16-FLOW-01
+B06,Qualified accessibility acceptance absent in baseline,All user-facing domains,Manual AT and complete-journey review; remediation/retest; accurate ACR,Accessibility,G-TST-02
+B07,"Staffing, support and paging not evidenced",All operated services,Named primary and backup; actual alert delivery and drills,Operations,G-PRD-04
+B08,Recovery/rollback/privacy operation not proved for candidate,All durable services,Rehearse N-1 compatibility; database+objects restore; rights/offboarding,Reliability / Privacy,G-PRD-03/05
+B09,Institution/commercial authority and claim conflicts,"Institutional, paid and authoritative operations",Resolve executed papers and authority; scope UAT; no unsupported claims,Founder / Counsel / Customer,G-AUT-01
+B10,Registers stale or inconsistent,All,Reconcile 21 screenshot flags with 28 source entries; broader inventories; timestamp evidence,Product / Engineering,G-DES-01

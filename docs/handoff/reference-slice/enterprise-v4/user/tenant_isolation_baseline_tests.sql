@@ -1,0 +1,24 @@
+-- Sandbox only. pgTAP in public; fixture administrator can bypass RLS.
+BEGIN;
+SET LOCAL search_path=public,semester;
+CREATE EXTENSION IF NOT EXISTS pgtap;
+SELECT plan(10);
+SELECT ok(NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='semester' AND c.relkind IN ('r','p') AND NOT c.relrowsecurity),'All domain tables enable RLS');
+SELECT ok(NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='semester' AND c.relkind IN ('r','p') AND NOT c.relforcerowsecurity),'All domain tables force RLS');
+SELECT ok(NOT EXISTS(SELECT 1 FROM pg_constraint fk JOIN pg_class c ON c.oid=fk.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE fk.contype='f' AND n.nspname='semester' AND EXISTS(SELECT 1 FROM pg_attribute a WHERE a.attrelid=fk.confrelid AND a.attname='tenant_id' AND NOT a.attisdropped) AND NOT EXISTS(SELECT 1 FROM unnest(fk.conkey,fk.confkey) AS k(cn,pn) JOIN pg_attribute ca ON ca.attrelid=fk.conrelid AND ca.attnum=k.cn JOIN pg_attribute pa ON pa.attrelid=fk.confrelid AND pa.attnum=k.pn WHERE ca.attname='tenant_id' AND pa.attname='tenant_id')),'Tenant-owned foreign keys include tenant_id');
+SELECT ok(EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='semester.housing_allocations'::regclass AND conname='housing_bed_overlap' AND contype='x'),'Bed overlap exclusion exists');
+INSERT INTO semester.institutions(id,name,slug,default_timezone,status) VALUES ('10000000-0000-0000-0000-000000000001','A','isolation-a','America/Chicago','active'),('20000000-0000-0000-0000-000000000002','B','isolation-b','America/Chicago','active');
+INSERT INTO semester.people(tenant_id,id,preferred_name,status) VALUES('20000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000003','B person','active');
+CREATE ROLE semester_isolation_probe NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
+GRANT USAGE ON SCHEMA semester,public TO semester_isolation_probe;
+GRANT SELECT ON semester.people,semester.housing_applications,semester.dining_plan_enrollments TO semester_isolation_probe;
+SELECT ok(NOT(SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='semester_isolation_probe'),'Probe cannot bypass RLS');
+SET LOCAL ROLE semester_isolation_probe;
+SELECT is((SELECT count(*) FROM semester.people),0::bigint,'Default deny hides people');
+SELECT is((SELECT count(*) FROM semester.housing_applications),0::bigint,'Default deny hides housing');
+SELECT is((SELECT count(*) FROM semester.dining_plan_enrollments),0::bigint,'Default deny hides dining');
+SELECT throws_ok($q$INSERT INTO semester.people(tenant_id,preferred_name,status) VALUES('10000000-0000-0000-0000-000000000001','Unauthorized','active')$q$,'42501',NULL,'Unauthorized insert denied');
+RESET ROLE;
+SELECT throws_ok($q$INSERT INTO semester.billing_charges(tenant_id,person_id,amount_minor,currency,status) VALUES('10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000003',100,'USD','pending')$q$,'23503',NULL,'Cross-tenant person reference rejected');
+SELECT * FROM finish();
+ROLLBACK;

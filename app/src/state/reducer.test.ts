@@ -1157,6 +1157,46 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a dismissed suggestion without reverting other work', () => {
+    const wanted: State['wanted'] = {
+      year: 'third',
+      fields: ['public service'],
+      dismissed: ['older-programme'],
+    };
+    const s: State = { ...blank(), wanted };
+
+    const gone = reducer(s, { type: 'dismissProgramme', id: 'new-programme' });
+    expect(gone.wanted).toEqual({
+      ...wanted,
+      dismissed: ['older-programme', 'new-programme'],
+    });
+    expect(gone.undone?.label).toBe('Suggestion dismissed');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.wanted).toEqual(wanted);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores one deleted reminder rule without reverting later work', () => {
+    const rules: State['myRules'] = [
+      { id: 'rule-one', watches: 'deadline', days: 3, hour: 9, courseId: '', on: true },
+      { id: 'rule-two', watches: 'exam', days: 1, hour: 8, courseId: 'econ', on: true },
+    ];
+    const s: State = { ...blank(), myRules: rules };
+
+    const gone = reducer(s, { type: 'deleteMyRule', id: 'rule-one' });
+    expect(gone.myRules).toEqual([rules[1]]);
+    expect(gone.undone?.label).toBe('Reminder rule deleted');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.myRules).toEqual(rules);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();
@@ -1318,6 +1358,63 @@ describe('editTask', () => {
   it('does nothing at all for an id that is not there', () => {
     const s = withTask();
     expect(reducer(s, { type: 'editTask', id: 'gone', patch: { title: 'x' } }).tasks).toEqual(s.tasks);
+  });
+});
+
+describe('a calendar feed, refreshed and failed', () => {
+  /*
+   * Phase 2 hardening, two of the eight: a duplicate source event does not
+   * multiply tasks, and a failed import creates no deadlines. A feed is the
+   * source that is refreshed most often, so it is where both would show.
+   */
+  const event = (id: string, title = 'Lecture') => ({
+    id, sourceId: '', title, date: '2026-09-02', at: 540, time: '09:00', where: '', kind: 'class',
+  }) as never;
+  const feedOf = (s: State) => s.feeds[0];
+  const withFeed = () =>
+    reducer(blank(), {
+      type: 'addFeed',
+      feed: { name: 'Canvas', url: 'https://lms.example/feed.ics', status: 'ok', count: 2, synced: 0 } as never,
+      events: [event('a'), event('b')],
+    });
+
+  it('stamps every event with the feed it came from', () => {
+    const s = withFeed();
+    expect(s.feedEvents).toHaveLength(2);
+    expect(new Set(s.feedEvents.map((e) => e.sourceId))).toEqual(new Set([feedOf(s).id]));
+  });
+
+  it('refreshing replaces the feed\'s events rather than adding them again', () => {
+    let s = withFeed();
+    const id = feedOf(s).id;
+    // The same two events, one retitled, arrive a second and a third time.
+    s = reducer(s, { type: 'syncFeed', id, status: 'ok', events: [event('a'), event('b', 'Lecture (moved)')] });
+    s = reducer(s, { type: 'syncFeed', id, status: 'ok', events: [event('a'), event('b', 'Lecture (moved)')] });
+    expect(s.feedEvents, 'a second copy of the events').toHaveLength(2);
+    expect(s.feedEvents.find((e) => e.id === 'b')?.title).toBe('Lecture (moved)');
+    expect(feedOf(s).count).toBe(2);
+  });
+
+  it('leaves another feed\'s events alone when one is refreshed', () => {
+    let s = withFeed();
+    s = reducer(s, {
+      type: 'addFeed',
+      feed: { name: 'Club', url: 'https://club.example/feed.ics', status: 'ok', count: 1, synced: 0 } as never,
+      events: [event('club-1', 'Meeting')],
+    });
+    const [first, second] = s.feeds;
+    s = reducer(s, { type: 'syncFeed', id: first.id, status: 'ok', events: [] });
+    expect(s.feedEvents.map((e) => e.sourceId)).toEqual([second.id]);
+    expect(s.feedEvents[0].title).toBe('Meeting');
+  });
+
+  it('a failed refresh records the failure and adds or removes nothing', () => {
+    let s = withFeed();
+    const before = s.feedEvents;
+    s = reducer(s, { type: 'failFeed', id: feedOf(s).id, status: 'The feed could not be read (HTTP 500).' });
+    expect(s.feedEvents).toBe(before);
+    expect(feedOf(s).status).toBe('The feed could not be read (HTTP 500).');
+    expect(feedOf(s).count).toBe(2);
   });
 });
 

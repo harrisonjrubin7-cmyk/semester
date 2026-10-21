@@ -410,6 +410,88 @@ export async function loadCommandCenter(includeDemo = false): Promise<CommandIte
   return rows(data).map(readCommandItem);
 }
 
+// ── projection health ──────────────────────────────────────────────────────
+
+export interface ProjectionHealth {
+  projection: string;
+  version: number;
+  freshness: ProjectionFreshness;
+  freshnessSloSeconds: number;
+  workerStatus: string;
+  lastEventAt: string | null;
+  lagSeconds: number | null;
+  /** `null` when no outbox event type is mapped to the model: unknown, never zero. */
+  eventsBehind: number | null;
+  oldestPendingSeconds: number | null;
+  deadLetters: number | null;
+  lastError: string | null;
+  lastRebuild: { status: string; mode: string; finishedAt: string | null; parityOk: boolean | null } | null;
+  eventSourceMapped: boolean;
+}
+
+export interface ProjectionDashboard {
+  freshness: ProjectionFreshness;
+  generatedAt: string;
+  activeModels: number;
+  eventSourcesMapped: number;
+  projections: ProjectionHealth[];
+  warnings: string[];
+}
+
+const FRESHNESS: readonly ProjectionFreshness[] = ['fresh', 'stale', 'failed', 'unknown'];
+// An unreadable freshness is `unknown`, which is never healthy.
+const freshness = (v: unknown): ProjectionFreshness => (FRESHNESS.includes(v as ProjectionFreshness) ? (v as ProjectionFreshness) : 'unknown');
+const count = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+export function readProjectionHealth(r: Row): ProjectionHealth {
+  const rebuild = r.lastRebuild && typeof r.lastRebuild === 'object' ? (r.lastRebuild as Row) : null;
+  return {
+    projection: text(r.projection),
+    version: count(r.version) ?? 0,
+    freshness: freshness(r.freshness),
+    freshnessSloSeconds: count(r.freshnessSloSeconds) ?? 0,
+    workerStatus: text(r.workerStatus) || 'unknown',
+    lastEventAt: maybe(r.lastEventAt),
+    lagSeconds: count(r.lagSeconds),
+    eventsBehind: count(r.eventsBehind),
+    oldestPendingSeconds: count(r.oldestPendingSeconds),
+    deadLetters: count(r.deadLetters),
+    lastError: maybe(r.lastError),
+    lastRebuild: rebuild
+      ? { status: text(rebuild.status), mode: text(rebuild.mode), finishedAt: maybe(rebuild.finishedAt), parityOk: typeof rebuild.parityOk === 'boolean' ? rebuild.parityOk : null }
+      : null,
+    eventSourceMapped: r.eventSourceMapped === true,
+  };
+}
+
+export function readProjectionDashboard(envelope: unknown): ProjectionDashboard {
+  const e = (envelope && typeof envelope === 'object' ? envelope : {}) as Row;
+  const data = (e.data && typeof e.data === 'object' ? e.data : {}) as Row;
+  const meta = (e.meta && typeof e.meta === 'object' ? e.meta : {}) as Row;
+  const coverage = (meta.coverage && typeof meta.coverage === 'object' ? meta.coverage : {}) as Row;
+  return {
+    freshness: freshness(meta.freshness),
+    generatedAt: text(meta.generatedAt),
+    activeModels: count(coverage.activeModels) ?? 0,
+    eventSourcesMapped: count(coverage.eventSourcesMapped) ?? 0,
+    projections: rows(data.projections).map(readProjectionHealth),
+    warnings: strings(e.warnings),
+  };
+}
+
+/**
+ * Per read model: computed freshness, backlog, dead letters, last sanitized
+ * error and last rebuild. The database refuses anyone without `console:operate`
+ * at platform scope (and a platform seat needs a fresh aal2 session), so a
+ * refusal arrives here as a thrown message, never as an empty dashboard.
+ */
+export async function loadProjectionDashboard(): Promise<ProjectionDashboard> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('ops_projection_dashboard');
+  if (error) throw new Error(message(error, 'Could not read projection health.'));
+  return readProjectionDashboard(data);
+}
+
 // ── customers ──────────────────────────────────────────────────────────────
 
 export interface CustomerCommitment {

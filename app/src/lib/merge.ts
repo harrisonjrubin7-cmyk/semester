@@ -138,6 +138,9 @@ export const STRATEGY: Record<string, Strategy> = {
   payments: 'union',
   balances: 'union',
   residences: 'union',
+  // Each request stamps `updated` on every move, so where two devices both
+  // changed one, the later change is the one kept.
+  maintenance: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',
@@ -395,6 +398,9 @@ export const STRATEGY: Record<string, Strategy> = {
   sample: 'theirs',
   term: 'theirs',
   seenOnboarding: 'theirs',
+  // The step an interrupted onboarding reached travels with the flag, so a
+  // second device picks it up where the first one stopped.
+  onb: 'theirs',
   // Whether this person has an account at all. `theirs` reads oddly for a flag
   // that only ever becomes true — but a copy arriving from the account is by
   // definition a copy from an account, so the value it carries is true and the

@@ -70,6 +70,10 @@ Nothing here changes a surface's behaviour. Each is an item with an owner.
 | Q-1 | The moderators' queue is newest first within a status, so the oldest open reports are read last. |
 | CA-1 | Camera-off participants sink below camera-on ones in the call gallery. |
 | O-1 | The assignment order adds a point for institution-verified dates and removes one for dates that need review, a bounded tilt toward better-integrated institutions (the same shape as A-1). |
+| P-1 | Drafted by Claude Code, not yet read by the named reviewer, so the `rank` review is not yet a review. |
+| P-2 | Ranking by origin means the school’s integration status decides which copy of a fact a student sees. |
+| N-1 | Drafted by Claude Code, not yet read by the named reviewer, so the `order` review is not yet a review. |
+| N-2 | An undated item scores as if it were fourteen days away, and nothing tells the student the list is built on missing dates. |
 
 ## Governance decisions
 

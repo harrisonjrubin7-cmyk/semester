@@ -80,9 +80,17 @@ override.tf.json
 app/reports/
 
 # Auto-saved session checkpoint (regenerated on every stop; not source)
+# Local memory-tool snapshot
 .anchor/
 
 # Local Claude Code and tooling config, not shared with the repository
 .claude/CLAUDE.md
 .claude/settings.json
 .claudeignore
+
+# Local tool caches written by the md-linker plugin.
+.md-linker/
+
+# Course Engine browser evidence is uploaded by CI, not committed.
+course-engine/apps/web/playwright-report/
+course-engine/apps/web/test-results/

@@ -150,10 +150,38 @@ describe('with graduation_simulator on', () => {
     expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b' });
     expect(text()).toContain('Saved to your account as an estimate.');
     act(() => button(/^Remove from account$/)!.click());
+    const removalDialog = host.querySelector('[role="dialog"]')!;
+    expect(removalDialog.textContent).toContain('Deletes this estimated scenario draft from your signed-in account');
+    expect(removalDialog.textContent).toContain('The scenario on this device, other account drafts, downloaded summaries and the registrar’s official degree audit stay unchanged');
+    expect(removalDialog.textContent).toContain('This account copy cannot be restored after deletion');
+    expect(removed).toHaveLength(0);
     const confirmRemove = [...host.querySelectorAll('[role="dialog"] button')].find((b) => b.textContent === 'Remove from account') as HTMLButtonElement;
     await act(async () => confirmRemove.click());
     expect(removed).toEqual(['0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b']);
     expect(stored().scenarios[0].cloudIds).toBeUndefined();
+  });
+
+  it('keeps a failed account-draft deletion available to retry without changing the device copy', async () => {
+    const cloudMod = await import('../lib/graduation-cloud');
+    vi.mocked(cloudMod.deleteDraft).mockRejectedValueOnce(new Error('service unavailable'));
+    mount({ simulator: true, costs: false, accountId: 'user-1' });
+    choose('minor');
+    act(() => button(/^Save draft to your account$/)!.click());
+    await act(async () => button(/^Save to account$/)!.click());
+
+    act(() => button(/^Remove from account$/)!.click());
+    const confirmRemoval = () => [...host.querySelectorAll('[role="dialog"] button')]
+      .find((candidate) => candidate.textContent === 'Remove from account') as HTMLButtonElement;
+    await act(async () => confirmRemoval().click());
+
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(text()).toContain('could not be removed from your account: service unavailable');
+    expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b' });
+
+    await act(async () => confirmRemoval().click());
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(stored().scenarios[0].cloudIds).toBeUndefined();
+    expect(text()).toContain('removed from your account. It is still on this device.');
   });
 
   it('never tells another account on this device that the draft is in theirs', async () => {
@@ -258,5 +286,67 @@ describe('with cost_planner on', () => {
     expect(text()).toContain('Copied from');
     expect(text()).toContain('Copied on');
     expect(host.querySelector('[data-source="institution_verified"]')).toBeNull();
+  });
+
+  it('previews one cost-line removal and changes totals only after confirmation', () => {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify({
+      ...PLAN,
+      plan: {
+        ...PLAN.plan,
+        costLines: [
+          { id: 'tuition', label: 'Tuition', amount: 18_000, per: 'term', source: 'imported', from: 'Cost of attendance', on: '2026-08-01' },
+          { id: 'housing', label: 'Housing', amount: 5_000, per: 'term', source: 'student_entered' },
+        ],
+        costPerTerm: 23_000,
+        summerCost: 0,
+      },
+    }));
+    mount({ simulator: false, costs: true });
+
+    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Remove this cost estimate?');
+    expect(dialog.textContent).toContain('Tuition · $18,000 each fall or spring term');
+    expect(dialog.textContent).toContain('The other cost lines, graduation scenarios, downloaded copies, financial-aid records and the registrar’s official degree audit stay unchanged');
+    expect(dialog.textContent).toContain('A device-workspace backup created before removal can restore the graduation plan; otherwise add this estimate again');
+    expect(stored().plan.costLines).toHaveLength(2);
+    expect(document.activeElement?.textContent).toBe('Cancel');
+
+    act(() => button(/^Remove cost$/)!.click());
+
+    expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['housing']);
+    expect(stored().plan.costPerTerm).toBe(5_000);
+    expect(text()).toContain('“Tuition” removed from this device. Your estimated fall or spring total is now $5,000.');
+  });
+
+  it('keeps a refused cost-line removal represented for retry', () => {
+    localStorage.setItem(GRADUATION_KEY, JSON.stringify({
+      ...PLAN,
+      plan: {
+        ...PLAN.plan,
+        costLines: [{ id: 'tuition', label: 'Tuition', amount: 18_000, per: 'term', source: 'student_entered' }],
+        costPerTerm: 18_000,
+        summerCost: 0,
+      },
+    }));
+    const real = Storage.prototype.setItem;
+    const refused = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(function (this: Storage, key: string, value: string) {
+      if (key === GRADUATION_KEY) throw new Error('device full');
+      return real.call(this, key, value);
+    });
+    onTestFinished(() => refused.mockRestore());
+    mount({ simulator: false, costs: true });
+    act(() => (host.querySelector('button[aria-label="Remove Tuition"]') as HTMLButtonElement).click());
+
+    act(() => button(/^Remove cost$/)!.click());
+
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(stored().plan.costLines?.map((line) => line.id)).toEqual(['tuition']);
+    expect(text()).toContain('“Tuition” could not be removed from this device. Retry or cancel.');
+
+    act(() => button(/^Remove cost$/)!.click());
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(stored().plan.costLines).toEqual([]);
   });
 });

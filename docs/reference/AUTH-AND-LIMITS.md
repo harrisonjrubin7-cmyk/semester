@@ -75,11 +75,11 @@ curl -s 'http://127.0.0.1:8787/status' \
 
 The gateway never trusts anything the client says about who it is. Three facts are used, and none comes from the request body, a header other than `Authorization`, or the browser:
 
-- **The token.** A Supabase Auth access token, sent as `Authorization: Bearer <token>`. The gateway does not decode it. It asks the auth service about it (`auth.getUser`) on every request, so a revoked token or a deleted account stops working at once. The client used for this keeps no session and refreshes nothing.
+- **The token.** A Supabase Auth access token, sent as `Authorization: Bearer <token>`. The gateway asks the auth service about the exact token (`auth.getUser`) on every request, so a revoked token or a deleted account stops working at once. Only after that validation succeeds does it decode the signed `exp` claim, solely to carry the session expiry forward; identity, tenant and roles are never decoded from claims. A missing, malformed or expired `exp` fails closed before membership resolution. The client used for this keeps no session and refreshes nothing.
 - **The sign-in route.** The validated user must have signed in through a single sign-on provider: `app_metadata.provider` must start with `sso:` and the user must have an email address. A user who signed in another way has no identity here.
 - **A current membership.** `membership.ts` looks up the provider by its identifier and requires exactly one, with status `authorized`. It then requires exactly one membership for that user, tenant and provider, with status `active`, and roles that are all in the [role list](API-GATEWAY.md#roles). If the user has no membership yet, the lookup tries to bind one by user name through the database function `bind_institution_sso_membership`. Every outcome, accepted or denied, is written to the process log as an `institution.authorization` JSON line with a reason such as `missing-provider`, `ambiguous-membership` or `membership-not-active`. The reason is not returned to the caller.
 
-The result is an identity of three fields: `userId`, `institutionId` and `roles`. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
+The result carries `userId`, `institutionId` and `roles`, plus the authoritative membership row id and the validated session expiry. The institution id picks the adapter, so there is no request input that selects an adapter. `user_metadata` and a stale `app_metadata.semester` role claim play no part. `trustedIdentity` in `auth.ts`, which reads `app_metadata.semester`, is a fixture helper for tests; neither entry point calls it.
 
 The gateway also has an additive `contextForSelection` adapter for a future
 multi-membership flow. It accepts a requested membership and workspace, but derives the
@@ -87,9 +87,27 @@ tenant, person, institution, role-grant identifiers and expiry only from a direc
 server has already verified. It refuses a directory whose person or institution differs
 from the authenticated identity, and a conflicting `X-Tenant-Id` remains a
 `tenant_mismatch`. The selected membership becomes the request context's membership and
-its expiry caps the request's role grants. No current authentication result supplies the
-directory and session-expiry input, and no route calls this adapter; it is not a live
-workspace-switching API or a client contract.
+its expiry caps the request's role grants. Authentication supplies the verified
+membership id and session expiry. `contextDirectoryForVerifiedIdentity` can assemble
+the one active membership that production authentication actually proved and authorize
+only its role-derived workspace set: student, staff, institution, or external. No current
+membership role can manufacture company, operations, or developer access.
+`createContextDirectoryLoader` is the additive server-side expansion: it queries
+`institution_membership` only by the remotely verified auth user id, caps the result at
+100 rows, omits inactive rows, and refuses the whole directory unless the membership used
+for authentication is still active with the same tenant and roles. Every included row
+must have valid server ids, belong to that account, and contain only known institution
+roles. `createContextActivationRequester` can resolve an explicitly confirmed membership
+and workspace only after this fresh reload, but returns an `ActiveContext` rather than a
+gateway `RequestContext`. `createVerifiedContextActivationRequester` additionally returns
+an immutable, server-only authority record for the selected membership: its membership,
+person, tenant and provider ids plus roles copied from the same freshly reloaded row. That
+record is evidence for a later authorization boundary, not an authorization decision. No
+route calls these functions, and
+`contextForVerifiedSelection` still builds only the currently authenticated institution's
+single-membership directory. This is therefore not a live cross-institution request
+context, workspace-switching API, UI, client contract, adapter selection, or authorization
+grant.
 
 Both entry points re-run the token check at the moment of a commit (and of an intelligence confirm) and require the same user and institution as before. If the answer changed, the commit is `403 forbidden` ("Your current university access does not permit this action.").
 
@@ -161,7 +179,7 @@ curl -s -X OPTIONS 'http://127.0.0.1:8787/records' \
 access-control-allow-headers: Authorization, Content-Type, Idempotency-Key, X-Correlation-Id
 access-control-allow-methods: GET, POST, OPTIONS
 access-control-allow-origin: http://localhost:5173
-access-control-expose-headers: X-Request-Id, X-Correlation-Id
+access-control-expose-headers: X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After
 cache-control: no-store
 content-type: application/json
 vary: Origin
@@ -186,7 +204,7 @@ curl -s 'http://127.0.0.1:8787/health/live' \
 
 ```http
 access-control-allow-origin: http://localhost:5173
-access-control-expose-headers: X-Request-Id, X-Correlation-Id
+access-control-expose-headers: X-Request-Id, X-Correlation-Id, Idempotent-Replayed, Retry-After
 cache-control: no-store
 content-type: application/json
 vary: Origin
@@ -327,7 +345,7 @@ Read-only mode lets an operator freeze writes for maintenance while reads go on.
 
 Reconcile stays open on purpose. It does not act at the institution; it asks what already happened to an action whose outcome is unknown. Refusing it would leave that person's action stuck at `uncertain` for the whole window.
 
-Read-only mode is wired only into `start.ts`. It reads `SEMESTER_READ_ONLY` on every request, accepts `on` in any letter case with surrounding spaces removed, and needs no restart to end. The Vercel runtime does not read `SEMESTER_READ_ONLY`, so on that entry point the variable has no effect. The test holds this; if the runtime is wired later, update this page and [`FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md), which currently names only `start.ts`.
+Both `start.ts` and the Vercel runtime read `SEMESTER_READ_ONLY` through a callback on every request. They accept `on` in any letter case with surrounding spaces removed; any other value turns the gateway control off. The callback does not cache the value. Changing a hosted Vercel environment variable can still require a redeploy or process restart before that runtime's environment object receives the new value.
 
 <!-- example:read-only-prepare -->
 **Request**
@@ -443,6 +461,6 @@ Names only. Values are secrets or deployment choices and never belong in the rep
 | `SEMESTER_JOURNAL_PATH` | `start.ts` | SQLite journal file, default `work/university/private/actions.sqlite`. |
 | `SEMESTER_SANDBOX_INSTITUTION` | `start.ts` | `1` installs the sandbox adapters. |
 | `SEMESTER_SANDBOX_PATH` | `start.ts` | Sandbox SQLite file, default `work/university/private/sandbox.sqlite`. |
-| `SEMESTER_READ_ONLY` | `start.ts` | `on` turns read-only mode on ([above](#read-only-mode)). |
+| `SEMESTER_READ_ONLY` | Both | `on` turns read-only mode on ([above](#read-only-mode)); each request re-reads the runtime environment object. |
 
 The app's own browser setting for the gateway address, `VITE_UNIVERSITY_GATEWAY_URL`, is in `app/.env.example`; the gateway does not read it.

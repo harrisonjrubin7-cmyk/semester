@@ -314,23 +314,26 @@ export interface Write {
  * between two writes sees the state before or the state after, never a course
  * that exists with its deadlines missing.
  */
-export function write(writes: Write[]): Promise<boolean> {
+export function write(writes: Write[], signal?: AbortSignal): Promise<boolean> {
   return new Promise((resolve) => {
+    if (signal?.aborted) {
+      resolve(false);
+      return;
+    }
     if (!db || writes.length === 0) {
       resolve(writes.length === 0);
       return;
     }
-    const wanted = [...new Set(writes.map((w) => w.store))];
-    const stores = wanted.filter((s) => db?.objectStoreNames.contains(s));
+    const stores = [...new Set(writes.map((w) => w.store))];
     /*
-     * A store the database does not have is a row that is not being kept, and
-     * saying so is the whole of what this file owes the caller. `open` makes
-     * every store this build needs, so reaching here means that upgrade could
-     * not run — and the rest of the batch is still written, because half an
-     * account saved beats none. `false` is about the part that was not.
+     * Refuse before opening a transaction unless every requested store exists.
+     * Journal-bearing remote writes include their rollback marker in this
+     * batch; committing the stores that happen to exist could otherwise delete
+     * the only retry identity while leaving a partly restored account behind.
+     * `open` normally creates every store, so this is the fail-closed path
+     * after an upgrade was blocked or exhausted its retries.
      */
-    const dropped = stores.length < wanted.length;
-    if (stores.length === 0) {
+    if (stores.some((store) => !db?.objectStoreNames.contains(store))) {
       resolve(false);
       return;
     }
@@ -338,10 +341,24 @@ export function write(writes: Write[]): Promise<boolean> {
       const database = db;
       const t = database.transaction(stores, 'readwrite');
       let answered = false;
+      const abort = () => {
+        try {
+          t.abort();
+        } catch {
+          /*
+           * IndexedDB marks a transaction finished before it delivers the
+           * completion event. An abort in that narrow window cannot undo the
+           * commit, so wait for oncomplete and report what actually landed.
+           * The caller's rollback journal then restores the prior snapshot.
+           */
+          return;
+        }
+      };
       const finish = (ok: boolean) => {
         if (answered) return;
         answered = true;
         clearTimeout(limit);
+        signal?.removeEventListener('abort', abort);
         resolve(ok);
       };
       const limit = setTimeout(() => {
@@ -349,13 +366,18 @@ export function write(writes: Write[]): Promise<boolean> {
         abandon(database);
         finish(false);
       }, TRANSACTION_LIMIT_MS);
+      signal?.addEventListener('abort', abort, { once: true });
+      if (signal?.aborted) {
+        abort();
+        return;
+      }
       for (const w of writes) {
         if (!stores.includes(w.store)) continue;
         const s = t.objectStore(w.store);
         if (w.value === null) s.delete(w.key);
         else s.put(w.value, w.key);
       }
-      t.oncomplete = () => finish(!dropped);
+      t.oncomplete = () => finish(true);
       t.onerror = () => finish(false);
       t.onabort = () => finish(false);
     } catch {
@@ -376,22 +398,29 @@ export async function isEmpty(): Promise<boolean | null> {
 }
 
 /** For tests and for "delete everything on this device". */
-export async function wipe(collections: string[]): Promise<void> {
+export async function wipe(collections: string[]): Promise<boolean> {
+  let complete = true;
   for (const store of [MAPS_STORE, SETTINGS_STORE, ...collections]) {
-    await write([]).catch(() => false);
-    await new Promise<void>((resolve) => {
-      if (!db || !db.objectStoreNames.contains(store)) {
-        resolve();
+    const cleared = await new Promise<boolean>((resolve) => {
+      if (!db) {
+        resolve(false);
+        return;
+      }
+      if (!db.objectStoreNames.contains(store)) {
+        resolve(true);
         return;
       }
       try {
         const t = db.transaction(store, 'readwrite');
         t.objectStore(store).clear();
-        t.oncomplete = () => resolve();
-        t.onerror = () => resolve();
+        t.oncomplete = () => resolve(true);
+        t.onerror = () => resolve(false);
+        t.onabort = () => resolve(false);
       } catch {
-        resolve();
+        resolve(false);
       }
     });
+    complete &&= cleared;
   }
+  return complete;
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Notice } from './ui';
+import { PermissionState } from './unity/States';
 import type { ModuleGate } from '../lib/modulegate';
 
 /**
@@ -35,36 +36,40 @@ export function ModuleGateState({
       return <p role="status">Checking whether your school has {what} turned on…</p>;
     case 'off':
       return <Notice>{off}</Notice>;
+    case 'offline':
+      return (
+        <>
+          <p role="status">You are offline. {what[0]?.toUpperCase()}{what.slice(1)} needs a connection, so nothing was sent or changed.</p>
+          <button type="button" className="btn" onClick={gate.retry}>
+            Check connection again
+          </button>
+        </>
+      );
     case 'stopped':
       return (
-        <Notice alert>
-          Your school has paused {what} in Semester for now ({gate.switch}), so nothing here can be changed. Your
-          school’s administrators lift the pause; until then, use your school’s own system.
-        </Notice>
+        <PermissionState
+          title={`Your school has paused ${what}.`}
+          body={`Nothing here can be changed while ${gate.switch} is engaged. Until the pause is lifted, use your school’s own system.`}
+          owner="your school’s administrators"
+        />
       );
     case 'signed_out':
       return (
-        <>
-          <Notice>
-            Sign in with your school account to use {what}. It shows your own records, so Semester needs to know who you are
-            first.
-          </Notice>
-          <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'account' })}>
-            Open your account
-          </button>
-        </>
+        <PermissionState
+          title={`Sign in with your school account to use ${what}.`}
+          body="This area shows your own records, so Semester needs to know who you are first."
+          owner="your school account"
+          recover={{ label: 'Open your account', run: () => dispatch({ type: 'go', screen: 'account' }) }}
+        />
       );
     case 'no_school':
       return (
-        <>
-          <Notice>
-            Your account is not linked to a school yet, and {what} belongs to your school. Choose your school in your profile;
-            your school decides whether {what} is turned on.
-          </Notice>
-          <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'profile' })}>
-            Open your profile
-          </button>
-        </>
+        <PermissionState
+          title="Your account is not linked to a school yet."
+          body={`${what[0]?.toUpperCase()}${what.slice(1)} belongs to your school. Choose your school in your profile; your school decides whether ${what} is turned on.`}
+          owner="your school’s administrators"
+          recover={{ label: 'Open your profile', run: () => dispatch({ type: 'go', screen: 'profile' }) }}
+        />
       );
     case 'error':
       return (

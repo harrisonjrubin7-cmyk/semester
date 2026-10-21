@@ -206,6 +206,8 @@ export const ACTIONS: Record<string, { publisher: string; why: string }> = {
   'actions/attest-sbom': { publisher: 'GitHub', why: 'Binds the CycloneDX SBOM to the same bundle (Sigstore). See supply-chain.yml.' },
   'hashicorp/setup-terraform': { publisher: 'HashiCorp', why: 'Installs a pinned Terraform for the infrastructure plans; holds no credential itself. See infra.yml.' },
   'supabase/setup-cli': { publisher: 'Supabase', why: 'Installs the CLI that deploys the Edge Functions; Supabase already holds the data.' },
+  'open-policy-agent/setup-opa': { publisher: 'Open Policy Agent', why: 'Installs a pinned OPA for the starter policy tests in starter-ci.yml. Holds no credential; the job token stays read-only.' },
+  'pnpm/action-setup': { publisher: 'pnpm', why: 'Installs the pnpm named by starter/package.json for starter-ci.yml. Holds no credential.' },
 };
 
 /** The `owner/repo` an Action line names, without its ref or sub-path. */
