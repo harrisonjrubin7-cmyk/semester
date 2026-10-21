@@ -79,8 +79,15 @@ override.tf.json
 # Generated design-system reports (uploaded as CI artifacts, not committed)
 app/reports/
 
+# Auto-saved session checkpoint (regenerated on every stop; not source)
 # Local memory-tool snapshot
 .anchor/
+
+# Local Claude Code and tooling config, not shared with the repository
+.claude/CLAUDE.md
+.claude/settings.json
+.claudeignore
+
 # Local tool caches written by the md-linker plugin.
 .md-linker/
 
