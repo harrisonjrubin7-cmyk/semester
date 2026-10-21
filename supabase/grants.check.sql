@@ -748,6 +748,25 @@ declare
     'registration_hold_resolve(want_hold uuid, want_key text, want_expect text)',
     'registration_holds_for_office(want_office text)',
     'my_registration_readiness()',
+    -- The four in 20261021090000_roster_admin_desk.sql. Each raises unless
+    -- the caller holds roster:administer over exactly the named school; the
+    -- binder refuses the caller's own account, an account at another school
+    -- and anybody not on the live roster, and both writes take an
+    -- idempotency key (the switch also the value the administrator saw).
+    -- `roster-admin-desk.check.sql` attempts each refusal.
+    'roster_admin_unbound(want_tenant text)',
+    'roster_admin_bind(want_tenant text, want_sourced_id text, want_subject uuid, want_key text)',
+    'roster_admin_config(want_tenant text)',
+    'roster_admin_set_absence(want_tenant text, want_on boolean, want_expect boolean, want_key text)',
+    -- The three in 20261021100000_roster_admin_unbind_search.sql, behind the
+    -- same roster_admin_require. The unbinder refuses the caller's own
+    -- binding and an account other than the one the administrator saw, and
+    -- takes an idempotency key; the search answers this school's unbound
+    -- accounts only, 20 at most, address masked. `roster-admin-desk.check.sql`
+    -- attempts each refusal.
+    'roster_admin_bound(want_tenant text)',
+    'roster_admin_unbind(want_tenant text, want_sourced_id text, want_expect uuid, want_key text)',
+    'roster_admin_find_accounts(want_tenant text, want_query text)',
 
     -- The two productivity workspace functions recovered from production.
     -- Saving is security invoker and can only mutate the caller's RLS-owned

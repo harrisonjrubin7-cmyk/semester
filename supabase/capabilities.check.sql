@@ -317,7 +317,9 @@ begin
   -- student_accounts_officer, international_student_advisor,
   -- veterans_certifying_official, athletics_compliance_officer and
   -- residence_life_staff.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 198);
+  -- The roster desk (20261021090000_roster_admin_desk.sql) then gave
+  -- roster:administer to integration_admin and university_admin.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 200);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
