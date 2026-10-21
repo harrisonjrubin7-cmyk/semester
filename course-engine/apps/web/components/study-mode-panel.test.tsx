@@ -121,6 +121,39 @@ describe("stored study asset interactions", () => {
     expect(screen.queryByRole("heading", { name: "Uncited slide" })).not.toBeInTheDocument();
   });
 
+  it("renders a citation-bound reading brief as an applied case", () => {
+    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", title: "Coordination case", content: {
+      sections: [{
+        heading: "The unclear launch owner",
+        explanation: "Two teams believe the other owns the final launch decision.",
+        key_points: ["Who has final authority?", "What evidence should inform the choice?"],
+        examples: ["Name one owner and publish the escalation path."],
+        citation_ids: [citationId],
+      }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByText((_content, element) => element?.tagName === "P" && element.textContent === "1 cited case")).toBeInTheDocument();
+    expect(screen.getByText("Case 1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The unclear launch owner" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Questions to consider" })).toBeInTheDocument();
+    expect(screen.getByText("Who has final authority?")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Applications" })).toBeInTheDocument();
+    expect(screen.getByText("Name one owner and publish the escalation path.")).toBeInTheDocument();
+    expect(screen.getByText("syllabus.pdf, p. 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open material" })).not.toBeInTheDocument();
+  });
+
+  it("fails closed when an applied case has no resolvable citation", () => {
+    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", content: {
+      sections: [{ heading: "Uncited case", explanation: "This must not render.", citation_ids: ["missing-citation"] }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited cases");
+    expect(screen.queryByRole("heading", { name: "Uncited case" })).not.toBeInTheDocument();
+  });
+
   it("rejects malformed optional guide lists instead of crashing the panel", () => {
     renderPanel("read", { ...baseAsset, content: {
       ...baseAsset.content,
