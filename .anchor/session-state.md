@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 21:06:05_  ·  branch: `claude/affectionate-cori-y8ckxw`
+_Updated: 2026-10-21 21:08:01_  ·  branch: `claude/affectionate-cori-y8ckxw`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+a45b8bf8 chore: update the auto-saved session state snapshot
 5b5284cc docs(simplify): measured audit of the navigation overlap, step 1 only
 07fcae42 feat(ecosystem): role-journey coverage map and access-details explanation
 162cd31d docs(integration): reconcile Sheet rule slice
@@ -22,7 +23,6 @@ Diff stat:
 f2799d73 fix(sheet): distinguish duplicate rule removals
 7ca3b0ff Merge pull request #1519 from harrisonjrubin7-cmyk/claude/sync-keeps-unknown-and-ingress-drops
 5cf374d2 Merge pull request #1668 from harrisonjrubin7-cmyk/claude/happy-mccarthy-e6g5tt
-79c61a70 perf: record the University route measurement and derive its budget from it
 ```
 
 ## Resume
