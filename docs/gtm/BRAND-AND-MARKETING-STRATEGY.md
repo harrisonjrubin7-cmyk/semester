@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: ACTION-PLAN.md
-    changed_at: "2026-10-20T15:18:48"
+    changed_at: "2026-10-21T02:32:33"
     sections_changed: []
     summary: externally modified
   - source: CHANGELOG.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CLAUDE.md
-    changed_at: "2026-10-20T15:18:49"
+    changed_at: "2026-10-21T02:32:33"
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-20T15:18:49"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: MARKET-POSITION.md
-    changed_at: "2026-10-20T15:18:49"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -37,11 +37,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
-    changed_at: "2026-10-20T15:18:50"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: docs/CLM-018-SOURCE-LABEL-EVIDENCE.md
-    changed_at: "2026-10-20T15:18:50"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
@@ -49,15 +49,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
-    changed_at: "2026-10-20T15:18:51"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/EXECUTION-PLAN.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/EVENT-TAXONOMY.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/GO-TO-MARKET-POSITIONING.md
@@ -69,7 +69,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
-    changed_at: "2026-10-20T15:19:13"
+    changed_at: "2026-10-21T02:32:38"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
@@ -77,6 +77,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

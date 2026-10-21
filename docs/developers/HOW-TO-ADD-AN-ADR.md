@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: docs/architecture/README.md
-    changed_at: "2026-10-20T15:19:02"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-20T15:19:06"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

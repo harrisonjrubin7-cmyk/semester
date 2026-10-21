@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T18:54:28"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CHANGE-MANAGEMENT-POLICY.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

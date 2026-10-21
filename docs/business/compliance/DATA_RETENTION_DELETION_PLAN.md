@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
-    changed_at: "2026-10-20T15:18:50"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-RETENTION-EXPORT-DELETION.md
-    changed_at: "2026-10-20T15:18:50"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md
@@ -37,14 +37,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/02-SUBJECT-RIGHTS-WORKFLOW.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
-    changed_at: "2026-10-20T15:19:10"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

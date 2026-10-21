@@ -5,23 +5,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/CONTROLLED_ACTION_PATTERNS.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_RELEASE_GATES.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/OPERATIONS_WORKFLOW_CATALOG.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/04-support-operating-model.md
-    changed_at: "2026-10-20T15:19:04"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
@@ -41,6 +41,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

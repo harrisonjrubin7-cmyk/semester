@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-20T15:18:49"
+    changed_at: "2026-10-21T02:32:33"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CAREER-PORTABILITY-AND-LIFELONG-ACCESS.md
-    changed_at: "2026-10-20T15:18:50"
+    changed_at: "2026-10-21T02:32:34"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md
-    changed_at: "2026-10-19T02:53:18"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md
@@ -25,6 +25,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -9,10 +9,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-20T15:19:05"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/help/students/add-your-syllabus.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/back-up-and-sync.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

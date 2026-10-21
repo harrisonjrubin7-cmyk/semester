@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/architecture/0011-modular-monolith-before-services.md
-    changed_at: "2026-10-20T15:19:01"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/modularization/05-legacy-retirement.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
-    changed_at: "2026-10-20T15:19:06"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1149.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

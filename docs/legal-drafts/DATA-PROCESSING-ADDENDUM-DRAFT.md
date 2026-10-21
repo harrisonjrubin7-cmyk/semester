@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-20T15:19:10"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

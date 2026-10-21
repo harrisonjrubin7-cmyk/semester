@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-19T18:54:28"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Semester change management policy — controlled draft

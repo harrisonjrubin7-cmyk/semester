@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-19T18:53:00"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Pricing, packaging, entitlements, billing and collections

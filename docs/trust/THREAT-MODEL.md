@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/SECURITY-THREAT-MODEL.md
-    changed_at: "2026-10-20T15:18:56"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

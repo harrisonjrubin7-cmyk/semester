@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/GOVERNANCE.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/design/INTERACTION-STANDARDS.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/design/LAYOUT-CONTRACT.md
@@ -37,11 +37,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/design/VISUAL_DEBT_REGISTER.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/design/DESIGN_SYSTEM_ADOPTION_AUDIT.md
@@ -49,10 +49,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/adr/README.md
-    changed_at: "2026-10-20T15:19:03"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

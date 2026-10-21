@@ -13,19 +13,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/platform/MIGRATION.md
-    changed_at: "2026-10-20T15:19:05"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/OBSERVABILITY.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/OPERATIONS.md
-    changed_at: "2026-10-20T15:19:05"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/platform/PRIMITIVES.md
-    changed_at: "2026-10-19T02:53:23"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
@@ -33,10 +33,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
-    changed_at: "2026-10-20T15:19:01"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

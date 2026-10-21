@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/market-readiness/EXECUTIVE-GO-NO-GO.md
-    changed_at: "2026-10-19T18:53:02"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 # Pilot offer

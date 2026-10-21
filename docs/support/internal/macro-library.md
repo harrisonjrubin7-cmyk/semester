@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/ai-unavailable.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/billing.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/calendar-not-updating.md
-    changed_at: "2026-10-19T02:53:24"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/cannot-sign-in.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/delete-account-export-data.md
-    changed_at: "2026-10-20T15:19:06"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/deleted-item-came-back.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/old-version-showing.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/safety-concern.md
@@ -45,18 +45,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/syllabus-did-not-parse.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/sync-waiting-or-conflict.md
-    changed_at: "2026-10-19T02:53:25"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/escalation-map.md
-    changed_at: "2026-10-20T15:19:06"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

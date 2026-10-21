@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/accessibility/PROGRAM.md
-    changed_at: "2026-10-20T15:18:59"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

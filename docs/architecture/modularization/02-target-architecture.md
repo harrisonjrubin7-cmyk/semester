@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/architecture/0011-modular-monolith-before-services.md
-    changed_at: "2026-10-20T15:19:01"
+    changed_at: "2026-10-21T02:32:35"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md
-    changed_at: "2026-10-20T15:19:06"
+    changed_at: "2026-10-21T02:32:37"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

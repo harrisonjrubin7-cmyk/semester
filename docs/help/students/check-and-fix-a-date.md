@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/help/students/control-what-the-ai-sees.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/set-up-the-assistant.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/start-with-the-sample-or-your-own.md
-    changed_at: "2026-10-19T02:53:21"
+    changed_at: "2026-10-21T02:32:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
