@@ -7,6 +7,7 @@
  * nothing about anybody else — and the registrar's file holds only what every
  * student in it has already been shown.
  */
+import { csvCell } from '../csvcell';
 import { finalGrade, schemeProblems, type FinalGrade } from './compute';
 import { releasedFor } from './ledger';
 import { holds, refuse, type Actor, type Decision, type Gradebook, type Mark, type RegradeResolution } from './model';
@@ -57,11 +58,7 @@ export interface RosterName {
  * A cell as RFC 4180 writes it, and never as a formula: a spreadsheet runs
  * a cell starting `=`, `+`, `-` or `@`, and a student's name is not code.
  */
-export function cell(v: string | number | null): string {
-  let s = v === null ? '' : String(v);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
+export const cell = csvCell;
 
 /**
  * The registrar's file: one row per enrolled student, their final percentage

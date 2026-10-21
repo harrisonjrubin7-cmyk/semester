@@ -1,4 +1,4 @@
-import { csvCell } from '../csvcell';
+import { csvCell, csvNumber } from '../csvcell';
 
 /**
  * Student accounts: a school's financial record of what each student owes and
@@ -274,7 +274,8 @@ export function statementCsv(st: Statement): string {
     ...st.lines.map((l) => [l.effective_on, KIND_LABEL[l.kind], l.category, l.description, l.provider_ref || l.id, (l.amount_cents / 100).toFixed(2)]),
     ['Balance carried forward', '', '', '', '', (st.closing_cents / 100).toFixed(2)],
   ];
-  return rows.map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+  // The amount is the last column; it is a number the statement formatted, so it stays one.
+  return rows.map((r) => [...r.slice(0, -1).map(csvCell), csvNumber(r[r.length - 1])].join(',')).join('\n') + '\n';
 }
 
 /** A receipt for one payment: what the provider received, by its reference. Semester received nothing. */
