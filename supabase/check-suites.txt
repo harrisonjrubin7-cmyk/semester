@@ -15,6 +15,7 @@ beta
 calendar
 canonical-display
 capabilities
+career-evidence
 classmates
 client-privileges
 commercial

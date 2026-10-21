@@ -85,6 +85,10 @@
   "parent-scoped": [
    "accommodation_access_events",
    "advisor_share_events",
+   "career_evidence",
+   "career_evidence_grant_items",
+   "career_evidence_grants",
+   "career_portfolios",
    "dining_hours",
    "dining_menu_items",
    "dining_order_events",
