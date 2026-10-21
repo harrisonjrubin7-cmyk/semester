@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:12"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:12"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/EXECUTION-PLAN.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
@@ -37,10 +37,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

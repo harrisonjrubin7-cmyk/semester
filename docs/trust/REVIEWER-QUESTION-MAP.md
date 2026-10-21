@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-SYSTEM-INVENTORY.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-INVENTORY.md
@@ -57,15 +57,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md
@@ -77,7 +77,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-21T02:32:38"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
@@ -93,7 +93,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
-    changed_at: "2026-10-21T02:32:38"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
@@ -121,11 +121,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
-    changed_at: "2026-10-21T02:32:38"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md
-    changed_at: "2026-10-21T02:32:38"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0001-local-first-with-supabase.md
@@ -137,6 +137,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

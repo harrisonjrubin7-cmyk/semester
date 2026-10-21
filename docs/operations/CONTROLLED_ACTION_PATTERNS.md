@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

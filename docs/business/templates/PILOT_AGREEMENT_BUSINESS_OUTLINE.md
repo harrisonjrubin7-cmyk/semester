@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:12"
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:13"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
@@ -21,11 +21,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/FINAL_VALUE_REPORT.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/WEEKLY_PILOT_REPORT.md
@@ -37,19 +37,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/ACCESSIBILITY-ROADMAP-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-19T02:53:22"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONFIDENTIALITY-NDA-MUTUAL-DRAFT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COUNSEL-ISSUE-CHECKLISTS.md
@@ -69,11 +69,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
@@ -85,15 +85,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-21T02:32:38"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/SUBPROCESSOR-LIST-TEMPLATE-DRAFT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
@@ -105,10 +105,38 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-19T19:20:33"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

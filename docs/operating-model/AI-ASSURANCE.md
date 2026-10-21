@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:13"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-LIFECYCLE-GATES.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

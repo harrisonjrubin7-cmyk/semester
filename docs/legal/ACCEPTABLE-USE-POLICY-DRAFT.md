@@ -9,10 +9,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal/COMMUNITY-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

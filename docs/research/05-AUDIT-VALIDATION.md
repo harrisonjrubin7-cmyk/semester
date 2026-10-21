@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1144.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/research/01-EVIDENCE-MODEL.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
@@ -21,6 +21,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

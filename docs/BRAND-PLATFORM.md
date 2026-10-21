@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MARKET-POSITION.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:12"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -9,27 +9,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:13"
     sections_changed: []
     summary: externally modified
   - source: docs/CLM-018-SOURCE-LABEL-EVIDENCE.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:13"
     sections_changed: []
     summary: externally modified
   - source: docs/COLOR-AND-DARK-MODE-SPEC.md
-    changed_at: "2026-10-21T02:32:34"
+    changed_at: "2026-10-21T04:01:13"
     sections_changed: []
     summary: externally modified
   - source: docs/TAGLINE-DECISION-MEMO.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
-    changed_at: "2026-10-21T02:32:35"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1148.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/TRADEMARK-CLEARANCE-COUNSEL-REQUEST-DRAFT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
@@ -45,6 +45,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

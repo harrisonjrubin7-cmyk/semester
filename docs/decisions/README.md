@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/ADR_INDEX.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/DECISION_BACKLOG.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/governance/ADR_REVIEW_POLICY.md
@@ -17,10 +17,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/governance/DECISION_RIGHTS.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/commercial/SEGMENT-MOTIONS-AND-BUYING-COMMITTEES.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/STAGE-COLLATERAL-AND-HANDOFF.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T04:01:14"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

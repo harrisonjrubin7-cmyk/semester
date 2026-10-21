@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/sre/07-RESILIENCE-BACKUP-DR-AND-CHAOS.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/08-COST-AND-RESOURCE-GOVERNANCE.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/README.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/runbooks/RB-14-connector-failing.md
-    changed_at: "2026-10-21T02:32:37"
+    changed_at: "2026-10-21T04:01:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 
