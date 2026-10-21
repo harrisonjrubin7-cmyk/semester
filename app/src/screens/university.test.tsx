@@ -64,6 +64,28 @@ it('reports draft removal and undo only after the device write succeeds',async()
  expect(host.textContent).toContain('Changes could not be saved: device full');
  expect(host.textContent).not.toContain('Draft restored.');
 });
+it('distinguishes repeated readiness-step removals and removes only the selected step',async()=>{
+ const key='semester.university.drafts.v1:device:2026FA';
+ localStorage.setItem(key,JSON.stringify([{
+  id:'appeal-draft',role:'student',area:'advising',title:'Academic appeal',body:'Points to raise',due:'',courseId:'',steps:[
+   {id:'evidence-one',text:'Gather evidence',done:false},
+   {id:'evidence-two',text:'Gather evidence',done:true},
+  ],updatedAt:'2026-10-17T12:00:00.000Z',
+ }]));
+ mount();
+ await act(async()=>[...host.querySelectorAll('button')].find(b=>b.textContent?.startsWith('Drafts ('))!.click());
+ await act(async()=>[...host.querySelectorAll('button')].find(b=>b.textContent?.startsWith('Academic appeal'))!.click());
+
+ const first=host.querySelector<HTMLButtonElement>('button[aria-label="Remove readiness step 1 of 2, Gather evidence · not done"]');
+ const second=host.querySelector<HTMLButtonElement>('button[aria-label="Remove readiness step 2 of 2, Gather evidence · done"]');
+ expect(first).not.toBeNull();
+ expect(second).not.toBeNull();
+ await act(async()=>second!.click());
+
+ const saved=JSON.parse(localStorage.getItem(key)!) as Array<{steps:Array<{id:string}>}>;
+ expect(saved[0].steps).toEqual([{id:'evidence-one',text:'Gather evidence',done:false}]);
+ expect(host.querySelector('button[aria-label="Remove readiness step 1 of 1, Gather evidence · not done"]')).not.toBeNull();
+});
 it('seeds draft intent from the selected role and hides role-inapplicable local actions',async()=>{
  mock.role='staff';mount();
  expect(host.querySelector<HTMLSelectElement>('select')?.value).toBe('staff');

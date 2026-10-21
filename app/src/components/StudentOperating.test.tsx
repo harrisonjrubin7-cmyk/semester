@@ -71,6 +71,33 @@ describe('student-owned operating workflow', () => {
       'Outcome 4',
     ]);
   });
+  it('distinguishes repeated saved items and deletes only the selected id', () => {
+    act(() => root.unmount());
+    const repeated = [
+      { ...emptyEntry('plan'), id: 'same-1', title: 'Prepare review', status: 'planned' as const },
+      { ...emptyEntry('plan'), id: 'same-2', title: 'Prepare review', status: 'waiting' as const, deadline: '2026-10-15' },
+    ];
+    stored = {
+      ...DEFAULT_PERSISTED,
+      ...initialEphemeral(),
+      operatingWorkspace: JSON.stringify({ ...emptyOperating(), entries: repeated }),
+    };
+    root = createRoot(host);
+    act(() => root.render(<StudentOperating />));
+
+    const first = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete saved item 1 of 2, Prepare review: Daily plan · planned · no deadline selected"]',
+    );
+    const second = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete saved item 2 of 2, Prepare review: Daily plan · waiting · deadline 2026-10-15"]',
+    );
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+
+    act(() => second!.click());
+    act(() => button('Delete item').click());
+    expect(readOperating(stored.operatingWorkspace).entries.map((item) => item.id)).toEqual(['same-1']);
+  });
   it('previews saved preferences before deleting only the manual', () => {
     act(() => button('Delete preferences').click());
     const dialog = host.querySelector('[role="dialog"]');

@@ -713,6 +713,7 @@ function vercelUncovered(extra: string): string[] {
  */
 const MOCKS_MODULES = [
   'src/components/AboutMe.test.tsx',
+  'src/components/SchoolPicker.removal-labels.test.tsx',
   'src/components/ListingDesk.moderation-preview.test.tsx',
   'src/components/MyRules.test.tsx',
   'src/components/ProductivityCloud.test.tsx',
@@ -858,6 +859,7 @@ const MOCKS_MODULES = [
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/ingress.test.ts',
   'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/pushlater.test.tsx',

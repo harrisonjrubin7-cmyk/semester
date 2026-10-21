@@ -1086,7 +1086,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>
                 Readiness checklist
               </SectionLabel>
-              {draft.steps.map((s) => (
+              {draft.steps.map((s, index) => (
                 <ItemRow
                   key={s.id}
                   leading={
@@ -1106,7 +1106,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     <button
                       type="button"
                       className="bare tappable"
-                      aria-label={`Remove step: ${s.text}`}
+                      aria-label={`Remove readiness step ${index + 1} of ${draft.steps.length}, ${s.text} · ${s.done ? 'done' : 'not done'}`}
                       onClick={() => patch({ steps: draft.steps.filter((x) => x.id !== s.id) })}
                       style={{ ...secondLine() }}
                     >

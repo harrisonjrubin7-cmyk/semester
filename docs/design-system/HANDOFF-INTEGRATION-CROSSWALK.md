@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-16 · **Latest observed `origin/main`** `06c2d5c74` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-17 · **Latest observed `origin/main`** `955d9e06e` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -1056,6 +1056,401 @@ No route, navigation, dependency, schema, grant, RLS policy, provider configurat
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
 
+## Automation pass 31 update — distinguishable exact-duplicate People removals (slice 160)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate conversation removals remain distinguishable | `app/src/screens/People.tsx`, `app/src/screens/people.removal-labels.test.tsx`; current person's date-sorted `Visit[]` | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, person, recorded day and complete subject. The regression activates position 3 and proves the otherwise identical position-2 visit remains. |
+| Exact duplicate recommendation-letter removals remain distinguishable | `app/src/screens/People.tsx`, `app/src/screens/people.removal-labels.test.tsx`; current actionable `Letter[]` from `needing` | Existing but incomplete → existing and verified locally for this slice | Removal names include actionable-list position/count, purpose, recipient, deadline and stage. The regression activates position 3 and proves the otherwise identical position-2 request remains. |
+| Preserve exact private mutation and recovery | Existing stable ids, `dropVisit` / `dropLetter` reducers and shared Undo snapshot | Existing and unchanged | Only the represented private row is removed and the existing eight-second Undo remains available. No recommender is contacted and no official application, course, provider or institution record changes. |
+| Final upstream reconciliation | Slice commit `e56a643d3`; Course Engine slide `origin/main` `9c1f1f514`; merge `06cb40fe8` | Existing and verified locally for this slice | The upstream delta is confined to Course Engine Study Mode and its roadmap. The combined head passes 85/85 People-focused tests, both app TypeScript gates, 10/10 upstream Study Mode tests and its web TypeScript gate. |
+
+## Automation pass 32 update — distinguishable exact-duplicate Clocks actions (slice 161)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate timer Reset and Clear actions remain distinguishable | `app/src/screens/Clocks.tsx`, `app/src/screens/clocks.removal-labels.test.tsx`; current persisted `Timer[]` | Existing but incomplete → existing and verified locally for this slice | Action names include represented position/count, complete label, requested duration, current remainder and running/paused state. The regressions activate position 3 and prove the otherwise identical position-2 timer remains unchanged. |
+| Exact duplicate alarm Delete actions remain distinguishable | `app/src/screens/Clocks.tsx`, `app/src/screens/clocks.removal-labels.test.tsx`; current persisted `Alarm[]` | Existing but incomplete → existing and verified locally for this slice | Delete names include represented position/count, complete time, label, repeat schedule and on/off state. The regression activates position 3 and proves the otherwise identical position-2 alarm remains. |
+| Preserve exact private mutation and recovery | Existing stable ids; `patchTimer`, `removeTimer`, `removeAlarm`; shared Undo snapshot | Existing and unchanged | Only the represented device row resets or is removed. Removal retains the eight-second Undo; Reset keeps the exact timer and does not claim an undo. No academic, provider-clock, notification-service or institution record changes. |
+| Regression and repository gates | Extended rendered Clocks regression plus domain, reducer, label, lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against complete-fact-only names; 57/57 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| Final upstream reconciliation | Slice commit `1218e15ce`; registration-readiness `origin/main` `802c97c70`; merge `6d7834258` | Existing and verified locally for this slice | The upstream delta is confined to platform-control and operator-generated registration-readiness evidence. The combined head passes 57/57 Clocks/control tests and both app TypeScript gates; upstream registry verification passes 63/63 tests, validation and TypeScript with the app-installed type root. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI and Docker are absent; required environment values and a live target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+## Automation pass 33 update — distinguishable exact-duplicate Course Studio draft removals (slice 162)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact duplicate grading-row removals remain distinguishable | `app/src/screens/EditCourse.tsx`, `app/src/screens/editcourse.removal-labels.test.tsx`; current draft grading array | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, complete row name and weight. The regression activates position 3 and proves the otherwise identical position-2 row remains. |
+| Exact duplicate meeting removals remain distinguishable | `EditCourse`; current draft schedule array | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, title, complete day list, time and optional state. The regression activates position 3 and proves the otherwise identical position-2 meeting remains. |
+| Exact duplicate deadline removals remain distinguishable | `EditCourse`; stable deadline id in the current draft | Existing but incomplete → existing and verified locally for this slice | Removal names include represented position/count, title, formatted date, time, kind and weight. The regression activates position 3 and proves the otherwise identical position-2 deadline remains. |
+| Preserve draft and institutional authority | Existing `withGrading`, `withSchedule`, `dropItem` and explicit Save transition | Existing and unchanged | Row removal changes only the current student-edited draft until Save. No LMS, source-provider or official institution record is mutated. |
+| Regression and repository gates | Extended rendered Edit Course regression plus edit-domain, label, lifecycle and isolation contracts | Existing and verified locally for this slice | Red proof against complete-fact-only names; 50/50 focused/control tests, both typechecks, lint and build pass. Aggregate design checks pass 9 token and 70 contract tests; audit remains at zero violations with 86 existing warnings and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI and Docker are absent; API key, application id, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+## Automation pass 26 mapping — distinguishable exact-duplicate emergency-contact removals (slice 155)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate private contacts remain distinguishable at removal | `app/src/screens/Support.tsx`; account/device-scoped Support library | Existing but incomplete → existing and verified locally for this slice | Each accessible removal name includes one-based collection position, list size, complete contact name and phone number. Position distinguishes otherwise identical student-entered rows. |
+| Preserve exact device mutation and consequence preview | Stable contact id; Support library `set`; shared `ConfirmDialog` and `ActionPreview` | Existing and unchanged | The regression activates position 2 and proves only its id is removed. Cancel writes nothing; refusal retains the represented contact under the existing device-library contract. |
+| Preserve privacy, recovery and institutional boundaries | `app/src/lib/support.ts`; workspace-backup exclusion | Existing and unchanged | Emergency contacts remain device-only and deliberately excluded from portable backup. Other contacts, access notes, routines, continuity choices, official campus records and provider systems remain unchanged. |
+| Regression and repository gates | Extended `app/src/screens/journey.test.tsx` plus backup, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against name/phone-only labels; 78/78 focused/control tests, both typechecks, lint and build pass. Aggregate design check/report pass with 9 token tests, 70 contracts, all eight report contracts, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `57705f3e1`; final `origin/main` `116d8444e` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Support work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; required environment values and a live target are unavailable; no local properties file was found. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 29 mapping — distinguishable exact-duplicate activity removals (slice 158)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate student-owned commitments remain distinguishable at removal | `app/src/screens/Activities.tsx`; persisted `state.commitments` | Existing but incomplete → existing and verified locally for this slice | Every accessible name includes one-based represented-list position/size before complete name, kind, role, schedule and place facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and bounded recovery | Stable commitment id; `app/src/state/slices/mine.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates position 3 and proves only that id is removed. The shared eight-second Undo restores the `commitments` snapshot. |
+| Preserve campus and institution authority | Student-owned device plan; `app/src/components/CampusDirectory.tsx` | Existing and unchanged | Removal changes no official directory, membership, event, provider connection or institution record. |
+| Regression and repository gates | Extended `app/src/screens/activities.removal-labels.test.tsx` plus activity-domain, reducer, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; focused/control verification passes 222/222. Both typechecks, lint and build pass. Aggregate design verification passes 9 token tests, 70 design contracts and all eight report contracts with zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `4f3ab4264`; final `origin/main` `caa9967fb` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Activities work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; API key, application ID, host override and live default target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 30 mapping — distinguishable exact-duplicate out-of-pocket cost removals (slice 159)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate student-entered cost rows remain distinguishable at removal | `app/src/screens/Costs.tsx`; persisted `state.costs` | Existing but incomplete → existing and verified locally for this slice | Every accessible name includes one-based position/size within its represented course list before complete name, course, kind, rental/resale and amount facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and bounded recovery | Stable cost id; `app/src/state/slices/mine.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates position 2 and proves only that id is removed. The shared eight-second Undo restores the `costs` snapshot. |
+| Preserve financial and institution authority | Student-owned device plan; `app/src/screens/Bill.tsx` | Existing and unchanged | Removal changes no school account, official charge, payment, enrolled plan, provider or institution record. |
+| Regression and repository gates | Extended `app/src/screens/costs.removal-labels.test.tsx` plus Bill, cost-domain, reducer/Undo, label, lifecycle, isolation and integration-control guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; focused verification passes 182/182 and integration-control verification passes 42/42. Both typechecks, lint and build pass. Aggregate design verification passes 9 token tests, 70 design contracts and all eight report contracts with zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `64c9de65d`; final `origin/main` `caa9967fb` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Costs work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; API key, application ID, host override and live default target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, money movement, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 28 mapping — distinguishable exact-duplicate degree-planning removals (slice 157)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate recorded courses and requirements remain distinguishable at removal | `app/src/screens/Degree.tsx`; student-entered Degree workspace | Existing but incomplete → existing and verified locally for this slice | Each accessible name includes one-based represented-list position/size before the existing complete course or requirement facts. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and consequence preview | Stable ids; `dropTaken` / `dropRequirement`; shared `ConfirmDialog` and `ActionPreview` | Existing and unchanged | Both regressions activate position 2 and prove only its stable id is removed. Cancellation writes nothing; the existing preview still names the derived planning consequence and recovery boundary. |
+| Preserve registrar authority | Degree workspace planning copy; `NotOfficial` and existing preview language | Existing and unchanged | Removing a private planning row recalculates Semester's local planning arithmetic only. The registrar's official transcript, degree audit and every provider/institution record remain unchanged. |
+| Regression and repository gates | Extended `app/src/screens/degree.requirement-removal.test.tsx` plus domain, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; 142/142 focused/control tests, both typechecks, lint and build pass. Token/design verification passes 9 and 70 tests with a generated report, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| Final upstream reconciliation | Slice `8bd874312`; Course Engine main `35474ac5b` / merge `54c5120e4`; final membership main `caa9967fb` / merge `f9d987d91` | Existing and verified for the non-overlapping local surfaces | The reconciled head passes 142/142 Degree/control tests, 6/6 Course Engine source-viewer tests plus web TypeScript, and 29/29 final Degree/context tests plus university typecheck. Four upstream Course Engine API files remain locally unverified because the available Python runtime lacks `pytest`. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; headless API key, application id and host overrides are unset; and no live target is available. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 27 mapping — distinguishable exact-duplicate student shortcut removals (slice 156)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Exact-duplicate private shortcuts remain distinguishable at removal | `app/src/screens/Links.tsx`; persisted `state.extraLinks` rows | Existing but incomplete → existing and verified locally for this slice | Every accessible removal name includes one-based collection position/size, complete name, resolved address/no-address state and current group. Position distinguishes otherwise identical student-created rows. |
+| Preserve exact mutation and bounded recovery | Stable link id; `app/src/state/slices/library.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates position 2 and proves position 1 persists. `removeLink` still targets one id and Undo snapshots only `extraLinks` and `linkUrls`. |
+| Preserve external and institution authority | `app/src/screens/Links.tsx`; campus and school link sources | Existing and unchanged | Removing a private shortcut does not contact its destination, change a campus directory, revoke authentication or mutate provider/institution state. |
+| Regression and repository gates | Extended `app/src/screens/links.test.tsx` plus grouping, reducer, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against complete-fact-only names; 191/191 focused/control tests, both typechecks, lint and build pass. Design verification passes 79 constituents and all eight report contracts with zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `602122fa0`; final `origin/main` `116d8444e` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Links work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker are absent; headless API key, application id and host overrides are unset; a local properties file exists but was not read; and no live target is available. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 23 mapping — distinguishable exact-duplicate citation removals (slice 152)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate private citations remain distinguishable at removal | `app/src/screens/Sources.tsx`; persisted `state.sources` rows | Existing but incomplete → existing and verified locally for this slice | Each accessible name now includes one-based position/list size plus the complete student-entered citation. Position distinguishes rows whose represented citations are identical. |
+| Preserve exact mutation and recovery | `app/src/state/reducer.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The represented stable id still reaches `dropSource`; the global eight-second Undo remains the recovery receipt. |
+| Preserve source and academic authority boundaries | `app/src/screens/Sources.tsx`; `app/src/lib/sources.ts` | Intentionally unchanged | No citation is normalized or verified, no official academic record changes, no provider is contacted and no source content is sent to an AI service. |
+| Regression and repository gates | Extended `app/src/screens/sources.removal-labels.test.tsx` plus source-domain, reducer, Undo, label, root and isolation guards | Existing and verified locally for this slice | Red proof against citation-only labels; focused/control verification passes 204/204. Both typechecks, lint, build, 9 token tests, 70 design contracts and all eight report contracts pass; audit remains at zero violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| Local slice and DAST security verification | Commit `bb8191122`; `stackhawk.yml`; active HawkScan requirement | Code/test/control slice committed; DAST blocked by environment | Hawk 6.6.0/config support/current skills are present, but headless `HAWK_API_KEY` and `STACKHAWK_APPLICATION_ID` are unset, Docker is absent and the default local target is not running. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 24 mapping — distinguishable exact-duplicate Mail rule removals (slice 153)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate private Mail rules remain distinguishable at deletion | `app/src/components/mail/Rules.tsx`; persisted `state.mailRules` | Existing but incomplete → existing and verified locally for this slice | Every deletion name includes position/list size, complete rule name, search/action sentence and on/off state. Position distinguishes otherwise identical rules. |
+| Preserve exact recoverable local mutation | Stable rule ID; `dropMailRule`; `UNDOABLE.dropMailRule` | Existing and unchanged | The regression activates the second exact-duplicate control and proves only its ID is sent. Undo restores the rule without reverting later explicit message marks. |
+| Preserve provider and institutional authority boundaries | `app/src/lib/mailrules.ts`; read-only mailbox-provider contract | Existing and unchanged | Rules are local search overlays beneath explicit user marks. Deletion writes no provider mailbox, provider configuration or institution record. |
+| Regression and repository gates | New `Rules.removal-labels.test.tsx` plus reducer/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against rule-name-only controls; 199/199 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79, all eight report contracts pass, audit has zero violations and CSS stays within ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `f314dd621`; final `origin/main` `116d8444e` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Mail-rule work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | HawkScan CLI, Docker, API key, application ID, host override and live default target are unavailable. No credential file was read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 25 mapping — distinguishable exact-duplicate dining balance removals (slice 154)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate device balance readings remain distinguishable at removal | `app/src/screens/Meals.tsx`; term-filtered `state.balances` | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size before complete timestamp, swipe, Commodore Cash and meal-money facts. Position distinguishes otherwise identical readings. |
+| Preserve exact recoverable local mutation | Stable reading ID; `dropBalance`; `UNDOABLE.dropBalance` | Existing and unchanged | The regression activates the second exact-duplicate control and proves only its ID is removed. The shared eight-second Undo restores the device-history snapshot. |
+| Preserve finance and institution authority boundaries | `app/src/lib/meals.ts`; explicit no-provider-fetch contract | Existing and unchanged | Removal changes no official meal account, money, payment, credential, provider connection or institution record. |
+| Regression and repository gates | Extended `app/src/screens/meals.balance-removal.test.tsx` plus meal-domain, Undo, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against fact-only labels; 65/65 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79; the test-backed report passes with zero violations, 86 existing warnings and CSS within ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `874d3fa39`; final `origin/main` `116d8444e` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Meals work. The coherent behavior, regression and control evidence are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | HawkScan CLI, Docker, API key, application ID, host override and live default target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, money or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 22 mapping — distinguishable exact-duplicate Bill removals (slice 151)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Exact duplicate device-ledger rows remain distinguishable at removal | `app/src/screens/Bill.tsx`; term-filtered charge, aid and payment lists | Existing but incomplete → existing and verified locally for this slice | Each accessible name now includes one-based position/list size plus every previously represented financial fact. Position distinguishes rows whose title, category, amount, state and date are all identical. |
+| Preserve exact mutation and recovery | `app/src/state/slices/mine.ts`; `app/src/lib/undo.ts` | Existing and unchanged | The represented stable id still reaches `dropCharge`, `dropAid` or `dropPayment`; the global eight-second Undo remains the recovery receipt. |
+| Preserve finance authority boundaries | `app/src/screens/Bill.tsx`; `app/src/lib/bill.ts`; `student_entered` provenance | Intentionally unchanged | No calculation, official account, award decision, payment, card data, provider or institution record changes. |
+| Regression and repository gates | Extended `app/src/screens/bill.removal-labels.test.tsx` plus arithmetic, Undo, export, reducer, root and isolation guards | Existing and verified locally for this slice | Red proof against fact-only labels; focused/control verification passes 298/298. Both typechecks, lint, build, 9 token tests, 70 design contracts and all eight report contracts pass; audit remains at zero violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| Local slice and DAST security verification | Commit `8a991db4d`; `stackhawk.yml`; active HawkScan requirement | Code/test/control slice committed; DAST blocked by environment | The post-commit skill preflight finds no `hawk` or Docker runtime and no app host. `HAWK_API_KEY` is unset; a local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 21 mapping — distinguishable University readiness-step removals (slice 150)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated preparation steps remain distinguishable at removal | `app/src/screens/University.tsx`; account-and-term-scoped University draft library | Existing but incomplete → existing and verified locally for this slice | Each accessible name includes list position/size, complete step text and done/not-done state. Position distinguishes otherwise identical student-entered rows. |
+| Preserve exact local-draft mutation | Existing stable step ids, `patch` and `useDeviceLibrary` persistence | Existing and unchanged | The regression removes the second repeated step and proves the first stable-id row remains unchanged in validated device storage. |
+| Preserve institutional authority | University preparation-draft boundary and separate official-record actions | Intentionally unchanged | Removing a checklist row changes only the local draft. It does not submit a request, contact an institution, remove the whole draft or mutate an official record. |
+| Regression and repository gates | Extended `university.test.tsx` plus domain, device-library, backup, label, lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against the text-only name; 51/51 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and the audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker, API key, app host and live target are absent. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 20 mapping — distinguishable athletics-hours removals (slice 149)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated private athletics-hours rows remain distinguishable at removal | `app/src/components/CaraLog.tsx`; validated Athletics device library | Existing but incomplete → existing and verified locally for this slice | Every removal name includes represented weekly position/count, hours, activity kind, date and complete note/no-note state. Position distinguishes otherwise identical rows. |
+| Preserve exact recoverable device mutation | Stable Cara entry ID; `CaraLog.remove`; existing eight-second Undo snapshot | Existing and unchanged | The regression activates the second identical control and proves only its stable ID is removed; Undo continues to restore the exact entry at its prior device-list position. |
+| Preserve countability, compliance and official-record boundaries | `app/src/lib/cara.ts`; existing `NotOfficial` language | Existing and unchanged | Semester adds student-entered hours but does not decide whether activity counts, supply a compliance limit, make a compliance determination, contact a provider or mutate an official athletics record. |
+| Regression and repository gates | Extended `CaraLog.test.tsx` plus athletics, label, lifecycle and isolation guards | Existing and verified locally for this slice | Proved-red duplicate-row guard; 51/51 focused/adjacent tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 19 mapping — distinguishable timer resets (slice 148)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated timer actions identify the exact represented item | `app/src/screens/Clocks.tsx`; typed timer state and `app/src/lib/clocks.ts` vocabulary | Existing but incomplete → existing and verified locally for this slice | Reset names include the label, total duration, current remainder and running/paused state, matching the facts already exposed by timer-clear controls. |
+| Preserve exact device-timer mutation | Existing exact-id `patchTimer` reducer and pure `reset` function | Existing and unchanged | The rendered regression resets the represented long timer and proves the short timer and both alarms remain unchanged. Reset restores the requested duration and paused state; it does not delete the timer. |
+| Preserve academic and institutional authority boundaries | Clocks' explicit standalone device-tool contract | Existing and unchanged | Timers remain unrelated to coursework, grades, deadlines, provider calendars and official institution schedules. No server, provider or institutional record is invoked. |
+| Regression and repository gates | Extended `clocks.removal-labels.test.tsx` plus clock-domain, reducer, label, lifecycle and isolation contracts | Existing and verified locally for this slice | Red proof against the former generic names; 66/66 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key and app-host values are unset, and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 18 mapping — distinguishable Workflow Builder draft removals (slice 147)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Workflow-definition removals identify the exact represented draft facts | `app/src/components/institutional/WorkflowBuilder.tsx`; typed `Definition`, `Step` and `Requirement` vocabulary | Existing but incomplete → existing and verified locally for this slice | Step names include position/count, complete title, kind, owner and wait state. Check names include position/count, fact, comparison, value, complete explanation and next step. |
+| Preserve exact draft mutation and controlled publication | Existing `edit` state update, `workflow:manage`, tenant RLS, database validation and separate-person `workflow:publish` rule | Existing and unchanged | The regression removes a represented step and check and proves only the next exact rows move into their positions. Nothing is persisted until an authorized draft save, and no edit publishes or runs a workflow. |
+| Preserve student-record and institution authority boundaries | `app/src/lib/workflow/spec.ts`; `20260930231000_workflow_builder.sql` | Existing and unchanged | Definitions contain bounded workflow rules, not a student request or official record. This slice adds no route, server operation, schema, policy or provider integration. |
+| Regression and repository gates | Extended `WorkflowBuilder.test.tsx` plus workflow and control contracts | Existing and verified locally for this slice | Red proof against the former position-only names; 82/82 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 15 mapping — distinguishable Advisor Meeting preparation removals (slice 144)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated preparation rows remain distinguishable at removal | `app/src/components/AdvisorMeeting.tsx`; account/device-scoped meeting library | Existing but incomplete → existing and verified locally for this slice | Agenda, question and follow-up removals name position/list size and complete student-entered text. Questions add answer state; follow-ups add completion and due-date state. |
+| Preserve exact device mutation and tenant scope | Existing `LineList` id filter; `useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS)` | Existing and unchanged | The regression activates the second same-text follow-up and proves the first id/value remains persisted. Signed-in preparations remain account-keyed; signed-out preparation remains device-keyed. |
+| Preserve advisor and official-record boundaries | `sharePayload`; explicit share confirmation; private-note exclusion | Existing and unchanged | Removing an editor line changes only the current preparation. It does not modify a prior share, contact an advisor/provider, or change an official advising record. |
+| Regression and repository gates | Extended `AdvisorMeeting.test.tsx` plus domain/share/storage/backup/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against position-only labels; 97/97 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 16 mapping — distinguishable graph-line removals (slice 145)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated graph formulas remain distinguishable at removal | `app/src/components/Grapher.tsx`; persisted `state.plots` rows | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size, complete formula or blank state, and shown/hidden state. |
+| Preserve exact recoverable device mutation | Stable plot ID; `dropPlot`; `UNDOABLE.dropPlot` snapshot over `plots` | Existing and unchanged | The regression activates the second same-formula control and proves only its ID is dispatched. Existing Undo remains the recovery boundary. |
+| Preserve academic and external authority boundaries | Student graph workspace and local persistence | Existing and unchanged | Removing a line changes one student-created device row. No provider call, course record, grade or institution system changes. |
+| Regression and repository gates | Extended `Grapher.clear.test.tsx` plus reducer/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former position-only name; 163/163 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 17 mapping — distinguishable eligibility-requirement removals (slice 146)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-entered eligibility rules remain distinguishable at removal | `app/src/components/EligibilityCheck.tsx`; device-scoped Athletics library | Existing but incomplete → existing and verified locally for this slice | Every removal name includes position/list size, complete rule and source, required course-or-hour count, accepted-course scope and source note/no-note state. |
+| Preserve exact recoverable device mutation | Stable requirement ID; validated Athletics-library `update`; bounded Undo snapshot | Existing and unchanged | The regression activates the second same-name/same-source control and proves only its ID is removed. Refused writes keep the row represented; existing Undo restores the exact rule at its former position. |
+| Preserve compliance and official-record boundaries | `NotOfficial`; shared Degree arithmetic over student-recorded courses | Existing and unchanged | Removing a rule changes only a student-entered device copy. It does not determine eligibility, contact a compliance office/provider, or change a course, transcript or official academic record. |
+| Regression and repository gates | Extended `EligibilityCheck.test.tsx` plus Athletics/storage/Undo/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former name/source-only label; 63/63 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and eight report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 14 mapping — distinguishable Registration Day backup actions (slice 143)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated backup sections remain distinguishable across primary plans | `app/src/components/RegistrationDay.tsx`; `semester.registration-day.v1` device plan | Existing but incomplete → existing and verified locally for this slice | Every Up, Down and Remove name includes backup rank/list size, complete course/section/title/term and the primary course/section/title it belongs to. |
+| Preserve exact mutation and validation | `moveBackup` / `removeBackup`; `useDeviceLibrary`; `readRegistrationDay` | Existing and unchanged | The regression activates the second cross-primary Remove control and proves only that primary mapping changes; the first representation remains persisted and rendered. Refused writes continue through the shared device-library error state. |
+| Preserve official-system and freshness boundaries | Existing Registration Day planning copy and imported-catalog source language | Existing and unchanged | The operation changes a student-held device plan only. It does not enroll, drop, reserve a seat, refresh seat data or call an institution/provider system. |
+| Regression and repository gates | Extended `RegistrationDay.test.tsx` plus mode/card/domain/label/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against the former code/section-only controls; 77/77 focused tests pass. Both typechecks, lint and build pass. Aggregate design check/report pass 9 token and 70 design contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, enrollment, provider execution, institutional acceptance or production readiness.
+
+## Automation pass 13 mapping — exact shared-photo removal and thumbnail lifetime (slice 142)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated prepared photos remain distinguishable at removal | `app/src/components/Capture.tsx`; caller-owned `ShotFile[]` | Existing but incomplete → existing and verified locally for this slice | Each removal name includes collection position/size, complete filename and prepared size. Position distinguishes otherwise identical camera-roll filenames. |
+| Preserve only the represented unsent draft | Existing index-scoped `onChange` transition | Existing and unchanged | Selecting the second duplicate removes only that prepared photo; the first remains. No read, upload, provider call, source-file deletion or institution mutation occurs. |
+| Keep thumbnail resources valid and bounded | `Capture` blob-preview ownership | Existing but incomplete → existing and verified locally for this slice | A list change revokes only removed blob URLs, preserves retained thumbnail URLs and releases the remainder on unmount. Data-URL previews are not treated as revocable object URLs. |
+| Regression and repository gates | New `Capture.test.tsx` plus camera/material/photo/root/isolation guards | Existing and verified locally for this slice | Red proof against filename-only controls; 40/40 focused tests, both typechecks, lint and build pass. Design constituents pass 79/79 and report contracts pass 97/97; audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, model/provider execution, scanner/extractor availability, production execution, institutional acceptance or production readiness.
+
+## Automation pass 12 mapping — distinguishable potential-schedule deletion (slice 141)
+
+| Archive/current requirement | Current repository evidence and disposition |
+|---|---|
+| Distinguish repeated private schedule choices | `app/src/components/RegistrationPortal.tsx`, `app/src/components/RegistrationPortal.delete.test.tsx` — **Existing but incomplete → existing and verified for this bounded slice.** Delete controls identify one-based position and collection size, complete name, section count, copied credit total and conflict count; identical names remain distinguishable. |
+| Exact represented mutation | The existing exact plan id still drives the registration-library filter. The rendered regression confirms deleting the second same-named schedule preserves the first schedule id. |
+| Consequence, authority and recovery | Existing shared `ConfirmDialog` / `ActionPreview` remains cancel-first and names copied sections. The current cart, catalog, other schedules and official registration remain unchanged; recovery remains limited to a prior device-workspace backup. No enrollment or institution/provider operation is added. |
+| Verification boundary | The guard was proved red against the former name-only controls. Focused Registration Portal, registration-domain, shared-preview, label, root-lifecycle and isolation verification passes 102/102. Both typechecks, lint and build pass; 79/79 design-check constituents and 97/97 report contracts pass, audit remains at zero violations with 86 existing warnings, CSS stays within ledger and the report regenerates. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | **Blocked by environment.** Hawk v6/config/skills status and Docker are absent, API-key/app-host values are unset and no live target exists. A local properties file was detected but not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+## Automation pass 7 mapping — distinguishable remembered-line deletion (slice 136)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-authored assistant context remains distinguishable at deletion | `app/src/components/AboutMe.tsx`; `state.aboutMe` | Existing but incomplete → existing and verified locally for this slice | Each accessible deletion name includes one-based collection position, collection size and complete remembered text. Position distinguishes otherwise identical lines. |
+| Preserve exact mutation, consequence and recovery boundaries | Existing `dropFact`, `ConfirmDialog`, `ActionPreview`, account sync and full-data export | Existing and unchanged | The regression activates position 2 and proves only its id is removed after confirmation. Cancel writes nothing. A prior export may retain the earlier copy, but no automatic restore is claimed. |
+| Preserve assistant/provider and unrelated-data boundaries | Existing About Me and Trust & Data contracts | Existing and unchanged | Other remembered lines, conversations, notes and plans remain unchanged. This slice sends no provider prompt, changes no sync policy and invokes no external system. |
+| Regression and repository gates | `AboutMe.test.tsx` and adjacent trust/export/accessibility/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against identical text-only names; 156/156 focused tests and 2/2 isolation tests pass. Both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and 97 report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key and app-host values are unset, and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish provider execution, deployment, institutional acceptance or production readiness.
+
+## Automation pass 6 mapping — distinguishable custom-reminder deletion (slice 135)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated student-authored reminder rules remain distinguishable at deletion | `app/src/components/MyRules.tsx`; `state.myRules` | Existing but incomplete -> existing and verified locally for this slice | Each accessible deletion name includes one-based collection position, collection size and the complete existing rule sentence. Position distinguishes otherwise identical rules. |
+| Preserve exact device mutation and recovery | Existing rule id, `deleteMyRule` and shared eight-second Undo | Existing and unchanged | The regression activates position 2 and proves only `rule-two` is dispatched. Undo continues to snapshot only `myRules`, preserving unrelated student work. |
+| Preserve academic and external authority boundaries | Existing custom-reminder contract | Existing and unchanged | Built-in reminders, course deadlines, provider notifications and institution records remain unchanged. No delivery, synchronization or official-record claim is added. |
+| Regression and repository gates | `MyRules.test.tsx` and adjacent Undo/reducer/accessibility/lifecycle/isolation guards | Existing and verified locally for this slice | Red proof against identical sentence-only names; 162/162 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites and DAST remain open. |
+| Upstream and commit reconciliation | Slice commit `ba529da24`; final `origin/main` `3ec04d742` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping My Rules work. The coherent behavior, regression and controls are committed locally. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent, API key and app-host values are unset, and no live target exists. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 2 mapping — distinguishable Semester Mail row actions (slice 131)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated Mail conversations remain distinguishable across row actions | `app/src/components/mail/List.tsx`; current page of `Thread` rows | Existing but incomplete → existing and verified locally for this slice | Select, star, open, archive, Trash, snooze and read-state names include page position, participants, complete subject and full timestamp. Position distinguishes otherwise identical threads. |
+| Preserve exact device-mail mutation | Existing `Thread` callbacks and mailbox-mark reducer | Existing and unchanged | The represented thread object still reaches the unchanged action. The regression proves the second of two otherwise identical conversations is the one passed to Trash. |
+| Preserve provider and recovery boundaries | `app/src/lib/mailbox.ts`; read-only provider scopes and local `Marks` | Existing and unchanged | Trash means moved to Trash in Semester; it does not delete provider mail. A conversation can be moved back through the existing local-folder action. Provider links, messages and account state remain unchanged. |
+| Regression and repository gates | `List.removal-labels.test.tsx` plus mailbox, reducer, rules, paging, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against subject-only names; 88/88 focused tests, both typechecks, lint and build pass. Aggregate design check/report pass 9 token, 70 design and 97 report contracts with zero audit violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| Upstream and commit reconciliation | Slice commit `d365f7512`; final `origin/main` `3ec04d742` | Existing and verified for this slice | Final fetch found no upstream movement or overlapping Mail work. The coherent behavior, regression and controls are committed locally. |
+
+## Automation pass 3 mapping — distinguishable opened Semester Mail actions (slice 132)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Opened Mail actions retain the represented conversation's identity | `app/src/components/mail/Reader.tsx`; current opened `Thread` | Existing but incomplete → existing and verified locally for this slice | Archive, Trash, snooze, read-state and star names include incoming participants or outgoing recipients, complete subject and full timestamp. |
+| Preserve exact local-mail mutation and recovery | Existing `Thread` callbacks and mailbox-mark reducer | Existing and unchanged | The regression invokes only the opened thread's Trash callback. Trash moves the conversation locally and the existing folder action can move it back. |
+| Preserve provider authority | `app/src/lib/mailbox.ts`; read-only provider scopes | Existing and unchanged | No action deletes, archives, stars, snoozes or marks provider mail; provider links, account state and message bodies remain unchanged. |
+| Regression and repository gates | `Reader.action-labels.test.tsx`, existing Mail and control tests | Existing and verified locally for this slice | Red proof against generic names; 55/55 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and the existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Post-commit preflight for `d365f7512` found Hawk v6/config, Docker, API key, app host and live target unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 11 mapping — distinguishable cost-estimate removals (slice 140)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private cost estimates remain distinguishable at removal | `app/src/components/CostPlanner.tsx`; versioned Graduation Simulator plan | Existing but incomplete → existing and verified locally for this slice | Every removal name includes collection position/size, complete label, amount, term cadence and student-entered/imported source. Imported rows include recorded provenance/date when present. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and consequence behavior | Existing cost-line id, `onChange`, `ConfirmDialog` and `ActionPreview` | Existing and unchanged | The regression removes only the represented second id, preserves the first same-label row and recalculates only the affected summer total. Cancel remains first and a refused device write keeps the line and retry path. |
+| Preserve authority and recovery boundaries | Private device Graduation workspace and device-workspace backup | Existing and unchanged | Other cost lines, scenarios, downloads, aid records and the registrar's official degree audit remain unchanged. Recovery remains limited to a backup made before removal or manually adding the estimate again. |
+| Regression and repository gates | Extended `GraduationSimulator.phase-d.test.tsx` plus Graduation, root-lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against label-only names; 45/45 focused tests and 196/196 broader focused/control/design tests pass. Both typechecks, lint and build pass; audit stays at zero violations with 86 existing warnings and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent; the environment API key, app host and live target are unavailable. A local Hawk credentials file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 10 mapping — distinguishable mentor-request actions (slice 139)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated pending mentor requests remain distinguishable when answered or withdrawn | `app/src/components/MentorFinder.tsx`; `app/src/lib/mentors.ts` | Existing but incomplete → existing and verified locally for this slice | Every Accept, Decline and Withdraw name includes collection position/size, peer or alumni kind, direction, visible person and topics/no-topic state. Position distinguishes otherwise identical requests. |
+| Preserve exact server operation and refusal recovery | Existing request UUID, `answerRequest`, `answer_mentor_request` and component busy/notice flow | Existing and unchanged | The regression invokes only the represented second ids. One operation at a time remains enabled, a successful call reloads server state, and refusal retains the represented request with retry language. |
+| Preserve mutual consent, tenancy and privacy | `20260928110700_consent_and_moderation_narrowing.sql`; mentor roster/RLS checks | Existing and unchanged | Only the asked person accepts/declines and only the requester withdraws; acceptance rechecks cohort/capacity. Semester still exposes chosen display names/topics and says programme contact stays outside Semester. Live institution programme activation remains external. |
+| Regression and repository gates | Extended `MentorFinder.test.tsx` plus mentor, matching, label, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against generic controls; focused verification passes 62/62. Both typechecks, lint and build pass; token export passes 9/9, combined design contracts 139/139 and report contracts 97/97. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status and Docker are absent; API key, app host and live target are unavailable. A local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, institution programme activation, production execution or production readiness.
+
+## Automation pass 9 mapping — distinguishable Operating Rhythm simulator removals (slice 138)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private planning commitments remain distinguishable at removal | `app/src/components/OperatingRhythmWorkspace.tsx`; component-local simulator `tasks` state | Existing but incomplete → existing and verified locally for this slice | Every accessible removal name includes collection position, complete title or untitled state, context and duration. Position distinguishes otherwise identical rows. |
+| Preserve exact draft mutation | Existing index-scoped `setTasks` transition | Existing and unchanged | The regression removes only the middle Admin row and leaves both represented Writing rows. No saved plan or device-library record changes until the separate explicit save action. |
+| Preserve authority and persistence boundaries | Existing private simulator copy and saved-rhythm contract | Existing and unchanged | The change affects only the current unsaved scenario. Official commitments, provider calendars, institution records and persisted rhythm plans remain unchanged. |
+| Regression and repository gates | Extended `OperatingRhythm.test.tsx` plus domain, preview, label, root-lifecycle, isolation and integration-control guards | Existing and verified locally for this slice | Red proof against position-only names; 65/65 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration, persisted production data or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 8 mapping — distinguishable Student Operating saved-item deletion (slice 137)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private workflow items remain distinguishable at deletion | `app/src/components/StudentOperating.tsx`; versioned `OperatingWorkspace.entries` | Existing but incomplete → existing and verified locally for this slice | Every accessible deletion name includes collection position, complete title, workflow kind, current status and deadline/no-deadline state. Position distinguishes otherwise identical rows. |
+| Preserve exact mutation and consequence boundary | Existing stable entry id, `setOperatingWorkspace`, `ConfirmDialog` and `ActionPreview` | Existing and unchanged | Cancel writes nothing; confirmation filters only the represented id. Other workflow items, preferences, downloads and official records remain unchanged. |
+| Preserve persistence and recovery truth | Private device/account workspace plus validated workspace backup | Existing and unchanged | Account sync may carry the deletion, while automatic undo is not claimed. Recovery remains limited to a Semester data backup made before deletion. |
+| Regression and repository gates | Extended `StudentOperating.test.tsx` plus domain, backup, preview, label, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against title-only names; 87/87 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config/skills status, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 5 mapping — distinguishable filed-feedback removals (slice 134)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Repeated private feedback remains distinguishable at deletion | `app/src/components/FeedbackInbox.tsx`; account/term-scoped `useInboxLibrary` | Existing but incomplete → existing and verified locally for this slice | Each accessible deletion name includes collection position, complete work title, student-selected category and filed date. Position distinguishes otherwise identical records. |
+| Preserve exact device mutation and recovery | Existing feedback id, `useDeviceLibrary`, `ConfirmDialog`, `ActionPreview` and workspace backup coverage | Existing and unchanged | The regression deletes only position 2 and leaves position 1. Cancel remains first; confirmation removes the exact id, and recovery remains limited to a prior device-workspace backup. |
+| Preserve academic and user authority boundaries | Existing private Feedback inbox contract | Existing and unchanged | Returned work outside Semester, separately saved evidence, optional plan actions and provider/institution records remain unchanged. No theme, score or official record is inferred or written. |
+| Regression and repository gates | `FeedbackInbox.test.tsx` and adjacent learning/consequence/control guards | Existing and verified locally for this slice | Red proof against identical unnamed controls; 33/33 focused/control tests, both typechecks, lint and build pass. Design constituents pass 79/79, report contracts pass 97/97, audit stays at zero violations and CSS remains within its ledger. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Preflight for commit `9f8373dd8` found Hawk v6/config/skills status, Docker, API key, app host and a live target unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 4 mapping — distinguishable Semester Mail bulk actions (slice 133)
+
+| Reference obligation | Repository owner / authority | Disposition | Evidence and boundary |
+| --- | --- | --- | --- |
+| Bulk Mail actions retain the exact selected-set identity | `app/src/screens/Mail.tsx`; current filtered `Thread[]` and `picked` ids | Existing but incomplete → existing and verified locally for this slice | Archive, Trash, Move, Snooze and Mark read names include selected conversation count plus ordered positions; a one-row or opened-thread target adds direction, participants, complete subject and full timestamp. |
+| Preserve exact local-mail mutation and recovery | Existing `chosen` message ids, Mail callbacks and mailbox-mark reducer | Existing and unchanged | The regression selects positions 1 and 3, invokes only that bulk Trash action and proves the unselected row remains. Trash moves the selected conversations locally and the existing folder action can move them back. |
+| Preserve provider authority | `app/src/lib/mailbox.ts`; read-only provider scopes | Existing and unchanged | No bulk action deletes, archives, snoozes, moves or marks provider mail; provider links, account state and message bodies remain unchanged. |
+| Regression and repository gates | `Mail.bulk-action-labels.test.tsx`, existing Mail and control tests | Existing and verified locally for this slice | Red proof against generic names; 76/76 focused/control tests, both typechecks, lint and build pass. Design checks pass 9 token and 70 contract tests, all eight report contracts pass, and the existing audit/CSS ledgers remain unchanged. Full ordered/shuffled suites and DAST remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Mandatory preflight found the Hawk v6 executable absent, so `hawk config` and `hawk skills status` cannot run. Docker, API key, app host and live target are also absent; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 1 mapping — distinguishable Learning Map concept removals (slice 130)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated private concepts/questions remain distinguishable at removal | `app/src/components/LearningMap.tsx`; account/term-scoped `useDeviceLibrary` map | Existing but incomplete → existing and verified locally for this slice | Every accessible removal name includes collection position, concept/question type, complete title and current learning state. Position distinguishes otherwise identical rows. |
+| Preserve consequence and recovery boundaries | Existing `ConfirmDialog`, `ActionPreview` and device-workspace backup coverage | Existing and unchanged | Selection still opens the cancel-first preview; confirmation removes the exact id. Course-guide concepts, grades, plan actions and other private concepts remain unchanged, and recovery remains limited to a prior workspace backup. |
+| Regression and repository gates | Extended `LearningMap.delete.test.tsx` plus Office Agenda, backup, label, root-lifecycle and isolation guards | Existing and verified locally for this slice | Red proof against generic controls; final focused set passes 31/31. Both typechecks, lint, build and 148 design contracts pass; audit remains at zero violations and CSS within ledger. Full ordered/shuffled suites remain open. |
+| Upstream reconciliation | Slice `a4a166f01`; final `origin/main` `3ec04d742`; merge `9c0fef73f` | Existing and verified for this slice | Exact history/current-code inspection found no equivalent repeated-row guard. The final upstream delta changes only the Course Engine field-guide panel, its tests/journey and roadmap and merges without overlap. Combined verification passes 53 app-focused/control tests plus app TypeScript and 8 upstream panel tests plus its TypeScript gate. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk v6/config, Docker, API key, app host and live target are unavailable. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
 ## Automation pass 28 mapping — distinguishable registration-cart removals (slice 129)
 
 | Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
@@ -1066,5 +1461,55 @@ No route, navigation, dependency, schema, policy, provider configuration or exte
 | Regression and repository gates | Registration conflict/delete/detail/named-plan, label and root-lifecycle tests | Existing and verified locally for this slice | Red proof against the former course-code-only name; recovered verification passes 27/27 focused tests. Final combined-head verification passes 390/390 focused and upstream tests, both app typechecks, lint and production build. |
 | Final upstream reconciliation | Slice commit `4b9575afb`; final `origin/main` `4e1a043f1`; merge `d78048709` | Existing and verified for this slice | Upstream institution replay, local-fallback, platform-readiness, support-recovery and readiness-event-schema changes do not overlap Registration. The earlier combined head passes 390/390 tests; the final race delta passes 7/7 Registration/readiness-schema tests and app TypeScript. Platform control passes 63/63 tests and TypeScript using the app's installed type roots. |
 | DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker runtimes, API key, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 34 mapping — distinguishable exact-duplicate Mine removals (slice 163)
+
+| Archive requirement | Repository authority | Disposition | Evidence |
+| --- | --- | --- | --- |
+| Exact-duplicate student actions remain distinguishable at deletion | `app/src/screens/Mine.tsx`, `app/src/screens/mine.removal-labels.test.tsx`; displayed Today/Coming up/Someday/Overdue group | Existing but incomplete → existing and verified locally for this slice | Deletion names add represented group position/count before complete title, course/personal, date, time, repeat and step facts. Two fact-identical rows receive different names. |
+| Exact-duplicate appointments remain distinguishable at deletion | `Mine`; chronological `appointments` list | Existing but incomplete → existing and verified locally for this slice | Deletion names add chronological position/count before complete title, date, time, kind, place, duration and repeat facts. The regression activates the second duplicate and preserves the first. |
+| Preserve exact private mutation and recovery | Stable task/appointment ids; `deleteTask`, `deleteAppointment`; `app/src/lib/undo.ts` | Existing and unchanged | Only the represented stable id is removed. The shared eight-second Undo snapshots only `tasks` or `appointments`; provider calendars and official institution records remain unchanged. |
+| Regression and repository gates | Extended Mine regression plus reducer, Undo, label, lifecycle, isolation and design contracts | Existing and verified locally for this slice | Red proof against fact-complete-only names; 63/63 focused tests, both typechecks, lint and build pass. Design verification passes 148 distinct tests, zero audit violations, unchanged CSS ledger and the test-backed report. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, provider connectivity, production execution, institutional acceptance or production readiness.
+
+## Automation pass 35 mapping — distinguishable exact-duplicate waiting-send actions (slice 164)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Fact-identical held requests remain distinguishable | `app/src/components/WaitingSends.tsx`, `WaitingSends.test.tsx`; D-155 device-held outbox | Existing but incomplete → existing and verified locally for this slice | Send, Discard and sent-row removal names include represented position/count, request kind and complete persisted summary. Two fact-identical rows receive different names. |
+| Preserve explicit-send and exact-row authority | `app/src/lib/sync/useOutbox.ts`; `app/src/lib/sync/outbox.ts`; stable entry id | Existing and unchanged | The regression discards duplicate 2, observes only `ob-second` removed from IndexedDB and leaves `ob-first` represented. Reconnection still sends nothing automatically; no provider call is added. |
+| Preserve failure, identity and delivery boundaries | Account-scoped load; durable pre-send state; `unknown` confirmation path | Existing and unchanged | Another account cannot see or send a row. Ambiguous delivery still requires the existing explicit confirmation, and live provider receipt/configuration remain separate. |
+| Regression and repository gates | WaitingSends/outbox/classification/lifecycle/isolation tests plus standard design contracts | Existing and verified locally for this slice | Red proof against summary-only names; 54/54 focused tests, both typechecks, lint and build pass. Design verification passes 9 token tests, 70 design contracts, eight report files with 97/97 tests, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk skill package, CLI, Docker, API key, application id, app host, local properties and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+
+No route, navigation, shared component, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish provider delivery, institutional receipt, deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 36 mapping — distinguishable exact-duplicate custom-school removal (slice 165)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Same-named student-created school profiles remain distinguishable | `app/src/components/SchoolPicker.tsx`, `SchoolPicker.removal-labels.test.tsx`; device-held `mySchools` | Existing but incomplete → existing and verified locally for this slice | Each Forget action includes represented custom-school position/count, complete name and selected/not-selected state. Two otherwise identical profiles receive different names. |
+| Preserve exact private mutation and recovery | Stable school id; `forgetSchool`; `app/src/lib/undo.ts` | Existing and unchanged | The regression activates duplicate 2 and observes only `riverview-2` dispatched. Existing Undo snapshots only `mySchools` and `schoolId`, restoring the exact profile and former selection without overwriting unrelated work. |
+| Preserve school-data authority boundaries | Bundled schools and `SchoolPackDoor` institution-authored pack | Existing and unchanged | The action remains available only for `state.mySchools`; it cannot remove bundled or loaded-pack authority and adds no live directory/provider claim. |
+| Regression and repository gates | SchoolPicker/reducer/Undo/label/lifecycle/isolation tests plus standard design contracts | Existing and verified locally for this slice | Red proof against name-only actions; 162/162 focused tests, both typechecks, lint and build pass. Design verification passes 9 token tests, 70 design contracts and eight report files with 97/97 tests, zero audit violations and unchanged CSS ledger. Full ordered/shuffled suites remain open. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | The Hawk skill is available, but the Hawk CLI, Docker, API key, application id, app host and live target are absent. A local properties file is present but unread. No scan, finding result, fix/rescan loop or security pass exists. |
+| Final upstream reconciliation | Slice `23b750f68`; `origin/main` `955d9e06e`; merge `42bb130b8` | Existing and verified for this slice | The upstream edge-error-envelope files do not overlap SchoolPicker or integration controls. The combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates. |
+
+No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish live school data, institution-pack approval, deployment, production execution, institutional acceptance or production readiness.
+
+## Automation pass 37 mapping — distinguishable Sheet rule removals (slice 166)
+
+| Reference intent | Current production authority | Integration disposition | Evidence / remaining boundary |
+| --- | --- | --- | --- |
+| Repeated Sheet rules remain distinguishable at removal | `app/src/screens/Sheet.tsx`; `app/src/screens/sheet.test.tsx` | Existing but incomplete → existing and verified locally for this slice | Colour-rule names include position, condition, colour and placement; cell-rule names include position, constraint and empty-cell policy. |
+| Preserve exact local mutation | Stable rule IDs and existing `onRules` / `onChecks` callbacks | Existing and unchanged | Removing the second duplicate filters only its stable ID and leaves the first rule represented. |
+| Preserve spreadsheet authority boundaries | Device Sheet workspace | Intentionally unchanged | This is local workbook configuration; no institutional record, provider system, schema or server operation changes. |
+| Regression and focused verification | Extended Sheet regression | Existing and verified locally for this slice | The interrupted runner left a coherent two-file change; recovered verification passes 40/40 Sheet tests. The final combined head passes 302/302 app tests and 181/181 domain/institution package tests, both app TypeScript gates, lint and production build. |
+| DAST security verification | `stackhawk.yml`; active HawkScan requirement | Blocked by environment | Hawk and Docker runtimes, API key, app host and live target are unavailable. No scan, finding result, fix/rescan loop or security pass exists. |
+| Final upstream reconciliation | Slice `f2799d738`; `origin/main` `7ca3b0ff9`; merge `48ca5f85b` | Existing and verified for this slice | The large upstream registration, roster, gradebook, workspace-object, outbox, developer-platform and performance changes merged without Sheet overlap. Release and activation evidence remain separate. |
 
 No route, navigation, dependency, schema, policy, provider configuration or external system changed. The archive remains specification evidence only; this local slice does not establish deployment, production execution, institutional acceptance or production readiness.

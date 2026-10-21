@@ -59,11 +59,11 @@ const MyStudentAccount = lazy(() => import('../components/MyStudentAccount').the
 /** How many instalments a plan can be split into. Five is the common one. */
 const PARTS = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
-function chargeRemovalLabel(charge: Charge) {
-  return `Remove charge ${charge.what}: ${chargeKindOf(charge.kind).label} · ${money(charge.cents)}`;
+function chargeRemovalLabel(charge: Charge, index: number, total: number) {
+  return `Remove charge ${index + 1} of ${total}, ${charge.what}: ${chargeKindOf(charge.kind).label} · ${money(charge.cents)}`;
 }
 
-function aidRemovalLabel(aid: Aid) {
+function aidRemovalLabel(aid: Aid, index: number, total: number) {
   const kind = aidKindOf(aid.kind);
   const meaning = [
     kind.label,
@@ -72,11 +72,11 @@ function aidRemovalLabel(aid: Aid) {
     kind.repaid ? 'paid back' : '',
     aid.pending ? 'not yet confirmed' : 'confirmed',
   ].filter(Boolean).join(' · ');
-  return `Remove aid ${aid.what}: ${meaning}`;
+  return `Remove aid ${index + 1} of ${total}, ${aid.what}: ${meaning}`;
 }
 
-function paymentRemovalLabel(payment: Payment) {
-  return `Remove payment ${payment.what}: ${money(payment.cents)} paid ${longLabel(isoToDate(payment.on))}`;
+function paymentRemovalLabel(payment: Payment, index: number, total: number) {
+  return `Remove payment ${index + 1} of ${total}, ${payment.what}: ${money(payment.cents)} paid ${longLabel(isoToDate(payment.on))}`;
 }
 
 export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off' }: { schoolAccount?: boolean } = {}) {
@@ -199,7 +199,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
 
       {charges.length > 0 && (
         <Group header="Charged" framed={false}>
-          {charges.map((c) => (
+          {charges.map((c, index) => (
             <CustomRow key={c.id}>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
@@ -221,7 +221,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                 <button
                   type="button"
                   className="bare"
-                  aria-label={chargeRemovalLabel(c)}
+                  aria-label={chargeRemovalLabel(c, index, charges.length)}
                   onClick={() => dispatch({ type: 'dropCharge', id: c.id })}
                   style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >
@@ -235,7 +235,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
 
       {awards.length > 0 && (
         <Group header="Aid" framed={false}>
-          {awards.map((a) => {
+          {awards.map((a, index) => {
             const kind = aidKindOf(a.kind);
             return (
               <CustomRow key={a.id}>
@@ -280,7 +280,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                   <button
                     type="button"
                     className="bare"
-                    aria-label={aidRemovalLabel(a)}
+                    aria-label={aidRemovalLabel(a, index, awards.length)}
                     onClick={() => dispatch({ type: 'dropAid', id: a.id })}
                     style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                   >
@@ -383,7 +383,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
 
       {payments.length > 0 && (
         <Group header={`Paid — ${money(done)}`} framed={false}>
-          {payments.map((p) => (
+          {payments.map((p, index) => (
             <CustomRow key={p.id}>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
@@ -405,7 +405,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
                 <button
                   type="button"
                   className="bare"
-                  aria-label={paymentRemovalLabel(p)}
+                  aria-label={paymentRemovalLabel(p, index, payments.length)}
                   onClick={() => dispatch({ type: 'dropPayment', id: p.id })}
                   style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >

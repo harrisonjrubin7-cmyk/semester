@@ -166,6 +166,21 @@ describe('drafting', () => {
     expect([...control('Check 3 fact').options].map((o) => o.value)).not.toContain('final_grade');
   });
 
+  it('names step and check removals with the complete draft facts they remove', async () => {
+    await mount(fake([published('advisor_approval', 1, TEMPLATES.advisor_approval)], EDITOR), EDITOR, EDIT);
+    await open(/^Advisor approval request/);
+
+    const secondStep = 'Remove step 2 of 5, Say what you are asking approval for: The student fills in a form · The student · no wait time';
+    const firstCheck = 'Remove check 1 of 2, Enrolled in a program is Yes: You need to be enrolled in a program to use this. · Next: Ask the registrar to confirm your enrollment.';
+    expect(host.querySelector(`button[aria-label="${secondStep}"]`)).toBeTruthy();
+    expect(host.querySelector(`button[aria-label="${firstCheck}"]`)).toBeTruthy();
+
+    await click(button(new RegExp(`^${secondStep}$`)));
+    expect(control('Step 2 title').value).toBe('Your advisor reviews it');
+    await click(button(new RegExp(`^${firstCheck}$`)));
+    expect(control('Check 1 fact').value).toBe('advisor_assigned');
+  });
+
   it('gives an int fact a number and a comparison that fits, and a bool fact a yes or no', async () => {
     await mount(fake([published('study_abroad_approval', 1, TEMPLATES.study_abroad_approval)], EDITOR), EDITOR, EDIT);
     await open(/^Study-abroad course approval/);

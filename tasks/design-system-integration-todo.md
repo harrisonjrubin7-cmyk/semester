@@ -1566,6 +1566,607 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank other dependency-ready gaps against current repository authority; do not widen this caller fix into account deletion or provider activation.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## Automation pass 37 update — distinguishable Sheet rule removals (slice 166)
+
+- [x] Distinguish duplicate conditional-colour and cell-validation rule removals with position and represented rule facts.
+- [x] Preserve stable-ID filtering so removing the second duplicate leaves the first rule intact.
+- [x] Pass the recovered 40/40 focused Sheet tests.
+- [x] Commit as `f2799d738`, merge current `origin/main` `7ca3b0ff9` cleanly as `48ca5f85b`, then pass 302/302 app tests, 181/181 domain/institution package tests, both app TypeScript gates, lint and production build.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — runtime, API key, app host and live target are unavailable; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps after current-main reconciliation.
+- [ ] Keep device-side workbook rules, provider data and institutional records as separate authorities.
+
+## Automation pass 26 update — distinguishable exact-duplicate emergency-contact removals (slice 155)
+
+- [x] Start from clean required-branch head `b35714eae`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Support history/current code for overlap.
+- [x] Re-rank exact-duplicate emergency contacts as the next bounded Phase 3 accessibility gap; keep provider contacts and official campus records outside this device-only mutation.
+- [x] Name every removal with list position/size, complete contact name and phone number.
+- [x] Preserve the existing exact-id Support-library write, cancel-first consequence preview and intentional exclusion from portable backup.
+- [x] Prove the exact-duplicate regression red against the former name/phone-only controls, then pass 78/78 Support journey, workspace-backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent code/test/control slice locally as `57705f3e1` after confirming final `origin/main` remains `116d8444e` with no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `57705f3e1` reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; no local properties file; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep emergency contacts device-only and excluded from portable backup; keep provider and official campus records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 27 update — distinguishable exact-duplicate student shortcut removals (slice 156)
+
+- [x] Start from clean required-branch head `02116b01a`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Links history/current code for overlap.
+- [x] Re-rank exact-duplicate private shortcuts as the next bounded Phase 3 accessibility gap; keep external destinations, campus directories and provider/institution records outside the device mutation.
+- [x] Name every removal with one-based collection position/size, complete name, resolved address/no-address state and current group.
+- [x] Preserve the existing stable-id `removeLink` reducer, private `extraLinks` / `linkUrls` persistence and eight-second Undo snapshot over only those fields.
+- [x] Prove the exact-duplicate regression red against the former complete-fact-only controls, then pass 191/191 Links, grouping, school-link, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and all eight test-backed report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent code/test/control slice locally as `602122fa0` after confirming final `origin/main` remains `116d8444e` with no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` and a local properties file present but unread; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private shortcut mutation separate from external navigation, campus-directory data, authentication and provider/institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 28 update — distinguishable exact-duplicate degree-planning removals (slice 157)
+
+- [x] Start from clean required-branch head `aa7cb2bf0`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Degree history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered courses and degree requirements as the next bounded Phase 3 accessibility gap; keep official transcript and degree-audit mutation outside the device planning copy.
+- [x] Name every represented removal with one-based list position/size plus its existing complete course or requirement facts.
+- [x] Preserve the existing stable-id `dropTaken` / `dropRequirement` reducers, cancel-first consequence previews and official-record boundary.
+- [x] Prove both exact-duplicate regressions red against the former complete-fact-only controls, then pass 142/142 Degree, domain, reducer/Undo, graduation/advisor, label, dead-end, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 9/9 token export and 70/70 design contracts, generate the design report, and retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `8bd874312`; merge non-overlapping Course Engine `origin/main` `35474ac5b` as `54c5120e4` and final membership-context `origin/main` `caa9967fb` as `f9d987d91`; rerun 142/142 Degree/control tests, 6/6 Course Engine web tests plus TypeScript, and 29/29 final Degree/context tests plus university typecheck.
+- [ ] Upstream Course Engine API focused tests — locally unavailable because the active Python runtime has no `pytest` module; no local API-suite pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; automation pass 2 remains the latest full-suite checkpoint.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered planning copies separate from the registrar's official transcript and degree audit.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 29 update — distinguishable exact-duplicate activity removals (slice 158)
+
+- [x] Start from clean required-branch head `7740794bf`, fetch current `origin/main` `caa9967fb`, confirm it is already included and inspect exact Activities history/current code for overlap.
+- [x] Re-rank exact-duplicate student-owned commitments as the next bounded Phase 3/6 accessibility gap; keep official directories, memberships, events, providers and institution records outside the device mutation.
+- [x] Name every removal with one-based represented-list position/size before the complete name, kind, role, schedule and place facts.
+- [x] Preserve the existing exact-id `removeCommitment` reducer, device persistence and eight-second Undo snapshot over `commitments`.
+- [x] Prove both regression paths red against the former complete-fact-only controls, then pass 222/222 focused Activities, activity-domain, reducer/Undo, accessibility-label, root-lifecycle and isolation tests.
+- [x] Run both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Re-fetch final `origin/main` `caa9967fb`, confirm no movement or overlap, and commit the coherent code/test/control slice locally as `4f3ab4264`.
+- [ ] Ordered and shuffled full suites — not yet run for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-owned activity planning, official campus directories/memberships/events and provider or institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 30 update — distinguishable exact-duplicate out-of-pocket cost removals (slice 159)
+
+- [x] Start from clean required-branch head `82a1a5218`, fetch current `origin/main` `caa9967fb`, confirm it is already included and inspect exact Costs history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered out-of-pocket rows as the next bounded Phase 6 accessibility gap; keep school accounts, charges, payments, enrolled plans, providers and institution records outside the device mutation.
+- [x] Name every removal with one-based position/size within its represented course list before the complete name, course, kind, rental/resale and amount facts.
+- [x] Preserve the existing exact-id `dropCost` reducer, device persistence and eight-second Undo snapshot over `costs`.
+- [x] Prove the exact-duplicate regression red against the former complete-fact-only controls, then pass 182/182 focused Costs, Bill, arithmetic, reducer/Undo, accessibility-label, root-lifecycle and isolation tests plus 42/42 integration-control tests.
+- [x] Run both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Re-fetch final `origin/main` `caa9967fb`, confirm no movement or overlap, and commit the coherent code/test/control slice locally as `64c9de65d`.
+- [ ] Ordered and shuffled full suites — not run for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` and an unread local properties file present; and the default local target unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered cost planning, school accounts, money movement, providers and institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 23 update — distinguishable exact-duplicate citation removals (slice 152)
+
+- [x] Start from clean required-branch head `de1abfb06`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Sources history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered citations as the next bounded Phase 3 accessibility gap; keep official academic records, provider access and AI use outside the private source-library mutation.
+- [x] Name every source removal with one-based position, represented-list size and the complete citation exactly as the student entered it.
+- [x] Preserve the existing exact-id `dropSource` reducer, private persistence, project/course filters, exports and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former citation-only names, then pass 204/204 Sources, source-domain, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [x] Commit the coherent code/test/control slice locally as `bb8191122`.
+- [ ] HawkScan DAST — post-commit preflight finds Hawk 6.6.0/config support/current skills, but headless `HAWK_API_KEY` and `STACKHAWK_APPLICATION_ID` are unset, Docker is absent and the default `http://localhost:4173` target is not running. Host overrides are unset; a local properties file exists but was not read. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep citation-library mutation separate from official academic records, provider access and AI use.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 24 update — distinguishable exact-duplicate Mail rule removals (slice 153)
+
+- [x] Start from clean required-branch head `dc64a71e8`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Mail-rule history/current code for overlap.
+- [x] Re-rank exact-duplicate private Mail rules as the next bounded Phase 3 accessibility gap; keep provider mail, account connection and institution records outside the local-rule mutation.
+- [x] Name every deletion with one-based position, represented-list size, complete rule name, search/action sentence and on/off state.
+- [x] Preserve the existing exact-id `dropMailRule` reducer, private persisted overlay, explicit-message-mark precedence and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former rule-name-only controls, then pass 199/199 Mail-rule, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and the test-backed report's eight contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent code/test/control slice locally as `f314dd621` after confirming final `origin/main` remains `116d8444e` with no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `f314dd621` finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` exists; no credential file was read and no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private Mail-rule mutation separate from provider mailbox mutation, live account connection and institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 25 update — distinguishable exact-duplicate dining balance removals (slice 154)
+
+- [x] Start from clean required-branch head `36584daf0`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Meals history/current code for overlap.
+- [x] Re-rank exact-duplicate dining balance readings as the next bounded Phase 6 accessibility gap; keep meal accounts, money, provider credentials and institution records outside the device-history mutation.
+- [x] Name every removal with one-based position, represented-list size and the existing complete timestamp, swipe, Commodore Cash and meal-money facts.
+- [x] Preserve the existing exact-id `dropBalance` reducer, term filtering, device persistence and eight-second Undo receipt.
+- [x] Prove the exact-duplicate regression red against the former fact-only controls, then pass 65/65 Meals, meal-domain, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and regenerate the passing test-backed report; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent code/test/control slice locally as `874d3fa39` after confirming final `origin/main` remains `116d8444e` with no overlap.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `874d3fa39` finds `hawk` and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, and the default `http://localhost:4173` target unavailable. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered dining history separate from official meal accounts, money movement, provider access and institution records.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 22 update — distinguishable exact-duplicate Bill removals (slice 151)
+
+- [x] Start from clean required-branch head `3ba001e28`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Bill history/current code for overlap.
+- [x] Re-rank exact-duplicate student-entered Bill rows as the next bounded Phase 6 accessibility gap; keep school accounts, official aid decisions, money movement and provider systems outside the slice.
+- [x] Name every charge, aid and payment removal with one-based position, represented-list size and the existing complete financial facts.
+- [x] Preserve the existing exact-id reducers, global eight-second Undo, `student_entered` provenance, calculations, export coverage and official-payment boundary.
+- [x] Prove the exact-duplicate regression red against the former fact-only names, then pass 298/298 Bill, arithmetic, Undo, export, reducer, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and all eight report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [x] Commit the coherent code/test/control slice locally as `8a991db4d`.
+- [ ] HawkScan DAST — the skill's post-commit preflight reports `hawk` and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. HawkScan cannot start; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep official student accounts, aid decisions, payments and provider reconciliation separate from student-entered device planning.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 21 update — distinguishable University readiness-step removals (slice 150)
+
+- [x] Start from clean required-branch head `4a71e2895`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact University preparation history/current code for overlap.
+- [x] Re-rank repeated University readiness steps as the next bounded Phase 3/5 accessibility gap; keep official records, institution submission and provider activity outside this device-draft slice.
+- [x] Name each removal with one-based position, list size, complete step text and done/not-done state.
+- [x] Preserve the existing account-and-term-scoped device library, validation, stable step ids and exact-id filtering.
+- [x] Prove the regression red against the former text-only label, then pass 51/51 focused University, domain, persistence, backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with only the existing warnings.
+- [x] Pass aggregate design-system check/report through temporary package-runner compatibility shims: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — Hawk v6/config/skills status and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST`, `APP_HOST` and a live target are absent. `stackhawk.yml` and a local properties file exist but credential material was not read; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep institution submission, official record mutation and live provider activity separate from local University preparation drafts.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 20 update — distinguishable athletics-hours removals (slice 149)
+
+- [x] Start from clean required-branch head `3bafc0b953`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Cara Log history/current code for overlap.
+- [x] Re-rank repeated private hours-log entries as the next bounded Phase 3/7 accessibility gap; keep countability, compliance determination, official athletics records and provider activity outside the mutation.
+- [x] Name every removal with position/list size, hours, activity kind, date and complete note/no-note state so otherwise identical entries remain distinguishable.
+- [x] Preserve the existing exact-id device-library mutation, validation and eight-second Undo snapshot.
+- [x] Prove the duplicate-entry regression red against the former label, then prove removing the second represented entry leaves the first stable ID unchanged.
+- [x] Pass 51/51 focused/adjacent Cara Log, athletics arithmetic/share, activity-removal, label, root-lifecycle and isolation tests from `app/`.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private hours planning, athletics-compliance determinations, official records and provider systems as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 19 update — distinguishable timer resets (slice 148)
+
+- [x] Start from clean required-branch head `928436a78`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Clocks history/current code for overlap.
+- [x] Re-rank generic timer-reset names as the next bounded Phase 3 accessibility gap; keep coursework, provider calendars and official institution records outside this device-timer mutation.
+- [x] Name every reset with the represented timer label, total duration, current remainder and running/paused state.
+- [x] Preserve the existing exact-id `patchTimer` reducer and pure reset behavior that restores only the selected timer to its requested duration and paused state.
+- [x] Prove the behavior guard red against the former generic reset names, then pass 66/66 focused Clocks, clock-domain, timer reducer, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. A local properties file exists but was not read; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device timers, provider calendars and official institution schedules as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 18 update — distinguishable Workflow Builder draft removals (slice 147)
+
+- [x] Start from clean required-branch head `708863314`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Workflow Builder history/current code for overlap.
+- [x] Re-rank position-only step/check removals as the next bounded Phase 10 accessibility gap; keep draft saving, publishing, workflow execution and official student records outside this label-only mutation.
+- [x] Name every draft-step removal with position, list size, complete title, kind, owner and wait/no-wait state.
+- [x] Name every eligibility-check removal with position, list size, fact, comparison, value, complete explanation and next step.
+- [x] Preserve exact-position unsaved-definition edits, `workflow:manage`, tenant RLS, database validation, authorized draft save and the separate-person `workflow:publish` boundary.
+- [x] Prove the behavior guard red against the former position-only names, then pass 82/82 Workflow Builder, workflow spec/API/path/shell, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep editing an unsaved workflow definition, saving a tenant draft, publishing by a second authorized person and running any student workflow as separate authority transitions.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 15 — distinguishable Advisor Meeting preparation removals (slice 144)
+
+- [x] Start from clean required-branch head `bef213ba9`, fetch current `origin/main` `116d8444e` and confirm no equivalent Advisor Meeting preparation-line identity guard landed.
+- [x] Re-rank the remaining dependency-ready gaps and select the bounded device-owned meeting editor; keep advisor-share mutations, official advising records and provider/institution operations outside this slice.
+- [x] Reuse the existing `LineList` and identify each removal by one-based position, list size and complete student-entered text.
+- [x] Include recorded answer/absence for questions and completion/due-date state for follow-ups; preserve the current account/device-scoped `useDeviceLibrary` authority.
+- [x] Prove the guard red against the former position-only labels, then remove the second same-text follow-up and verify the first exact row remains persisted and rendered.
+- [x] Pass 97/97 focused Advisor Meeting, domain/share, device-library, backup, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep advisor-share mutation, official advising records, provider connectivity and institution operations as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 16 — distinguishable graph-line removals (slice 145)
+
+- [x] Start from clean required-branch head `8dabfa54e`, fetch current `origin/main` `116d8444e` and confirm no equivalent graph-line identity guard landed.
+- [x] Re-rank the bounded Phase 3 graph workspace ahead of external or institution-controlled gaps; keep provider activity and official academic records outside this device-row mutation.
+- [x] Identify every line removal by one-based position, list size, complete formula or blank-line state, and shown/hidden state.
+- [x] Preserve the existing stable-id `dropPlot` reducer, device persistence and eight-second Undo snapshot.
+- [x] Prove the guard red against the former position-only labels and verify the second same-formula control dispatches only its represented plot ID.
+- [x] Pass 163/163 focused Grapher, reducer, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device graph lines, provider activity and official academic records as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 17 — distinguishable eligibility-requirement removals (slice 146)
+
+- [x] Start from clean required-branch head `84cb004bd`, fetch current `origin/main` `116d8444e`, confirm it is already included and inspect exact Eligibility Check history/current code for overlap.
+- [x] Re-rank repeated student-entered eligibility rules as the next bounded Phase 3/6 accessibility gap; keep official eligibility determinations, provider activity and institution records outside this device-row mutation.
+- [x] Identify every removal by one-based position, list size, complete rule/source, required course-or-hour count, accepted-course scope and source note/no-note state.
+- [x] Preserve the existing exact-id device-library update, refused-write representation and eight-second Undo snapshot.
+- [x] Prove the guard red against the former name/source-only label and verify the second same-name/same-source control removes only its represented requirement ID.
+- [x] Pass 63/63 focused Eligibility, Athletics, device-library, Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — active-skill preflight confirms Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target exists. The local properties file was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered eligibility planning, official compliance determinations, provider activity and institution records as separate authority boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 13 update — exact shared-photo removal and thumbnail lifetime (slice 142)
+
+- [x] Start from clean required-branch head `ed04f81dd`, fetch current `origin/main` `3ec04d742` and inspect exact shared-capture history/current code for overlap.
+- [x] Re-rank the shared device-photo picker as the next bounded Phase 3/4 accessibility and resource-lifetime gap; keep upload, model reading, storage and provider behavior outside the slice.
+- [x] Give every photo-removal control an exact accessible name containing position, collection size, complete filename and prepared size.
+- [x] Release only blob preview URLs that left the represented batch; preserve retained thumbnails across list changes and release the remainder on unmount.
+- [x] Preserve the existing index-scoped unsent-draft mutation and the caller's separate explicit read/send action.
+- [x] Prove the label regression red against the former filename-only controls, then pass 40/40 focused Capture, camera, material, photo-reading, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; keep the audit at zero violations with 86 existing warnings and CSS within its ledger; regenerate the report.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded shared-component slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep scanner/extractor-backed Import, model-provider reading and persisted source-file disposal as separate authority and environment gates.
+
+## Automation pass 12 update — distinguishable potential-schedule deletion (slice 141)
+
+- [x] Start from clean required-branch head `a9ba835e2`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact saved-schedule history/current code for overlap.
+- [x] Re-rank repeated student-entered potential-schedule names as the next bounded Phase 3 accessibility gap; keep enrollment, official registration and institution/provider operations outside the device mutation.
+- [x] Name every deletion with collection position and size, complete name, section count, copied credit total and time-conflict count.
+- [x] Preserve the existing cancel-first shared consequence preview, exact-id registration-library update and backup-only recovery boundary.
+- [x] Prove the repeated-name regression red against the former name-only controls, then pass 102/102 focused Registration Portal, registration-domain, ActionPreview, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger, and regenerate the report successfully.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep potential-schedule deletion, cart changes and official registration as separate operations.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 11 update — distinguishable cost-estimate removals (slice 140)
+
+- [x] Start from clean required-branch head `1623d8ecb`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Cost Planner history/current code for overlap.
+- [x] Re-rank repeated Cost Planner labels as the next bounded Phase 3 accessibility gap; keep financial aid, bills, registrar records and provider activity outside this private estimate mutation.
+- [x] Name every removal with one-based collection position, collection size, complete label, amount, cadence and student-entered/imported source, including recorded provenance and readable date for imported rows when present.
+- [x] Preserve the existing cancel-first consequence preview, exact-id device-plan update, recalculated totals, persistence-refusal retry and backup-only recovery language.
+- [x] Prove the repeated-label guard red against the former label-only controls and confirm the second removal deletes only its represented id.
+- [x] Pass 45/45 focused Graduation Simulator, cost-plan and graduation-domain tests and 196/196 broader focused/control/design tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Retain zero design-audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk credentials file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private cost estimates, financial-aid records, bills and the registrar's official degree audit as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 7 update — distinguishable remembered-line deletion (slice 136)
+
+- [x] Start from clean required-branch head `a39c56fb0`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact About Me history/current code for overlap.
+- [x] Re-rank identical remembered-line deletion names as the next bounded Phase 3 Profile accessibility gap; keep provider prompts, sync policy, whole-account erasure and external systems outside this exact-record mutation.
+- [x] Name every deletion with one-based collection position, collection size and complete remembered text so otherwise identical lines remain distinguishable.
+- [x] Preserve the existing cancel-first consequence preview, exact-id `dropFact` mutation, account-sync merge authority, export behavior and no-automatic-restore boundary.
+- [x] Prove the repeated-line guard red against the former text-only names, then pass 156/156 focused About Me, Trust Center, ActionPreview, root-lifecycle, fact, export and private-backup tests plus the 2/2 isolation guard.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep whole-account erasure, sync-provider changes and assistant-provider requests outside this exact-record accessibility slice.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 6 update — distinguishable custom-reminder deletion (slice 135)
+
+- [x] Start from clean required-branch head `4669bb5aa`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact My Rules history/current code for overlap.
+- [x] Re-rank duplicate custom-reminder deletion names as the next bounded Phase 3 accessibility gap; keep built-in reminders, official deadlines, provider notifications and institution records outside this device mutation.
+- [x] Name each deletion with one-based collection position, collection size and the complete existing rule sentence so otherwise identical rules remain distinguishable.
+- [x] Preserve the existing exact-id `deleteMyRule` action, device persistence and eight-second Undo snapshot of only `myRules`.
+- [x] Prove the repeated-rule regression red against the former sentence-only names and confirm the second control dispatches only the second rule id.
+- [x] Pass 162/162 focused My Rules, Undo, reducer, accessibility, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass design-check constituents: 79/79 token/design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
+- [ ] Aggregate design report launcher — writes its artifact, then exits 1 because its hardcoded `npx` command is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [x] Commit the coherent code/test/control slice as `ba529da24`; final `origin/main` remains `3ec04d742` with no overlap.
+- [ ] HawkScan DAST — mandatory preflight for `ba529da24` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep custom reminder rules device-owned and recoverable without implying provider scheduling or institution-authored deadline changes.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 1 update — distinguishable Learning Map concept removals (slice 130)
+
+- [x] Fetch `origin/main`, confirm the clean required branch and upstream are both `4ac162f1c`, and inspect exact Learning Map history/current code for equivalent work.
+- [x] Re-rank repeated private Learning Map rows as the next bounded Phase 3 accessibility gap; preserve account/term device authority and the existing workspace-backup recovery boundary.
+- [x] Name every removal with list position, private concept/question type, complete title and current learning state.
+- [x] Preserve the shared cancel-first deletion preview, exact-id device-library mutation, unchanged-record language and backup-only recovery contract.
+- [x] Prove the repeated-concept regression red against the former generic controls, then pass the final 31/31 focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 148/148 design contracts, zero-violation audit with 86 existing warnings and the unchanged CSS ledger.
+- [x] Commit the coherent slice as `a4a166f01`, inspect final `origin/main` `3ec04d742` as non-overlapping Course Engine field-guide work, and merge it as `9c0fef73f` before combined-head verification.
+- [x] On merged head `9c0fef73f`, pass 53/53 app-focused/control tests and app TypeScript plus 8/8 upstream field-guide tests and its TypeScript gate.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no new full-suite result is claimed.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep course-guide concepts, official grades/records and provider learning systems separate from this private device map.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 4 update — distinguishable Semester Mail bulk actions (slice 133)
+
+- [x] Start from clean required-branch head `d0fe548a0`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mail toolbar history/current code for overlap.
+- [x] Re-rank the generic selected-set toolbar controls as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this local-mark slice.
+- [x] Name Archive, Trash, Move, Snooze and Mark read with the exact selected conversation count and ordered positions; retain complete conversation identity for one selected or opened conversation.
+- [x] Preserve the existing exact-message reducer inputs, account-local mailbox marks, folder recovery, provider links and read-only provider boundary.
+- [x] Prove the bulk-toolbar guard red against the former generic names, then pass 76/76 focused Mail, reader/list, mailbox, reducer, paging, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript builds, lint/style/label/terms checks and production build with only the existing warnings.
+- [x] Pass design-system check/report: 9 token tests, 70 design contracts, 8/8 report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight stopped because the Hawk v6 executable is absent; `hawk config` and `hawk skills status` cannot run, Docker is absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate People removals — automation pass 31, integration slice 160
+
+- [x] Start from clean required-branch head `f6f0c2db7`; fetch current `origin/main` `caa9967fb`, confirm it is already included and inspect exact People history/current code for overlap.
+- [x] Re-rank exact-duplicate student-authored conversation and recommendation-letter removal names as the next bounded Phase 3 accessibility gap; keep communications and official records outside the mutation.
+- [x] Name every represented removal with one-based position and list size while retaining its complete existing person, date, subject, purpose, deadline and stage facts.
+- [x] Preserve stable-id `dropVisit` / `dropLetter`, shared eight-second Undo and private planning authority; no recommender, provider or institution is contacted.
+- [x] Prove both regressions red against the former fact-complete-only controls, then pass 85/85 focused and adjacent People, letters, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents, all eight design-report contracts, zero-violation design audit and the existing CSS ledger.
+- [x] Commit the coherent slice as `e56a643d3`, merge non-overlapping Course Engine slide work from `origin/main` `9c1f1f514` as `06cb40fe8`, then pass 85/85 People-focused tests, both app TypeScript gates, 10/10 upstream Study Mode tests and its web TypeScript gate on the combined head.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice; no focused regression is red.
+- [ ] HawkScan DAST — preflight cannot start because the Hawk CLI, Docker, credentials/application id, host and live target are unavailable; the skill package is absent from the available catalog. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+
+## 2026-10-17 distinguishable exact-duplicate Clocks actions — automation pass 32, integration slice 161
+
+- [x] Start from clean required-branch head `0d295c00d`; fetch current `origin/main` `9c1f1f514`, confirm it is already included and inspect exact Clocks history/current code for overlap.
+- [x] Re-rank exact-duplicate device-only timer Reset/Clear and alarm Delete names as the next bounded Phase 3 accessibility gap; keep academic records, provider clocks, notification services and institution systems outside the mutation.
+- [x] Name every represented action with one-based position and list size while retaining its complete existing label, duration/remainder/state or time/schedule/state facts.
+- [x] Preserve stable-id `patchTimer`, `removeTimer` and `removeAlarm` reducers plus the shared eight-second removal Undo; no external authority changes.
+- [x] Prove all three regressions red against the former fact-complete-only controls, then pass 57/57 focused and adjacent Clocks, reducer, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents, 97/97 report contracts, zero-violation design audit and the existing CSS ledger.
+- [x] Commit the coherent slice as `1218e15ce`, merge non-overlapping registration-readiness evidence from `origin/main` `802c97c70` as `6d7834258`, then pass 57/57 Clocks/control tests and both app TypeScript gates on the combined head; pass the upstream platform-control registry's 63/63 tests, validation and TypeScript with the app-installed type root.
+- [ ] Aggregate design report launcher — writes the report, then exits 1 because its hardcoded `npx` is unavailable; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight found the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and a local properties file exist but credential material was not read; and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep ordinary timers and alarms separate from academic work-session evidence, provider notification guarantees and official institution schedules.
+
+## 2026-10-17 distinguishable exact-duplicate Course Studio draft removals — automation pass 33, integration slice 162
+
+- [x] Start from clean required-branch head `f118e9508`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact Edit Course history/current code for overlap.
+- [x] Re-rank exact-duplicate grading-row, meeting and deadline removal names as the next bounded Phase 4 accessibility gap; keep the unsaved draft, explicit Save boundary and official LMS/institution records separate.
+- [x] Name every represented removal with one-based position and current collection size while retaining the complete existing grading, schedule or deadline facts.
+- [x] Preserve current index-scoped grading/schedule removal, stable-id deadline removal and explicit course-draft Save behavior; no persisted course changes until Save.
+- [x] Prove all four behavior guards red against the former fact-complete-only names, then pass 50/50 focused Edit Course, edit-domain, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary cached package-runner shim: 9/9 token tests, 70/70 design contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present and no live target exists. No scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-edited course drafts separate from official LMS/source records, provider synchronization and institution-controlled publication.
+
+## Automation pass 14 update — distinguishable Registration Day backup actions (slice 143)
+
+- [x] Merge current `origin/main` `116d8444e` into clean required-branch head `d10396349`, then select from combined head `36fbb71b4`.
+- [x] Inspect exact upstream history and current Registration Day code; find exact-primary/exact-backup mutations but no equivalent cross-primary action-name guard.
+- [x] Name every Up, Down and Remove action with backup rank/list size, course, section, title and term plus its primary course and section.
+- [x] Preserve the existing `moveBackup` / `removeBackup` device-plan authority, validation, persistence and planning-only official-registration boundary.
+- [x] Prove the new guard red against the former backup-code/section-only controls and prove removing the second representation leaves the first primary's backup intact.
+- [x] Pass 77/77 focused Registration Day, mode/card, domain, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner shim: 9 token tests, 70 design contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep device registration planning, official enrollment, seat availability and institution-provider operations as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 10 update — distinguishable mentor-request actions (slice 139)
+
+- [x] Start from clean required-branch head `09bbed065`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mentor Finder history/current code for overlap.
+- [x] Re-rank repeated mentor-request controls as the next bounded Phase 7 accessibility gap; preserve mutual consent, programme contact and school/provider activation boundaries.
+- [x] Name Accept, Decline and Withdraw with one-based collection position, collection size, peer/alumni programme kind, direction, person and topics/no-topic state.
+- [x] Preserve the existing exact-id `answer_mentor_request` call, one-operation-at-a-time guard, server refresh and retryable refusal notice.
+- [x] Prove the repeated-request guard red against the former generic controls and confirm the second Decline and Withdraw actions send only their represented ids.
+- [x] Pass 62/62 focused Mentor Finder, mentor-domain, matching, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 9/9 token-export tests, 139/139 combined design contracts and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep visible request identity, server-side mutual consent/capacity and institution programme activation as separate evidence boundaries.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 9 update — distinguishable Operating Rhythm simulator removals (slice 138)
+
+- [x] Start from clean required-branch head `2fd29ab2f`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Operating Rhythm history/current code for overlap.
+- [x] Re-rank repeated simulator commitments as the next bounded Phase 3 accessibility gap; keep saved rhythm plans, provider calendars and official commitments outside this unsaved scenario edit.
+- [x] Name every removal with one-based collection position, collection size, complete title or untitled state, context and duration.
+- [x] Preserve the existing index-scoped draft transition and confirm removing the middle Admin row leaves both represented Writing rows.
+- [x] Prove the guard red against the former position-only controls, then pass 65/65 focused Operating Rhythm, domain, ActionPreview, label, root-lifecycle, isolation and integration-control tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing large-chunk warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep the unsaved simulator, persisted rhythm plans, provider calendars and official institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 8 update — distinguishable Student Operating saved-item deletion (slice 137)
+
+- [x] Start from clean required-branch head `0819ff74c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Student Operating history/current code for overlap.
+- [x] Re-rank repeated private workflow-item titles as the next bounded Phase 3 accessibility gap; keep account/provider configuration, downloaded copies and official records outside this exact-record mutation.
+- [x] Name every deletion with one-based collection position, collection size, complete title, workflow kind, current status and deadline/no-deadline state.
+- [x] Preserve the existing cancel-first consequence preview, exact-id workspace update, account-sync boundary and backup-only recovery language.
+- [x] Prove the repeated-title guard red against the former title-only names and confirm deletion of position 2 removes only its stable id.
+- [x] Pass 87/87 focused Student Operating, domain, workspace-backup, ActionPreview, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass 79/79 design-check constituents and 97/97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Aggregate design check/report wrappers — their hardcoded `npm` / `npx` launchers are unavailable; exact constituents pass and no wrapper result is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep private operating items, downloaded exports, account sync and official institution records as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 5 update — distinguishable filed-feedback removals (slice 134)
+
+- [x] Start from clean required-branch head `05c19d68c`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Feedback inbox history/current code for overlap.
+- [x] Re-rank repeated filed-feedback deletion controls as the next bounded Phase 3 accessibility gap; keep returned-work systems, saved evidence, plan actions and provider/institution records outside this device mutation.
+- [x] Name every deletion with list position, complete work title, student-selected feedback category and filed date so otherwise identical entries remain distinguishable.
+- [x] Preserve the existing exact-id device-library update, cancel-first consequence preview, account/term storage scope and device-workspace backup boundary.
+- [x] Prove the repeated-entry regression red against the former unnamed controls and confirm deleting position 2 leaves the represented position-1 record intact.
+- [x] Pass 33/33 focused Feedback inbox, Learning hub, study-hierarchy, ActionPreview, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass design-check constituents: 9 token tests, 70 design contracts, zero audit violations with 86 existing warnings and CSS within its ledger; pass all eight report contract files at 97/97.
+- [ ] Aggregate design check/report launchers — unavailable because their hardcoded `npm` / `npx` commands are absent; exact constituents pass and no aggregate-wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight for commit `9f8373dd8` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep returned-work authority, saved evidence, plan actions and institutional feedback records separate from the private device inbox.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Automation pass 28 update — distinguishable registration-cart removals (slice 129)
 
 - [x] Identify the duplicate accessible-name gap for different sections of the same course in the local registration cart.
@@ -2676,4 +3277,100 @@ Documentation only. Application code was not changed after the reset onto `d577a
 
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep durable moderation audit, published-listing administration and institution/provider activation as separate server-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 2 update — distinguishable Semester Mail row actions (slice 131)
+
+- [x] Start from clean required-branch head `815239aed`, fetch current `origin/main` `3ec04d742` and inspect exact Mail row/history evidence for overlap.
+- [x] Re-rank repeated Mail rows as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this device-mark slice.
+- [x] Name every row action with page position, participants, complete subject and full timestamp so otherwise identical threads remain distinguishable.
+- [x] Preserve the existing exact-thread callbacks, mailbox-mark persistence, keyboard commands, provider links and read-only provider boundary.
+- [x] Prove the repeated-thread Trash regression red against the former subject-only name, then pass 88/88 focused List, mailbox, reducer, rules and paging tests plus TypeScript.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build; retain twelve existing lint warnings and the existing chunk-size warning.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; retain zero audit violations, 86 existing warnings and CSS within its ledger.
+- [x] Pass the root-lifecycle and isolation guards as part of a 100/100 control-contract run.
+- [x] Re-fetch final `origin/main` `3ec04d742`, confirm no upstream movement or overlap, and commit the coherent slice as `d365f7512`.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory post-commit preflight for `d365f7512` reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread; no live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## Automation pass 3 update — distinguishable opened Semester Mail actions (slice 132)
+
+- [x] Start from clean required-branch head `488243d15`, fetch current `origin/main` `3ec04d742`, confirm it is already included and inspect exact Mail reader history/current code for overlap.
+- [x] Re-rank the generic opened-conversation controls as the next bounded Phase 3 accessibility gap; keep provider-mail mutation, sending, account connection and live provider configuration outside this local-mark slice.
+- [x] Name archive, Trash, snooze, read-state and star actions with participants, complete subject and full timestamp, retaining **from** / **to** semantics.
+- [x] Preserve the existing exact-thread callbacks, account-local mailbox marks, keyboard behavior, provider links and read-only provider boundary.
+- [x] Prove the opened-reader guard red against the former generic names, then pass 55/55 focused Reader, List, mailbox, paging, root-lifecycle and isolation tests plus TypeScript.
+- [x] Pass lint/style/label/terms checks, university gateway typecheck and production build with only the existing warnings.
+- [x] Pass aggregate design-system check/report through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, 8/8 report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are absent; no scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep provider mailbox mutation, live account connection and sending as separate external-authority work.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate Mine removals — automation pass 34, integration slice 163
+
+- [x] Start from clean required-branch head `23397032a`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact Mine history/current code for overlap.
+- [x] Re-rank fact-identical student-authored action and appointment deletion names as the next bounded Phase 3 accessibility gap; keep provider calendars and official institution records outside the device/account workspace mutation.
+- [x] Name action deletions with represented position/count inside their displayed group while retaining complete title, course/personal, date, time, repeat and step facts.
+- [x] Name appointment deletions with represented position/count in chronological order while retaining complete title, date, time, kind, place, duration and repeat facts.
+- [x] Preserve stable-id `deleteTask` / `deleteAppointment` behavior and shared eight-second Undo snapshots; no provider or institution system changes.
+- [x] Prove both guards red against the former complete-fact-only controls, then pass 63/63 focused Mine, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 148 distinct token/design/report contract tests, zero-violation audit with 86 existing warnings, CSS within ledger and the test-backed design report across all eight contract files.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility slice.
+- [ ] HawkScan DAST — mandatory preflight found the Hawk CLI and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present, no local properties file or live target exists, and no scan/fix/rescan result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep student-entered task/appointment records, provider calendars and official institution schedules as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate waiting-send actions — automation pass 35, integration slice 164
+
+- [x] Start from clean required-branch head `22c66fe02`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact WaitingSends/outbox history and current code for overlap.
+- [x] Re-rank fact-identical queued-request controls as the next bounded Phase 3 accessibility and controlled-action gap; keep provider sending, institutional receipt and live connection configuration outside this device-held outbox slice.
+- [x] Name each Send, Discard and sent-row removal with represented position/count, request kind and complete persisted summary.
+- [x] Preserve exact-id `sendOne` / `drop`, account isolation, durable-before-send state, unknown-delivery confirmation and the rule that reconnecting never sends automatically.
+- [x] Prove the duplicate-row guard red against the former summary-only names, then prove choosing duplicate 2 removes only `ob-second` and leaves `ob-first` represented.
+- [x] Pass 54/54 focused WaitingSends, outbox/classification, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 9 token tests, 70 design contracts, all eight report contract files with 97/97 tests, zero audit violations with 86 existing warnings and CSS within its ledger.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/identity slice.
+- [ ] HawkScan DAST — the active skill is not installed in the callable catalog; mandatory preflight found no Hawk CLI, Docker, API key, application id, app host, local properties file or live target. No scan/fix/rescan result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep queued device requests, provider delivery, institutional receipt and provider configuration as separate authorities.
+- [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-17 distinguishable exact-duplicate custom-school removal — automation pass 36, integration slice 165
+
+- [x] Start from clean required-branch head `14eb02a63`; fetch current `origin/main` `802c97c70`, confirm it is already included and inspect exact SchoolPicker/history evidence for overlap.
+- [x] Re-rank identical custom-profile Forget names as the next bounded Phase 3 accessibility and recovery gap; keep institution-authored packs and provider/institution records outside this device-workspace slice.
+- [x] Name each Forget action with represented custom-school position/count, complete school name and selected/not-selected state.
+- [x] Preserve stable-id `forgetSchool` behavior and the shared eight-second Undo snapshot over only `mySchools` and `schoolId`.
+- [x] Prove the duplicate-row guard red against the former name-only actions, then prove choosing duplicate 2 dispatches only `riverview-2`.
+- [x] Pass 162/162 focused SchoolPicker, reducer/Undo, label, root-lifecycle and isolation tests.
+- [x] Pass both TypeScript gates, lint/style/label/terms checks and production build with twelve existing warnings and the existing large-chunk warning.
+- [x] Pass 9 token tests, 70 design contracts, all eight report contract files with 97/97 tests, zero audit violations with 86 existing warnings and CSS within its ledger.
+- [x] Commit the coherent slice as `23b750f68`; merge non-overlapping final `origin/main` `955d9e06e` as `42bb130b8`, then pass 168/168 combined focused/control/upstream tests and both application TypeScript gates.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded accessibility/identity slice.
+- [ ] HawkScan DAST — the active skill stops at mandatory preflight because the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; no live target, scan, finding result, fix/rescan loop or security pass exists.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep custom device profiles, institution-authored packs, live directory data and provider configuration as separate authorities.
 - [ ] Keep authenticated Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

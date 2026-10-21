@@ -1,10 +1,97 @@
 # Handoff integration status
 
-**Automation pass** 22 of 120 · **Integration slice** 123 · **Date** 2026-10-16 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice base** `462ad4873` · **Latest observed `origin/main`** `06c2d5c74`
+**Automation pass** 37 of 120 · **Integration slice** 166 · **Date** 2026-10-21 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Slice commit** `f2799d738` · **Latest observed `origin/main`** `7ca3b0ff9`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current consequence and recovery work also provides governed private-workspace removals, validated account-scoped recovery, account-and-term-scoped housing/meal planning, private NIL restore, governed and distinguishable degree-planning removals, complete/distinguishable meal and bill removal names, distinguishable activity, course, course-material, Mine, saved-equation, residence, maintenance-request, connected-calendar and protected-time removal names with exact-id recovery where available, and cancel-first shared group-part removal and membership departure. Sensitive fields remain outside general portable backup under their stronger boundaries. Durable group-membership history remains incomplete. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Current consequence and recovery work also provides governed private-workspace removals, validated account-scoped recovery, account-and-term-scoped housing/meal planning, private NIL restore, governed and distinguishable degree-planning removals, complete/distinguishable meal and bill removal names, exact-duplicate-safe activity, out-of-pocket cost, course, course-material, Learning Map, Mine, saved-equation, residence, maintenance-request, connected-calendar, protected-time and Registration Day backup actions with exact-id recovery where available, and cancel-first shared group-part removal and membership departure. Sensitive fields remain outside general portable backup under their stronger boundaries. Durable group-membership history remains incomplete. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 36 / integration slice 165
+
+- Required-branch head `14eb02a63` was clean before selection and already included current `origin/main` `802c97c70`; exact SchoolPicker history/current-code inspection found no equivalent duplicate-profile action-name guard.
+- Every custom-school Forget action now names represented position/count, complete school name and selected/not-selected state. Otherwise identical student-created profiles remain distinguishable.
+- Existing stable ids, `forgetSchool` and shared eight-second Undo over only `mySchools` plus `schoolId` remain authoritative. The regression activates duplicate 2 and dispatches only `riverview-2`; bundled schools, institution packs and provider data remain unchanged.
+- The guard failed against the former name-only controls, then focused SchoolPicker, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 162/162.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design verification passes 9 token tests, 70 design contracts and all eight report files with 97/97 tests; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun.
+- The active HawkScan skill stops at mandatory preflight: the Hawk CLI and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; and no live target exists. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+- Coherent slice commit `23b750f68` is followed by non-overlapping edge-error-envelope merge `42bb130b8` from final `origin/main` `955d9e06e`; the combined head passes 168/168 focused/control/upstream tests and both application TypeScript gates.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 37 / integration slice 166
+
+- The interrupted runner selected a bounded Sheet accessibility gap: otherwise identical colour and cell rules exposed indistinguishable removal names.
+- Each removal now includes its position and represented rule facts while preserving stable-ID filtering and local workbook ownership.
+- Recovered focused verification passes 40/40 Sheet tests. Slice `f2799d738` merges current `origin/main` `7ca3b0ff9` cleanly as `48ca5f85b`; the combined head passes 302/302 app tests and 181/181 domain/institution package tests, both app TypeScript gates, lint and production build.
+- HawkScan stops at preflight because Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This slice changes only local Sheet rule identification. It does not change an institutional record, provider system, deployment, approval or production-readiness state.
+
+## Evidence locked in automation pass 30 / integration slice 159
+
+- Required-branch head `82a1a5218` was clean before selection and already included current `origin/main` `caa9967fb`; exact Costs history/current-code inspection found the earlier fact-complete removal names, stable-id reducer and bounded Undo, but no exact-duplicate cost identity guard.
+- Every out-of-pocket cost removal now names one-based position and size within its represented course list before the existing complete free-text name, course, kind, rental/resale and amount facts. Position keeps otherwise identical student-entered planning rows distinguishable.
+- The existing exact-id `dropCost` reducer and shared eight-second Undo snapshot over `costs` remain authoritative. The regression activates position 2 and proves only that stable id is removed; school accounts, official charges, payments, enrolled plans, providers and institution records remain unchanged.
+- The guard failed against the former complete-fact-only controls. Focused Costs, Bill, arithmetic, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 182/182, and integration-control verification passes 42/42; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Aggregate design-system check/report pass through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Coherent code/test/control slice commit `64c9de65d` follows a final fetch confirming `origin/main` remains `caa9967fb` with no overlapping Costs work.
+- HawkScan DAST remains open: Hawk and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` and an unread local properties file are present; and the default local target is unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, money movement, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 29 / integration slice 158
+
+- Required-branch head `7740794bf` was clean before selection and already included current `origin/main` `caa9967fb`; exact Activities history/current-code inspection found the earlier complete-fact removal names, stable-id reducer and bounded Undo, but no exact-duplicate commitment identity guard.
+- Every student-owned activity removal now names one-based represented-list position and size before the existing complete name, kind, role, schedule and place facts. Position keeps otherwise identical device-planning rows distinguishable.
+- The existing exact-id `removeCommitment` reducer and shared eight-second Undo snapshot over `commitments` remain authoritative. The regression activates position 3 and proves only that stable id is removed; official directories, memberships, events and institution records remain unchanged.
+- Both guards failed against the former complete-fact-only controls. Focused Activities, activity-domain, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 222/222; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Aggregate design-system check/report pass through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts and all eight report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Coherent code/test/control slice commit `4f3ab4264` follows a final fetch confirming `origin/main` remains `caa9967fb` with no overlapping Activities work.
+- HawkScan DAST remains open: Hawk and Docker are absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` are unset; `stackhawk.yml` is present; and the default local target is unavailable. No scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 28 / integration slice 157
+
+- Required-branch head `aa7cb2bf0` was clean before selection and already included current `origin/main` `116d8444e`; exact Degree history/current-code inspection found the earlier complete-fact names, consequence previews and stable-id reducers, but no exact-duplicate planning-row identity guard.
+- Every recorded-course and degree-requirement removal now names one-based represented-list position and size before its existing complete planning facts. Position keeps otherwise identical student-entered copies distinguishable.
+- Existing `dropTaken` / `dropRequirement` stable-id reducers and cancel-first `ConfirmDialog` / `ActionPreview` remain authoritative. The regressions activate position 2 and prove only that exact duplicate id is removed; the registrar's official transcript and degree audit remain unchanged.
+- Both guards failed against the former complete-fact-only controls. Degree-domain, reducer/Undo, graduation/advisor, accessibility-label, dead-end, root-lifecycle and isolation verification passes 142/142; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Token export passes 9/9, design contracts pass 70/70, the report is generated, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Coherent slice commit `8bd874312` precedes non-overlapping Course Engine `origin/main` `35474ac5b`, merged as `54c5120e4`, and final non-overlapping membership-context `origin/main` `caa9967fb`, merged as `f9d987d91`. The reconciled head passes 142/142 Degree/control tests, 6/6 Course Engine source-viewer tests plus web TypeScript, and 29/29 final Degree/context tests plus university typecheck. Four focused Course Engine API files remain locally unverified because the available Python runtime has no `pytest` module.
+- Mandatory HawkScan preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; and the default local target unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 27 / integration slice 156
+
+- Required-branch head `02116b01a` was clean before selection and already included current `origin/main` `116d8444e`; exact Links history/current-code inspection found the earlier complete-fact name, exact-id reducer and bounded Undo, but no exact-duplicate shortcut identity guard.
+- Every student-created shortcut removal now names one-based position, collection size, complete name, resolved address/no-address state and current group. Position distinguishes otherwise identical private rows.
+- The existing stable link id, `removeLink` reducer and eight-second Undo snapshot over only `extraLinks` and `linkUrls` remain authoritative. The regression activates position 2 and proves position 1 remains persisted.
+- The guard failed against the former complete-fact-only controls. Links, link-group, school-link, reducer, Undo, accessibility-label, root-lifecycle and isolation verification passes 191/191; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Design-check constituents pass 79/79; the test-backed report passes all eight contracts, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Coherent slice commit `602122fa0` contains the behavior, regression and synchronized control evidence. Final `origin/main` remains `116d8444e` with no overlapping Links work.
+- Mandatory HawkScan preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` and a local properties file present but unread; and the default local target unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 26 / integration slice 155
+
+- Required-branch head `b35714eae` was clean before selection and already included current `origin/main` `116d8444e`; exact Support history/current-code inspection found the earlier consequence preview and name/phone distinction, but no exact-duplicate contact identity guard.
+- Every emergency-contact removal now names one-based collection position, collection size, complete contact name and phone number. Position keeps two identical student-entered contacts distinguishable.
+- The existing stable contact id, device-only Support library write, cancel-first `ConfirmDialog` / `ActionPreview` and explicit exclusion from portable backup remain authoritative. The regression activates position 2 and proves only its id is removed.
+- The guard failed against the former name/phone-only controls. Support journey, workspace-backup, accessibility-label, root-lifecycle and isolation verification passes 78/78; both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Aggregate design-system check/report pass through a temporary package-runner compatibility launcher: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Coherent slice commit `57705f3e1` contains the behavior, regression and synchronized control evidence. Final `origin/main` remains `116d8444e` with no overlapping Support work.
+- Mandatory post-commit HawkScan preflight reports Hawk and Docker absent; `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset; `stackhawk.yml` present; no local properties file; and the default local target unavailable. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
 ## Evidence locked in automation pass 20 / integration slice 121
 
@@ -1353,6 +1440,311 @@ This local slice does not prove deployment, production execution, institutional 
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
 
+## Evidence locked in automation pass 23 / integration slice 152
+
+- Required-branch head `de1abfb06` was clean before selection and already included current `origin/main` `116d8444e`; exact Sources history/current-code inspection found the earlier complete-citation name but no identity guard for otherwise exact duplicate rows.
+- Every private citation removal now names one-based position, list size and the complete student-entered citation. Exact duplicates remain distinguishable without changing the visible row.
+- The existing exact-id `dropSource` reducer, persisted private source library and eight-second Undo remain authoritative. Nothing normalizes or verifies a citation, changes an official academic record, contacts a provider or sends source content to an AI service.
+- The new exact-duplicate regression failed against the former citation-only names, then 204/204 focused Sources, source-domain, reducer, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The coherent code/test/control slice is commit `bb8191122`. The HawkScan skill's post-commit preflight finds Hawk 6.6.0 with config support and current skills, but this headless run has no `HAWK_API_KEY` or `STACKHAWK_APPLICATION_ID`, Docker is absent and the configured default `http://localhost:4173` target is not running. `HAWK_APP_HOST` / `APP_HOST` are unset; a local properties file exists but was not read. HawkScan cannot start, so no scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 35 / integration slice 164
+
+- Required-branch head `22c66fe02` was clean before selection and already included current `origin/main` `802c97c70`; exact upstream and branch history/current-code inspection found no equivalent duplicate waiting-send identity guard.
+- Every Send, Discard and sent-row removal name now includes represented position/count, request kind and complete persisted summary. Otherwise identical queued requests remain distinguishable.
+- Existing stable request ids, exact `sendOne` / `drop`, account isolation, durable-before-send state, ambiguous-delivery confirmation and explicit student send remain authoritative. The regression discards duplicate 2, proves only `ob-second` leaves IndexedDB and proves `ob-first` remains available. Nothing sends automatically.
+- The guard failed against the former summary-only controls, then focused WaitingSends, outbox/classification, root-lifecycle and isolation verification passes 54/54. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Design verification passes 9 token tests, 70 design contracts, all eight report files with 97/97 tests, zero audit violations with 86 existing warnings, CSS within its ledger and the generated test-backed report. Ordered and shuffled full suites were not rerun.
+- Mandatory HawkScan preflight reports the active skill absent from the callable catalog, Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, and no local properties file or live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove provider delivery, institutional receipt, deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 24 / integration slice 153
+
+- Clean required-branch head `dc64a71e8` already includes current `origin/main` `116d8444e`; exact history/current-code inspection found no equivalent exact-duplicate Mail-rule removal guard.
+- Each private Mail-rule deletion now names position/list size, complete rule name, search/action sentence and on/off state. Exact duplicates remain distinguishable while the visible rule row stays unchanged.
+- The existing stable rule ID still drives `dropMailRule`; shared Undo snapshots only `mailRules`. Deletion stops the local overlay immediately without reverting explicit message marks or changing provider mail, configuration or institution records.
+- The regression was red against the prior rule-name-only controls. Focused Mail-rule/reducer/Undo/accessibility/lifecycle/isolation verification passes 199/199; both typechecks, lint and production build pass.
+- Design constituents pass 79/79 and the test-backed report passes all eight contracts; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites remain open.
+- Coherent slice commit `f314dd621` contains the behavior, regression and synchronized control evidence. Final `origin/main` remains `116d8444e` with no overlap.
+- Post-commit HawkScan cannot start because the CLI and Docker are absent, headless API key/application ID and host overrides are unset, and the configured default target is not running. `stackhawk.yml` exists; no credential file was read and no DAST result or security pass is claimed.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 25 / integration slice 154
+
+- Clean required-branch head `36584daf0` already includes current `origin/main` `116d8444e`; exact history/current-code inspection found no equivalent exact-duplicate dining-balance removal guard.
+- Each device balance-reading removal now names position/list size before complete timestamp, swipe, Commodore Cash and meal-money facts. Exact duplicates remain distinguishable while the visible reading stays unchanged.
+- The existing stable reading ID still drives `dropBalance`; shared Undo snapshots `balances`. Removal changes only the term-filtered device history and does not change an official meal account, money, provider credential or institution record.
+- The regression was red against the prior fact-only controls. Focused Meals/meal-domain/Undo/accessibility/lifecycle/isolation verification passes 65/65; both typechecks, lint and production build pass.
+- Design constituents pass 79/79 and the test-backed report passes with zero violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites remain open.
+- Coherent slice commit `874d3fa39` contains the behavior, regression and synchronized control evidence. Final `origin/main` remains `116d8444e` with no overlap.
+- Post-commit HawkScan cannot start because the CLI and Docker are absent, headless API key/application ID and host overrides are unset, and the configured default target is not running. `stackhawk.yml` and a local properties file exist, but no credential material was read and no DAST result or security pass is claimed.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, money, production data or external system changed. Safe in-scope work remains and requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 22 / integration slice 151
+
+- Required-branch head `3ba001e28` was clean before selection and already included current `origin/main` `116d8444e`; exact Bill history/current-code inspection found no position guard for otherwise exact duplicate rows.
+- Every student-entered charge, aid and payment removal now names one-based position, list size and all existing represented financial facts. Exact duplicates remain distinguishable.
+- Existing exact-id reducers, eight-second Undo, calculations, export and `student_entered` provenance remain authoritative. Nothing changes a school account, official award, money movement, card data, provider or institution record.
+- The new regression failed against the former fact-only names, then 298/298 focused Bill, arithmetic, Undo, export, reducer, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The coherent code/test/control slice is commit `8a991db4d`. The HawkScan skill's post-commit preflight reports `hawk` and Docker runtimes absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. HawkScan cannot start; no DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 21 / integration slice 150
+
+- Required-branch head `4a71e2895` was clean before selection and already included current `origin/main` `116d8444e`; exact University history/current-code inspection found no equivalent repeated-step removal identity guard.
+- Every University preparation readiness-step removal now names its list position/size, complete text and done/not-done state.
+- Existing stable ids, exact-id filtering, validated device-library persistence and account/term scope remain authoritative. Removing a row changes only the local preparation draft and does not submit a request, contact an institution or mutate an official record.
+- The regression failed against the former text-only name and proves the second repeated control removes only its stable ID, then 51/51 focused University, domain, persistence, backup, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through temporary package-runner compatibility shims: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 20 / integration slice 149
+
+- Required-branch head `3bafc0b953` was clean before selection and already included current `origin/main` `116d8444e`; exact Cara Log history/current-code inspection found the existing stable-id removal and Undo behavior but no same-facts identity guard.
+- Every hours-entry removal now names weekly position/count, hours, activity kind, date and complete note/no-note state. Otherwise identical student-entered rows therefore remain distinguishable to assistive technology.
+- Existing exact-id device-library persistence, validation and eight-second Undo remain authoritative. Removing a row does not determine countability/compliance, contact an athletics or compliance provider, or mutate an official record.
+- The regression failed against the former hours/kind/date-only label and proves the second identical control removes only its stable ID. Focused and adjacent Cara Log, athletics arithmetic/share, activity-removal, label, root-lifecycle and isolation verification passes 51/51 from `app/`.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. A local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 19 / integration slice 148
+
+- Required-branch head `928436a78` was clean before selection and already included current `origin/main` `116d8444e`; exact Clocks history/current-code inspection found the distinguishable timer-clear and alarm-delete names, but no equivalent timer-reset guard.
+- Every timer reset now names the represented label, total duration, current remainder and running/paused state. Timers with the same label therefore remain distinguishable to assistive technology.
+- The existing exact-id `patchTimer` reducer and pure reset arithmetic remain authoritative: reset restores only the selected timer to its requested duration and paused state. Other timers, alarms, course work, deadlines and official records remain unchanged.
+- The new behavior guard failed against the former generic **Reset** controls, then the final focused Clocks, clock-domain, timer reducer, label, root-lifecycle and isolation set passed 66/66.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. A local properties file exists but was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 18 / integration slice 147
+
+- Required-branch head `708863314` was clean before the slice and already included current `origin/main` `116d8444e`; exact Workflow Builder history/current-code inspection found no equivalent full-fact removal-name guard.
+- Every draft-step removal now names its position/count, complete title, kind, owner and wait state. Every eligibility-check removal names its position/count, fact, comparison, value, complete explanation and next step.
+- Existing exact-position unsaved edits, `workflow:manage`, tenant RLS, database validation, authorized draft save and separate-person publish remain authoritative. This slice neither persists by itself nor runs a student workflow or changes an official record.
+- The new behavior guard failed against the former position-only controls, then 82/82 focused Workflow Builder, workflow spec/API/path/shell, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, workflow execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 15 / integration slice 144
+
+- Required-branch head `bef213ba9` was clean before selection and already included current `origin/main` `116d8444e`; exact Advisor Meeting history/current-code inspection found no equivalent preparation-line identity guard.
+- Every agenda, question and follow-up removal now names its list position/size and complete student-entered text. Questions additionally name answer state; follow-ups name completion and due-date state.
+- Existing exact-id device-library mutation, account/device isolation, private-note handling and explicit advisor-share boundary remain authoritative. Removing a row neither changes prior shares nor contacts an advisor or official system.
+- The regression failed against the former position-only names, then 97/97 focused Advisor Meeting, domain/share, storage, backup, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 16 / integration slice 145
+
+- Required-branch head `8dabfa54e` was clean before selection and already included current `origin/main` `116d8444e`; exact Grapher history/current-code inspection found no equivalent repeated-formula removal identity guard.
+- Every graph-line removal now names its list position/size, complete formula or blank-line state, and shown/hidden state.
+- Existing stable-id `dropPlot`, device workspace persistence and eight-second Undo remain authoritative. Removing a row does not change another same-formula row, contact a provider or mutate an official academic record.
+- The regression failed against the former position-only name, then 163/163 focused Grapher, reducer, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 17 / integration slice 146
+
+- Required-branch head `84cb004bd` was clean before selection and already included current `origin/main` `116d8444e`; exact Eligibility Check history/current-code inspection found the existing exact-id/Undo behavior but no same-name/same-source identity guard.
+- Every eligibility-rule removal now names its list position/size, complete student-entered rule and source, required course-or-hour count, accepted-course scope and source note/no-note state.
+- Existing exact-id device-library persistence, refused-write behavior and eight-second Undo remain authoritative. Removing a row does not determine eligibility, change another repeated rule, contact a compliance office/provider or mutate an official academic record.
+- The regression failed against the former name/source-only label, then 63/63 focused Eligibility, Athletics, device-library, Undo, label, root-lifecycle and isolation tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing chunk-size warning. Aggregate design-system check/report pass through the temporary package-runner shim: 9 token tests, 70 design contracts, all eight report contracts, zero audit violations, 86 existing audit warnings and CSS within ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset and no live target is configured. `stackhawk.yml` and a local Hawk properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 14 / integration slice 143
+
+- Required-branch head `36fbb71b4` was clean before selection and already included current `origin/main` `116d8444e`; exact Registration Day history/current-code inspection found no equivalent cross-primary backup-action identity guard.
+- Every Up, Down and Remove action now names backup rank/list size, complete backup course/section/title/term and its primary course/section/title. The same catalog section represented under two primary plans therefore has distinct controls.
+- Existing exact-primary/exact-backup `moveBackup` and `removeBackup`, validated device persistence and the planning-only official-registration boundary remain authoritative. The regression proves removing the second representation leaves the first primary mapping intact.
+- The new guard failed against the former backup-code/section-only names. Focused Registration Day, mode/card, domain, label, root-lifecycle and isolation verification passes 77/77.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through a temporary package-runner shim: 9 token tests, 70 design contracts, zero audit violations, 86 existing audit warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The active HawkScan skill stops at mandatory preflight: Hawk v6/config/skills status and Docker are absent, API key/app-host values are unset, `stackhawk.yml` and a local properties file exist but credential material was not read, and no live target is configured. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, enrollment, seat availability, provider execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 13 / integration slice 142
+
+- Required-branch head `ed04f81dd` was clean before selection and already included current `origin/main` `3ec04d742`; exact upstream/current-code inspection found no equivalent shared `Capture` label or preview-lifetime fix.
+- Every prepared photo removal now names its collection position and size, complete filename and prepared size. Duplicate camera-roll filenames therefore remain distinguishable.
+- Blob previews now have exact lifetime handling: a list change revokes only URLs no longer represented, retained thumbnail URLs stay valid, and unmount revokes every remaining blob URL. The caller's unsent prepared-photo array and explicit read/send action remain authoritative.
+- The regression failed against the prior filename-only control, then the focused Capture, Import camera, course-material, Solve photo, root-lifecycle and isolation set passed 40/40.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79; report contracts pass 97/97, audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the report regenerates successfully.
+- Ordered and shuffled full suites were not rerun for this bounded shared-component slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, API key/app-host values unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, model/provider execution, scanner/extractor availability, production execution, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 12 / integration slice 141
+
+- Required-branch head `a9ba835e2` was clean before selection and already included current `origin/main` `3ec04d742`; exact upstream and current-code inspection found no repeated-name saved-schedule guard.
+- Every potential-schedule deletion now names one-based position and collection size, complete student-entered name, section count, copied credit total and time-conflict count.
+- Existing cancel-first `ConfirmDialog` / `ActionPreview`, exact-id device-library persistence and device-workspace backup recovery remain authoritative. The current cart, imported catalog, other schedules and official registration remain unchanged.
+- The repeated-name regression failed against the former name-only controls and proves confirmation of the second deletion preserves the first same-named schedule. The focused Registration Portal, registration-domain, ActionPreview, label, root-lifecycle and isolation set passes 102/102.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design-check constituents pass 79/79, report contracts pass 97/97, audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the report regenerates successfully.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 10 / integration slice 139
+
+- Required-branch head `09bbed065` was clean before selection and already included current `origin/main` `3ec04d742`; exact Mentor Finder history/current-code inspection found no equivalent repeated-request action-name guard.
+- Every pending Accept, Decline and Withdraw action now names collection position/size, peer/alumni kind, direction, visible person and complete topics/no-topic state. Otherwise identical visible requests remain distinguishable.
+- Existing exact-id `answerRequest`, server-side mutual consent, tenant/cohort/capacity checks, one-operation-at-a-time UI guard, refresh and refusal recovery remain authoritative. No contact details pass through Semester and live programme activation remains external.
+- The regression failed against the former generic controls and proves the second Decline and Withdraw controls send only their represented ids. Focused Mentor Finder, mentor-domain, matching, label, root-lifecycle and isolation verification passes 62/62.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Token export passes 9/9, combined design contracts pass 139/139 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider execution, institution programme activation, production operation, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 11 / integration slice 140
+
+- Required-branch head `1623d8ecb` was clean before selection and already included current `origin/main` `3ec04d742`; exact Cost Planner history/current-code inspection found no equivalent repeated-estimate removal-name guard.
+- Every cost-estimate removal now names collection position/size, complete label, amount, fall/spring or summer cadence and student-entered/imported source. Imported rows include their recorded source and readable copied-on date when present; otherwise identical rows remain distinguishable.
+- Existing exact-id device-plan persistence, cancel-first consequence preview, recalculated totals, persistence-refusal retry and backup-only recovery remain authoritative. Financial aid, bills, downloaded copies and the registrar's official degree audit remain separate.
+- The regression failed against the former label-only controls and proves the second same-label estimate alone is removed. Focused Graduation Simulator, cost-plan and graduation-domain verification passes 45/45; the broader focused/control/design set passes 196/196.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local Hawk credentials file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 9 / integration slice 138
+
+- Required-branch head `2fd29ab2f` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Operating Rhythm history/current-code inspection found no equivalent simulator-removal identity guard.
+- Every simulator commitment removal now names one-based collection position, collection size, complete title or untitled state, context and duration. Otherwise identical private draft rows remain distinguishable.
+- Existing index-scoped component state remains authoritative. Removing a simulator row does not mutate the saved rhythm plan, official commitments, provider calendars or institution records.
+- The regression failed against the former position-only controls and proves removing the middle Admin row leaves both represented Writing rows. The focused Operating Rhythm, domain, ActionPreview, label, root-lifecycle, isolation and integration-control set passes 65/65.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing large-chunk warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 8 / integration slice 137
+
+- Required-branch head `0819ff74c` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Student Operating history/current-code inspection found no equivalent repeated-item deletion-label guard.
+- Every saved-item deletion now names its one-based collection position, collection size, complete title, workflow kind, current status and deadline/no-deadline state. Otherwise identical private rows remain distinguishable.
+- Existing exact-id deletion, cancel-first `ConfirmDialog` / `ActionPreview`, private device/account workspace authority and backup-only recovery boundary remain unchanged. Other items, preferences, downloads and official records do not change.
+- The repeated-title regression failed against the former title-only names and proves deleting position 2 leaves position 1. The focused Student Operating, domain, backup, preview, label, root-lifecycle and isolation set passes 87/87.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and report contracts pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 7 / integration slice 136
+
+- Required-branch head `a39c56fb0` was clean before selection and already included current `origin/main` `3ec04d742`; exact About Me history/current-code inspection found no equivalent repeated-line deletion-label guard.
+- Every remembered-line deletion now names one-based collection position, collection size and complete remembered text. Otherwise identical student-authored lines remain distinguishable.
+- Existing exact-id `dropFact`, cancel-first consequence preview, account-sync merge authority and full-data export remain authoritative. Other remembered lines, conversations, notes and plans remain unchanged, and no provider prompt or external-system request is introduced.
+- The repeated-line regression failed against the former text-only names and proves deleting position 2 preserves position 1. Focused About Me, Trust Center, ActionPreview, root-lifecycle, fact, export and private-backup verification passes 156/156; isolation passes 2/2.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check/report pass through a temporary package-runner compatibility shim: 9 token tests, 70 design contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, provider execution, production operation, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 6 / integration slice 135
+
+- Required-branch head `4669bb5aa` was clean before selection and already included current `origin/main` `3ec04d742`; exact My Rules history/current-code inspection found no equivalent repeated-rule deletion-label guard.
+- Every custom-reminder deletion now names one-based collection position, collection size and the complete existing rule sentence. Otherwise identical rules remain distinguishable.
+- Existing exact-id `deleteMyRule`, device persistence and eight-second Undo of only `myRules` remain authoritative. Built-in reminders, deadlines, provider notifications and institution records do not change.
+- The repeated-rule regression failed against the former sentence-only names and proves the second control dispatches only the second rule id. Focused My Rules, Undo, reducer, accessibility, root-lifecycle and isolation verification passes 162/162.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The aggregate design report launcher writes its artifact but exits 1 because its hardcoded `npx` is unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The coherent code/test/control slice is commit `ba529da24`; final `origin/main` remains `3ec04d742` with no overlap.
+- Mandatory HawkScan preflight for `ba529da24` reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 5 / integration slice 134
+
+- Required-branch head `05c19d68c` was clean before selection and already included current `origin/main` `3ec04d742`; exact Feedback inbox history/current-code inspection found no equivalent repeated-entry action-label guard.
+- Every filed-feedback deletion now names collection position, complete work title, student-selected feedback category and filed date. Otherwise identical entries remain distinguishable.
+- Existing exact-id account/term device persistence and the cancel-first consequence preview remain authoritative. Deleting one private filing does not change returned work, separately saved evidence, optional plan actions or provider/institution records.
+- The repeated-entry regression failed against the former unnamed controls and proves deleting position 2 leaves the represented position-1 record. The focused Feedback inbox, Learning hub, study hierarchy, ActionPreview, root-lifecycle and isolation set passes 33/33.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-check constituents pass 79/79 and all eight report contract files pass 97/97; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- The coherent slice is commit `9f8373dd8`. Mandatory HawkScan preflight reports Hawk v6/config/skills status and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 2 / integration slice 131
+
+- Required-branch head `815239aed` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail history/current-code inspection found no equivalent repeated-thread action-label guard.
+- Every Mail row action now names page position, participants, complete subject and full timestamp. Otherwise identical conversations remain distinguishable.
+- Existing exact-thread callbacks and local mailbox marks remain authoritative. Moving a conversation to Trash here does not delete provider mail, and the existing local folder action can move it back.
+- The repeated-thread regression failed against the former subject-only Trash names, then 88/88 focused List, mailbox, reducer, rules and paging tests passed.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check/report pass 9 token tests, 70 design contracts and 97 report contracts; audit remains at zero violations with 86 existing warnings and CSS within its ledger. Root-lifecycle and isolation guards also pass.
+- Final `origin/main` remained `3ec04d742` with no overlapping Mail work, and the coherent slice is committed locally as `d365f7512`.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory post-commit HawkScan preflight for `d365f7512` reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` and a local properties file present but unread, and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 4 / integration slice 133
+
+- Required-branch head `d0fe548a0` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail toolbar history/current-code inspection found no equivalent selected-set action-label guard.
+- Every bulk Archive, Trash, Move, Snooze and Mark read action now names the exact selected conversation count and ordered positions. A one-row selection or opened-thread fallback retains direction, participants, complete subject and full timestamp.
+- Existing exact-message reducer inputs and account-local mailbox marks remain authoritative. Moving selected conversations to Trash here does not delete provider mail, and the existing local folder action can move them back.
+- The new regression failed against the former generic names, then 76/76 focused Mail, reader/list, mailbox, reducer, paging, root-lifecycle and isolation tests passed.
+- TypeScript, lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design-system check passes 9 token tests and 70 design contracts; the test-backed report passes 8/8 contracts, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight stopped because the Hawk v6 executable is absent; `hawk config` and `hawk skills status` cannot run. Docker, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are also absent. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 1 / integration slice 130
+
+- Required-branch head and current `origin/main` were both `4ac162f1c` with a clean tree; exact Learning Map history/current-code inspection found no equivalent repeated-row removal guard.
+- Every private concept/question removal now names collection position, type, complete title and current learning state. The existing cancel-first preview, exact-id account/term device mutation and workspace-backup recovery contract remain authoritative.
+- The repeated-concept regression failed against the former generic controls. Final focused Learning Map, Office Agenda, workspace-backup, label, root-lifecycle and isolation verification passes 31/31.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing lint warnings and the existing chunk-size warning. Design contracts pass 148/148; audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Slice commit `a4a166f01` merges final non-overlapping `origin/main` `3ec04d742` as `9c0fef73f`; upstream changes only the Course Engine field-guide panel, its tests/journey and roadmap. The combined head passes 53/53 app-focused/control tests plus app TypeScript and 8/8 upstream panel tests plus its TypeScript gate.
+- Aggregate design wrappers are not claimed because their hardcoded `npm` / `npx` launchers are unavailable. Ordered and shuffled full suites were not rerun for this bounded slice.
+- The active HawkScan skill stopped at mandatory preflight because Hawk v6/config and Docker are absent, `HAWK_API_KEY` / `HAWK_APP_HOST` are unset and no live target exists. `stackhawk.yml` and a local properties file exist, but credential material was not read. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
 ## Evidence locked in automation pass 28 / integration slice 129
 
 - The interrupted runner selected a bounded Registration Portal accessibility gap: same-course cart rows exposed the same course-code-only removal name even when section and meeting facts differed.
@@ -1436,5 +1828,64 @@ This local slice does not prove deployment, production execution, provider conne
 - The aggregate report launcher writes its artifact but exits 1 because its hardcoded `npx` is unavailable. Ordered and shuffled full suites were not rerun; automation pass 2 remains the latest full-suite checkpoint.
 - Durable moderation history remains open: the current RPC constrains and applies status but does not append an immutable actor/action event.
 - Mandatory HawkScan preflight reports Hawk v6/config and Docker absent, `HAWK_API_KEY` / `HAWK_APP_HOST` unset, `stackhawk.yml` present and a local properties file detected but unread. No live target, DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 3 / integration slice 132
+
+- Required-branch head `488243d15` was clean before the slice and already included current `origin/main` `3ec04d742`; exact Mail reader history/current-code inspection found no equivalent opened-conversation action-label guard.
+- Every opened-conversation archive, Trash, snooze, read-state and star action now names the participants, complete subject and full timestamp. Incoming and outgoing conversations retain distinct **from** / **to** language.
+- Existing exact-thread callbacks and account-local mailbox marks remain authoritative. Moving a conversation to Trash here does not delete provider mail, and the existing local folder action can move it back.
+- The new regression failed against the former generic names, then 55/55 focused Reader, List, mailbox, paging, root-lifecycle and isolation tests passed with TypeScript.
+- Lint/style/label/terms checks, university gateway typecheck and production build pass with twelve existing lint warnings and the existing chunk-size warning. Aggregate design-system check passes 9 token tests and 70 design contracts; report contracts pass 8/8, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight remains unavailable: Hawk and Docker runtimes, `HAWK_API_KEY`, `HAWK_APP_HOST` and a live target are absent. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 31 / integration slice 160
+
+- Required-branch head `f6f0c2db7` was clean before selection and already included current `origin/main` `caa9967fb`; exact People history/current-code inspection found no equivalent exact-duplicate removal-name guard.
+- Every conversation removal now names represented position/count, person, day and complete subject. Every actionable recommendation-letter removal names position/count, purpose, recipient, deadline and stage. Otherwise identical private planning rows remain distinguishable.
+- Existing stable ids, exact `dropVisit` / `dropLetter` reducers and shared eight-second Undo remain authoritative. No recommender is contacted and no official application, course, provider or institution record changes.
+- Both regressions failed against the former complete-fact-only controls, then the focused People, letters, reducer/Undo, label, root-lifecycle and isolation set passes 85/85.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. Ordered and shuffled full suites were not rerun.
+- The coherent slice is commit `e56a643d3`. Non-overlapping Course Engine lecture-slide `origin/main` `9c1f1f514` merges as `06cb40fe8`; the combined head passes 85/85 People-focused tests and both app TypeScript gates, while the upstream Study Mode panel passes 10/10 tests and its web TypeScript gate.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file, no live default target and no HawkScan package in the available skill catalog. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 33 / integration slice 162
+
+- Required-branch head `f118e9508` was clean before selection and already included current `origin/main` `802c97c70`; exact Edit Course history/current-code inspection found no equivalent exact-duplicate removal-name guard.
+- Every grading-row, meeting and deadline removal now names represented position/count plus the complete existing row facts. Otherwise identical student-edited course-draft rows remain distinguishable.
+- Existing index-scoped grading/schedule filtering, stable-id deadline removal and explicit Save boundary remain authoritative. No persisted course state changes until Save, and no official LMS, provider or institution record changes.
+- All four regressions failed against the former complete-fact-only controls, then the focused Edit Course, edit-domain, label, root-lifecycle and isolation set passes 50/50.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Aggregate design-system check/report pass through the cached package-runner shim: 9/9 token tests, 70/70 design contracts, zero audit violations, 86 existing warnings and CSS within its ledger. Ordered and shuffled full suites remain open.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 32 / integration slice 161
+
+- Required-branch head `0d295c00d` was clean before selection and already included current `origin/main` `9c1f1f514`; exact Clocks history/current-code inspection found no equivalent exact-duplicate action-name guard.
+- Every timer Reset/Clear now names represented position/count, complete label, requested duration, current remainder and running/paused state. Every alarm Delete names position/count, complete time, label, repeat schedule and on/off state. Otherwise identical device-tool rows remain distinguishable.
+- Existing stable ids and exact `patchTimer`, `removeTimer` and `removeAlarm` reducers remain authoritative. Timer removal and alarm deletion retain the shared eight-second Undo; Reset retains the existing exact timer row without claiming an undo. No course, grade, deadline, provider clock, notification service or institution record changes.
+- All three regressions failed against the former complete-fact-only controls, then the focused Clocks, clock-domain, reducer, label, root-lifecycle and isolation set passes 57/57.
+- Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning. Design-check constituents pass 79/79; all eight report contracts pass 97/97, audit remains at zero violations with 86 existing warnings and CSS stays within its ledger. The aggregate report writes its evidence but exits 1 because `npx` is unavailable.
+- The coherent slice is commit `1218e15ce`. Non-overlapping registration-readiness evidence from `origin/main` `802c97c70` merges as `6d7834258`; the combined head passes 57/57 focused Clocks/control tests and both app TypeScript gates. The upstream platform-control registry passes 63/63 tests, validation and TypeScript with the app-installed type root; the default noncanonical workspace lookup cannot find `@types/node`.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` and a local properties file present without reading credential material, and no live default target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+
+This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.
+
+## Evidence locked in automation pass 34 / integration slice 163
+
+- Required-branch head `23397032a` was clean before selection and already included current `origin/main` `802c97c70`; exact Mine history/current-code inspection found the earlier fact-complete task and appointment deletion names, stable-id mutations and shared Undo, but no exact-duplicate row identity guard.
+- Every task deletion now names its represented position/count within the displayed Today, Coming up, Someday or Overdue group before the complete existing title, course/personal, date, time, repeat and step facts. Every appointment deletion names represented position/count in the displayed chronological list before the complete title, date, time, kind, place, duration and repeat facts.
+- Existing stable ids, `deleteTask` / `deleteAppointment` mutations and eight-second Undo snapshots over only `tasks` or `appointments` remain authoritative. The regressions open two fact-identical rows, prove their names differ, activate the second stable-id action and prove the first remains represented.
+- The guards failed against the former fact-complete-only controls, then focused Mine, reducer/Undo, accessibility-label, root-lifecycle and isolation verification passes 63/63. Both TypeScript gates, lint/style/label/terms checks and production build pass with twelve existing warnings and the existing large-chunk warning.
+- Design verification passes 148 distinct token/design/report contract tests, zero audit violations with 86 existing warnings, CSS within its ledger and the test-backed design report across all eight contract files. Ordered and shuffled full suites were not rerun for this bounded accessibility slice.
+- Mandatory HawkScan preflight reports the Hawk CLI and Docker absent, `HAWK_API_KEY`, `STACKHAWK_APPLICATION_ID`, `HAWK_APP_HOST` and `APP_HOST` unset, `stackhawk.yml` present, no local properties file and no live target. No DAST scan, finding result, fix/rescan loop or security pass exists.
+- No route, navigation, shared component, dependency, schema, policy, server operation, provider configuration, production data or external system changed.
 
 This local slice does not prove deployment, production execution, provider connectivity, institutional acceptance, legal review or production readiness. Safe in-scope work remains and the next slice requires a fresh dependency/consequence ranking.

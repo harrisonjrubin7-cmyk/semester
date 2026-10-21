@@ -213,6 +213,10 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
         add="Add a question"
         items={meeting.questions}
         onChange={(questions) => edit({ questions: questions.map((q) => ({ answer: '', ...meeting.questions.find((x) => x.id === q.id), ...q })) })}
+        removalDetails={(item) => {
+          const answer = meeting.questions.find((question) => question.id === item.id)?.answer.trim();
+          return answer ? `answer: ${answer}` : 'no answer recorded';
+        }}
         extra={(item) => {
           const q = meeting.questions.find((x) => x.id === item.id);
           return (
@@ -281,6 +285,10 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
         add="Add a follow-up"
         items={meeting.followUps}
         onChange={(items) => edit({ followUps: items.map((f) => ({ done: false, due: null, ...meeting.followUps.find((x) => x.id === f.id), ...f })) })}
+        removalDetails={(item) => {
+          const followUp = meeting.followUps.find((candidate) => candidate.id === item.id);
+          return `${followUp?.done ? 'done' : 'not done'} · ${followUp?.due ? `due ${followUp.due}` : 'no due date'}`;
+        }}
         extra={(item) => {
           const f = meeting.followUps.find((x) => x.id === item.id);
           const set = (patch: { done?: boolean; due?: string | null }) =>
@@ -429,6 +437,7 @@ function LineList({
   items,
   onChange,
   extra,
+  removalDetails,
 }: {
   title: string;
   /** What one item is called: "Question", so the field reads "Question 2". */
@@ -437,6 +446,7 @@ function LineList({
   items: Line[];
   onChange: (next: Line[]) => void;
   extra?: (item: Line) => React.ReactNode;
+  removalDetails?: (item: Line) => string;
 }) {
   return (
     <>
@@ -455,7 +465,11 @@ function LineList({
                 />
               </label>
               {extra ? extra(item) : null}
-              <button type="button" aria-label={`Remove ${one.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((x) => x.id !== item.id))}>
+              <button
+                type="button"
+                aria-label={`Remove ${one.toLowerCase()} ${i + 1} of ${items.length}, ${item.text.trim() || 'No text entered'}${removalDetails ? ` · ${removalDetails(item)}` : ''}`}
+                onClick={() => onChange(items.filter((x) => x.id !== item.id))}
+              >
                 Remove
               </button>
             </li>

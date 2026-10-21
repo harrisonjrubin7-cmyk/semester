@@ -1,12 +1,10 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 19:48:00_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-21 13:59:53_  ·  branch: `claude/happy-mccarthy-e6g5tt`
 
 ## Uncommitted changes
 ```
  M .anchor/session-state.md
-?? .claude/CLAUDE.md
-?? .md-linker/
 ```
 
 Diff stat:
@@ -17,14 +15,14 @@ Diff stat:
 
 ## Recent commits
 ```
-7404a316 chore: update the auto-saved session state snapshot
-dfe7a74a chore: update the auto-saved session state snapshot
-0b2e9ea9 chore: update the auto-saved session state snapshot
-2e1b1ddc chore: update the auto-saved session state snapshot
-d66ace3f chore: update the auto-saved session state snapshot
-90332cc9 chore: update the auto-saved session state snapshot
-1cd8735c chore: update the auto-saved session state snapshot
-0bf4c59d chore: update the auto-saved session state snapshot
+1ec7ee2d chore: update the auto-saved session state snapshot
+e4c26cbb chore: update the auto-saved session state snapshot
+a78f6b58 chore: update the auto-saved session state snapshot
+54b160f1 chore: update the auto-saved session state snapshot
+c7d6d088 chore: update the auto-saved session state snapshot
+91b72963 chore: update the auto-saved session state snapshot
+6c0fb2b9 chore: update the auto-saved session state snapshot
+59190eca chore: update the auto-saved session state snapshot
 ```
 
 ## Resume

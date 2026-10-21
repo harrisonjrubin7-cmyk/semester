@@ -7,6 +7,17 @@ import { ATHLETICS_LIMITS, type AthleticsLibrary } from '../lib/athletics';
 import { progress, progressLine, type Requirement } from '../lib/degree';
 import { SHOWN_FOR } from '../lib/undo';
 
+function removalName(requirement: Requirement, index: number, total: number) {
+  const unit = requirement.need === 'hours'
+    ? `credit ${requirement.count === 1 ? 'hour' : 'hours'}`
+    : requirement.count === 1 ? 'course' : 'courses';
+  const amount = `${requirement.count} ${unit}`;
+  const accepted = requirement.accepts.length
+    ? `accepted courses: ${requirement.accepts.join(', ')}`
+    : 'any recorded course counts';
+  return `Remove eligibility requirement ${index + 1} of ${total}, ${requirement.name} from ${requirement.programme || 'eligibility'}: ${amount} · ${accepted} · ${requirement.note || 'no source note'}`;
+}
+
 /**
  * What is left, as you were told it.
  *
@@ -169,7 +180,7 @@ export function EligibilityCheck({
           their words, and the counting is done against your own record.
         </p>
       ) : (
-        value.eligibility.map((req) => {
+        value.eligibility.map((req, index) => {
           const p = progress(req, state.taken);
           return (
             <div
@@ -192,7 +203,7 @@ export function EligibilityCheck({
               <button
                 type="button"
                 className="bare tappable"
-                aria-label={`Remove ${req.name} from ${req.programme || 'eligibility'}`}
+                aria-label={removalName(req, index, value.eligibility.length)}
                 onClick={() => remove(req)}
                 style={{
                   textDecoration: 'underline',
