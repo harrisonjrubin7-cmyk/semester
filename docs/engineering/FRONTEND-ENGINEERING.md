@@ -22,7 +22,7 @@ Maturity labels used below:
 |---|---|---|
 | Repository | `harrisonjrubin7-cmyk/semester`, working branch `claude/nice-knuth-lj38ll` | `git branch --show-current` |
 | Commit at baseline | `706de357` (origin/main at the time of inspection) | `git log origin/main -1` |
-| Node | v22.22.0 (repo `engines` asks for `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`; install warns, does not fail) | `npm ci` output |
+| Node | v22.22.0. The root `package.json` requires `>=22`, and `app/package.json` has no `engines` field. `npm ci` printed an `EBADENGINE` warning for a stricter range (`^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`) that comes from a transitive dependency, not from the repository. The warning did not fail the install. | `npm ci` output; `package.json:12` |
 | Package manager | npm workspaces (`app/`, `packages/*`), single root lockfile | `package.json`, `CLAUDE.md` |
 | Install | `npm ci` from repo root, 237 packages added | executed, exit 0 |
 
@@ -110,7 +110,7 @@ Journey register. Status reflects evidence in this session only. Nothing here is
 
 ### D.1 Journey selected for the next slice
 
-**Journey A (Student Action Center)** is the first high-value incomplete journey: it is the cross-role entry point for the other journeys. Its two Action Center components are composed layers, not competing implementations. `screens/Today.tsx` renders `TodayDecisionSurface`, which lazy-loads `TodayActionCenter`. `TodayActionCenter` renders `ActionCenter` and adds the path, commitments, freshness and quick-action surfaces around it. Removing either would discard functionality. The first step is to record this relationship and trace the existing feature-flagged route, then route → context → data → action → receipt → recovery.
+**Journey A (Student Action Center)** is the first high-value incomplete journey: it is the student's cross-journey entry point; `showsTodayDecisionSurface` returns true only for `role === 'student'`. Its two Action Center components are composed layers, not competing implementations. `screens/Today.tsx` renders `TodayDecisionSurface`, which lazy-loads `TodayActionCenter`. `TodayActionCenter` renders `ActionCenter` and adds the path, commitments, freshness and quick-action surfaces around it. Removing either would discard functionality. The first step is to record this relationship and trace the existing feature-flagged route, then route → context → data → action → receipt → recovery.
 
 The smallest verified defect on the path is WI-FE-002 (the red `mine.removal-labels` test), because it is a student-facing task row and a confirmed failure, not a theoretical gap.
 
@@ -192,7 +192,7 @@ Deployment status: **none**. Nothing in this session was deployed, migrated, or 
 
 ### K.2 Checkpoint
 
-- **Completed in this session**: baseline install and the four commands in A.2; the failing-test diagnosis in A.3; this document.
+- **Completed in this session**: baseline install and the three commands in A.2 that were executed; the failing-test diagnosis in A.3; this document.
 - **Changed files**: `docs/engineering/FRONTEND-ENGINEERING.md` (new). No application source was changed.
 - **Next dependency-ordered task**: WI-FE-002. It is a confirmed, student-facing, deterministic failure on the path to Journey A, and it is smaller than the journey itself.
 - **Not to be treated as done**: any journey in D, any gate in J, and the claim that the frontend is "complete".
