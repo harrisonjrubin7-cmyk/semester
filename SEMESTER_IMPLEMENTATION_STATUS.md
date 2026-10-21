@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: SEMESTER-MASTER-COMMAND.md
-    changed_at: "2026-10-21T12:56:26"
+    changed_at: "2026-10-21T13:03:29"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER_IMPLEMENTATION_PLAN.md
-    changed_at: "2026-10-21T12:56:26"
+    changed_at: "2026-10-21T13:03:29"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
@@ -209,6 +213,8 @@ blocked person's words never reach the device), report **Built but unread** (see
 Organizations and Events: absent entirely. Courses: **Built**.
 
 ## §47.8 Social graph — **Partly**
+
+_Post-baseline update: the rows below describe `supabase/migrations/20260922003000_connections.sql`, which landed on 22 September, after the `387dcfb` baseline above. They are not part of that audit._
 
 | | |
 | --- | --- |
