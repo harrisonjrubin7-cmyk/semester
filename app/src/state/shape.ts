@@ -950,7 +950,7 @@ export interface Ephemeral {
    * the app — so Today, Courses and Study use it too rather than each being a
    * single long scroll with everything on it.
    */
-  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'files' | 'documents';
   homeTab: HomeTab;
   coursesTab: CoursesTab;
   /**
@@ -2537,7 +2537,7 @@ export type Action =
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
-  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' | 'documents' }
   | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: HomeTab }
   | { type: 'setAccountDoor'; door: 'in' | 'up' | null }

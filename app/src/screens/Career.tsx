@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
+import { EmployerSharing } from '../components/career/EmployerSharing';
+import { SharedWithMe } from '../components/career/SharedWithMe';
 import { Group, NavRow } from '../components/shell/Rows';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { ObjectCard } from '../components/unity/ObjectCard';
@@ -110,6 +112,7 @@ const TABS = [
   { id: 'skills' as const, label: 'Skills & fit' },
   { id: 'evidence' as const, label: 'Evidence' },
   { id: 'wallet' as const, label: 'Wallet' },
+  { id: 'employers' as const, label: 'Employers' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
@@ -954,6 +957,20 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
       )}
 
       {tab === 'wallet' && careerEvidence && <CredentialWallet claims={claims} />}
+
+      {/*
+       * Sharing evidence with an employer through the school's service
+       * (D-1670): the student's portfolio, and — for an account acting for an
+       * employer — what students shared with it. Not behind `career_evidence`,
+       * which gates the device-only Evidence tab; this one says for itself
+       * when the service is not set up.
+       */}
+      {tab === 'employers' && (
+        <>
+          <SharedWithMe />
+          <EmployerSharing />
+        </>
+      )}
 
       {tab === 'skills' && careerSkillsGraph && (
         <>

@@ -12,6 +12,7 @@ import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } 
 import { ChevronRight, Plus, StarIcon } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
+import { Documents } from '../components/workspace/Documents';
 import { dateToIso, isoToDate, longLabel, shownTime } from '../lib/date';
 import { codeOf } from '../lib/call';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
@@ -1482,6 +1483,7 @@ export function Mine() {
           { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
           { id: 'files', label: 'Files' },
+          { id: 'documents', label: 'Documents' },
         ]}
         value={state.mineTab}
         onChange={(tab) => dispatch({ type: 'setMineTab', tab })}
@@ -1491,6 +1493,8 @@ export function Mine() {
       {state.mineTab === 'appointments' && <Appointments />}
       {state.mineTab === 'notes' && <Notes rows={notes} />}
       {state.mineTab === 'files' && <Files />}
+      {/* Kept on the school's service with every version, not on the device (D-1661). */}
+      {state.mineTab === 'documents' && <Documents />}
       </>
     </Page>
   );
