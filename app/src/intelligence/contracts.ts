@@ -16,7 +16,8 @@ export interface EvidenceReference {
   title: string;
   locator: string;
   excerpt: string;
-  verifiedAt: string;
+  /** When the source was last checked. Null or absent when it was not recorded. */
+  verifiedAt?: string | null;
   authority: 'authoritative' | 'confirmed' | 'unverified' | 'inferred';
   scope: Scope;
   confidence?: number;
