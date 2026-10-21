@@ -152,7 +152,7 @@ describe('headings a student names', () => {
 describe('re-filing a link you already added', () => {
   it('names removal for the exact student-created link', async () => {
     await mount([link('Landlord', 'Housing')]);
-    expect(host.querySelector('button[aria-label="Remove Landlord link: https://landlord.example.edu · Housing"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove link 1 of 1, Landlord: https://landlord.example.edu · Housing"]')).toBeTruthy();
   });
 
   it('distinguishes links with the same name by their resolved address and group', async () => {
@@ -161,13 +161,32 @@ describe('re-filing a link you already added', () => {
       { ...link('Landlord', 'Lease'), id: 'landlord-lease', url: 'https://lease.example.edu' },
     ]);
 
-    const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove Landlord link: "]')]
+    const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove link "]')]
       .map((button) => button.ariaLabel);
     expect(names).toEqual([
-      'Remove Landlord link: https://landlord.example.edu · Housing',
-      'Remove Landlord link: https://lease.example.edu · Lease',
+      'Remove link 1 of 2, Landlord: https://landlord.example.edu · Housing',
+      'Remove link 2 of 2, Landlord: https://lease.example.edu · Lease',
     ]);
     expect(new Set(names).size).toBe(2);
+  });
+
+  it('distinguishes exact-duplicate links and removes only the represented record', async () => {
+    await mount([
+      { ...link('Landlord', 'Housing'), id: 'landlord-first' },
+      { ...link('Landlord', 'Housing'), id: 'landlord-second' },
+    ]);
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove link "]')];
+    expect(removals.map((button) => button.ariaLabel)).toEqual([
+      'Remove link 1 of 2, Landlord: https://landlord.example.edu · Housing',
+      'Remove link 2 of 2, Landlord: https://landlord.example.edu · Housing',
+    ]);
+
+    await act(async () => removals[1]?.click());
+
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks).toEqual([
+      { ...link('Landlord', 'Housing'), id: 'landlord-first' },
+    ]);
   });
 
   it('moves it to the group typed, and leaves the address alone', async () => {

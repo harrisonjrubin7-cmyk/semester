@@ -63,6 +63,21 @@ beforeEach(async () => {
         active: true,
         created: 2,
       },
+      {
+        id: 'radio-producer-copy',
+        name: 'Campus radio',
+        kind: 'club',
+        role: 'Producer',
+        where: 'Studio B',
+        url: '',
+        note: '',
+        days: [3],
+        at: 19 * 60 + 30,
+        minutes: 90,
+        hours: 0,
+        active: true,
+        created: 3,
+      },
     ],
   }));
   host = document.createElement('div');
@@ -89,10 +104,10 @@ afterEach(async () => {
 
 it('identifies duplicate activity removals by the represented commitment facts', async () => {
   const hostRemoval = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove Campus radio: Club or organisation · Host · M · 6:00p · Studio A"]',
+    'button[aria-label="Remove activity 1 of 3, Campus radio: Club or organisation · Host · M · 6:00p · Studio A"]',
   );
   const producerRemoval = host.querySelector<HTMLButtonElement>(
-    'button[aria-label="Remove Campus radio: Club or organisation · Producer · W · 7:30p · Studio B"]',
+    'button[aria-label="Remove activity 2 of 3, Campus radio: Club or organisation · Producer · W · 7:30p · Studio B"]',
   );
 
   expect(hostRemoval).not.toBeNull();
@@ -100,6 +115,23 @@ it('identifies duplicate activity removals by the represented commitment facts',
 
   await act(async () => producerRemoval?.click());
 
-  expect(seen.commitments.map((commitment) => commitment.id)).toEqual(['radio-host']);
+  expect(seen.commitments.map((commitment) => commitment.id)).toEqual(['radio-host', 'radio-producer-copy']);
+  expect(seen.undone?.label).toBe('Activity removed');
+});
+
+it('distinguishes exact-duplicate activity removals and removes only the represented stable id', async () => {
+  const firstCopy = host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Remove activity 2 of 3, Campus radio: Club or organisation · Producer · W · 7:30p · Studio B"]',
+  );
+  const secondCopy = host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Remove activity 3 of 3, Campus radio: Club or organisation · Producer · W · 7:30p · Studio B"]',
+  );
+
+  expect(firstCopy).not.toBeNull();
+  expect(secondCopy).not.toBeNull();
+
+  await act(async () => secondCopy?.click());
+
+  expect(seen.commitments.map((commitment) => commitment.id)).toEqual(['radio-host', 'radio-producer']);
   expect(seen.undone?.label).toBe('Activity removed');
 });

@@ -31,6 +31,10 @@ const later: CaraEntry = {
   kind: 'Required weights or conditioning',
   note: '',
 };
+const repeated: CaraEntry = {
+  ...first,
+  id: 'cara-repeated',
+};
 
 let host: HTMLDivElement;
 let root: Root;
@@ -48,8 +52,8 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function Harness() {
-  const [value, setValue] = useState<AthleticsLibrary>({ ...EMPTY_ATHLETICS, cara: [first, second] });
+function Harness({ entries = [first, second] }: { entries?: CaraEntry[] }) {
+  const [value, setValue] = useState<AthleticsLibrary>({ ...EMPTY_ATHLETICS, cara: entries });
   const update = (change: (old: AthleticsLibrary) => AthleticsLibrary) => {
     setValue(change);
     return true;
@@ -74,7 +78,7 @@ describe('student athletics-hours removal', () => {
   it('offers a bounded undo with an exact accessible remove name', async () => {
     await act(async () => root.render(<Harness />));
 
-    const remove = button('Remove 2 hours of Practice on 2026-09-22');
+    const remove = button('Remove hours entry 1 of 2, 2 hours of Practice on 2026-09-22: Morning session');
     expect(remove).toBeDefined();
     act(() => remove!.click());
 
@@ -91,12 +95,30 @@ describe('student athletics-hours removal', () => {
 
   it('retires the undo after the shared eight-second window', async () => {
     await act(async () => root.render(<Harness />));
-    act(() => button('Remove 2 hours of Practice on 2026-09-22')!.click());
+    act(() =>
+      button('Remove hours entry 1 of 2, 2 hours of Practice on 2026-09-22: Morning session')!.click(),
+    );
     expect(button('Undo removal')).toBeDefined();
 
     act(() => vi.advanceTimersByTime(8_000));
 
     expect(button('Undo removal')).toBeUndefined();
     expect(host.querySelector('[data-testid="ids"]')?.textContent).toBe('cara-two');
+  });
+
+  it('distinguishes repeated entries and removes only the represented id', async () => {
+    await act(async () => root.render(<Harness entries={[first, repeated]} />));
+
+    expect(
+      button('Remove hours entry 1 of 2, 2 hours of Practice on 2026-09-22: Morning session'),
+    ).toBeDefined();
+    const removeRepeated = button(
+      'Remove hours entry 2 of 2, 2 hours of Practice on 2026-09-22: Morning session',
+    );
+    expect(removeRepeated).toBeDefined();
+
+    act(() => removeRepeated!.click());
+
+    expect(host.querySelector('[data-testid="ids"]')?.textContent).toBe('cara-one');
   });
 });

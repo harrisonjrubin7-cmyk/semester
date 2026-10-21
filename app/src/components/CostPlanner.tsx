@@ -1,4 +1,5 @@
 import { dollars } from '../lib/cost';
+import { formatDate } from '../lib/locale';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
 import { SourceBadge } from './SourceBadge';
@@ -7,6 +8,13 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { ActionPreview } from './unity/ActionPreview';
 
 const money = dollars;
+const removalName = (line: CostLine, index: number, total: number) => {
+  const cadence = line.per === 'term' ? 'fall or spring term' : 'summer term';
+  const source = line.source === 'imported'
+    ? `imported${line.from ? ` from ${line.from}` : ''}${line.on ? ` on ${formatDate(new Date(`${line.on}T12:00:00`), { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}`
+    : 'your own estimate';
+  return `Remove cost estimate ${index + 1} of ${total}, ${line.label}: ${money(line.amount)} each ${cadence} · ${source}`;
+};
 const num = (v: string) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(1_000_000, Math.max(0, n)) : 0;
@@ -53,7 +61,7 @@ export function CostPlanner({
 
       {lines.length ? (
         <ul className="cost-lines">
-          {lines.map((l) => {
+          {lines.map((l, index) => {
             const old = staleness(l, now);
             return (
               <li key={l.id} className="cost-line">
@@ -125,7 +133,7 @@ export function CostPlanner({
                   {l.source === 'imported' && l.from ? ` ${l.from}` : ''}
                   {old ? <span className="portal-warning"> {old}</span> : null}
                 </p>
-                <button type="button" aria-label={`Remove ${l.label}`} onClick={() => setRemoving(l)}>
+                <button type="button" aria-label={removalName(l, index, lines.length)} onClick={() => setRemoving(l)}>
                   Remove
                 </button>
               </li>

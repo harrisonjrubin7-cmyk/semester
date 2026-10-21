@@ -99,7 +99,7 @@ const submitOnEnter =
  * lands in a field and a stray keystroke changes something, and the tick box —
  * the thing this screen is mostly for — becomes harder to hit.
  */
-function TaskRow({ task: t }: { task: PersonalTask }) {
+function TaskRow({ task: t, position, total }: { task: PersonalTask; position: number; total: number }) {
   const { state, dispatch, courseCode } = useStore();
   const taskActions = useTaskActions();
   const [editing, setEditing] = useState(false);
@@ -288,7 +288,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => taskActions.remove(t.id)}
-            aria-label={`Delete action ${t.title}: ${[
+            aria-label={`Delete action ${position} of ${total}, ${t.title}: ${[
               t.courseId ? courseCode(t.courseId) : 'Personal',
               t.date ? longLabel(isoToDate(t.date)) : 'No date',
               t.time ? shownTime(t.time) : '',
@@ -563,8 +563,8 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             <Folding name="Actions">
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-              {g.tasks.map((t) => (
-                <TaskRow key={t.id} task={t} />
+              {g.tasks.map((t, index) => (
+                <TaskRow key={t.id} task={t} position={index + 1} total={g.tasks.length} />
               ))}
             </div>
             </Folding>
@@ -893,7 +893,15 @@ function HowLongAndOften({
   );
 }
 
-function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
+function AppointmentRow({
+  appointment: a,
+  position,
+  total,
+}: {
+  appointment: Appointment;
+  position: number;
+  total: number;
+}) {
   const { state, dispatch } = useStore();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(a.title);
@@ -1047,7 +1055,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-            aria-label={`Delete appointment ${a.title}: ${[
+            aria-label={`Delete appointment ${position} of ${total}, ${a.title}: ${[
               longLabel(isoToDate(a.date)),
               shownTime(a.time),
               kindOf(a.kind).label,
@@ -1327,8 +1335,8 @@ function Appointments() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
-        {upcoming.map((a) => (
-          <AppointmentRow key={a.id} appointment={a} />
+        {upcoming.map((a, index) => (
+          <AppointmentRow key={a.id} appointment={a} position={index + 1} total={upcoming.length} />
         ))}
       </div>
       <div style={{ height: 22 }} />

@@ -424,6 +424,7 @@ export function Grapher() {
           <Row
             key={line.id}
             index={i}
+            total={lines.length}
             colour={colours[i]}
             line={line.text}
             on={line.on}
@@ -598,6 +599,7 @@ function saying(texts: string[]): string {
 
 function Row({
   index,
+  total,
   colour,
   line,
   on,
@@ -609,6 +611,7 @@ function Row({
   onDrop,
 }: {
   index: number;
+  total: number;
   colour: string;
   line: string;
   on: boolean;
@@ -709,7 +712,7 @@ function Row({
         <button
           type="button"
           className="bare tappable"
-          aria-label={`Remove line ${index + 1}`}
+          aria-label={`Remove line ${index + 1} of ${total}, ${line.trim() || 'blank line'} · ${on ? 'shown' : 'hidden'}`}
           onClick={onDrop}
           style={{ width: 26, flex: '0 0 auto', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}
         >

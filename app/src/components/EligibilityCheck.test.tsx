@@ -24,12 +24,12 @@ const first: Requirement = {
 };
 const second: Requirement = {
   id: 'eligibility-two',
-  programme: 'Conference handbook',
-  name: 'Complete six courses',
+  programme: 'Compliance office',
+  name: 'Earn 24 credit hours',
   need: 'courses',
   count: 6,
-  accepts: [],
-  note: '',
+  accepts: ['BIOL', 'CHEM 1101'],
+  note: 'Conference progress rule',
 };
 const later: Requirement = {
   id: 'eligibility-later',
@@ -90,7 +90,9 @@ describe('student-entered eligibility requirement removal', () => {
   it('offers a bounded undo with an exact accessible remove name', async () => {
     await act(async () => root.render(<Harness />));
 
-    const remove = button('Remove Earn 24 credit hours from Compliance office');
+    const remove = button(
+      'Remove eligibility requirement 1 of 2, Earn 24 credit hours from Compliance office: 24 credit hours · any recorded course counts · Annual progress rule',
+    );
     expect(remove).toBeDefined();
     act(() => remove!.click());
 
@@ -109,7 +111,11 @@ describe('student-entered eligibility requirement removal', () => {
 
   it('retires the undo after the shared eight-second window', async () => {
     await act(async () => root.render(<Harness />));
-    act(() => button('Remove Earn 24 credit hours from Compliance office')!.click());
+    act(() =>
+      button(
+        'Remove eligibility requirement 1 of 2, Earn 24 credit hours from Compliance office: 24 credit hours · any recorded course counts · Annual progress rule',
+      )!.click(),
+    );
     expect(button('Undo removal')).toBeDefined();
 
     act(() => vi.advanceTimersByTime(8_000));
@@ -120,12 +126,34 @@ describe('student-entered eligibility requirement removal', () => {
 
   it('keeps the requirement represented when device storage refuses the write', async () => {
     await act(async () => root.render(<Harness refuse />));
-    act(() => button('Remove Earn 24 credit hours from Compliance office')!.click());
+    act(() =>
+      button(
+        'Remove eligibility requirement 1 of 2, Earn 24 credit hours from Compliance office: 24 credit hours · any recorded course counts · Annual progress rule',
+      )!.click(),
+    );
 
     expect(host.querySelector('[data-testid="ids"]')?.textContent).toBe('eligibility-one,eligibility-two');
     expect(host.querySelector('[role="status"]')?.textContent).toContain(
       'Eligibility requirement could not be removed from this device.',
     );
     expect(button('Undo removal')).toBeUndefined();
+  });
+
+  it('distinguishes repeated names and removes only the represented requirement', async () => {
+    await act(async () => root.render(<Harness />));
+
+    expect(
+      button(
+        'Remove eligibility requirement 1 of 2, Earn 24 credit hours from Compliance office: 24 credit hours · any recorded course counts · Annual progress rule',
+      ),
+    ).toBeDefined();
+    const removeSecond = button(
+      'Remove eligibility requirement 2 of 2, Earn 24 credit hours from Compliance office: 6 courses · accepted courses: BIOL, CHEM 1101 · Conference progress rule',
+    );
+    expect(removeSecond).toBeDefined();
+
+    act(() => removeSecond!.click());
+
+    expect(host.querySelector('[data-testid="ids"]')?.textContent).toBe('eligibility-one');
   });
 });

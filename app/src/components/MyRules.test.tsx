@@ -10,6 +10,7 @@ vi.mock('../state/store', () => ({
     state: {
       myRules: [
         { id: 'rule-one', watches: 'deadline', days: 3, hour: 9, courseId: '', on: true },
+        { id: 'rule-two', watches: 'deadline', days: 3, hour: 9, courseId: '', on: true },
       ],
     },
     dispatch,
@@ -40,14 +41,17 @@ afterEach(async () => {
 });
 
 describe('student reminder rule deletion', () => {
-  it('uses the dedicated undoable delete action and keeps an exact accessible name', async () => {
+  it('distinguishes identical rules and deletes only the represented rule', async () => {
     await act(async () => root.render(<MyRules />));
-    const remove = host.querySelector<HTMLButtonElement>('button[aria-label^="Delete:"]');
-    expect(remove?.getAttribute('aria-label')).toBe('Delete: 3 days before every deadline, at 9am.');
+    const remove = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Delete custom reminder"]')];
+    expect(remove.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Delete custom reminder 1 of 2: 3 days before every deadline, at 9am.',
+      'Delete custom reminder 2 of 2: 3 days before every deadline, at 9am.',
+    ]);
 
-    await act(async () => remove?.click());
+    await act(async () => remove[1].click());
 
-    expect(dispatch).toHaveBeenCalledWith({ type: 'deleteMyRule', id: 'rule-one' });
+    expect(dispatch).toHaveBeenCalledWith({ type: 'deleteMyRule', id: 'rule-two' });
     expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'setMyRules' }));
   });
 });

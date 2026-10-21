@@ -118,7 +118,7 @@ export function AboutMe() {
 
   return (
     <div>
-      {facts.map((f) => (
+      {facts.map((f, index) => (
         <div key={f.id} style={{ ...row, display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'flex-start' }}>
           {/*
             Editable in place rather than behind a pencil. A line somebody
@@ -146,7 +146,7 @@ export function AboutMe() {
             type="button"
             className="bare"
             onClick={() => setForgetting(f)}
-            aria-label={`Delete: ${f.text}`}
+            aria-label={`Delete remembered line ${index + 1} of ${facts.length}: ${f.text}`}
             style={{ flex: 'none', width: 28, color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
           >
             ×
