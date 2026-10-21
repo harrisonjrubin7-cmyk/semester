@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # 01 · Processing register and lifecycle controls
 
 **Status `DESIGNED`. 4 October 2026, `origin/main` at `8e9b746`. Owner: privacy seat (vacant; interim Harrison Rubin).**

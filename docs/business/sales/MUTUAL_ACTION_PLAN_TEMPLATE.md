@@ -1,3 +1,58 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/IMPLEMENTATION-RESPONSIBILITY-MATRIX.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Mutual Action Plan Template
 
 | Control | Value |

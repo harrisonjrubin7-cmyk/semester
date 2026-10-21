@@ -1,3 +1,98 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_DOMAIN_REPLACEMENT_GATES.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/INSTITUTION_CONSOLE_CATALOG.md
+    changed_at: "2026-10-19T18:51:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_COMMAND_CENTER.md
+    changed_at: "2026-10-19T18:51:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/SHARED_CONTROL_PLANE.md
+    changed_at: "2026-10-19T18:51:06"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Institution Operating System
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. Per-console dossiers: [`INSTITUTION_CONSOLE_CATALOG.md`](INSTITUTION_CONSOLE_CATALOG.md). Shared foundations: [`SHARED_CONTROL_PLANE.md`](SHARED_CONTROL_PLANE.md).

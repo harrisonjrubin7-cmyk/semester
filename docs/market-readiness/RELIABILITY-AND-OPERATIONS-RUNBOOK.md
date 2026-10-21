@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: RESTORE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Reliability and operations runbook
 
 **Activation status: RED until named owners and target-environment rehearsals exist.**

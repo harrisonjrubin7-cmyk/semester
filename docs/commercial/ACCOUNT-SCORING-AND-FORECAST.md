@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: docs/commercial/SEGMENT-MOTIONS-AND-BUYING-COMMITTEES.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/STAGE-COLLATERAL-AND-HANDOFF.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Account Scoring, Stage Exits and Forecast Model
 
 | Control | Value |

@@ -1,3 +1,116 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RUNBOOKS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/02-implementation-methodology.md
+    changed_at: "2026-10-19T18:51:07"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/03-raci-and-decision-rights.md
+    changed_at: "2026-10-19T18:51:07"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/04-support-operating-model.md
+    changed_at: "2026-10-19T18:51:07"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/11-founder-to-team-transition.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/templates.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 07 · Documentation, training, enablement and knowledge management
 
 | Control | Value |

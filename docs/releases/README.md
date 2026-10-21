@@ -1,3 +1,72 @@
+---
+stale-refs:
+  - source: README.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/releases/CHANGE-COMMUNICATION.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: CHANGELOG.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Releases and change communication
 
 > **Type:** how-to · **Audience:** contributors, institution-admins · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/releases.test.ts`

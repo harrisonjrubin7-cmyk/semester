@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester Community Guidelines — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** A working draft for qualified

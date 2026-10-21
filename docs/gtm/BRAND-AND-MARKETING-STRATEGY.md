@@ -1,3 +1,240 @@
+---
+stale-refs:
+  - source: ACTION-PLAN.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: CLAUDE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: MARKET-POSITION.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/EVENT-TAXONOMY.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/claims/README.md
+    changed_at: "2026-10-19T18:51:12"
+    sections_changed: []
+    summary: externally modified
+  - source: CHANGELOG.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/BRAND-PLATFORM.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CLM-018-SOURCE-LABEL-EVIDENCE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/gtm/EXECUTION-PLAN.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/GO-TO-MARKET-POSITIONING.md
+    changed_at: "2026-10-19T16:39:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRICING-AND-PACKAGING.md
+    changed_at: "2026-10-19T16:39:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 > **DRAFT FOR FOUNDER, COUNSEL AND SPECIALIST REVIEW. A marketing strategy, not legal advice, and not an approval of any claim, channel, audience, price or campaign. Nothing here is live until the gate it names is closed.**
 
 # Semester brand and marketing strategy

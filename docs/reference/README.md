@@ -1,3 +1,162 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ARCHITECTURE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ANALYTICS-MARKS.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EVENTS.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/README.md
+    changed_at: "2026-10-19T16:39:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/CONFIGURATION.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/EDGE-FUNCTIONS.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/API-GATEWAY.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/AUTH-AND-LIMITS.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Reference
 
 > **Type:** reference · **Audience:** partner-developers, implementers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docsystem.test.ts`

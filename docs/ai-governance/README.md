@@ -1,3 +1,144 @@
+---
+stale-refs:
+  - source: docs/ai-governance/05-feature-requirements.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/10-red-team-and-launch-gates.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/01-inventory-and-risk-tiering.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/03-retrieval-policy.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/06-evaluation-framework.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/08-tenant-ai-console.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/02-model-gateway.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/04-tool-broker.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/09-user-transparency.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # AI governance architecture
 
 **Status: design and guard. Not an approval, not a claim about any deployed environment.**

@@ -1,3 +1,170 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/OBJECTION_HANDLING_LIBRARY.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/CONTROL-FACTS.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/business/sales/CRM_PIPELINE_DEFINITION.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
+    changed_at: "2026-10-19T16:39:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
+    changed_at: "2026-10-19T02:31:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pilot Sales Email Sequences (account-based institutional outreach)
 
 | Control | Value |

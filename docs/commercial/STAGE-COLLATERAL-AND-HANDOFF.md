@@ -1,3 +1,218 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SEGMENT-MOTIONS-AND-BUYING-COMMITTEES.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/SECURITY-WHITEPAPER.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
+    changed_at: "2026-10-19T16:39:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/PRIVACY-OVERVIEW.md
+    changed_at: "2026-10-19T16:39:50"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
+    changed_at: "2026-10-19T16:39:47"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-OFFER.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
+    changed_at: "2026-10-19T02:31:18"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Stage Collateral, Evidence Artifacts and Sales-to-Implementation Handoff
 
 | Control | Value |

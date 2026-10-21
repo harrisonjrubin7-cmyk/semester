@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-04 · An edge function is erroring
 
 Class C0 to C3, by function · role per catalog row · alerts `edge:error-shape`, `burn:privacy_request_intake` · components `supabase-edge-runtime` and every `fn:*`.

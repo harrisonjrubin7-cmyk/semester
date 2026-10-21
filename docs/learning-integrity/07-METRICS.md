@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
+    changed_at: "2026-10-19T16:39:45"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 07 · Evaluation metrics that measure learning support, not engagement
 
 Deliverable covered: **evaluation metrics that measure learning support rather

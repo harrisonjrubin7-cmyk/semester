@@ -1,3 +1,108 @@
+---
+stale-refs:
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_RISK_REGISTER.md
+    changed_at: "2026-10-19T18:51:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_RELEASE_GATES.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T18:51:10"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_ROADMAP.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_WORKFLOW_CATALOG.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Operations audit and evidence
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

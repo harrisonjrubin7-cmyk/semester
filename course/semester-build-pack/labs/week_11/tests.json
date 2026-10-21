@@ -1,0 +1,64 @@
+{
+  "function": "redact",
+  "cases": [
+    {
+      "input": {
+        "token": "secret",
+        "request_id": "r",
+        "student_name": "X"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "status": 503
+      },
+      "expected": {
+        "status": 503
+      }
+    },
+    {
+      "input": {
+        "password": "p",
+        "request_id": "r"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "submission_body": "x",
+        "request_id": "r"
+      },
+      "expected": {
+        "request_id": "r"
+      }
+    },
+    {
+      "input": {
+        "password": "p",
+        "submission_body": "b",
+        "token": "t",
+        "student_name": "X",
+        "status": 503
+      },
+      "expected": {
+        "status": 503
+      }
+    },
+    {
+      "input": {
+        "region": "eu",
+        "request_id": "r",
+        "password": "p"
+      },
+      "expected": {
+        "region": "eu",
+        "request_id": "r"
+      }
+    }
+  ]
+}

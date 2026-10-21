@@ -1,3 +1,80 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/03-INTERVIEW-GUIDES.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: VALIDATED.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/05-AUDIT-VALIDATION.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 01 · The evidence model
 
 | Control | Value |

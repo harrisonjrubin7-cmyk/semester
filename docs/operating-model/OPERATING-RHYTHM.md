@@ -1,3 +1,106 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PROOF-CALENDAR.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
+    changed_at: "2026-10-19T18:51:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-19T18:51:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/TRUST-BRAND-AND-LEGAL.md
+    changed_at: "2026-10-19T18:51:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/DATA-STEWARDSHIP.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Founding-team operating rhythm
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).

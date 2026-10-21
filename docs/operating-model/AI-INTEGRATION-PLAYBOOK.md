@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-ASSURANCE.md
+    changed_at: "2026-10-19T18:51:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-19T18:51:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # The 2026 AI integration playbook, held to the tree
 
 <!-- Rendered from app/src/lib/governance/ai-playbook.ts by ai-playbook.test.ts. Edit the data, then run `npm run registers` from app/. -->

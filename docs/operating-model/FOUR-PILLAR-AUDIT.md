@@ -1,3 +1,84 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # The four-pillar audit
 
 <!-- Rendered from app/src/lib/audit.ts by audit.test.ts. Edit the data, then run `npm run registers` from app/. -->

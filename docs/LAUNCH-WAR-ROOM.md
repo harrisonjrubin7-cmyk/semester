@@ -1,3 +1,104 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/customer-commitments/README.md
+    changed_at: "2026-10-19T16:39:57"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Launch war room
 
 <!-- Rendered from app/src/lib/ops/warroom.ts by warroom.test.ts. Edit the data, then run `npm run registers` from app/. -->

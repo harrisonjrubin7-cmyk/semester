@@ -1,3 +1,68 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPANY_LIVE_STATUS.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: operations/GO_NO_GO_SCORECARD.md
+    changed_at: "2026-10-19T16:39:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester — go-to-market readiness (Phase 0)
 
 **Date:** 2026-10-04 · **Status:** BASELINE ASSESSMENT — approves no price, claim, campaign or sale · **Controlling:** [`GO-NO-GO-DECISION.md`](../GO-NO-GO-DECISION.md), [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) · **Company state:** [`docs/program/COMPANY_LIVE_STATUS.md`](../docs/program/COMPANY_LIVE_STATUS.md)

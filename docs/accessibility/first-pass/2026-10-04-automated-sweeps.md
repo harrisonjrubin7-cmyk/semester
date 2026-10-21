@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/accessibility/TESTING-AND-EVIDENCE.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/accessibility/first-pass/MANUAL-PASS-KIT.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Automated sweeps, 2026-10-04
 
 **Sweep evidence for one commit. Not a screen-reader pass and not a WCAG evaluation.** Per

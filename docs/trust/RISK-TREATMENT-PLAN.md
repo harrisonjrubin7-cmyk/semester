@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: LAUNCH-RISK-REGISTER.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester security and trust risk treatment plan — controlled draft
 
 - **Status:** `INCOMPLETE / NO ADOPTED RISK APPETITE`

@@ -1,3 +1,394 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: MARKET-POSITION.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ANALYTICS-EVENTS.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PROOF-CALENDAR.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RUNBOOKS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/DEFENSIBILITY.md
+    changed_at: "2026-10-19T18:51:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATING-RHYTHM.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RISK-GOVERNANCE.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/TRUST-BRAND-AND-LEGAL.md
+    changed_at: "2026-10-19T18:51:05"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-19T18:51:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+  - source: RESTORE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/MIGRATION_PLAYBOOK.md
+    changed_at: "2026-10-19T16:39:49"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: STAGING.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-HARDENING-REPORT.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T18:51:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0004-ai-through-a-metered-gateway.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Operational maturity
 
 <!-- Rendered from app/src/lib/governance/maturity.ts by maturity.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/design/INTERACTION-STANDARDS.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/design/DESIGN-DEBT.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester content standards
 
 The words Semester uses, and the rules for writing new ones. It applies to

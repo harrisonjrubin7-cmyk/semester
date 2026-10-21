@@ -1,3 +1,110 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/02-STAKEHOLDER-RESEARCH-PLAN.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/04-TESTING-AND-OBSERVATION.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
+    changed_at: "2026-10-19T18:51:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/DATA-STEWARDSHIP.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 08 · Research ethics, consent and data handling
 
 > **DRAFT FOR QUALIFIED REVIEW.** This is an operating standard and a set of

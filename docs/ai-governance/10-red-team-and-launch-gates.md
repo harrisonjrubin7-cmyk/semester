@@ -1,3 +1,80 @@
+---
+stale-refs:
+  - source: docs/operating-model/AI-ASSURANCE.md
+    changed_at: "2026-10-19T18:51:02"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/01-inventory-and-risk-tiering.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/07-incident-response-and-shutdown.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
+    changed_at: "2026-10-19T18:51:04"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 10 · Red-team suites and launch gates by risk tier
 
 **Code:** `launchRequirements` and `TIER_GATES` in `app/src/lib/governance/ai-systems.ts`; the release gate

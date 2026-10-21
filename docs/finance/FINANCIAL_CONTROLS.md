@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/finance/FINANCE_RELEASE_GATES.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/REFUND_CREDIT_DISPUTE_POLICY.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Financial controls for the native platform
 
 | Control | Value |

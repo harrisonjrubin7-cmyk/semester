@@ -1,3 +1,90 @@
+---
+stale-refs:
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-19T18:51:03"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/README.md
+    changed_at: "2026-10-19T16:39:53"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/05-HARNESS-OWNERSHIP-EVIDENCE.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/08-REPOSITORY-AND-FIXTURES.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 04 · Quality gates and CI
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

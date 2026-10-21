@@ -1,3 +1,96 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/institutional-readiness/INSTITUTIONAL-CAPABILITY-MATRIX.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/product-design/FIRST-WIN-SPECIFICATION.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T18:51:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
+    changed_at: "2026-10-19T16:39:56"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester executive evidence register
 
 | Control | Value |

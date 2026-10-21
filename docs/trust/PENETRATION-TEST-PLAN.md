@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Penetration Test Plan
 
 **No external penetration test has been performed.** This is the plan for the

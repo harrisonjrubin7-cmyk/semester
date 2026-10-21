@@ -1,3 +1,58 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/security/DETECTION-CATALOG.md
+    changed_at: "2026-10-19T16:39:54"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/security/SECURITY-PROGRAM.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/security/TENANT-ISOLATION-VERIFICATION.md
+    changed_at: "2026-10-19T16:39:54"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Security findings register
 
 > Owner: the security seat (held today by the founder; backup `UNASSIGNED`).

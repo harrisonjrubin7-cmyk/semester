@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 06 Acceptance, sign-off, evidence and archival
 
 Code: `signoff.ts`, `evidence.ts`. Stages: **archive**, **monitoring**, and the

@@ -1,3 +1,56 @@
+---
+stale-refs:
+  - source: docs/INTEGRATION-CONTROL-PLANE.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INTEROPERABILITY-ROADMAP.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LMS-INTEROPERABILITY-MATRIX.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_COMPLETE_OPERATING_SYSTEM.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester interoperability matrix
 
 **As of** 2026-10-05 · **Base** origin/main 790ebbf · **Part of** [`SEMESTER_COMPLETE_OPERATING_SYSTEM.md`](SEMESTER_COMPLETE_OPERATING_SYSTEM.md)
