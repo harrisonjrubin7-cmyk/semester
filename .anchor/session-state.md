@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 21:10:52_  ·  branch: `claude/affectionate-cori-y8ckxw`
+_Updated: 2026-10-21 21:11:21_  ·  branch: `claude/affectionate-cori-y8ckxw`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+fc6cdd35 chore: update the auto-saved session state snapshot
 b0997806 chore: update the auto-saved session state snapshot
 f0f2e675 chore: update the auto-saved session state snapshot
 e36efaf5 chore: update the auto-saved session state snapshot
@@ -22,7 +23,6 @@ e36efaf5 chore: update the auto-saved session state snapshot
 ef48b9fd chore: update the auto-saved session state snapshot
 a45b8bf8 chore: update the auto-saved session state snapshot
 5b5284cc docs(simplify): measured audit of the navigation overlap, step 1 only
-07fcae42 feat(ecosystem): role-journey coverage map and access-details explanation
 ```
 
 ## Resume
