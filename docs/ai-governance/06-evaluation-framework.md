@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/10-red-team-and-launch-gates.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

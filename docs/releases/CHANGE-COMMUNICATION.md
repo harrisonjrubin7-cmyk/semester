@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T12:47:35"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: PILOT.md
@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T12:47:43"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/STYLE-GUIDE.md
@@ -29,10 +29,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T12:48:03"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

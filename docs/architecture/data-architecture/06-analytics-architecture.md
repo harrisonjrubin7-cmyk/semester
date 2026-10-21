@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-21T12:47:33"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/ANALYTICS-EVENTS.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/12-governance-operating-model.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/05-lifecycle-governance.md
@@ -25,6 +25,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

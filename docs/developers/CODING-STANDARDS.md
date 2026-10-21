@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -13,15 +13,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SEMESTER-UI-CONSTITUTION.md
-    changed_at: "2026-10-21T12:47:49"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/strategic-boundaries/README.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
@@ -45,10 +45,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T12:48:03"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

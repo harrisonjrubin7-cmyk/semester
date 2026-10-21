@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/ADVISORS.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MARKET-ENTRY-PLAN.md
@@ -25,15 +25,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MOAT-PLAN.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/SCORECARD.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/THREE-YEAR-STRATEGY.md
@@ -41,6 +41,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

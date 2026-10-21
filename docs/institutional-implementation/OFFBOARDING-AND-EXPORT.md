@@ -9,11 +9,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/FEEDBACK-AND-ESCALATION.md
-    changed_at: "2026-10-21T12:47:54"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/METHODOLOGY.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-EXPORT-STANDARD.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
@@ -29,6 +29,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

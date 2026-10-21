@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/program/COMPANY_LIVE_STATUS.md
-    changed_at: "2026-10-21T12:48:05"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/program/COMPLETE_CAPABILITY_REGISTER.md
@@ -17,10 +17,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: operations/GO_NO_GO_SCORECARD.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

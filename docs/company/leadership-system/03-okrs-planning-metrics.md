@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-21T12:47:33"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/01-board.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/05-culture.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/06-domain-governance.md
@@ -33,6 +33,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

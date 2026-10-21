@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/07-communications-and-tracking.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

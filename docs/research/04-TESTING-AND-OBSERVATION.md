@@ -1,19 +1,19 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
-    changed_at: "2026-10-21T12:48:03"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-21T12:48:04"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/product-design/CORE-USER-JOURNEYS.md
@@ -29,15 +29,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/research/02-STAKEHOLDER-RESEARCH-PLAN.md
-    changed_at: "2026-10-21T12:48:08"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/research/03-INTERVIEW-GUIDES.md
-    changed_at: "2026-10-21T12:48:09"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
-    changed_at: "2026-10-21T12:48:09"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
@@ -45,6 +45,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

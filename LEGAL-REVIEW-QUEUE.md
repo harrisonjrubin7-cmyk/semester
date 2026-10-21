@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/ACCEPTABLE-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
-    changed_at: "2026-10-21T12:47:59"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LEGAL-ISSUE-MAP.md
@@ -25,18 +25,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LITIGATION-RESPONSE-PROCEDURE-DRAFT.md
-    changed_at: "2026-10-21T12:47:59"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md
-    changed_at: "2026-10-21T12:48:00"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

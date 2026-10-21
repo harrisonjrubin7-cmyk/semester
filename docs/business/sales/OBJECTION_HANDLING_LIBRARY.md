@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/CRM_PIPELINE_DEFINITION.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
@@ -49,11 +49,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
-    changed_at: "2026-10-21T12:48:00"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
@@ -69,19 +69,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
@@ -89,7 +89,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-EXPORT-STANDARD.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
@@ -101,11 +101,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
@@ -113,7 +113,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md
-    changed_at: "2026-10-21T12:48:12"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
@@ -121,7 +121,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
@@ -129,7 +129,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
@@ -149,6 +149,38 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

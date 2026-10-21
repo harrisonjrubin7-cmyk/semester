@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/QBR_TEMPLATE.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-implementation/SUCCESS-SYSTEM.md
-    changed_at: "2026-10-21T12:47:56"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

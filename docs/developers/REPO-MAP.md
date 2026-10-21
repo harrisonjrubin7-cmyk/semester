@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: README.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
@@ -17,14 +17,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/README.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

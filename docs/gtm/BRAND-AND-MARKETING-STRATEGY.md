@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T12:47:35"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: CLAUDE.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T12:47:40"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/BRAND-PLATFORM.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-ANALYTICS-DATA-ETHICS.md
@@ -61,11 +61,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/GO-TO-MARKET-POSITIONING.md
-    changed_at: "2026-10-21T12:48:00"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T12:48:00"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
@@ -73,10 +73,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

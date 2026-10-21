@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/TYPOGRAPHY-SYSTEM.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

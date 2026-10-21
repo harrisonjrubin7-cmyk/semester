@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/support/articles/accessibility-help.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/ai-unavailable.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/billing.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/calendar-not-updating.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/deleted-item-came-back.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/old-version-showing.md
@@ -33,11 +33,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/safety-concern.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/school-connection-failing.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/syllabus-did-not-parse.md
@@ -53,7 +53,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/macro-library.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/severity-and-routing.md
@@ -61,10 +61,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/supporter-access.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-21T12:47:35"
+    changed_at: "2026-10-21T14:48:04"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
-    changed_at: "2026-10-21T12:48:03"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/ADVISORS.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/FOUNDER-DECISION-LOG.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MARKET-ENTRY-PLAN.md
@@ -41,15 +41,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/MOAT-PLAN.md
-    changed_at: "2026-10-21T12:48:10"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/RISK-REGISTER.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/SCORECARD.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/THREE-YEAR-STRATEGY.md
@@ -57,6 +57,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

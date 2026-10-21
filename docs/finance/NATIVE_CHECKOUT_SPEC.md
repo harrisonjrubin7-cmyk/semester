@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/finance/COMMERCIAL_AND_ENTITLEMENT_MODEL.md
-    changed_at: "2026-10-21T12:47:49"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/FINANCE_RELEASE_GATES.md
@@ -17,10 +17,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/PAYMENT_PROVIDER_ADAPTER_ARCHITECTURE.md
-    changed_at: "2026-10-21T12:47:49"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

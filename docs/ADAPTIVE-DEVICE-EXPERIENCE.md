@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/CAPABILITY-PARITY-MATRIX.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
@@ -13,6 +13,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

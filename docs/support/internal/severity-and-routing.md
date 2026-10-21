@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T12:47:36"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-21T12:47:39"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -13,11 +13,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T12:47:45"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/README.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/accessibility-help.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/ai-unavailable.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/billing.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/support/articles/cannot-sign-in.md
@@ -53,10 +53,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/internal/macro-library.md
-    changed_at: "2026-10-21T12:48:11"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

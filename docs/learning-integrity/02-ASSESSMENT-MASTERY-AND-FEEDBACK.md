@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
-    changed_at: "2026-10-21T12:47:47"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/QTI-3-ASSESSMENT-AND-MIGRATION.md
-    changed_at: "2026-10-21T12:47:48"
+    changed_at: "2026-10-21T14:48:07"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/04-ACADEMIC-INTEGRITY-CONTROLS.md
-    changed_at: "2026-10-21T12:47:57"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/05-ACCOMMODATIONS.md
@@ -21,14 +21,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/06-POLICY-CONFIGURATION-AND-WORKFLOWS.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/learning-integrity/07-METRICS.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

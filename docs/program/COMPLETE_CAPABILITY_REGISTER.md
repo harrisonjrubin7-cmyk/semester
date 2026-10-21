@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
-    changed_at: "2026-10-21T12:47:46"
+    changed_at: "2026-10-21T14:48:06"
     sections_changed: []
     summary: externally modified
   - source: docs/program/COMPANY_LIVE_STATUS.md
-    changed_at: "2026-10-21T12:48:04"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/program/COMPLETION_DOMAIN_OWNERSHIP.md
-    changed_at: "2026-10-21T12:48:05"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/program/FINAL_BASELINE_AUDIT.md
@@ -17,10 +17,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: operations/GO_NO_GO_SCORECARD.md
-    changed_at: "2026-10-21T12:48:13"
+    changed_at: "2026-10-21T14:48:10"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

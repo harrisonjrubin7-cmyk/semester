@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: commercial/GO_TO_MARKET_READINESS.md
-    changed_at: "2026-10-21T12:47:45"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md
-    changed_at: "2026-10-21T12:48:05"
+    changed_at: "2026-10-21T14:48:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

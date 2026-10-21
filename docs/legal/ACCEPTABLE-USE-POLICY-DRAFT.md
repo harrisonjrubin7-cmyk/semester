@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-21T12:47:42"
+    changed_at: "2026-10-21T14:48:05"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/TERMS-OF-SERVICE-DRAFT.md
-    changed_at: "2026-10-21T12:47:58"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/COMMUNITY-GUIDELINES-DRAFT.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

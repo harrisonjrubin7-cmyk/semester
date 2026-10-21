@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/institutional-readiness/INSTITUTIONAL-IMPLEMENTATION-GUIDE.md
-    changed_at: "2026-10-21T12:47:56"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ACCESSIBILITY-PACKAGE.md
-    changed_at: "2026-10-21T12:47:56"
+    changed_at: "2026-10-21T14:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
