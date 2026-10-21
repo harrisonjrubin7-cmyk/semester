@@ -1,30 +1,28 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 19:48:00_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-21 02:05:49_  ·  branch: `claude/ecstatic-fermi-amk84h`
 
 ## Uncommitted changes
 ```
  M .anchor/session-state.md
-?? .claude/CLAUDE.md
-?? .md-linker/
 ```
 
 Diff stat:
 ```
- .anchor/session-state.md | 21 +--------------------
- 1 file changed, 1 insertion(+), 20 deletions(-)
+ .anchor/session-state.md | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 ```
 
 ## Recent commits
 ```
-7404a316 chore: update the auto-saved session state snapshot
-dfe7a74a chore: update the auto-saved session state snapshot
-0b2e9ea9 chore: update the auto-saved session state snapshot
-2e1b1ddc chore: update the auto-saved session state snapshot
-d66ace3f chore: update the auto-saved session state snapshot
-90332cc9 chore: update the auto-saved session state snapshot
-1cd8735c chore: update the auto-saved session state snapshot
-0bf4c59d chore: update the auto-saved session state snapshot
+23809426 feat(release): build an evidence bundle for one commit
+b0e0486b chore: gitignore auto-saved session checkpoint and local Claude config (#1646)
+22f53f83 Merge remote-tracking branch 'origin/main' into claude/affectionate-goldberg-4hn7pc
+7b55bfb9 chore: gitignore local Claude config and ignore file
+a47c03a6 chore: stop tracking auto-saved session-state checkpoint
+706de357 Merge pull request #1536 from harrisonjrubin7-cmyk/claude/blissful-franklin-ixpmdc
+bde60fcd docs(strategy): add maturity registries and the 50-action backlog (#1578)
+3b9a035c chore: refresh auto-saved session-state checkpoint
 ```
 
 ## Resume
