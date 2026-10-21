@@ -389,7 +389,8 @@ curl -s 'http://127.0.0.1:8787/health'
   "status": "ready",
   "adapters": 16,
   "intelligence": "policy-disabled",
-  "readOnly": true
+  "readOnly": true,
+  "registrationReadinessPaused": false
 }
 ```
 <!-- /example -->

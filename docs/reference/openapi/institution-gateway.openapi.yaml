@@ -1104,7 +1104,7 @@ components:
           enum: [live]
     Health:
       type: object
-      required: [service, version, status, adapters, intelligence, readOnly]
+      required: [service, version, status, adapters, intelligence, readOnly, registrationReadinessPaused]
       properties:
         service:
           type: string
@@ -1121,6 +1121,9 @@ components:
           enum: [policy-disabled, configured-sandbox, configured-production]
         readOnly:
           type: boolean
+        registrationReadinessPaused:
+          type: boolean
+          description: True while the registration-readiness safe-off is engaged.
     SsoConfig:
       oneOf:
         - type: object
