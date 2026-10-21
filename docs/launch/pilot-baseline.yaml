@@ -1,0 +1,82 @@
+# Pilot launch baseline for the registration-readiness pilot (from the continuation plan).
+# Scope only: anything not listed under "included" is out of the first production baseline.
+# Source-state vocabulary: app/src/lib/source-definitive.ts (mayShowDefinitiveReadiness).
+pilot_baseline:
+  release: REL-READINESS-001
+  capability: CAP-REG-001
+
+  included:
+    student:
+      - authenticated_entry
+      - institution_and_term_context
+      - readiness_request
+      - ready_blocked_review_unknown_stale_states
+      - source_and_freshness_labels
+      - blocker_handoff
+      - request_receipt
+      - privacy_and_session_entry_points
+
+    staff:
+      - scoped_registrar_queue
+      - scoped_advisor_handoff_queue
+      - reconciliation_case_view
+      - audit_trail
+      - approved_outreach_or_response
+
+    platform:
+      - tenant_membership
+      - policy_enforcement_point
+      - source_projection
+      - durable_workflow
+      - idempotency
+      - outbox_and_audit
+      - feature_flag_safe_off
+      - release_evidence
+
+    operations:
+      - source_health
+      - workflow_health
+      - support_triage
+      - incident_runbook
+      - reconciliation_runbook
+      - hypercare_dashboard
+
+  excluded:
+    - official_enrollment_action
+    - prerequisite_override_execution
+    - hold_removal
+    - official_degree_audit
+    - grade_or_financial_aid_decision
+    - open_partner_API_access
+    - autonomous_AI_action
+
+# Mandatory vertical slices. Each must reach a visible outcome plus authorization,
+# persistence, tests, operations and recovery.
+slices:
+  - slice: identity_and_context
+    outcome: Correct institution, role, term and cohort context
+    must_prove: [tenant_and_membership_isolation, session_revocation]
+  - slice: readiness_request
+    outcome: Student can request a scoped evaluation
+    must_prove: [schema_validation, idempotency, audit_receipt]
+  - slice: source_evaluation
+    outcome: Approved input is evaluated safely
+    must_prove: [authority_and_freshness_labels, stale_or_unknown_blocking]
+  - slice: student_result
+    outcome: Student understands what happened and what to do next
+    must_prove: [ready, blocked, review, unknown, stale, error_states]
+  - slice: staff_handoff
+    outcome: Authorized office receives the minimum needed context
+    must_prove: [caseload_or_office_scope, student_visible_status]
+  - slice: reconciliation
+    outcome: Mismatches are classified and safely resolved
+    must_prove: [human_review, immutable_decision_trail]
+  - slice: operations
+    outcome: Team can detect, contain, recover and communicate
+    must_prove: [monitoring, safe_off, incident_and_rollback_drills]
+
+# Gap against the continuation plan (not yet verified on main):
+#   - SLICE-READINESS-003 (registry/slices/) and CERT-CONTROL-001 (evidence/control-plane/)
+#     are not created: those top-level directories do not exist in this repository.
+#   - packages/domain-core/source-state.yaml is not created; the TypeScript contract lives in app/src/lib/source-definitive.ts.
+#   - The student UI does not yet call mayShowDefinitiveReadiness; wiring is unverified.
