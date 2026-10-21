@@ -173,6 +173,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['course_request_decide', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay', 'r.student_id = me']],
+  ['course_request_file', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['course_request_respond', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
+  ['course_request_withdraw', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
   ['create_study_session', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -217,6 +221,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gradebook_queue_passback', 'integration', ['auth.uid()', 'private.gradebook_require', "public.kill_switch_engaged('kill.writeback', school)", "e.status = 'released'"]],
   ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
+  ['gradebook_set_due', 'admin', ['private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay', 'it.due_version <> want_expect']],
   ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
@@ -614,6 +619,14 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261021100000_roster_admin_unbind_search.sql',
     functions: ['roster_admin_bound', 'roster_admin_find_accounts', 'roster_admin_unbind'],
+  },
+  {
+    file: '20261021120000_course_requests.sql',
+    functions: ['course_request_decide', 'course_request_file', 'course_request_respond', 'course_request_withdraw'],
+  },
+  {
+    file: '20261021130000_gradebook_due_dates.sql',
+    functions: ['gradebook_set_due'],
   },
 ];
 

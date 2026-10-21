@@ -319,7 +319,12 @@ begin
   -- residence_life_staff.
   -- The roster desk (20261021090000_roster_admin_desk.sql) then gave
   -- roster:administer to integration_admin and university_admin.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 200);
+  -- Course requests (20261021120000_course_requests.sql) then added
+  -- seven: course_requests:create for student, undergraduate_student,
+  -- graduate_student and transfer_student (the roles carrying grades:receive),
+  -- course_requests:decide and :view for faculty, and :view for
+  -- teaching_assistant.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 207);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

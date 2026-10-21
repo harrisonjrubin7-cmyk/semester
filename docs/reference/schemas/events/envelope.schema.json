@@ -55,6 +55,8 @@
         "grade.posted",
         "grade.passback_requested",
         "grade.passback_reconciled",
+        "course_request.filed",
+        "course_request.decided",
         "connector.sync_started",
         "connector.sync_completed",
         "connector.sync_failed",

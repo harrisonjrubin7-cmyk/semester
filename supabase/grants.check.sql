@@ -570,6 +570,27 @@ declare
     -- submissions:create on the item's course and term, and spends a key on
     -- the gradebook ledger; `learning-submissions.check.sql` proves each refusal.
     'learning_submit(want_item uuid, want_body text, want_key text)',
+    -- 20261021120000_course_requests.sql: a student asks the course's
+    -- instructor for an extension, an excused absence or an incomplete, and
+    -- the instructor decides. Each checks auth.uid() and the caller's own
+    -- school; filing and deciding check course_requests:create / :decide on
+    -- the course and term, withdrawing and answering that the request is the
+    -- caller's own. All spend a key on the gradebook ledger, and every change
+    -- after filing names the version read. `course-requests.check.sql` proves
+    -- each refusal.
+    'course_request_file(want_course text, want_term text, want_kind text, want_item uuid, want_requested_due date, want_reason text, want_key text)',
+    'course_request_withdraw(want_request uuid, want_expect integer, want_key text)',
+    'course_request_respond(want_request uuid, want_note text, want_expect integer, want_key text)',
+    'course_request_decide(want_request uuid, want_outcome text, want_granted_due date, want_note text, want_expect integer, want_key text)',
+    -- 20261021130000_gradebook_due_dates.sql: setting an item's due date
+    -- checks auth.uid(), the caller's own school and grades:release on the
+    -- item's course and term (who adds items), spends a key on the gradebook
+    -- ledger and names the version read. Reading the dates is security
+    -- invoker: the item and request tables' own policies decide every row, so
+    -- a student reads their own extension and no other.
+    -- `gradebook-due-dates.check.sql` proves each refusal and each reader.
+    'gradebook_set_due(want_item uuid, want_due timestamp with time zone, want_expect integer, want_key text)',
+    'gradebook_due_dates(want_course text, want_term text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions

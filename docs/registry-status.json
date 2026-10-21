@@ -11,11 +11,11 @@
     "operational"
   ],
   "counts": {
-    "specified": 51,
+    "specified": 50,
     "schema-present": 11,
     "code-present": 88,
     "connected": 18,
-    "tested": 113,
+    "tested": 114,
     "deployed": 0,
     "operational": 0
   },
@@ -48,11 +48,11 @@
       "operational": 0
     },
     "faculty": {
-      "specified": 3,
+      "specified": 2,
       "schema-present": 0,
       "code-present": 9,
       "connected": 0,
-      "tested": 5,
+      "tested": 6,
       "deployed": 0,
       "operational": 0
     },
@@ -761,10 +761,10 @@
       "blockers": "production app not probed from this session"
     },
     "#/faculty/requests": {
-      "status": "specified",
-      "evidence": "—",
-      "deployment": "nothing to deploy yet",
-      "blockers": "No student-to-faculty request (extension, excused absence, incomplete) intake or queue."
+      "status": "tested",
+      "evidence": "screen app/src/screens/Gradebook.tsx; screen app/src/components/gradebook/RequestQueue.tsx; screen app/src/components/gradebook/AskInstructor.tsx; screen app/src/components/gradebook/DueDates.tsx; module app/src/lib/gradebook/requests.ts; module app/src/lib/gradebook/duedates.ts; test supabase/course-requests.check.sql; test supabase/gradebook-due-dates.check.sql; test app/src/lib/gradebook/requests.test.ts; test app/src/lib/gradebook/duedates.test.ts; test app/src/components/gradebook/CourseRequests.test.tsx; test app/src/components/gradebook/DueDates.test.tsx; test app/src/screens/gradebook.test.tsx",
+      "deployment": "schema: 2 of 2 cited migration(s) not in the lzrqvlugnawcgywkhqlz listing (20261021120000, 20261021130000) · app: unverified — Vercel built preview deployments of this branch for the projects semester, api, web and semester-company-site (GitHub commit statuses \"Deployment has completed\", 2026-10-11) but they sit behind Vercel Authentication, and both the plain fetch (302) and the authorized Vercel fetch (403, team harrison22 not authorized for this session's connection) were refused; the production URL is the repository variable SEMESTER_PRODUCTION_APP_URL, not readable here. No deployment was seen running.",
+      "blockers": "An approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate.; production app not probed from this session"
     },
     "#/faculty/gradesync": {
       "status": "code-present",

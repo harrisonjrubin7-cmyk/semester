@@ -1357,6 +1357,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
   { table: 'learning_submissions', column: 'student_id' },
+
+  // Your requests to a course's instructor — an extension, an excused absence,
+  // an incomplete — and every act on them (`lib/gradebook/requests.ts`,
+  // `20261021120000_course_requests.sql`). The request names you by
+  // `student_id` with `on delete cascade`, and its history goes with it.
+  { table: 'course_requests', column: 'student_id' },
+  { table: 'course_request_actions', column: null, cascadesFrom: 'course_requests' },
 ];
 
 /**
