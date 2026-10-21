@@ -150,6 +150,16 @@ export function roleOf(id: string): RoleInfo {
   return ROLES.find((r) => r.id === id) ?? ROLES[0];
 }
 
+/**
+ * The role a stored value opens the app as. A role held back from the picker
+ * (payer, until its workspace exists) falls back to the student: a saved copy
+ * of it has no option to select, so keeping it would desync the picker.
+ */
+export function choosableRole(id: string): Role {
+  const info = roleOf(id);
+  return info.ready ? info.id : DEFAULT_ROLE;
+}
+
 /** Every role with a usable workspace. Kept as a predicate so a future role cannot ship half-built. */
 export function pickable(): RoleInfo[] {
   return ROLES.filter((r) => r.ready);

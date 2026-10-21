@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ROLE, ROLES, denserLayoutFor, forRole, hiddenFrom, pickable, roleOf, screenForRole, type Role } from './role';
+import { DEFAULT_ROLE, ROLES, choosableRole, denserLayoutFor, forRole, hiddenFrom, pickable, roleOf, screenForRole, type Role } from './role';
 import { DESTINATIONS, destinationsFor, offered } from './nav';
 import type { Capabilities } from './school';
 import { reducer } from '../state/reducer';
@@ -52,6 +52,14 @@ describe('the roles the app admits to', () => {
     // does not name would open the app on an empty directory.
     expect(roleOf('vice-chancellor').id).toBe('student');
     expect(roleOf('').id).toBe('student');
+  });
+
+  // A saved copy of a role the picker no longer offers must not reopen the app
+  // as that role: there is no option to show it against.
+  it('loads a stored role the picker holds back as the student', () => {
+    expect(choosableRole('payer')).toBe('student');
+    expect(choosableRole('faculty')).toBe('faculty');
+    expect(choosableRole('vice-chancellor')).toBe('student');
   });
 });
 

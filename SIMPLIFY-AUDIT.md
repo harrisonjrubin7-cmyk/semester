@@ -11,14 +11,14 @@ corrections change what can be merged.
 
 | Brief says | Measured | Command |
 | --- | --- | --- |
-| 59 screens in `lib/nav.ts` | **64** `screen:` entries in `lib/nav.ts` (lines 204–1014) | `grep -c "screen: '" app/src/lib/nav.ts` |
+| 59 screens in `lib/nav.ts` | **<!--screens-->sixty-three<!--/--> destinations** in the `DESTINATIONS` list. A raw `grep -c "screen: '"` gives 64 because `community` (`nav.ts:1014`) sits outside that list | `grep -c "screen: '" app/src/lib/nav.ts` |
 | `weekly`, `ahead`, `tonight`, `chat`, `standing`, `worked`, `everything`, `check` are screens | **None** exists in the `Screen` union (`lib/types.ts`, 85 members) or in `nav.ts` | `grep -c "| 'weekly'" app/src/lib/types.ts` (and the others) |
 | `grades` and `springboard` are destinations | Both are in the `Screen` union, **neither** is a `nav.ts` destination | `grep -c "screen: 'grades'" app/src/lib/nav.ts` → 0 |
 | `countScreens` tracks screen counts | **Does not exist.** `usage.ts` and `privacy.ts` match on other names | `grep -rn countScreens app/src` → no definition |
 | `GROUPED-AUDIT.md`: 74 hand-rolled rows over 31 screens | Present, and the count line is unchanged in the file (`GROUPED-AUDIT.md:27`). **Not re-counted** here; see §4 | `grep -n "74 occurrences" GROUPED-AUDIT.md` |
 | Settings slice in `state/slices/settings.ts` | Dispatch sites are in the screens and components, not one file. Action names are dispatched as `type: 'setX'` | see §3 |
 
-The 59 in the brief is not the 64 in the registry, and the difference is not
+The 59 in the brief is not the 63 in the registry, and the difference is not
 explained by these checks. Reconciling it is the first decision (§6).
 
 ## 1. Route count per destination
@@ -104,7 +104,7 @@ edits (remove) and which are navigation-order edits (keep).
 ## 4. Duplicated UI
 
 Re-counts are not done in this commit. `GROUPED-AUDIT.md:27` claims 74
-occurrences over 31 of 58 screens. Those numbers predate the 64 registry
+occurrences over 31 of 58 screens. Those numbers predate the 63 registry
 entries, so the count must be re-measured before it is used. Hand-rolled
 headers, chip rows and empty states have no count yet. Shared components
 (`ItemRow`, etc.) need the re-count first.
@@ -122,8 +122,8 @@ headers, chip rows and empty states have no count yet. Shared components
 
 ## 6. Decisions the owner must make before any merge
 
-1. **Which 59?** The registry has 64 entries. Name the 5 that are not
-   destinations (or confirm 64).
+1. **Which 59?** The registry has 63 destinations. Name the 4 that are not
+   destinations (or confirm 63).
 2. **The named clusters.** Confirm that `weekly`, `ahead`, `tonight`, `chat`,
    `standing`, `worked`, `everything` and `check` are not expected to exist.
    If the brief means different screens by these names, supply them.
@@ -133,7 +133,7 @@ headers, chip rows and empty states have no count yet. Shared components
 
 ## 7. Next executable step (no owner input needed)
 
-- Re-count hand-rolled rows (§4) with the 64-entry registry.
+- Re-count hand-rolled rows (§4) with the 63-destination registry.
 - Implement the `setLook` consolidation (§3) as its own commit, with a test
   that every appearance writer goes through `screens/settings/Look.tsx`.
 - Add the migration test for saved `screen` values that no longer exist
