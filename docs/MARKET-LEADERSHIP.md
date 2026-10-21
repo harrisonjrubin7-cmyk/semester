@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
@@ -13,27 +13,27 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/INTEROPERABILITY-ROADMAP.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-LAUNCH-REGISTER.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/RUNBOOKS.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
@@ -41,38 +41,68 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/accessibility/AT-PASS-PROTOCOL.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATIONAL-MATURITY.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/COMPLIANCE-CROSSWALK.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
   - source: ops/strategic-boundaries/README.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:13"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: docs/CAPABILITY-PARITY-MATRIX.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/DOMAIN-REPLACEMENT-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONAL-REALITY-REGISTER.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

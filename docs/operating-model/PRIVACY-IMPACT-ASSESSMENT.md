@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -5,19 +5,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/SUPPLY-CHAIN.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CONFIGURATION-TIERS.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/01-operating-cadence.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/02-implementation-methodology.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/03-raci-and-decision-rights.md
@@ -45,11 +45,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/05-incident-and-continuity.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/07-knowledge-training-enablement.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/09-dashboards-and-indicators.md
@@ -61,7 +61,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/coo/templates.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md
@@ -69,10 +69,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

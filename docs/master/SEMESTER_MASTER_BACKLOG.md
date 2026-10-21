@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-STATUS-MAP.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/DECISION_BACKLOG.md
@@ -21,14 +21,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/program/03-RAID.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/program/PHASE_1_EXECUTION_BACKLOG.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:05"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

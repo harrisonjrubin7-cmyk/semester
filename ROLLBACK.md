@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: MIGRATION-HISTORY.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

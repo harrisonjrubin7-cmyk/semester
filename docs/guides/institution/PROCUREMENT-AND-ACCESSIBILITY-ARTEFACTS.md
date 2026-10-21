@@ -1,23 +1,23 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:40"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/STUDENT-DATA-MAP.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-CONFORMANCE-PLAN.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:00"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:13"
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ACCESSIBILITY-PACKAGE.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:56"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-PROCUREMENT-READINESS.md
@@ -49,6 +49,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

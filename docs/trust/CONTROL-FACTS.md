@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: docs/DEFINER-RLS-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

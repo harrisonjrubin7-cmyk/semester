@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -9,23 +9,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/BASIC-NEEDS-NAVIGATOR.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINER-RLS-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/MODULE-PRIVACY-MODEL.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/SAAS-LAUNCH-KIT.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-LIFECYCLE-GATES.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
@@ -57,6 +57,22 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

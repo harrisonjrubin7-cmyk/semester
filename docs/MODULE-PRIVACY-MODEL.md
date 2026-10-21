@@ -5,18 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ROLE-LAUNCH-REGISTER.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/FERPA-CONSENT-WORKFLOW.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

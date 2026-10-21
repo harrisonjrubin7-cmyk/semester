@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: MONITORING.md
@@ -9,19 +9,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:40"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:43"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DEFENSIBILITY.md
@@ -29,6 +29,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/WEEKLY_PILOT_REPORT.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1154.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/ACCESSIBILITY-ROADMAP-EXHIBIT-DRAFT.md
@@ -53,19 +53,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/COUNSEL-ISSUE-CHECKLISTS.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:58"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:58"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:59"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/REFUND-CANCELLATION-AND-RENEWAL-POLICY-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:00"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
@@ -77,11 +77,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PILOT-AGREEMENT-OUTLINE.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:13"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md
@@ -97,11 +97,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:59"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INSTITUTIONAL-PILOT-PROPOSAL-TEMPLATE-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:59"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
@@ -109,6 +109,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

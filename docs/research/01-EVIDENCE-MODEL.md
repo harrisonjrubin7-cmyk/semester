@@ -1,23 +1,23 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: VALIDATED.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:45"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/research/03-INTERVIEW-GUIDES.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/research/05-AUDIT-VALIDATION.md
@@ -25,6 +25,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

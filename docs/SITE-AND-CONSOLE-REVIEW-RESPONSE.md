@@ -5,11 +5,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONS-CONSOLE-MAP.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
@@ -17,10 +17,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/operations-console/README.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:13"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

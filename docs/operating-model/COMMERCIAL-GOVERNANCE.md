@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0004-ai-through-a-metered-gateway.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

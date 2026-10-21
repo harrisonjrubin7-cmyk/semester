@@ -1,26 +1,36 @@
 ---
 stale-refs:
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: README.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: docs/INSTITUTIONAL-CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/OWNERSHIP-AND-REVIEW.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:49"
     sections_changed: []
     summary: externally modified
   - source: docs/releases/CHANGE-COMMUNICATION.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

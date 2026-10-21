@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: VALIDATED.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:45"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1144.md
@@ -17,10 +17,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

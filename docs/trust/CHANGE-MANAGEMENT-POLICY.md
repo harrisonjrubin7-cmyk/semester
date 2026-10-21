@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T02:32:36"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

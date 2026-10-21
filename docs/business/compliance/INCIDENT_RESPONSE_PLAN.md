@@ -1,42 +1,60 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:42"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/CLOUD_SECURITY_PLAN.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/TRUST_CENTER_INVENTORY.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:57"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-RESPONSE.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:57"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/TABLETOP-CALENDAR.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:57"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:59"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

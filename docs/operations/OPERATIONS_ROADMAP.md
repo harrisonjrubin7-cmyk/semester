@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: docs/master/SEMESTER_12_MONTH_EXECUTION_PLAN.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:01"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_MASTER_BACKLOG.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:02"
     sections_changed: []
     summary: externally modified
   - source: docs/master/SEMESTER_RISK_REGISTER.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/INSTITUTION_OPERATING_SYSTEM.md
@@ -25,7 +25,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operations/ROLE_CAPABILITY_MATRIX.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
   - source: docs/operations/SHARED_CONTROL_PLANE.md
@@ -41,6 +41,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

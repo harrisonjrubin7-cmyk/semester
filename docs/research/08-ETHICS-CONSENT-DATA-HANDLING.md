@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SECURITY.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:43"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -9,23 +9,23 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/research/02-STAKEHOLDER-RESEARCH-PLAN.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:08"
     sections_changed: []
     summary: externally modified
   - source: docs/research/04-TESTING-AND-OBSERVATION.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:12"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DATA-STEWARDSHIP.md
@@ -33,6 +33,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

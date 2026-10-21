@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:46"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-21T03:32:06"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/ADMIN-GUIDE.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/AUDIT-AND-DATA-REQUESTS.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/IMPLEMENTATION-GUIDE.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/LTI-SETUP.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
@@ -45,7 +45,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/ROSTER-AND-DATA-LOADING.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/SCIM-PROVISIONING.md
@@ -57,14 +57,34 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/STUDENT-DATA-MAP.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:52"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

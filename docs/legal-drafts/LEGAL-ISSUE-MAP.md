@@ -1,18 +1,24 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:36"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/INCIDENT-NOTIFICATION-DECISION-WORKFLOW-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:59"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/LITIGATION-RESPONSE-PROCEDURE-DRAFT.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:48:00"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

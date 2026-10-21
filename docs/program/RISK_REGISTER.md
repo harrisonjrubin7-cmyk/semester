@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: LAUNCH-RISK-REGISTER.md
-    changed_at: "2026-10-21T03:32:04"
+    changed_at: "2026-10-21T12:47:35"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
@@ -9,22 +9,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/ai/ai-policy-enforcement-map.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:49"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:58"
     sections_changed: []
     summary: externally modified
   - source: docs/program/03-RAID.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:04"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

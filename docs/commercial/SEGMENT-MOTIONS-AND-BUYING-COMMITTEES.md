@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-21T03:32:05"
+    changed_at: "2026-10-21T12:47:47"
     sections_changed: []
     summary: externally modified
   - source: docs/k12/K12-REQUIREMENTS.md
-    changed_at: "2026-10-21T03:32:08"
+    changed_at: "2026-10-21T12:47:57"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/architecture/offline-sync-contract.md
-    changed_at: "2026-10-21T03:32:07"
+    changed_at: "2026-10-21T12:47:48"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-21T03:32:09"
+    changed_at: "2026-10-21T12:48:11"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
