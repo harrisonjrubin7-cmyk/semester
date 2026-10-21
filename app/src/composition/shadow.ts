@@ -33,13 +33,15 @@ export interface ShadowDiff {
  * Each entry is a statement about work not yet done, so deleting one means
  * doing it.
  *
- * **Empty.** It had three — registration-day actions, campus office actions
- * and class meetings — and the slice now has all three sources. The mechanism
- * stays, taking its list as a parameter, so the next source that is genuinely
- * missing can be named instead of hidden; but nothing is excused today, and a
- * test asserts it.
+ * It had three — registration-day actions, campus office actions and class
+ * meetings — and the slice gained all three sources. It has one again:
+ * released feedback (`lib/student-actions.ts`), which the Action Center ranks
+ * from the server's `student_actions` and the domain layer does not read yet.
+ * A test pins the list to exactly this, so nothing else is excused.
  */
-export const KNOWN_GAPS: readonly (readonly [RegExp, string])[] = [];
+export const KNOWN_GAPS: readonly (readonly [RegExp, string])[] = [
+  [/^feedback:/, 'released feedback (student_actions) has no domain-layer source yet'],
+];
 
 
 /** `appointment:abc:2026-10-08` → `appointment:abc`; the day is the comparison's, not part of the identity. */

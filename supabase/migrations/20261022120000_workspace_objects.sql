@@ -796,6 +796,10 @@ begin
       ('public.registration_enrollments', 'student'),
       ('public.regrade_requests',     'student_id'),
       ('public.dining_orders',        'student'),
+      -- 20261019120000: work a student handed in.
+      ('public.learning_submissions', 'student_id'),
+      -- 20261021120000: what a student asked their instructor.
+      ('public.course_requests',      'student_id'),
       -- 20261022120000: a person's own documents.
       ('public.workspaces',           'owner_id')
     ) as x(rel, col)

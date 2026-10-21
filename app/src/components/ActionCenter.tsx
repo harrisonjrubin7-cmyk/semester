@@ -53,6 +53,25 @@ export function tomorrowMorning(now: number): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 8, 0, 0, 0).getTime();
 }
 
+/**
+ * An action whose done, dismissed and open states live on the server rather
+ * than this device — released feedback (`lib/student-actions.ts`). Only those
+ * three moves go to the server; snooze, start and notes stay on the device.
+ */
+export interface RemoteActions {
+  owns: (actionId: string) => boolean;
+  /** Moves the server's copy. Throws the refusal, in words. */
+  settle: (actionId: string, to: 'done' | 'dismissed' | 'open') => Promise<void>;
+  /** The server's state laid over this device's choices. */
+  choices: (local: Record<string, Choice>) => Record<string, Choice>;
+}
+
+const SERVER_MOVES: Partial<Record<ActionEvent, 'done' | 'dismissed' | 'open'>> = {
+  complete: 'done',
+  dismiss: 'dismissed',
+  reopen: 'open',
+};
+
 const DONE_SAYS: Partial<Record<ActionEvent, string>> = {
   start: 'Marked as started.',
   complete: 'Marked as done.',
@@ -320,22 +339,40 @@ function Row({
 export function ActionCenter({
   actions,
   closure = null,
+  remote,
 }: {
   actions: Action[];
   /** "You are set for today…", when Today has decided the day is done (`lib/today-center.ts`). */
   closure?: string | null;
+  /** Actions whose done and dismissed states are the server's. */
+  remote?: RemoteActions;
 }) {
   const { account } = useStore();
   const now = useNow().getTime();
   const key = `${ACTIONS_PREFIX}:${account?.id || 'device'}`;
   const library = useDeviceLibrary(key, readActionChoices, EMPTY_ACTION_CHOICES);
-  const choices = library.value.choices;
+  const local = library.value.choices;
+  const choices = useMemo(() => (remote ? remote.choices(local) : local), [remote, local]);
   const ranked = useMemo(() => rank(actions, choices, now), [actions, choices, now]);
-  const [said, setSaid] = useState<{ text: string; undo?: { id: string; prev: Choice | undefined } } | null>(null);
+  const [said, setSaid] = useState<{
+    text: string;
+    undo?: { id: string; prev: Choice | undefined };
+    serverUndo?: { id: string; to: 'done' | 'dismissed' | 'open' };
+  } | null>(null);
   const [reporting, setReporting] = useState<string | null>(null);
   const [explaining, setExplaining] = useState<Scored | null>(null);
 
   const act = (id: string, event: ActionEvent, note?: string, until?: number, says?: string) => {
+    const to = SERVER_MOVES[event];
+    if (remote && to && remote.owns(id)) {
+      const back = event === 'reopen' ? 'dismissed' : 'open';
+      setSaid({ text: 'Saving…' });
+      remote.settle(id, to).then(
+        () => setSaid({ text: `${says ?? DONE_SAYS[event] ?? 'Saved.'} Saved to your account.`, serverUndo: { id, to: back } }),
+        (e: unknown) => setSaid({ text: e instanceof Error ? e.message : String(e) }),
+      );
+      return;
+    }
     const prev = choices[id];
     const reopensNextDay = actions.find((a) => a.id === id)?.reopensNextDay === true;
     const moved = transition(prev, event, now, { until: until ?? tomorrowMorning(now), note, reopensNextDay });
@@ -348,6 +385,15 @@ export function ActionCenter({
   };
 
   const undo = () => {
+    const s = said?.serverUndo;
+    if (s && remote) {
+      setSaid({ text: 'Saving…' });
+      remote.settle(s.id, s.to).then(
+        () => setSaid({ text: 'Undone.' }),
+        (e: unknown) => setSaid({ text: e instanceof Error ? e.message : String(e) }),
+      );
+      return;
+    }
     const u = said?.undo;
     if (!u) return;
     library.update((v) => {
@@ -386,7 +432,7 @@ export function ActionCenter({
       {said && (
         <p role="status" className="today-dismissed">
           {said.text}{' '}
-          {said.undo && (
+          {(said.undo || said.serverUndo) && (
             <button type="button" className="workspace-text-button" onClick={undo}>Undo</button>
           )}
         </p>
