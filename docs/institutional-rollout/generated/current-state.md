@@ -1,3 +1,10 @@
+---
+stale-refs:
+  - source: SEMESTER_IMPLEMENTATION_STATUS.md
+    changed_at: "2026-10-21T12:49:04"
+    sections_changed: ["§47.8 Social graph — **Partly**"]
+---
+
 # Semester institutional current-state census
 
 Commit: `1f8ff58565dfa4d941f525fb8613b3a719433b91`

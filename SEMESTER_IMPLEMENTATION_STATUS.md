@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: SEMESTER-MASTER-COMMAND.md
+    changed_at: "2026-10-21T13:03:29"
+    sections_changed: []
+    summary: externally modified
+  - source: SEMESTER_IMPLEMENTATION_PLAN.md
+    changed_at: "2026-10-21T13:03:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester — implementation status
 
 Every requirement in [`SEMESTER-MASTER-COMMAND.md`](SEMESTER-MASTER-COMMAND.md),
@@ -195,13 +214,17 @@ Organizations and Events: absent entirely. Courses: **Built**.
 
 ## §47.8 Social graph — **Partly**
 
+_Post-baseline update: the rows below describe `supabase/migrations/20260922003000_connections.sql`, which landed on 22 September, after the `387dcfb` baseline above. They are not part of that audit._
+
 | | |
 | --- | --- |
 | Blocking | **Built** — `public.blocks`, RLS-enforced |
 | Reporting | **Partly** — messages and Community posts are stored and reviewed; users, organizations and events cannot be reported yet (§58) |
 | Shared courses | **Built** — the room *is* the shared course |
-| Connection requests, accept, decline, remove | **Absent** — no table |
-| Following, followers, mutual connections | **Absent** — no table |
+| Connection requests, accept, decline, remove — backend | **Partly** — `public.connections` with `request_connection`, `accept_connection`, `remove_connection` (`20260922003000_connections.sql`). `remove_connection` is also the decline: the addressee calling it refuses a pending request, and either party calling it withdraws or removes. Gap: `request_connection` refuses a blocked pair, but `accept_connection` does not re-check `public.blocks`, and a block created after a request neither removes the pending row nor ends an accepted connection, so the migration's "blocking outranks connections" invariant is not enforced across the lifecycle |
+| Connection requests, accept, decline, remove — student UI | **Absent** — no application code calls these RPCs (`app/src/lib/definerregister.ts` only registers them); a student cannot request, accept, decline or remove a connection |
+| Mutual connections, connected-with — backend | **Built** — `public.mutual_connections`, `public.connected_with` (same migration); no application call site yet |
+| Following, followers | **Absent** — no table |
 | Shared organizations | **Absent** — no organizations |
 
 ## §47.9 Direct messaging — **Absent** as specified
@@ -272,8 +295,11 @@ Built: `lib/notify.ts`, `lib/push.ts`, `public.push_devices`, `public.push_queue
 and the `notifs` destination with preferences and quiet hours (`state.quiet`).
 The types are academic — a deadline, a study plan, an office-hours nudge. None
 of §47.13's six required types (connection request, connection accepted, new
-message, organization action, event RSVP, system) can fire, because five of the
-six have no underlying entity.
+message, organization action, event RSVP, system) can fire. Connection request
+and connection accepted now have an underlying entity (`public.connections`),
+but the migration does not enqueue either notification; the other four still
+lack an entity. The remaining gap for the two connection types is notification
+wiring, not a missing entity.
 
 ## §47.14 Basic campus data — **Partly**
 
