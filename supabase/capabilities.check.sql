@@ -311,7 +311,13 @@ begin
   -- 187 before submissions (20261019120000_learning_submissions.sql) added
   -- four: submissions:create for student, undergraduate_student,
   -- graduate_student and transfer_student — the roles carrying grades:receive.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 191);
+  -- Hold resolution (20261020120000_registration_hold_resolution.sql) then
+  -- gave registration_hold:resolve to the seven roles that already publish
+  -- holds as institution actions: registrar, financial_aid_officer,
+  -- student_accounts_officer, international_student_advisor,
+  -- veterans_certifying_official, athletics_compliance_officer and
+  -- residence_life_staff.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 198);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

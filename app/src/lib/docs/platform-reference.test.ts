@@ -1263,7 +1263,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(65);
+    // 66 since registration.hold_resolved (20261020120000): no type before it named a hold.
+    expect(all.length).toBe(66);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1429,6 +1430,9 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Slice 1: a student's hand-in emits the registry's submission.finalized in its own transaction
       // (20261019120000_learning_submissions.sql). Nothing drains the outbox yet, so "none published" still holds.
       'supabase/migrations/20261019120000_learning_submissions.sql',
+      // Slice 2: an office resolving a registration hold emits registration.hold_resolved in the release's own
+      // transaction, and the file carries the readiness save forward with its emission unchanged. Nothing drains it.
+      'supabase/migrations/20261020120000_registration_hold_resolution.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/institution', 'packages/platform']);

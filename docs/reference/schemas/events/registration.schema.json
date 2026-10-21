@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:semester:events:registration",
   "title": "Semester events: Registration",
-  "description": "The 6 Registration event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "description": "The 7 Registration event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
   "allOf": [
     {
       "$ref": "urn:semester:events:envelope"
@@ -114,6 +114,26 @@
       "properties": {
         "eventType": {
           "const": "registration.override_granted"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "registration.hold_resolved",
+      "properties": {
+        "eventType": {
+          "const": "registration.hold_resolved"
         },
         "eventVersion": {
           "const": 1
