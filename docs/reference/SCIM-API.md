@@ -1,26 +1,36 @@
 ---
 stale-refs:
   - source: docs/SAML-OIDC-SCIM-COMPARISON.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/AUTH-AND-LIMITS.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ERRORS.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

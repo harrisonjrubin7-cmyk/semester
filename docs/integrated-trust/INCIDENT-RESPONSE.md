@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-PLAYBOOKS.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/REMEDIATION-SEQUENCE.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/TABLETOP-CALENDAR.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

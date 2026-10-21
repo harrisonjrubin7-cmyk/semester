@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: MONITORING.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
@@ -25,10 +25,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/DEFENSIBILITY.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

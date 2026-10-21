@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/BUDGET-AND-PURCHASING-PATH.md
@@ -21,19 +21,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SEGMENT-MOTIONS-AND-BUYING-COMMITTEES.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/ACCESSIBILITY-OVERVIEW.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/market-readiness/PRIVACY-OVERVIEW.md
@@ -49,7 +49,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-GOVERNANCE-PROGRAM.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/SALES-PIPELINE-DEFINITIONS.md
@@ -69,7 +69,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-OFFER.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PILOT-PROPOSAL-TEMPLATE.md
@@ -77,6 +77,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -9,14 +9,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/which-integration-path.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/API-GATEWAY.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/FINAL_VALUE_REPORT.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/RISK_REGISTER.md
@@ -21,11 +21,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ROADMAP-COMMUNICATION-STANDARD.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/EVIDENCE-REGISTER.md
@@ -33,6 +33,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

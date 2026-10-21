@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:34"
     sections_changed: []
     summary: externally modified
   - source: MIGRATION-HISTORY.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

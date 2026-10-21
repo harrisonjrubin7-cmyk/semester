@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal/AI-USE-POLICY-DRAFT.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

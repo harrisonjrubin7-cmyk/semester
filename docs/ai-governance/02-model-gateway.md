@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/ai-governance/03-retrieval-policy.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/06-evaluation-framework.md
@@ -9,19 +9,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/07-incident-response-and-shutdown.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/08-tenant-ai-console.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PROVIDER-TERMS.md
@@ -41,6 +41,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

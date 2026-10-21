@@ -5,18 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ANALYTICS-EVENTS.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-MIGRATION.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EVENTS.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

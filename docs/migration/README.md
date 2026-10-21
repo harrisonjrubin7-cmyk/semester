@@ -17,18 +17,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/migration/workbooks/README.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/09-CONVERSION-PLAN.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/operating-model/QUALITY-MANAGEMENT.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/03-SUITES.md
@@ -9,14 +9,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/04-GATES-AND-CI.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/quality-system/README.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

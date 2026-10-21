@@ -9,10 +9,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/COLOR-AND-DARK-MODE-SPEC.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

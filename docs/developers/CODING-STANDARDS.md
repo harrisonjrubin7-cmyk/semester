@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: REGRESSION-CHECKLIST.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
@@ -25,15 +25,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: ops/strategic-boundaries/README.md
@@ -41,7 +41,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/design/SCREEN-QUALITY-CHECKLIST.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
@@ -49,6 +49,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

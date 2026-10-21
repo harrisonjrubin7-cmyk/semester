@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/gtm/SEMESTER_MASTER_GTM_PLAYBOOK.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/03-okrs-planning-metrics.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/README.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
@@ -45,6 +45,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

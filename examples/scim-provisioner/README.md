@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/scim-provisioner.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

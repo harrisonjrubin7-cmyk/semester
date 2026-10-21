@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/infrastructure/DISASTER-RECOVERY.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/ENVIRONMENTS-AND-RELEASE.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: infra/README.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/infrastructure/ACTIVATION.md
@@ -33,6 +33,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

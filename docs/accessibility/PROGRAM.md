@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/DEFINITION-OF-DONE.md
@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:36"
     sections_changed: []
     summary: externally modified
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
@@ -45,10 +45,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

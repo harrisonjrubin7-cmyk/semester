@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/SECURITY-ACCESSIBILITY-READINESS.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/HECVAT_ROADMAP.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
@@ -13,18 +13,28 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/VENDOR_RISK_REGISTER.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/REVIEWER-QUESTION-MAP.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

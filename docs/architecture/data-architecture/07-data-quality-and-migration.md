@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/10-physical-design.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/03-schema-conventions.md
@@ -13,10 +13,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/05-lifecycle-governance.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

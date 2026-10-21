@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: CONTRIBUTING.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-CHANGE-A-REGISTER-PAGE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/README.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/REPO-MAP.md
@@ -33,10 +33,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
-    changed_at: "2026-10-21T15:01:36"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

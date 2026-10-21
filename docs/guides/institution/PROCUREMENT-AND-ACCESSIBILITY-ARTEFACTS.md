@@ -21,15 +21,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DPA-CHECKLIST.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/HECVAT-VPAT-PLAN.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/PENETRATION-TEST-PLAN.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/claims/README.md
-    changed_at: "2026-10-21T15:01:39"
+    changed_at: "2026-10-21T15:27:40"
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-ACCESSIBILITY-PACKAGE.md
@@ -45,10 +45,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/INSTITUTIONAL-PROCUREMENT-READINESS.md
-    changed_at: "2026-10-21T15:01:37"
+    changed_at: "2026-10-21T15:27:38"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

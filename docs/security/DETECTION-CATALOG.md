@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MONITORING.md
-    changed_at: "2026-10-21T15:01:34"
+    changed_at: "2026-10-21T15:27:35"
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
@@ -9,14 +9,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/security/FINDINGS-REGISTER.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
   - source: docs/security/SECURITY-PROGRAM.md
-    changed_at: "2026-10-21T15:01:38"
+    changed_at: "2026-10-21T15:27:39"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

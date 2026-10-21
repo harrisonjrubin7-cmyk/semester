@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/architecture/modularization/02-target-architecture.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/modularization/03-refactoring-sequence.md
-    changed_at: "2026-10-21T15:01:35"
+    changed_at: "2026-10-21T15:27:37"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
