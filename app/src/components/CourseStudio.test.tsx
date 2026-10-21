@@ -12,11 +12,17 @@ import { readFileSync } from 'node:fs';
  */
 
 const mock = vi.hoisted(() => {
+  const read = { error: null as null | { message: string } };
   const chain = () => {
-    const q = { select: () => q, eq: () => q, in: () => q, then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(ok) };
+    const q = {
+      select: () => q,
+      eq: () => q,
+      in: () => q,
+      then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: read.error ? null : [], error: read.error }).then(ok),
+    };
     return q;
   };
-  return { rpc: vi.fn(), from: vi.fn(chain), account: { id: 'prof' } as { id: string } | null };
+  return { rpc: vi.fn(), from: vi.fn(chain), read, account: { id: 'prof' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc, from: mock.from }) }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account, state: { term: '2026FA' } }) }));
@@ -28,6 +34,7 @@ let host: HTMLDivElement;
 
 beforeEach(() => {
   mock.rpc.mockReset();
+  mock.read.error = null;
   mock.account = { id: 'prof' };
   host = document.createElement('div');
   document.body.append(host);
@@ -77,7 +84,7 @@ it('distinguishes no assigned course from a failed access check when explicitly 
 
 it('is explicitly requested only by the typed Teaching destination on Account', () => {
   const account = readFileSync('src/screens/Account.tsx', 'utf8');
-  expect(account).toContain("<CourseStudioEntry requested={state.workspaceView === 'course-studio'} />");
+  expect(account).toContain("{state.workspaceView === 'course-studio' ? <FacultyWorkspaceView /> : <CourseStudioEntry />}");
 });
 
 it('is not offered with the module off, and does not even ask', async () => {
@@ -98,6 +105,19 @@ it('is offered, for the courses it names, to faculty', async () => {
   expect(host.textContent).toContain('You can publish AI rules, guidance and study packs for ECON 1020.');
   await act(async () => button(/Open Course Studio/)!.click());
   expect(host.textContent).toContain('Nothing here shows you anything about students.');
+});
+
+it('does not open an editable draft over a publication that could not be read', async () => {
+  const rulesField = () => [...host.querySelectorAll('label')].some((l) => /In your own words/.test(l.textContent ?? ''));
+  mock.read.error = { message: 'offline' };
+  await open();
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Could not read what is published for ECON 1020');
+  expect(rulesField()).toBe(false);
+
+  mock.read.error = null;
+  await act(async () => button(/Try again/)!.click());
+  expect(host.querySelector('[role="alert"]')).toBeNull();
+  expect(rulesField()).toBe(true);
 });
 
 it('previews rules with the students’ engine, and publishes only on a confirmation', async () => {
