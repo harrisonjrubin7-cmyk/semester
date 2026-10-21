@@ -5,22 +5,30 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T15:37:14"
+    changed_at: "2026-10-21T16:16:59"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/D-1150.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-ADR.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

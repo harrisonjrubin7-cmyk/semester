@@ -5,18 +5,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/CONTROL-FRAMEWORK.md
-    changed_at: "2026-10-21T15:37:17"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/INCIDENT-RESPONSE.md
-    changed_at: "2026-10-21T15:37:17"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/integrated-trust/TABLETOP-CALENDAR.md
-    changed_at: "2026-10-21T15:37:17"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

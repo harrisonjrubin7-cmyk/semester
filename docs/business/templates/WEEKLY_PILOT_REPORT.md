@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/INSTITUTIONAL-GTM-PLAYBOOK.md
-    changed_at: "2026-10-21T15:37:15"
+    changed_at: "2026-10-21T16:16:59"
     sections_changed: []
     summary: externally modified
   - source: docs/business/sales/PILOT_PROPOSAL_TEMPLATE.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/templates/RISK_REGISTER.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:00"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

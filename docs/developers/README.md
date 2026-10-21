@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CONTRIBUTING.md
-    changed_at: "2026-10-21T15:37:13"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/README.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/CODING-STANDARDS.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-DECISION-RECORD.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-ADR.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EDGE-FUNCTION.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-AN-EVENT-TYPE.md
@@ -45,11 +45,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/ONBOARDING.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/REPO-MAP.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/TESTING-GUIDE.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-21T15:37:18"
+    changed_at: "2026-10-21T16:17:03"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-SHIP-BEHIND-A-FLAG.md
@@ -65,10 +65,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/developers/HOW-TO-ADD-A-GATEWAY-ROUTE.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: ANALYTICS.md
-    changed_at: "2026-10-21T15:37:13"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T15:37:13"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: docs/ANALYTICS-EVENTS.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EDGE-FUNCTIONS.md
-    changed_at: "2026-10-21T15:37:18"
+    changed_at: "2026-10-21T16:17:02"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EVENTS.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

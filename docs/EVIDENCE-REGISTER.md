@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: REGRESSION-CHECKLIST.md
-    changed_at: "2026-10-21T15:37:13"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
-    changed_at: "2026-10-21T15:37:15"
+    changed_at: "2026-10-21T16:17:00"
     sections_changed: []
     summary: externally modified
   - source: docs/PROOF-CALENDAR.md
-    changed_at: "2026-10-21T15:37:15"
+    changed_at: "2026-10-21T16:17:00"
     sections_changed: []
     summary: externally modified
   - source: docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-WHITEPAPER.md
@@ -25,10 +25,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: ops/operations-console/README.md
-    changed_at: "2026-10-21T15:37:19"
+    changed_at: "2026-10-21T16:17:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

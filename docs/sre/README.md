@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-21T15:37:13"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -17,7 +17,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T15:37:14"
+    changed_at: "2026-10-21T16:16:58"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
@@ -29,7 +29,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/02-SLOS-SLIS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-21T15:37:18"
+    changed_at: "2026-10-21T16:17:03"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/03-OBSERVABILITY.md
@@ -37,7 +37,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/sre/04-CAPACITY-PLANNING.md
-    changed_at: "2026-10-21T15:37:18"
+    changed_at: "2026-10-21T16:17:03"
     sections_changed: []
     summary: externally modified
   - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
@@ -61,10 +61,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-21T15:37:18"
+    changed_at: "2026-10-21T16:17:03"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

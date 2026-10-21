@@ -9,7 +9,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/CONFIGURATION-AND-APPROVALS.md
-    changed_at: "2026-10-21T15:37:16"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/PARALLEL-RUN-EVIDENCE.md
@@ -17,10 +17,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/ACCESS-REVIEW-PROCEDURE.md
-    changed_at: "2026-10-21T15:37:17"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

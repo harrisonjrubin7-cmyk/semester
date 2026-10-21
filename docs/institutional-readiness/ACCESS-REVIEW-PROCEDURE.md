@@ -5,10 +5,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/institutional-readiness/ROLE-AND-PERMISSION-MATRIX.md
-    changed_at: "2026-10-21T15:37:17"
+    changed_at: "2026-10-21T16:17:01"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 
