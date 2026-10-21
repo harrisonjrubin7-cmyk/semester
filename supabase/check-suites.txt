@@ -83,6 +83,7 @@ intelligence-policy
 invites
 k12-guardians
 killswitch-release
+learning-submissions
 ledger-chains
 ledger-seals
 legal-holds

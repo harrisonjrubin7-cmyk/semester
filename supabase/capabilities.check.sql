@@ -308,7 +308,10 @@ begin
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
   -- Privileged access review then added access_review:manage for
   -- platform_admin and trust_officer.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 187);
+  -- 187 before submissions (20261019120000_learning_submissions.sql) added
+  -- four: submissions:create for student, undergraduate_student,
+  -- graduate_student and transfer_student — the roles carrying grades:receive.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 191);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

@@ -565,6 +565,11 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261019120000_learning_submissions.sql: a student hands in work on a
+    -- gradebook item. Checks auth.uid(), the caller's own school and
+    -- submissions:create on the item's course and term, and spends a key on
+    -- the gradebook ledger; `learning-submissions.check.sql` proves each refusal.
+    'learning_submit(want_item uuid, want_body text, want_key text)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
