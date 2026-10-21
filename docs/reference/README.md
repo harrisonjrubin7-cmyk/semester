@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: MIGRATION-HISTORY.md
-    changed_at: "2026-10-19T02:53:16"
+    changed_at: "2026-10-21T03:32:04"
     sections_changed: []
     summary: externally modified
   - source: SECRETS.md
@@ -9,15 +9,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-21T01:38:55"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/README.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ANALYTICS-MARKS.md
@@ -33,11 +33,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/CONFIGURATION.md
-    changed_at: "2026-10-21T01:39:12"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/EDGE-FUNCTIONS.md
-    changed_at: "2026-10-21T01:39:12"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: docs/reference/ERRORS.md
@@ -49,10 +49,24 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/reference/SCIM-API.md
-    changed_at: "2026-10-21T01:39:12"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CHANGELOG.md
-    changed_at: "2026-10-21T01:38:52"
+    changed_at: "2026-10-21T03:32:04"
     sections_changed: []
     summary: externally modified
   - source: CLAUDE.md
@@ -9,19 +9,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: CONTRIBUTING.md
-    changed_at: "2026-10-21T01:38:52"
+    changed_at: "2026-10-21T03:32:04"
     sections_changed: []
     summary: externally modified
   - source: README.md
-    changed_at: "2026-10-21T01:38:53"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: RESTORE.md
-    changed_at: "2026-10-21T01:38:53"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T01:38:53"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: ROLLBACK.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
@@ -41,43 +41,43 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/CAPABILITY-ACTIVATION-REGISTER.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/DO-NOT-BUILD.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-21T01:38:55"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md
-    changed_at: "2026-10-21T01:38:59"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/PRODUCT-ROADMAP.md
-    changed_at: "2026-10-21T01:39:01"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/PUBLIC-SITE.md
-    changed_at: "2026-10-21T01:39:02"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/RUNBOOKS.md
-    changed_at: "2026-10-21T01:39:02"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/SSO-TENANT-ONBOARDING.md
-    changed_at: "2026-10-21T01:39:03"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T01:39:03"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/README.md
@@ -93,7 +93,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/decisions/README.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
   - source: docs/design/README.md
@@ -109,7 +109,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/documentation/README.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/README.md
@@ -117,11 +117,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/guides/institution/README.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
   - source: docs/guides/integrations/README.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
   - source: docs/help/README.md
@@ -145,11 +145,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/support/README.md
-    changed_at: "2026-10-21T01:39:12"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-21T01:39:13"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/DOCUMENT-MAP.md
@@ -157,18 +157,68 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SECURITY-OVERVIEW.md
-    changed_at: "2026-10-21T01:39:13"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: examples/README.md
-    changed_at: "2026-10-21T01:39:13"
+    changed_at: "2026-10-21T03:32:09"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SEMESTER-CONTENT-STANDARDS.md
-    changed_at: "2026-10-21T01:39:04"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

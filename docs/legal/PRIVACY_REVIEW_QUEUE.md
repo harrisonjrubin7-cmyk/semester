@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: LEGAL-REVIEW-QUEUE.md
-    changed_at: "2026-10-21T01:38:53"
+    changed_at: "2026-10-21T03:32:04"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T01:39:03"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
@@ -13,10 +13,16 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/README.md
-    changed_at: "2026-10-21T01:39:11"
+    changed_at: "2026-10-21T03:32:08"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

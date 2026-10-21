@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/08-search-and-retrieval.md
-    changed_at: "2026-10-21T01:39:03"
+    changed_at: "2026-10-21T03:32:07"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

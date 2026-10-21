@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/ARCHITECTURE.md
-    changed_at: "2026-10-21T01:38:54"
+    changed_at: "2026-10-21T03:32:05"
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONAL-REALITY-REGISTER.md
-    changed_at: "2026-10-21T01:38:57"
+    changed_at: "2026-10-21T03:32:06"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
