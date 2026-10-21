@@ -1,5 +1,10 @@
 # Consolidating Semester onto one Vercel project
 
+> Routing and cutover governance in this 5 October audit is superseded by the
+> 10 October [unified-hosting preview](UNIFIED-HOSTING-PREVIEW.md). Historical
+> observations remain useful, but unchecked steps below are not authorization
+> and the prototype accounts' real-user status is now recorded as unknown.
+
 Audited 5 October 2026 against the Vercel team `harrison22`
 (`team_v0ugbIoxEJmsnWkUWRQqt4Ys`) and the two Supabase projects the repository
 references. Environment-variable **names** only: no value was read, decrypted,
@@ -177,7 +182,9 @@ Do not start until every box in §6.1 is ticked. Nothing here has been run.
 - [ ] `GET /api/institution/health` returns the same status as the live site
       (503) or better. Not worse.
 - [ ] Which scope owns `semester.website` is known (§3).
-- [x] The four `Semester2` accounts are test accounts and the OAuth redirect URIs include `www.semesterintel.tech` (§2.2; both stated by the owner on 5 October, not verified from here).
+- [ ] Decide the disposition of the four `Semester2` accounts and one saved row.
+      Their real-user status is unknown; the earlier owner statement was not
+      independently verified. Verify OAuth redirect readiness separately.
 
 ### 6.2 Move
 

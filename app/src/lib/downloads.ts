@@ -27,19 +27,20 @@
  * *fills* the cache, because only it sees the fetches; nothing about reading
  * or emptying it needs to go through there.
  *
- * ## Why the cache is found by suffix
+ * ## Why the cache is found by exact scope and shape
  *
- * `sw.js` names it `${VERSION}-media`, and the version is a constant that
- * someone will one day bump. Matching on the suffix means that bump does not
- * strand a screenful of files this is the only way to delete — and it takes in
- * the old worker's cache in the window before `activate` has swept it. It also
- * cannot touch the two caches that are not this screen's business: the shell,
- * which is what makes the app open at all, and `semester-shared`, which is a
- * file in mid-handover.
+ * CacheStorage is origin-wide. A suffix such as `-media` can belong to an
+ * unrelated app, and the root worker's legacy caches must survive the move to
+ * `/app/`. Only Semester's versioned `/app/` and `/semester/` media names are
+ * readable or clearable here. Unsupported nested scopes and old root names are
+ * deliberately left for an explicit migration or the browser's own eviction.
  */
 
 /** What `sw.js` calls the cache it puts played media in. */
 export const MEDIA_SUFFIX = '-media';
+
+/** Exact worker-owned media caches for the two path scopes this release supports. */
+export const MEDIA_CACHE = /^semester-v\d+-scope-(?:app|semester)-media$/;
 
 /**
  * The ceiling the worker holds the cache under, and the ledger it keeps.
@@ -198,7 +199,7 @@ async function bytesOf(res: Response): Promise<number> {
 /** The caches `sw.js` puts media in, and no others. See the note at the top. */
 async function mediaCaches(store: CacheStorage): Promise<string[]> {
   const keys = await store.keys();
-  return keys.filter((k) => k.endsWith(MEDIA_SUFFIX));
+  return keys.filter((key) => MEDIA_CACHE.test(key));
 }
 
 /**
