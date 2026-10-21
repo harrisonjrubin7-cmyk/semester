@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/help/students/back-up-and-sync.md
-    changed_at: "2026-10-21T15:18:22"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/check-and-fix-a-date.md
-    changed_at: "2026-10-21T15:18:22"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
   - source: docs/help/students/install-the-app.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/WCAG-UI-AUDIT-SCORECARD.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/SOC2-READINESS.md
-    changed_at: "2026-10-21T15:18:24"
+    changed_at: "2026-10-21T15:37:19"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

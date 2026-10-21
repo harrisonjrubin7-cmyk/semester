@@ -1,39 +1,39 @@
 ---
 stale-refs:
   - source: docs/INTEROPERABILITY-ROADMAP.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/MODULE-PRIVACY-MODEL.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/OPERATIONAL-REALITY-REGISTER.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/SAAS-LAUNCH-KIT.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/ACCESSIBILITY-GOVERNANCE.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-ASSURANCE.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-INTEGRATION-PLAYBOOK.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-LIFECYCLE-GATES.md
@@ -41,11 +41,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/BENCHMARK.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CONFIGURATION-TIERS.md
@@ -57,7 +57,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/FOUR-PILLAR-AUDIT.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATING-RHYTHM.md
@@ -65,19 +65,19 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/OPERATIONAL-MATURITY.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PILOT-TO-PRODUCTION.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/QUALITY-MANAGEMENT.md
@@ -85,15 +85,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RELEASE-CERTIFICATION.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RESEARCH-AND-SERVICE-DESIGN.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/RISK-GOVERNANCE.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:18"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
@@ -109,10 +109,50 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/CHANGE-MANAGEMENT.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

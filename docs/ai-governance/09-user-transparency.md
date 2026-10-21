@@ -5,14 +5,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md
-    changed_at: "2026-10-21T15:18:24"
+    changed_at: "2026-10-21T15:37:18"
     sections_changed: []
     summary: externally modified
   - source: docs/ai-governance/04-tool-broker.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

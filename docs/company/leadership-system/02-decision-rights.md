@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/LAUNCH-READINESS-COUNCIL.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/01-board.md
@@ -21,7 +21,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/07-communications-and-tracking.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/08-continuity.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/company/leadership-system/README.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GOVERNANCE-BOARD.md
-    changed_at: "2026-10-21T15:18:23"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/08-ORGANIZATION-AND-MILESTONES.md
@@ -41,10 +41,20 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/finance/05-BUDGET-GOVERNANCE.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/PLATFORM-CONSTITUTION.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
-    changed_at: "2026-10-21T15:18:24"
+    changed_at: "2026-10-21T15:37:18"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0003-no-application-server.md
@@ -45,6 +45,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

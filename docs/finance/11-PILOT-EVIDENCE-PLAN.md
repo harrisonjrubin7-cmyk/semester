@@ -5,15 +5,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/COMPANY-FIRST-YEAR-MEASURES.md
-    changed_at: "2026-10-21T15:18:19"
+    changed_at: "2026-10-21T15:37:14"
     sections_changed: []
     summary: externally modified
   - source: docs/PILOT-TO-ANNUAL-CONVERSION.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/10-GO-NO-GO-GATES.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/12-GATED-HIRING-SCHEDULE.md
@@ -21,6 +21,12 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
 
 
 

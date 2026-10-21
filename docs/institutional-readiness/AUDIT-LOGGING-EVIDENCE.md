@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/trust/EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T15:18:24"
+    changed_at: "2026-10-21T15:37:18"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
-    changed_at: "2026-10-21T15:18:24"
+    changed_at: "2026-10-21T15:37:18"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/03-schema-conventions.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

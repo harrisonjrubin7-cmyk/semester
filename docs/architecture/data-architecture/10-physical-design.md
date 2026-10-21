@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: docs/architecture/data-architecture/06-analytics-architecture.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/08-search-and-retrieval.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:15"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/data-architecture/05-lifecycle-governance.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

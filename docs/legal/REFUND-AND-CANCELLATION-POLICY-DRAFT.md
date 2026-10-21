@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/DECISION-LOG.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:14"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/TERMS-OF-SERVICE-DRAFT.md
-    changed_at: "2026-10-21T15:18:22"
+    changed_at: "2026-10-21T15:37:17"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

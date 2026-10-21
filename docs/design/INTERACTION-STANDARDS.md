@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:14"
     sections_changed: []
     summary: externally modified
   - source: docs/design/SEMESTER-CONTENT-STANDARDS.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

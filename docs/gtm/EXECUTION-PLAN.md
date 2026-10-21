@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/FEATURE-FLAG-REGISTRY.md
-    changed_at: "2026-10-21T15:18:20"
+    changed_at: "2026-10-21T15:37:14"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/GROWTH-OPERATING-PLAN.md
-    changed_at: "2026-10-21T15:18:21"
+    changed_at: "2026-10-21T15:37:16"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
