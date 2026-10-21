@@ -1,8 +1,22 @@
+// @vitest-environment jsdom
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { baseOf } from './conflicts';
-import { BULK_COUNT, DELETABLE, bulk, coursesDeletedHere, settleDeletions } from './deletions';
+import {
+  BULK_COUNT,
+  DELETABLE,
+  HELD_KEY,
+  INGRESS_KEY,
+  bulk,
+  clearIngressDrops,
+  coursesDeletedHere,
+  droppedOnRead,
+  ingressDrops,
+  noteIngressDrops,
+  settleDeletions,
+  withIngressNote,
+} from './deletions';
 import { mergePersisted } from './merge';
 
 const note = (id: string, body = id, updated = 1) => ({ id, title: id, body, created: 1, updated });
@@ -121,5 +135,161 @@ describe('what is allowed to be deleted by the sync', () => {
       expect(removals.length, `${field} is filtered ${removals.length} times in the reducers`).toBe(1);
       expect(source, field).toMatch(new RegExp(`case '(delete|remove)[A-Za-z]*': *\\n?[^]*?${field}: state\\.${field}\\.filter`));
     }
+  });
+});
+
+/*
+ * A row this device could not read back is not a row anybody deleted.
+ *
+ * Found reviewing #1501: a note whose stored copy lost its id was dropped (or
+ * kept, unaddressable) on load, its agreed id was then missing here, and the
+ * next settle took the good copy out of the account. One row is under the
+ * bulk guard, so nothing stood in the way.
+ */
+describe('rows lost on the way in', () => {
+  const agreed = baseOf(persisted([note('a'), note('b'), note('c')]));
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    clearIngressDrops();
+    localStorage.clear();
+  });
+
+  it('does not take a row out of the account when this device lost it reading its own storage', () => {
+    const here = persisted([note('a'), note('b')]);
+    const there = persisted([note('a'), note('b'), note('c')]);
+    const s = settleDeletions(here, there, agreed, 1, ['notes']);
+    expect((s.remote.notes as { id: string }[]).map((n) => n.id)).toEqual(['a', 'b', 'c']);
+    const merged = mergePersisted(here as never, s.remote as never) as unknown as { notes: { id: string }[] };
+    expect(merged.notes.map((n) => n.id).sort(), 'the account copy comes back').toEqual(['a', 'b', 'c']);
+    // A list it did not lose rows from still settles as before.
+    const other = settleDeletions(here, there, agreed, 1, ['tasks']);
+    expect((other.remote.notes as { id: string }[]).map((n) => n.id)).toEqual(['a', 'b']);
+  });
+
+  // Found reviewing 60dd44c: keyed to the loose row rather than to the pull
+  // that heals it, one stray id-less row stopped every later deletion in the
+  // list, on this device and from every other, for good.
+  it('still settles a deliberate deletion while a stray id-less row sits in the list', () => {
+    const stray = { title: 'loose', body: 'no id', created: 1, updated: 1 };
+    const here = settleDeletions(persisted([note('a'), note('b'), stray]), persisted([note('a'), note('b'), note('c')]), agreed);
+    expect((here.remote.notes as { id?: string }[]).map((n) => n.id), 'deleted here').toEqual(['a', 'b']);
+    const there = settleDeletions(persisted([note('a'), note('b'), note('c')]), persisted([note('a'), note('b'), stray]), agreed);
+    expect(there.dropHere, 'deleted on another device').toEqual({ notes: ['c'] });
+  });
+
+  it('does not delete a course from the account that this device lost on load', () => {
+    const base = baseOf(persisted([], [course('x'), course('y')]));
+    expect(coursesDeletedHere(base, [course('x')]), 'an ordinary deletion still counts').toEqual(['y']);
+    expect(coursesDeletedHere(base, [course('x')], ['courses'])).toEqual([]);
+    expect(coursesDeletedHere(base, [course('x'), { course: {} }]), 'a stray row does not stop it').toEqual(['y']);
+  });
+
+  it('notices the lists a reader shortened or could not address, and only those', () => {
+    const raw = { notes: [note('a'), null], tasks: [{ title: 't' }], documents: [{ id: 'd' }], places: [null] };
+    const read = { notes: [note('a')], tasks: [{ title: 't' }], documents: [{ id: 'd' }], places: [] };
+    expect(droppedOnRead(raw, read)).toEqual(['notes', 'tasks']);
+    expect(droppedOnRead({ notes: [note('a')] }, { notes: [note('a')] })).toEqual([]);
+    // A list this copy did not carry says nothing.
+    expect(droppedOnRead({}, { notes: [] })).toEqual([]);
+  });
+
+  // Found reviewing bffd8da: a blank id or one id on two rows still counted
+  // as readable, so the agreed id they replaced read as deleted here.
+  // Found reviewing df5dd87: a removal storage refused left the stored note
+  // in force, so every later pull held this device's deletions back for good.
+  it('stays cleared when storage refuses to remove the note', () => {
+    noteIngressDrops(['courses']);
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+    clearIngressDrops();
+    expect(ingressDrops(), 'the stored note outlived the clear').toEqual([]);
+    noteIngressDrops(['notes']);
+    expect(ingressDrops(), 'a new note still counts').toEqual(['notes']);
+  });
+
+  it('counts a row whose id is blank, or another row\u2019s, as lost', () => {
+    expect(droppedOnRead({ notes: [note('a'), { id: '' }] }, { notes: [note('a'), { id: '' }] })).toEqual(['notes']);
+    expect(droppedOnRead({ notes: [note('a'), note('a')] }, { notes: [note('a'), note('a')] })).toEqual(['notes']);
+    expect(droppedOnRead({ notes: [note('a'), note('b')] }, { notes: [note('a'), note('b')] }), 'control').toEqual([]);
+  });
+
+  it('counts a list stored as something other than a list as lost', () => {
+    // The reader makes `{}` into `[]`; pushed as it is, that empties the account's list.
+    expect(droppedOnRead({ notes: {}, tasks: 'x', courses: null }, { notes: [], tasks: [], courses: [] })).toEqual([
+      'courses',
+      'notes',
+      'tasks',
+    ]);
+  });
+
+  it('remembers the lists until a pull clears them, across more than one boot', () => {
+    expect(ingressDrops()).toEqual([]);
+    noteIngressDrops(['notes']);
+    noteIngressDrops(['courses', 'notes']);
+    expect(ingressDrops().sort()).toEqual(['courses', 'notes']);
+    noteIngressDrops([]);
+    expect(ingressDrops().sort()).toEqual(['courses', 'notes']);
+    clearIngressDrops();
+    expect(localStorage.getItem(INGRESS_KEY)).toBeNull();
+    localStorage.setItem(INGRESS_KEY, '{"not":"a list"}');
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing 60dd44c: storage at its quota refused the note while the
+  // reader still dropped the row, and the pull read the gap as a deletion.
+  it('holds the note for this session when storage refuses it', () => {
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    noteIngressDrops(['notes']);
+    expect(localStorage.getItem(INGRESS_KEY)).toBeNull();
+    expect(ingressDrops()).toEqual(['notes']);
+    set.mockRestore();
+    clearIngressDrops();
+    expect(ingressDrops()).toEqual([]);
+  });
+
+  // Found reviewing 36c7453: two tabs booted from one damaged copy, one healed
+  // and removed the note, and the other went on holding deletions back.
+  for (const stored of [true, false]) {
+    it(`lets go of a stored note another tab has cleared (${stored ? 'stored' : 'control: never stored'})`, () => {
+      const set = stored
+        ? null
+        : vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new DOMException('full', 'QuotaExceededError');
+          });
+      noteIngressDrops(['courses']);
+      set?.mockRestore();
+      // The other tab's clear.
+      localStorage.removeItem(INGRESS_KEY);
+      expect(ingressDrops()).toEqual(stored ? [] : ['courses']);
+    });
+  }
+
+  // Found reviewing 36c7453: storage at its quota refused the note but took the
+  // smaller copy without the damaged row, and a close before the pull lost both.
+  it('rides on the saved copy when storage refused the note, and comes back on the next boot', async () => {
+    const set = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    noteIngressDrops(['notes']);
+    set.mockRestore();
+    const text = withIngressNote(JSON.stringify({ schemaVersion: 6, seenOnboarding: true, notes: [] }));
+    expect(JSON.parse(text)[HELD_KEY]).toEqual(['notes']);
+    localStorage.setItem('semester.v1', text);
+    vi.resetModules();
+    const fresh = await import('./deletions');
+    const { loadPersisted } = await import('../state/shape');
+    const read = loadPersisted();
+    expect(fresh.ingressDrops()).toEqual(['notes']);
+    expect(HELD_KEY in read, 'never part of the state').toBe(false);
+  });
+
+  it('leaves the saved copy alone when the note is stored', () => {
+    noteIngressDrops(['notes']);
+    const text = JSON.stringify({ notes: [] });
+    expect(withIngressNote(text)).toBe(text);
   });
 });
