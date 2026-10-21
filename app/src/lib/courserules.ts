@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
 import { obj } from './device-library';
 import { MODULE_FLAGS, moduleOn } from './experience-flags';
@@ -118,26 +118,95 @@ export function latest(
   return out;
 }
 
-export async function loadPublications(codes: string[], term: string): Promise<Record<string, CoursePublication>> {
+export async function loadPublications(codes: string[], term: string, schoolId?: string): Promise<Record<string, CoursePublication>> {
   const keys = [...new Set(codes.map(courseCode).filter(Boolean))];
   if (!keys.length) return {};
   const db = await cloud();
   const [r, g, p] = await Promise.all([
-    db.from('course_ai_rules').select('course_code, version, blanket, uses, words, link, effective, published_at').eq('term', term).in('course_code', keys),
-    db.from('course_guidance').select('course_code, version, body, published_at').eq('term', term).in('course_code', keys),
-    db.from('study_packs').select('pack_id, course_code, version, title, note, items, retired, published_at').eq('term', term).in('course_code', keys),
+    schoolId
+      ? db.from('course_ai_rules').select('course_code, version, blanket, uses, words, link, effective, published_at').eq('tenant_id', schoolId).eq('term', term).in('course_code', keys)
+      : db.from('course_ai_rules').select('course_code, version, blanket, uses, words, link, effective, published_at').eq('term', term).in('course_code', keys),
+    schoolId
+      ? db.from('course_guidance').select('course_code, version, body, published_at').eq('tenant_id', schoolId).eq('term', term).in('course_code', keys)
+      : db.from('course_guidance').select('course_code, version, body, published_at').eq('term', term).in('course_code', keys),
+    schoolId
+      ? db.from('study_packs').select('pack_id, course_code, version, title, note, items, retired, published_at').eq('tenant_id', schoolId).eq('term', term).in('course_code', keys)
+      : db.from('study_packs').select('pack_id, course_code, version, title, note, items, retired, published_at').eq('term', term).in('course_code', keys),
   ]);
   const failed = r.error ?? g.error ?? p.error;
   if (failed) throw new Error(failed.message);
   return latest(r.data ?? [], g.data ?? [], p.data ?? []);
 }
 
-/**
- * The publications for these courses, or {} while loading, when signed out,
- * when the module is off, or when the read failed — in every one of which the
- * student's own record is all there is, exactly as before this existed.
- */
+/** Empty publication data shared by disabled, loading, empty and failed reads. */
 const NONE: Record<string, CoursePublication> = {};
+
+export type CoursePublicationsStatus = 'disabled' | 'loading' | 'ready' | 'empty' | 'error';
+
+export interface CoursePublicationsState {
+  status: CoursePublicationsStatus;
+  publications: Record<string, CoursePublication>;
+  error: string;
+  retry: () => void;
+}
+
+type PublicationLoader = (codes: string[], term: string, schoolId?: string) => Promise<Record<string, CoursePublication>>;
+
+function usePublicationRead(
+  codes: string[],
+  term: string,
+  identity: string[],
+  schoolId: string | undefined,
+  schoolRequired: boolean,
+  on: boolean,
+  load: PublicationLoader,
+): CoursePublicationsState {
+  const key = [...new Set(codes.map(courseCode).filter(Boolean))].sort().join('|');
+  const [attempt, setAttempt] = useState(0);
+  const enabled = on && cloudConfigured && Boolean(term) && key && identity.every(Boolean) && (!schoolRequired || Boolean(schoolId));
+  const want = enabled ? JSON.stringify({ identity, schoolId: schoolId ?? '', term, key, attempt }) : '';
+  const [got, setGot] = useState<{
+    want: string;
+    status: Exclude<CoursePublicationsStatus, 'disabled' | 'loading'>;
+    publications: Record<string, CoursePublication>;
+    error: string;
+  }>({ want: '', status: 'empty', publications: NONE, error: '' });
+  const retry = useCallback(() => setAttempt((value) => value + 1), [setAttempt]);
+
+  useEffect(() => {
+    if (!want) return;
+    let alive = true;
+    const requested = JSON.parse(want) as { schoolId: string; term: string; key: string };
+    void load(requested.key.split('|'), requested.term, requested.schoolId || undefined).then(
+      (publications) => alive && setGot({ want, status: Object.keys(publications).length ? 'ready' : 'empty', publications, error: '' }),
+      (reason: unknown) => alive && setGot({ want, status: 'error', publications: NONE, error: reason instanceof Error ? reason.message : 'Could not load published course content.' }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [load, want]);
+
+  if (!want) return { status: 'disabled', publications: NONE, error: '', retry };
+  if (got.want !== want) return { status: 'loading', publications: NONE, error: '', retry };
+  return { status: got.status, publications: got.publications, error: got.error, retry };
+}
+
+/**
+ * A status-bearing publication read for one exact signed-in account and
+ * selected school. The school is both part of the request identity and an
+ * additional query filter; database RLS remains the authority over which
+ * tenant the signed-in account may read.
+ */
+export function useCoursePublicationsState(
+  codes: string[],
+  term: string,
+  accountId: string,
+  schoolId: string,
+  on = moduleOn(MODULE_FLAGS.course_studio),
+  load: PublicationLoader = loadPublications,
+): CoursePublicationsState {
+  return usePublicationRead(codes, term, [accountId, schoolId], schoolId, true, on, load);
+}
 
 export function useCoursePublications(
   codes: string[],
@@ -146,25 +215,7 @@ export function useCoursePublications(
   on = moduleOn(MODULE_FLAGS.course_studio),
   load: (codes: string[], term: string) => Promise<Record<string, CoursePublication>> = loadPublications,
 ) {
-  const key = [...new Set(codes.map(courseCode).filter(Boolean))].sort().join('|');
-  // What is being asked for, or '' when nothing should be read. The answer is
-  // kept against the question, so a stale answer is never shown for a new one
-  // and "nothing to read" needs no state change at all.
-  const want = on && accountId && cloudConfigured && key ? JSON.stringify([accountId, term, key]) : '';
-  const [got, setGot] = useState<{ want: string; value: Record<string, CoursePublication> }>({ want: '', value: NONE });
-  useEffect(() => {
-    if (!want) return;
-    let alive = true;
-    const [, t, joined] = JSON.parse(want) as [string, string, string];
-    void load(joined.split('|'), t).then(
-      (value) => alive && setGot({ want, value }),
-      () => alive && setGot({ want, value: NONE }),
-    );
-    return () => {
-      alive = false;
-    };
-  }, [load, want]);
-  return want && got.want === want ? got.value : NONE;
+  return usePublicationRead(codes, term, [accountId], undefined, false, on, load).publications;
 }
 
 /** The layers for one course: the instructor's published rules, then the student's own note. */
