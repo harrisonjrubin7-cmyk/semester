@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-21 13:59:53_  ·  branch: `claude/happy-mccarthy-e6g5tt`
+_Updated: 2026-10-21 20:51:59_  ·  branch: `claude/wonderful-carson-eqqlxw`
 
 ## Uncommitted changes
 ```
@@ -15,14 +15,14 @@ Diff stat:
 
 ## Recent commits
 ```
-1ec7ee2d chore: update the auto-saved session state snapshot
-e4c26cbb chore: update the auto-saved session state snapshot
-a78f6b58 chore: update the auto-saved session state snapshot
-54b160f1 chore: update the auto-saved session state snapshot
-c7d6d088 chore: update the auto-saved session state snapshot
-91b72963 chore: update the auto-saved session state snapshot
-6c0fb2b9 chore: update the auto-saved session state snapshot
-59190eca chore: update the auto-saved session state snapshot
+76b98b1b docs(changelog): say what a tester sees in the teaching workspace change
+433bc568 feat(faculty): teaching workspace wrapper and failed-publication state
+162cd31d docs(integration): reconcile Sheet rule slice
+48ca5f85 Merge remote-tracking branch 'origin/main' into codex/complete-semester-integration-2026-10-08
+f2799d73 fix(sheet): distinguish duplicate rule removals
+7ca3b0ff Merge pull request #1519 from harrisonjrubin7-cmyk/claude/sync-keeps-unknown-and-ingress-drops
+5cf374d2 Merge pull request #1668 from harrisonjrubin7-cmyk/claude/happy-mccarthy-e6g5tt
+79c61a70 perf: record the University route measurement and derive its budget from it
 ```
 
 ## Resume
