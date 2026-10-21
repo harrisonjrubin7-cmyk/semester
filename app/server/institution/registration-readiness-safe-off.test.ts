@@ -82,6 +82,15 @@ describe('registration-readiness safe-off', () => {
     expect(evaluate).not.toHaveBeenCalled();
   });
 
+  it('reports the paused state on the health readback', async () => {
+    const { boundary } = commands();
+    const { handle } = gateway(boundary, () => true);
+
+    const response = await handle(new Request('https://api.semesterintel.tech/health'));
+
+    expect(await response.json()).toMatchObject({ registrationReadinessPaused: true });
+  });
+
   it('is read on each request so an operator can resume without a restart', async () => {
     let paused = true;
     const { boundary, start } = commands();

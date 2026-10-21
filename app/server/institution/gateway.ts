@@ -313,6 +313,9 @@ export function createGateway(config: Config) {
             intelligence: config.intelligence?.status ?? 'policy-disabled',
             // So the runbook's "confirm" step is a curl, not a guess.
             readOnly: config.readOnly?.() === true,
+            // The registration-readiness safe-off is a separate incident control;
+            // monitoring reads it here rather than inferring it from 503s.
+            registrationReadinessPaused: config.registrationReadinessSafeOff?.() === true,
           },
           { status: ready ? 200 : 503, headers },
         );

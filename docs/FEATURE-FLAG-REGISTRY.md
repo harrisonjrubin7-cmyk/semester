@@ -261,6 +261,6 @@ feature; none of them stops a student's semester going up.
 - **Owner:** the `engineering` seat (`docs/LAUNCH-READINESS-COUNCIL.md`).
 - **Type:** environment on the gateway. Default off. Scoped to readiness evaluations only; it is not a tenant flag.
 - **Engage:** set `SEMESTER_REGISTRATION_READINESS_SAFE_OFF` to any value other than `off`; `runtime.ts` re-reads it on each request.
-- **Confirm:** a new evaluation returns `503` `registration_readiness_paused`, and the existing results are still readable.
+- **Confirm:** a new evaluation returns `503` `registration_readiness_paused`, and `GET /health` reports `"registrationReadinessPaused": true`.
 - **Rollback:** set it to `off` or unset it. The next request evaluates again; a hosted Vercel runtime may require a redeploy or restart before the new value reaches the process.
 - **Tests:** `app/server/institution/registration-readiness-safe-off.test.ts`.
