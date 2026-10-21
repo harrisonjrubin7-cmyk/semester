@@ -35,6 +35,7 @@ console-security-reads
 console-tenant-operations
 course-material-metadata
 course-material-retention-policy
+course-requests
 course-source-conflict-resolutions
 course-source-derived-snapshots
 course-source-persistence
@@ -49,6 +50,7 @@ demand
 dining
 emit-domain-event
 erasure-clears-consent-snapshots
+event-relay
 evidence-graphs
 expansion
 export-withholds-guardian-restrictions
@@ -62,6 +64,7 @@ forms
 gateway-journal
 governance
 gradebook
+gradebook-due-dates
 grants
 groups
 gtm
@@ -84,6 +87,7 @@ intelligence-policy
 invites
 k12-guardians
 killswitch-release
+learning-submissions
 ledger-chains
 ledger-seals
 legal-holds
@@ -122,6 +126,7 @@ projection-outbox-operations
 rate-limits
 records
 referrals
+registration-hold-resolution
 registration-readiness-store
 registration_swap
 registration_transaction
@@ -131,7 +136,9 @@ rls-coverage
 role-grant-audit
 rolegrants
 rooms
+roster-admin-desk
 roster-import
+roster-projection
 school-membership
 school-offboarding
 schools
