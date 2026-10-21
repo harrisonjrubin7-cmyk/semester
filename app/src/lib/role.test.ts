@@ -20,20 +20,23 @@ describe('the roles the app admits to', () => {
     expect(roleOf('student').ready).toBe(true);
   });
 
-  it('offers every built role', () => {
-    expect(pickable().map((r) => r.id)).toEqual(ROLES.map((r) => r.id));
+  it('offers every role with a usable workspace, and no other', () => {
+    expect(pickable().map((r) => r.id)).toEqual(ROLES.filter((r) => r.ready).map((r) => r.id));
+    expect(pickable().map((r) => r.id)).not.toContain('payer');
   });
 
   /*
-   * Every role has a useful local workspace, while connected records remain
-   * explicit about the verified relationship they require. The picker changes
-   * presentation; it never manufactures that relationship.
+   * Every role that can be chosen has a useful local workspace, while connected
+   * records remain explicit about the verified relationship they require. The
+   * picker changes presentation; it never manufactures that relationship. A
+   * role without a workspace (payer, until a grant workspace exists) is held
+   * back rather than offered with nothing behind it.
    */
-  it('ships each role live and explains both immediate and connected access', () => {
-    for (const r of ROLES) {
-      expect(r.ready, r.id).toBe(true);
+  it('ships each chosen role live and explains both immediate and connected access', () => {
+    for (const r of ROLES.filter((r) => r.ready)) {
       expect(r.live.length, r.id).toBeGreaterThan(30);
     }
+    expect(roleOf('payer').ready).toBe(false);
     for (const r of ROLES.filter((r) => r.id !== 'student')) {
       expect(r.needs.length, r.id).toBeGreaterThan(30);
     }

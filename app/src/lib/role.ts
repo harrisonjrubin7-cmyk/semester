@@ -103,8 +103,10 @@ export const ROLES: RoleInfo[] = [
     id: 'payer',
     label: 'Parent or payer',
     blurb: 'The part of a student’s bill they have chosen to share with you.',
-    ready: true,
-    live: 'Keep payment questions, deadlines and handoff preparation together now.',
+    // Held back until a payer workspace exists; see rolejourney.ts. A role
+    // without a usable workspace cannot be chosen.
+    ready: false,
+    live: 'Not available on this device yet. Payment handoff waits on an authorized-payer grant.',
     needs:
       'Billing details and payment actions require a current authorized-payer relationship granted by the institution.',
   },
