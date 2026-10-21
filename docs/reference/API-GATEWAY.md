@@ -132,7 +132,8 @@ curl -s 'http://127.0.0.1:8787/health'
   "status": "ready",
   "adapters": 16,
   "intelligence": "policy-disabled",
-  "readOnly": false
+  "readOnly": false,
+  "registrationReadinessPaused": false
 }
 ```
 <!-- /example -->
@@ -545,7 +546,8 @@ curl -s 'http://127.0.0.1:8787/health'
   "status": "ready",
   "adapters": 0,
   "intelligence": "configured-sandbox",
-  "readOnly": false
+  "readOnly": false,
+  "registrationReadinessPaused": false
 }
 ```
 <!-- /example -->
