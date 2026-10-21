@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CATEGORY_TITLE,
   CONSOLE_PROVISIONING,
+  ROSTER_PROVISIONING,
+  ROSTER_ROLES,
   INTERNAL_CATEGORIES,
   NOT_APP_ROLES,
   OPERATIONS_ONLY,
@@ -174,13 +176,13 @@ describe('the role launch register', () => {
   });
 
   describe('its finding', () => {
-    it('has exactly one path that assigns an app role: the console’s role-grant duty', () => {
-      // The console migration is the one writer of `role_grants`. A second one
-      // — another migration, an SSO claim binder, a SCIM group mapper — turns
-      // this red and means the register's finding and CONSOLE_PROVISIONING
-      // both need rewriting.
+    it('has exactly two paths that assign an app role: the console’s role-grant duty and the school roster', () => {
+      // The console migration and the roster projection are the writers of
+      // `role_grants`. A third — another migration, an SSO claim binder, a
+      // SCIM group mapper — turns this red and means the register's finding
+      // and its provisioning lists need rewriting.
       const writers = migrations.filter(({ sql }) => /insert into public\.role_grants/i.test(sql)).map(({ file }) => file);
-      expect(writers).toEqual(['20260929110000_console_approvals_and_break_glass.sql']);
+      expect(writers).toEqual(['20260929110000_console_approvals_and_break_glass.sql', '20261020013100_roster_completeness_and_projection.sql']);
       const servers = ['supabase/functions', 'app/server', 'app/api', 'packages/institution/src'];
       const writes: string[] = [];
       const walk = (dir: string) => {
@@ -195,8 +197,12 @@ describe('the role launch register', () => {
       };
       servers.forEach(walk);
       expect(writes).toEqual([]);
-      for (const r of ROLES) expect(r.provisioning, r.role).toEqual(CONSOLE_PROVISIONING);
-      for (const e of CONSOLE_PROVISIONING) expect(existsSync(join(root, e.path)), e.path).toBe(true);
+      for (const r of ROLES) {
+        expect(r.provisioning, r.role).toEqual(ROSTER_ROLES.has(r.role) ? [...CONSOLE_PROVISIONING, ...ROSTER_PROVISIONING] : CONSOLE_PROVISIONING);
+      }
+      // The roster can only ever assign the roles its migration maps to.
+      expect([...ROSTER_ROLES].sort()).toEqual(['faculty', 'student', 'teaching_assistant']);
+      for (const e of [...CONSOLE_PROVISIONING, ...ROSTER_PROVISIONING]) expect(existsSync(join(root, e.path)), e.path).toBe(true);
     });
 
     it('therefore holds every role at provisionable or above, and none at modeled', () => {

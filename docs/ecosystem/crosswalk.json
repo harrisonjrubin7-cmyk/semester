@@ -1500,23 +1500,27 @@
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/ledger.ts"
+        "app/src/lib/gradebook/ledger.ts",
+        "app/src/lib/gradebook/submissions.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261019120000_learning_submissions.sql"
       ],
       "tests": [
         "supabase/gradebook.check.sql",
         "app/src/lib/gradebook/gradebook.test.ts",
         "app/src/lib/gradebook/client.test.ts",
-        "app/src/screens/gradebook.test.tsx"
+        "app/src/screens/gradebook.test.tsx",
+        "supabase/learning-submissions.check.sql",
+        "app/src/lib/gradebook/submissions.test.ts"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "InstructorBook enters draft scores per item and student (enterScore), moderates and releases, all persisted through gradebook RPCs.",
-      "gap": "Grading is score-and-comment per item; no submission viewer, rubric or annotation workspace."
+      "note": "InstructorBook enters draft scores per item and student (enterScore), moderates and releases, all persisted through gradebook RPCs. Each student row shows their latest hand-in (fixed text and SHA-256) and which hand-in version the current grade names (learning_submissions, grade_entries.submission_id).",
+      "gap": "Grading is score-and-comment per item beside the hand-in text; no rubric or annotation workspace."
     },
     "#/faculty/home": {
       "status": "code-present",
@@ -1543,22 +1547,30 @@
       "gap": "No real teaching home reading the instructor's courses, grading queue or announcements."
     },
     "#/faculty/inbox": {
-      "status": "code-present",
+      "status": "tested",
       "roles": [
         "faculty"
       ],
-      "screens": [],
-      "modules": [],
+      "screens": [
+        "app/src/components/gradebook/InstructorBook.tsx"
+      ],
+      "modules": [
+        "app/src/lib/gradebook/submissions.ts"
+      ],
       "server": [
         "app/server/institution/sandbox.ts"
       ],
-      "migrations": [],
+      "migrations": [
+        "supabase/migrations/20261019120000_learning_submissions.sql"
+      ],
       "tests": [
+        "supabase/learning-submissions.check.sql",
+        "app/src/lib/gradebook/submissions.test.ts",
         "app/server/institution/sandbox.test.ts"
       ],
       "flags": [],
-      "note": "A submit -> receipt -> grade -> feedback loop exists only as the gateway's labelled sandbox adapter in the gateway, in-memory store, no staff screen.",
-      "gap": "No real assignments or submissions table and no instructor inbox screen."
+      "note": "Students hand in through learning_submit (append-only, versioned, SHA-256, idempotent, emits submission.finalized); the course's graders read every hand-in on the item in InstructorBook. The gateway sandbox adapter still models the full loop in memory.",
+      "gap": "No separate inbox screen or due-date window: hand-ins are listed per item inside the gradebook, and gradebook items have no published state or deadline."
     },
     "#/faculty/lineitem": {
       "status": "code-present",
@@ -1616,18 +1628,39 @@
       "gap": "No faculty grade-posting flow joins a released gradebook to the record ledger."
     },
     "#/faculty/requests": {
-      "status": "specified",
+      "status": "tested",
       "roles": [
         "faculty"
       ],
-      "screens": [],
-      "modules": [],
+      "screens": [
+        "app/src/screens/Gradebook.tsx",
+        "app/src/components/gradebook/RequestQueue.tsx",
+        "app/src/components/gradebook/AskInstructor.tsx",
+        "app/src/components/gradebook/DueDates.tsx"
+      ],
+      "modules": [
+        "app/src/lib/gradebook/requests.ts",
+        "app/src/lib/gradebook/duedates.ts"
+      ],
       "server": [],
-      "migrations": [],
-      "tests": [],
-      "flags": [],
-      "note": "Searched request/extension/forms in faculty code: the forms tables (supabase/migrations/20260921143455_forms.sql) and components/creation/FormBuilder.tsx are a student's own device-local forms tool, not a faculty request workflow.",
-      "gap": "No student-to-faculty request (extension, excused absence, incomplete) intake or queue."
+      "migrations": [
+        "supabase/migrations/20261021120000_course_requests.sql",
+        "supabase/migrations/20261021130000_gradebook_due_dates.sql"
+      ],
+      "tests": [
+        "supabase/course-requests.check.sql",
+        "supabase/gradebook-due-dates.check.sql",
+        "app/src/lib/gradebook/requests.test.ts",
+        "app/src/lib/gradebook/duedates.test.ts",
+        "app/src/components/gradebook/CourseRequests.test.tsx",
+        "app/src/components/gradebook/DueDates.test.tsx",
+        "app/src/screens/gradebook.test.tsx"
+      ],
+      "flags": [
+        "writeback.lms_grade_passback"
+      ],
+      "note": "Students file extension, excused-absence and incomplete requests (course_request_file, course_requests:create at <school>/<CODE>/<TERM>) from AskInstructor under their released grades; faculty decide them in RequestQueue under the instructor gradebook (course_request_decide: approve with a granted date, deny with a note, or ask a question; expected version, idempotent on the gradebook ledger, emits course_request.filed / .decided). Teaching assistants read the queue (course_requests:view) and do not decide. Gradebook items carry an optional due date (gradebook_set_due, grades:release, expected version); an approved extension on an item becomes that student's due date for it (gradebook_due_dates, security invoker), shown as \"Extended to\" on the student's side and per student on the instructor's (DueDates).",
+      "gap": "An approved excused absence or incomplete does not mark a grade. No notification is sent; the outbox events are not drained. Lives inside the gradebook screen, behind its writeback.lms_grade_passback gate."
     },
     "#/faculty/roster": {
       "status": "code-present",
@@ -1640,23 +1673,26 @@
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/ledger.ts"
+        "app/src/lib/gradebook/ledger.ts",
+        "packages/institution/src/roster-source.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261020013100_roster_completeness_and_projection.sql"
       ],
       "tests": [
         "supabase/gradebook.check.sql",
         "app/src/lib/gradebook/gradebook.test.ts",
         "app/src/lib/gradebook/client.test.ts",
-        "app/src/screens/gradebook.test.tsx"
+        "app/src/screens/gradebook.test.tsx",
+        "supabase/roster-projection.check.sql"
       ],
       "flags": [
         "writeback.lms_grade_passback"
       ],
-      "note": "The only instructor roster is the gradebook's grades:receive roster, read inside InstructorBook when entering grades.",
-      "gap": "No roster screen and no accommodation instructions; the roster is derived from gradebook grants rather than a section enrolment feed."
+      "note": "The instructor roster is the gradebook's grades:receive roster, read inside InstructorBook when entering grades. Since 20261020013100 those grants can come from the school's promoted roster (SIS, OneRoster or Clever-style source): bound roster people get student, faculty or teaching_assistant on <school>/<CODE>/<TERM>.",
+      "gap": "No roster screen and no accommodation instructions; no live source connector yet (the roster feed is staged by a service worker that is not built); identity bindings are made and removed at the Roster tab of the University screen (#/institution/integrations), finding the account by a search of the school."
     },
     "#/family/billing": {
       "status": "code-present",
@@ -2114,24 +2150,31 @@
       ],
       "screens": [
         "app/src/screens/University.tsx",
-        "app/src/components/institutional/IntegrationDashboard.tsx"
+        "app/src/components/institutional/IntegrationDashboard.tsx",
+        "app/src/components/institutional/RosterDesk.tsx"
       ],
       "modules": [
         "app/src/lib/integration/dashboard.ts",
-        "app/src/lib/integration/freshness.ts"
+        "app/src/lib/integration/freshness.ts",
+        "app/src/lib/roster/admin.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260927170000_integration_control_plane.sql"
+        "supabase/migrations/20260927170000_integration_control_plane.sql",
+        "supabase/migrations/20261021090000_roster_admin_desk.sql",
+        "supabase/migrations/20261021100000_roster_admin_unbind_search.sql"
       ],
       "tests": [
         "supabase/integration-control-plane.check.sql",
-        "app/src/components/institutional/IntegrationDashboard.test.tsx"
+        "app/src/components/institutional/IntegrationDashboard.test.tsx",
+        "supabase/roster-admin-desk.check.sql",
+        "app/src/lib/roster/admin.test.ts",
+        "app/src/components/institutional/RosterDesk.test.tsx"
       ],
       "flags": [
         "EXPERIENCE_FLAGS.integrationDashboard (VITE_INTEGRATION_DASHBOARD)"
       ],
-      "note": "IntegrationDashboard lists connections, mappings, sync runs, conflicts, dead letters and replay requests from the integration control plane.",
+      "note": "IntegrationDashboard lists connections, mappings, sync runs, conflicts, dead letters and replay requests from the integration control plane. Since 20261021090000 the Roster tab (RosterDesk, roster:administer at the school) lists roster people with no account bound, binds one to an account found by searching the school (handle or address fragment, 20 at most, address masked), lists who is bound and unbinds one (ending the course access the roster gave, with an expected-account check; since 20261021100000), and turns absence-means-removal on or off with an expected-value check.",
       "gap": "Scopes, owners and kill switches are read-only; no connection setup wizard or credential configuration."
     },
     "#/institution/onbverify": {
@@ -2284,7 +2327,8 @@
       ],
       "screens": [
         "app/src/screens/Registration.tsx",
-        "app/src/components/enrollment/RegistrarDesk.tsx"
+        "app/src/components/enrollment/RegistrarDesk.tsx",
+        "app/src/components/enrollment/HoldDesk.tsx"
       ],
       "modules": [
         "app/src/lib/enrollment/client.ts",
@@ -2292,18 +2336,22 @@
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929300000_registration_transaction.sql"
+        "supabase/migrations/20260929300000_registration_transaction.sql",
+        "supabase/migrations/20261020120000_registration_hold_resolution.sql"
       ],
       "tests": [
         "supabase/registration_transaction.check.sql",
         "app/src/screens/registration.test.tsx",
-        "app/src/lib/enrollment/client.test.ts"
+        "app/src/lib/enrollment/client.test.ts",
+        "supabase/registration-hold-resolution.check.sql",
+        "app/src/components/enrollment/HoldDesk.test.tsx"
       ],
       "flags": [
         "writeback.registration_submit",
-        "capability registration:administer"
+        "capability registration:administer",
+        "capability registration_hold:resolve (office scope)"
       ],
-      "note": "RegistrarDesk: pending approval requests (registrar_decide), overrides, term and section setup, shown only when my_capabilities holds registration:administer.",
+      "note": "RegistrarDesk: pending approval requests (registrar_decide), overrides, term and section setup, shown only when my_capabilities holds registration:administer. Beside it, an office holding registration_hold:resolve over its own office scope lists its open holds and resolves one (HoldDesk, registration_hold_resolve) behind a preview that says it is not enrollment.",
       "gap": "No registration audit viewer, waitlist reorder, hold placement or faculty assignment."
     },
     "#/institution/regops": {
@@ -4234,23 +4282,28 @@
         "student"
       ],
       "screens": [
-        "app/src/screens/Gradebook.tsx"
+        "app/src/screens/Gradebook.tsx",
+        "app/src/components/gradebook/HandIn.tsx"
       ],
       "modules": [
         "app/src/lib/gradebook/client.ts",
-        "app/src/lib/gradebook/views.ts"
+        "app/src/lib/gradebook/views.ts",
+        "app/src/lib/gradebook/submissions.ts"
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929310000_gradebook.sql"
+        "supabase/migrations/20260929310000_gradebook.sql",
+        "supabase/migrations/20261019120000_learning_submissions.sql"
       ],
       "tests": [
         "app/src/screens/gradebook.test.tsx",
         "app/src/lib/gradebook/client.test.ts",
-        "supabase/gradebook.check.sql"
+        "supabase/gradebook.check.sql",
+        "app/src/components/gradebook/HandIn.test.tsx",
+        "supabase/learning-submissions.check.sql"
       ],
       "flags": [],
-      "note": "Gradebook reads a student's own released grade_entries (and lets the instructor set scheme, release, answer regrades) through lib/gradebook/client.ts.",
+      "note": "Gradebook reads a student's own released grade_entries (and lets the instructor set scheme, release, answer regrades) through lib/gradebook/client.ts. Students hand in work on an item (preview, fixed versioned copy, receipt with fingerprint) and see which hand-in a released grade names.",
       "gap": "Only when the school has turned the gradebook on; otherwise the screen says grades stay in the school's system."
     },
     "#/student/grades": {
@@ -4795,7 +4848,8 @@
       ],
       "screens": [
         "app/src/screens/Registration.tsx",
-        "app/src/components/enrollment/StudentRegistration.tsx"
+        "app/src/components/enrollment/StudentRegistration.tsx",
+        "app/src/components/RegistrationReadiness.tsx"
       ],
       "modules": [
         "app/src/lib/enrollment/client.ts",
@@ -4804,19 +4858,22 @@
       ],
       "server": [],
       "migrations": [
-        "supabase/migrations/20260929300000_registration_transaction.sql"
+        "supabase/migrations/20260929300000_registration_transaction.sql",
+        "supabase/migrations/20261020120000_registration_hold_resolution.sql"
       ],
       "tests": [
         "app/src/lib/enrollment/client.test.ts",
         "app/src/lib/path-readiness.test.ts",
         "app/src/screens/registration.test.tsx",
-        "supabase/registration_transaction.check.sql"
+        "supabase/registration_transaction.check.sql",
+        "app/src/components/RegistrationReadiness.hold.test.tsx",
+        "supabase/registration-hold-resolution.check.sql"
       ],
       "flags": [
         "writeback.registration_submit"
       ],
-      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated. Phase 3: the readiness headline refuses Ready on a catalog imported more than 30 days ago.",
-      "gap": "Behind the enrollment module/writeback flag, off unless a school turns it on; holds have no list screen (REPO_AUDIT B-018)."
+      "note": "Enrol, waitlist, drop, holds and approvals run through lib/enrollment/client.ts RPCs on the registration transaction ledger; the screen is module-gated. Phase 3: the readiness headline refuses Ready on a catalog imported more than 30 days ago. Slice 2: when the owning office resolves a hold, the server marks readiness worked out while it stood as stale (my_registration_readiness) and the readiness view says \"Something changed — check again\"; a clear check is a receipt that says it is not enrollment.",
+      "gap": "Behind the enrollment module/writeback flag, off unless a school turns it on; the student sees one hold at a time and no list; nothing re-runs a stale readiness evaluation yet (no evaluator calls the readiness store)."
     },
     "#/student/regplan": {
       "status": "tested",
