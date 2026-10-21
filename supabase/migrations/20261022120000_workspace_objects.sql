@@ -409,10 +409,14 @@ create policy "owners and live grantees read the object" on public.workspace_obj
   for select to authenticated
   using (private.workspace_object_access(id, null) is not null);
 
+-- Owners only. A grantee reads a version's title and body through
+-- public.workspace_object_read, which writes the audit row; a policy letting
+-- them select the table would be a second, unaudited door to the same content.
 drop policy if exists "owners and grantees read the versions granted" on public.workspace_object_versions;
-create policy "owners and grantees read the versions granted" on public.workspace_object_versions
+drop policy if exists "owners read their versions" on public.workspace_object_versions;
+create policy "owners read their versions" on public.workspace_object_versions
   for select to authenticated
-  using (private.workspace_object_access(object_id, id) is not null);
+  using (private.workspace_object_access(object_id, id) = 'owner');
 
 drop policy if exists "owners read their grants, grantees their own" on public.workspace_object_grants;
 create policy "owners read their grants, grantees their own" on public.workspace_object_grants
