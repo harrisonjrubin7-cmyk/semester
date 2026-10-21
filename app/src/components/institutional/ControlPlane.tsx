@@ -2,11 +2,24 @@ import { useMemo, useState } from 'react';
 import { controlPlaneView, type ControlPlaneInput } from '../../lib/control-plane';
 import { Blueprint } from '../Blueprint';
 import { ActionButton, SectionLabel } from '../ui';
+import type { OverridePattern } from '../../lib/governance/override-review';
+import { OverridePatterns } from './OverridePatterns';
 import { PolicySimulator } from './PolicySimulator';
 
-export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onApply?: () => Promise<{ receiptId: string }> }) {
+export function ControlPlane({
+  input,
+  onApply,
+  loadPatterns,
+}: {
+  input: ControlPlaneInput;
+  onApply?: () => Promise<{ receiptId: string }>;
+  loadPatterns?: (tenantId: string) => Promise<OverridePattern[]>;
+}) {
   const view = useMemo(() => controlPlaneView(input), [input]);
   const [message, setMessage] = useState('');
+  const canReviewOverrides = input.tenantId === input.viewedTenantId && input.verifiedCapabilities.some(
+    (grant) => grant.verified && grant.tenantId === input.viewedTenantId && grant.capability === 'override:review',
+  );
 
   return (
     <section className="control-plane" aria-label="University control plane">
@@ -28,6 +41,13 @@ export function ControlPlane({ input, onApply }: { input: ControlPlaneInput; onA
           </Blueprint>
         ))}
       </div>
+
+      <OverridePatterns
+        key={`${input.viewedTenantId}:${canReviewOverrides}`}
+        tenantId={input.viewedTenantId}
+        canReview={canReviewOverrides}
+        load={loadPatterns}
+      />
 
       <PolicySimulator />
 
