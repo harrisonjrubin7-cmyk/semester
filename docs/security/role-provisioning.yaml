@@ -1,0 +1,65 @@
+# Identity and role-provisioning standard. Status: specified. Not implemented or tested.
+# Identity belongs to the institution's identity process; access is calculated per request from
+# membership, role, permission, record scope and policy.
+
+provisioning:
+  identity_sources:
+    primary: institution_SSO
+    fallback: approved_magic_link_or_manual_invitation
+
+  required_claims:
+    - tenant_id
+    - institutional_identifier
+    - email
+    - display_name
+
+  optional_claims:
+    - department
+    - affiliation
+    - employee_type
+
+  role_mapping:
+    student:
+      grants:
+        - student.readiness.self.read
+        - student.readiness.self.evaluate
+        - student.referral.self.create
+
+    advisor:
+      grants:
+        - advisor.readiness.caseload.read
+        - advisor.readiness.caseload.refer
+
+    registrar:
+      grants:
+        - registrar.readiness.cohort.read
+        - registrar.readiness.case.route
+        - registrar.readiness.reconciliation.manage
+
+    institution_admin:
+      grants:
+        - institution.readiness.configuration.read
+        - institution.readiness.reporting.read
+      prohibited:
+        - unrestricted_student_record_export
+
+  deprovisioning:
+    events:
+      - identity_disabled
+      - affiliation_removed
+      - role_changed
+      - manual_access_revoke
+    required_actions:
+      - revoke_active_sessions
+      - invalidate_permission_cache
+      - increment_access_generation
+      - block_pending_sensitive_actions
+      - write_audit_event
+      - verify_revocation_completion
+
+role_constraints:
+  - "Roles grant capability candidates; policy determines whether the actor may act on a specific record."
+  - "Role changes never rewrite prior audit history."
+  - "Manual role grants require an owner, reason, approval, expiry, and periodic review."
+  - "A staff member cannot approve an exception they requested."
+  - "Offboarding must be tested as a workflow, not assumed from an identity-provider disable event."

@@ -1,0 +1,64 @@
+# Source-authority register. Status: specified. Owners and freshness thresholds are pending institutional approval.
+# Every field used in readiness needs a named owner, authoritative system, freshness expectation,
+# correction pathway and user-facing disclosure.
+
+sources:
+  - record_type: enrollment_context
+    field: active_term
+    authoritative_system: SIS
+    institutional_owner: registrar
+    semester_role: synchronized_projection
+    freshness_requirement: institution_defined
+    correction_path: registrar_office
+    student_label: Institution verified
+    allowed_use:
+      - readiness_context
+      - term_selection
+    blocked_use_when_stale:
+      - definitive_readiness_outcome
+
+  - record_type: academic_progress
+    field: prerequisite_completion
+    authoritative_system: SIS_or_degree_audit_system
+    institutional_owner: registrar
+    semester_role: synchronized_projection
+    freshness_requirement: institution_defined
+    correction_path: degree_audit_or_registrar_office
+    student_label: Institution verified
+    allowed_use:
+      - readiness_check
+    blocked_use_when_stale:
+      - ready_state
+
+  - record_type: readiness_case
+    field: selected_goal
+    authoritative_system: semester
+    institutional_owner: student
+    semester_role: student_entered_context
+    freshness_requirement: immediate
+    correction_path: student_edit
+    student_label: Student entered
+    allowed_use:
+      - planning_context
+      - referral_routing
+    blocked_use_when_stale: []
+
+  - record_type: readiness_case
+    field: explanatory_summary
+    authoritative_system: semester
+    institutional_owner: semester_product_owner
+    semester_role: derived_explanation
+    freshness_requirement: evaluation_time
+    correction_path: support_and_product_review
+    student_label: Derived from listed sources
+    allowed_use:
+      - explanation_only
+    blocked_use_when_stale:
+      - official_decision
+
+authority_rules:
+  - "Semester may derive and explain readiness; it does not author official enrollment decisions."
+  - "The institutional system of record prevails where a Semester projection and an authoritative record disagree."
+  - "Student-entered context may shape routing and planning but cannot establish official eligibility or status."
+  - "An AI-generated explanation may not become a source of record or an approval basis."
+  - "A missing authority record produces Needs review, not inferred certainty."

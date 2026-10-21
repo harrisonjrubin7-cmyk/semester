@@ -1,0 +1,35 @@
+# Source mapping record. Status: specified. Approvals are pending, so this mapping must not be used for live data.
+
+source_mapping:
+  id: MAP-SIS-PREREQUISITES-001
+  adapter: sis_adapter
+  version: 1
+  source_entity: prerequisite_status
+  target_entity: readiness_check
+
+  mappings:
+    - source: student_external_id
+      target: student_external_reference
+      transform: normalized_identifier
+      required: true
+
+    - source: course_requirement_code
+      target: requirement_key
+      transform: exact_string
+      required: true
+
+    - source: completion_status
+      target: source_status
+      transform: enum_map_v1
+      required: true
+
+    - source: changed_at
+      target: source_observed_at
+      transform: ISO_8601_timestamp
+      required: false
+
+  unknown_value_behavior: quarantine_and_needs_review
+
+  approval:
+    institution_data_owner: pending
+    semester_integration_owner: pending

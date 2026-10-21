@@ -1,0 +1,34 @@
+# Capability maturity record. Status: baseline as stated in the tranche brief, NOT verified against code.
+# Each dimension is tracked independently; do not mark the capability "done" as a whole.
+
+capability:
+  key: registration_readiness
+  title: Registration readiness
+  impact: high
+  sensitivity: restricted
+  institution_authority: required
+
+  maturity:
+    problem_defined: true
+    interaction_designed: true
+    source_authority_defined: true
+    data_model_implemented: false
+    policy_enforced: false
+    workflow_durable: false
+    accessibility_evidenced: false
+    integration_verified: false
+    operationally_observable: false
+    release_approved: false
+    production_enabled: false
+
+  required_evidence:
+    - source_authority_register
+    - RLS_test_result
+    - policy_test_result
+    - workflow_transition_test
+    - source_freshness_drill
+    - reconciliation_drill
+    - accessibility_review
+    - incident_drill
+    - institution_signoff
+    - release_decision
