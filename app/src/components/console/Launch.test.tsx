@@ -18,7 +18,7 @@ const rows = (table: number) => [...host.querySelectorAll('table')[table].queryS
 /** Everything met, every seat held and signed, nothing open: the one state `decide` answers go to. */
 const clean: LaunchState = {
   gates: GATES.map((g) => ({ ...g, status: 'met' as const, gap: undefined, evidence: g.evidence.length ? g.evidence : [{ path: 'docs/x.md', shows: 'something' }] })),
-  council: COUNCIL.map((s) => ({ ...s, holder: s.holder ?? 'Role holder' })),
+  council: COUNCIL.map((s) => ({ ...s, holder: s.holder ?? 'Role holder', interimOwner: null })),
   signoffs: [...SEATS],
   blockers: [],
   acceptances: [],
@@ -73,9 +73,10 @@ it('says Go with conditions with the accepted risk, its expiry and what pilot us
 
 const signedColumn = () => rows(1).map((tr) => tr.querySelector('td[data-label="Signed"]')?.textContent);
 
-it('shows a vacant seat and an unsigned one as what they are, and a seat as signed only when it signed', async () => {
+it('shows interim accountability separately from accepted holders and signatures', async () => {
   await mount();
-  expect(rows(1).some((tr) => tr.querySelector('td[data-label="Held by"]')?.textContent === 'Vacant')).toBe(true);
+  expect(rows(1).map((tr) => tr.querySelector('td[data-label="Interim accountable owner"]')?.textContent)).toEqual(COUNCIL.map(() => 'Harrison Rubin'));
+  expect(rows(1).map((tr) => tr.querySelector('td[data-label="Accepted / appointed holder"]')?.textContent)).toEqual(COUNCIL.map((s) => s.holder ?? 'Vacant'));
   expect(signedColumn()).toEqual(COUNCIL.map(() => 'Not signed'));
   await mount(clean);
   expect(signedColumn()).toEqual(COUNCIL.map(() => 'Signed'));
