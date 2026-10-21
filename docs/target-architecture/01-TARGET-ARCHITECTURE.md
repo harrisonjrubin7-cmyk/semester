@@ -5,31 +5,31 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/SLOS-AND-ERROR-BUDGETS.md
-    changed_at: "2026-10-21T04:01:15"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/03-TECHNOLOGY-DECISIONS.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/09-CONVERSION-PLAN.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:50"
     sections_changed: []
     summary: externally modified
   - source: docs/target-architecture/README.md
@@ -37,14 +37,32 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0003-no-application-server.md
-    changed_at: "2026-10-21T04:01:14"
+    changed_at: "2026-10-21T13:53:46"
     sections_changed: []
     summary: externally modified
   - source: docs/architecture/0007-policy-decision-point.md
-    changed_at: "2026-10-21T04:01:14"
+    changed_at: "2026-10-21T13:53:46"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

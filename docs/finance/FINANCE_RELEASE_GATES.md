@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:45"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
-    changed_at: "2026-10-21T04:01:15"
+    changed_at: "2026-10-21T13:53:47"
     sections_changed: []
     summary: externally modified
   - source: docs/finance/EMBEDDED_FINANCE_ROADMAP.md
@@ -13,6 +13,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

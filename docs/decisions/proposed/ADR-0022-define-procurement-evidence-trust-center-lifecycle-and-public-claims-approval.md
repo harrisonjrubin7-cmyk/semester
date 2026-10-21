@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: docs/legal/LEGAL_REVIEW_QUEUE.md
-    changed_at: "2026-10-21T04:01:15"
+    changed_at: "2026-10-21T13:53:48"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md
@@ -9,10 +9,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/trust/CONTROL-FACTS.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:50"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

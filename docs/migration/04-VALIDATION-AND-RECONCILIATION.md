@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
-    changed_at: "2026-10-21T04:01:15"
+    changed_at: "2026-10-21T13:53:48"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

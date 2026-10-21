@@ -1,15 +1,15 @@
 ---
 stale-refs:
   - source: DECISIONS.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:44"
     sections_changed: []
     summary: externally modified
   - source: EVIDENCE-REGISTER.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:45"
     sections_changed: []
     summary: externally modified
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:45"
     sections_changed: []
     summary: externally modified
   - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
@@ -17,11 +17,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SEMESTER-OPERATING-SYSTEM.md
-    changed_at: "2026-10-21T04:01:13"
+    changed_at: "2026-10-21T13:53:46"
     sections_changed: []
     summary: externally modified
   - source: docs/PAID-PILOT-FRAMEWORK.md
-    changed_at: "2026-10-21T04:01:13"
+    changed_at: "2026-10-21T13:53:46"
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
@@ -29,11 +29,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
-    changed_at: "2026-10-21T04:01:14"
+    changed_at: "2026-10-21T13:53:47"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/EXECUTION-PLAN.md
-    changed_at: "2026-10-21T04:01:15"
+    changed_at: "2026-10-21T13:53:47"
     sections_changed: []
     summary: externally modified
   - source: docs/strategy/BOARD-MEMO.md
@@ -41,10 +41,26 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/commercial/PRICING-AND-PACKAGING.md
-    changed_at: "2026-10-21T04:01:14"
+    changed_at: "2026-10-21T13:53:47"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

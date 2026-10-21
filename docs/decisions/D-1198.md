@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/08-FINDINGS-AND-RECONCILIATION.md
-    changed_at: "2026-10-21T04:01:16"
+    changed_at: "2026-10-21T13:53:49"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

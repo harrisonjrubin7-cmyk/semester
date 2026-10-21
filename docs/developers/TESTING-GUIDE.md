@@ -1,7 +1,7 @@
 ---
 stale-refs:
   - source: CLAUDE.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:44"
     sections_changed: []
     summary: externally modified
   - source: docs/developers/ONBOARDING.md
@@ -9,6 +9,8 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

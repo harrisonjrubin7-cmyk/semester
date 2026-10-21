@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: GO-NO-GO-DECISION.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:45"
     sections_changed: []
     summary: externally modified
   - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
-    changed_at: "2026-10-21T04:01:12"
+    changed_at: "2026-10-21T13:53:45"
     sections_changed: []
     summary: externally modified
   - source: commercial/GO_TO_MARKET_READINESS.md
@@ -17,6 +17,10 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 
