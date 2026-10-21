@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Spreadsheet exports defuse text that starts with a sign
+
+Every CSV you export now treats a cell that starts with `+` or `-` as text, the same as one that starts with `=` or `@`. Opened in a spreadsheet, a value such as `+00123` or `-0007` keeps its sign and leading zeros, and a formula such as `-1+1` no longer runs. The change is in Sheet, data studio, record, finance statement, gradebook and operating-workspace downloads. You have to do nothing. Statement amounts such as `-12.50` still read as numbers. Sheet's "Analyse" handover is unchanged, since it does not pass through a file.
+
 ### Mine names the exact action, step or event before removing it
 
 In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
