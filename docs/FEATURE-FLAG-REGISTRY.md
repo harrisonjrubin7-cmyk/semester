@@ -251,3 +251,16 @@ feature; none of them stops a student's semester going up.
 - **Rollback:** unset the variable (or use any value but the exact word) and deploy the app again. For the gateway, propagate the changed environment to the running process; a hosted Vercel runtime may require a redeploy or restart. Once the runtime environment changes, the next request observes it without an additional in-process cache delay. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
 - **Not yet done:** it has never been engaged against production. `docs/GO-NO-GO-CHECKLIST.md` (`flags-rollback`) keeps that line open.
 - **Tests:** `app/src/lib/readonly.test.ts`, `cloud.test.ts` ("push under read-only mode"), `app/src/state/readonly.test.tsx`, `app/src/components/ReadOnlyBanner.test.tsx`, `app/server/institution/gateway.test.ts` ("read-only mode").
+
+### Registration readiness safe-off
+
+| Side | Switch | Paused when | What it does |
+| --- | --- | --- | --- |
+| Gateway | `SEMESTER_REGISTRATION_READINESS_SAFE_OFF` | set to anything but unset, empty or exactly `off` | New readiness evaluations are refused with `503` `registration_readiness_paused`, before membership is refreshed or any evaluator runs. Existing results are unchanged. |
+
+- **Owner:** the `engineering` seat (`docs/LAUNCH-READINESS-COUNCIL.md`).
+- **Type:** environment on the gateway. Default off. Scoped to readiness evaluations only; it is not a tenant flag.
+- **Engage:** set `SEMESTER_REGISTRATION_READINESS_SAFE_OFF` to any value other than `off`; `runtime.ts` re-reads it on each request.
+- **Confirm:** a new evaluation returns `503` `registration_readiness_paused`, and `GET /health` reports `"registrationReadinessPaused": true`.
+- **Rollback:** set it to `off` or unset it. The next request evaluates again; a hosted Vercel runtime may require a redeploy or restart before the new value reaches the process.
+- **Tests:** `app/server/institution/registration-readiness-safe-off.test.ts`.

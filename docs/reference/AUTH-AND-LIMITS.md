@@ -389,7 +389,8 @@ curl -s 'http://127.0.0.1:8787/health'
   "status": "ready",
   "adapters": 16,
   "intelligence": "policy-disabled",
-  "readOnly": true
+  "readOnly": true,
+  "registrationReadinessPaused": false
 }
 ```
 <!-- /example -->
@@ -462,5 +463,6 @@ Names only. Values are secrets or deployment choices and never belong in the rep
 | `SEMESTER_SANDBOX_INSTITUTION` | `start.ts` | `1` installs the sandbox adapters. |
 | `SEMESTER_SANDBOX_PATH` | `start.ts` | Sandbox SQLite file, default `work/university/private/sandbox.sqlite`. |
 | `SEMESTER_READ_ONLY` | Both | `on` turns read-only mode on ([above](#read-only-mode)); each request re-reads the runtime environment object. |
+| `SEMESTER_REGISTRATION_READINESS_SAFE_OFF` | Vercel runtime | Unset, empty or exactly `off` leaves registration-readiness evaluations open. Any other value pauses new evaluations with 503 `registration_readiness_paused`, before membership is refreshed. Re-read on each request. Existing results are unchanged. |
 
 The app's own browser setting for the gateway address, `VITE_UNIVERSITY_GATEWAY_URL`, is in `app/.env.example`; the gateway does not read it.
