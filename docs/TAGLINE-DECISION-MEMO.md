@@ -1,14 +1,18 @@
 ---
 stale-refs:
   - source: docs/BRAND-PLATFORM.md
-    changed_at: "2026-10-21T14:48:06"
+    changed_at: "2026-10-21T15:18:19"
     sections_changed: []
     summary: externally modified
   - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
-    changed_at: "2026-10-21T14:48:08"
+    changed_at: "2026-10-21T15:18:21"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
 
 
 

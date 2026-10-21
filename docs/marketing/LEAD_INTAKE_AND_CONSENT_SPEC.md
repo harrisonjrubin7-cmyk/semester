@@ -1,10 +1,12 @@
 ---
 stale-refs:
   - source: docs/marketing/COMPANY_SITE_CURRENT_STATE.md
-    changed_at: "2026-10-21T14:48:09"
+    changed_at: "2026-10-21T15:18:22"
     sections_changed: []
     summary: externally modified
 ---
+
+
 
 
 

@@ -1,11 +1,11 @@
 ---
 stale-refs:
   - source: RESTORE.md
-    changed_at: "2026-10-21T14:48:05"
+    changed_at: "2026-10-21T15:18:19"
     sections_changed: []
     summary: externally modified
   - source: RETENTION.md
-    changed_at: "2026-10-21T14:48:05"
+    changed_at: "2026-10-21T15:18:19"
     sections_changed: []
     summary: externally modified
   - source: docs/DATA-PORTABILITY-AND-OFFBOARDING.md
@@ -17,15 +17,15 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/COMPLIANCE_EVIDENCE_REGISTER.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:21"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/DATA_INVENTORY_TEMPLATE.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:21"
     sections_changed: []
     summary: externally modified
   - source: docs/business/compliance/SECURITY_QUESTIONNAIRE_LIBRARY.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:21"
     sections_changed: []
     summary: externally modified
   - source: docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md
@@ -33,7 +33,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md
-    changed_at: "2026-10-21T14:48:08"
+    changed_at: "2026-10-21T15:18:22"
     sections_changed: []
     summary: externally modified
   - source: docs/privacy-operations/02-SUBJECT-RIGHTS-WORKFLOW.md
@@ -45,6 +45,18 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

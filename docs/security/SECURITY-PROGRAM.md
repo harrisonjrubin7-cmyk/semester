@@ -5,7 +5,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: SECURITY.md
-    changed_at: "2026-10-21T14:48:05"
+    changed_at: "2026-10-21T15:18:19"
     sections_changed: []
     summary: externally modified
   - source: docs/SECURITY-THREAT-MODEL.md
@@ -13,7 +13,7 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:21"
     sections_changed: []
     summary: externally modified
   - source: docs/security/DETECTION-CATALOG.md
@@ -25,11 +25,11 @@ stale-refs:
     sections_changed: []
     summary: externally modified
   - source: docs/security/TENANT-ISOLATION-VERIFICATION.md
-    changed_at: "2026-10-21T14:48:09"
+    changed_at: "2026-10-21T15:18:23"
     sections_changed: []
     summary: externally modified
   - source: docs/security/THREAT-RECORD-TEMPLATE.md
-    changed_at: "2026-10-21T14:48:09"
+    changed_at: "2026-10-21T15:18:23"
     sections_changed: []
     summary: externally modified
   - source: docs/trust/VENDOR-RISK-REGISTER.md
@@ -37,6 +37,14 @@ stale-refs:
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
 
 
 

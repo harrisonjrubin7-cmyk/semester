@@ -1,26 +1,36 @@
 ---
 stale-refs:
   - source: docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md
-    changed_at: "2026-10-21T14:48:06"
+    changed_at: "2026-10-21T15:18:20"
     sections_changed: []
     summary: externally modified
   - source: docs/LMS-INTEROPERABILITY-MATRIX.md
-    changed_at: "2026-10-21T14:48:06"
+    changed_at: "2026-10-21T15:18:20"
     sections_changed: []
     summary: externally modified
   - source: docs/ONE-SYSTEM-PLATFORM-GRAMMAR.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:20"
     sections_changed: []
     summary: externally modified
   - source: docs/QTI-3-ASSESSMENT-AND-MIGRATION.md
-    changed_at: "2026-10-21T14:48:07"
+    changed_at: "2026-10-21T15:18:20"
     sections_changed: []
     summary: externally modified
   - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
-    changed_at: "2026-10-21T14:48:09"
+    changed_at: "2026-10-21T15:18:23"
     sections_changed: []
     summary: externally modified
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 
