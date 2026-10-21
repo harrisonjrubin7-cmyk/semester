@@ -1,30 +1,28 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-12 19:48:00_  ·  branch: `claude/busy-babbage-w7um9b`
+_Updated: 2026-10-21 01:40:40_  ·  branch: `claude/eager-galileo-0cjduk`
 
 ## Uncommitted changes
 ```
  M .anchor/session-state.md
-?? .claude/CLAUDE.md
-?? .md-linker/
 ```
 
 Diff stat:
 ```
- .anchor/session-state.md | 21 +--------------------
- 1 file changed, 1 insertion(+), 20 deletions(-)
+ .anchor/session-state.md | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 ```
 
 ## Recent commits
 ```
-7404a316 chore: update the auto-saved session state snapshot
-dfe7a74a chore: update the auto-saved session state snapshot
-0b2e9ea9 chore: update the auto-saved session state snapshot
-2e1b1ddc chore: update the auto-saved session state snapshot
-d66ace3f chore: update the auto-saved session state snapshot
-90332cc9 chore: update the auto-saved session state snapshot
-1cd8735c chore: update the auto-saved session state snapshot
-0bf4c59d chore: update the auto-saved session state snapshot
+87755bce9 Merge pull request #1569 from harrisonjrubin7-cmyk/claude/brave-cerf-d1up0c
+d3c4b10e3 Merge pull request #1645 from harrisonjrubin7-cmyk/claude/epic-galileo-aq26dg
+d9d9407da Regenerate control facts: the merged tree has 254 migration files
+62f1a6660 Merge remote-tracking branch 'origin/main' into p6
+afd09a6bb Merge pull request #1572 from harrisonjrubin7-cmyk/claude/epic-cori-zyc4rv
+930fa7653 Merge pull request #1549 from harrisonjrubin7-cmyk/claude/awesome-curie-6h4jy8
+8e2376742 Merge main into claude/awesome-curie-6h4jy8
+0a1632120 Merge pull request #1546 from harrisonjrubin7-cmyk/claude/brave-feynman-wgzyz4
 ```
 
 ## Resume
