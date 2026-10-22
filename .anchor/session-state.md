@@ -1,6 +1,6 @@
 # Session state (auto-saved — last known reality)
 
-_Updated: 2026-10-22 20:10:19_  ·  branch: `claude/exciting-ritchie-n1nj59`
+_Updated: 2026-10-22 20:10:40_  ·  branch: `claude/exciting-ritchie-n1nj59`
 
 ## Uncommitted changes
 ```
@@ -15,6 +15,7 @@ Diff stat:
 
 ## Recent commits
 ```
+d9754806 chore: update the auto-saved session state snapshot
 e8a1ee3d chore: update the auto-saved session state snapshot
 24dba7f6 chore: update the auto-saved session state snapshot
 5ac6a0f9 chore: update the auto-saved session state snapshot
@@ -22,7 +23,6 @@ e8a1ee3d chore: update the auto-saved session state snapshot
 bd154297 chore: update the auto-saved session state snapshot
 162cd31d docs(integration): reconcile Sheet rule slice
 48ca5f85 Merge remote-tracking branch 'origin/main' into codex/complete-semester-integration-2026-10-08
-f2799d73 fix(sheet): distinguish duplicate rule removals
 ```
 
 ## Resume
