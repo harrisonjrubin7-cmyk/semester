@@ -1,0 +1,12 @@
+<!-- @dsCard group="Colors" viewport="700x230" name="Components on Ink" subtitle="The same components with [data-theme="dark"]" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../components/bundle.js"></script><style>body{padding:20px 24px;background:var(--surface-canvas)}.lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}.col{display:grid;gap:12px;align-content:start}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.step{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:13px}.num{width:20px;height:20px;border-radius:50%;border:1px solid var(--border-strong);display:grid;place-items:center;font-size:11px;font-variant-numeric:tabular-nums}</style></head><body><div id="root"></div><script type="text/babel">
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo(){return <div data-theme="dark" style={{background:'var(--surface-canvas)',color:'var(--text-primary)',padding:16,borderRadius:10,margin:-4,display:'grid',gridTemplateColumns:'1.2fr 1fr',gap:14}}>
+<N.ObjectCard kind="Assignment" statuses={['action-required']} title="Lab report 3: Enzyme kinetics" provenance={{origin:'official',by:'BIO 210'}} metadata="Due Thu 9 Oct · 23:59" primary={{label:'Open draft'}} secondary={{label:'View rubric'}}/>
+<div className="col"><div className="row"><N.Button variant="primary">Submit</N.Button><N.Button>Save draft</N.Button></div><div className="row"><N.SourceBadge source="ai"/><N.SourceBadge source="connected"/><N.StatusChip status="hold"/></div><N.OfflineStrip queued={2}/></div></div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

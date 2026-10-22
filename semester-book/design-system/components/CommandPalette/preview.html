@@ -1,0 +1,9 @@
+<!-- @dsCard group="Navigation" height=260 -->
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}</style></head><body><div id="root"></div>
+<script>
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo() {
+  return /* @__PURE__ */ React.createElement(N.CommandPalette, { groups: [{ label: "Jump to", items: [{ label: "BIO 210 \xB7 Cell biology", icon: "courses", detail: "Course" }, { label: "Degree progress", icon: "degree" }] }, { label: "Ask", items: [{ label: "Ask Semester about this week", icon: "ask", detail: "AI-assisted" }] }] });
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(Demo, null));
+</script></body></html>

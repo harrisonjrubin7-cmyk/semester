@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Education OS domain map" description="15 domains by phase, each with 15 gates" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="min-height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<div style="background:#090a0e;color:#eceef2;padding:14px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 18 }}" metal="{{ true }}" hint-size="140px,24px"></x-import>
+<div style="font-size:13px;color:rgba(236,238,242,.64)">Connect first · Replace by domain · Operate as one system</div>
+</div>
+<div style="max-width:1280px;margin:0 auto;padding:28px 30px 64px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px">
+<div>
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Education OS · Domain map</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:28px;letter-spacing:-.015em;margin:6px 0 0">Every domain, its path to native, and its gates</h1>
+<p style="color:var(--text-secondary);margin:6px 0 0;max-width:70ch">A domain becomes the system of record only when all 15 gates pass. Select a domain to work its gates.</p>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Segmented" label="Phase" options="{{ phaseOpts }}" value="{{ phase }}" onChange="{{ setPhase }}" hint-size="420px,40px"></x-import>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);gap:32px">
+<div style="display:grid;gap:0;align-content:start">
+<div style="display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1.2fr) minmax(0,1.4fr) 110px;gap:16px;padding:10px 12px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border-strong)">
+<div>Domain</div><div>While connected</div><div>Native in Semester</div><div>Gates</div>
+</div>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+<sc-if value="{{ r.on }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ r.select }}" style="display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1.2fr) minmax(0,1.4fr) 110px;gap:16px;padding:14px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;border:0;border-bottom:1px solid var(--border-subtle);align-items:baseline;box-shadow:inset 3px 0 0 var(--action-primary);background:var(--action-secondary)">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ r.name }}</div>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.45">{{ r.connect }}</div>
+<div style="font-size:14px;line-height:1.45">{{ r.native }}</div>
+<div style="font-size:14px;font-variant-numeric:tabular-nums">{{ r.gateText }}</div>
+</button></sc-if><sc-if value="{{ r.off }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ r.select }}" style="display:grid;grid-template-columns:minmax(120px,.8fr) minmax(0,1.2fr) minmax(0,1.4fr) 110px;gap:16px;padding:14px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;border:0;border-bottom:1px solid var(--border-subtle);align-items:baseline;background:transparent">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ r.name }}</div>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.45">{{ r.connect }}</div>
+<div style="font-size:14px;line-height:1.45">{{ r.native }}</div>
+<div style="font-size:14px;font-variant-numeric:tabular-nums">{{ r.gateText }}</div>
+</button></sc-if>
+</sc-for>
+</div>
+<aside style="display:grid;gap:16px;align-content:start;position:sticky;top:16px">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:14px">
+<div style="display:grid;gap:4px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ sel.phaseLabel }}</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ sel.name }}</div>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.5">Replacement gate: {{ sel.gate }}</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Gates passed" done="{{ sel.passed }}" total="{{ 15 }}" note="{{ sel.note }}" hint-size="100%,80px"></x-import>
+<div style="display:grid;gap:2px;max-height:520px;overflow:auto">
+<sc-for list="{{ gates }}" as="g" hint-placeholder-count="15">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ g.label }}" checked="{{ g.on }}" onChange="{{ g.toggle }}" hint-size="100%,40px"></x-import>
+</sc-for>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="{{ sel.verdictHead }}" hint-size="100%,56px">{{ sel.verdict }}</x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="sample" updated="Gate progress is saved on this device" hint-size="200px,24px"></x-import>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const DOMAINS = [
+  ['Identity', 1, 'SSO, SCIM, directory sync', 'Membership, role grants, capabilities', 'Provisioning reconciliation, access review, rollback'],
+  ['Productivity', 2, 'Google, Microsoft, Apple sync', 'Notes, tasks, calendar, files, projects', 'Data portability, reliability, user acceptance'],
+  ['AI', 2, 'Approved model routing', 'Copilot, tutor, research, agent workflows', 'Policy, evaluation, course rules, cost control'],
+  ['Advising', 3, 'CRM and referral sync', 'Caseload, success plans, Action Center, referrals', 'Privacy, caseload, intervention and outcome validation'],
+  ['Degree audit', 3, 'Requirement import', 'Path engine, scenarios, requirement checks', 'Registrar validation and official sign-off'],
+  ['Campus services', 3, 'Feeds and handoffs', 'Native service workflows where approved', 'Service-owner approval, safety and privacy review'],
+  ['Career', 3, 'Opportunity import', 'Skills graph, portfolio, matching', 'Employer data rules, student consent, outcome evidence'],
+  ['Family', 3, 'Existing communication handoffs', 'Scoped grants, sharing, audit history', 'Student consent, institution policy, revocation'],
+  ['Support', 3, 'Helpdesk integration', 'Tickets, help requests, knowledge base', 'SLA, escalation, privacy, operational readiness'],
+  ['LMS', 4, 'LTI 1.3, roster and course read sync', 'Course Studio, study packs, learning workflows', 'Faculty acceptance, accessibility, grade workflow parity'],
+  ['Gradebook', 4, 'LMS passback or read', 'Native grade ledger, assessments, regrades', 'Faculty policy, student visibility, record governance'],
+  ['SIS', 4, 'Read-only APIs, OneRoster, Edu-API', 'Canonical academic data and policy workflows', 'Reconciliation, registrar and legal approval, audit'],
+  ['Registration', 4, 'SIS handoff', 'Terms, sections, enrolment, waitlists, holds, overrides', 'Transaction integrity, capacity correctness, rollback'],
+  ['Student accounts', 4, 'Balance and status sync', 'Ledger, payment plans, reconciliation', 'Finance controls, payment reconciliation, audit'],
+  ['Company operations', 5, 'CRM, billing, support integrations', 'Operations Command Center', 'Internal controls, finance and security review'],
+];
+const GATES = ['Functional parity', 'Data model complete', 'Accessibility', 'Security and privacy', 'Tenant isolation (RLS)', 'Auditability', 'Migration integrity', 'Reconciliation', 'Dual-run reliability', 'User acceptance', 'Institutional approval', 'Support readiness', 'Incident and rollback ready', 'Export and portability', 'Commercial readiness'];
+const PH = ['', 'Phase 1 · Connect', 'Phase 2 · Co-pilot', 'Phase 3 · Replace domains', 'Phase 4 · Replace the core', 'Phase 5 · Education OS'];
+const KEY = 'semester-domain-gates-v1';
+class Component extends DCLogic {
+  state = { sel: 0, phase: 'All', done: (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })() };
+  toggle(d, g) { this.setState((s) => { const cur = new Set(s.done[d] || []); cur.has(g) ? cur.delete(g) : cur.add(g); const done = { ...s.done, [d]: [...cur] }; localStorage.setItem(KEY, JSON.stringify(done)); return { done }; }); }
+  renderVals() {
+    const { sel, phase, done } = this.state;
+    const n = (i) => (done[i] || []).length;
+    const pf = { 'All': 0, 'Connect': 1, 'Co-pilot': 2, 'Domains': 3, 'Core': 4, 'OS': 5 }[phase];
+    const rows = DOMAINS.map((d, i) => ({ d, i })).filter(({ d }) => !pf || d[1] === pf).map(({ d, i }) => ({
+      name: d[0], connect: d[2], native: d[3], gateText: n(i) + ' of 15' + (n(i) === 15 ? ' ✓' : ''),
+      select: () => this.setState({ sel: i }),
+      on: i === sel, off: i !== sel, style: { display: 'grid', gridTemplateColumns: 'minmax(120px,.8fr) minmax(0,1.2fr) minmax(0,1.4fr) 110px', gap: 16, padding: '14px 12px', textAlign: 'left', font: 'inherit', color: 'inherit', cursor: 'pointer', border: 0, borderBottom: '1px solid var(--border-subtle)', boxShadow: i === sel ? 'inset 3px 0 0 var(--action-primary)' : 'none', background: i === sel ? 'var(--action-secondary)' : 'transparent', alignItems: 'baseline' },
+    }));
+    const d = DOMAINS[sel], p = n(sel), set = new Set(done[sel] || []);
+    return {
+      phaseOpts: ['All', 'Connect', 'Co-pilot', 'Domains', 'Core', 'OS'], phase, setPhase: (v) => this.setState({ phase: v && v.target ? v.target.value : v }),
+      rows,
+      sel: { name: d[0], gate: d[4], phaseLabel: PH[d[1]], passed: p, note: (15 - p) + ' remaining', verdictHead: p === 15 ? 'Ready to become authoritative' : 'Not yet authoritative', verdict: p === 15 ? 'All gates pass. Cutover still needs a dated institutional approval and a rollback window.' : 'Semester stays connected to the existing system for ' + d[0] + ' until every gate passes.' },
+      gates: GATES.map((label, g) => ({ label, on: set.has(g), toggle: () => this.toggle(sel, g) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

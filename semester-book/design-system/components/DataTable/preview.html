@@ -1,0 +1,9 @@
+<!-- @dsCard group="Data" height=220 -->
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}</style></head><body><div id="root"></div>
+<script>
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo() {
+  return /* @__PURE__ */ React.createElement(N.DataTable, { caption: "Integrations", columns: [{ key: "name", label: "Integration" }, { key: "src", label: "Source", render: (r) => /* @__PURE__ */ React.createElement(N.SourceBadge, { source: r.src }) }, { key: "st", label: "Status", render: (r) => /* @__PURE__ */ React.createElement(N.StatusChip, { status: r.st }) }, { key: "n", label: "Records", numeric: true }], rows: [{ name: "Banner SIS", src: "official", st: "synced", n: "41,208" }, { name: "Canvas LMS", src: "connected", st: "syncing", n: "9,114" }, { name: "Housing", src: "imported", st: "sync-error", n: "2,032" }] });
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(Demo, null));
+</script></body></html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Master operating map" description="Semester as a whole: layers, chain, journeys and status on one page" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="min-height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<div style="background:#090a0e;color:#eceef2;padding:14px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 18 }}" metal="{{ true }}" hint-size="140px,24px"></x-import>
+<div style="font-size:13px;color:rgba(236,238,242,.64)">Build everything natively · Integrate responsibly · Replace only with proof · Operate as one system</div>
+</div>
+<div style="max-width:1320px;margin:0 auto;padding:28px 30px 64px;display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div>
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Master operating map · 12 systems · 40 domains</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:28px;letter-spacing:-.015em;margin:6px 0 0">Everything Semester has to be</h1>
+<p style="color:var(--text-secondary);margin:6px 0 0;max-width:72ch">Each domain shows whether this project has a design for it yet. Select one to work through the 35 things it must define before it can ship. Repository status comes from running phase 00 of the Claude Code kit.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:12px;min-width:min(100%,480px)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Designed here" value="{{ designedCount }}" unit="of 40" source="personal" updated="This project" hint-size="100%,110px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Not designed" value="{{ plannedCount }}" unit="domains" source="personal" updated="This project" hint-size="100%,110px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Fully defined" value="{{ definedCount }}" unit="of 40" source="personal" updated="Your checklist" hint-size="100%,110px"></x-import>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),max-content));gap:6px">
+<sc-for list="{{ systems }}" as="sy" hint-placeholder-count="13">
+<sc-if value="{{ sy.on }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ sy.pick }}" style="padding:8px 12px;border-radius:3px;font:inherit;font-size:14px;cursor:pointer;color:var(--text-primary);text-align:left;border:1px solid var(--action-primary);background:var(--action-secondary);font-weight:600">{{ sy.label }}</button></sc-if><sc-if value="{{ sy.off }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ sy.pick }}" style="padding:8px 12px;border-radius:3px;font:inherit;font-size:14px;cursor:pointer;color:var(--text-primary);text-align:left;border:1px solid var(--border-default);background:transparent;font-weight:400">{{ sy.label }}</button></sc-if>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:32px;align-items:start">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;align-content:start">
+<sc-for list="{{ domains }}" as="d" hint-placeholder-count="12">
+<sc-if value="{{ d.on }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ d.pick }}" style="display:grid;gap:4px;text-align:left;padding:12px 14px;border-radius:6px;cursor:pointer;font:inherit;color:inherit;border:1px solid var(--action-primary);box-shadow:inset 3px 0 0 var(--action-primary);background:var(--action-secondary)">
+<span style="font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums">{{ d.num }} · {{ d.sys }}</span>
+<span style="font-family:var(--font-heading);font-weight:600;font-size:17px;line-height:1.2">{{ d.name }}</span>
+<span style="font-size:13px;color:var(--text-secondary)">{{ d.status }} · {{ d.defText }}</span>
+</button></sc-if><sc-if value="{{ d.off }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ d.pick }}" style="display:grid;gap:4px;text-align:left;padding:12px 14px;border-radius:6px;cursor:pointer;font:inherit;color:inherit;border:1px solid var(--border-default);background:var(--surface-base)">
+<span style="font-size:12px;color:var(--text-secondary);font-variant-numeric:tabular-nums">{{ d.num }} · {{ d.sys }}</span>
+<span style="font-family:var(--font-heading);font-weight:600;font-size:17px;line-height:1.2">{{ d.name }}</span>
+<span style="font-size:13px;color:var(--text-secondary)">{{ d.status }} · {{ d.defText }}</span>
+</button></sc-if>
+</sc-for>
+</div>
+<aside style="display:grid;gap:16px;align-content:start;position:sticky;top:16px">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:14px">
+<div style="display:grid;gap:4px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ cur.sys }}</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ cur.num }} · {{ cur.name }}</div>
+<div style="font-size:14px;line-height:1.5;color:var(--text-secondary)">For {{ cur.users }}</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ cur.fields }}" hint-size="100%,120px"></x-import>
+<sc-if value="{{ cur.hasLink }}" hint-placeholder-val="{{ true }}">
+<a href="{{ cur.href }}" style="font-size:14px;font-weight:500">Open the design · {{ cur.linkLabel }} →</a>
+</sc-if>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Definition" done="{{ cur.defined }}" total="{{ 35 }}" note="{{ cur.defNote }}" hint-size="100%,80px"></x-import>
+<div style="display:grid;gap:0;max-height:440px;overflow:auto;border-top:1px solid var(--border-subtle);padding-top:8px">
+<sc-for list="{{ attrs }}" as="a" hint-placeholder-count="35">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ a.label }}" checked="{{ a.on }}" onChange="{{ a.toggle }}" hint-size="100%,36px"></x-import>
+</sc-for>
+</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="sample" updated="Checklist saved on this device" hint-size="200px,24px"></x-import>
+</aside>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SYS = ['Education experience', 'Learning and assessment', 'Academic records and registrar', 'Student success and support', 'Productivity and knowledge', 'Governed AI', 'Campus life and commerce', 'Career and lifelong learning', 'Identity, trust and governance', 'Institutional intelligence', 'Platform and partners', 'Company operating system'];
+const S = 'ui_kits/student/index.html', I = 'Institution OS.dc.html', C = 'Company Command Center.dc.html', M = 'Education OS Domain Map.dc.html', V = 'Semester Vision Deck.dc.html';
+const D = [
+  ['Student OS', 0, 'students', S, 'Student app · 64 screens', 'Portal, LMS app, email', 2],
+  ['Workspace and productivity', 4, 'students, faculty, staff', S, 'Student app · Write, Sheets, Decks', 'Google, Microsoft, Apple', 2],
+  ['Path and degree planning', 2, 'students, advisors', S, 'Student app · Pathway, Degree', 'Degree audit system', 5],
+  ['Course Studio / LMS', 1, 'faculty, TAs, students', I, 'Institution OS · Course Studio', 'Canvas, Brightspace', 3],
+  ['Learning evidence and assessment', 1, 'faculty, students', I, 'Institution OS · Course Studio', 'LMS quizzes, publisher tools', 3],
+  ['AI gateway and copilot', 5, 'every role', S, 'Student app · Ask Semester', 'ChatGPT, Claude, Perplexity', 2],
+  ['Search and knowledge graph', 4, 'every role', 'Semester Platform.dc.html', 'Platform · Search', 'Campus search, Google', 2],
+  ['Faculty experience', 0, 'faculty', 'Onboarding - Faculty.dc.html', 'Faculty onboarding', 'LMS, email', 3],
+  ['Advisor / student success', 3, 'advisors, student affairs', 'Onboarding - Advisor.dc.html', 'Advisor onboarding', 'Navigate, Starfish', 4],
+  ['Registrar and academic operations', 2, 'registrars', I, 'Institution OS · Registrar OS', 'SIS (Banner, PeopleSoft)', 5],
+  ['Academic records and grade ledger', 2, 'registrars, faculty', I, 'Institution OS · Registrar OS', 'SIS', 5],
+  ['Registration and enrolment', 2, 'students, registrars', S, 'Student app · Registration', 'SIS registration', 5],
+  ['Student finance and payment plans', 6, 'students, finance, families', 'Onboarding - Finance.dc.html', 'Finance onboarding', 'Bursar portal', 5],
+  ['Financial aid handoffs', 6, 'students, aid office', S, 'Student app · Decisions', 'Aid system', 5],
+  ['Campus life and services', 6, 'students', S, 'Student app · Campus', 'Separate campus apps', 6],
+  ['Housing', 6, 'students, housing staff', S, 'Student app · Housing', 'StarRez-type portals', 6],
+  ['Dining', 6, 'students', S, 'Student app · Dining', 'Dining apps', 6],
+  ['Events', 6, 'students, organisers', S, 'Student app · University, Athletics', 'Event apps', 6],
+  ['Community and organisations', 6, 'students, organisations', S, 'Student app · Community, Activities', 'Group chats, club portals', 6],
+  ['Accessibility services', 3, 'students, disability services', 'Semester Platform.dc.html', 'Platform · Accessibility', 'Accommodation systems', 6],
+  ['Safety and emergency handoffs', 3, 'students, campus safety', 'Semester Platform.dc.html', 'Platform · Safety', 'Safety apps', 6],
+  ['Library and research', 4, 'faculty, researchers, students', I, 'Institution OS · Research', 'Library discovery, grants systems', 6],
+  ['Career, employer, alumni', 7, 'students, employers, alumni', 'Onboarding - Employer.dc.html', 'Employer onboarding', 'Handshake, LinkedIn', 7],
+  ['Family / guardian grants', 8, 'guardians, students', 'Onboarding - Guardian.dc.html', 'Guardian onboarding', 'Parent portals, email', 6],
+  ['Institutional governance', 9, 'institution leaders', M, 'Domain map', 'Spreadsheets, committees', 8],
+  ['Identity, SSO, SCIM', 8, 'IT', 'Onboarding - IT security.dc.html', 'IT security onboarding', 'IdP', 1],
+  ['Integrations: LTI, OneRoster, Edu-API', 10, 'IT, partners', M, 'Domain map', 'Point integrations', 1],
+  ['Privacy, retention, legal holds', 8, 'students, privacy office', S, 'Student app · Privacy, Export', 'Manual requests', 1],
+  ['Security, audit, incident response', 8, 'IT security, Semester', C, 'Command center · Reliability', 'SIEM, ticketing', 1],
+  ['Trust and compliance (HECVAT)', 8, 'procurement, Semester', C, 'Command center · Trust', 'Questionnaires by email', 1],
+  ['Operations Command Center', 11, 'Semester staff', C, 'Command center', 'Spreadsheets', 9],
+  ['Commercial, billing, customer success', 11, 'Semester staff', C, 'Command center · Revenue', 'CRM, billing tools', 9],
+  ['Marketing, sales, company site', 11, 'buyers, students', V, 'Vision deck', 'Website, decks', 9],
+  ['Developer platform', 10, 'developers, partners', 'Semester Platform.dc.html', 'Platform · Developers', '—', 10],
+  ['Marketplace and partners', 10, 'partners, institutions', 'Semester Platform.dc.html', 'Platform · Marketplace', 'Vendor lists', 10],
+  ['Data, analytics, outcomes', 9, 'institution leaders', I, 'Institution OS · Executive', 'BI tools', 8],
+  ['Reliability, SLOs, releases', 11, 'Semester engineering', C, 'Command center · Releases', 'CI, status page', 1],
+  ['People, hiring, company ops', 11, 'Semester founder', 'Semester Finish Line.dc.html', 'Finish line · Cadence', 'Spreadsheets', 9],
+  ['Finance, runway, board reporting', 11, 'founder, investors', 'Company Command Center.dc.html', 'Command center · Finance', 'Spreadsheets', 9],
+  ['Globalisation and localisation', 11, 'every role', 'Company Command Center.dc.html', 'Command center · Localisation', '—', 10],
+];
+const ATTR = ['Vision', 'Primary users', 'Jobs to be done', 'Current source of truth', 'Native source of truth', 'Integration strategy', 'Data model', 'Tenant scope', 'Role and capability model', 'Data classification', 'Consent model', 'AI model and policy', 'Accessibility', 'Security', 'Audit', 'Privacy and retention', 'Migration plan', 'Reconciliation plan', 'Dual-run plan', 'Cutover criteria', 'Rollback plan', 'Support model', 'Incident model', 'SLOs', 'Commercial model', 'Customer success model', 'Outcome metrics', 'Documentation', 'Release gates', 'Replacement authority gates', 'Team owner', 'Dependencies', 'Risks', 'Priority and branch', 'Tests'];
+const KEY = 'semester-master-map-v1';
+class Component extends DCLogic {
+  state = { sys: -1, sel: 0, done: (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch (e) { return {} } })() };
+  renderVals() {
+    const { sys, sel, done } = this.state;
+    const n = (i) => (done[i] || []).length;
+    const chip = (on) => ({ padding: '8px 12px', borderRadius: 3, font: 'inherit', fontSize: 14, cursor: 'pointer', border: '1px solid ' + (on ? 'var(--action-primary)' : 'var(--border-default)'), background: on ? 'var(--action-secondary)' : 'transparent', color: 'var(--text-primary)', fontWeight: on ? 600 : 400, textAlign: 'left' });
+    const d = D[sel], set = new Set(done[sel] || []);
+    return {
+      designedCount: String(D.filter((x) => x[3]).length), plannedCount: String(D.filter((x) => !x[3]).length), definedCount: String(D.filter((_, i) => n(i) === 35).length),
+      systems: [{ label: 'All 12 systems', pick: () => this.setState({ sys: -1 }), style: chip(sys === -1), on: sys === -1, off: sys !== -1 }, ...SYS.map((label, i) => ({ label: (i + 1) + ' · ' + label, pick: () => this.setState({ sys: i }), style: chip(sys === i), on: sys === i, off: sys !== i }))],
+      domains: D.map((x, i) => ({ x, i })).filter(({ x }) => sys < 0 || x[1] === sys).map(({ x, i }) => ({
+        num: String(i + 1).padStart(2, '0'), name: x[0], sys: SYS[x[1]], status: x[3] ? '○ Designed here' : '· Not designed yet', defText: n(i) + '/35 defined',
+        pick: () => this.setState({ sel: i }),
+        on: i === sel, off: i !== sel, style: { display: 'grid', gap: 4, textAlign: 'left', padding: '12px 14px', borderRadius: 6, cursor: 'pointer', font: 'inherit', color: 'inherit', border: '1px solid ' + (i === sel ? 'var(--action-primary)' : 'var(--border-default)'), boxShadow: i === sel ? 'inset 3px 0 0 var(--action-primary)' : 'none', background: i === sel ? 'var(--action-secondary)' : 'var(--surface-base)' },
+      })),
+      cur: { num: String(sel + 1).padStart(2, '0'), name: d[0], sys: SYS[d[1]], users: d[2], hasLink: !!d[3], href: d[3] ? encodeURI(d[3]) : '', linkLabel: d[4], defined: n(sel), defNote: (35 - n(sel)) + ' still to define',
+        fields: [{ field: 'Replaces today', value: d[5] }, { field: 'Program phase', value: 'Phase ' + d[6] }, { field: 'In this project', value: d[3] ? 'Designed · ' + d[4] : 'Not designed yet' }, { field: 'In the repository', value: 'Unknown until phase 00 audit' }] },
+      attrs: ATTR.map((label, a) => ({ label, on: set.has(a), toggle: () => this.setState((s) => { const c = new Set(s.done[sel] || []); c.has(a) ? c.delete(a) : c.add(a); const nd = { ...s.done, [sel]: [...c] }; localStorage.setItem(KEY, JSON.stringify(nd)); return { done: nd }; }) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

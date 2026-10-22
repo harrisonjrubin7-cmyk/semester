@@ -1,0 +1,9 @@
+<!-- @dsCard group="Forms" height=280 -->
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}</style></head><body><div id="root"></div>
+<script>
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo() {
+  return /* @__PURE__ */ React.createElement(N.Combobox, { label: "Find a course", hint: "Code, title or instructor", defaultOpen: true, value: "bio", options: [{ label: "BIO 330 \xB7 Genetics", detail: "4 cr \xB7 Mon Wed 10:00 \xB7 2 seats" }, { label: "BIO 410 \xB7 Research Seminar", detail: "2 cr \xB7 Needs approval" }, { label: "BIO 245 \xB7 Ecology", detail: "4 cr \xB7 Full \xB7 3 waiting" }] });
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(Demo, null));
+</script></body></html>

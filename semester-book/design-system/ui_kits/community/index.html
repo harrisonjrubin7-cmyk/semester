@@ -1,0 +1,30 @@
+<!-- @dsCard group="Product" viewport="1440x900" name="Community & live marketplace" subtitle="Feed, groups, events, Q&A, campus marketplace with live drops, safety" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Semester — Community & Marketplace</title><link rel="icon" href="../../assets/favicon.svg"><link rel="stylesheet" href="../../styles.css">
+<style>*{box-sizing:border-box}body{margin:0;background:#f4f1ea;color:#1b1a17;font-family:'Barlow',sans-serif;font-size:14px}a{color:#416180}a:hover{color:#1d2d3d}
+.app{display:grid;grid-template-columns:220px minmax(0,1fr) 300px;min-height:100vh}
+.rail{width:auto;min-width:0;overflow:hidden;background:#090a0e;color:#eceef2;padding:16px 10px;display:flex;flex-direction:column;gap:2px}.rail img{height:24px;margin:4px 8px 18px;align-self:flex-start}
+.rail button{all:unset;box-sizing:border-box;min-width:0;cursor:pointer;padding:9px 10px;border-radius:6px;color:#d4d4d7;display:flex;justify-content:space-between}.rail button:hover{background:#12141a}.rail button.on{background:#191c23;color:#fff;box-shadow:inset 2px 0 0 #94bce3}.rail .n{font-size:12px;background:#2c455d;border-radius:999px;padding:0 7px}
+main{padding:20px 24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+h1{margin:0;font:700 26px 'Barlow Condensed','Barlow',sans-serif}.sub{color:#5d5d60;margin:2px 0 0}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.btn{all:unset;cursor:pointer;padding:8px 14px;border-radius:6px;border:1px solid #d4d4d7;background:#fff;font-weight:500}.btn:hover{border-color:#597ea3}.btn.p{background:#1d2d3d;color:#fff;border-color:#1d2d3d}.btn.p:hover{background:#2c455d}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{all:unset;cursor:pointer;padding:5px 11px;border-radius:999px;border:1px solid #d4d4d7;background:#fff;font-size:13px}.chip.on{background:#d6ebff;border-color:#749dc4}
+.card{background:#fff;border:1px solid #e7e7ea;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.who{display:flex;gap:10px;align-items:center}.av{width:36px;height:36px;border-radius:50%;background:#d4d9e2;display:grid;place-items:center;font-weight:700;color:#2c455d;flex:none}.who b{display:block}.who span{color:#7a7a7d;font-size:12px}
+.acts{display:flex;gap:14px;color:#5d5d60;font-size:13px}.acts button{all:unset;cursor:pointer}.acts button:hover{color:#1d2d3d}.acts button.on{color:#416180;font-weight:600}
+.pill{display:inline-flex;gap:5px;align-items:center;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #d4d4d7;white-space:nowrap}.ok{color:#2f6b3d;border-color:#9fd6a8}.warn{color:#7a5a12;border-color:#e9cf8f}.info{color:#2c455d;border-color:#94bce3}.bad{color:#8a2a24;border-color:#f2b8b5}.live{color:#fff;background:#b3261e;border-color:#b3261e}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.ph{aspect-ratio:4/3;border-radius:8px;background:repeating-linear-gradient(135deg,#ece8df 0 10px,#e4dfd4 10px 20px);display:grid;place-items:center;color:#7a7a7d;font-size:12px}
+.price{font:700 20px 'Barlow Condensed','Barlow',sans-serif}
+aside.side{border-left:1px solid #e7e7ea;padding:20px 18px;display:flex;flex-direction:column;gap:14px;background:#fbf9f4}aside h3{margin:0;font:600 14px 'Barlow',sans-serif}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #eee}
+.drawer{position:fixed;inset:0 0 0 auto;width:min(460px,100%);background:#fff;border-left:1px solid #d4d4d7;transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column;z-index:5;box-shadow:-12px 0 32px rgba(0,0,0,.08)}.drawer.open{transform:none}
+.drawer .h{padding:16px 20px;border-bottom:1px solid #e7e7ea;display:flex;justify-content:space-between;gap:10px}.drawer .h b{font-size:18px}.drawer .b{padding:16px 20px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px}.drawer .f{padding:14px 20px;border-top:1px solid #e7e7ea;display:flex;gap:8px;flex-wrap:wrap}
+.note{font-size:12px;color:#5d5d60;background:#f4f1ea;border-radius:6px;padding:8px 10px}
+textarea,input[type=text],input[type=number]{font:inherit;border:1px solid #d4d4d7;border-radius:6px;padding:9px 10px;width:100%;background:#fff}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#090a0e;color:#fff;padding:10px 16px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none}.toast.on{opacity:1}
+@media(max-width:1100px){.app{grid-template-columns:200px minmax(0,1fr)}aside.side{display:none}}@media(max-width:700px){.app{grid-template-columns:1fr}.rail{flex-direction:row;overflow-x:auto}.rail img{display:none}}
+</style></head><body>
+<div class="app"><nav class="rail" id="rail"></nav><main id="main"></main><aside class="side" id="side"></aside></div>
+<div class="drawer" id="dr"><div class="h"><b id="dt"></b><button class="btn" onclick="cl()">Close</button></div><div class="b" id="db"></div><div class="f" id="df"></div></div><div class="toast" id="toast"></div>
+<script src="community.js"></script></body></html>

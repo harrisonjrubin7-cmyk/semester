@@ -1,0 +1,39 @@
+<!-- @dsCard group="Master catalog" viewport="1440x900" name="New screens from workflow gaps" subtitle="84 screens that workflow steps needed and the catalog lacked — each rendered in the product shell with its control chain" -->
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../components/bundle.js"></script><title>Semester — New screens</title>
+<style>html,body,#root{height:100%}body{margin:0;overflow:hidden}a{color:var(--blue-700,#416180)}a:hover{color:#1d2d3d}.shell{display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr);height:100%}.main{display:flex;flex-direction:column;min-width:0;height:100%}.scroll{flex:1;overflow:auto}.page{max-width:1180px;margin:0 auto;padding:24px var(--page-pad) 64px;display:grid;gap:22px}.ph{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--border-subtle)}.ph h1{margin:4px 0 0}.kicker{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}.lead{color:var(--text-secondary);margin:6px 0 0}.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:28px}@media(max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}.stack{display:grid;gap:12px;align-content:start;min-width:0}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.muted{color:var(--text-secondary);font-size:13px}.chip{display:inline-flex;align-items:center;border:1px solid;border-radius:3px;padding:2px 7px;font-size:12px}.frame{border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base);overflow:hidden}.framebar{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;background:var(--surface-sunken,#efebe3);font-size:13px;flex-wrap:wrap;border-bottom:1px solid var(--border-subtle)}.framebody{padding:16px}.framefoot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border-subtle);flex-wrap:wrap}.framefoot .muted{flex:1;min-width:200px}.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.chain{list-style:none;margin:0;padding:0;display:grid}.chain li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;font-size:12.5px;padding:4px 0;border-bottom:1px solid var(--border-subtle)}.chain li b{font-weight:500}.chain li span{color:var(--text-secondary)}</style></head>
+<body><div id="root"></div>
+<script>window.NO_RUNNER_MOUNT = true;</script>
+<script src="../master-catalog/catalog-data.js"></script>
+<script src="../workflow-runner/runner-data.js"></script>
+<script src="../workflow-runner/os-map-data.js"></script>
+<script type="text/babel" src="../workflow-runner/Runner.jsx"></script>
+<script type="text/babel">
+const N = window.SemesterDesignSystem_e9f3ba; const C = window.CATALOG; const R = window.RUNNER;
+const ADDED = C.addedScreens || [];
+const ICON = { B: 'today', C: 'courses', D: 'people', E: 'registrar', G: 'campus', H: 'classmates', I: 'family', K: 'university', L: 'connect', N: 'data' };
+function App() {
+  const ids = ADDED.map((a, i) => String(i));
+  const [cur, setCur] = React.useState(() => { const h = (location.hash || '').slice(1); return ids.includes(h) ? h : (localStorage.getItem('sem-gapscreens') || '0'); });
+  const [done, setDone] = React.useState({});
+  React.useEffect(() => { localStorage.setItem('sem-gapscreens', cur); history.replaceState(null, '', '#' + cur); const m = document.querySelector('.scroll'); if (m) m.scrollTop = 0; }, [cur]);
+  const a = ADDED[+cur] || ADDED[0];
+  const flow = window.RUNNER_FLOWS.find((f) => f.key === a.flow);
+  const step = flow.steps[a.step];
+  const groups = [...new Set(ADDED.map((x) => x.group))].map((g) => ({ label: g, items: ADDED.map((x, i) => [x, i]).filter(([x]) => x.group === g).map(([x, i]) => ({ id: String(i), label: x.name, icon: ICON[g[0]] || 'apps' })) }));
+  const Stage = window.RunnerStage;
+  const open = () => { try { const s = JSON.parse(localStorage.getItem('sem-runner-v1') || '{}'); localStorage.setItem('sem-runner-v1', JSON.stringify({ ...s, view: 'run', fk: flow.key, si: step.i })); } catch (e) {} window.open('../workflow-runner/index.html', '_blank'); };
+  return <div className="shell"><N.SideRail current={cur} onNavigate={setCur} groups={groups} foot={<span style={{ fontSize: 12, color: 'var(--chrome-text-secondary)' }}>{ADDED.length} new screens · sample data</span>} />
+    <div className="main"><N.SystemContextBar location={a.group.split(' · ')[1] + ' · ' + a.name} term="Fall 2026 · Week 7" sync="synced" />
+      <div className="scroll"><div className="page" data-screen-label={a.name}>
+        <div className="ph"><div><div className="kicker">{a.group} · {flow.name} · step {step.i + 1}</div><h1>{a.name}</h1><p className="lead">{step.actor}{step.to ? ' → ' + step.to : ''} · {step.system}</p></div><div className="row"><N.Button size="sm" variant="ghost" onClick={() => setCur(String(Math.max(0, +cur - 1)))}>← Previous</N.Button><N.Button size="sm" variant="ghost" onClick={() => setCur(String(Math.min(ADDED.length - 1, +cur + 1)))}>Next →</N.Button><N.Button size="sm" onClick={open}>Open in runner ↗</N.Button></div></div>
+        <div className="cols"><section className="stack"><Stage flow={flow} step={step} done={!!done[cur]} onDone={() => setDone((d) => ({ ...d, [cur]: true }))} /></section>
+          <aside className="stack"><N.SectionLabel>Control chain</N.SectionLabel><ol className="chain">{window.runnerChain(flow, step).map(([k, v]) => <li key={k}><span>✓</span><div><b>{k}</b><br /><span>{v}</span></div></li>)}</ol></aside></div>
+      </div></div></div></div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

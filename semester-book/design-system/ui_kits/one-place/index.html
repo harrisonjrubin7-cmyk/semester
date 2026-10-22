@@ -1,0 +1,33 @@
+<!-- @dsCard group="Master control" viewport="1440x900" name="One place: never leave Semester" subtitle="Every job a student, staff member, institution or the company does, mapped to the Semester module that does it — and what must stay external, embedded" -->
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../components/bundle.js"></script><title>Semester — One place</title>
+<style>html,body,#root{height:100%}body{margin:0;overflow:hidden}a{color:var(--blue-700,#416180)}a:hover{color:#1d2d3d}.shell{display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr);height:100%}.main{display:flex;flex-direction:column;min-width:0;height:100%}.scroll{flex:1;overflow:auto}.page{max-width:1280px;margin:0 auto;padding:24px var(--page-pad) 64px;display:grid;gap:20px}.kicker{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}h1{margin:4px 0 0}.lead{color:var(--text-secondary);max-width:70ch;margin:6px 0 0;line-height:1.55}.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.list{display:grid}.it{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.5fr) 130px;gap:14px;padding:12px 4px;border-bottom:1px solid var(--border-subtle);align-items:baseline}.it.h{font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border-strong)}.muted{color:var(--text-secondary);font-size:13px}.chip{display:inline-flex;border:1px solid currentColor;border-radius:3px;padding:1px 7px;font-size:12px}.s-designed{color:var(--blue-700,#416180)}.s-build{color:var(--text-secondary);border-style:dashed}.s-embed{color:#7a5b1e}@media(max-width:860px){.it{grid-template-columns:minmax(0,1fr)}.it.h{display:none}}</style></head>
+<body><div id="root"></div>
+<script src="one-place-data.js"></script>
+<script type="text/babel">
+const N = window.SemesterDesignSystem_e9f3ba; const D = window.ONEPLACE;
+const LBL = { designed: 'In Semester · designed', build: 'In Semester · to build', embed: 'Embedded external' };
+function App() {
+  const [aud, setAud] = React.useState(() => localStorage.getItem('sem-oneplace-aud') || 'All');
+  const [st, setSt] = React.useState('all');
+  React.useEffect(() => localStorage.setItem('sem-oneplace-aud', aud), [aud]);
+  const rows = D.rows.filter((r) => (aud === 'All' || r[0] === aud) && (st === 'all' || r[4] === st));
+  const cnt = (s) => D.rows.filter((r) => (aud === 'All' || r[0] === aud) && r[4] === s).length;
+  const icons = { All: 'apps', Student: 'today', 'Faculty & staff': 'courses', Institution: 'university', 'Company (Semester)': 'brief' };
+  return <div className="shell"><N.SideRail current={aud} onNavigate={setAud} groups={[{ label: 'One place', items: ['All', ...D.audiences].map((a) => ({ id: a, label: a, icon: icons[a], count: a === 'All' ? D.rows.length : D.rows.filter((r) => r[0] === a).length })) }]} />
+    <div className="main"><N.SystemContextBar location={'One place · ' + aud} term="Every job, inside Semester" sync="device-only" />
+      <div className="scroll"><div className="page">
+        <div><div className="kicker">Product principle</div><h1>Nobody has to leave Semester</h1><p className="lead">Every job a student, staff member, institution or the Semester team does has a home inside Semester. Where law, a licence or the institution’s own choice keeps a system external (bank, payment processor, identity provider, system of record), Semester embeds it and runs the workflow around it, so the user never switches apps.</p></div>
+        <div className="tiles"><N.MetricTile label="Jobs mapped" value={String(cnt('designed') + cnt('build') + cnt('embed'))} /><N.MetricTile label="In Semester · designed" value={String(cnt('designed'))} /><N.MetricTile label="In Semester · to build" value={String(cnt('build'))} /><N.MetricTile label="Embedded external" value={String(cnt('embed'))} delta="Regulated or institution-owned" /></div>
+        <div className="row"><N.Segmented label="Show" value={st} onChange={setSt} options={[{ value: 'all', label: 'All' }, { value: 'designed', label: 'Designed' }, { value: 'build', label: 'To build' }, { value: 'embed', label: 'Embedded' }]} /></div>
+        <div className="list" role="table" aria-label="Jobs"><div className="it h" role="row"><span>Job</span><span>Replaces</span><span>In Semester</span><span>Status</span></div>
+          {rows.map((r, i) => <div className="it" role="row" key={i}><span><b style={{ fontWeight: 500 }}>{r[1]}</b>{aud === 'All' && <><br /><span className="muted">{r[0]}</span></>}</span><span className="muted">{r[2]}</span><span>{r[5] ? <a href={r[5]} target="_blank" rel="noreferrer">{r[3]}</a> : r[3]}</span><span><span className={'chip s-' + r[4]}>{LBL[r[4]]}</span></span></div>)}</div>
+        <N.Notice head="Embedded external">{D.why.embed}</N.Notice>
+      </div></div></div></div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>

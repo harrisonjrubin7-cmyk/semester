@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Internal plan deck" description="Semester internal plan — six pilot blockers, 90-day roadmap, risks, hiring triggers" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;background:#040507}</style></helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+<section data-label="Title" data-screen-label="01" style="background:#090a0e;color:#eceef2;padding:140px;display:flex;flex-direction:column;justify-content:center;font-family:var(--font-body)"><div style="font-family:var(--font-display);font-size:100px;line-height:1.05">Before real student records arrive.</div><div style="font-size:34px;color:rgba(236,238,242,.64);margin-top:32px">Internal plan · solo founder · LLC · paid pilot</div></section>
+<section data-label="Blockers" data-screen-label="02" style="background:#f4f1ea;color:#1b1a17;padding:120px 140px;font-family:var(--font-body)"><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Six launch blockers</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px;font-size:34px;line-height:1.35"><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">Cyber insurance</div><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">E&amp;O insurance</div><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">DPA / FERPA mapping</div><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">HECVAT Full</div><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">SAML SSO</div><div style="border:2px solid rgba(122,83,16,.5);padding:28px;border-radius:6px">VPAT / ACR</div></div></section>
+<section data-label="90 days" data-screen-label="03" style="background:#f4f1ea;color:#1b1a17;padding:120px 140px;font-family:var(--font-body)"><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">90-day roadmap</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-top:48px;font-size:28px;line-height:1.5"><div><b style="font-family:var(--font-heading);font-size:38px">Days 1–30</b><br>Insurance · EIN, bank, books · DPA mapping · subprocessors · data map · AI-boundary test</div><div><b style="font-family:var(--font-heading);font-size:38px">Days 31–60</b><br>HECVAT Full · SAML SSO · VPAT · IR tabletop · restore test · counsel review</div><div><b style="font-family:var(--font-heading);font-size:38px">Days 61–90</b><br>Mutual action plan · baseline · onboarding · weekly KPIs · results deck</div></div></section>
+<section data-label="Risks + hiring" data-screen-label="04" style="background:#090a0e;color:#eceef2;padding:120px 140px;font-family:var(--font-body)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;font-size:30px;line-height:1.55"><div><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,238,242,.64);margin-bottom:24px">Top risks</div>Launch without insurance<br>HECVAT stalls review<br>No decision date → drift<br>Solo-founder capacity</div><div><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,238,242,.64);margin-bottom:24px">Hire / contract</div>Now: counsel, broker, accountant<br>After launch: support contractor<br>After 2nd customer: first engineer</div></div></section>
+</x-import>
+</x-dc>
+</body>
+</html>

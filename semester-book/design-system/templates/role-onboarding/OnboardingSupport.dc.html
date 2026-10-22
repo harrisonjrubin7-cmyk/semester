@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--action-primary,#416180)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Support · Sign in" style="min-height:100vh;background:#090a0e;color:#d9dde4;display:grid;place-items:center;padding:30px;font-family:var(--font-body)">
+<div style="width:100%;max-width:420px;display:grid;gap:24px;justify-items:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 26 }}" metal="{{ true }}" hint-size="180px,32px"></x-import>
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9aa1ad">Semester support · Vanderbilt tenant</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:32px;letter-spacing:-.015em;margin:0;color:#f2f3f5;text-wrap:pretty">Everything you need to help users, in one place.</h1>
+<p style="margin:0;color:#9aa1ad;line-height:1.55">Support queue for the Vanderbilt pilot.</p>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="university" block="{{ true }}" loading="{{ signing }}" onClick="{{ signIn }}" hint-size="100%,44px">Sign in with Semester staff ID</x-import>
+<div style="font-size:13px;color:#9aa1ad">Support staff cannot see student records without a logged access request.</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Support · Support queue" style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="queue" groups="{{ rail }}" foot="Alex Moreno · Semester support" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="Support queue" term="Fall 2026 · Week 7" sync="{{ sync }}" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Support queue</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Hi Alex</h1>
+<p style="color:var(--text-secondary);margin:6px 0 0">{{ headSub }}</p>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Open tickets" columns="{{ cols }}" rows="{{ rows }}" hint-size="100%,200px"></x-import>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;display:grid;gap:14px;background:var(--surface-panel)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Finish setting up</div>
+<div style="font-size:13px;color:var(--text-secondary)">{{ doneCount }} of 3 done</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StepStatus" steps="{{ setupSteps }}" hint-size="100%,110px"></x-import>
+<sc-if value="{{ at0 }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<div style="font-size:14px;line-height:1.5">Tickets from Vanderbilt users route to you.</div>
+<sc-if value="{{ importing }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Loading tickets" done="{{ prog }}" total="{{ total }}" note="{{ progNote }}" hint-size="100%,90px"></x-import>
+</sc-if>
+<sc-if value="{{ canImport }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="support" onClick="{{ doImport }}" hint-size="200px,44px">Join queue</x-import>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ at1 }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:6px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<div style="font-size:14px;line-height:1.5">How you see a user’s data when helping them.</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="opt" label="Ask the user each time" about="They approve a 30-minute view." checked="{{ optA }}" onChange="{{ setA }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="opt" label="Metadata only" about="You see sync status, never content." checked="{{ optB }}" onChange="{{ setB }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ next }}" hint-size="120px,44px">Save</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ at2 }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ fields }}" hint-size="100%,90px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ next }}" hint-size="160px,44px">Confirm</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:14px;line-height:1.5;border-top:1px solid var(--border-subtle);padding-top:14px">Setup finished. Every record view you request is logged and shown to the user.</div>
+</sc-if>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" icon="back" onClick="{{ restart }}" hint-size="140px,44px">Start over</x-import>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { signed: false, signing: false, phase: 0, prog: 0, importing: false, opt: 'a' };
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { (this.timers = this.timers || []).push(setTimeout(fn, ms)); }
+  signIn = () => { this.setState({ signing: true }); this.later(() => this.setState({ signed: true, signing: false }), 1200); };
+  doImport = () => { const n = 2; this.setState({ importing: true, prog: 0 }); for (let i = 1; i <= n; i++) this.later(() => this.setState({ prog: i }), i * 700); this.later(() => this.setState({ phase: 1, importing: false }), n * 700 + 400); };
+  renderVals() {
+    const { signed, signing, phase, prog, importing, opt } = this.state;
+    const s = (i) => (phase > i ? 'done' : phase === i ? 'working' : 'waiting');
+    const on = phase >= 1;
+    return {
+      signedOut: !signed, signedIn: signed, signing, signIn: this.signIn,
+      rail: [{"items":[{"id":"queue","label":"Queue","icon":"support"},{"id":"status","label":"Status page","icon":"announce"}]},{"label":"Work","items":[{"id":"articles","label":"Help articles","icon":"help"},{"id":"access","label":"Access requests","icon":"privacy"}]},{"label":"You","items":[{"id":"settings","label":"Settings","icon":"settings"}]}],
+      sync: importing ? 'syncing' : 'synced',
+      headSub: on ? "11 open tickets · median first reply 42 min · 0 breaching." : "Join the Vanderbilt queue to start taking tickets.",
+      cols: [{"key":"t","label":"Ticket"},{"key":"w","label":"From"},{"key":"s","label":"Age"}],
+      rows: on ? [{"t":"Brightspace not syncing","w":"Student","s":"18 min"},{"t":"Can’t see TA section","w":"TA","s":"1 h"},{"t":"Guardian ID check failed","w":"Guardian","s":"3 h"}] : [{"t":"—","w":"Join a queue first","s":"—"}],
+      setupSteps: [{ label: "Join the Vanderbilt queue", state: s(0) }, { label: "Choose your record access", state: s(1) }, { label: "Confirm reply standards", state: s(2) }],
+      doneCount: Math.min(phase, 3), at0: phase === 0, at1: phase === 1, at2: phase === 2, allDone: phase >= 3,
+      importing, canImport: !importing, doImport: this.doImport, prog, total: 2,
+      progNote: prog >= 2 ? 'Done · ' + "Open · waiting on you" : 'Step ' + (prog + 1) + ' of 2 · ' + "Open · waiting on you",
+      optA: opt === 'a', optB: opt === 'b', setA: () => this.setState({ opt: 'a' }), setB: () => this.setState({ opt: 'b' }),
+      fields: [{"field":"First reply","value":"Within 1 working day"},{"field":"Escalate to","value":"Engineering on-call"},{"field":"Tone","value":"Plain status sentence"}],
+      next: () => this.setState((x) => ({ phase: x.phase + 1 })),
+      restart: () => { (this.timers || []).forEach(clearTimeout); this.setState({ signed: false, signing: false, phase: 0, prog: 0, importing: false }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

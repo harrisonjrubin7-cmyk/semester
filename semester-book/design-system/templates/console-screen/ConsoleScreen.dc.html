@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Institution console screen" description="Semester enterprise control plane: environment bar, Ink rail, page head, data table and decision trail" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;height:100%}</style></helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="integrations" groups="{{ railGroups }}" foot="Institution Console" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<div style="display:flex;align-items:center;gap:20px;padding:8px 30px;background:var(--ink-panel);color:rgba(236,238,242,.64);font-size:11px;border-bottom:1px solid rgba(236,238,242,.1)"><span>Environment <b style="color:#eceef2;font-weight:500">◆ Production</b></span><span>Scope <b style="color:#eceef2;font-weight:500">nfu-prod</b></span><span>Operator <b style="color:#eceef2;font-weight:500">k.osei@northfield.edu</b></span><span>MFA <b style="color:#eceef2;font-weight:500">Fresh — verified 4 min ago</b></span><span style="margin-left:auto">Session expires 12:40</span></div>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:24px 30px 64px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:18px;border-bottom:1px solid var(--border-subtle);margin-bottom:22px">
+<div><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Integrations</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Connected systems</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="plus" hint-size="150px,44px">Add integration</x-import>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:28px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Integrations" columns="{{ columns }}" rows="{{ rows }}" hint-size="100%,220px"></x-import>
+<aside style="display:grid;gap:12px;align-content:start"><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Implementation</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DecisionTrail" items="{{ trail }}" hint-size="100%,220px"></x-import></aside>
+</div>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      railGroups: [
+        { items: [{ id: 'overview', label: 'Overview', icon: 'data' }, { id: 'approvals', label: 'Approvals', icon: 'yes', count: 3 }] },
+        { label: 'Configure', items: [{ id: 'roles', label: 'Roles & permissions', icon: 'people' }, { id: 'integrations', label: 'Integrations', icon: 'connect' }, { id: 'flags', label: 'Feature flags', icon: 'settings' }] },
+        { label: 'Govern', items: [{ id: 'audit', label: 'Audit log', icon: 'proof' }, { id: 'evidence', label: 'Compliance evidence', icon: 'sources' }] },
+      ],
+      columns: [{ key: 'name', label: 'System' }, { key: 'kind', label: 'Data' }, { key: 'state', label: 'State' }, { key: 'n', label: 'Records', numeric: true }],
+      rows: [
+        { name: 'Banner SIS', kind: 'Student records', state: '✓ Synced', n: '41,208' },
+        { name: 'Canvas LMS', kind: 'Courses & grades', state: '↻ Syncing', n: '9,114' },
+        { name: 'StarRez', kind: 'Housing', state: '! Sync trouble', n: '2,032' },
+      ],
+      trail: [
+        { title: 'Tenant configured', when: 'Jun 2' },
+        { title: 'SIS + LMS connected', when: 'Jul 18' },
+        { title: 'Campus-wide rollout', when: 'In progress · 78%', state: 'current' },
+        { title: 'Steady-state review', when: 'Dec 1', state: 'waiting' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

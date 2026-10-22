@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--action-primary,#416180)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Onboarding B · Sign in" style="min-height:100vh;background:#090a0e;color:#d9dde4;display:grid;place-items:center;padding:30px;font-family:var(--font-body)">
+<div style="width:100%;max-width:420px;display:grid;gap:24px;justify-items:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 26 }}" metal="{{ true }}" hint-size="180px,32px"></x-import>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:32px;letter-spacing:-.015em;margin:0;color:#f2f3f5;text-wrap:pretty">Everything you need for education.</h1>
+<p style="margin:0;color:#9aa1ad;line-height:1.55">Vanderbilt University · Fall 2026. Sign in once; your courses and schedule are waiting.</p>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="university" block="{{ true }}" loading="{{ signing }}" onClick="{{ signIn }}" hint-size="100%,44px">Sign in with Vanderbilt</x-import>
+<div style="font-size:13px;color:#9aa1ad">Your password goes to Vanderbilt, never to Semester.</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Onboarding B · Today" style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="today" groups="{{ rail }}" foot="Vanderbilt University" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="Today" term="Fall 2026 · Week 7" sync="{{ sync }}" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Today</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Good morning, Maya</h1>
+<p style="color:var(--text-secondary);margin:6px 0 0">{{ headSub }}</p>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Today’s schedule</div>
+<sc-for list="{{ items }}" as="it" hint-placeholder-count="2">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ObjectCard" kind="{{ it.kind }}" title="{{ it.title }}" provenance="{{ it.prov }}" metadata="{{ it.meta }}" primary="{{ it.primary }}" hint-size="100%,150px"></x-import>
+</sc-for>
+<sc-if value="{{ notConnected }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.EmptyState" title="No assignments yet" body="Connect Brightspace and what is due this week appears here, labelled with its course." hint-size="100%,140px"></x-import>
+</sc-if>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;display:grid;gap:14px;background:var(--surface-panel)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Finish setting up</div>
+<div style="font-size:13px;color:var(--text-secondary)">{{ doneCount }} of 3 done</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StepStatus" steps="{{ setupSteps }}" hint-size="100%,110px"></x-import>
+<sc-if value="{{ atConnect }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<div style="font-size:14px;line-height:1.5">Brightspace has your assignments for 4 courses. Semester reads them; it never submits or changes anything there.</div>
+<sc-if value="{{ importing }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Importing from Brightspace" done="{{ prog }}" total="{{ 4 }}" note="{{ progNote }}" hint-size="100%,90px"></x-import>
+</sc-if>
+<sc-if value="{{ canConnect }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="connect" onClick="{{ connect }}" hint-size="200px,44px">Connect Brightspace</x-import>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ atPrivacy }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:6px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="vis" label="Only me" about="Classmates can’t find you in Semester." checked="{{ visMe }}" onChange="{{ setVisMe }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="vis" label="Classmates in my courses" about="They see your name and pronouns only." checked="{{ visCourse }}" onChange="{{ setVisCourse }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ savePrivacy }}" hint-size="120px,44px">Save</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ atAi }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Switch" label="Let Ask Semester use your course data" checked="{{ ai }}" onChange="{{ setAi }}" hint-size="100%,32px"></x-import>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.5">Vanderbilt allows assignments and due dates. Grades and records stay off for AI.</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ saveAi }}" hint-size="120px,44px">Done</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:14px;line-height:1.5;border-top:1px solid var(--border-subtle);padding-top:14px">Setup finished. Change any of this in You · Settings.</div>
+</sc-if>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" icon="back" onClick="{{ restart }}" hint-size="140px,44px">Start over</x-import>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { signed: false, signing: false, phase: 0, prog: 0, importing: false, vis: 'me', ai: true };
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { (this.timers = this.timers || []).push(setTimeout(fn, ms)); }
+  signIn = () => { this.setState({ signing: true }); this.later(() => this.setState({ signed: true, signing: false }), 1200); };
+  connect = () => { this.setState({ importing: true, prog: 0 }); [1, 2, 3, 4].forEach((n) => this.later(() => this.setState({ prog: n }), n * 600)); this.later(() => this.setState({ phase: 1, importing: false }), 2900); };
+  renderVals() {
+    const { signed, signing, phase, prog, importing, vis, ai } = this.state;
+    const s = (i) => (phase > i ? 'done' : phase === i ? 'working' : 'waiting');
+    const connected = phase >= 1;
+    const cls = { kind: 'Class', title: 'ECON 1010 · 13:10 · Calhoun 109', prov: { origin: 'official', by: 'Vanderbilt registrar' }, meta: 'Today · 50 min', primary: { label: 'Get directions' } };
+    const items = connected ? [
+      { kind: 'Assignment', title: 'Lab report 3: Enzyme kinetics', prov: { origin: 'connected', by: 'Brightspace · BIO 2100', age: 'Just now' }, meta: 'Due Thu 9 Oct · 23:59 · 12% of your grade', primary: { label: 'Plan time for it' } },
+      cls,
+      { kind: 'Announcement', title: 'Problem set 5 posted', prov: { origin: 'connected', by: 'Brightspace · ECON 1010', age: '2 h ago' }, meta: 'Due Fri 10 Oct · 17:00', primary: { label: 'Open' } },
+    ] : [cls];
+    const courses = ['BIO 2100', 'ECON 1010', 'ENGL 1100', 'MATH 1300'];
+    return {
+      signedOut: !signed, signedIn: signed, signing, signIn: this.signIn,
+      rail: [{ items: [{ id: 'today', label: 'Today', icon: 'today' }, { id: 'ask', label: 'Ask Semester', icon: 'ask' }] }, { label: 'Learn', items: [{ id: 'courses', label: 'Courses', icon: 'courses' }, { id: 'grades', label: 'Grades', icon: 'proof' }] }, { label: 'Plan', items: [{ id: 'cal', label: 'Calendar', icon: 'calendar' }, { id: 'reg', label: 'Registration', icon: 'registrar' }] }, { label: 'You', items: [{ id: 'settings', label: 'Settings', icon: 'settings' }] }],
+      sync: importing ? 'syncing' : 'synced',
+      headSub: connected ? 'One class today and one thing to begin. Each item says where it came from.' : 'Your schedule came in with your Vanderbilt sign-in. Connect Brightspace to see what is due.',
+      items, notConnected: !connected,
+      setupSteps: [{ label: 'Connect Brightspace', state: s(0) }, { label: 'Choose who can see you', state: s(1) }, { label: 'Decide on Ask Semester', state: s(2) }],
+      doneCount: Math.min(phase, 3),
+      atConnect: phase === 0, atPrivacy: phase === 1, atAi: phase === 2, allDone: phase >= 3,
+      importing, canConnect: !importing, connect: this.connect, prog,
+      progNote: prog >= 4 ? '4 courses · 23 assignments' : 'Course ' + Math.min(prog + 1, 4) + ' of 4 · ' + courses[Math.min(prog, 3)],
+      visMe: vis === 'me', visCourse: vis === 'course', setVisMe: () => this.setState({ vis: 'me' }), setVisCourse: () => this.setState({ vis: 'course' }),
+      savePrivacy: () => this.setState({ phase: 2 }), ai, setAi: (v) => this.setState({ ai: v }), saveAi: () => this.setState({ phase: 3 }),
+      restart: () => { (this.timers || []).forEach(clearTimeout); this.setState({ signed: false, signing: false, phase: 0, prog: 0, importing: false }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

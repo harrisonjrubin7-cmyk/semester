@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Institution buyer deck" description="Semester pilot overview for university leaders — scope, what stays official, student data, review status, success plan" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;background:#040507}</style></helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+<section data-label="Title" data-screen-label="01" style="background:#090a0e;color:#eceef2;padding:140px;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--font-body)"><div style="font-family:var(--font-heading);font-weight:600;letter-spacing:.22em;font-size:30px;color:#d4d9e2">SEMESTER</div><div><div style="font-family:var(--font-display);font-size:100px;line-height:1.05">Beside your systems, not instead of them.</div><div style="font-size:34px;color:rgba(236,238,242,.64);margin-top:32px">Pilot overview · scope, status, what stays official</div></div><div style="font-size:24px;color:rgba(236,238,242,.42)">In a bounded pilot</div></section>
+<section data-label="Scope" data-screen-label="02" style="background:#f4f1ea;color:#1b1a17;padding:120px 140px;font-family:var(--font-body)"><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Pilot scope</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:56px;font-size:32px;line-height:1.5;margin-top:48px"><div><b>In scope</b><ul style="margin:12px 0 0;padding-left:32px"><li>Today, deadlines, holds, degree progress</li><li>SAML / Shibboleth sign-in</li><li>Student-controlled sharing</li></ul></div><div><b>Stays official</b><ul style="margin:12px 0 0;padding-left:32px"><li>Your SIS, LMS and registrar records</li><li>Grades, transcripts, billing</li><li>Decisions by your offices</li></ul></div></div></section>
+<section data-label="Student data" data-screen-label="03" style="background:#f4f1ea;color:#1b1a17;padding:120px 140px;font-family:var(--font-body)"><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Student data</div><div style="font-family:var(--font-heading);font-weight:600;font-size:72px;margin:24px 0 48px">Governed by your DPA and FERPA addendum.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;font-size:28px;line-height:1.45"><div style="border-top:2px solid #1b1a17;padding-top:20px"><b>Hosting</b><br>Vercel + Supabase; subprocessors listed</div><div style="border-top:2px solid #1b1a17;padding-top:20px"><b>AI boundary</b><br>Student records never reach an AI provider</div><div style="border-top:2px solid #1b1a17;padding-top:20px"><b>Isolation</b><br>Row-level security per institution; audited access</div></div></section>
+<section data-label="Review status" data-screen-label="04" style="background:#f4f1ea;color:#1b1a17;padding:120px 140px;font-family:var(--font-body)"><div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Security · accessibility · insurance</div><div style="display:grid;grid-template-columns:1fr auto;gap:18px 40px;font-size:32px;margin-top:48px"><span>HECVAT Full</span><span>In preparation</span><span>SAML SSO</span><span>Building for launch</span><span>VPAT / ACR (WCAG 2.1 AA)</span><span>In preparation</span><span>Cyber + E&amp;O insurance</span><span>Binding before launch</span></div><div style="font-size:24px;color:rgba(27,26,23,.68);margin-top:40px">We state status, not certifications we don’t hold.</div></section>
+<section data-label="Next" data-screen-label="05" style="background:#090a0e;color:#eceef2;padding:120px 140px;font-family:var(--font-body);display:flex;flex-direction:column;justify-content:center"><div style="font-family:var(--font-display);font-size:96px;line-height:1.08">Next: set the pilot dates together.</div><div style="font-size:34px;color:rgba(236,238,242,.7);margin-top:32px">Mutual action plan · baseline metrics · weekly KPI review · renewal decision date</div></section>
+</x-import>
+</x-dc>
+</body>
+</html>

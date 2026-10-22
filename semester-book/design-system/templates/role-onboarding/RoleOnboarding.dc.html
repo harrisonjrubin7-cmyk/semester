@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Role onboarding" description="First-run onboarding for any of 13 roles — sign in, connect, privacy, AI choice, first home. Set the role prop." -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;height:100%}</style></helmet>
+<sc-if value="{{ isStudent }}" hint-placeholder-val="{{ true }}"><dc-import name="OnboardingStudent" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isApplicant }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingApplicant" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isGuardian }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingGuardian" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isAlumni }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingAlumni" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isFaculty }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingFaculty" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isTA }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingTA" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isAdvisor }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingAdvisor" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isRegistrar }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingRegistrar" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isFinance }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingFinance" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isStudentAffairs }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingStudentAffairs" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isITSecurity }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingITSecurity" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isSupport }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingSupport" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ isEmployer }}" hint-placeholder-val="{{ false }}"><dc-import name="OnboardingEmployer" hint-size="100%,100vh"></dc-import></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Student&quot;,&quot;Applicant&quot;,&quot;Guardian&quot;,&quot;Alumni&quot;,&quot;Faculty&quot;,&quot;TA&quot;,&quot;Advisor&quot;,&quot;Registrar&quot;,&quot;Finance&quot;,&quot;Student affairs&quot;,&quot;IT security&quot;,&quot;Support&quot;,&quot;Employer&quot;],&quot;default&quot;:&quot;Student&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const r = this.props.role ?? 'Student';
+    const k = ['Student', 'Applicant', 'Guardian', 'Alumni', 'Faculty', 'TA', 'Advisor', 'Registrar', 'Finance', 'Student affairs', 'IT security', 'Support', 'Employer'];
+    const out = {};
+    k.forEach((x) => { out['is' + x.replace(/ (\w)/g, (_, c) => c.toUpperCase()).replace('It security', 'ITSecurity').replace(/^It/, 'IT')] = r === x; });
+    out.isITSecurity = r === 'IT security';
+    out.isStudentAffairs = r === 'Student affairs';
+    return out;
+  }
+}
+</script>
+</body>
+</html>

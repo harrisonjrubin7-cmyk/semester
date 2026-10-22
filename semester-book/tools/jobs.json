@@ -1,0 +1,625 @@
+[
+{
+"id": "kit-architecture",
+"url": "http://127.0.0.1:8765/ui_kits/architecture/index.html",
+"title": "architecture",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-atlas",
+"url": "http://127.0.0.1:8765/ui_kits/atlas/index.html",
+"title": "atlas",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-business",
+"url": "http://127.0.0.1:8765/ui_kits/business/index.html",
+"title": "business",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kitdoc-business-Market-Research",
+"url": "http://127.0.0.1:8765/ui_kits/business/Market%20Research.html",
+"title": "Market Research",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-business-Operating-Manual",
+"url": "http://127.0.0.1:8765/ui_kits/business/Operating%20Manual.html",
+"title": "Operating Manual",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-business-Operating-Pack",
+"url": "http://127.0.0.1:8765/ui_kits/business/Operating%20Pack.html",
+"title": "Operating Pack",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-business-Pilot-Invitation-Email",
+"url": "http://127.0.0.1:8765/ui_kits/business/Pilot%20Invitation%20Email.html",
+"title": "Pilot Invitation Email",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-business-Pilot-One-Pager",
+"url": "http://127.0.0.1:8765/ui_kits/business/Pilot%20One-Pager.html",
+"title": "Pilot One-Pager",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-business-Vanderbilt-Campus-Map",
+"url": "http://127.0.0.1:8765/ui_kits/business/Vanderbilt%20Campus%20Map.html",
+"title": "Vanderbilt Campus Map",
+"group": "kitdoc:business",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kit-community",
+"url": "http://127.0.0.1:8765/ui_kits/community/index.html",
+"title": "community",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-company-site",
+"url": "http://127.0.0.1:8765/ui_kits/company-site/index.html",
+"title": "company-site",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-compliance",
+"url": "http://127.0.0.1:8765/ui_kits/compliance/index.html",
+"title": "compliance",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-console",
+"url": "http://127.0.0.1:8765/ui_kits/console/index.html",
+"title": "console",
+"group": "kit",
+"cap": 50,
+"depth": 2
+},
+{
+"id": "kit-demo-video",
+"url": "http://127.0.0.1:8765/ui_kits/demo-video/index.html",
+"title": "demo-video",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-every-screen",
+"url": "http://127.0.0.1:8765/ui_kits/every-screen/index.html",
+"title": "every-screen",
+"group": "kit",
+"cap": 40,
+"depth": 2
+},
+{
+"id": "kit-external",
+"url": "http://127.0.0.1:8765/ui_kits/external/index.html",
+"title": "external",
+"group": "kit",
+"cap": 50,
+"depth": 2
+},
+{
+"id": "kit-forms",
+"url": "http://127.0.0.1:8765/ui_kits/forms/index.html",
+"title": "forms",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-gap-screens",
+"url": "http://127.0.0.1:8765/ui_kits/gap-screens/index.html",
+"title": "gap-screens",
+"group": "kit",
+"cap": 40,
+"depth": 2
+},
+{
+"id": "kit-investor",
+"url": "http://127.0.0.1:8765/ui_kits/investor/index.html",
+"title": "investor",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-launch-kit",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/index.html",
+"title": "launch-kit",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kitdoc-launch-kit-Data-Hosting-Map",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Data%20Hosting%20Map.html",
+"title": "Data Hosting Map",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-launch-kit-Incident-Notice-Email",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Incident%20Notice%20Email.html",
+"title": "Incident Notice Email",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-launch-kit-Semester-Mark-3D",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Semester%20Mark%203D.html",
+"title": "Semester Mark 3D",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-launch-kit-Sponsor-Weekly-Update",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Sponsor%20Weekly%20Update.html",
+"title": "Sponsor Weekly Update",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-launch-kit-Staff-Training-Flier",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Staff%20Training%20Flier.html",
+"title": "Staff Training Flier",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kitdoc-launch-kit-Welcome-Email",
+"url": "http://127.0.0.1:8765/ui_kits/launch-kit/Welcome%20Email.html",
+"title": "Welcome Email",
+"group": "kitdoc:launch-kit",
+"mode": "single",
+"maxH": 30000,
+"w": 1200
+},
+{
+"id": "kit-master-catalog",
+"url": "http://127.0.0.1:8765/ui_kits/master-catalog/index.html",
+"title": "master-catalog",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-master-control",
+"url": "http://127.0.0.1:8765/ui_kits/master-control/index.html",
+"title": "master-control",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-mobile",
+"url": "http://127.0.0.1:8765/ui_kits/mobile/index.html",
+"title": "mobile",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-one-place",
+"url": "http://127.0.0.1:8765/ui_kits/one-place/index.html",
+"title": "one-place",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-ops",
+"url": "http://127.0.0.1:8765/ui_kits/ops/index.html",
+"title": "ops",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-platform-maturity",
+"url": "http://127.0.0.1:8765/ui_kits/platform-maturity/index.html",
+"title": "platform-maturity",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-role-lens",
+"url": "http://127.0.0.1:8765/ui_kits/role-lens/index.html",
+"title": "role-lens",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-role-pages",
+"url": "http://127.0.0.1:8765/ui_kits/role-pages/index.html",
+"title": "role-pages",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-staff",
+"url": "http://127.0.0.1:8765/ui_kits/staff/index.html",
+"title": "staff",
+"group": "kit",
+"cap": 60,
+"depth": 2
+},
+{
+"id": "kit-student",
+"url": "http://127.0.0.1:8765/ui_kits/student/index.html",
+"title": "student",
+"group": "kit",
+"cap": 120,
+"depth": 2
+},
+{
+"id": "kit-wireframes",
+"url": "http://127.0.0.1:8765/ui_kits/wireframes/index.html",
+"title": "wireframes",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-workflow-lab",
+"url": "http://127.0.0.1:8765/ui_kits/workflow-lab/index.html",
+"title": "workflow-lab",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "kit-workflow-runner",
+"url": "http://127.0.0.1:8765/ui_kits/workflow-runner/index.html",
+"title": "workflow-runner",
+"group": "kit",
+"cap": 45,
+"depth": 2
+},
+{
+"id": "tpl-CommandCenter",
+"url": "http://127.0.0.1:8765/templates/command-center/CommandCenter.dc.html",
+"title": "Command center screen",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-CompanyDeck",
+"url": "http://127.0.0.1:8765/templates/company-deck/CompanyDeck.dc.html",
+"title": "Company deck",
+"group": "deck",
+"mode": "slides",
+"count": 14,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "tpl-ConsoleScreen",
+"url": "http://127.0.0.1:8765/templates/console-screen/ConsoleScreen.dc.html",
+"title": "Institution console screen",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-DomainMap",
+"url": "http://127.0.0.1:8765/templates/domain-map/DomainMap.dc.html",
+"title": "Education OS domain map",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-FinishLine",
+"url": "http://127.0.0.1:8765/templates/finish-line/FinishLine.dc.html",
+"title": "Finish line",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-InstitutionDeck",
+"url": "http://127.0.0.1:8765/templates/institution-deck/InstitutionDeck.dc.html",
+"title": "Institution buyer deck",
+"group": "deck",
+"mode": "slides",
+"count": 5,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "tpl-InstitutionOs",
+"url": "http://127.0.0.1:8765/templates/institution-os/InstitutionOs.dc.html",
+"title": "Institution OS screen",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-InternalPlanDeck",
+"url": "http://127.0.0.1:8765/templates/internal-plan-deck/InternalPlanDeck.dc.html",
+"title": "Internal plan deck",
+"group": "deck",
+"mode": "slides",
+"count": 4,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "tpl-InvestorDeck",
+"url": "http://127.0.0.1:8765/templates/investor-deck/InvestorDeck.dc.html",
+"title": "Investor deck",
+"group": "deck",
+"mode": "slides",
+"count": 6,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "tpl-LaunchPoster",
+"url": "http://127.0.0.1:8765/templates/launch-poster/LaunchPoster.dc.html",
+"title": "Launch poster",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OperatingMap",
+"url": "http://127.0.0.1:8765/templates/operating-map/OperatingMap.dc.html",
+"title": "Master operating map",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OverviewDeck",
+"url": "http://127.0.0.1:8765/templates/overview-deck/OverviewDeck.dc.html",
+"title": "Product overview deck",
+"group": "deck",
+"mode": "slides",
+"count": 10,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "tpl-PilotResultsReport",
+"url": "http://127.0.0.1:8765/templates/pilot-results-report/PilotResultsReport.dc.html",
+"title": "Pilot results report",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-PlatformShell",
+"url": "http://127.0.0.1:8765/templates/platform-shell/PlatformShell.dc.html",
+"title": "Platform screen shell",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-PrivacyCenter",
+"url": "http://127.0.0.1:8765/templates/privacy-center/PrivacyCenter.dc.html",
+"title": "Privacy center",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-ProductTeaser",
+"url": "http://127.0.0.1:8765/templates/product-teaser/ProductTeaser.dc.html",
+"title": "Product teaser (30 s)",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-QuickStart",
+"url": "http://127.0.0.1:8765/templates/quick-start/QuickStart.dc.html",
+"title": "Student quick start",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-ResearchBrief",
+"url": "http://127.0.0.1:8765/templates/research-brief/ResearchBrief.dc.html",
+"title": "Research brief",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingAdvisor",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingAdvisor.dc.html",
+"title": "OnboardingAdvisor.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingAlumni",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingAlumni.dc.html",
+"title": "OnboardingAlumni.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingApplicant",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingApplicant.dc.html",
+"title": "OnboardingApplicant.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingEmployer",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingEmployer.dc.html",
+"title": "OnboardingEmployer.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingFaculty",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingFaculty.dc.html",
+"title": "OnboardingFaculty.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingFinance",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingFinance.dc.html",
+"title": "OnboardingFinance.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingGuardian",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingGuardian.dc.html",
+"title": "OnboardingGuardian.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingITSecurity",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingITSecurity.dc.html",
+"title": "OnboardingITSecurity.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingRegistrar",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingRegistrar.dc.html",
+"title": "OnboardingRegistrar.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingStudent",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingStudent.dc.html",
+"title": "OnboardingStudent.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingStudentAffairs",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingStudentAffairs.dc.html",
+"title": "OnboardingStudentAffairs.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingSupport",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingSupport.dc.html",
+"title": "OnboardingSupport.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-OnboardingTA",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/OnboardingTA.dc.html",
+"title": "OnboardingTA.dc.html",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-RoleOnboarding",
+"url": "http://127.0.0.1:8765/templates/role-onboarding/RoleOnboarding.dc.html",
+"title": "Role onboarding",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-StudentScreen",
+"url": "http://127.0.0.1:8765/templates/student-screen/StudentScreen.dc.html",
+"title": "Student screen",
+"group": "template",
+"cap": 20,
+"depth": 1
+},
+{
+"id": "tpl-VisionDeck",
+"url": "http://127.0.0.1:8765/templates/vision-deck/VisionDeck.dc.html",
+"title": "Vision deck",
+"group": "deck",
+"mode": "slides",
+"count": 12,
+"w": 1600,
+"h": 900,
+"scale": 1
+},
+{
+"id": "staffws",
+"url": "http://127.0.0.1:8765/Semester%20Staff%20Workspaces.html",
+"title": "Semester Staff Workspaces",
+"group": "kit",
+"cap": 60,
+"depth": 2,
+"settle": 4000
+}
+]

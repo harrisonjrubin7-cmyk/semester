@@ -1,0 +1,9 @@
+<!-- @dsCard group="AI" height=300 -->
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}</style></head><body><div id="root"></div>
+<script>
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo() {
+  return /* @__PURE__ */ React.createElement(N.AIResponse, { scope: ["BIO 210 materials", "Your calendar"], sources: [{ title: "BIO 210 Syllabus, \xA74 Lab reports", kind: "official" }, { title: "Your lab notes, Oct 1", kind: "personal" }], confidence: "Moderate", cost: "1 request \xB7 3 left today", policy: "Instructor allows AI for outlining only" }, /* @__PURE__ */ React.createElement("p", null, "Your lab report is due ", /* @__PURE__ */ React.createElement("b", null, "Thursday at 23:59"), /* @__PURE__ */ React.createElement("span", { className: "ai-cite" }, "1"), ". Based on your notes, the methods section is drafted; results and discussion remain", /* @__PURE__ */ React.createElement("span", { className: "ai-cite" }, "2"), "."));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(Demo, null));
+</script></body></html>

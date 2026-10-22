@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Platform screen shell" description="Student platform shell: rail, context bar, search, study cards, connections, marketplace — one DC with screen switching" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="{{ cur }}" onNavigate="{{ go }}" groups="{{ rail }}" foot="Vanderbilt University · Maya Lindqvist" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="{{ loc }}" term="Fall 2026 · Week 7" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+
+<sc-if value="{{ isSearch }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Search" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Search · only what you are allowed to see</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Search everything</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TextField" label="Search" value="{{ q }}" onChange="{{ setQ }}" placeholder="Try: drop deadline, kinetics, tutoring" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.AIResponse" scope="{{ ansScope }}" sources="{{ ansSources }}" confidence="High" hint-size="100%,180px">{{ answer }}</x-import>
+<div style="display:grid;gap:0">
+<sc-for list="{{ results }}" as="r" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-weight:600">{{ r.title }}</div><div style="font-size:14px;color:var(--text-secondary)">{{ r.where }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="{{ r.src }}" by="{{ r.by }}" hint-size="160px,24px"></x-import>
+</div>
+</sc-for>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.EmptyState" title="Nothing you can see matches" body="Try fewer words, or ask Support — a person will look for you." hint-size="100%,140px"></x-import>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStudy }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Study cards" style="display:grid;gap:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Learn · Study cards · BIO 2100</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Lecture 8 · Enzyme kinetics</h1><p style="color:var(--text-secondary);margin:6px 0 0">Built from Prof. Okafor’s slides · card {{ cardNum }} of {{ cardTotal }} · {{ knownCount }} marked known</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="official" by="Course-provided deck" hint-size="180px,24px"></x-import></div>
+<button type="button" onClick="{{ flip }}" aria-label="Flip card" style="min-height:300px;border:1px solid var(--border-default);border-radius:10px;background:var(--surface-base);display:grid;place-items:center;padding:40px;cursor:pointer;font:inherit;color:inherit;text-align:center">
+<div style="display:grid;gap:14px;max-width:56ch"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ sideLabel }}</div><div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.25">{{ cardText }}</div><div style="font-size:13px;color:var(--text-secondary)">Click to flip</div></div>
+</button>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" icon="back" onClick="{{ prev }}" hint-size="120px,44px">Previous</x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" onClick="{{ again }}" hint-size="140px,44px">Still learning</x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ known }}" hint-size="120px,44px">I know it</x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Course policy" hint-size="100%,56px">BIO 2100 allows AI to make practice cards from course material. Cards you write yourself are marked Yours.</x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSocial }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Connections" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Campus · Connections</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">People you share something with</h1><p style="color:var(--text-secondary);margin:6px 0 0">Only people who chose to be findable appear. Semester never shows your grades, schedule or location.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:0">
+<sc-for list="{{ people }}" as="p" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-subtle)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Avatar" name="{{ p.name }}" size="{{ 40 }}" hint-size="40px,40px"></x-import>
+<div><div style="font-weight:600">{{ p.name }}</div><div style="font-size:14px;color:var(--text-secondary)">{{ p.why }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" size="sm" variant="{{ p.variant }}" onClick="{{ p.toggle }}" hint-size="110px,36px">{{ p.label }}</x-import>
+</div>
+</sc-for>
+</div>
+<aside style="display:grid;gap:12px;align-content:start">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ObjectCard" kind="{{ g.kind }}" title="{{ g.title }}" provenance="{{ g.prov }}" metadata="{{ g.meta }}" primary="{{ g.primary }}" hint-size="100%,140px"></x-import>
+</sc-for>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMarket }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Marketplace" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Platform · Marketplace</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Apps and services for Vanderbilt</h1><p style="color:var(--text-secondary);margin:6px 0 0">Every app is certified by Semester and approved by Vanderbilt IT before anyone can add it.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+<sc-for list="{{ apps }}" as="a" hint-placeholder-count="6">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:10px;align-content:start">
+<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:18px">{{ a.name }}</div><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StatusChip" status="{{ a.status }}" label="{{ a.statusLabel }}" hint-size="120px,22px"></x-import></div>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.5">{{ a.desc }}</div>
+<div style="font-size:13px;color:var(--text-secondary)">Reads: {{ a.reads }}</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" size="sm" variant="{{ a.variant }}" onClick="{{ a.act }}" disabled="{{ a.disabled }}" hint-size="140px,36px">{{ a.cta }}</x-import>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDev }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Developers" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Platform · Developer portal · Genvia Bio</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Build on Semester</h1><p style="color:var(--text-secondary);margin:6px 0 0">Start in a sandbox tenant with sample data. Production access needs certification and an institution’s approval.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:16px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="API keys" columns="{{ keyCols }}" rows="{{ keyRows }}" hint-size="100%,140px"></x-import>
+<pre style="margin:0;padding:16px;border-radius:6px;background:#090a0e;color:#eceef2;font-family:var(--font-mono);font-size:13px;line-height:1.6;overflow:auto">curl https://sandbox.api.semester.app/v1/opportunities \
+  -H "Authorization: Bearer sk_sandbox_••••4f2a" \
+  -H "Semester-Tenant: northfield-sample" \
+  -d '{"title":"Lab technician intern","apply_by":"2026-12-01"}'</pre>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Webhooks" columns="{{ hookCols }}" rows="{{ hookRows }}" hint-size="100%,140px"></x-import>
+</div>
+<aside style="display:grid;gap:16px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StepStatus" label="Certification" steps="{{ certSteps }}" hint-size="100%,200px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Scopes" hint-size="100%,56px">Partner apps never receive student records. Students choose what to send when they apply.</x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAccess }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Accessibility services" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Help · Accessibility services</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Your accommodations</h1><p style="color:var(--text-secondary);margin:6px 0 0">Approved by Student Access Services. Instructors see the accommodation, never the reason.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:16px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Approved for Fall 2026" columns="{{ accCols }}" rows="{{ accRows }}" hint-size="100%,160px"></x-import>
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:10px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Send letters to instructors</div>
+<sc-for list="{{ letters }}" as="l" hint-placeholder-count="3">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ l.label }}" about="{{ l.about }}" checked="{{ l.on }}" onChange="{{ l.toggle }}" hint-size="100%,56px"></x-import>
+</sc-for>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ sendLetters }}" disabled="{{ lettersSent }}" hint-size="160px,44px">{{ lettersLabel }}</x-import>
+</div>
+</div>
+<aside><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ accFields }}" hint-size="100%,160px"></x-import></aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSafety }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Safety" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Campus · Safety</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Get help now</h1><p style="color:var(--text-secondary);margin:6px 0 0">These connect you straight to the people who respond. Semester does not record what you report.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+<sc-for list="{{ safety }}" as="s" hint-placeholder-count="4">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:10px;align-content:start">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:20px">{{ s.title }}</div>
+<div style="font-size:14px;color:var(--text-secondary);line-height:1.5">{{ s.body }}</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="{{ s.variant }}" icon="call" hint-size="200px,44px">{{ s.cta }}</x-import>
+</div>
+</sc-for>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Emergency alerts" hint-size="100%,56px">Vanderbilt’s emergency alerts appear at the top of every screen, labelled Institution verified, until the university clears them.</x-import>
+</div>
+</sc-if>
+
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const IDX = [
+  { title: 'Last day to drop with a W · Fri 31 Oct', where: 'Academic calendar', src: 'official', by: 'Registrar', k: 'drop deadline withdraw w calendar' },
+  { title: 'Lecture 8 slides · Enzyme kinetics', where: 'BIO 2100 · course materials', src: 'official', by: 'Prof. Okafor', k: 'kinetics enzyme lecture bio slides' },
+  { title: 'Kinetics — questions for office hours', where: 'Your notes', src: 'personal', by: 'You', k: 'kinetics notes questions office hours' },
+  { title: 'Michaelis–Menten kinetics revisited', where: 'Library database', src: 'connected', by: 'Library', k: 'kinetics enzyme article library' },
+  { title: 'Peer tutoring · BIO and CHEM', where: 'Center for Student Wellbeing', src: 'official', by: 'Tutoring', k: 'tutoring help bio chem' },
+  { title: 'Dropping a course: what changes', where: 'Help article', src: 'official', by: 'Registrar', k: 'drop course withdraw deadline aid' },
+  { title: 'Study group · BIO 2100 lab B', where: 'Community', src: 'personal', by: 'Priya Nair', k: 'study group bio kinetics' },
+];
+const CARDS = [['What does Km measure?', 'The substrate concentration at which the reaction runs at half its maximum rate.'], ['What happens to Vmax with a competitive inhibitor?', 'It stays the same — enough substrate outcompetes the inhibitor.'], ['What happens to Km with a competitive inhibitor?', 'It rises — more substrate is needed to reach half of Vmax.'], ['What does a Lineweaver–Burk plot show?', '1/v against 1/[S]; the y-intercept is 1/Vmax and the x-intercept is −1/Km.'], ['What is kcat?', 'The turnover number: substrate molecules converted per enzyme per second at saturation.']];
+class Component extends DCLogic {
+  state = { cur: 'search', q: 'drop deadline', card: 0, flipped: false, known: [], follow: { 1: true }, apps: { 0: 'installed', 2: 'requested' }, letters: { 0: true, 1: true, 2: false }, lettersSent: false };
+  renderVals() {
+    const s = this.state, N = window.SemesterDesignSystem_e9f3ba;
+    const labels = { search: 'Search', study: 'Study cards', social: 'Connections', market: 'Marketplace', dev: 'Developers', access: 'Accessibility', safety: 'Safety' };
+    const words = s.q.toLowerCase().split(/\s+/).filter(Boolean);
+    const results = words.length ? IDX.filter((r) => words.some((w) => r.k.includes(w))) : IDX;
+    const c = CARDS[s.card];
+    const people = [['Priya Nair', 'BIO 2100 lab B · Rowing club'], ['Leo Grant', 'WRIT 1100 debate team'], ['Ana Ruiz', 'Biology society'], ['Tomás Bell', 'North Hall · floor 3']];
+    const APPS = [['Gradescope bridge', 'Moves graded scans into Course Studio during transition.', 'Assignments, grades for your courses'], ['Library reserves', 'Course readings from the Heard Library.', 'Your course list'], ['Handshake import', 'Brings saved jobs into Career.', 'Nothing, until you connect it'], ['Commodore Card', 'Meal swipes and dining dollars.', 'Your card balance'], ['TeamApp rowing', 'Practice schedule into your calendar.', 'Your team membership'], ['Zoom', 'Join office hours from Meet.', 'Meeting links only']];
+    const ast = (i) => s.apps[i] || 'none';
+    const L = [['BIO 2100 · Prof. Okafor', 'Extended time 1.5× · reduced-distraction room'], ['ECON 1010 · Dr. Haas', 'Extended time 1.5×'], ['ENGL 1100 · Ms. Patel', 'No exams — letter optional']];
+    return {
+      cur: s.cur, go: (id) => this.setState({ cur: id }), loc: labels[s.cur],
+      rail: [{ label: 'Find', items: [{ id: 'search', label: 'Search', icon: 'search' }, { id: 'study', label: 'Study cards', icon: 'study' }] }, { label: 'Campus', items: [{ id: 'social', label: 'Connections', icon: 'people' }, { id: 'safety', label: 'Safety', icon: 'call' }, { id: 'access', label: 'Accessibility', icon: 'help' }] }, { label: 'Platform', items: [{ id: 'market', label: 'Marketplace', icon: 'apps' }, { id: 'dev', label: 'Developers', icon: 'connect' }] }],
+      isSearch: s.cur === 'search', isStudy: s.cur === 'study', isSocial: s.cur === 'social', isMarket: s.cur === 'market', isDev: s.cur === 'dev', isAccess: s.cur === 'access', isSafety: s.cur === 'safety',
+      q: s.q, setQ: (e) => this.setState({ q: e && e.target ? e.target.value : e }), results, noResults: results.length === 0,
+      answer: results.length ? 'The top result is from ' + results[0].by + ': ' + results[0].title + '. Results are ranked official first, then connected, then yours.' : 'No sources you can see answer this.',
+      ansScope: ['Sources you have access to'], ansSources: results.slice(0, 2).map((r) => ({ title: r.title + ' · ' + r.where, kind: r.src })),
+      cardNum: String(s.card + 1), cardTotal: String(CARDS.length), knownCount: String(s.known.length), sideLabel: s.flipped ? 'Answer' : 'Question', cardText: s.flipped ? c[1] : c[0],
+      flip: () => this.setState((x) => ({ flipped: !x.flipped })), prev: () => this.setState((x) => ({ card: (x.card + CARDS.length - 1) % CARDS.length, flipped: false })),
+      again: () => this.setState((x) => ({ card: (x.card + 1) % CARDS.length, flipped: false })),
+      known: () => this.setState((x) => ({ known: [...new Set([...x.known, x.card])], card: (x.card + 1) % CARDS.length, flipped: false })),
+      people: people.map(([name, why], i) => ({ name, why, label: s.follow[i] ? 'Connected' : 'Connect', variant: s.follow[i] ? 'secondary' : 'primary', toggle: () => this.setState((x) => ({ follow: { ...x.follow, [i]: !x.follow[i] } })) })),
+      groups: [{ kind: 'Group', title: 'BIO 2100 study group', prov: { origin: 'personal', by: 'Priya Nair' }, meta: '12 members · Wed 19:00 · Library 2B', primary: { label: 'Open' } }, { kind: 'Organisation', title: 'Vanderbilt Rowing', prov: { origin: 'official', by: 'Club Sports' }, meta: '48 members · erg night Thu', primary: { label: 'Open' } }, { kind: 'Floor', title: 'North Hall · floor 3', prov: { origin: 'official', by: 'Housing' }, meta: 'RA Jordan Lee · 22 residents', primary: { label: 'Open' } }],
+      apps: APPS.map(([name, desc, reads], i) => ({ name, desc, reads, status: ast(i) === 'installed' ? 'live' : ast(i) === 'requested' ? 'pending' : 'verified', statusLabel: ast(i) === 'installed' ? 'Added' : ast(i) === 'requested' ? 'Awaiting IT' : 'Certified', cta: ast(i) === 'installed' ? 'Remove' : ast(i) === 'requested' ? 'Requested' : 'Request', variant: ast(i) === 'none' ? 'primary' : 'secondary', disabled: ast(i) === 'requested', act: () => this.setState((x) => ({ apps: { ...x.apps, [i]: ast(i) === 'installed' ? 'none' : 'requested' } })) })),
+      keyCols: [{ key: 'n', label: 'Key' }, { key: 'e', label: 'Environment' }, { key: 'sc', label: 'Scopes' }, { key: 'u', label: 'Last used' }],
+      keyRows: [{ n: 'sk_sandbox_••••4f2a', e: 'Sandbox', sc: 'opportunities:write', u: '2 h ago' }, { n: 'Production', e: '—', sc: 'After certification', u: '—' }],
+      hookCols: [{ key: 'ev', label: 'Event' }, { key: 'url', label: 'Endpoint' }, { key: 'st', label: 'Last delivery' }],
+      hookRows: [{ ev: 'application.submitted', url: 'https://genviabio.com/hooks/semester', st: '200 · 4 min ago' }, { ev: 'opportunity.expired', url: 'https://genviabio.com/hooks/semester', st: '200 · yesterday' }],
+      certSteps: [{ label: 'Sandbox app works end to end', state: 'done' }, { label: 'Security questionnaire', state: 'done' }, { label: 'Accessibility review', state: 'working' }, { label: 'Data-use review', state: 'waiting' }, { label: 'Listed in marketplace', state: 'waiting' }],
+      accCols: [{ key: 'a', label: 'Accommodation' }, { key: 'w', label: 'Applies to' }],
+      accRows: [{ a: 'Extended time 1.5×', w: 'Exams and quizzes' }, { a: 'Reduced-distraction room', w: 'Exams' }, { a: 'Captioned recordings', w: 'All lectures' }],
+      letters: L.map(([label, about], i) => ({ label, about, on: !!s.letters[i], toggle: () => this.setState((x) => ({ letters: { ...x.letters, [i]: !x.letters[i] }, lettersSent: false })) })),
+      sendLetters: () => this.setState({ lettersSent: true }), lettersSent: s.lettersSent, lettersLabel: s.lettersSent ? 'Letters sent' : 'Send letters',
+      accFields: [{ field: 'Approved by', value: 'Student Access Services' }, { field: 'Review date', value: 'Before Spring 2027' }, { field: 'Your contact', value: 'Dana Whitfield' }, { field: 'Who sees the reason', value: 'Only Student Access Services' }],
+      safety: [{ title: 'Emergency', body: 'Vanderbilt University Police, 24 hours.', cta: 'Call VUPD', variant: 'danger' }, { title: 'Walk home', body: 'Vandy Vans and safety escorts after dark.', cta: 'Request a ride', variant: 'primary' }, { title: 'Talk to someone', body: 'University Counseling Center, 24-hour line.', cta: 'Call UCC', variant: 'secondary' }, { title: 'Report a concern', body: 'Anonymous options go to Student Care, not to Semester.', cta: 'Open report form', variant: 'secondary' }],
+    };
+  }
+}
+</script>
+</body>
+</html>

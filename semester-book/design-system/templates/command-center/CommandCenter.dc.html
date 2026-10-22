@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Command center screen" description="Company operations command center: inbox, approvals, tenants, pilots, health — business data only" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="{{ cur }}" onNavigate="{{ go }}" groups="{{ rail }}" foot="Semester, LLC · Company operations" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<div style="background:#090a0e;color:#eceef2;padding:8px 24px;font-size:13px;display:flex;gap:16px;align-items:center;flex-wrap:wrap"><span style="letter-spacing:.08em;text-transform:uppercase;color:#94bce3">Production</span><span style="color:rgba(236,238,242,.64)">Vercel us-east-1 · Supabase us-east-1 · every action here is audited</span></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="{{ loc }}" term="Q4 2026" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+
+<sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Overview" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Overview</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">One pilot signed. Six things block its start.</h1><p style="color:var(--text-secondary);margin:6px 0 0">Pre-seed, solo founder, bootstrapping. The pilot start date is not set until the blockers clear.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Signed contracts" value="1" unit="paid pilot" source="official" updated="Contract on file" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Pilot blockers" value="{{ blockersLeft }}" unit="of 6 open" source="personal" updated="This checklist" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Setup budget" value="$5k–$20k" source="estimated" updated="Founder plan" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Team" value="1" unit="founder" source="official" updated="Hiring plan" hint-size="100%,120px"></x-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:4px;align-content:start">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px">Pilot blockers · tick when evidence is filed</div>
+<sc-for list="{{ blockers }}" as="b" hint-placeholder-count="6">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ b.label }}" about="{{ b.about }}" checked="{{ b.on }}" onChange="{{ b.toggle }}" hint-size="100%,60px"></x-import>
+</sc-for>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.NextSteps" steps="{{ overviewSteps }}" hint-size="100%,200px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Before the start date" hint-size="100%,56px">Real student records arrive on day one. Every blocker above must have filed evidence first.</x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTenants }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Tenants" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Tenants</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Institutions on Semester</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Tenants" columns="{{ tenCols }}" rows="{{ tenRows }}" hint-size="100%,200px"></x-import>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ vuFields }}" hint-size="100%,220px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DecisionTrail" label="Vanderbilt pilot" items="{{ vuTrail }}" hint-size="100%,260px"></x-import>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReleases }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Releases" style="display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Releases and flags</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Release 2026.10.2</h1><p style="color:var(--text-secondary);margin:6px 0 0">All six gates green on main · staged to the sandbox tenant</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="export" onClick="{{ promote }}" disabled="{{ promoted }}" hint-size="200px,44px">{{ promoteLabel }}</x-import></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StepStatus" label="Gates" steps="{{ gateSteps }}" hint-size="100%,220px"></x-import>
+<div style="display:grid;gap:10px;align-content:start;border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base)">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Feature flags · Vanderbilt</div>
+<sc-for list="{{ flags }}" as="f" hint-placeholder-count="4">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Switch" label="{{ f.label }}" checked="{{ f.on }}" onChange="{{ f.toggle }}" hint-size="100%,36px"></x-import>
+</sc-for>
+<div style="font-size:13px;color:var(--text-secondary);line-height:1.5">AI data types are switched by the institution’s IT admin, not here.</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReliability }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Reliability" style="display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Reliability</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">{{ relHead }}</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="{{ incVariant }}" icon="announce" onClick="{{ toggleIncident }}" hint-size="180px,44px">{{ incLabel }}</x-import></div>
+<sc-if value="{{ incident }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Incident open · status page updated" hint-size="100%,56px">Brightspace sync is delayed for Vanderbilt. Students see “Connected · may be out of date”. Next update in 30 minutes.</x-import>
+</sc-if>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProvenanceChart" title="Sync freshness, minutes behind source" unit=" min" source="Integration monitors" rows="{{ freshRows }}" hint-size="100%,260px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Service levels · last 30 days" columns="{{ sloCols }}" rows="{{ sloRows }}" hint-size="100%,200px"></x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTrust }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Trust" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Trust and compliance</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">What the pilot contract requires</h1><p style="color:var(--text-secondary);margin:6px 0 0">Name the control and its evidence. Never write “compliant” or “certified” unless a document says so.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Requirements" columns="{{ trustCols }}" rows="{{ trustRows }}" hint-size="100%,320px"></x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRevenue }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Revenue" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Revenue and pipeline</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Pipeline</h1><p style="color:var(--text-secondary);margin:6px 0 0">Amounts are sample figures until invoices exist.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Opportunities" columns="{{ pipeCols }}" rows="{{ pipeRows }}" hint-size="100%,220px"></x-import>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Price model" value="Per student" unit="per year" source="personal" updated="Pricing draft" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="AI cost ceiling" value="$0.40" unit="per active student / mo" source="estimated" updated="Spend meter target" hint-size="100%,120px"></x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="sample" updated="Pipeline figures are illustrative" hint-size="200px,24px"></x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isFinance }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Finance" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Finance and runway</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">{{ runwayHead }}</h1><p style="color:var(--text-secondary);margin:6px 0 0">Bootstrapped, no revenue yet. Change the inputs; figures are your estimates until the books say otherwise.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:16px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TextField" label="Cash on hand ($)" value="{{ cashStr }}" onChange="{{ setCash }}" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TextField" label="Pilot fee expected ($, one-time)" value="{{ pilotStr }}" onChange="{{ setPilot }}" hint-size="100%,72px"></x-import>
+<div style="display:grid;gap:4px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px">Monthly costs</div>
+<sc-for list="{{ costs }}" as="c" hint-placeholder-count="6">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ c.label }}" about="{{ c.about }}" checked="{{ c.on }}" onChange="{{ c.toggle }}" hint-size="100%,56px"></x-import>
+</sc-for>
+</div>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Monthly burn" value="{{ burnStr }}" source="estimated" updated="Ticked costs" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Runway" value="{{ runwayStr }}" unit="months" source="estimated" updated="Cash + pilot fee ÷ burn" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="One-time setup" value="{{ setupStr }}" source="estimated" updated="Budget $5k–$20k" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Revenue" value="$0" source="official" updated="No invoices yet" hint-size="100%,120px"></x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="{{ setupHead }}" hint-size="100%,56px">{{ setupBody }}</x-import>
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:8px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Monthly investor update · draft</div>
+<div style="font-size:14px;line-height:1.6;white-space:pre-line">{{ boardDraft }}</div>
+</div>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLocale }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Localisation" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Globalisation</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Languages and regions</h1><p style="color:var(--text-secondary);margin:6px 0 0">Each tenant sets a default; every person can choose their own. Data stays in the tenant’s region.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:16px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Segmented" label="Preview language" options="{{ langOpts }}" value="{{ lang }}" onChange="{{ setLang }}" hint-size="100%,40px"></x-import>
+<div dir="{{ dir }}" lang="{{ langCode }}" style="border:1px solid var(--border-default);border-radius:6px;padding:20px;background:var(--surface-base);display:grid;gap:10px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">{{ lp.kicker }}</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ lp.title }}</div>
+<div style="font-size:15px;line-height:1.5">{{ lp.body }}</div>
+<div style="font-size:14px;color:var(--text-secondary);font-variant-numeric:tabular-nums">{{ lp.date }} · {{ lp.money }}</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Translation coverage" columns="{{ locCols }}" rows="{{ locRows }}" hint-size="100%,220px"></x-import>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ regionFields }}" hint-size="100%,160px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Before a new region" hint-size="100%,56px">A tenant outside the US needs its own data region, a local DPA and a translation review of every official label.</x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSupport }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Support" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Company · Support</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Support across tenants</h1></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Open tickets" value="11" source="official" updated="Support queue" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Median first reply" value="42" unit="min" source="official" updated="Last 7 days" hint-size="100%,120px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="Record-view requests" value="3" unit="this week" source="official" updated="Access log" hint-size="100%,120px"></x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Top issues" columns="{{ supCols }}" rows="{{ supRows }}" hint-size="100%,200px"></x-import>
+</div>
+</sc-if>
+
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const KEY = 'semester-command-blockers-v1';
+class Component extends DCLogic {
+  state = { cur: 'overview', done: (() => { try { return JSON.parse(localStorage.getItem(KEY)) || [] } catch (e) { return [] } })(), promoted: false, incident: false, flags: { study: true, community: false, career: true, family: false } };
+  chip(status, label) { return React.createElement(window.SemesterDesignSystem_e9f3ba.StatusChip, { status, label }); }
+  renderVals() {
+    const s = this.state, done = new Set(s.done);
+    const B = [['HECVAT Full submitted', 'Security questionnaire the pilot requires'], ['DPA and FERPA addendum countersigned', 'Defines Semester as a school official for listed data'], ['SAML SSO tested with the university IdP', 'Students sign in with their university account'], ['VPAT / ACR published', 'Accessibility conformance report for the product'], ['Cyber and E&O insurance bound', 'Required by contract; not yet held'], ['Incident response plan signed off', '72-hour notification path tested once']];
+    const labels = { overview: 'Overview', tenants: 'Tenants', releases: 'Releases', reliability: 'Reliability', trust: 'Trust', revenue: 'Revenue', support: 'Support', finance: 'Finance', locale: 'Localisation' };
+    const fl = [['study', 'Study and flashcards'], ['community', 'Community'], ['career', 'Career'], ['family', 'Family sharing']];
+    const COSTS = [['host', 'Hosting · Vercel + Supabase Pro', 120], ['ai', 'AI providers · pilot volume', 300], ['ins', 'Cyber + E&O insurance', 350], ['legal', 'Legal retainer', 400], ['tools', 'Tools · GitHub, email, domain', 80], ['acct', 'Bookkeeping', 150]];
+    const on = s.costs || { host: true, ai: true, ins: true, legal: false, tools: true, acct: false };
+    const burn = COSTS.reduce((a, [k, , v]) => a + (on[k] ? v : 0), 0);
+    const cash = Number(String(s.cash ?? '15000').replace(/[^0-9.]/g, '')) || 0, pilot = Number(String(s.pilot ?? '0').replace(/[^0-9.]/g, '')) || 0;
+    const setup = 3500 + 2500 + 4000;
+    const runway = burn ? Math.max(0, (cash + pilot - setup) / burn) : 0;
+    const usd = (n) => '$' + Math.round(n).toLocaleString('en-US');
+    const LANGS = { English: { code: 'en', dir: 'ltr', kicker: 'Today', title: 'Lab report 3 is due Thursday', body: 'Plan two hours for it. It is 12% of your BIO 2100 grade.', date: 'Thu, Oct 9, 2026', money: '$1,240.00' }, Español: { code: 'es', dir: 'ltr', kicker: 'Hoy', title: 'El informe de laboratorio 3 vence el jueves', body: 'Reserva dos horas. Vale el 12 % de tu nota de BIO 2100.', date: 'jue, 9 oct 2026', money: '1240,00 US$' }, 'العربية': { code: 'ar', dir: 'rtl', kicker: 'اليوم', title: 'تقرير المختبر ٣ مستحق يوم الخميس', body: 'خصّص ساعتين له. يمثل ١٢٪ من درجتك في BIO 2100.', date: 'الخميس، ٩ أكتوبر ٢٠٢٦', money: '‏١٬٢٤٠٫٠٠ US$' }, '中文': { code: 'zh', dir: 'ltr', kicker: '今天', title: '实验报告 3 周四截止', body: '请预留两小时。它占 BIO 2100 成绩的 12%。', date: '2026年10月9日 周四', money: 'US$1,240.00' } };
+    const lang = s.lang || 'English', lp = LANGS[lang];
+    const extra = {
+      isFinance: s.cur === 'finance', isLocale: s.cur === 'locale',
+      cashStr: String(s.cash ?? '15000'), setCash: (e) => this.setState({ cash: e && e.target ? e.target.value : e }),
+      pilotStr: String(s.pilot ?? '0'), setPilot: (e) => this.setState({ pilot: e && e.target ? e.target.value : e }),
+      costs: COSTS.map(([k, label, v]) => ({ label, about: usd(v) + ' / month', on: !!on[k], toggle: () => this.setState({ costs: { ...on, [k]: !on[k] } }) })),
+      burnStr: usd(burn), runwayStr: runway ? runway.toFixed(1) : '—', setupStr: usd(setup),
+      runwayHead: runway ? runway.toFixed(1) + ' months of runway after setup' : 'Add costs to see runway',
+      setupHead: setup > cash + pilot ? 'Setup costs exceed cash' : 'Setup is covered',
+      setupBody: 'One-time: insurance deposit $3,500 · VPAT audit $2,500 · legal review of DPA $4,000. ' + (setup > cash + pilot ? 'Raise cash or collect the pilot fee first.' : 'Leaves ' + usd(cash + pilot - setup) + ' for operations.'),
+      boardDraft: 'Highlights: Vanderbilt pilot signed; ' + (6 - done.size) + ' of 6 start blockers still open.\nCash: ' + usd(cash) + ' · burn ' + usd(burn) + '/mo · runway ' + (runway ? runway.toFixed(1) : '—') + ' months.\nAsks: an intro to a cyber insurance broker; a university IT reviewer for HECVAT.',
+      langOpts: Object.keys(LANGS), lang, setLang: (x) => this.setState({ lang: x && x.target ? x.target.value : x }), dir: lp.dir, langCode: lp.code, lp,
+      locCols: [{ key: 'l', label: 'Language' }, { key: 'c', label: 'Strings' }, { key: 'r', label: 'Official labels reviewed' }],
+      locRows: [{ l: 'English (US)', c: '100%', r: 'Yes' }, { l: 'Spanish', c: '92%', r: 'In review' }, { l: 'Arabic (right-to-left)', c: '61%', r: 'No' }, { l: 'Chinese (Simplified)', c: '58%', r: 'No' }],
+      regionFields: [{ field: 'Current region', value: 'US · us-east-1' }, { field: 'Date and number formats', value: 'Per person' }, { field: 'Currency', value: 'Tenant default · USD' }, { field: 'Right-to-left', value: 'Supported in layout' }],
+    };
+    return {
+      ...extra,
+      cur: s.cur, go: (id) => this.setState({ cur: id }), loc: 'Command center · ' + labels[s.cur],
+      rail: [{ label: 'Run', items: [{ id: 'overview', label: 'Overview', icon: 'today' }, { id: 'tenants', label: 'Tenants', icon: 'university' }, { id: 'revenue', label: 'Revenue', icon: 'costs' }] }, { label: 'Operate', items: [{ id: 'releases', label: 'Releases', icon: 'export' }, { id: 'reliability', label: 'Reliability', icon: 'clocks' }, { id: 'support', label: 'Support', icon: 'support' }] }, { label: 'Govern', items: [{ id: 'trust', label: 'Trust', icon: 'privacy' }, { id: 'finance', label: 'Finance', icon: 'costs' }, { id: 'locale', label: 'Localisation', icon: 'settings' }] }],
+      isOverview: s.cur === 'overview', isTenants: s.cur === 'tenants', isReleases: s.cur === 'releases', isReliability: s.cur === 'reliability', isTrust: s.cur === 'trust', isRevenue: s.cur === 'revenue', isSupport: s.cur === 'support',
+      blockersLeft: String(6 - done.size),
+      blockers: B.map(([label, about], i) => ({ label, about, on: done.has(i), toggle: () => this.setState((x) => { const d = new Set(x.done); d.has(i) ? d.delete(i) : d.add(i); const arr = [...d]; localStorage.setItem(KEY, JSON.stringify(arr)); return { done: arr }; }) })),
+      overviewSteps: [{ label: 'Get three insurance quotes', why: 'Cyber + E&O · the longest lead time', icon: 'costs' }, { label: 'Book the SSO test window', why: 'Needs the university IdP team', icon: 'privacy' }, { label: 'Run the VPAT audit on 64 screens', why: 'Use the accessibility checklist', icon: 'proof' }],
+      tenCols: [{ key: 't', label: 'Institution' }, { key: 'k', label: 'Contract' }, { key: 'u', label: 'Users' }, { key: 's', label: 'Status', render: (r) => this.chip(r.s, r.l) }],
+      tenRows: [{ t: 'Vanderbilt University', k: 'Paid pilot · signed', u: '—', s: 'pending', l: 'Start date not set' }, { t: 'Sandbox · Northfield (sample)', k: 'Internal', u: '1,240 sample', s: 'live', l: 'Live' }],
+      vuFields: [{ field: 'Data region', value: 'US · us-east-1' }, { field: 'Sign-in', value: 'SAML SSO · not yet tested' }, { field: 'LMS', value: 'Brightspace · read-only planned' }, { field: 'AI data types on', value: 'None until IT enables them' }, { field: 'Records', value: 'Real student records from day one' }],
+      vuTrail: [{ title: 'Pilot contract signed', who: 'Founder + university', state: 'done' }, { title: 'DPA / FERPA addendum', who: 'University counsel', state: done.has(1) ? 'done' : 'current' }, { title: 'HECVAT Full review', who: 'University IT security', state: done.has(0) ? 'done' : 'waiting' }, { title: 'SSO test', who: 'University IdP team', state: done.has(2) ? 'done' : 'waiting' }, { title: 'Start date set', who: 'Both', state: done.size === 6 ? 'current' : 'blocked' }],
+      promoted: s.promoted, promote: () => this.setState({ promoted: true }), promoteLabel: s.promoted ? 'Promoted to production' : 'Promote to production',
+      gateSteps: [{ label: 'Types · tsc -b', state: 'done' }, { label: 'Lint and label audit', state: 'done' }, { label: 'Gateway typecheck', state: 'done' }, { label: 'Test suite', state: 'done' }, { label: 'Shuffled suite', state: 'done' }, { label: 'Production build', state: 'done' }, { label: 'Production rollout', state: s.promoted ? 'done' : 'waiting' }],
+      flags: fl.map(([k, label]) => ({ label, on: s.flags[k], toggle: (v) => this.setState((x) => ({ flags: { ...x.flags, [k]: typeof v === 'boolean' ? v : !x.flags[k] } })) })),
+      incident: s.incident, toggleIncident: () => this.setState((x) => ({ incident: !x.incident })), incLabel: s.incident ? 'Resolve incident' : 'Declare incident', incVariant: s.incident ? 'secondary' : 'danger',
+      relHead: s.incident ? 'One incident open' : 'All systems normal',
+      freshRows: [{ label: 'SSO', value: 0, source: 'official' }, { label: 'Brightspace', value: s.incident ? 96 : 4, source: s.incident ? 'stale' : 'connected' }, { label: 'SIS', value: 58, source: 'connected' }, { label: 'Outlook', value: 12, source: 'connected' }],
+      sloCols: [{ key: 'n', label: 'Service' }, { key: 't', label: 'Target' }, { key: 'a', label: 'Actual' }, { key: 's', label: '', render: (r) => this.chip(r.s) }],
+      sloRows: [{ n: 'Sign-in availability', t: '99.9%', a: '99.97%', s: 'verified' }, { n: 'Today loads under 2 s', t: '95%', a: '97.2%', s: 'verified' }, { n: 'LMS freshness under 15 min', t: '99%', a: s.incident ? '96.1%' : '99.4%', s: s.incident ? 'sync-error' : 'verified' }],
+      trustCols: [{ key: 'r', label: 'Requirement' }, { key: 'w', label: 'Who asks' }, { key: 'e', label: 'Evidence' }, { key: 's', label: 'Status', render: (r) => this.chip(r.s, r.l) }],
+      trustRows: [
+        { r: 'HECVAT Full', w: 'University IT', e: done.has(0) ? 'Submitted questionnaire' : 'Draft', s: done.has(0) ? 'approved' : 'draft', l: done.has(0) ? 'Submitted' : 'Draft' },
+        { r: 'DPA + FERPA addendum', w: 'University counsel', e: done.has(1) ? 'Countersigned PDF' : 'Redlines open', s: done.has(1) ? 'approved' : 'pending', l: done.has(1) ? 'Signed' : 'In review' },
+        { r: 'SAML SSO', w: 'University IdP', e: done.has(2) ? 'Test sign-in log' : '—', s: done.has(2) ? 'verified' : 'action-required' },
+        { r: 'VPAT / ACR', w: 'Procurement', e: done.has(3) ? 'Published ACR' : 'Audit not run', s: done.has(3) ? 'verified' : 'action-required' },
+        { r: 'Cyber + E&O insurance', w: 'Contract', e: done.has(4) ? 'Certificate of insurance' : 'Not held', s: done.has(4) ? 'verified' : 'hold', l: done.has(4) ? 'Bound' : 'Not held' },
+        { r: 'AI never sees records by default', w: 'Contract', e: 'Per-type switches, default off', s: 'verified', l: 'In product' },
+      ],
+      pipeCols: [{ key: 'o', label: 'Institution' }, { key: 'st', label: 'Stage' }, { key: 'n', label: 'Next step' }, { key: 'v', label: 'Annual value' }],
+      pipeRows: [{ o: 'Vanderbilt University', st: 'Signed pilot', n: 'Clear 6 blockers', v: 'Pilot fee' }, { o: 'Regional university A', st: 'Discovery', n: 'Demo with registrar', v: '$60,000' }, { o: 'Community college B', st: 'Intro', n: 'Send buyer deck', v: '$24,000' }],
+      supCols: [{ key: 'i', label: 'Issue' }, { key: 'n', label: 'Tickets' }, { key: 'f', label: 'Fix' }],
+      supRows: [{ i: 'Brightspace connection expired', n: '4', f: 'Reconnect prompt in Today' }, { i: 'Guardian ID check failed', n: '3', f: 'Clearer photo guidance' }, { i: 'TA can’t see section', n: '2', f: 'Roster sync from SIS' }],
+    };
+  }
+}
+</script>
+</body>
+</html>

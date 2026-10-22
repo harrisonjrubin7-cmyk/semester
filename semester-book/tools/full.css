@@ -1,0 +1,132 @@
+@page { size: Letter; margin: 0.7in 0.65in 0.75in; }
+@page :first { margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; }
+body { font-family: var(--font-body); font-size: 10pt; line-height: 1.5; color: var(--parchment-fg); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+code, pre { font-family: var(--font-mono); font-size: 8.5pt; }
+code { background: var(--surface-quiet); padding: 0 3px; border-radius: 3px; }
+a { color: var(--blue-700); text-decoration: none; }
+.kicker { font-size: 8pt; letter-spacing: .08em; text-transform: uppercase; color: rgba(27,26,23,.68); font-weight: 500; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 30pt; line-height: 1.05; margin: 4pt 0 18pt; letter-spacing: 0; }
+h2 { font-family: var(--font-heading); font-weight: 600; font-size: 16pt; letter-spacing: -.015em; margin: 22pt 0 8pt; padding-top: 6pt; border-top: 1px solid rgba(27,26,23,.16); break-after: avoid; }
+h3 { font-family: var(--font-heading); font-weight: 600; font-size: 12.5pt; letter-spacing: -.015em; margin: 14pt 0 4pt; break-after: avoid; }
+h4 { font-family: var(--font-heading); font-weight: 600; font-size: 11pt; margin: 10pt 0 3pt; }
+p, li { orphans: 3; widows: 3; }
+.note { color: rgba(27,26,23,.68); font-size: 9.5pt; max-width: 6.2in; }
+
+/* cover */
+.cover { height: 11in; width: 8.5in; background: var(--parchment-bg); position: relative; break-after: page; overflow: hidden; }
+.coverimg { width: 8.5in; display: block; }
+.covertext { position: absolute; left: .75in; right: .75in; bottom: 1in; }
+.covertitle { font-family: var(--font-display); font-weight: 600; font-size: 40pt; line-height: .95; margin: 6pt 0 14pt; }
+.lede { font-size: 12pt; max-width: 5.6in; color: rgba(27,26,23,.8); }
+.meta { font-size: 9pt; color: rgba(27,26,23,.68); }
+
+/* toc */
+.toc { break-after: page; }
+.toc ol { font-family: var(--font-heading); font-size: 15pt; font-weight: 600; line-height: 1.9; padding-left: 1.2em; }
+.toc a { color: var(--parchment-fg); }
+.chapter { break-before: page; }
+
+/* prose */
+.prose { max-width: 7.2in; }
+.prose h2 { font-size: 14pt; }
+.prose h3 { font-size: 12pt; }
+.prose pre { background: var(--surface-quiet); border: 1px solid rgba(27,26,23,.09); border-radius: 6px; padding: 8pt 10pt; white-space: pre-wrap; word-break: break-word; }
+.prose pre code { background: none; padding: 0; }
+.prose table { border-collapse: collapse; font-size: 9pt; margin: 6pt 0; }
+.prose th, .prose td { border-bottom: 1px solid rgba(27,26,23,.16); padding: 3pt 6pt; text-align: left; vertical-align: top; }
+.prose ul, .prose ol { padding-left: 1.3em; }
+.prose li { margin: 2pt 0; }
+.prose.small { font-size: 9.5pt; }
+.prose.small p { margin: 4pt 0; }
+.guide { break-inside: auto; border-top: 1px solid rgba(27,26,23,.16); margin-top: 14pt; }
+.guide h1 { font-size: 18pt; font-family: var(--font-heading); }
+
+/* tokens */
+table.tok { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin: 4pt 0 10pt; }
+table.tok th { text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: rgba(27,26,23,.68); font-weight: 500; border-bottom: 1px solid rgba(27,26,23,.34); padding: 3pt 5pt; }
+table.tok td { border-bottom: 1px solid rgba(27,26,23,.09); padding: 3pt 5pt; vertical-align: middle; }
+table.tok tr { break-inside: avoid; }
+table.tok td.v { font-family: var(--font-mono); font-size: 7.5pt; word-break: break-word; max-width: 2in; }
+table.tok td.u, .u { color: rgba(27,26,23,.68); font-size: 8pt; }
+.sws { white-space: nowrap; width: 54pt; }
+.sw { display: inline-block; width: 22pt; height: 16pt; border-radius: 3px; border: 1px solid rgba(27,26,23,.16); margin-right: 3pt; vertical-align: middle; }
+.bar { display: inline-block; height: 8pt; background: var(--blue-700); border-radius: 1px; max-width: 1.6in; }
+.rad { display: inline-block; width: 34pt; height: 22pt; border: 1.5px solid rgba(27,26,23,.5); background: var(--parchment-panel); }
+.shad { display: inline-block; width: 40pt; height: 22pt; background: #fff; border-radius: 6px; margin: 6pt; }
+.vis { width: 1.7in; }
+.specimens { display: grid; gap: 8pt; }
+.spec { border-bottom: 1px solid rgba(27,26,23,.09); padding-bottom: 6pt; break-inside: avoid; }
+.specmeta { font-size: 8pt; color: rgba(27,26,23,.68); margin-bottom: 2pt; }
+.specline { color: var(--parchment-fg); }
+
+/* galleries and components */
+.card, .comp { break-inside: avoid; margin: 0 0 16pt; }
+.comp { border-top: 1px solid rgba(27,26,23,.09); padding-top: 4pt; }
+.sub { color: rgba(27,26,23,.68); font-size: 9pt; margin-bottom: 4pt; }
+figure.shot { margin: 4pt 0 6pt; }
+figure.shot img { max-width: 100%; display: block; border: 1px solid rgba(27,26,23,.16); border-radius: 6px; }
+h2.grp { font-size: 20pt; margin-top: 26pt; break-before: page; border-top: 3px solid var(--blue-700); }
+details summary { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .06em; color: rgba(27,26,23,.68); list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+pre.dts { background: var(--surface-quiet); border-radius: 6px; padding: 6pt 8pt; white-space: pre-wrap; word-break: break-word; font-size: 7.5pt; margin: 2pt 0 0; }
+table.tok td.nm code { white-space: nowrap; font-size: 7.5pt; }
+table.tok td.v { max-width: 1.3in; }
+table.tok td.v { max-width: none; word-break: normal; white-space: nowrap; font-size: 7pt; }
+@page { size: Letter; margin: 0.65in 0.6in 0.8in; }
+@page :first { margin: 0.65in 0.6in 0.8in; }
+.chapter { break-before: auto; }
+.intro { font-size: 11pt; color: rgba(27,26,23,.78); max-width: 6.6in; margin: -8pt 0 14pt; }
+.divider { height: 9.4in; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 1in; border-left: 6px solid var(--blue-700); padding-left: 28pt; }
+.pnum { font-family: var(--font-heading); font-size: 14pt; letter-spacing: .2em; text-transform: uppercase; color: var(--blue-700); font-weight: 600; }
+.ptitle { font-family: var(--font-display); font-size: 52pt; font-weight: 600; line-height: 1; margin: 8pt 0 16pt; }
+.plede { font-size: 13pt; max-width: 5.6in; color: rgba(27,26,23,.75); }
+.doc { margin-bottom: 18pt; }
+.doc .src { font-family: var(--font-mono); font-size: 7pt; color: rgba(27,26,23,.5); border-top: 2px solid var(--parchment-fg); padding-top: 4pt; margin-top: 10pt; }
+.doc h1 { font-family: var(--font-heading); font-size: 18pt; margin: 6pt 0 8pt; }
+.doc table { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin: 6pt 0; table-layout: auto; }
+.doc th { background: var(--parchment-bg); text-align: left; padding: 3pt 4pt; border-bottom: 1px solid rgba(27,26,23,.34); }
+.doc td { padding: 3pt 4pt; border-bottom: 1px solid rgba(27,26,23,.09); vertical-align: top; word-break: break-word; }
+.doc tr { break-inside: avoid; }
+.doc pre { background: var(--surface-quiet); padding: 6pt 8pt; border-radius: 6px; white-space: pre-wrap; word-break: break-word; font-size: 7.5pt; }
+.doc code { font-size: 8pt; }
+.doc li { margin: 1.5pt 0; }
+figure.shot { margin: 6pt 0 14pt; break-inside: avoid; }
+figure.shot img { width: 100%; max-height: 9in; object-fit: contain; object-position: left top; border: 1px solid rgba(27,26,23,.16); border-radius: 4px; display: block; }
+figcaption { font-size: 8.5pt; color: rgba(27,26,23,.68); margin-top: 3pt; font-family: var(--font-heading); font-weight: 600; letter-spacing: -.01em; }
+.cont { font-weight: 400; }
+.assetgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; }
+.asset { border: 1px solid rgba(27,26,23,.16); border-radius: 6px; padding: 10pt; background: var(--parchment-panel); break-inside: avoid; }
+.asset.dark { background: var(--ink-bg); }
+.asset.dark .an { color: rgba(236,238,242,.64); }
+.asset img { width: 100%; height: 70pt; object-fit: contain; }
+.an { font-family: var(--font-mono); font-size: 6.5pt; margin-top: 4pt; color: rgba(27,26,23,.6); word-break: break-all; }
+.icongrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6pt; }
+.ic { text-align: center; border: 1px solid rgba(27,26,23,.09); border-radius: 4px; padding: 6pt 2pt 3pt; break-inside: avoid; }
+.ic img { width: 22pt; height: 22pt; }
+.ic div { font-family: var(--font-mono); font-size: 5.5pt; color: rgba(27,26,23,.6); word-break: break-all; }
+.pair { break-inside: avoid; margin-bottom: 12pt; }
+.pair h3 { margin: 6pt 0 4pt; }
+.pair .g { font-weight: 400; font-size: 8pt; color: rgba(27,26,23,.55); text-transform: uppercase; letter-spacing: .06em; margin-left: 6pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; align-items: start; }
+.two img { width: 100%; border: 1px solid rgba(27,26,23,.16); border-radius: 4px; }
+.toc2 h1 { margin-bottom: 10pt; }
+.toc2 .tp { font-family: var(--font-heading); font-weight: 600; font-size: 13pt; margin: 12pt 0 3pt; color: var(--blue-700); text-transform: uppercase; letter-spacing: .08em; }
+.toc2 .te { display: flex; font-size: 9pt; line-height: 1.55; }
+.toc2 .te .t { flex: 1; overflow: hidden; white-space: nowrap; }
+.toc2 .te .t:after { content: " ........................................................................................................................................"; color: rgba(27,26,23,.3); }
+.toc2 .te .n { padding-left: 6pt; font-variant-numeric: tabular-nums; }
+table.dt { width: 100%; border-collapse: collapse; font-size: 7.5pt; margin: 4pt 0 10pt; }
+table.dt th { background: var(--parchment-bg); text-align: left; padding: 3pt 4pt; border-bottom: 1px solid rgba(27,26,23,.34); font-weight: 600; vertical-align: bottom; }
+table.dt td { padding: 3pt 4pt; border-bottom: 1px solid rgba(27,26,23,.09); vertical-align: top; word-break: normal; overflow-wrap: anywhere; }
+table.dt tr { break-inside: avoid; }
+table.dt td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.kvt th { width: 28%; }
+table.dt ul, .kv ul { margin: 0; padding-left: 1.1em; }
+.kv { font-size: 8pt; } .kv > div { margin: 1pt 0; }
+.rec { border: 1px solid rgba(27,26,23,.12); border-radius: 4px; padding: 5pt 7pt; margin: 0 0 6pt; break-inside: avoid; font-size: 8pt; }
+.rec .rt { font-family: var(--font-heading); font-weight: 600; font-size: 10pt; margin-bottom: 2pt; }
+.code { margin: 0 0 12pt; }
+.code pre { font-size: 6.6pt; line-height: 1.35; background: var(--surface-quiet); border: 1px solid rgba(27,26,23,.09); border-radius: 4px; padding: 6pt 8pt; white-space: pre-wrap; word-break: break-word; margin: 2pt 0 0; }
+.ov p { font-size: 10pt; }

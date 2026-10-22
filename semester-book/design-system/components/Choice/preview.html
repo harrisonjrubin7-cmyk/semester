@@ -1,0 +1,10 @@
+<!-- @dsCard group="Forms" height=150 -->
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:24px;background:var(--surface-canvas)}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:grid;gap:16px;align-content:start}</style></head><body><div id="root"></div>
+<script>
+const N = window.SemesterDesignSystem_e9f3ba;
+function Demo() {
+  const [vis, setVis] = React.useState("me");
+  return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(N.Choice, { name: "vis", label: "Only me", about: "Nobody else can see this note.", checked: vis === "me", onChange: () => setVis("me") }), /* @__PURE__ */ React.createElement(N.Choice, { name: "vis", label: "My advisor", about: "Dr. Okafor can read it during advising.", checked: vis === "adv", onChange: () => setVis("adv") }));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(Demo, null));
+</script></body></html>

@@ -1,0 +1,736 @@
+[
+ {
+  "kind": "comp",
+  "name": "AIResponse",
+  "f": "components/AIResponse/preview.html",
+  "meta": {
+   "group": "AI"
+  },
+  "file": "comp-AIResponse.png",
+  "w": 860,
+  "h": 257,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ActionPreview",
+  "f": "components/ActionPreview/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-ActionPreview.png",
+  "w": 860,
+  "h": 267,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ApprovalBanner",
+  "f": "components/ApprovalBanner/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ApprovalBanner.png",
+  "w": 860,
+  "h": 114,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Avatar",
+  "f": "components/Avatar/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Avatar.png",
+  "w": 860,
+  "h": 88,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Button",
+  "f": "components/Button/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-Button.png",
+  "w": 860,
+  "h": 140,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Choice",
+  "f": "components/Choice/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Choice.png",
+  "w": 860,
+  "h": 157,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Combobox",
+  "f": "components/Combobox/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Combobox.png",
+  "w": 860,
+  "h": 307,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "CommandPalette",
+  "f": "components/CommandPalette/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-CommandPalette.png",
+  "w": 860,
+  "h": 357,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ConsentBadge",
+  "f": "components/ConsentBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ConsentBadge.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ContextBar",
+  "f": "components/ContextBar/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ContextBar.png",
+  "w": 860,
+  "h": 147,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Cover",
+  "f": "components/Cover/preview.html",
+  "meta": {},
+  "file": "comp-Cover.png",
+  "w": 960,
+  "h": 264,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DataTable",
+  "f": "components/DataTable/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-DataTable.png",
+  "w": 860,
+  "h": 217,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DateField",
+  "f": "components/DateField/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-DateField.png",
+  "w": 860,
+  "h": 137,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DecisionTrail",
+  "f": "components/DecisionTrail/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-DecisionTrail.png",
+  "w": 860,
+  "h": 250,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Dialog",
+  "f": "components/Dialog/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-Dialog.png",
+  "w": 860,
+  "h": 472,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "EmptyState",
+  "f": "components/EmptyState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-EmptyState.png",
+  "w": 860,
+  "h": 174,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ErrorState",
+  "f": "components/ErrorState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-ErrorState.png",
+  "w": 860,
+  "h": 202,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ErrorSummary",
+  "f": "components/ErrorSummary/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ErrorSummary.png",
+  "w": 860,
+  "h": 151,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Fields",
+  "f": "components/Fields/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-Fields.png",
+  "w": 860,
+  "h": 120,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "FocusBar",
+  "f": "components/FocusBar/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-FocusBar.png",
+  "w": 860,
+  "h": 94,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "HealthBadge",
+  "f": "components/HealthBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-HealthBadge.png",
+  "w": 860,
+  "h": 72,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Icon",
+  "f": "components/Icon/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Icon.png",
+  "w": 860,
+  "h": 67,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "IconButton",
+  "f": "components/IconButton/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-IconButton.png",
+  "w": 860,
+  "h": 88,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Iconography",
+  "f": "components/Iconography/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Lucide-like, 24 grid, 1.5 stroke, round caps — the app’s own set"
+  },
+  "file": "comp-Iconography.png",
+  "w": 860,
+  "h": 134,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LoadingState",
+  "f": "components/LoadingState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-LoadingState.png",
+  "w": 860,
+  "h": 266,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LogoMark",
+  "f": "components/LogoMark/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Three slabs — a term rising, cresting, running out"
+  },
+  "file": "comp-LogoMark.png",
+  "w": 860,
+  "h": 220,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LogoSystem",
+  "f": "components/LogoSystem/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Horizontal, stacked, mono, reversed, favicon, co-brand"
+  },
+  "file": "comp-LogoSystem.png",
+  "w": 1200,
+  "h": 820,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "MetricTile",
+  "f": "components/MetricTile/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-MetricTile.png",
+  "w": 860,
+  "h": 178,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "NextSteps",
+  "f": "components/NextSteps/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-NextSteps.png",
+  "w": 860,
+  "h": 192,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Notice",
+  "f": "components/Notice/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-Notice.png",
+  "w": 860,
+  "h": 81,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ObjectCard",
+  "f": "components/ObjectCard/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ObjectCard.png",
+  "w": 860,
+  "h": 267,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "OfflineStrip",
+  "f": "components/OfflineStrip/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-OfflineStrip.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "OpenIn",
+  "f": "components/OpenIn/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-OpenIn.png",
+  "w": 860,
+  "h": 80,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PageHeader",
+  "f": "components/PageHeader/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-PageHeader.png",
+  "w": 860,
+  "h": 174,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PermissionNotice",
+  "f": "components/PermissionNotice/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-PermissionNotice.png",
+  "w": 860,
+  "h": 152,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PolicyBadge",
+  "f": "components/PolicyBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-PolicyBadge.png",
+  "w": 860,
+  "h": 73,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProgressState",
+  "f": "components/ProgressState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-ProgressState.png",
+  "w": 860,
+  "h": 165,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProvenanceChart",
+  "f": "components/ProvenanceChart/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-ProvenanceChart.png",
+  "w": 860,
+  "h": 237,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProvenanceChips",
+  "f": "components/ProvenanceChips/preview.html",
+  "meta": {
+   "group": "AI"
+  },
+  "file": "comp-ProvenanceChips.png",
+  "w": 860,
+  "h": 73,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "QuickActions",
+  "f": "components/QuickActions/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-QuickActions.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SaveState",
+  "f": "components/SaveState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-SaveState.png",
+  "w": 860,
+  "h": 66,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ScreenGuide",
+  "f": "components/ScreenGuide/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ScreenGuide.png",
+  "w": 860,
+  "h": 195,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SectionLabel",
+  "f": "components/SectionLabel/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-SectionLabel.png",
+  "w": 860,
+  "h": 65,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Segmented",
+  "f": "components/Segmented/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Segmented.png",
+  "w": 860,
+  "h": 84,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Select",
+  "f": "components/Select/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Select.png",
+  "w": 860,
+  "h": 116,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Sheet",
+  "f": "components/Sheet/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-Sheet.png",
+  "w": 860,
+  "h": 347,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SideRail",
+  "f": "components/SideRail/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-SideRail.png",
+  "w": 860,
+  "h": 390,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SourceBadge",
+  "f": "components/SourceBadge/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-SourceBadge.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SourceLine",
+  "f": "components/SourceLine/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-SourceLine.png",
+  "w": 860,
+  "h": 101,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "StatusChip",
+  "f": "components/StatusChip/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-StatusChip.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "StepStatus",
+  "f": "components/StepStatus/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-StepStatus.png",
+  "w": 860,
+  "h": 135,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SuccessState",
+  "f": "components/SuccessState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-SuccessState.png",
+  "w": 860,
+  "h": 158,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SupportHandoff",
+  "f": "components/SupportHandoff/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-SupportHandoff.png",
+  "w": 860,
+  "h": 283,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Switch",
+  "f": "components/Switch/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Switch.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SystemContextBar",
+  "f": "components/SystemContextBar/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-SystemContextBar.png",
+  "w": 860,
+  "h": 94,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "TabBar",
+  "f": "components/TabBar/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-TabBar.png",
+  "w": 860,
+  "h": 108,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "TextField",
+  "f": "components/TextField/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-TextField.png",
+  "w": 860,
+  "h": 243,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "UndoToast",
+  "f": "components/UndoToast/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-UndoToast.png",
+  "w": 860,
+  "h": 152,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "VisibilityPicker",
+  "f": "components/VisibilityPicker/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-VisibilityPicker.png",
+  "w": 860,
+  "h": 321,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Wordmark",
+  "f": "components/Wordmark/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Wordmark.png",
+  "w": 860,
+  "h": 97,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "WordmarkLockup",
+  "f": "components/WordmarkLockup/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Mark + SEMESTER in Barlow Condensed, tracked"
+  },
+  "file": "comp-WordmarkLockup.png",
+  "w": 860,
+  "h": 131,
+  "errs": []
+ }
+]

@@ -1,0 +1,26 @@
+// Every role → features → screens → functions. Design-level catalogue; links open the kit that renders each.
+window.ATLAS = [
+ { role: 'Student', kit: '../student/index.html', features: [
+  ['Today', ['Today', 'Course hub', 'Notifications'], ['See the next action', 'Source label on every fact', 'Snooze / complete', 'Ask Semester about this week']],
+  ['Plan', ['Calendar', 'Registration', 'Changes', 'Decisions', 'Runway', 'Pathway', 'Applying', 'Launchpad', 'Career', 'Opportunities', 'Costs & billing', 'Notes & tasks'], ['Add/schedule', 'Review → enroll/drop with preview', 'Clear holds', 'Track applications', 'Pay at processor']],
+  ['Learn', ['Courses', 'Grades', 'Import', 'Sources', 'Study', 'Meet', 'Ask Semester', 'Analyse', 'Solve', 'Exam prep', 'Work', 'Time', 'Group work', 'Draw', 'Decks', 'Write', 'Sheets', 'Equations', 'Create', 'Essay', 'Proofread'], ['Open course workspace', 'Submit work', 'Study cards/quizzes', 'AI help within course policy', 'Focus timer', 'Collaborate']],
+  ['Help', ['Support', 'Catching up', 'People', 'Family', 'Help'], ['No-wrong-door support', 'Share with family/advisor', 'Revoke shares', 'See access history']],
+  ['Campus', ['Campus', 'Maps', 'University', 'Activities', 'Classmates', 'Dining', 'Housing', 'Links', 'Mail', 'Calls', 'Athletics', 'NIL', 'Community'], ['Directions', 'RSVP', 'Report housing issue', 'Meal swipes', 'Post / report']],
+  ['Progress', ['Me', 'Reports', 'Degree', 'Advising'], ['Degree progress', 'What-if', 'Book + prepare advising', 'Weekly brief']],
+  ['You', ['Profile', 'Account', 'Settings', 'Connect', 'Privacy & data', 'Export'], ['Appearance + accessibility', 'Connect accounts', 'AI scope', 'Export / delete']]] },
+ { role: 'Applicant', kit: '../external/index.html', features: [['Application', ['Your application', 'Checklist', 'Cost estimate'], ['Track checklist', 'Remind recommender', 'Estimate net price', 'Book a visit']]] },
+ { role: 'Guardian', kit: '../external/index.html', features: [['Family portal', ['What’s shared with you', 'Billing milestones', 'Final grades'], ['View only what’s shared', 'Make a payment', 'Ask the student to share']]] },
+ { role: 'Alumni', kit: '../external/index.html', features: [['Alumni', ['Verified achievements', 'Mentoring requests', 'Visibility'], ['Download records', 'Accept mentoring', 'Set visibility']]] },
+ { role: 'Faculty', kit: '../staff/index.html', features: [['Teaching', ['Gradebook', 'Regrade requests', 'Course AI policy'], ['Draft vs release grades', 'Decide regrades', 'Set AI policy', 'Announce changes']]] },
+ { role: 'Teaching assistant', kit: '../staff/index.html', features: [['Grading', ['Grading queue'], ['Draft scores + comments', 'Next/previous submission', 'See own authority']]] },
+ { role: 'Advisor', kit: '../staff/index.html', features: [['Advising', ['Advisees', 'Shared degree plans', 'Meeting notes'], ['Open shared plans', 'Record agreed actions', 'Approve plans (if authorised)']]] },
+ { role: 'Registrar', kit: '../staff/index.html', features: [['Registration desk', ['Approval requests', 'Capacity', 'Record changes'], ['Approve overrides', 'Manage capacity', 'Audit trail']]] },
+ { role: 'Finance', kit: '../staff/index.html', features: [['Student accounts', ['Balances', 'Holds', 'Payment plans'], ['Release holds (two-person)', 'Set up plans', 'Refunds via processor']]] },
+ { role: 'Student affairs', kit: '../staff/index.html', features: [['Basic needs', ['Support requests', 'Resource directory'], ['Offer swipes/grants', 'Refer offices', 'See only what student shared']]] },
+ { role: 'IT / security', kit: '../console/index.html', features: [['Security operations', ['Privileged sessions', 'Sign-in alerts', 'Break-glass', 'Access review'], ['Revoke sessions', 'Request break-glass (2 approvers)', 'Export access review']], ['Configuration', ['Roles & permissions', 'Policies', 'Integrations', 'Feature flags'], ['Rotate credentials', 'Change flags', 'Map roles']]] },
+ { role: 'Institution admin', kit: '../console/index.html', features: [['Console', ['Overview', 'Approvals', 'Audit log', 'Compliance evidence'], ['Approve two-person duties', 'Export evidence', 'Release readiness']]] },
+ { role: 'Support / ops', kit: '../console/index.html', features: [['Support queue', ['Tickets', 'Student-granted access'], ['Diagnose sync', 'Reply', 'Escalate', 'Access expires with ticket']]] },
+ { role: 'Employer', kit: '../external/index.html', features: [['Postings', ['Posting', 'Applicants'], ['Edit posting', 'Review shared evidence', 'Move stage']]] },
+ { role: 'Marketplace partner', kit: '../external/index.html', features: [['Listing', ['Listing preview', 'Review checklist'], ['Submit for review', 'See student-facing labels']]] },
+ { role: 'Founder / company', kit: '../business/index.html', features: [['Business OS', ['Gap analysis', 'Launch tracker', '90-day roadmap', 'Go-to-market', 'Launch checklist', 'Pilot checklist', 'Risks', 'Hiring', 'Fundraising', 'Documents & decks'], ['Update status', 'Export CSV', 'Print pack', 'Present decks']], ['Platform', ['Architecture', 'Lag simulator', 'Role lens', 'Workflow lab', 'Compliance', 'Company site'], ['Model projections', 'Audit WCAG/FTC', 'Route AI workflows']]] },
+];

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--action-primary,#416180)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="IT security · Sign in" style="min-height:100vh;background:#090a0e;color:#d9dde4;display:grid;place-items:center;padding:30px;font-family:var(--font-body)">
+<div style="width:100%;max-width:420px;display:grid;gap:24px;justify-items:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 26 }}" metal="{{ true }}" hint-size="180px,32px"></x-import>
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9aa1ad">Vanderbilt IT · Security operations</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:32px;letter-spacing:-.015em;margin:0;color:#f2f3f5;text-wrap:pretty">Everything you need to run Semester safely, in one place.</h1>
+<p style="margin:0;color:#9aa1ad;line-height:1.55">Institution console · production.</p>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="university" block="{{ true }}" loading="{{ signing }}" onClick="{{ signIn }}" hint-size="100%,44px">Sign in with Vanderbilt</x-import>
+<div style="font-size:13px;color:#9aa1ad">Console access requires a hardware key and is audited.</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="IT security · Console" style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="overview" groups="{{ rail }}" foot="Dana Park · IT Security" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="Console" term="Fall 2026 · Week 7" sync="{{ sync }}" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Console</div>
+<h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Good morning, Ms. Park</h1>
+<p style="color:var(--text-secondary);margin:6px 0 0">{{ headSub }}</p>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Integrations" columns="{{ cols }}" rows="{{ rows }}" hint-size="100%,200px"></x-import>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;display:grid;gap:14px;background:var(--surface-panel)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Finish setting up</div>
+<div style="font-size:13px;color:var(--text-secondary)">{{ doneCount }} of 3 done</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.StepStatus" steps="{{ setupSteps }}" hint-size="100%,110px"></x-import>
+<sc-if value="{{ at0 }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<div style="font-size:14px;line-height:1.5">Upload Vanderbilt’s identity provider metadata. Students sign in with VUnetID.</div>
+<sc-if value="{{ importing }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Validating SSO" done="{{ prog }}" total="{{ total }}" note="{{ progNote }}" hint-size="100%,90px"></x-import>
+</sc-if>
+<sc-if value="{{ canImport }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="privacy" onClick="{{ doImport }}" hint-size="200px,44px">Upload IdP metadata</x-import>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ at1 }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:6px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<div style="font-size:14px;line-height:1.5">Which data Ask Semester may read. Each type is off until you turn it on.</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="opt" label="Assignments and due dates only" about="Grades and records stay off." checked="{{ optA }}" onChange="{{ setA }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="opt" label="Nothing yet" about="Ask Semester works only on what a person pastes in." checked="{{ optB }}" onChange="{{ setB }}" hint-size="100%,56px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ next }}" hint-size="120px,44px">Save</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ at2 }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;gap:10px;border-top:1px solid var(--border-subtle);padding-top:14px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ fields }}" hint-size="100%,90px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ next }}" hint-size="160px,44px">Confirm</x-import>
+</div>
+</sc-if>
+<sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:14px;line-height:1.5;border-top:1px solid var(--border-subtle);padding-top:14px">Setup finished. Every AI data change is recorded in the audit log.</div>
+</sc-if>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" icon="back" onClick="{{ restart }}" hint-size="140px,44px">Start over</x-import>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { signed: false, signing: false, phase: 0, prog: 0, importing: false, opt: 'a' };
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { (this.timers = this.timers || []).push(setTimeout(fn, ms)); }
+  signIn = () => { this.setState({ signing: true }); this.later(() => this.setState({ signed: true, signing: false }), 1200); };
+  doImport = () => { const n = 3; this.setState({ importing: true, prog: 0 }); for (let i = 1; i <= n; i++) this.later(() => this.setState({ prog: i }), i * 700); this.later(() => this.setState({ phase: 1, importing: false }), n * 700 + 400); };
+  renderVals() {
+    const { signed, signing, phase, prog, importing, opt } = this.state;
+    const s = (i) => (phase > i ? 'done' : phase === i ? 'working' : 'waiting');
+    const on = phase >= 1;
+    return {
+      signedOut: !signed, signedIn: signed, signing, signIn: this.signIn,
+      rail: [{"items":[{"id":"overview","label":"Overview","icon":"today"},{"id":"integrations","label":"Integrations","icon":"connect"}]},{"label":"Work","items":[{"id":"ai","label":"AI data controls","icon":"ask"},{"id":"audit","label":"Audit log","icon":"proof"}]},{"label":"You","items":[{"id":"settings","label":"Settings","icon":"settings"}]}],
+      sync: importing ? 'syncing' : 'synced',
+      headSub: on ? "SSO healthy · 4 integrations live · AI on for 2 data types." : "Finish SSO setup before students can sign in.",
+      cols: [{"key":"i","label":"System"},{"key":"s","label":"Status"},{"key":"l","label":"Last sync"}],
+      rows: on ? [{"i":"SAML SSO","s":"Healthy","l":"Live"},{"i":"Brightspace","s":"Healthy","l":"4 min ago"},{"i":"Student information system","s":"Healthy","l":"1 h ago"},{"i":"Outlook","s":"Healthy","l":"12 min ago"}] : [{"i":"SAML SSO","s":"Not configured","l":"—"}],
+      setupSteps: [{ label: "Configure SAML SSO", state: s(0) }, { label: "Choose AI data access", state: s(1) }, { label: "Confirm security contacts", state: s(2) }],
+      doneCount: Math.min(phase, 3), at0: phase === 0, at1: phase === 1, at2: phase === 2, allDone: phase >= 3,
+      importing, canImport: !importing, doImport: this.doImport, prog, total: 3,
+      progNote: prog >= 3 ? 'Done · ' + "Metadata · certificate · test sign-in" : 'Step ' + (prog + 1) + ' of 3 · ' + "Metadata · certificate · test sign-in",
+      optA: opt === 'a', optB: opt === 'b', setA: () => this.setState({ opt: 'a' }), setB: () => this.setState({ opt: 'b' }),
+      fields: [{"field":"Incidents","value":"security@vanderbilt.edu"},{"field":"Notify within","value":"72 hours"},{"field":"Key holder","value":"Dana Park"}],
+      next: () => this.setState((x) => ({ phase: x.phase + 1 })),
+      restart: () => { (this.timers || []).forEach(clearTimeout); this.setState({ signed: false, signing: false, phase: 0, prog: 0, importing: false }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

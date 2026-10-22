@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Student screen" description="Semester student workspace: Ink side rail, context bar, page head, main column + aside, with source-labelled cards" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;height:100%}</style></helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="today" groups="{{ railGroups }}" foot="Northfield University" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="Today" term="Fall 2026 · Week 6" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px">
+<div><div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Today</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Tuesday, 7 October</h1><p style="color:var(--text-secondary);margin:6px 0 0">Three classes, one thing to begin, one hold to clear before Oct 14.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="plus" hint-size="120px,44px">Add a task</x-import>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Begin today</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ObjectCard" kind="Assignment" statuses="{{ cardStatuses }}" title="Lab report 3: Enzyme kinetics" provenance="{{ cardProvenance }}" explanation="Worth 12% of your grade. Methods drafted; results and discussion remain." metadata="Due Thu 9 Oct · 23:59" primary="{{ openDraft }}" secondary="{{ viewRubric }}" hint-size="100%,230px"></x-import>
+</div>
+<aside style="display:grid;gap:12px;align-content:start">
+<div style="font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Needs you</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.NextSteps" steps="{{ nextSteps }}" hint-size="100%,140px"></x-import>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      railGroups: [
+        { items: [{ id: 'today', label: 'Today', icon: 'today' }, { id: 'ask', label: 'Ask Semester', icon: 'ask' }] },
+        { label: 'Learning', items: [{ id: 'bio', label: 'BIO 210', icon: 'courses' }, { id: 'grades', label: 'Grades', icon: 'proof' }] },
+        { label: 'My Path', items: [{ id: 'degree', label: 'Degree', icon: 'degree' }, { id: 'reg', label: 'Registration', icon: 'registrar' }] },
+        { label: 'Life', items: [{ id: 'campus', label: 'Campus', icon: 'campus' }, { id: 'billing', label: 'Billing', icon: 'costs' }, { id: 'family', label: 'Family', icon: 'family' }] },
+      ],
+      cardStatuses: ['action-required'],
+      cardProvenance: { origin: 'official', by: 'BIO 210', age: 'Updated today' },
+      openDraft: { label: 'Open draft' },
+      viewRubric: { label: 'View rubric' },
+      nextSteps: [
+        { label: 'Clear immunization hold', why: 'Blocks spring registration on Oct 14.', icon: 'registrar' },
+        { label: 'Pay fall balance · $1,240.00', why: 'Due Oct 31. A payment plan is available.', icon: 'costs' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

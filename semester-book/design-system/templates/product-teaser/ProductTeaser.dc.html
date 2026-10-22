@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Product teaser (30 s)" description="1920×1080 five-scene loop: Chaos, Merge, Today, Trust, Close" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%;background:#040507}a{color:#94bce3}a:hover{color:#eceef2}</style>
+<script>window.OM_SCENES = '[{"name":"Chaos","dur":6,"desc":"Five school sites pile up with unread badges"},{"name":"Merge","dur":5,"desc":"The windows collapse into one Today card"},{"name":"Today","dur":9,"desc":"Today rows settle; the source label is highlighted"},{"name":"Trust","dur":6,"desc":"Card slides left; school AI-access switches appear"},{"name":"Close","dur":4,"desc":"Semester wordmark and URL, then fade to black"}]';</script>
+<script>window.OM_PLAYBACK = '{"mode":"loop"}';</script>
+<script>window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{"motionEditor":true,"captions":true}/*EDITMODE-END*/;</script>
+</helmet>
+<div style="position:fixed;inset:0">
+<x-import component-from-global-scope="Teaser" from="./animations-v3.jsx ./tweaks-panel.jsx ./teaser.jsx" hint-size="100%,100%"></x-import>
+</div>
+</x-dc>
+</body>
+</html>

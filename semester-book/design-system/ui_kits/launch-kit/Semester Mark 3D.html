@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Semester mark · 3D</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<style>html,body{margin:0;background:#090a0e}three-d-stage:not(:defined){visibility:hidden}three-d-stage{display:block;width:100vw;height:100vh}</style>
+</head>
+<body>
+<three-d-stage name="semester-mark" background="#12141a" autorotate></three-d-stage>
+<script src="three-d-stage.js"></script>
+<script type="module">
+const stage = document.querySelector('three-d-stage');
+const { THREE } = await stage.ready;
+
+// Mark slabs on the 512 grid (from the design system's markPaths)
+const SLABS = [
+  [[128,176],[204,208],[204,420],[128,388]],
+  [[218,65],[294,97],[294,404],[218,372]],
+  [[308,147],[384,179],[384,447],[308,415]],
+];
+const S = 0.3 / 382;           // mark 0.30 m tall
+const cx = 256, cy = 256;      // viewBox centre
+const depth = 0.04;
+
+const sterling = new THREE.MeshStandardMaterial({ name: 'sterling', color: 0xe4e8ef, metalness: 0.4, roughness: 0.28 });
+const sterlingEdge = new THREE.MeshStandardMaterial({ name: 'sterling_edge', color: 0xb9c0cc, metalness: 0.4, roughness: 0.4 });
+
+const mark = new THREE.Group();
+mark.name = 'semester_mark';
+SLABS.forEach((pts, i) => {
+  const shape = new THREE.Shape();
+  pts.forEach(([x, y], k) => {
+    const X = (x - cx) * S, Y = -(y - cy) * S;
+    k ? shape.lineTo(X, Y) : shape.moveTo(X, Y);
+  });
+  shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 4, curveSegments: 1 });
+  geo.translate(0, 0, -depth / 2);
+  const m = new THREE.Mesh(geo, [sterling, sterlingEdge]);
+  m.name = ['slab_left', 'slab_centre', 'slab_right'][i];
+  m.castShadow = true;
+  mark.add(m);
+});
+
+// rest base on y=0
+const box = new THREE.Box3().setFromObject(mark);
+mark.position.y = -box.min.y;
+const root = new THREE.Group();
+root.name = 'semester_mark_root';
+root.add(mark);
+stage.setObject(root);
+</script>
+</body>
+</html>

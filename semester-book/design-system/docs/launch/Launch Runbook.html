@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Semester — Pilot launch runbook</title><link rel="stylesheet" href="../../styles.css"><style>doc-page:not(:defined){visibility:hidden}a{color:#416180}a:hover{color:#1d2d3d}
+doc-page{font-family:'Barlow',sans-serif;color:#1b1a17;font-size:10.5pt;line-height:1.5}h1{font:700 26pt 'Barlow Condensed','Barlow',sans-serif;margin:0 0 4px}h2{font:700 14pt 'Barlow Condensed','Barlow',sans-serif;margin:22px 0 6px;border-top:2px solid #1b1a17;padding-top:8px;break-after:avoid}p{margin:0 0 6px}.sub{color:#5d5d60}
+table{width:100%;border-collapse:collapse;font-size:9.5pt;margin:6px 0}th{text-align:left;background:#f4f1ea;padding:5px 6px;border-bottom:1px solid #b7b7ba}td{padding:5px 6px;border-bottom:1px solid #e7e7ea;vertical-align:top}tr{break-inside:avoid}.box{break-inside:avoid;background:#f4f1ea;border-radius:6px;padding:10px 12px;margin:8px 0}</style></head><body>
+<doc-page margin="0.7in">
+<img src="../../assets/logo-horizontal.svg" alt="Semester" style="height:26px;margin-bottom:12px">
+<h1>Pilot launch runbook · Vanderbilt University</h1><p class="sub">Owner: founder. Status: draft, October 2026. Pilot dates aren't set yet, so every date below is relative to launch day (L).</p>
+<div class="box"><b>Rule:</b> nothing launches until every go/no-go gate is green, with evidence attached. "Ready" means tested in staging with the institution's real configuration, not described in a document.</div>
+<h2>1. Go / no-go gates</h2>
+<table><thead><tr><th>Gate</th><th>Evidence required</th><th>Owner</th><th>Due</th></tr></thead><tbody>
+<tr><td>DPA / FERPA addendum signed</td><td>Countersigned PDF on file</td><td>Founder</td><td>L−45</td></tr>
+<tr><td>HECVAT Full submitted and accepted</td><td>Vanderbilt IT acceptance email</td><td>Founder</td><td>L−30</td></tr>
+<tr><td>Cyber and E&amp;O insurance bound</td><td>Certificates of insurance sent to Vanderbilt</td><td>Founder</td><td>L−30</td></tr>
+<tr><td>VPAT / ACR delivered</td><td>ACR document and test log</td><td>Founder</td><td>L−30</td></tr>
+<tr><td>SAML SSO working in staging</td><td>Test logins for each pilot role</td><td>Eng</td><td>L−21</td></tr>
+<tr><td>SIS read sync reconciled</td><td>Reconciliation report: 0 unexplained mismatches</td><td>Eng</td><td>L−14</td></tr>
+<tr><td>RLS tests pass</td><td>CI run link; company roles can't read student tables</td><td>Eng</td><td>L−14</td></tr>
+<tr><td>AI gateway blocks student records</td><td>Red-team test log</td><td>Eng</td><td>L−14</td></tr>
+<tr><td>Backups and restore drill</td><td>Restore timed and documented</td><td>Eng</td><td>L−10</td></tr>
+<tr><td>Incident response contacts exchanged</td><td>Named contacts on both sides</td><td>Founder</td><td>L−7</td></tr>
+<tr><td>Success measures agreed</td><td>Signed one-page measures sheet</td><td>Founder + sponsor</td><td>L−7</td></tr>
+</tbody></table>
+<h2>2. Timeline</h2>
+<table><thead><tr><th>When</th><th>What</th></tr></thead><tbody>
+<tr><td>L−45 to L−30</td><td>Contracts, insurance, security review, accessibility report</td></tr>
+<tr><td>L−30 to L−14</td><td>SSO, SIS connection, role mapping, staging data checks</td></tr>
+<tr><td>L−14 to L−7</td><td>Staff training (advisors, registrar, Student Life), dry run with test accounts</td></tr>
+<tr><td>L−3</td><td>Final go/no-go meeting with the sponsor, then freeze changes</td></tr>
+<tr><td>L</td><td>Turn on for the pilot group, send the welcome email, open the watch room</td></tr>
+<tr><td>L+1 to L+7</td><td>Daily check-ins, then the week-1 review</td></tr>
+<tr><td>End of term</td><td>Results report against the agreed measures</td></tr>
+</tbody></table>
+<h2>3. Launch day</h2>
+<table><thead><tr><th>Time</th><th>Step</th><th>Check</th></tr></thead><tbody>
+<tr><td>08:00</td><td>Confirm status page green and SIS sync fresh (&lt;15 min)</td><td>Ops console</td></tr>
+<tr><td>08:30</td><td>Enable pilot cohort flag</td><td>Test login per role</td></tr>
+<tr><td>09:00</td><td>Institution sends the welcome email (from Vanderbilt, not Semester)</td><td>Sponsor confirms</td></tr>
+<tr><td>09:00–17:00</td><td>Watch errors, sign-in failures, support tickets and AI gateway blocks</td><td>Hourly note in the log</td></tr>
+<tr><td>17:00</td><td>Day-1 summary to the sponsor</td><td>Sent</td></tr></tbody></table>
+<h2>4. Rollback</h2>
+<p><b>Trigger any one of these:</b> a suspected student-data exposure; SSO down for more than 30 minutes; SIS data shown wrongly to a student; error rate above 2% for 15 minutes.</p>
+<p><b>Steps:</b> 1) turn off the pilot cohort flag; 2) show the holding message; 3) tell the Vanderbilt contact within 1 hour; 4) if student data might be involved, follow the incident response plan and the DPA notice terms; 5) fix, retest in staging, and re-run the go/no-go before re-enabling.</p>
+<h2>5. Support in week 1</h2>
+<p>Staff questions go to the support desk (target first response under 1 hour during pilot hours). Student questions go through Vanderbilt's help channel first and are escalated to Semester only when needed. Every issue is logged with its cause and fix, and the log feeds the week-1 review.</p>
+<h2>6. Communications</h2>
+<table><thead><tr><th>Audience</th><th>Message</th><th>Sender</th></tr></thead><tbody>
+<tr><td>Pilot students</td><td>What it is, what data it uses, how to get help</td><td>Vanderbilt</td></tr>
+<tr><td>Pilot staff</td><td>Training links, the support path, what's in scope</td><td>Vanderbilt + Semester</td></tr>
+<tr><td>Sponsor</td><td>Daily in week 1, then weekly</td><td>Founder</td></tr>
+<tr><td>Public</td><td>Nothing until both sides approve. The Vanderbilt name is cleared for use, but the wording is agreed first</td><td>Founder</td></tr></tbody></table>
+</doc-page><script src="./doc-page.js"></script></body></html>

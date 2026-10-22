@@ -1,0 +1,202 @@
+[
+{
+"id": "index",
+"path": "docs/index.html",
+"url": "http://127.0.0.1:8765/docs/index.html"
+},
+{
+"id": "operate-Operations-Handbook",
+"path": "docs/operate/Operations Handbook.html",
+"url": "http://127.0.0.1:8765/docs/operate/Operations%20Handbook.html"
+},
+{
+"id": "operate-Runbooks",
+"path": "docs/operate/Runbooks.html",
+"url": "http://127.0.0.1:8765/docs/operate/Runbooks.html"
+},
+{
+"id": "operate-index",
+"path": "docs/operate/index.html",
+"url": "http://127.0.0.1:8765/docs/operate/index.html"
+},
+{
+"id": "legal-Accessibility-Statement",
+"path": "docs/legal/Accessibility Statement.html",
+"url": "http://127.0.0.1:8765/docs/legal/Accessibility%20Statement.html"
+},
+{
+"id": "legal-Community-Guidelines",
+"path": "docs/legal/Community Guidelines.html",
+"url": "http://127.0.0.1:8765/docs/legal/Community%20Guidelines.html"
+},
+{
+"id": "legal-Cookie-Notice",
+"path": "docs/legal/Cookie Notice.html",
+"url": "http://127.0.0.1:8765/docs/legal/Cookie%20Notice.html"
+},
+{
+"id": "legal-Data-Protection-Addendum",
+"path": "docs/legal/Data Protection Addendum.html",
+"url": "http://127.0.0.1:8765/docs/legal/Data%20Protection%20Addendum.html"
+},
+{
+"id": "legal-Master-Services-Agreement",
+"path": "docs/legal/Master Services Agreement.html",
+"url": "http://127.0.0.1:8765/docs/legal/Master%20Services%20Agreement.html"
+},
+{
+"id": "legal-Order-Form",
+"path": "docs/legal/Order Form.html",
+"url": "http://127.0.0.1:8765/docs/legal/Order%20Form.html"
+},
+{
+"id": "legal-Privacy-Policy",
+"path": "docs/legal/Privacy Policy.html",
+"url": "http://127.0.0.1:8765/docs/legal/Privacy%20Policy.html"
+},
+{
+"id": "legal-Subprocessors",
+"path": "docs/legal/Subprocessors.html",
+"url": "http://127.0.0.1:8765/docs/legal/Subprocessors.html"
+},
+{
+"id": "legal-Terms-of-Service",
+"path": "docs/legal/Terms of Service.html",
+"url": "http://127.0.0.1:8765/docs/legal/Terms%20of%20Service.html"
+},
+{
+"id": "brief-FAQ",
+"path": "docs/brief/FAQ.html",
+"url": "http://127.0.0.1:8765/docs/brief/FAQ.html"
+},
+{
+"id": "brief-One-pager",
+"path": "docs/brief/One-pager.html",
+"url": "http://127.0.0.1:8765/docs/brief/One-pager.html"
+},
+{
+"id": "brief-Role-sheets",
+"path": "docs/brief/Role sheets.html",
+"url": "http://127.0.0.1:8765/docs/brief/Role%20sheets.html"
+},
+{
+"id": "brief-index",
+"path": "docs/brief/index.html",
+"url": "http://127.0.0.1:8765/docs/brief/index.html"
+},
+{
+"id": "build-Accessibility-Test-Plan",
+"path": "docs/build/Accessibility Test Plan.html",
+"url": "http://127.0.0.1:8765/docs/build/Accessibility%20Test%20Plan.html"
+},
+{
+"id": "build-Engineering-Playbook",
+"path": "docs/build/Engineering Playbook.html",
+"url": "http://127.0.0.1:8765/docs/build/Engineering%20Playbook.html"
+},
+{
+"id": "build-QA-Test-Plan",
+"path": "docs/build/QA Test Plan.html",
+"url": "http://127.0.0.1:8765/docs/build/QA%20Test%20Plan.html"
+},
+{
+"id": "build-index",
+"path": "docs/build/index.html",
+"url": "http://127.0.0.1:8765/docs/build/index.html"
+},
+{
+"id": "guides-Architecture-Guide",
+"path": "docs/guides/Architecture Guide.html",
+"url": "http://127.0.0.1:8765/docs/guides/Architecture%20Guide.html"
+},
+{
+"id": "guides-Developer-Guide",
+"path": "docs/guides/Developer Guide.html",
+"url": "http://127.0.0.1:8765/docs/guides/Developer%20Guide.html"
+},
+{
+"id": "guides-User-Guide",
+"path": "docs/guides/User Guide.html",
+"url": "http://127.0.0.1:8765/docs/guides/User%20Guide.html"
+},
+{
+"id": "secure-Platform-Security-Review",
+"path": "docs/secure/Platform Security Review.html",
+"url": "http://127.0.0.1:8765/docs/secure/Platform%20Security%20Review.html"
+},
+{
+"id": "secure-Security-Policies",
+"path": "docs/secure/Security Policies.html",
+"url": "http://127.0.0.1:8765/docs/secure/Security%20Policies.html"
+},
+{
+"id": "secure-Security-Readiness",
+"path": "docs/secure/Security Readiness.html",
+"url": "http://127.0.0.1:8765/docs/secure/Security%20Readiness.html"
+},
+{
+"id": "secure-index",
+"path": "docs/secure/index.html",
+"url": "http://127.0.0.1:8765/docs/secure/index.html"
+},
+{
+"id": "grow-GTM-Plan",
+"path": "docs/grow/GTM Plan.html",
+"url": "http://127.0.0.1:8765/docs/grow/GTM%20Plan.html"
+},
+{
+"id": "grow-index",
+"path": "docs/grow/index.html",
+"url": "http://127.0.0.1:8765/docs/grow/index.html"
+},
+{
+"id": "run-Finance-Model",
+"path": "docs/run/Finance Model.html",
+"url": "http://127.0.0.1:8765/docs/run/Finance%20Model.html"
+},
+{
+"id": "run-Hiring-Plan",
+"path": "docs/run/Hiring Plan.html",
+"url": "http://127.0.0.1:8765/docs/run/Hiring%20Plan.html"
+},
+{
+"id": "run-index",
+"path": "docs/run/index.html",
+"url": "http://127.0.0.1:8765/docs/run/index.html"
+},
+{
+"id": "launch-Cutover-Plan",
+"path": "docs/launch/Cutover Plan.html",
+"url": "http://127.0.0.1:8765/docs/launch/Cutover%20Plan.html"
+},
+{
+"id": "launch-Launch-Runbook",
+"path": "docs/launch/Launch Runbook.html",
+"url": "http://127.0.0.1:8765/docs/launch/Launch%20Runbook.html"
+},
+{
+"id": "launch-Support-Plan",
+"path": "docs/launch/Support Plan.html",
+"url": "http://127.0.0.1:8765/docs/launch/Support%20Plan.html"
+},
+{
+"id": "launch-index",
+"path": "docs/launch/index.html",
+"url": "http://127.0.0.1:8765/docs/launch/index.html"
+},
+{
+"id": "kitdoc-business-Market-Research",
+"path": "ui_kits/business/Market Research.html",
+"url": "http://127.0.0.1:8765/ui_kits/business/Market%20Research.html"
+},
+{
+"id": "kitdoc-business-Operating-Manual",
+"path": "ui_kits/business/Operating Manual.html",
+"url": "http://127.0.0.1:8765/ui_kits/business/Operating%20Manual.html"
+},
+{
+"id": "kitdoc-business-Operating-Pack",
+"path": "ui_kits/business/Operating Pack.html",
+"url": "http://127.0.0.1:8765/ui_kits/business/Operating%20Pack.html"
+}
+]

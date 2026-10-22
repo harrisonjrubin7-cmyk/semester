@@ -1,0 +1,30 @@
+<!-- @dsCard height=288 -->
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;height:100%}
+body{background:var(--surface-canvas);position:relative;overflow:hidden;width:960px;height:288px}
+svg{position:absolute;left:0;top:0;display:block}
+.ink{fill:var(--brand-ink)}.blue{fill:var(--brand-accent)}.brass{fill:var(--brass)}.sterling{fill:var(--sterling)}.tint{fill:var(--official-tint)}
+.rule{stroke:var(--surface-canvas);stroke-width:1px}
+.name{position:absolute;left:var(--space-6);bottom:var(--space-5);right:var(--space-6)}
+.name h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:64px;line-height:.95;letter-spacing:0;color:var(--brand-ink);white-space:nowrap}
+.name p{margin:var(--space-1) 0 0;font-family:var(--font-body);font-size:14px;line-height:1.4;color:var(--brand-muted)}
+</style></head><body>
+<svg width="960" height="112" viewBox="0 0 960 112" aria-hidden="true">
+<!--
+blocks: brand-ink 384 (space-12 x4) · brand-accent 240 (space-5 x6) · brass 144 (space-6 x3) · sterling 96 (space-12) · official-tint 96 (space-12), each 112 tall (space-12 + space-2)
+arrangement: top-band skeleton — one flush strip of unequal bands bleeding off the top and both edges, like the Ink chrome bar above Parchment content; the name is too wide for the 440px zone
+pattern: editorial, serif, "borders not shadows" → a baseline grid of 4 hairlines (1px, ground cut out of the blocks) at space-3 pitch; chosen because the system ranks hierarchy "by hairline first"
+scales: widths and band height from space-2/5/6/12; square corners (r-sm drawn corners are below the band's scale, and the strip bleeds off three edges); text inset space-6 / space-5
+-->
+<rect class="ink" x="0" y="0" width="384" height="112"/>
+<rect class="blue" x="384" y="0" width="240" height="112"/>
+<rect class="brass" x="624" y="0" width="144" height="112"/>
+<rect class="sterling" x="768" y="0" width="96" height="112"/>
+<rect class="tint" x="864" y="0" width="96" height="112"/>
+<line class="rule" x1="0" y1="24.5" x2="960" y2="24.5"/>
+<line class="rule" x1="0" y1="48.5" x2="960" y2="48.5"/>
+<line class="rule" x1="0" y1="72.5" x2="960" y2="72.5"/>
+<line class="rule" x1="0" y1="96.5" x2="960" y2="96.5"/>
+</svg>
+<div class="name"><h1>Semester Design System</h1><p>Calm, scholarly and source-aware.</p></div>
+</body></html>

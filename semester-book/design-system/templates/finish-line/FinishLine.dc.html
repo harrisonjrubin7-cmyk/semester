@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Finish line" description="Everything left before launch, by stream, with owners and evidence" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="{{ cur }}" onNavigate="{{ go }}" groups="{{ rail }}" foot="Finish line · completion requires evidence" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="{{ loc }}" term="90-day plan · day 1" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1240px;margin:0 auto;padding:28px 30px 64px">
+
+<sc-if value="{{ isPilot }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Pilot loop" style="display:grid;gap:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Phase 3 · Registration Readiness Pilot · Vanderbilt</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">The 18-step pilot loop</h1><p style="color:var(--text-secondary);margin:6px 0 0">A step counts only when its evidence is filed. Select a step to see what proves it.</p></div>
+<div style="min-width:min(100%,320px)"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Steps with evidence" done="{{ pilotDone }}" total="{{ 18 }}" note="{{ pilotNote }}" hint-size="100%,80px"></x-import></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:0">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="18">
+<sc-if value="{{ st.on }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ st.pick }}" style="display:grid;grid-template-columns:32px minmax(0,1fr) 90px;gap:12px;align-items:baseline;padding:12px;text-align:left;font:inherit;color:inherit;cursor:pointer;border:0;border-bottom:1px solid var(--border-subtle);background:var(--action-secondary);box-shadow:inset 3px 0 0 var(--action-primary);font-weight:600">
+<span style="font-variant-numeric:tabular-nums;color:var(--text-secondary);font-size:14px">{{ st.num }}</span>
+<span style="font-size:15px">{{ st.label }}</span>
+<span style="font-size:13px;color:var(--text-secondary);text-align:right">{{ st.mark }}</span>
+</button></sc-if><sc-if value="{{ st.off }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ st.pick }}" style="display:grid;grid-template-columns:32px minmax(0,1fr) 90px;gap:12px;align-items:baseline;padding:12px;text-align:left;font:inherit;color:inherit;cursor:pointer;border:0;border-bottom:1px solid var(--border-subtle);background:transparent;font-weight:400">
+<span style="font-variant-numeric:tabular-nums;color:var(--text-secondary);font-size:14px">{{ st.num }}</span>
+<span style="font-size:15px">{{ st.label }}</span>
+<span style="font-size:13px;color:var(--text-secondary);text-align:right">{{ st.mark }}</span>
+</button></sc-if>
+</sc-for>
+</div>
+<aside style="display:grid;gap:14px;position:sticky;top:16px;border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base)">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Step {{ step.num }}</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ step.label }}</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ step.fields }}" hint-size="100%,260px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Switch" label="Evidence filed" checked="{{ step.on }}" onChange="{{ step.toggle }}" hint-size="100%,36px"></x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReady }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Readiness" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Phase 4 · Domain replacement readiness</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">14 domains × 21 gates</h1><p style="color:var(--text-secondary);margin:6px 0 0">Click a cell to mark a gate passed. A domain is authoritative only at 21 of 21.</p></div>
+<div style="overflow:auto;border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base)">
+<div style="display:grid;grid-template-columns:200px repeat(21,34px) 90px;min-width:max-content">
+<div style="position:sticky;left:0;background:var(--surface-base);padding:8px 12px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border-strong)">Domain</div>
+<sc-for list="{{ gateHeads }}" as="g" hint-placeholder-count="21">
+<div title="{{ g.full }}" style="padding:8px 0;text-align:center;font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border-strong);font-variant-numeric:tabular-nums">{{ g.n }}</div>
+</sc-for>
+<div style="padding:8px 12px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);border-bottom:1px solid var(--border-strong)">Passed</div>
+<sc-for list="{{ matrix }}" as="row" hint-placeholder-count="14">
+<div style="position:sticky;left:0;background:var(--surface-base);padding:8px 12px;font-size:14px;border-bottom:1px solid var(--border-subtle)">{{ row.name }}</div>
+<sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="21">
+<sc-if value="{{ c.on }}" hint-placeholder-val="{{ false }}"><button type="button" title="{{ c.title }}" aria-label="{{ c.title }}" onClick="{{ c.toggle }}" style="width:34px;height:34px;border:0;border-bottom:1px solid var(--border-subtle);border-left:1px solid var(--border-subtle);cursor:pointer;font:inherit;font-size:14px;font-weight:600;background:var(--action-secondary);color:var(--action-primary)">{{ c.glyph }}</button></sc-if><sc-if value="{{ c.off }}" hint-placeholder-val="{{ true }}"><button type="button" title="{{ c.title }}" aria-label="{{ c.title }}" onClick="{{ c.toggle }}" style="width:34px;height:34px;border:0;border-bottom:1px solid var(--border-subtle);border-left:1px solid var(--border-subtle);cursor:pointer;font:inherit;font-size:14px;font-weight:600;background:transparent;color:var(--text-tertiary)">{{ c.glyph }}</button></sc-if>
+</sc-for>
+<div style="padding:8px 12px;font-size:14px;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border-subtle)">{{ row.score }}</div>
+</sc-for>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px;font-size:13px;color:var(--text-secondary)">
+<sc-for list="{{ gateHeads }}" as="g" hint-placeholder-count="21"><div>{{ g.n }} · {{ g.full }}</div></sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRelease }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Release evidence" style="display:grid;gap:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Phase 6 · Release evidence register</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Registration readiness · release 2026.10.2</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ markReady }}" disabled="{{ notReady }}" hint-size="220px,44px">{{ readyLabel }}</x-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:32px;align-items:start">
+<div style="display:grid;gap:2px">
+<sc-for list="{{ evidence }}" as="e" hint-placeholder-count="20">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="checkbox" label="{{ e.label }}" checked="{{ e.on }}" onChange="{{ e.toggle }}" hint-size="100%,40px"></x-import>
+</sc-for>
+</div>
+<aside style="display:grid;gap:14px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProgressState" label="Evidence attached" done="{{ evDone }}" total="{{ 20 }}" note="{{ evNote }}" hint-size="100%,80px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="{{ relHead }}" hint-size="100%,56px">{{ relBody }}</x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCadence }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Cadence" style="display:grid;gap:20px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Phase 7 · Operating rhythm</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Reviews this period</h1><p style="color:var(--text-secondary);margin:6px 0 0">As a solo founder, each review is a 30-minute block with a written note.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px">
+<sc-for list="{{ cadence }}" as="cg" hint-placeholder-count="3">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;background:var(--surface-base);display:grid;gap:10px;align-content:start">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:20px">{{ cg.name }}</div><div style="font-size:13px;color:var(--text-secondary)">{{ cg.count }}</div></div>
+<sc-for list="{{ cg.items }}" as="ci" hint-placeholder-count="6">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Switch" label="{{ ci.label }}" checked="{{ ci.on }}" onChange="{{ ci.toggle }}" hint-size="100%,36px"></x-import>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const STEPS = [
+  ['Prospect is qualified', 'Founder', 'CRM account', 'Command center · Revenue', 'Signed qualification note'],
+  ['Pilot is scoped', 'Founder + provost’s office', 'Pilot proposal', 'Command center · Tenants', 'Signed scope with cohort size and dates'],
+  ['Contract and security boundary approved', 'University counsel + IT', 'Contract, DPA/FERPA, HECVAT', 'Command center · Trust', 'Countersigned contract and DPA'],
+  ['Tenant provisioned', 'Semester engineering', 'Tenant registry', 'Command center · Tenants', 'Tenant ID, region us-east-1, isolation test log'],
+  ['Roles and policy configured', 'University IT', 'Control plane', 'IT security onboarding', 'Role map and AI data-type settings export'],
+  ['Cohort imported or provisioned', 'Registrar', 'SIS / OneRoster CSV', 'Registrar onboarding', 'Import reconciliation: counts match'],
+  ['Official context synced or marked unavailable', 'Semester + registrar', 'SIS, Brightspace', 'Command center · Reliability', 'Freshness report; unavailable fields labelled'],
+  ['Students invited', 'Registrar / champion', 'Communications', 'Institution OS · Communications', 'Send log with audience count'],
+  ['Students onboard', 'Students', 'SSO', 'Student onboarding', 'Activation rate by day'],
+  ['First meaningful action', 'Students', 'Action Center', 'Student app · Today', 'Share completing one action in week 1'],
+  ['Readiness workflow complete', 'Students', 'Registration readiness', 'Student app · Registration', 'Holds cleared, plan saved, time ticket seen'],
+  ['Support and feedback operate', 'Semester support', 'Support queue', 'Command center · Support', 'First-reply median and ticket themes'],
+  ['Champion dashboard operates', 'Champion', 'Aggregates', 'Institution OS · Executive', 'Champion sign-in log'],
+  ['Weekly pilot review runs', 'Founder + champion', 'Pilot notes', 'Finish line · Cadence', 'Dated notes for every week'],
+  ['Midpoint executive review', 'Provost’s office', 'Outcome aggregates', 'Institution OS · Executive', 'Midpoint deck and decisions'],
+  ['Final outcome report', 'Founder', 'Outcome aggregates', 'Vision deck format', 'Report against agreed success metrics'],
+  ['Conversion decision recorded', 'University', 'Contract', 'Command center · Revenue', 'Written decision'],
+  ['Renewal or expansion plan', 'Founder + university', 'Account plan', 'Command center · Revenue', 'Signed plan or documented no'],
+];
+const DOMS = ['Learning', 'Course platform', 'AI', 'Advising', 'Registration', 'Academic record', 'Gradebook', 'Degree planning', 'Student account', 'Campus services', 'Career', 'Family', 'Institutional governance', 'Company operations'];
+const GATES = ['Functional parity', 'Data authority', 'Data model', 'Tenant isolation', 'Accessibility', 'Security', 'Privacy', 'Auditability', 'Integration', 'Migration', 'Reconciliation', 'Dual run', 'Rollback', 'Support', 'Monitoring', 'SLO', 'Training', 'Documentation', 'Institutional approval', 'Commercial readiness', 'Outcome proof'];
+const EVID = ['Requirement', 'Owner', 'Design', 'Source authority', 'Data classification', 'Permission model', 'Tenant scope', 'Accessibility evidence', 'Security review', 'Privacy and retention review', 'AI policy', 'Tests', 'Monitoring', 'SLO', 'Support path', 'Rollback', 'Documentation', 'Release evidence', 'Customer-facing claim review', 'Review date'];
+const CAD = [['Weekly', ['Product and engineering', 'Revenue and pipeline', 'Customer success', 'Support', 'Security and reliability', 'Operations inbox']], ['Monthly', ['Finance and runway', 'Trust and compliance', 'Access review', 'Vendor risk', 'Outcome measurement', 'Hiring and capacity']], ['Quarterly', ['OKRs', 'Roadmap', 'Risk review', 'Board and investor', 'Domain replacement review', 'Market and competitive review']]];
+const KEY = 'semester-finish-line-v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch (e) { return {} } };
+class Component extends DCLogic {
+  state = { cur: 'pilot', sel: 0, released: false, ...{ p: [], m: {}, e: [], c: [] }, ...load() };
+  save(patch) { this.setState(patch, () => { const { p, m, e, c } = this.state; localStorage.setItem(KEY, JSON.stringify({ p, m, e, c })); }); }
+  tog(arr, v) { const s = new Set(arr); s.has(v) ? s.delete(v) : s.add(v); return [...s]; }
+  renderVals() {
+    const st = this.state, P = new Set(st.p), E = new Set(st.e), C = new Set(st.c);
+    const labels = { pilot: 'Pilot loop', ready: 'Readiness', release: 'Release evidence', cadence: 'Cadence' };
+    const s = STEPS[st.sel];
+    const evDone = E.size;
+    return {
+      cur: st.cur, go: (id) => this.setState({ cur: id }), loc: 'Finish line · ' + labels[st.cur],
+      rail: [{ label: 'Finish line', items: [{ id: 'pilot', label: 'Pilot loop', icon: 'pathway' }, { id: 'ready', label: 'Readiness', icon: 'proof' }, { id: 'release', label: 'Release evidence', icon: 'export' }, { id: 'cadence', label: 'Cadence', icon: 'calendar' }] }],
+      isPilot: st.cur === 'pilot', isReady: st.cur === 'ready', isRelease: st.cur === 'release', isCadence: st.cur === 'cadence',
+      pilotDone: P.size, pilotNote: P.size === 18 ? 'Pilot loop complete with evidence' : 'Next without evidence: ' + (STEPS.find((_, i) => !P.has(i)) || [''])[0],
+      steps: STEPS.map((x, i) => ({ num: String(i + 1).padStart(2, '0'), label: x[0], mark: P.has(i) ? '✓ Evidence' : '—', pick: () => this.setState({ sel: i }),
+        on: i === st.sel, off: i !== st.sel, style: { display: 'grid', gridTemplateColumns: '32px minmax(0,1fr) 90px', gap: 12, alignItems: 'baseline', padding: '12px', textAlign: 'left', font: 'inherit', color: 'inherit', cursor: 'pointer', border: 0, borderBottom: '1px solid var(--border-subtle)', background: i === st.sel ? 'var(--action-secondary)' : 'transparent', boxShadow: i === st.sel ? 'inset 3px 0 0 var(--action-primary)' : 'none', fontWeight: i === st.sel ? 600 : 400 } })),
+      step: { num: String(st.sel + 1).padStart(2, '0'), label: s[0], on: P.has(st.sel), toggle: () => this.save({ p: this.tog(st.p, st.sel) }),
+        fields: [{ field: 'Owner', value: s[1] }, { field: 'Data source', value: s[2] }, { field: 'Screen', value: s[3] }, { field: 'Evidence that proves it', value: s[4] }, { field: 'If it fails', value: 'Pause the next step; log it in the weekly review' }] },
+      gateHeads: GATES.map((full, i) => ({ n: String(i + 1), full })),
+      matrix: DOMS.map((name, d) => { const row = new Set(st.m[d] || []); return { name, score: row.size + ' / 21', cells: GATES.map((g, i) => ({ title: name + ' · ' + g + (row.has(i) ? ' · passed' : ' · open'), glyph: row.has(i) ? '✓' : '·', toggle: () => this.save({ m: { ...st.m, [d]: this.tog(st.m[d] || [], i) } }),
+        on: row.has(i), off: !row.has(i), style: { width: 34, height: 34, border: 0, borderBottom: '1px solid var(--border-subtle)', borderLeft: '1px solid var(--border-subtle)', background: row.has(i) ? 'var(--action-secondary)' : 'transparent', color: row.has(i) ? 'var(--action-primary)' : 'var(--text-tertiary)', cursor: 'pointer', font: 'inherit', fontSize: 14, fontWeight: 600 } })) }; }),
+      evidence: EVID.map((label, i) => ({ label, on: E.has(i), toggle: () => this.save({ e: this.tog(st.e, i) }) })),
+      evDone, evNote: (20 - evDone) + ' items still missing', notReady: evDone < 20 || st.released, readyLabel: st.released ? 'Marked production-ready' : 'Mark production-ready',
+      markReady: () => this.setState({ released: true }),
+      relHead: evDone < 20 ? 'Blocked' : (st.released ? 'Production-ready' : 'Ready to mark'), relBody: evDone < 20 ? 'This release cannot be marked production-ready until all 20 evidence items are attached.' : 'All evidence attached. Marking it records your name and the date in the register.',
+      cadence: CAD.map(([name, items], g) => ({ name, count: items.filter((_, i) => C.has(g * 10 + i)).length + ' of ' + items.length + ' held', items: items.map((label, i) => ({ label, on: C.has(g * 10 + i), toggle: () => this.save({ c: this.tog(st.c, g * 10 + i) }) })) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

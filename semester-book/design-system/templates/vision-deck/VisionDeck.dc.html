@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Vision deck" description="1920×1080 vision deck on deck-stage: the education operating system" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;background:#090a0e}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+
+<section data-label="Title" data-screen-label="01" data-theme="dark" data-speaker-notes="Semester is the education operating system. One line: everything you need for education." style="background:#090a0e;color:#eceef2;font-family:var(--font-body);padding:120px 140px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Wordmark" size="{{ 44 }}" metal="{{ true }}" hint-size="320px,56px"></x-import>
+<div style="display:grid;gap:36px">
+<h1 style="font-family:var(--font-display);font-weight:400;font-size:112px;line-height:1.05;letter-spacing:.01em;margin:0;max-width:1400px;text-wrap:pretty">Everything you need for education.</h1>
+<p style="font-size:38px;line-height:1.4;margin:0;color:rgba(236,238,242,.72);max-width:1300px">The education operating system: one education graph, one control plane, and a home for every role on campus.</p>
+</div>
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,238,242,.64)">Product vision · 2026</div>
+</section>
+
+<section data-label="Problem" data-screen-label="02" data-speaker-notes="Every legacy category solves one slice. Students and staff live across all of them." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr;gap:64px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">The problem</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:88px;letter-spacing:-.015em;line-height:1;margin:0">Education runs on twenty disconnected systems.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px 48px;align-content:start">
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">Learning</div><div style="font-size:28px;color:rgba(27,26,23,.68)">Canvas · Brightspace · Blackboard · Top Hat</div></div>
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">Records</div><div style="font-size:28px;color:rgba(27,26,23,.68)">Banner · PeopleSoft · Workday Student</div></div>
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">Advising</div><div style="font-size:28px;color:rgba(27,26,23,.68)">Degree Works · Navigate · Starfish</div></div>
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">Productivity</div><div style="font-size:28px;color:rgba(27,26,23,.68)">Google · Microsoft 365 · Apple · Notion</div></div>
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">AI</div><div style="font-size:28px;color:rgba(27,26,23,.68)">ChatGPT · Claude · Perplexity · Copilot</div></div>
+<div style="border-top:1px solid rgba(27,26,23,.34);padding-top:20px;display:grid;gap:8px"><div style="font-family:var(--font-heading);font-weight:600;font-size:40px">Campus life</div><div style="font-size:28px;color:rgba(27,26,23,.68)">Housing · dining · events · billing · career</div></div>
+</div>
+</section>
+
+<section data-label="Thesis" data-screen-label="03" data-theme="dark" data-speaker-notes="The doctrine. Connect first, so institutions keep continuity. Replace by domain, as each one is approved. Operate as one system." style="background:#090a0e;color:#eceef2;font-family:var(--font-body);padding:140px;display:flex;flex-direction:column;justify-content:center;gap:56px;box-sizing:border-box">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,238,242,.64)">The thesis</div>
+<div style="display:grid;gap:12px">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:120px;letter-spacing:-.015em;line-height:1.02">Connect first.</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:120px;letter-spacing:-.015em;line-height:1.02">Replace by domain.</div>
+<div style="font-family:var(--font-heading);font-weight:600;font-size:120px;letter-spacing:-.015em;line-height:1.02;color:#94bce3">Operate as one system.</div>
+</div>
+<p style="font-size:34px;line-height:1.45;margin:0;color:rgba(236,238,242,.72);max-width:1300px">Semester replaces the fragmented stack, domain by domain, with one platform that students live in and institutions run on.</p>
+</section>
+
+<section data-label="One platform" data-screen-label="04" data-speaker-notes="Not a bundle of apps: one graph, many roles." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr;gap:56px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">One platform</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">Eight products, one education graph.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;align-content:start">
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Student OS</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Schedule, plan, tasks, decisions, progress</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Workspace</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Docs, sheets, decks, notes, messaging</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Course Studio</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Courses, assignments, gradebook, feedback</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Academic record</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Enrolment, registration, degree, transcripts</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Governed AI</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Tutoring, research, advising, agents</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Campus</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Housing, dining, events, accounts, safety</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Institution OS</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Policy, identity, workflows, executive insight</div></div>
+<div style="border:1px solid rgba(27,26,23,.16);border-radius:6px;padding:28px;background:#fbf9f4;display:grid;gap:10px"><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Family &amp; partners</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Consented sharing, employers, alumni</div></div>
+</div>
+</section>
+
+<section data-label="Seven areas" data-screen-label="05" data-speaker-notes="For students, every screen files under one of seven areas, and each area answers one question." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr;gap:56px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">For students · 64 screens</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">Seven areas. Each answers one question.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:20px;align-content:start">
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Today</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">What do I need to do now?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Plan</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">What is coming up?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Learn</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">How do I get the work done?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Help</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">Who can help me?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Campus</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">What is happening, and where?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Progress</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">How am I doing?</div></div>
+<div style="border-top:3px solid #416180;padding-top:22px;display:grid;gap:12px"><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">You</div><div style="font-size:26px;line-height:1.35;color:rgba(27,26,23,.68)">What are my settings?</div></div>
+</div>
+</section>
+
+<section data-label="What it replaces" data-screen-label="06" data-speaker-notes="Each legacy category, and what Semester becomes in its place." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:100px 140px;display:grid;grid-template-rows:auto 1fr;gap:48px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">What Semester replaces</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:76px;letter-spacing:-.015em;line-height:1;margin:0">From point tools to native domains.</h2>
+</div>
+<div style="display:grid;grid-template-columns:420px 1fr;font-size:28px;line-height:1.35;align-content:start">
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.34);font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Today</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.34);font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Semester</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">LMS</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">Course Studio: assignments, study packs, feedback, gradebook, course AI rules</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">SIS and registrar</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">Native enrolment, catalog, holds, registration and academic record</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">Advising and success</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">Path, scenarios, Action Center, case management</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">Productivity suites</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">An education workspace where every task knows its course and deadline</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">General AI tools</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">Course-aware AI with policy, citations and human handoff</div>
+<div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16);font-weight:600">Search</div><div style="padding:18px 0;border-bottom:1px solid rgba(27,26,23,.16)">Permission-aware search across courses, policy, services and library</div>
+</div>
+</section>
+
+<section data-label="Governed AI" data-screen-label="07" data-theme="dark" data-speaker-notes="Model-flexible, Semester-governed. Every request passes the policy check. The institution switches data on per type." style="background:#090a0e;color:#eceef2;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr auto;gap:56px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(236,238,242,.64)">Governed AI</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">Any model. Semester’s rules.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:20px;align-content:center">
+<div style="border:1px solid rgba(236,238,242,.30);border-radius:6px;padding:28px;display:grid;gap:12px;align-content:start"><div style="font-size:24px;color:rgba(236,238,242,.64)">1</div><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Request</div><div style="font-size:26px;line-height:1.4;color:rgba(236,238,242,.72)">Student, staff or institution asks</div></div>
+<div style="border:1px solid rgba(236,238,242,.30);border-radius:6px;padding:28px;display:grid;gap:12px;align-content:start"><div style="font-size:24px;color:rgba(236,238,242,.64)">2</div><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">AI gateway</div><div style="font-size:26px;line-height:1.4;color:rgba(236,238,242,.72)">One front door for every model</div></div>
+<div style="border:1px solid #94bce3;border-radius:6px;padding:28px;display:grid;gap:12px;align-content:start"><div style="font-size:24px;color:#94bce3">3</div><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Policy check</div><div style="font-size:26px;line-height:1.4;color:rgba(236,238,242,.72)">Role, data type, course rules, consent, budget</div></div>
+<div style="border:1px solid rgba(236,238,242,.30);border-radius:6px;padding:28px;display:grid;gap:12px;align-content:start"><div style="font-size:24px;color:rgba(236,238,242,.64)">4</div><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Routing</div><div style="font-size:26px;line-height:1.4;color:rgba(236,238,242,.72)">Approved model, search, or a person</div></div>
+<div style="border:1px solid rgba(236,238,242,.30);border-radius:6px;padding:28px;display:grid;gap:12px;align-content:start"><div style="font-size:24px;color:rgba(236,238,242,.64)">5</div><div style="font-family:var(--font-heading);font-weight:600;font-size:38px">Evidence</div><div style="font-size:26px;line-height:1.4;color:rgba(236,238,242,.72)">Citations, logs, labelled AI-assisted</div></div>
+</div>
+<p style="font-size:30px;line-height:1.45;margin:0;color:rgba(236,238,242,.72);max-width:1400px">AI reads student records only after the institution switches each data type on — grades and records stay off until it does.</p>
+</section>
+
+<section data-label="Trust" data-screen-label="08" data-speaker-notes="Every fact says where it came from. This vocabulary is the product's signature." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:center;box-sizing:border-box">
+<div style="display:grid;gap:28px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Trust is visible</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">Every fact says where it came from.</h2>
+<p style="font-size:32px;line-height:1.45;margin:0;color:rgba(27,26,23,.68)">Official, connected, yours or AI-assisted — always in a word and a glyph, never colour alone.</p>
+</div>
+<div style="zoom:2.1;display:grid;gap:10px;justify-items:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="official" by="Registrar" hint-size="200px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="connected" by="Brightspace" hint-size="200px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="personal" hint-size="200px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="ai" hint-size="200px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="estimated" hint-size="200px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SourceBadge" source="review" hint-size="200px,24px"></x-import>
+</div>
+</section>
+
+<section data-label="Architecture" data-screen-label="09" data-speaker-notes="Five layers. Experience on top, integration and migration at the base." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:100px 140px;display:grid;grid-template-rows:auto 1fr;gap:48px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Architecture</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:76px;letter-spacing:-.015em;line-height:1;margin:0">One system, five layers.</h2>
+</div>
+<div style="display:grid;gap:14px;align-content:start">
+<div style="display:grid;grid-template-columns:440px 1fr;gap:32px;padding:24px 32px;border:1px solid rgba(27,26,23,.16);border-radius:6px;background:#fbf9f4;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:36px">Experience</div><div style="font-size:27px;color:rgba(27,26,23,.68)">Student OS · Course Studio · Advisor · Registrar · Campus · Family · Employer</div></div>
+<div style="display:grid;grid-template-columns:440px 1fr;gap:32px;padding:24px 32px;border:1px solid rgba(27,26,23,.16);border-radius:6px;background:#fbf9f4;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:36px">Intelligence</div><div style="font-size:27px;color:rgba(27,26,23,.68)">AI gateway · search · knowledge graph · workflows · provenance</div></div>
+<div style="display:grid;grid-template-columns:440px 1fr;gap:32px;padding:24px 32px;border:1px solid rgba(27,26,23,.16);border-radius:6px;background:#fbf9f4;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:36px">Domain and record</div><div style="font-size:27px;color:rgba(27,26,23,.68)">Courses · enrolment · grades · degree · accounts · advising · career</div></div>
+<div style="display:grid;grid-template-columns:440px 1fr;gap:32px;padding:24px 32px;border:1px solid rgba(27,26,23,.16);border-radius:6px;background:#fbf9f4;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:36px">Control and trust</div><div style="font-size:27px;color:rgba(27,26,23,.68)">Tenant policy · roles · approvals · audit · consent · retention</div></div>
+<div style="display:grid;grid-template-columns:440px 1fr;gap:32px;padding:24px 32px;border:1px solid rgba(27,26,23,.16);border-radius:6px;background:#fbf9f4;align-items:baseline"><div style="font-family:var(--font-heading);font-weight:600;font-size:36px">Integration</div><div style="font-size:27px;color:rgba(27,26,23,.68)">LTI · OneRoster · Edu-API · SSO · SCIM · SIS · LMS</div></div>
+</div>
+</section>
+
+<section data-label="Path to replacement" data-screen-label="10" data-speaker-notes="Five phases. Each domain moves only when the institution approves, with dual-run, reconciliation and rollback." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr;gap:64px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">The path</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">How Semester replaces everything.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:24px;align-content:start">
+<div style="border-top:3px solid #416180;padding-top:24px;display:grid;gap:14px"><div style="font-size:24px;color:rgba(27,26,23,.68)">Phase 1</div><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Connect</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Read approved data from existing systems</div></div>
+<div style="border-top:3px solid #416180;padding-top:24px;display:grid;gap:14px"><div style="font-size:24px;color:rgba(27,26,23,.68)">Phase 2</div><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Co-pilot</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">The action layer for students and staff</div></div>
+<div style="border-top:3px solid #416180;padding-top:24px;display:grid;gap:14px"><div style="font-size:24px;color:rgba(27,26,23,.68)">Phase 3</div><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Replace domains</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">Planning, advising, courses, support, career</div></div>
+<div style="border-top:3px solid #416180;padding-top:24px;display:grid;gap:14px"><div style="font-size:24px;color:rgba(27,26,23,.68)">Phase 4</div><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Replace the core</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">System of record, with dual-run and rollback</div></div>
+<div style="border-top:3px solid #416180;padding-top:24px;display:grid;gap:14px"><div style="font-size:24px;color:rgba(27,26,23,.68)">Phase 5</div><div style="font-family:var(--font-heading);font-weight:600;font-size:42px">Education OS</div><div style="font-size:26px;line-height:1.4;color:rgba(27,26,23,.68)">The system the university runs on</div></div>
+</div>
+</section>
+
+<section data-label="Every role" data-screen-label="11" data-speaker-notes="Thirteen roles, each with its own first day." style="background:#f4f1ea;color:#1b1a17;font-family:var(--font-body);padding:110px 140px;display:grid;grid-template-rows:auto 1fr;gap:56px;box-sizing:border-box">
+<div style="display:grid;gap:20px">
+<div style="font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,26,23,.68)">Every role</div>
+<h2 style="font-family:var(--font-heading);font-weight:600;font-size:80px;letter-spacing:-.015em;line-height:1;margin:0">One sign-in. A home for everyone.</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0 48px;align-content:start;font-size:34px">
+<div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Students</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Applicants</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Families</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Faculty</div>
+<div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Teaching assistants</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Advisors</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Registrars</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Finance</div>
+<div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Student affairs</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">IT and security</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Support</div><div style="padding:20px 0;border-bottom:1px solid rgba(27,26,23,.16)">Alumni and employers</div>
+</div>
+</section>
+
+<section data-label="Close" data-screen-label="12" data-theme="dark" data-speaker-notes="Close on the line." style="background:#090a0e;color:#eceef2;font-family:var(--font-body);padding:140px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:48px;box-sizing:border-box">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Mark" size="{{ 120 }}" hint-size="120px,120px"></x-import>
+<h2 style="font-family:var(--font-display);font-weight:400;font-size:96px;line-height:1.08;margin:0;max-width:1500px">One system. Every role. Every year of education.</h2>
+<div style="font-size:30px;color:rgba(236,238,242,.72)">semester · the education operating system</div>
+</section>
+
+</x-import>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Privacy center" description="Student privacy and data: AI switches by data type, sharing, delegations with expiry, sessions, access history, export and delete" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;height:100%}</style></helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="privacy" groups="{{ rail }}" foot="Vanderbilt University" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="You · Privacy &amp; data" term="Fall 2026 · Week 7" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px;display:grid;gap:28px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.PageHeader" kicker="You" title="Privacy and data" purpose="See who can see what, turn things off, and take your data with you." hint-size="100%,96px"></x-import>
+<section style="display:grid;gap:12px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Ask Semester and your data</div>
+<p style="margin:0;color:var(--text-secondary);max-width:66ch">Your institution decides which kinds of records AI may use. You can turn AI off for yourself at any time. Student records are never sent to an AI provider.</p>
+<div style="display:grid;gap:0;border:1px solid var(--border-default);border-radius:6px;background:var(--surface-base)">
+<sc-for list="{{ aiRows }}" as="r" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-weight:600">{{ r.name }}</div><div style="font-size:13px;color:var(--text-secondary)">{{ r.note }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.PolicyBadge" name="{{ r.policy }}" owner="Your institution" hint-size="180px,24px"></x-import>
+<span style="font-size:13px;min-width:120px;text-align:right">{{ r.state }}</span>
+</div>
+</sc-for>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Switch" label="Use Ask Semester" checked="{{ aiOn }}" onChange="{{ setAi }}" hint-size="100%,44px"></x-import>
+</section>
+<section style="display:grid;gap:12px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Who you share with</div>
+<sc-for list="{{ shares }}" as="s" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-weight:600">{{ s.who }}</div><div style="font-size:13px;color:var(--text-secondary)">{{ s.what }} · {{ s.purpose }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ConsentBadge" state="{{ s.state }}" recipient="{{ s.short }}" expires="{{ s.expires }}" hint-size="220px,24px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" size="sm" variant="{{ s.btnVariant }}" disabled="{{ s.revoked }}" onClick="{{ s.revoke }}" hint-size="96px,36px">{{ s.btn }}</x-import>
+</div>
+</sc-for>
+</section>
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Signed-in devices</div>
+<sc-for list="{{ sessions }}" as="d" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-weight:600">{{ d.device }}</div><div style="font-size:13px;color:var(--text-secondary)">{{ d.where }} · {{ d.when }}</div></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" size="sm" variant="ghost" disabled="{{ d.current }}" onClick="{{ d.signOut }}" hint-size="96px,36px">{{ d.label }}</x-import>
+</div>
+</sc-for>
+</div>
+<div style="display:grid;gap:12px;align-content:start">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Who looked at your records</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DecisionTrail" items="{{ access }}" hint-size="100%,220px"></x-import>
+</div>
+</section>
+<section style="display:grid;gap:12px">
+<div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Your data</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="export" onClick="{{ exportData }}" hint-size="180px,44px">{{ exportLabel }}</x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="danger" onClick="{{ askDelete }}" hint-size="200px,44px">Request deletion</x-import>
+</div>
+<sc-if value="{{ deleting }}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SupportHandoff" office="Registrar and privacy office" reason="Official records are kept by Vanderbilt under its retention rules. Your notes, tasks and files in Semester are deleted within 30 days." channel="Request sent from Semester" hours="Reply within 10 business days" status="sent" reference="PR-0412" hint-size="100%,200px"></x-import>
+</sc-if>
+</section>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;institutionAi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;courses-only&quot;,&quot;courses-and-calendar&quot;,&quot;off&quot;],&quot;default&quot;:&quot;courses-only&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { aiOn: true, revoked: {}, signedOut: {}, exporting: false, exported: false, deleting: false };
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const { aiOn, revoked, signedOut, exporting, exported, deleting } = this.state;
+    const inst = this.props.institutionAi ?? 'courses-only';
+    const allowed = { 'courses-only': ['Course materials'], 'courses-and-calendar': ['Course materials', 'Calendar and deadlines'], off: [] }[inst] || [];
+    const kinds = [['Course materials', 'Syllabi, slides and readings your instructors publish'], ['Calendar and deadlines', 'Dates from Brightspace and your calendar'], ['Your notes and tasks', 'Only when you attach them to a question'], ['Grades and transcript', 'Official records'], ['Holds, aid and accounts', 'Official records']];
+    const shares0 = [['advisor', 'Advisor Lee', 'Lee', 'Term plan and holds', 'Registration planning', '31 Dec'], ['family', 'Jordan (parent)', 'Jordan', 'Balance and calendar', 'Help with payments', '30 Nov'], ['ta', 'TA Okafor', 'Okafor', 'Study plan for BIO 2100', 'Office hours', '20 Oct']];
+    return {
+      rail: [{ items: [{ id: 'today', label: 'Today', icon: 'today' }, { id: 'ask', label: 'Ask Semester', icon: 'ask' }] }, { label: 'You', items: [{ id: 'me', label: 'Me', icon: 'profile' }, { id: 'privacy', label: 'Privacy & data', icon: 'privacy' }, { id: 'settings', label: 'Settings', icon: 'settings' }] }],
+      aiOn, setAi: (v) => this.setState({ aiOn: v }),
+      aiRows: kinds.map(([name, note]) => { const rec = /Grades|Holds/.test(name); const ok = !rec && allowed.includes(name); return { name, note, policy: rec ? 'Never sent to AI' : 'Institution AI policy', state: !aiOn ? 'Off (your choice)' : rec ? 'Never used' : ok ? 'AI may use' : name.startsWith('Your') ? 'Only if you attach' : 'Off by institution' }; }),
+      shares: shares0.map(([id, who, short, what, purpose, expires]) => { const r = !!revoked[id]; return { who, short, what, purpose, expires, state: r ? 'revoked' : 'shared', revoked: r, btn: r ? 'Revoked' : 'Revoke', btnVariant: r ? 'ghost' : 'secondary', revoke: () => this.setState((s) => ({ revoked: { ...s.revoked, [id]: true } })) }; }),
+      sessions: [['this', 'This MacBook · Safari', 'Nashville, TN', 'Now', true], ['phone', 'iPhone · Semester app', 'Nashville, TN', '2 h ago', false], ['lab', 'Library lab PC · Chrome', 'Nashville, TN', 'Yesterday 16:40', false]].map(([id, device, where, when, current]) => ({ device, where, when: signedOut[id] ? 'Signed out' : when, current: current || !!signedOut[id], label: current ? 'This device' : signedOut[id] ? 'Signed out' : 'Sign out', signOut: () => this.setState((s) => ({ signedOut: { ...s.signedOut, [id]: true } })) })),
+      access: [{ title: 'Advisor Lee viewed your term plan', who: 'Shared by you', when: 'Today 09:12', state: 'done' }, { title: 'Registrar Ortiz viewed your hold', who: 'Official duty', when: 'Mon 14:03', state: 'done' }, { title: 'Jordan viewed your balance', who: 'Shared by you', when: 'Sun 19:40', state: 'done' }],
+      exportLabel: exporting ? 'Preparing export…' : exported ? 'Export ready · download' : 'Export my data',
+      exportData: () => { if (exporting) return; this.setState({ exporting: true }); this.t = setTimeout(() => this.setState({ exporting: false, exported: true }), 1400); },
+      deleting, askDelete: () => this.setState({ deleting: true }),
+    };
+  }
+}
+</script>
+</body>
+</html>

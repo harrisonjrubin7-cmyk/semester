@@ -1,0 +1,250 @@
+/* The Main Semester design system — generated from tokens.json */
+:root, [data-theme="light"] {
+  --ink-void: #040507;
+  --ink-bg: #090a0e;
+  --ink-panel: #12141a;
+  --ink-hero: #191c23;
+  --ink-raise: #22262f;
+  --ink-fg: #eceef2;
+  --parchment-void: #e8e4dc;
+  --parchment-bg: #f4f1ea;
+  --parchment-panel: #fbf9f4;
+  --parchment-hero: #ffffff;
+  --parchment-raise: #ffffff;
+  --parchment-fg: #1b1a17;
+  --graphite-bg: #16181c;
+  --graphite-panel: #1f2229;
+  --graphite-raise: #333843;
+  --sterling: #d4d9e2;
+  --sterling-bright: #f6f8fb;
+  --sterling-deep: #9ca3b2;
+  --sterling-shade: #4c5561;
+  --brass: #d8c79a;
+  --brass-bright: #f2e7c8;
+  --brass-deep: #b09f76;
+  --brass-shade: #695a33;
+  --blue-100: #eef6ff;
+  --blue-200: #d6ebff;
+  --blue-300: #b5d9fd;
+  --blue-400: #94bce3;
+  --blue-500: #749dc4;
+  --blue-600: #597ea3;
+  --blue-700: #416180;
+  --blue-800: #2c455d;
+  --blue-900: #1d2d3d;
+  --neutral-100: #f5f5f8;
+  --neutral-200: #e7e7ea;
+  --neutral-300: #d4d4d7;
+  --neutral-400: #b7b7ba;
+  --neutral-500: #98989b;
+  --neutral-600: #7a7a7d;
+  --neutral-700: #5d5d60;
+  --neutral-800: #424244;
+  --neutral-900: #2b2b2d;
+  --official-ink: #2c455d;
+  --official-tint: #b5d9fd;
+  --connected-ink: #2d5c61;
+  --connected-tint: #9fcbcd;
+  --personal-ink: #4a4b4f;
+  --personal-tint: #b9b9bd;
+  --ai-ink: #544a7f;
+  --ai-tint: #bcb2df;
+  --pending-ink: #7a5310;
+  --pending-tint: #e2c27a;
+  --risk-ink: #a3301f;
+  --risk-tint: #f0907a;
+  --success-ink: #3e6141;
+  --success-tint: #a9c9a3;
+  --surface-sunken: var(--parchment-void);
+  --surface-canvas: var(--parchment-bg);
+  --surface-base: var(--parchment-panel);
+  --surface-quiet: #f1ede4;
+  --surface-raised: var(--parchment-hero);
+  --surface-overlay: var(--parchment-raise);
+  --text-primary: var(--parchment-fg);
+  --text-secondary: rgba(27,26,23,.68);
+  --text-tertiary: rgba(27,26,23,.52);
+  --text-disabled: rgba(27,26,23,.52);
+  --text-on-action: #ffffff;
+  --text-link: var(--blue-700);
+  --border-subtle: rgba(27,26,23,.09);
+  --border-default: rgba(27,26,23,.16);
+  --border-strong: rgba(27,26,23,.34);
+  --action-primary: var(--blue-700);
+  --action-primary-hover: var(--blue-800);
+  --action-primary-press: var(--blue-900);
+  --action-secondary: rgba(65,97,128,.08);
+  --action-secondary-hover: rgba(65,97,128,.14);
+  --focus-color: var(--blue-600);
+  --accent-editorial: var(--brass-shade);
+  --source-official: var(--official-ink);
+  --source-official-line: rgba(44,69,93,.45);
+  --source-official-wash: rgba(44,69,93,.08);
+  --source-connected: var(--connected-ink);
+  --source-connected-line: rgba(45,92,97,.45);
+  --source-connected-wash: rgba(45,92,97,.08);
+  --source-personal: var(--personal-ink);
+  --source-personal-line: rgba(74,75,79,.40);
+  --source-personal-wash: rgba(74,75,79,.06);
+  --source-ai: var(--ai-ink);
+  --source-ai-line: rgba(84,74,127,.45);
+  --source-ai-wash: rgba(84,74,127,.08);
+  --status-pending: var(--pending-ink);
+  --status-pending-line: rgba(160,112,24,.50);
+  --status-pending-wash: rgba(196,146,48,.12);
+  --status-danger: var(--risk-ink);
+  --status-danger-line: rgba(163,48,31,.45);
+  --status-danger-wash: rgba(163,48,31,.08);
+  --status-success: var(--success-ink);
+  --status-success-line: rgba(62,97,65,.45);
+  --status-success-wash: rgba(62,97,65,.08);
+  --status-neutral: var(--text-secondary);
+  --chrome-surface: var(--ink-bg);
+  --chrome-surface-raised: var(--ink-panel);
+  --chrome-text: var(--ink-fg);
+  --chrome-text-secondary: rgba(236,238,242,.64);
+  --chrome-line: rgba(236,238,242,.10);
+  --chrome-active: rgba(148,188,227,.14);
+  --scrim: rgba(4,5,7,.5);
+  --brand-canvas: var(--surface-canvas);
+  --brand-surface: var(--surface-base);
+  --brand-ink: var(--text-primary);
+  --brand-muted: var(--text-secondary);
+  --brand-accent: var(--action-primary);
+  --brand-focus: var(--focus-color);
+  --lift-1: 0 1px 2px rgba(0,0,0,.4);
+  --lift-2: 0 1px 2px rgba(0,0,0,.45),0 6px 18px rgba(0,0,0,.35);
+  --lift-3: 0 1px 3px rgba(0,0,0,.5),0 12px 36px rgba(0,0,0,.5);
+  --shadow-sm: 0 1px 2px rgba(43,43,45,.14);
+  --shadow-md: 0 3px 10px rgba(43,43,45,.16);
+  --shadow-lg: 0 12px 32px rgba(43,43,45,.22);
+}
+[data-theme="dark"] {
+  --surface-sunken: var(--ink-void);
+  --surface-canvas: var(--ink-bg);
+  --surface-base: var(--ink-panel);
+  --surface-quiet: #161820;
+  --surface-raised: var(--ink-hero);
+  --surface-overlay: var(--ink-raise);
+  --text-primary: var(--ink-fg);
+  --text-secondary: rgba(236,238,242,.64);
+  --text-tertiary: rgba(236,238,242,.42);
+  --text-disabled: rgba(236,238,242,.42);
+  --text-on-action: #08090c;
+  --text-link: var(--blue-300);
+  --border-subtle: rgba(236,238,242,.08);
+  --border-default: rgba(236,238,242,.14);
+  --border-strong: rgba(236,238,242,.30);
+  --action-primary: var(--blue-400);
+  --action-primary-hover: var(--blue-300);
+  --action-primary-press: var(--blue-500);
+  --action-secondary: rgba(148,188,227,.10);
+  --action-secondary-hover: rgba(148,188,227,.18);
+  --focus-color: var(--blue-400);
+  --accent-editorial: var(--brass);
+  --source-official: var(--official-tint);
+  --source-official-line: rgba(181,217,253,.40);
+  --source-official-wash: rgba(181,217,253,.08);
+  --source-connected: var(--connected-tint);
+  --source-connected-line: rgba(159,203,205,.40);
+  --source-connected-wash: rgba(159,203,205,.08);
+  --source-personal: var(--personal-tint);
+  --source-personal-line: rgba(185,185,189,.34);
+  --source-personal-wash: rgba(185,185,189,.06);
+  --source-ai: var(--ai-tint);
+  --source-ai-line: rgba(188,178,223,.42);
+  --source-ai-wash: rgba(188,178,223,.09);
+  --status-pending: var(--pending-tint);
+  --status-pending-line: rgba(226,194,122,.45);
+  --status-pending-wash: rgba(226,194,122,.09);
+  --status-danger: var(--risk-tint);
+  --status-danger-line: rgba(240,144,122,.45);
+  --status-danger-wash: rgba(240,144,122,.09);
+  --status-success: var(--success-tint);
+  --status-success-line: rgba(169,201,163,.42);
+  --status-success-wash: rgba(169,201,163,.08);
+  --status-neutral: var(--text-secondary);
+  --chrome-surface: var(--ink-bg);
+  --chrome-surface-raised: var(--ink-panel);
+  --chrome-text: var(--ink-fg);
+  --brand-canvas: var(--surface-canvas);
+  --brand-surface: var(--surface-base);
+  --brand-ink: var(--text-primary);
+  --brand-muted: var(--text-secondary);
+  --brand-accent: var(--action-primary);
+  --brand-focus: var(--focus-color);
+}
+:root {
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
+  --page-pad: 18px;
+  --chrome-pad: 18px;
+  --r-sm: 3px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --shape-pill: 999px;
+  --rail-w: 248px;
+  --rail-w-compact: 72px;
+  --layout-measure: 100%;
+  --layout-operational: 1180px;
+  --target-min: 24px;
+  --target-compact: 32px;
+  --target-icon: 40px;
+  --target-primary: 44px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --blur-chrome: 14px;
+  --layer-base: 0;
+  --layer-raised: 1;
+  --layer-sticky: 20;
+  --layer-chrome: 21;
+  --layer-overlay: 80;
+  --layer-menu: 90;
+  --layer-skip: 100;
+  --layer-curtain: 1500;
+  --leading-none: 1;
+  --leading-display-xl: 1.08;
+  --leading-display-lg: 1.1;
+  --leading-display: 1.15;
+  --leading-display-sm: 1.2;
+  --leading-display-xs: 1.25;
+  --leading-tight: 1.3;
+  --leading-tight-plus: 1.35;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.5;
+  --leading-relaxed-plus: 1.55;
+  --leading-loose: 1.6;
+  --tracking-heading: -0.015em;
+  --tracking-kicker: 0.08em;
+  --tracking-caps: 0.1em;
+  --tracking-wordmark: 0.22em;
+  --font-display: 'Cinzel','Barlow Condensed',Georgia,serif;
+  --font-heading: 'Barlow Condensed',system-ui,sans-serif;
+  --font-body: 'Barlow',system-ui,sans-serif;
+  --font-mono: ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+.role-editorial { font-family: var(--font-display); font-size: 42px; line-height: 1.1; font-weight: 500; }
+.role-display { font-family: var(--font-heading); font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; }
+.role-page { font-family: var(--font-heading); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.role-section { font-family: var(--font-heading); font-size: 20px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.role-card-title { font-family: var(--font-heading); font-size: 18px; line-height: 1.25; font-weight: 600; letter-spacing: -0.015em; }
+.role-body { font-family: var(--font-body); font-size: 16px; line-height: 1.55; font-weight: 400; }
+.role-control { font-family: var(--font-heading); font-size: 14px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+.role-compact { font-family: var(--font-body); font-size: 12px; line-height: 1.45; font-weight: 400; }
+.role-label { font-family: var(--font-body); font-size: 11px; line-height: 1.3; font-weight: 500; }
+.role-caption { font-family: var(--font-body); font-size: 11px; line-height: 1.45; font-weight: 400; }
+.role-kicker { font-family: var(--font-body); font-size: 10.5px; line-height: 1.3; font-weight: 500; letter-spacing: 0.08em; }
+.role-numeric { font-family: var(--font-heading); font-size: 22px; line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/Barlow-400-latin.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/Barlow-500-latin.woff2") format("woff2"); }
+@font-face { font-family: "Barlow"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/Barlow-700-latin.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/BarlowCondensed-400-latin.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/BarlowCondensed-600-latin.woff2") format("woff2"); }
+@font-face { font-family: "Cinzel"; font-style: normal; font-weight: 400 600; font-display: swap; src: url("fonts/Cinzel-latin.woff2") format("woff2"); }

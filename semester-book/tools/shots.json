@@ -1,0 +1,1198 @@
+[
+ {
+  "kind": "comp",
+  "name": "AIResponse",
+  "f": "components/AIResponse/preview.html",
+  "meta": {
+   "group": "AI"
+  },
+  "file": "comp-AIResponse.png",
+  "w": 860,
+  "h": 257,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ActionPreview",
+  "f": "components/ActionPreview/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-ActionPreview.png",
+  "w": 860,
+  "h": 267,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ApprovalBanner",
+  "f": "components/ApprovalBanner/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ApprovalBanner.png",
+  "w": 860,
+  "h": 114,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Avatar",
+  "f": "components/Avatar/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Avatar.png",
+  "w": 860,
+  "h": 88,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Button",
+  "f": "components/Button/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-Button.png",
+  "w": 860,
+  "h": 140,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Choice",
+  "f": "components/Choice/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Choice.png",
+  "w": 860,
+  "h": 157,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Combobox",
+  "f": "components/Combobox/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Combobox.png",
+  "w": 860,
+  "h": 307,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "CommandPalette",
+  "f": "components/CommandPalette/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-CommandPalette.png",
+  "w": 860,
+  "h": 357,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ConsentBadge",
+  "f": "components/ConsentBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ConsentBadge.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ContextBar",
+  "f": "components/ContextBar/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ContextBar.png",
+  "w": 860,
+  "h": 147,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Cover",
+  "f": "components/Cover/preview.html",
+  "meta": {},
+  "file": "comp-Cover.png",
+  "w": 960,
+  "h": 264,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DataTable",
+  "f": "components/DataTable/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-DataTable.png",
+  "w": 860,
+  "h": 217,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DateField",
+  "f": "components/DateField/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-DateField.png",
+  "w": 860,
+  "h": 137,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "DecisionTrail",
+  "f": "components/DecisionTrail/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-DecisionTrail.png",
+  "w": 860,
+  "h": 250,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Dialog",
+  "f": "components/Dialog/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-Dialog.png",
+  "w": 860,
+  "h": 472,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "EmptyState",
+  "f": "components/EmptyState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-EmptyState.png",
+  "w": 860,
+  "h": 174,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ErrorState",
+  "f": "components/ErrorState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-ErrorState.png",
+  "w": 860,
+  "h": 202,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ErrorSummary",
+  "f": "components/ErrorSummary/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-ErrorSummary.png",
+  "w": 860,
+  "h": 151,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Fields",
+  "f": "components/Fields/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-Fields.png",
+  "w": 860,
+  "h": 120,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "FocusBar",
+  "f": "components/FocusBar/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-FocusBar.png",
+  "w": 860,
+  "h": 94,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "HealthBadge",
+  "f": "components/HealthBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-HealthBadge.png",
+  "w": 860,
+  "h": 72,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Icon",
+  "f": "components/Icon/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Icon.png",
+  "w": 860,
+  "h": 67,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "IconButton",
+  "f": "components/IconButton/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-IconButton.png",
+  "w": 860,
+  "h": 88,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Iconography",
+  "f": "components/Iconography/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Lucide-like, 24 grid, 1.5 stroke, round caps — the app’s own set"
+  },
+  "file": "comp-Iconography.png",
+  "w": 860,
+  "h": 134,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LoadingState",
+  "f": "components/LoadingState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-LoadingState.png",
+  "w": 860,
+  "h": 266,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LogoMark",
+  "f": "components/LogoMark/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Three slabs — a term rising, cresting, running out"
+  },
+  "file": "comp-LogoMark.png",
+  "w": 860,
+  "h": 220,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "LogoSystem",
+  "f": "components/LogoSystem/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Horizontal, stacked, mono, reversed, favicon, co-brand"
+  },
+  "file": "comp-LogoSystem.png",
+  "w": 1200,
+  "h": 820,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "MetricTile",
+  "f": "components/MetricTile/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-MetricTile.png",
+  "w": 860,
+  "h": 178,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "NextSteps",
+  "f": "components/NextSteps/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-NextSteps.png",
+  "w": 860,
+  "h": 192,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Notice",
+  "f": "components/Notice/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-Notice.png",
+  "w": 860,
+  "h": 81,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ObjectCard",
+  "f": "components/ObjectCard/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ObjectCard.png",
+  "w": 860,
+  "h": 267,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "OfflineStrip",
+  "f": "components/OfflineStrip/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-OfflineStrip.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "OpenIn",
+  "f": "components/OpenIn/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-OpenIn.png",
+  "w": 860,
+  "h": 80,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PageHeader",
+  "f": "components/PageHeader/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-PageHeader.png",
+  "w": 860,
+  "h": 174,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PermissionNotice",
+  "f": "components/PermissionNotice/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-PermissionNotice.png",
+  "w": 860,
+  "h": 152,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "PolicyBadge",
+  "f": "components/PolicyBadge/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-PolicyBadge.png",
+  "w": 860,
+  "h": 73,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProgressState",
+  "f": "components/ProgressState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-ProgressState.png",
+  "w": 860,
+  "h": 165,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProvenanceChart",
+  "f": "components/ProvenanceChart/preview.html",
+  "meta": {
+   "group": "Data"
+  },
+  "file": "comp-ProvenanceChart.png",
+  "w": 860,
+  "h": 237,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ProvenanceChips",
+  "f": "components/ProvenanceChips/preview.html",
+  "meta": {
+   "group": "AI"
+  },
+  "file": "comp-ProvenanceChips.png",
+  "w": 860,
+  "h": 73,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "QuickActions",
+  "f": "components/QuickActions/preview.html",
+  "meta": {
+   "group": "Actions"
+  },
+  "file": "comp-QuickActions.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SaveState",
+  "f": "components/SaveState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-SaveState.png",
+  "w": 860,
+  "h": 66,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "ScreenGuide",
+  "f": "components/ScreenGuide/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-ScreenGuide.png",
+  "w": 860,
+  "h": 195,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SectionLabel",
+  "f": "components/SectionLabel/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-SectionLabel.png",
+  "w": 860,
+  "h": 65,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Segmented",
+  "f": "components/Segmented/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Segmented.png",
+  "w": 860,
+  "h": 84,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Select",
+  "f": "components/Select/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Select.png",
+  "w": 860,
+  "h": 116,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Sheet",
+  "f": "components/Sheet/preview.html",
+  "meta": {
+   "group": "Surfaces"
+  },
+  "file": "comp-Sheet.png",
+  "w": 860,
+  "h": 347,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SideRail",
+  "f": "components/SideRail/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-SideRail.png",
+  "w": 860,
+  "h": 390,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SourceBadge",
+  "f": "components/SourceBadge/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-SourceBadge.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SourceLine",
+  "f": "components/SourceLine/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-SourceLine.png",
+  "w": 860,
+  "h": 101,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "StatusChip",
+  "f": "components/StatusChip/preview.html",
+  "meta": {
+   "group": "Trust & provenance"
+  },
+  "file": "comp-StatusChip.png",
+  "w": 860,
+  "h": 69,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "StepStatus",
+  "f": "components/StepStatus/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-StepStatus.png",
+  "w": 860,
+  "h": 135,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SuccessState",
+  "f": "components/SuccessState/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-SuccessState.png",
+  "w": 860,
+  "h": 158,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SupportHandoff",
+  "f": "components/SupportHandoff/preview.html",
+  "meta": {
+   "group": "Governance"
+  },
+  "file": "comp-SupportHandoff.png",
+  "w": 860,
+  "h": 283,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Switch",
+  "f": "components/Switch/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-Switch.png",
+  "w": 860,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "SystemContextBar",
+  "f": "components/SystemContextBar/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-SystemContextBar.png",
+  "w": 860,
+  "h": 94,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "TabBar",
+  "f": "components/TabBar/preview.html",
+  "meta": {
+   "group": "Navigation"
+  },
+  "file": "comp-TabBar.png",
+  "w": 860,
+  "h": 108,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "TextField",
+  "f": "components/TextField/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-TextField.png",
+  "w": 860,
+  "h": 243,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "UndoToast",
+  "f": "components/UndoToast/preview.html",
+  "meta": {
+   "group": "States"
+  },
+  "file": "comp-UndoToast.png",
+  "w": 860,
+  "h": 152,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "VisibilityPicker",
+  "f": "components/VisibilityPicker/preview.html",
+  "meta": {
+   "group": "Forms"
+  },
+  "file": "comp-VisibilityPicker.png",
+  "w": 860,
+  "h": 321,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "Wordmark",
+  "f": "components/Wordmark/preview.html",
+  "meta": {
+   "group": "Glyph"
+  },
+  "file": "comp-Wordmark.png",
+  "w": 860,
+  "h": 97,
+  "errs": []
+ },
+ {
+  "kind": "comp",
+  "name": "WordmarkLockup",
+  "f": "components/WordmarkLockup/preview.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Mark + SEMESTER in Barlow Condensed, tracked"
+  },
+  "file": "comp-WordmarkLockup.png",
+  "w": 860,
+  "h": 131,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "arch-ai-gateway",
+  "f": "guidelines/arch-ai-gateway.html",
+  "meta": {
+   "group": "Architecture",
+   "subtitle": "Six checks between a question and an answer — student records never leave",
+   "name": "AI gateway"
+  },
+  "file": "guide-arch-ai-gateway.png",
+  "w": 760,
+  "h": 141,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "arch-environments",
+  "f": "guidelines/arch-environments.html",
+  "meta": {
+   "group": "Architecture",
+   "subtitle": "Local, staging, production on Vercel + Supabase — data never crosses",
+   "name": "Environments"
+  },
+  "file": "guide-arch-environments.png",
+  "w": 760,
+  "h": 154,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "arch-layers",
+  "f": "guidelines/arch-layers.html",
+  "meta": {
+   "group": "Architecture",
+   "subtitle": "Front end → middleware → API → database, with the rule for each",
+   "name": "Stack layers"
+  },
+  "file": "guide-arch-layers.png",
+  "w": 760,
+  "h": 263,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "arch-read-model",
+  "f": "guidelines/arch-read-model.html",
+  "meta": {
+   "group": "Architecture",
+   "subtitle": "Write → outbox → projection → refetch; lag decides what the UI allows",
+   "name": "Read-model pipeline & freshness"
+  },
+  "file": "guide-arch-read-model.png",
+  "w": 760,
+  "h": 265,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "colors-accents",
+  "f": "guidelines/colors-accents.html",
+  "meta": {
+   "group": "Colors",
+   "subtitle": "base (on dark) and shade (text on light) — desaturated metals and stones",
+   "name": "The 11 metal accents"
+  },
+  "file": "guide-colors-accents.png",
+  "w": 700,
+  "h": 146,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "colors-dark-components",
+  "f": "guidelines/colors-dark-components.html",
+  "meta": {
+   "group": "Colors",
+   "subtitle": "The same components with [data-theme=",
+   "name": "Components on Ink"
+  },
+  "file": "guide-colors-dark-components.png",
+  "w": 700,
+  "h": 274,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "colors-grounds",
+  "f": "guidelines/colors-grounds.html",
+  "meta": {
+   "group": "Colors",
+   "subtitle": "The app lets each reader choose a ground; this system ships Ink + Parchment",
+   "name": "All 13 grounds (reader setting)"
+  },
+  "file": "guide-colors-grounds.png",
+  "w": 700,
+  "h": 200,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "colors-metals",
+  "f": "guidelines/colors-metals.html",
+  "meta": {
+   "group": "Colors",
+   "subtitle": "Sterling (wordmark/chrome), Brass (editorial accent)",
+   "name": "Metals"
+  },
+  "file": "guide-colors-metals.png",
+  "w": 700,
+  "h": 142,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "company-documents",
+  "f": "guidelines/company-documents.html",
+  "meta": {
+   "group": "Business",
+   "subtitle": "docs/ — what exists per stream and what is next",
+   "name": "Document library by stream"
+  },
+  "file": "guide-company-documents.png",
+  "w": 760,
+  "h": 214,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "dataviz",
+  "f": "guidelines/dataviz.html",
+  "meta": {
+   "group": "Colors",
+   "subtitle": "Provenance by pattern: solid, outline, hatched, dotted — survives greyscale",
+   "name": "Data visualisation encoding"
+  },
+  "file": "guide-dataviz.png",
+  "w": 700,
+  "h": 121,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "density",
+  "f": "guidelines/density.html",
+  "meta": {
+   "group": "Spacing",
+   "subtitle": "Comfortable 1 · Snug .86 · Tight .74 — scales the 2px steps, never targets",
+   "name": "Density settings"
+  },
+  "file": "guide-density.png",
+  "w": 700,
+  "h": 150,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "iconography-rules",
+  "f": "guidelines/iconography-rules.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "Sizes, stroke, colour, accessible names, status glyphs, files",
+   "name": "Iconography rules"
+  },
+  "file": "guide-iconography-rules.png",
+  "w": 760,
+  "h": 210,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "layout",
+  "f": "guidelines/layout.html",
+  "meta": {
+   "group": "Spacing",
+   "subtitle": "Rail + context bar + content; page padding by tier",
+   "name": "Layout & breakpoints"
+  },
+  "file": "guide-layout.png",
+  "w": 700,
+  "h": 198,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "maps-of-the-whole",
+  "f": "guidelines/maps-of-the-whole.html",
+  "meta": {
+   "group": "Master control",
+   "subtitle": "Master control, catalog, role lens — how the pieces point at each other",
+   "name": "Maps of the whole"
+  },
+  "file": "guide-maps-of-the-whole.png",
+  "w": 760,
+  "h": 191,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "motion",
+  "f": "guidelines/motion.html",
+  "meta": {
+   "group": "Spacing",
+   "subtitle": "Role durations · zeroed by reduced motion and Less motion",
+   "name": "Motion"
+  },
+  "file": "guide-motion.png",
+  "w": 700,
+  "h": 120,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-ai-anatomy",
+  "f": "guidelines/pattern-ai-anatomy.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "Label · scope · sources · uncertainty · cost · policy · human-confirmed action",
+   "name": "AI answer anatomy"
+  },
+  "file": "guide-pattern-ai-anatomy.png",
+  "w": 700,
+  "h": 266,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-consent",
+  "f": "guidelines/pattern-consent.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "One decision at a time · default private · visible history · revoke anywhere",
+   "name": "Consent & sharing"
+  },
+  "file": "guide-pattern-consent.png",
+  "w": 700,
+  "h": 217,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-consequential",
+  "f": "guidelines/pattern-consequential.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "Review → preview → confirm → receipt. Reversible work gets Undo instead",
+   "name": "Consequential action"
+  },
+  "file": "guide-pattern-consequential.png",
+  "w": 700,
+  "h": 328,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-provenance-ladder",
+  "f": "guidelines/pattern-provenance-ladder.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "Strongest first; stale ranks below yours on purpose (lib/where.ts)",
+   "name": "Provenance ladder"
+  },
+  "file": "guide-pattern-provenance-ladder.png",
+  "w": 700,
+  "h": 345,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-source-line",
+  "f": "guidelines/pattern-source-line.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "Signature device — a statement, a rule, its source. Only where a real source exists",
+   "name": "Source Line"
+  },
+  "file": "guide-pattern-source-line.png",
+  "w": 700,
+  "h": 175,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "pattern-state-matrix",
+  "f": "guidelines/pattern-state-matrix.html",
+  "meta": {
+   "group": "Patterns",
+   "subtitle": "Every data region designs all seven states",
+   "name": "State matrix"
+  },
+  "file": "guide-pattern-state-matrix.png",
+  "w": 700,
+  "h": 351,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "spacing",
+  "f": "guidelines/spacing.html",
+  "meta": {
+   "group": "Spacing",
+   "subtitle": "Density-aware 2px steps for UI · 8px grid for layout",
+   "name": "Spacing scales"
+  },
+  "file": "guide-spacing.png",
+  "w": 700,
+  "h": 155,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "states-interaction",
+  "f": "guidelines/states-interaction.html",
+  "meta": {
+   "group": "Spacing",
+   "subtitle": "Rest, hover, press, focus, disabled — no scale, no bounce",
+   "name": "Interaction states"
+  },
+  "file": "guide-states-interaction.png",
+  "w": 700,
+  "h": 199,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "tooling-claude-code",
+  "f": "guidelines/tooling-claude-code.html",
+  "meta": {
+   "group": "Tooling",
+   "subtitle": "Token pipeline, files and commands — handoff/claude-code-toolkit/",
+   "name": "Claude Code toolkit"
+  },
+  "file": "guide-tooling-claude-code.png",
+  "w": 700,
+  "h": 279,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "tooling-semester-core",
+  "f": "guidelines/tooling-semester-core.html",
+  "meta": {
+   "group": "Tooling",
+   "subtitle": "Workflow decision logic as pure TypeScript — handoff/semester-core/",
+   "name": "semester-core"
+  },
+  "file": "guide-tooling-semester-core.png",
+  "w": 760,
+  "h": 266,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "tooling-semester-platform",
+  "f": "guidelines/tooling-semester-platform.html",
+  "meta": {
+   "group": "Tooling",
+   "subtitle": "Migrations 010–040 with RLS, API routes and tests — handoff/semester-platform/",
+   "name": "semester-platform"
+  },
+  "file": "guide-tooling-semester-platform.png",
+  "w": 760,
+  "h": 204,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "tooling-workflow-router",
+  "f": "guidelines/tooling-workflow-router.html",
+  "meta": {
+   "group": "Tooling",
+   "subtitle": "Prototype in ui_kits/workflow-lab/ → production source in handoff/workflow-router-app/",
+   "name": "AI Workflow Router & Benchmark Lab"
+  },
+  "file": "guide-tooling-workflow-router.png",
+  "w": 760,
+  "h": 229,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "type-body",
+  "f": "guidelines/type-body.html",
+  "meta": {
+   "group": "Type",
+   "subtitle": "Product reading, forms, operational text",
+   "name": "Body — Barlow"
+  },
+  "file": "guide-type-body.png",
+  "w": 700,
+  "h": 180,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "type-display",
+  "f": "guidelines/type-display.html",
+  "meta": {
+   "group": "Type",
+   "subtitle": "Major statements and editorial moments only",
+   "name": "Editorial display — Cinzel"
+  },
+  "file": "guide-type-display.png",
+  "w": 700,
+  "h": 153,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "type-headings",
+  "f": "guidelines/type-headings.html",
+  "meta": {
+   "group": "Type",
+   "subtitle": "Page, section, card, and control labels",
+   "name": "Headings — Barlow Condensed"
+  },
+  "file": "guide-type-headings.png",
+  "w": 700,
+  "h": 144,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "type-labels",
+  "f": "guidelines/type-labels.html",
+  "meta": {
+   "group": "Type",
+   "subtitle": "Caps kickers, tabular figures, identifiers",
+   "name": "Kickers, numerals & mono"
+  },
+  "file": "guide-type-labels.png",
+  "w": 700,
+  "h": 92,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "type-scale",
+  "f": "guidelines/type-scale.html",
+  "meta": {
+   "group": "Type",
+   "subtitle": "Every --type-* step with its job; all × --text-scale",
+   "name": "Full type scale"
+  },
+  "file": "guide-type-scale.png",
+  "w": 700,
+  "h": 400,
+  "errs": []
+ },
+ {
+  "kind": "guide",
+  "name": "voice",
+  "f": "guidelines/voice.html",
+  "meta": {
+   "group": "Brand",
+   "subtitle": "From docs/BRAND-PLATFORM.md §1.7",
+   "name": "Voice — prefer / avoid"
+  },
+  "file": "guide-voice.png",
+  "w": 700,
+  "h": 272,
+  "errs": []
+ }
+]

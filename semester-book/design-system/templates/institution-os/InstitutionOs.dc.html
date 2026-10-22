@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Institution OS screen" description="Institution control plane: tenant, roles, policies, integrations, audit" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>html,body{margin:0;height:100%}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style>
+</helmet>
+<div style="display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body)">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SideRail" current="{{ cur }}" onNavigate="{{ go }}" groups="{{ rail }}" foot="Vanderbilt University · Institution OS" hint-size="248px,100%"></x-import>
+<div style="display:flex;flex-direction:column;min-width:0;height:100vh">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SystemContextBar" location="{{ loc }}" term="Fall 2026 · Week 7" sync="synced" hint-size="100%,44px"></x-import>
+<main style="flex:1;overflow:auto">
+<div style="max-width:1180px;margin:0 auto;padding:28px 30px 64px">
+
+<sc-if value="{{ isExec }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Executive" style="display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Executive · Provost’s office</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Institution at a glance</h1><p style="color:var(--text-secondary);margin:6px 0 0">Aggregates only. No individual student is identifiable on this screen.</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Segmented" label="Compare" options="{{ cmpOpts }}" value="{{ cmp }}" onChange="{{ setCmp }}" hint-size="300px,40px"></x-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+<sc-for list="{{ metrics }}" as="m" hint-placeholder-count="4">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="{{ m.label }}" value="{{ m.value }}" unit="{{ m.unit }}" source="{{ m.source }}" updated="{{ m.updated }}" delta="{{ m.delta }}" hint-size="100%,120px"></x-import>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProvenanceChart" title="First-year persistence signal is lowest in Engineering" unit="%" source="Registrar and Action Center aggregates" rows="{{ schoolRows }}" hint-size="100%,300px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.AIResponse" scope="{{ execScope }}" sources="{{ execSources }}" confidence="Medium" policy="Executive briefs read aggregates only; cohorts under 10 are suppressed." hint-size="100%,260px">Engineering’s week-7 action completion is 9 points below the institution. Most of the gap is two gateway courses with late first feedback. Advising capacity in Engineering is at 118% of target.</x-import>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Decisions for this week" columns="{{ decCols }}" rows="{{ decRows }}" hint-size="100%,200px"></x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStudio }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Course Studio" style="display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Course Studio · BIO 2100 · Prof. Okafor</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Cell Biology · Fall 2026</h1><p style="color:var(--text-secondary);margin:6px 0 0">162 students · 14 assignments · gradebook of record</p></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="plus" hint-size="160px,44px">New assignment</x-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Assignments" columns="{{ asgCols }}" rows="{{ asgRows }}" hint-size="100%,260px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ProvenanceChart" title="Lab report 3 · submissions by day" unit="" source="Course Studio" rows="{{ subRows }}" hint-size="100%,240px"></x-import>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<div style="border:1px solid var(--border-default);border-radius:6px;padding:16px;display:grid;gap:12px;background:var(--surface-base)">
+<div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Course AI rule</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Segmented" label="AI rule" options="{{ aiOpts }}" value="{{ aiRule }}" onChange="{{ setAiRule }}" hint-size="100%,40px"></x-import>
+<div style="font-size:14px;line-height:1.5;color:var(--text-secondary)">{{ aiRuleText }}</div>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.NextSteps" steps="{{ studioSteps }}" hint-size="100%,160px"></x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReg }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Registrar OS" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Registrar OS · Office of the University Registrar</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Record changes awaiting approval</h1><p style="color:var(--text-secondary);margin:6px 0 0">Every change needs two people and is written to the academic record ledger.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Queue" columns="{{ regCols }}" rows="{{ regRows }}" hint-size="100%,220px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ActionPreview" subject="Approving a late drop · Ana Ruiz · CHEM 1601" says="Ana leaves CHEM 1601 and a W is recorded on her transcript." exactly="Her credits fall from 15 to 11. Financial Aid is notified because she drops below full time." doesNotChange="Her other courses and her grade history stay as they are." recovery="{{ regRecovery }}" hint-size="100%,260px"></x-import>
+<div style="display:flex;gap:12px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" onClick="{{ approve }}" disabled="{{ approved }}" hint-size="200px,44px">Approve as second person</x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="ghost" hint-size="120px,44px">Send back</x-import>
+</div>
+</div>
+<aside><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DecisionTrail" label="Decision trail" items="{{ regTrail }}" hint-size="100%,300px"></x-import></aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAdm }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Admissions CRM" style="display:grid;gap:24px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--border-subtle)">
+<div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Admissions · Fall 2027 cycle</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Applicant pipeline</h1></div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Segmented" label="Stage" options="{{ stageOpts }}" value="{{ stage }}" onChange="{{ setStage }}" hint-size="420px,40px"></x-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+<sc-for list="{{ funnel }}" as="f" hint-placeholder-count="5">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.MetricTile" label="{{ f.label }}" value="{{ f.value }}" source="official" updated="Admissions" hint-size="100%,110px"></x-import>
+</sc-for>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DataTable" caption="Applicants" columns="{{ admCols }}" rows="{{ admRows }}" hint-size="100%,240px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="Readers decide" hint-size="100%,56px">Semester organises files and flags what is missing. It never scores, ranks or recommends an admission decision.</x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRes }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Research" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Research · Okafor Lab</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Grants, protocols and people</h1></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:12px;align-content:start">
+<sc-for list="{{ grants }}" as="g" hint-placeholder-count="3">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ObjectCard" kind="{{ g.kind }}" statuses="{{ g.statuses }}" title="{{ g.title }}" provenance="{{ g.prov }}" metadata="{{ g.meta }}" primary="{{ g.primary }}" hint-size="100%,150px"></x-import>
+</sc-for>
+</div>
+<aside style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Fields" items="{{ labFields }}" hint-size="100%,160px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Notice" head="IRB" hint-size="100%,56px">Protocol changes go to the IRB through Semester; the IRB’s decision is the one recorded.</x-import>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isComms }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Communications" style="display:grid;gap:24px">
+<div style="padding-bottom:20px;border-bottom:1px solid var(--border-subtle)"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Communications · Office of the Provost</div><h1 style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-.015em;margin:6px 0 0">Send an announcement</h1></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px">
+<div style="display:grid;gap:16px;align-content:start">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TextField" label="Subject" defaultValue="Spring 2027 registration opens Nov 3" hint-size="100%,72px"></x-import>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TextField" label="Message" defaultValue="Check your time ticket and clear any holds before Nov 3. Your advisor can help you plan." hint-size="100%,72px"></x-import>
+<div style="display:grid;gap:4px">
+<sc-for list="{{ audiences }}" as="a" hint-placeholder-count="3">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Choice" type="radio" name="aud" label="{{ a.label }}" about="{{ a.about }}" checked="{{ a.on }}" onChange="{{ a.pick }}" hint-size="100%,56px"></x-import>
+</sc-for>
+</div>
+<div style="display:flex;gap:12px;align-items:center">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.Button" variant="primary" icon="announce" onClick="{{ send }}" disabled="{{ sent }}" hint-size="160px,44px">{{ sendLabel }}</x-import>
+<div style="font-size:14px;color:var(--text-secondary)">{{ sentNote }}</div>
+</div>
+</div>
+<aside><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.ActionPreview" subject="Sending this announcement" says="{{ commsSays }}" exactly="It appears in Today and Mail, labelled Institution verified · Office of the Provost." doesNotChange="Nobody’s registration, holds or time ticket changes." recovery="{{ commsRecovery }}" hint-size="100%,260px"></x-import></aside>
+</div>
+</div>
+</sc-if>
+
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { cur: 'exec', cmp: 'Last term', aiRule: 'Practice only', approved: false, stage: 'All', aud: 0, sent: false };
+  renderVals() {
+    const s = this.state;
+    const v = (x) => (x && x.target ? x.target.value : x);
+    const labels = { exec: 'Executive', studio: 'Course Studio', reg: 'Registrar OS', adm: 'Admissions', res: 'Research', comms: 'Communications' };
+    const aiText = { 'Off': 'Ask Semester declines to help with BIO 2100 work and says why.', 'Practice only': 'Help with practice questions and study packs. Graded work stays the student’s own.', 'Open with disclosure': 'Any help is allowed; students note AI use in their submission.' };
+    const apps = [
+      { n: 'Jordan Ellis', p: 'Biological Sciences', s: 'Complete', m: '—', st: 'Review' },
+      { n: 'Sofia Marquez', p: 'Engineering', s: 'Missing 1', m: 'Counselor letter', st: 'Submitted' },
+      { n: 'Kenji Watanabe', p: 'Economics', s: 'Complete', m: '—', st: 'Decided' },
+      { n: 'Amara Okoye', p: 'Nursing', s: 'Missing 2', m: 'Transcript · CSS Profile', st: 'Submitted' },
+      { n: 'Liam Novak', p: 'Undeclared', s: 'Started', m: 'Essay', st: 'Started' },
+    ];
+    const auds = [['All undergraduates', '6,890 people'], ['Students with a registration hold', '412 people'], ['First-year students', '1,610 people']];
+    return {
+      cur: s.cur, go: (id) => this.setState({ cur: id }), loc: 'Institution OS · ' + labels[s.cur],
+      rail: [{ label: 'Leadership', items: [{ id: 'exec', label: 'Executive', icon: 'brief' }, { id: 'comms', label: 'Communications', icon: 'announce' }] }, { label: 'Academic', items: [{ id: 'studio', label: 'Course Studio', icon: 'courses' }, { id: 'reg', label: 'Registrar OS', icon: 'registrar' }, { id: 'res', label: 'Research', icon: 'sources' }] }, { label: 'Enrolment', items: [{ id: 'adm', label: 'Admissions', icon: 'applying' }] }],
+      isExec: s.cur === 'exec', isStudio: s.cur === 'studio', isReg: s.cur === 'reg', isAdm: s.cur === 'adm', isRes: s.cur === 'res', isComms: s.cur === 'comms',
+      cmpOpts: ['Last term', 'Last year'], cmp: s.cmp, setCmp: (x) => this.setState({ cmp: v(x) }),
+      metrics: [
+        { label: 'Active students this week', value: '91', unit: '%', source: 'official', updated: 'Semester sign-ins', delta: s.cmp === 'Last term' ? '+4 pts vs last term' : '+11 pts vs last year' },
+        { label: 'Critical actions completed', value: '78', unit: '%', source: 'official', updated: 'Action Center', delta: s.cmp === 'Last term' ? '+6 pts' : '+14 pts' },
+        { label: 'Support contacts', value: '1,204', unit: 'this week', source: 'official', updated: 'Support queue', delta: s.cmp === 'Last term' ? '−18%' : '−31%' },
+        { label: 'Systems retired', value: '4', unit: 'of 21', source: 'official', updated: 'Domain map', delta: '+2 this year' },
+      ],
+      schoolRows: [{ label: 'Arts & Science', value: 94, source: 'official' }, { label: 'Engineering', value: 86, source: 'official' }, { label: 'Peabody', value: 95, source: 'official' }, { label: 'Blair', value: 97, source: 'official' }, { label: 'Nursing', value: 93, source: 'official' }],
+      execScope: ['School-level aggregates, Fall 2026'], execSources: [{ title: 'Action Center completion · week 7', kind: 'official' }, { title: 'Advising capacity report', kind: 'official' }],
+      decCols: [{ key: 'd', label: 'Decision' }, { key: 'o', label: 'Owner' }, { key: 'b', label: 'By' }, { key: 's', label: 'Status', render: (r) => React.createElement(window.SemesterDesignSystem_e9f3ba.StatusChip, { status: r.s }) }],
+      decRows: [{ d: 'Add 2 advisors to Engineering for spring', o: 'Dean of Engineering', b: 'Oct 17', s: 'pending' }, { d: 'Move Gradebook to native (gate 13 of 15)', o: 'Registrar + Faculty Senate', b: 'Nov 1', s: 'needs-confirmation' }, { d: 'Turn on AI for course announcements', o: 'IT Security', b: 'Oct 24', s: 'approved' }],
+      asgCols: [{ key: 't', label: 'Assignment' }, { key: 'd', label: 'Due' }, { key: 'w', label: 'Weight' }, { key: 'x', label: 'Submitted' }, { key: 'g', label: 'Graded' }],
+      asgRows: [{ t: 'Lab report 3: Enzyme kinetics', d: 'Thu 9 Oct', w: '12%', x: '118 of 162', g: '0' }, { t: 'Quiz 4', d: 'Fri 3 Oct', w: '3%', x: '159 of 162', g: '159' }, { t: 'Reading response: Ch. 7', d: 'Mon 13 Oct', w: '2%', x: '12 of 162', g: '0' }, { t: 'Midterm', d: 'Wed 22 Oct', w: '25%', x: '—', g: '—' }],
+      subRows: [{ label: 'Mon', value: 8, source: 'official' }, { label: 'Tue', value: 14, source: 'official' }, { label: 'Wed', value: 31, source: 'official' }, { label: 'Thu', value: 65, source: 'official' }],
+      aiOpts: ['Off', 'Practice only', 'Open with disclosure'], aiRule: s.aiRule, setAiRule: (x) => this.setState({ aiRule: v(x) }), aiRuleText: aiText[s.aiRule] || '',
+      studioSteps: [{ label: 'Release Quiz 4 grades', why: '159 graded · students see them in Grades', icon: 'proof' }, { label: '44 students haven’t opened Lab 3', why: 'Send a nudge through Communications', icon: 'announce' }],
+      regCols: [{ key: 'r', label: 'Request' }, { key: 'n', label: 'Student' }, { key: 'f', label: 'First approver' }, { key: 's', label: 'Status', render: (r) => React.createElement(window.SemesterDesignSystem_e9f3ba.StatusChip, { status: r.s }) }],
+      regRows: [{ r: 'Late drop · CHEM 1601', n: 'Ana Ruiz', f: 'L. Chen', s: s.approved ? 'approved' : 'pending' }, { r: 'Grade change · ECON 1010', n: 'Leo Grant', f: 'Dr. Haas', s: 'pending' }, { r: 'Transcript hold release', n: 'Tomás Bell', f: 'L. Chen', s: 'approved' }],
+      regRecovery: { kind: 'request', how: 'Reinstate within 10 days by a new two-person request.' },
+      approved: s.approved, approve: () => this.setState({ approved: true }),
+      regTrail: [{ title: 'Requested by student', who: 'Ana Ruiz', when: 'Oct 3 · 14:12', state: 'done' }, { title: 'Instructor consent', who: 'Dr. Kim · CHEM 1601', when: 'Oct 4 · 09:30', state: 'done' }, { title: 'First approval', who: 'Lauren Chen · Associate Registrar', when: 'Oct 4 · 11:02', state: 'done' }, { title: 'Second approval', who: s.approved ? 'You · Assistant Registrar' : 'Waiting on you', when: s.approved ? 'Just now' : '', state: s.approved ? 'done' : 'current' }, { title: 'Written to record ledger', who: 'Registrar OS', state: s.approved ? 'done' : 'waiting' }],
+      stageOpts: ['All', 'Started', 'Submitted', 'Review', 'Decided'], stage: s.stage, setStage: (x) => this.setState({ stage: v(x) }),
+      funnel: [{ label: 'Started', value: '41,280' }, { label: 'Submitted', value: '36,940' }, { label: 'Complete files', value: '31,115' }, { label: 'In review', value: '9,870' }, { label: 'Decided', value: '2,410' }],
+      admCols: [{ key: 'n', label: 'Applicant' }, { key: 'p', label: 'Intended programme' }, { key: 's', label: 'File' }, { key: 'm', label: 'Missing' }, { key: 'st', label: 'Stage' }],
+      admRows: s.stage === 'All' ? apps : apps.filter((a) => a.st === s.stage),
+      grants: [
+        { kind: 'Grant', statuses: ['live'], title: 'NIH R01 · Enzyme regulation in membrane transport', prov: { origin: 'official', by: 'Sponsored Programs' }, meta: '$1.84M · year 2 of 5 · 61% spent · report due Jan 15', primary: { label: 'Open budget' } },
+        { kind: 'Protocol', statuses: ['pending'], title: 'IRB #2026-0412 · student learning survey amendment', prov: { origin: 'official', by: 'IRB' }, meta: 'Submitted Sep 29 · reviewer assigned', primary: { label: 'View amendment' } },
+        { kind: 'Proposal', statuses: ['draft'], title: 'NSF CAREER · draft 3', prov: { origin: 'personal', by: 'Prof. Okafor' }, meta: 'Due Jul 22 · budget justification missing', primary: { label: 'Continue draft' } },
+      ],
+      labFields: [{ field: 'Members', value: '2 postdocs · 4 PhD · 3 undergraduate RAs' }, { field: 'Safety training', value: 'All current · next due Jan' }, { field: 'Open RA role', value: 'Summer 2027 · 6 applicants' }],
+      audiences: auds.map(([label, about], i) => ({ label, about, on: s.aud === i, pick: () => this.setState({ aud: i, sent: false }) })),
+      commsSays: 'It goes to ' + auds[s.aud][0].toLowerCase() + ' — ' + auds[s.aud][1] + '.',
+      commsRecovery: { kind: 'undo', how: 'Unsend within 10 minutes; after that, send a correction.' },
+      send: () => this.setState({ sent: true }), sent: s.sent, sendLabel: s.sent ? 'Sent' : 'Send', sentNote: s.sent ? 'Sent to ' + auds[s.aud][1] + ' · unsend within 10 min' : '',
+    };
+  }
+}
+</script>
+</body>
+</html>
