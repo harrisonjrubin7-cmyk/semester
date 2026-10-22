@@ -22,7 +22,9 @@ permissions:
 jobs:
   api:
     name: API (${{ matrix.database }})
-    runs-on: ubuntu-latest
+    # The workflow requires Python 3.12 and Playwright's supported system packages.
+    # Pin the image so a future ubuntu-latest migration cannot change either contract.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -62,7 +64,7 @@ jobs:
         run: pytest -q
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: course-engine/apps/web
