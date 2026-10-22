@@ -1,3 +1,10 @@
+---
+stale-refs:
+  - source: SIMPLIFY-AUDIT.md
+    changed_at: "2026-10-22T03:00:01"
+    sections_changed: [Flagged, "One app — the thirty-sixth pass: the ten absent ids, traced", The trace]
+---
+
 # Semester institutional current-state census
 
 Commit: `1f8ff58565dfa4d941f525fb8613b3a719433b91`
