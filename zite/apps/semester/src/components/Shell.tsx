@@ -17,18 +17,19 @@ const NAV = [
   { group: 'Progress', items: [{ to: '/progress', label: 'Degree path', icon: TrendingUp }, { to: '/progress/degree', label: 'Requirements', icon: GraduationCap }, { to: '/progress/graduate', label: 'Graduate milestones', icon: ScrollText }, { to: '/progress/grades', label: 'Grades', icon: Award }] },
   { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
 ];
-const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[] }[] = [
-  { to: '/staff/gradebook', label: 'Gradebook', icon: Table2, roles: ['Faculty'] },
-  { to: '/staff/queue', label: 'Grading queue', icon: Inbox, roles: ['Faculty', 'Tutor'] },
-  { to: '/staff/regrades', label: 'Regrade queue', icon: Scale, roles: ['Faculty', 'Staff', 'Administrator'] },
-  { to: '/staff/shared', label: 'Shared with me', icon: Share2, roles: ['Advisor'] },
-  { to: '/staff/registrar', label: 'Registrar desk', icon: ClipboardCheck, roles: ['Staff', 'Administrator'] },
-  { to: '/staff/holds', label: 'Registration holds', icon: Ban, roles: ['Staff', 'Administrator'] },
-  { to: '/staff/analytics', label: 'Analytics', icon: BarChart3, roles: ['Staff', 'Administrator'] },
-  { to: '/staff/accounts', label: 'Student accounts', icon: Receipt, roles: ['Staff', 'Administrator'] },
-  { to: '/staff/affairs', label: 'Support requests', icon: HeartHandshake, roles: ['Staff', 'Administrator', 'Advisor'] },
-  { to: '/staff/mentoring', label: 'Mentoring', icon: MessageSquare, roles: ['Alumni'] },
-  { to: '/staff/admissions', label: 'Admissions', icon: HeartHandshake, roles: ['Staff', 'Administrator'] },
+const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[]; action: string }[] = [
+  { to: '/staff/gradebook', label: 'Gradebook', icon: Table2, roles: ['Faculty'], action: 'grade.write' },
+  { to: '/staff/queue', label: 'Grading queue', icon: Inbox, roles: ['Faculty', 'Tutor'], action: 'teaching.queue' },
+  { to: '/staff/regrades', label: 'Regrade queue', icon: Scale, roles: ['Faculty', 'Staff', 'Administrator'], action: 'regrade.decide' },
+  { to: '/staff/shared', label: 'Shared with me', icon: Share2, roles: ['Advisor'], action: 'caseload.read' },
+  { to: '/staff/registrar', label: 'Registrar desk', icon: ClipboardCheck, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
+  { to: '/staff/calendar', label: 'Academic calendar', icon: CalendarDays, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
+  { to: '/staff/holds', label: 'Registration holds', icon: Ban, roles: ['Staff', 'Administrator'], action: 'registration.request.decide' },
+  { to: '/staff/analytics', label: 'Analytics', icon: BarChart3, roles: ['Staff', 'Administrator'], action: 'readiness.read' },
+  { to: '/staff/accounts', label: 'Student accounts', icon: Receipt, roles: ['Staff', 'Administrator'], action: 'accounts.read' },
+  { to: '/staff/affairs', label: 'Support requests', icon: HeartHandshake, roles: ['Staff', 'Administrator', 'Advisor'], action: 'caseload.read' },
+  { to: '/staff/mentoring', label: 'Mentoring', icon: MessageSquare, roles: ['Alumni'], action: 'mentoring.offer' },
+  { to: '/staff/admissions', label: 'Admissions', icon: HeartHandshake, roles: ['Staff', 'Administrator'], action: 'admission.decide' },
 ];
 const TABS = [{ to: '/today', label: 'Today', icon: Sun }, { to: '/progress', label: 'My path', icon: TrendingUp }, { to: '#search', label: 'Search', icon: Search }, { to: '/plan', label: 'Plan', icon: CalendarDays }, { to: '/you', label: 'Me', icon: Shield }];
 const AREA: Record<string, string> = { today: 'Today', plan: 'Plan', learn: 'Learn', help: 'Help', campus: 'Campus', progress: 'Progress', you: 'You', staff: 'Workspace' };
@@ -40,6 +41,8 @@ function weekOfTerm() {
 
 export default function Shell() {
   const { membership, role, setRole } = useWorkspace();
+  // Pages a member's approved role templates unlock that their current role workspace doesn't already show.
+  const assigned = STAFF_NAV.filter((i) => !i.roles.includes(role) && (membership.templateActions ?? []).includes(i.action));
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   useEffect(() => {
@@ -76,6 +79,16 @@ export default function Shell() {
               ))}
             </div>
           ))}
+          {assigned.length > 0 && (
+            <div>
+              <p className="mb-1 px-2 font-display text-[11px] uppercase tracking-[0.18em] opacity-50">Assigned tools</p>
+              {assigned.map((i) => (
+                <NavLink key={i.to} to={i.to} className={({ isActive }) => cn('flex items-center gap-2 rounded-[3px] border-l-2 border-transparent px-2 py-1.5 transition-colors duration-150 hover:bg-sidebar-accent', isActive && 'border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground')}>
+                  <i.icon className="h-4 w-4" strokeWidth={1.5} />{i.label}
+                </NavLink>
+              ))}
+            </div>
+          )}
           {STAFF_NAV.some((i) => i.roles.includes(role)) && (
             <div>
               <p className="mb-1 px-2 font-display text-[11px] uppercase tracking-[0.18em] opacity-50">{role} workspace</p>

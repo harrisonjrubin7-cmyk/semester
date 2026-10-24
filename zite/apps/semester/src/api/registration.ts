@@ -4,6 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, tenantScope } from '../lib/server';
 import { computeReadiness, firstBlocker } from '../lib/readiness';
 import { replayDecision } from '../lib/registrarRules';
+import { registrationWindow } from '../lib/calendarServer';
 
 const parse = (t: string) => {
   const m = t.match(/^([A-Za-z/]+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
@@ -95,6 +96,10 @@ export default createEndpoint({
     const readiness = computeReadiness(draft, holds);
 
     if (input.action === 'submit') {
+      // Registration window (approved academic calendar). Terms without an approved calendar behave as before.
+      const win = await registrationWindow(a.institutionId, input.term);
+      if (win === 'not_yet') forbid(`Registration for ${input.term} has not opened yet.`);
+      if (win === 'closed') forbid(`Registration for ${input.term} is closed. Ask the registrar about late changes.`);
       // Retry safety: the same request key returns the earlier result instead of submitting again.
       if (input.requestKey) {
         const prior = await zite.registrationRequests.findAll({ filters: { requestKey: input.requestKey }, limit: 50 });
@@ -127,6 +132,6 @@ export default createEndpoint({
     const takenIds = new Set(mine.records.filter((e) => e.status !== 'Dropped' && inTerm(e)).map((e) => first(e.section)));
     const catalog = Object.values(secById).filter((s) => s.term === term && !plannedIds.has(s.id) && !takenIds.has(s.id)).map((s) => describe(s.id));
     const status = mine.records.filter((e) => inTerm(e) && ['Requested', 'Enrolled', 'Waitlisted', 'Dropped'].includes(e.status ?? '')).map((e) => ({ enrollmentId: e.id, ...describe(first(e.section)!), status: e.status ?? '', source: e.source ?? '' }));
-    return { draft, catalog, holds, readiness, status };
+    return { draft, catalog, holds, readiness, status, window: await registrationWindow(a.institutionId, term) };
   },
 });

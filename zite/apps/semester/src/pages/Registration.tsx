@@ -75,6 +75,7 @@ export default function Registration() {
               </Panel>
             </div>
             <div className="space-y-4">
+            {d.window && d.window !== 'none' && <p role="status" className="mb-3 text-sm">{d.window === 'open' ? 'Registration is open for this term.' : d.window === 'not_yet' ? 'Registration has not opened yet. You can build your plan now.' : 'Registration is closed for this term. Talk to the registrar about late changes.'} <a href="/staff/calendar" className="text-primary underline">Academic calendar</a></p>}
             <ReadinessPanel checks={d.readiness.checks as Check[]} ready={d.readiness.ready} count={d.draft.length}
               onSubmit={async () => {
                 // Keep the same key across retries so a timed-out submit can't create a second request.
