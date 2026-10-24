@@ -1,0 +1,27 @@
+{
+  "id": "sci91lofpm",
+  "accessMode": "internal",
+  "envVars": {
+    "ZITE_POSTGRES_URL": {
+      "description": "Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string)"
+    }
+  },
+  "seoSettings": {
+    "title": "Semester Developers",
+    "description": "",
+    "thumbnailUrl": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/widgetid-default/uJuskPZ5tAxwm6McoMKS9M/Screenshot-2026-10-22-at-2.43.12aPM.png",
+    "faviconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/widgetid-default/rk7NRpoNVWErEqv7XRMdmJ/Screenshot-2026-10-24-at-7.32.57aPM.png"
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "Semester Developers",
+    "appIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/source-058fbab1afb65485959e819061523e4c",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/favicon-32.png"
+    },
+    "backgroundColor": "#ffffff"
+  }
+}
