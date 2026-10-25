@@ -117,3 +117,9 @@ export async function userNames(userIds: string[]) {
   rows.forEach((r) => { out[String(r.id)] = String(r.name || r.email || 'Member'); });
   return out;
 }
+
+/** Refuses unless the target user has an active membership in this institution. Use before granting any office role. */
+export async function requireTenantMember(institutionId: string, userId: string) {
+  const { records } = await zite.memberships.findAll({ filters: { member: userId, institution: institutionId }, limit: 5 });
+  if (!records.some((r) => r.status === 'Active')) forbid('That person is not an active member of your institution.');
+}

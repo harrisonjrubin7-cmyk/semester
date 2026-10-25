@@ -23,10 +23,25 @@ export async function sha256(text: string) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-type Row = { id: number; tenant_id: string; command_key: string; payload: { requestId: string; state: string; resultCode: string; message: string } };
+type Row = { id: number; tenant_id: string; command_key: string; topic: string; payload: { requestId: string; state: string; resultCode: string; message: string; student?: string; section?: string; drop?: string; add?: string | null } };
+
+async function setSeat(student: string, section: string, status: 'Enrolled' | 'Dropped') {
+  const found = await zite.enrollments.findAll({ filters: { student, section }, limit: 5 });
+  const live = found.records.find((e) => e.status !== 'Dropped') ?? found.records[0];
+  if (live) await zite.enrollments.update({ id: live.id, record: { status, ...(status === 'Enrolled' ? { source: 'Official' } : {}) } as never });
+  else if (status === 'Enrolled') await zite.enrollments.create({ record: { label: 'Registrar ledger', student, section, status, source: 'Official' } as never });
+}
 
 /** Applies one outbox entry to Zite. Idempotent: re-running writes the same values. */
 async function apply(row: Row) {
+  if (row.topic === 'reg.seat') {
+    // Drop/swap/waitlist promotion (lib/wlMigration.ts). Idempotent: sets the same status again.
+    const p = row.payload;
+    if (p.drop) await setSeat(p.student!, p.drop, 'Dropped');
+    if (p.add) await setSeat(p.student!, p.add, 'Enrolled');
+    if (p.section) await setSeat(p.student!, p.section, 'Enrolled');
+    return;
+  }
   const { requestId, state, resultCode, message } = row.payload;
   const req = await zite.registrationRequests.findOne({ id: requestId });
   if (!req) throw new Error('Request not found in Zite');
@@ -39,8 +54,8 @@ async function apply(row: Row) {
 export async function dispatchOutbox(tenantId: string, commandKey?: string) {
   const sql = pg();
   const rows = (commandKey
-    ? await sql.query(`SELECT id, tenant_id, command_key, payload FROM reg_outbox WHERE status = 'pending' AND tenant_id = $1 AND command_key = $2`, [tenantId, commandKey])
-    : await sql.query(`SELECT id, tenant_id, command_key, payload FROM reg_outbox WHERE status = 'pending' AND tenant_id = $1 ORDER BY id LIMIT 50`, [tenantId])) as Row[];
+    ? await sql.query(`SELECT id, tenant_id, command_key, topic, payload FROM reg_outbox WHERE status = 'pending' AND tenant_id = $1 AND command_key = $2`, [tenantId, commandKey])
+    : await sql.query(`SELECT id, tenant_id, command_key, topic, payload FROM reg_outbox WHERE status = 'pending' AND tenant_id = $1 ORDER BY id LIMIT 50`, [tenantId])) as Row[];
   let dispatched = 0, failed = 0;
   for (const row of rows) {
     try {

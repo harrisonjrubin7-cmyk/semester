@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, first, audit, userNames } from '../lib/server';
+import { requireAccess, first, audit, userNames, requireTenantMember } from '../lib/server';
 import { pg } from '../lib/pg';
 import { TUT_MIGRATION } from '../lib/tutMigration';
 
@@ -69,6 +69,7 @@ export default createEndpoint({
       }
       case 'setStaff':
         if (!isAdmin) fail('Only institution administrators manage learning-center staff.');
+        if (input.on) await requireTenantMember(T, input.userId);
         await call(`SELECT tut_set_staff($1,$2,$3,$4) AS e`, [uid, T, input.userId, input.on]);
         await audit(a, input.on ? 'Learning-center staff granted' : 'Learning-center staff revoked', `user:${input.userId}`, '', 'Administrator');
         break;

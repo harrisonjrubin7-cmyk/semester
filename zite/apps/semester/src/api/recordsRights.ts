@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, first, audit, userNames } from '../lib/server';
+import { requireAccess, first, audit, userNames, requireTenantMember } from '../lib/server';
 import { pg } from '../lib/pg';
 import { PRV_MIGRATION } from '../lib/prvMigration';
 
@@ -60,6 +60,7 @@ export default createEndpoint({
     }
     if (input.action === 'setOffice') {
       adminOnly();
+      if (input.on) await requireTenantMember(T, input.userId);
       await call(`SELECT prv_set_staff($1,$2,$3,$4) AS e`, [uid, T, input.userId, input.on]);
       await audit(a, input.on ? 'Records-privacy office granted' : 'Records-privacy office revoked', `user:${input.userId}`, '', 'Administrator');
     }

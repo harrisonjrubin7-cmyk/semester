@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, first, audit, userNames } from '../lib/server';
+import { requireAccess, first, audit, userNames, requireTenantMember } from '../lib/server';
 import { pg } from '../lib/pg';
 import { FA_MIGRATION } from '../lib/faMigration';
 
@@ -58,6 +58,7 @@ export default createEndpoint({
         break;
       case 'setStaff':
         if (!isAdmin) fail('Only institution administrators manage aid-office staff.');
+        if (input.on) await requireTenantMember(T, input.userId);
         await one(`SELECT fa_set_staff($1,$2,$3,$4) AS e`, [uid, T, input.userId, input.on]);
         await audit(a, input.on ? 'Aid-office staff granted' : 'Aid-office staff revoked', `user:${input.userId}`, '', 'Administrator');
         break;

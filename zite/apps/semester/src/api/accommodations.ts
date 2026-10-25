@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, ids, first, audit, userNames, tenantScope } from '../lib/server';
+import { requireAccess, ids, first, audit, userNames, tenantScope, requireTenantMember } from '../lib/server';
 import { pg } from '../lib/pg';
 import { ACC_MIGRATION } from '../lib/accMigration';
 
@@ -63,6 +63,7 @@ export default createEndpoint({
       if (!isAdmin) fail('Only administrators manage accessibility-office access.');
       const tenant = await tenantScope(T);
       if (!tenant.members.has(input.userId)) fail('That person is not in your institution.');
+      if (input.on) await requireTenantMember(T, input.userId);
       fail(((await sql.query(`SELECT acc_set_staff($1,$2,$3,$4) AS e`, [uid, T, input.userId, input.on])) as { e: string | null }[])[0].e);
       await audit(a, input.on ? 'Accessibility office access granted' : 'Accessibility office access revoked', `user:${input.userId}`, '', 'Administrator');
       return { ok: true };

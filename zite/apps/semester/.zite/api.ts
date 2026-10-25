@@ -24,6 +24,7 @@ import type { default as _InboxEp } from '../src/api/inbox';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
 import type { default as _InstitutionReadinessEp } from '../src/api/institutionReadiness';
+import type { default as _IntegrationMappingsEp } from '../src/api/integrationMappings';
 import type { default as _IntelligenceEp } from '../src/api/intelligence';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
@@ -31,12 +32,14 @@ import type { default as _MigrationApprovalEp } from '../src/api/migrationApprov
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProgressEp } from '../src/api/progress';
+import type { default as _ReconciliationEp } from '../src/api/reconciliation';
 import type { default as _RecordsRightsEp } from '../src/api/recordsRights';
 import type { default as _ReferralsEp } from '../src/api/referrals';
 import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
 import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
 import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
 import type { default as _RegistrationEp } from '../src/api/registration';
+import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _RegradeEp } from '../src/api/regrade';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
 import type { default as _SandboxApiEp } from '../src/api/sandboxApi';
@@ -160,6 +163,11 @@ export type InstitutionReadinessInputType = NonNullable<_InstitutionReadinessCfg
 export type InstitutionReadinessOutputType = Awaited<ReturnType<_InstitutionReadinessCfg['execute']>>;
 export const institutionReadiness = createCaller<InstitutionReadinessInputType, InstitutionReadinessOutputType>('institutionReadiness');
 
+type _IntegrationMappingsCfg = typeof _IntegrationMappingsEp;
+export type IntegrationMappingsInputType = NonNullable<_IntegrationMappingsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntegrationMappingsCfg['execute']>[0]['input'];
+export type IntegrationMappingsOutputType = Awaited<ReturnType<_IntegrationMappingsCfg['execute']>>;
+export const integrationMappings = createCaller<IntegrationMappingsInputType, IntegrationMappingsOutputType>('integrationMappings');
+
 type _IntelligenceCfg = typeof _IntelligenceEp;
 export type IntelligenceInputType = NonNullable<_IntelligenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntelligenceCfg['execute']>[0]['input'];
 export type IntelligenceOutputType = Awaited<ReturnType<_IntelligenceCfg['execute']>>;
@@ -195,6 +203,11 @@ export type ProgressInputType = NonNullable<_ProgressCfg['inputSchema']> extends
 export type ProgressOutputType = Awaited<ReturnType<_ProgressCfg['execute']>>;
 export const progress = createCaller<ProgressInputType, ProgressOutputType>('progress');
 
+type _ReconciliationCfg = typeof _ReconciliationEp;
+export type ReconciliationInputType = NonNullable<_ReconciliationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReconciliationCfg['execute']>[0]['input'];
+export type ReconciliationOutputType = Awaited<ReturnType<_ReconciliationCfg['execute']>>;
+export const reconciliation = createCaller<ReconciliationInputType, ReconciliationOutputType>('reconciliation');
+
 type _RecordsRightsCfg = typeof _RecordsRightsEp;
 export type RecordsRightsInputType = NonNullable<_RecordsRightsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RecordsRightsCfg['execute']>[0]['input'];
 export type RecordsRightsOutputType = Awaited<ReturnType<_RecordsRightsCfg['execute']>>;
@@ -224,6 +237,11 @@ type _RegistrationCfg = typeof _RegistrationEp;
 export type RegistrationInputType = NonNullable<_RegistrationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrationCfg['execute']>[0]['input'];
 export type RegistrationOutputType = Awaited<ReturnType<_RegistrationCfg['execute']>>;
 export const registration = createCaller<RegistrationInputType, RegistrationOutputType>('registration');
+
+type _RegistrationChangesCfg = typeof _RegistrationChangesEp;
+export type RegistrationChangesInputType = NonNullable<_RegistrationChangesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrationChangesCfg['execute']>[0]['input'];
+export type RegistrationChangesOutputType = Awaited<ReturnType<_RegistrationChangesCfg['execute']>>;
+export const registrationChanges = createCaller<RegistrationChangesInputType, RegistrationChangesOutputType>('registrationChanges');
 
 type _RegradeCfg = typeof _RegradeEp;
 export type RegradeInputType = NonNullable<_RegradeCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegradeCfg['execute']>[0]['input'];
@@ -309,6 +327,7 @@ export const api = {
   institutionConsole,
   institutionOps,
   institutionReadiness,
+  integrationMappings,
   intelligence,
   learn,
   manageTask,
@@ -316,12 +335,14 @@ export const api = {
   onboard,
   privacy,
   progress,
+  reconciliation,
   recordsRights,
   referrals,
   registrarDecide,
   registrarLedger,
   registrarQueue,
   registration,
+  registrationChanges,
   regrade,
   roleApps,
   sandboxApi,

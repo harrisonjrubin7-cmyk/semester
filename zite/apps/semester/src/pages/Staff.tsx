@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageHeader, Panel, Empty, Loadable, useLoad, fmtDay, Status, SourceTag, ActionPreview, errMsg } from '../components/kit';
 import { ConfirmAction } from '../components/overlays';
 import RegistrationQueue from '../components/RegistrationQueue';
+import { RegistrarChanges } from '../components/RegistrationChanges';
 
 const run = async (fn: () => Promise<unknown>, ok: string, reload: () => void) => { try { await fn(); toast(ok); reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
 const Scope = ({ see, approve, cannot }: { see: string; approve: string; cannot: string }) => <p className="mb-4 rounded-[3px] border border-border bg-card px-3 py-2 text-xs text-muted-foreground">Can see: {see} · Can approve: {approve} · Cannot: {cannot}</p>;
@@ -68,16 +69,15 @@ export function RegistrarDesk() {
       <PageHeader eyebrow="Staff · Registrar" title="Registrar desk" sub="Registration requests from students, waitlists, planned enrollments and prerequisite overrides. Each change is written to the audit log first. Record official enrollments in your SIS too: it is not connected." />
       <Scope see="enrollments across your institution" approve="enrollment status changes" cannot="change your own enrollment" />
       <RegistrationQueue />
+      <RegistrarChanges />
       <Loadable state={s}>{(d) => (
         <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
           <Panel title="Enrollment queue">
             <Input placeholder="Filter by student or section" value={q} onChange={(e) => setQ(e.target.value)} className="mb-3" />
             {d.enrollments.length ? <table className="w-full text-sm"><tbody>{d.enrollments.filter((e: { student: string; section: string }) => `${e.student} ${e.section}`.toLowerCase().includes(q.toLowerCase())).map((e: { id: string; student: string; section: string; status: string; source: string; self: boolean }) => (
               <tr key={e.id} className="border-t border-border"><td className="py-2">{e.student}<span className="block text-xs text-muted-foreground">{e.section}</span></td><td><Status value={e.status} /></td>
-                <td className="text-right">{e.self ? <span className="text-xs text-muted-foreground">Your own</span> : (
-                  <ConfirmAction trigger={<Button size="sm" variant="outline">Enroll</Button>} title={`Enroll ${e.student} in ${e.section}?`} confirmLabel="Enroll — confirm" keepLabel="Keep as is" onConfirm={() => run(() => staff({ action: 'setEnrollment', enrollmentId: e.id, status: 'Enrolled' }), 'Enrolled in Semester. Record it in the SIS too: it is still the official record.', s.reload)}>
-                    <ActionPreview says={`${e.student} is enrolled in ${e.section} and it appears on their schedule as Official.`} stays="Their other enrollments and holds." recovery={{ kind: 'request', how: 'set the enrollment to Dropped from this desk.' }} />
-                  </ConfirmAction>)}</td></tr>))}</tbody></table> : <Empty>No waitlisted or planned enrollments.</Empty>}
+                <td className="text-right text-xs text-muted-foreground">{e.self ? 'Your own' : 'Decide in the queues above'}</td></tr>))}</tbody></table> : <Empty>No waitlisted or planned enrollments.</Empty>}
+            <p className="mt-3 text-xs text-muted-foreground">Read-only. Enrollment changes are decided in the registration and change queues above, which check seat capacity, promote the waitlist and issue a receipt.</p>
           </Panel>
           <Panel title="Override requests">{d.overrides.length ? <ul className="space-y-2 text-sm">{d.overrides.map((o: { id: string; title: string; status: string; by: string }) => <li key={o.id}>{o.title}<span className="block text-xs text-muted-foreground">{o.by} · <Status value={o.status} /></span></li>)}</ul> : <Empty>No override requests.</Empty>}
             <p className="mt-3 text-xs text-muted-foreground">Decide overrides in the Approvals queue on Help — the approver must differ from the requester.</p></Panel>

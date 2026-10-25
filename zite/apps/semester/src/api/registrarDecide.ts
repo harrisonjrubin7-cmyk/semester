@@ -4,8 +4,10 @@ import { tenantSources } from '../lib/sourcesServer';
 import { sisBlock } from '../lib/sources';
 import { pg, ensureSchema, sha256, dispatchOutbox } from '../lib/pg';
 import { zite } from 'zitejs/db';
-import { requireAction, first, forbid, audit, tenantScope } from '../lib/server';
-import { decideRegistration } from '../lib/registrarRules';
+import { requireAction, first, ids, forbid, audit, tenantScope } from '../lib/server';
+import { decideRegistration, commitBlocker } from '../lib/registrarRules';
+import { overlaps } from '../lib/changeRules';
+import { maxCredits } from '../lib/calendarServer';
 
 /**
  * Registrar commits or rejects a submitted registration request. Rules live in lib/registrarRules (unit-tested).
@@ -51,6 +53,33 @@ export default createEndpoint({
     if (out.kind !== 'reject') {
       const blocked = sisBlock(await tenantSources(a.institutionId));
       if (blocked) return { state: req!.state ?? 'Submitted', resultCode: 'SOURCE_STALE', message: blocked };
+      // Re-check what may have changed since the student submitted (lib/registrarRules commitBlocker, unit-tested).
+      const student = first(req!.student) ?? '';
+      const [holds, mine, overrides, courses, secs] = await Promise.all([
+        zite.studentHolds.findAll({ filters: { student, status: 'Active', blocksRegistration: true }, limit: 20 }),
+        zite.enrollments.findAll({ filters: { student }, limit: 500 }),
+        zite.tasks.findAll({ filters: { requestedBy: student, type: 'Approval Request', status: 'Approved', section: sectionId }, limit: 5 }),
+        zite.courses.findAll({ limit: 2000 }),
+        zite.sections.findAll({ limit: 2000 }),
+      ]);
+      const secById = Object.fromEntries(secs.records.map((x) => [x.id, x]));
+      const courseById = Object.fromEntries(courses.records.map((c) => [c.id, c]));
+      const term = section?.term ?? '';
+      const course = courseById[first(section?.course) ?? ''];
+      const secOf = (e: (typeof mine.records)[0]) => secById[first(e.section) ?? ''];
+      // Prerequisites count only work from other terms; a same-term section cannot satisfy one.
+      const done = new Set(mine.records.filter((e) => (e.status === 'Completed' || e.status === 'Enrolled') && secOf(e)?.term !== term).map((e) => first(secOf(e)?.course)).filter(Boolean));
+      const confirmed = mine.records.filter((e) => e.status === 'Enrolled' && secOf(e)?.term === term && first(e.section) !== sectionId);
+      const why = commitBlocker({
+        holds: holds.records.map((h) => h.studentFacingMessage || 'a hold blocks registration'),
+        missingPrereqs: ids(course?.prerequisites).filter((p) => !done.has(p)).map((p) => courseById[p]?.code ?? 'a prerequisite'),
+        overrideApproved: overrides.records.length > 0,
+        enrolledCredits: confirmed.reduce((n, e) => n + Number(courseById[first(secOf(e)?.course) ?? '']?.credits ?? 0), 0),
+        sectionCredits: Number(course?.credits ?? 0),
+        maxCredits: await maxCredits(a.institutionId),
+        clashesWith: confirmed.filter((e) => overlaps(section?.meetingTimes ?? '', secOf(e)?.meetingTimes ?? '')).map((e) => courseById[first(secOf(e)?.course) ?? '']?.code ?? 'a section'),
+      });
+      if (why) return { state: req!.state ?? 'Submitted', resultCode: 'NEEDS_REVIEW', message: `Not committed. ${why}` };
     }
     await ensureSchema();
     const studentId = first(req!.student) ?? '';

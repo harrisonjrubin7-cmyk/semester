@@ -13,7 +13,6 @@ export default createEndpoint({
     z.object({ action: z.literal('setFinal'), enrollmentId: z.string(), grade: z.enum(GRADES as [string, ...string[]]) }),
     z.object({ action: z.literal('taQueue') }),
     z.object({ action: z.literal('registrar') }),
-    z.object({ action: z.literal('setEnrollment'), enrollmentId: z.string(), status: z.enum(['Enrolled', 'Waitlisted', 'Dropped']) }),
     z.object({ action: z.literal('accounts') }),
     z.object({ action: z.literal('requestHoldRelease'), holdId: z.string(), reason: z.string().min(5) }),
     z.object({ action: z.literal('affairs') }),
@@ -65,21 +64,11 @@ export default createEndpoint({
       };
     }
 
-    if (input.action === 'registrar' || input.action === 'setEnrollment') {
-      const a = await requireAction(uid, input.action === 'setEnrollment' ? 'registration.request.decide' : 'registrar.read');
+    if (input.action === 'registrar') {
+      // C17: the direct enrollment write was removed. Status changes go through the registrar ledger
+      // (registrarDecide / registrationChanges), which holds the capacity lock, waitlist promotion and receipts.
+      const a = await requireAction(uid, 'registrar.read');
       const tenant = await tenantScope(a.institutionId);
-      if (input.action === 'setEnrollment') {
-        const e = await zite.enrollments.findOne({ id: input.enrollmentId });
-        if (!e || !inSet(e.section, tenant.sections)) forbid('Enrollment not found.');
-        if (first(e!.student) === uid) forbid('You cannot change your own enrollment from the registrar desk.');
-        await audit(a, `Enrollment set to ${input.status}`, `enrollment:${e!.id}`, e!.label ?? '', 'Registrar');
-        // Recorded by the Registrar in Semester. The SIS stays the official record until a connector is authorized.
-        await zite.enrollments.update({ id: e!.id, record: { status: input.status, source: 'Made Here' } as never });
-        const student = first(e!.student);
-        const secLabel = (await zite.sections.findOne({ id: first(e!.section) ?? '' }))?.label ?? 'a section';
-        if (student) await zite.messages.create({ record: { body: `Registrar update: ${secLabel.split(' · ')[0]} is now ${input.status} (recorded by the Registrar in Semester; the student information system remains the official record).`, sender: uid, recipients: [student], isNotification: true } as never });
-        return { ok: true };
-      }
       const [wait, planned, reqs, secs] = await Promise.all([
         zite.enrollments.findAll({ filters: { status: { in: ['Requested', 'Waitlisted'] } }, limit: 2000 }),
         zite.enrollments.findAll({ filters: { status: 'Planned' }, limit: 2000 }),

@@ -1,3 +1,5 @@
+> Superseded for status by `scope-coverage.md` and `NEXT_ACTIONS.md` (24 Oct 2026). The table below is the 22 Oct snapshot; since then the Site was published and Developers and Security Lab apps were added.
+
 # Current state (22 Oct 2026)
 
 ## Apps (workspace "Education OS")

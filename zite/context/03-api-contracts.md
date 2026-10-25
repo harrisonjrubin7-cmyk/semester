@@ -11,8 +11,7 @@ Proposed standard:
 
   Base path:
     /api/v1
-
- Authentication:
+ Authentication:
    verified end-user session or narrowly scoped service identity
 
  Workspace context:
@@ -73,8 +72,7 @@ Proposed standard:
                 evaluations
 
  Registration   POST /registration-requests; GET /registration-requests/{id}
-
-       Domain                                 Representative endpoints
+       Domain                                 Representative endpoints
 
   Learning         GET /sections/{id}/assignments; POST /study-sets; POST /documents
 
@@ -135,8 +133,7 @@ before generating the complete OpenAPI artifact.
                "syncedAt": "2026-10-22T17:05:00Z"
              },
              "primaryAction": {
-
-                 "kind": "official_handoff",
+                 "kind": "official_handoff",
                  "label": "Open registrar instructions",
                  "targetRef": "approved-handoff-id"
              }
@@ -189,8 +186,7 @@ Expected handling:
        "requestId": "request-id"
      }
  }
-
-5.6 Events and webhooks
+5.6 Events and webhooks
 
  type SemesterEvent<T> = {
     id: string;

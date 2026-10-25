@@ -3,7 +3,13 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, tenantScope } from '../lib/server';
 import { computeReadiness, firstBlocker } from '../lib/readiness';
-import { replayDecision } from '../lib/registrarRules';
+import { submitOutcome } from '../lib/registrarRules';
+import { pg } from '../lib/pg';
+import { SUB_MIGRATION } from '../lib/subMigration';
+
+let subReady: Promise<void> | null = null;
+const ensureSub = () => { if (!subReady) subReady = (async () => { for (const q of SUB_MIGRATION) await pg().query(q); })().catch((e) => { subReady = null; throw e; }); return subReady; };
+type Reservation = { forbidden?: boolean; created?: boolean; sections: string[]; state: 'reserved' | 'done'; term: string };
 import { registrationWindow, maxCredits } from '../lib/calendarServer';
 
 const parse = (t: string) => {
@@ -25,7 +31,7 @@ export default createEndpoint({
     z.object({ action: z.literal('add'), sectionId: z.string() }),
     z.object({ action: z.literal('remove'), enrollmentId: z.string() }),
     z.object({ action: z.literal('requestOverride'), sectionId: z.string(), reason: z.string().min(5) }),
-    z.object({ action: z.literal('submit'), term: z.string(), requestKey: z.string().min(8).optional() }),
+    z.object({ action: z.literal('submit'), term: z.string(), requestKey: z.string().min(8).max(100) }),
     z.object({ action: z.literal('withdrawRequest'), enrollmentId: z.string() }),
   ]),
   outputSchema: z.any(),
@@ -50,6 +56,9 @@ export default createEndpoint({
     if (input.action === 'withdrawRequest') {
       const e = await zite.enrollments.findOne({ id: input.enrollmentId });
       if (!e || !ids(e.student).includes(uid) || e.status !== 'Requested') forbid('Only a request the Registrar has not acted on can be withdrawn.');
+      // Close the Registrar's copy too, so a withdrawn request cannot be committed later.
+      const open = await zite.registrationRequests.findAll({ filters: { enrollment: e!.id, state: { in: ['Submitted', 'Evaluating', 'Needs Review'] } }, limit: 10 });
+      for (const r of open.records) await zite.registrationRequests.update({ id: r.id, record: { state: 'Rejected', resultCode: 'POLICY_RESTRICTION', safeExplanation: 'Withdrawn by the student before the Registrar acted.' } as never });
       await zite.enrollments.update({ id: e!.id, record: { status: 'Planned', label: 'Registration draft' } as never });
       await audit(a, 'Registration request withdrawn', `enrollment:${e!.id}`, '', 'Student self-service');
       return { ok: true };
@@ -96,6 +105,15 @@ export default createEndpoint({
     const readiness = computeReadiness(draft, holds);
 
     if (input.action === 'submit') {
+      // Idempotency first: a finished submit replays, a half-finished one resumes without re-validating.
+      await ensureSub();
+      const plannedSections = planned.map((e) => first(e.section)!).filter(Boolean);
+      const prior = ((await pg().query(`SELECT student_id, sections, state, term FROM reg_submit_keys WHERE tenant_id = $1 AND request_key = $2`, [a.institutionId, input.requestKey])) as { student_id: string; sections: string[]; state: 'reserved' | 'done'; term: string }[])[0];
+      if (prior && prior.student_id !== uid) forbid();
+      let outcome = submitOutcome(prior ? { sections: prior.sections, state: prior.state } : null, plannedSections);
+      if (outcome === 'conflict') forbid('This request ID was already used for different sections. Reload and submit again.');
+      if (outcome === 'replay') return { ok: true, submitted: prior!.sections.length, replayed: true };
+      if (outcome === 'new') {
       // Registration window (approved academic calendar). Terms without an approved calendar behave as before.
       const win = await registrationWindow(a.institutionId, input.term);
       if (win === 'not_yet') forbid(`Registration for ${input.term} has not opened yet.`);
@@ -107,32 +125,38 @@ export default createEndpoint({
         const total = held + draft.reduce((n, d) => n + Number(d.credits || 0), 0);
         if (total > cap) forbid(`That would be ${total} credits this term; the limit is ${cap}. Remove a course or ask your advisor about an overload.`);
       }
-      // Retry safety: the same request key returns the earlier result instead of submitting again.
-      if (input.requestKey) {
-        const prior = await zite.registrationRequests.findAll({ filters: { requestKey: input.requestKey }, limit: 50 });
-        const verdict = replayDecision(prior.records.map((r) => ({ studentIds: ids(r.student), sectionId: first(r.section) ?? '' })), uid, planned.map((e) => first(e.section) ?? ''));
-        if (verdict === 'forbidden') forbid();
-        if (verdict === 'conflict') forbid('This request ID was already used for different sections. Reload and submit again.');
-        if (verdict === 'replay') return { ok: true, submitted: prior.records.filter((r) => r.state === 'Submitted').length, replayed: true };
-      }
       // Registrar-placed holds that block registration.
       const regHolds = await zite.studentHolds.findAll({ filters: { student: uid, status: 'Active', blocksRegistration: true }, limit: 20 });
       if (regHolds.records.length) forbid(`Not ready to submit: ${regHolds.records[0].studentFacingMessage || 'a hold blocks registration'}`);
       const blocker = firstBlocker(readiness);
       if (blocker) forbid(`Not ready to submit: ${blocker}`);
-      // Audit first, then hand each planned section to the Registrar's enrollment queue.
-      await audit(a, 'Registration request submitted', `user:${uid}`, `${term}: ${draft.map((d) => d.code).join(', ')} (${readiness.credits} credits)`, 'Student self-service');
-      for (const e of planned) await zite.enrollments.update({ id: e.id, record: { status: 'Requested', label: `Registration request · ${term}` } as never });
-      if (input.requestKey && planned.length) {
-        await zite.registrationRequests.bulkCreate({
-          records: planned.map((e) => ({
-            requestKey: input.requestKey!, student: uid, section: first(e.section)!, institution: a.institutionId,
-            action: 'Add', state: 'Submitted', resultCode: 'OK', enrollment: e.id,
-            safeExplanation: 'Received. Enrollment is not confirmed until the Registrar commits it.',
-          })) as never,
-        });
+      if (!plannedSections.length) forbid('Add at least one section before submitting.');
+      // Reserve the key before any write. A concurrent submit with the same key gets the same reservation.
+      const r = ((await pg().query(`SELECT reg_submit_reserve($1,$2,$3,$4,$5) AS r`, [a.institutionId, input.requestKey, uid, term, plannedSections])) as { r: Reservation }[])[0].r;
+      if (r.forbidden) forbid();
+      if (!r.created) {
+        outcome = submitOutcome({ sections: r.sections, state: r.state }, plannedSections);
+        if (outcome === 'conflict') forbid('This request ID was already used for different sections. Reload and submit again.');
+        if (outcome === 'replay') return { ok: true, submitted: r.sections.length, replayed: true };
       }
-      return { ok: true, submitted: planned.length };
+      await audit(a, 'Registration request submitted', `user:${uid}`, `${term}: ${draft.map((d) => d.code).join(', ')} (${readiness.credits} credits) · key ${input.requestKey.slice(0, 8)}`, 'Student self-service');
+      }
+      // Write (or finish writing) exactly the reserved sections. Each step is safe to repeat.
+      const reserved = ((await pg().query(`SELECT sections FROM reg_submit_keys WHERE tenant_id = $1 AND request_key = $2`, [a.institutionId, input.requestKey])) as { sections: string[] }[])[0].sections;
+      const existing = await zite.registrationRequests.findAll({ filters: { requestKey: input.requestKey }, limit: 50 });
+      const haveRow = new Set(existing.records.map((x) => first(x.section)));
+      for (const sid of reserved) {
+        const e = mine.records.find((m) => first(m.section) === sid && m.status !== 'Dropped');
+        if (!e) continue;
+        if (e.status === 'Planned') await zite.enrollments.update({ id: e.id, record: { status: 'Requested', label: `Registration request · ${term}` } as never });
+        if (!haveRow.has(sid)) await zite.registrationRequests.create({ record: {
+          requestKey: input.requestKey, student: uid, section: sid, institution: a.institutionId,
+          action: 'Add', state: 'Submitted', resultCode: 'OK', enrollment: e.id,
+          safeExplanation: 'Received. Enrollment is not confirmed until the Registrar commits it.',
+        } as never });
+      }
+      await pg().query(`SELECT reg_submit_done($1,$2)`, [a.institutionId, input.requestKey]);
+      return { ok: true, submitted: reserved.length, resumed: outcome === 'resume' };
     }
 
     const plannedIds = new Set(planned.map((p) => first(p.section)));

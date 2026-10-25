@@ -1,7 +1,7 @@
 # Semester on Zite
 
 This folder is a snapshot of the Semester Zite monorepo (workspace `1c4b0d16210e8d4b`), imported from Zite commit
-`d8ee54e83674b58ccdc979a9b3cd016bbe2039c5` on 2026-10-24.
+`762229469b75a45cddafb610c1a2e06d962766a3` on 2026-10-25 (previous import: `d8ee54e`, 2026-10-24).
 
 **Zite is still the source of truth for this folder.** Edits are made in the Zite project and re-imported here; a change made
 only in this folder will not reach the running Zite apps. It is kept separate from `app/` and is not part of the root npm
@@ -19,6 +19,9 @@ workspaces, so it does not change installs, builds or tests of the existing app.
 | `apps/semester-family` | Family (`vpysx5dj4n`) | Guardian view of what students share |
 | `apps/semester-security-lab` | Security Lab (`jw85ejkuj1`) | Capability evidence and release gates |
 | `apps/semester-developers` | Developers (`sci91lofpm`) | Developer platform console and sandbox |
+
+Traceability and status registers live in `docs/execution/` (source manifest, requirement and module registers,
+conflicts and decisions, `NEXT_ACTIONS.md`).
 
 ## Status
 

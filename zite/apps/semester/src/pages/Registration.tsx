@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Link } from 'react-router-dom';
 import { PageHeader, Panel, Empty, useLoad, Loadable, errMsg, ActionPreview, Status } from '../components/kit';
 import { ConfirmAction } from '../components/overlays';
+import { MyRegistrationChanges } from '../components/RegistrationChanges';
 
 type Check = { key: string; label: string; state: 'ok' | 'blocked' | 'info'; detail: string; fixPath?: string };
 const MARK = { ok: '✓', blocked: '!', info: 'i' } as const;
@@ -94,6 +95,7 @@ export default function Registration() {
                   </li>))}</ul>
               </Panel>
             )}
+            <MyRegistrationChanges term={TERM} />
             <Panel title="Catalog">
               <Input placeholder="Filter courses" value={q} onChange={(e) => setQ(e.target.value)} className="mb-3" />
               <div className="space-y-2">{catalog.length === 0 ? <Empty>No sections match.</Empty> : catalog.map((c: Row & { times: string; credits: number }) => (

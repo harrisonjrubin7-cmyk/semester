@@ -1,0 +1,136 @@
+id,group,app,source,source_of_authority,operating_mode,existing_implementation,designed,implemented,tested,deployed,institution_authorized,production_enabled
+MOD-001,Core workspace,Home / Today,S-53 §1,student-owned + derived,native,/today getToday,yes,partial,built parts only,no,no,no
+MOD-002,Core workspace,Action Center,S-53 §1,derived,native,/today inbox approvals,yes,partial,built parts only,no,no,no
+MOD-003,Core workspace,Calendar & Schedule,S-53 §1,student-owned + institution-official,native,/plan academicCalendar,yes,partial,built parts only,no,no,no
+MOD-004,Core workspace,Tasks & Goals,S-53 §1,student-owned,native,/today manageTask,yes,partial,built parts only,no,no,no
+MOD-005,Core workspace,Notifications,S-53 §1,derived,native,/today/notifications zite.messages,yes,partial,built parts only,no,no,no
+MOD-006,Core workspace,Communications,S-53 §1,institution-official,native,/today/mail inbox,yes,partial,built parts only,no,no,no
+MOD-007,Core workspace,Notes & Documents,S-53 §1,student-owned,native,/learn/write,yes,partial,built parts only,no,no,no
+MOD-008,Core workspace,Files & Resources,S-53 §1,student-owned,native,none (private storage blocked),yes,missing,NOT RUN,no,no,no
+MOD-009,Core workspace,Projects & Group Workspaces,S-53 §1,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-010,Core workspace,Focus & Study Sessions,S-53 §1,student-owned,native,/learn/study study,yes,partial,built parts only,no,no,no
+MOD-011,Core workspace,Universal Search,S-53 §1,derived,native,search,yes,partial,built parts only,no,no,no
+MOD-012,Core workspace,Profile & Preferences,S-53 §1,student-owned,native,/you privacy,yes,partial,built parts only,no,no,no
+MOD-013,Planning and registration,Academic Path,S-53 §2,student-owned,native,/plan progress,yes,partial,built parts only,no,no,no
+MOD-014,Planning and registration,Degree Progress & Audit,S-53 §2,institution-official,read-only,/progress/degree progress,yes,partial,built parts only,no,no,no
+MOD-015,Planning and registration,Program & Major Explorer,S-53 §2,institution-official,read-only,none,yes,missing,NOT RUN,no,no,no
+MOD-016,Planning and registration,Term Planner,S-53 §2,student-owned,native,/plan/registration draft,yes,partial,built parts only,no,no,no
+MOD-017,Planning and registration,Course & Section Explorer,S-53 §2,institution-official,read-only,/plan/registration catalog,yes,partial,built parts only,no,no,no
+MOD-018,Planning and registration,Schedule Builder,S-53 §2,student-owned,native,registration conflict checks,yes,partial,built parts only,no,no,no
+MOD-019,Planning and registration,Course Comparison,S-53 §2,derived,native,none,yes,missing,NOT RUN,no,no,no
+MOD-020,Planning and registration,Workload & Cost Planner,S-53 §2,derived,native,none,yes,missing,NOT RUN,no,no,no
+MOD-021,Planning and registration,Registration Readiness,S-53 §2,institution-official,native,registration readiness holds calendar,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-022,Planning and registration,Registration & Enrollment,S-53 §2,institution-official,approved write-through,registration registrarDecide reg_decide,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-023,Planning and registration,Waitlists & Seat Watch,S-53 §2,institution-official,approved write-through,registrationChanges wl-001,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-024,Planning and registration,Transfer & Articulation,S-53 §2,institution-official,native,/plan/transfer transfer transferPath,yes,partial,built parts only,no,no,no
+MOD-025,Planning and registration,Graduation Scenarios,S-53 §2,derived,native,/progress/graduate graduate,yes,partial,built parts only,no,no,no
+MOD-026,Learning and Course Studio,Courses,S-53 §3,instructor-published,native,/learn /learn/:sectionId learn,yes,partial,built parts only,no,no,no
+MOD-027,Learning and Course Studio,Course Studio,S-53 §3,instructor-published,native,CourseStudio learn,yes,partial,built parts only,no,no,no
+MOD-028,Learning and Course Studio,Syllabus & Course Policies,S-53 §3,instructor-published,native,crs syllabus versions,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-029,Learning and Course Studio,Learning Content & Resources,S-53 §3,instructor-published,native,learn materials,yes,partial,built parts only,no,no,no
+MOD-030,Learning and Course Studio,Assignments & Submissions,S-53 §3,instructor-published,native,teaching,yes,partial,built parts only,no,no,no
+MOD-031,Learning and Course Studio,Assessments & Rubrics,S-53 §3,instructor-published,native,none,yes,missing,NOT RUN,no,no,no
+MOD-032,Learning and Course Studio,Gradebook & Feedback,S-53 §3,institution-official,native,/staff/gradebook regrade,yes,partial,built parts only,no,no,no
+MOD-033,Learning and Course Studio,Discussions & Course Q&A,S-53 §3,instructor-published,native,/staff/queue,yes,partial,built parts only,no,no,no
+MOD-034,Learning and Course Studio,Course Groups & TA Management,S-53 §3,instructor-published,native,none,yes,missing,NOT RUN,no,no,no
+MOD-035,Learning and Course Studio,Study Packs & Practice,S-53 §3,derived,native,/learn/study /learn/decks,yes,partial,built parts only,no,no,no
+MOD-036,Learning and Course Studio,Research Workspace,S-53 §3,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-037,Learning and Course Studio,Writing Workspace,S-53 §3,student-owned,native,/learn/write,yes,partial,built parts only,no,no,no
+MOD-038,Learning and Course Studio,Learning Progress,S-53 §3,derived,native,/progress/grades,yes,partial,built parts only,no,no,no
+MOD-039,Learning and Course Studio,Academic Integrity,S-53 §3,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-040,Advising and support,Advising Workspace,S-53 §4,institution-official,native,/help/advising advisorShare /staff/shared,yes,partial,built parts only,no,no,no
+MOD-041,Advising and support,Student Success & Cases,S-53 §4,institution-official,native,help cases (APP-003),yes,partial,built parts only,no,no,no
+MOD-042,Advising and support,Appointments & Office Hours,S-53 §4,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-043,Advising and support,Advising Notes & Shared Plans,S-53 §4,student-owned + institution-official,native,advisorShare case notes,yes,partial,built parts only,no,no,no
+MOD-044,Advising and support,Tutoring & Peer Learning,S-53 §4,institution-official,native,/learn/tutoring tutoring,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-045,Advising and support,Mentoring,S-53 §4,institution-official,native,/staff/mentoring,yes,partial,built parts only,no,no,no
+MOD-046,Advising and support,Support & Service Desk,S-53 §4,institution-official,native,/help help,yes,partial,built parts only,no,no,no
+MOD-047,Advising and support,Resource Directory & Referrals,S-53 §4,institution-official,native,/help/referrals referrals outbox,yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-048,Advising and support,Accessibility & Accommodation Support,S-53 §4,institution-official,native,/campus/accommodations accommodations,yes,partial,built parts only,no,no,no
+MOD-049,Advising and support,Wellness & Basic-Needs Support,S-53 §4,external,handoff,/help resources,yes,partial,built parts only,no,no,no
+MOD-050,Registrar operations,Registrar Workspace,S-53 §5,institution-official,native,/staff/registrar,yes,partial,built parts only,no,no,no
+MOD-051,Registrar operations,Academic Catalog & Curriculum,S-53 §5,institution-official,native,/staff/catalog catalog,yes,partial,built parts only,no,no,no
+MOD-052,Registrar operations,"Terms, Sections & Scheduling",S-53 §5,institution-official,native,/staff/calendar academicCalendar,yes,partial,built parts only,no,no,no
+MOD-053,Registrar operations,Enrollment Operations,S-53 §5,institution-official,approved write-through,registrarQueue registrationChanges,yes,partial,built parts only,no,no,no
+MOD-054,Registrar operations,Holds & Eligibility,S-53 §5,institution-official,native,/staff/holds,yes,partial,built parts only,no,no,no
+MOD-055,Registrar operations,Academic Records,S-53 §5,institution-official,read-only,recordsRights registrarLedger,yes,partial,built parts only,no,no,no
+MOD-056,Registrar operations,Official Grade Ledger,S-53 §5,institution-official,disabled until authorized,regrade (no posting),yes,partial,built parts only,no,no,no
+MOD-057,Registrar operations,Transfer Evaluation,S-53 §5,institution-official,native,transfer (no transcript posting),yes,partial,built parts only,no,no,no
+MOD-058,Registrar operations,Graduation & Credential Conferral,S-53 §5,institution-official,disabled until authorized,none,yes,missing,NOT RUN,no,no,no
+MOD-059,Registrar operations,Transcripts & Record Exports,S-53 §5,institution-official,disabled until authorized,none,yes,missing,NOT RUN,no,no,no
+MOD-060,Registrar operations,Department & Program Administration,S-53 §5,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-061,Student finances,Student Account,S-53 §6,institution-official,read-only,/you/account studentAccount,yes,partial,built parts only,no,no,no
+MOD-062,Student finances,Payments & Payment Plans,S-53 §6,external,disabled until authorized,none (money movement disabled),yes,missing,NOT RUN,no,no,no
+MOD-063,Student finances,Financial Aid & Scholarships,S-53 §6,institution-official,native,/you/aid financialAid,yes,partial,built parts only,no,no,no
+MOD-064,Student finances,Budget & Affordability,S-53 §6,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-065,Student finances,Financial Support Requests,S-53 §6,institution-official,native,financialAid requests,yes,partial,built parts only,no,no,no
+MOD-066,Student finances,Student Accounts Operations,S-53 §6,institution-official,native,/staff/accounts accountServices,yes,partial,built parts only,no,no,no
+MOD-067,Student finances,Refunds & Reconciliation,S-53 §6,institution-official,disabled until authorized,sa_proposals approved_not_posted,yes,partial,built parts only,no,no,no
+MOD-068,Campus life,Campus Services Directory,S-53 §7,institution-official,native,/campus /campus/places campus,yes,partial,built parts only,no,no,no
+MOD-069,Campus life,Events,S-53 §7,institution-official,native,campus,yes,partial,built parts only,no,no,no
+MOD-070,Campus life,Organizations & Clubs,S-53 §7,institution-official,native,community,yes,partial,built parts only,no,no,no
+MOD-071,Campus life,Community & Peer Connections,S-53 §7,student-owned,native,/campus/community community,yes,partial,built parts only,no,no,no
+MOD-072,Campus life,Student Marketplace,S-53 §7,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-073,Campus life,Moderation & Appeals,S-53 §7,institution-official,native,community moderation (APP-007),yes,partial,built parts only,no,no,no
+MOD-074,Campus life,Housing & Roommate Resources,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-075,Campus life,Maintenance Requests,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-076,Campus life,Dining & Meal Programs,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-077,Campus life,Spaces & Resource Booking,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-078,Campus life,"Transit, Parking & Campus Navigation",S-53 §7,external,handoff,/campus/places,yes,partial,built parts only,no,no,no
+MOD-079,Campus life,Recreation & Campus Activities,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-080,Campus life,Library & Bookstore Access,S-53 §7,external,read-only,none,yes,missing,NOT RUN,no,no,no
+MOD-081,Campus life,Campus Jobs & Volunteering,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-082,Campus life,Safety & Emergency Handoffs,S-53 §7,external,handoff,/help,yes,partial,built parts only,no,no,no
+MOD-083,Career and alumni,Skills Profile & Verification,S-53 §8,student-owned + verifier,native,/plan/career,yes,partial,built parts only,no,no,no
+MOD-084,Career and alumni,Portfolio,S-53 §8,student-owned,native,/plan/career,yes,partial,built parts only,no,no,no
+MOD-085,Career and alumni,Credential Wallet,S-53 §8,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-086,Career and alumni,Resume & Cover Letter Studio,S-53 §8,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-087,Career and alumni,Opportunities & Applications,S-53 §8,external,native,/plan/career employers app,yes,partial,built parts only,no,no,no
+MOD-088,Career and alumni,Career Services Workspace,S-53 §8,institution-official,native,/staff/affairs,yes,partial,built parts only,no,no,no
+MOD-089,Career and alumni,Employer Portal,S-53 §8,external,native,semester-employers employer,yes,partial,built parts only,no,no,no
+MOD-090,Career and alumni,Networking & Career Events,S-53 §8,external,native,none,yes,missing,NOT RUN,no,no,no
+MOD-091,Career and alumni,Alumni Portal,S-53 §8,student-owned,native,alumni,yes,partial,built parts only,no,no,no
+MOD-092,Career and alumni,Continuing Education,S-53 §8,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-093,Family and external,Family & Guardian Portal,S-53 §9,student-owned (shared),native,semester-family familyView,yes,partial,built parts only,no,no,no
+MOD-094,Family and external,Consent & Sharing Center,S-53 §9,student-owned,native,/you privacy advisorShare consent ledger,yes,partial,built parts only,no,no,no
+MOD-095,Family and external,External Collaborator Access,S-53 §9,student-owned,native,none,yes,missing,NOT RUN,no,no,no
+MOD-096,Family and external,Family Resource Center,S-53 §9,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-097,Institutional administration,Institution Admin Console,S-53 §10,institution-official,native,/console institutionConsole,yes,partial,built parts only,no,no,no
+MOD-098,Institutional administration,Identity & Access Administration,S-53 §10,institution-official,native,Console roles memberships access reviews (no SSO),yes,partial,built parts only,no,no,no
+MOD-099,Institutional administration,Configuration & Workflow Studio,S-53 §10,institution-official,native,none,yes,missing,NOT RUN,no,no,no
+MOD-100,Institutional administration,Policy & Governance,S-53 §10,institution-official,native,Console approvals,yes,partial,built parts only,no,no,no
+MOD-101,Institutional administration,Module & Rollout Management,S-53 §10,institution-official,native,Console feature status,yes,partial,built parts only,no,no,no
+MOD-102,Institutional administration,Institutional Analytics & Outcomes,S-53 §10,institution-official,native,/staff/analytics analytics (disclosure control),yes,implemented,unit + rolled-back DB checks,no,no,no
+MOD-103,Institutional administration,Executive Workspace,S-53 §10,derived,native,executiveBrief (intelligence),yes,partial,built parts only,no,no,no
+MOD-104,Institutional administration,Audit & Evidence Workspace,S-53 §10,institution-official,native,Console audit log,yes,partial,built parts only,no,no,no
+MOD-105,"AI, integration, developer",Ask Semester,S-53 §11,derived,native,/learn/ask ask intelligence,yes,partial,built parts only,no,no,no
+MOD-106,"AI, integration, developer",AI Policy & Model Gateway,S-53 §11,institution-official,native,aiGate intelligence registry,yes,partial,built parts only,no,no,no
+MOD-107,"AI, integration, developer",AI Evaluation & Oversight,S-53 §11,institution-official,native,ACCEPTANCE scenarios (unit),yes,partial,built parts only,no,no,no
+MOD-108,"AI, integration, developer",Education Graph & Source Authority,S-53 §11,derived,native,sources freshness,yes,partial,built parts only,no,no,no
+MOD-109,"AI, integration, developer",Integration Hub,S-53 §11,institution-official,native,"Console integrations, mappings and drift",yes,partial,built parts only,no,no,no
+MOD-110,"AI, integration, developer",Data Quality & Reconciliation,S-53 §11,institution-official,native,"event delivery replay, drift reports",yes,partial,built parts only,no,no,no
+MOD-111,"AI, integration, developer",Migration & Cutover Studio,S-53 §11,institution-official,native,"Company OS migrations, migrationApproval",yes,partial,built parts only,no,no,no
+MOD-112,"AI, integration, developer",Developer Portal,S-53 §11,external,native,semester-developers devApps sandboxApi,yes,partial,built parts only,no,no,no
+MOD-113,"AI, integration, developer",App Marketplace,S-53 §11,external,native,Company OS appReview,yes,partial,built parts only,no,no,no
+MOD-114,"Trust, privacy, security",Trust Center,S-53 §12,company,native,"site /trust, trustCenter",yes,partial,built parts only,no,no,no
+MOD-115,"Trust, privacy, security",Privacy Operations,S-53 §12,institution-official,native,recordsRights privacy (APP-013),yes,partial,built parts only,no,no,no
+MOD-116,"Trust, privacy, security",Retention & Legal Holds,S-53 §12,institution-official,native,Console retention,yes,partial,built parts only,no,no,no
+MOD-117,"Trust, privacy, security",Security Operations,S-53 §12,company + institution,native,"securityOps, Security Lab",yes,partial,built parts only,no,no,no
+MOD-118,"Trust, privacy, security",Compliance & Risk,S-53 §12,company,native,Company OS risks evidence,yes,partial,built parts only,no,no,no
+MOD-119,"Trust, privacy, security",Accessibility Program,S-53 §12,company,native,none (WCAG target only),yes,missing,NOT RUN,no,no,no
+MOD-120,"Trust, privacy, security",Audit & Approval Controls,S-53 §12,institution-official,native,"audit log, two-person rules across migrations",yes,partial,built parts only,no,no,no
+MOD-121,"Trust, privacy, security",Reliability & Incident Command,S-53 §12,company,native,Company OS incidents,yes,partial,built parts only,no,no,no
+MOD-122,"Trust, privacy, security","Backup, Restore & Continuity",S-53 §12,company,native,none (restore not exercised),yes,missing,NOT RUN,no,no,no
+MOD-123,"Trust, privacy, security",Status & Service Communications,S-53 §12,company,native,site /status,yes,partial,built parts only,no,no,no
+MOD-124,Company operations,Public Website & Content,S-53 §13,company,native,semester-site (published),yes,implemented,NOT TRACED,yes,no,no
+MOD-125,Company operations,CRM & Revenue Operations,S-53 §13,company,native,Company OS /crm /deals /accounts,yes,partial,built parts only,no,no,no
+MOD-126,Company operations,"Quotes, Contracts & Procurement",S-53 §13,company,native,Company OS /contracts,yes,partial,built parts only,no,no,no
+MOD-127,Company operations,Subscription Billing,S-53 §13,company,disabled until authorized,Company OS finance (no live billing),yes,partial,built parts only,no,no,no
+MOD-128,Company operations,Implementation & Onboarding,S-53 §13,company,native,Company OS /implementation,yes,partial,built parts only,no,no,no
+MOD-129,Company operations,Customer Success,S-53 §13,company,native,Company OS /accounts,yes,partial,built parts only,no,no,no
+MOD-130,Company operations,Support Operations,S-53 §13,company,native,Company OS /support supportAccess,yes,partial,built parts only,no,no,no
+MOD-131,Company operations,Product & Release Operations,S-53 §13,company,native,Security Lab gates,yes,partial,built parts only,no,no,no
+MOD-132,Company operations,Finance Operations,S-53 §13,company,disabled until authorized,Company OS /finance financeCommand,yes,partial,built parts only,no,no,no
+MOD-133,Company operations,Legal & Vendor Operations,S-53 §13,company,native,none,yes,missing,NOT RUN,no,no,no
+MOD-134,Company operations,People & Capacity,S-53 §13,company,native,none,yes,missing,NOT RUN,no,no,no
+MOD-135,Company operations,Executive & Board Workspace,S-53 §13,company,native,Company OS /board,yes,partial,built parts only,no,no,no

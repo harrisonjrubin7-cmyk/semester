@@ -41,8 +41,7 @@ working software unnecessarily.
       │   ├── Pricing and pilot requests
       │   ├── Documentation and help center
       │   ├── Trust center
-
-  │   └── Public service-status page
+  │   └── Public service-status page
   │
   ├── Education product
   │   ├── Student workspace
@@ -98,8 +97,7 @@ working software unnecessarily.
 
 These surfaces reflect the product and Company OS scope in your documents. The particular
 boundaries above are my recommended implementation structure. [1]
-
-What “one system” should mean
+What “one system” should mean
 I recommend enforcing these architectural rules:
  1. One identity can have multiple memberships and responsibilities.
  2. Every request operates in an explicit workspace and data scope.
@@ -142,8 +140,7 @@ A proposed repository structure:
   │   │   ├── learning/
   │   │   ├── student-services/
   │   │   ├── community/
-
-  │   │   ├── career/
+  │   │   ├── career/
   │   │   ├── commerce/
   │   │   └── company/
   │   ├── workflows/
@@ -198,8 +195,7 @@ deployment:
          Observability                  Errors, traces, logs, uptime checks, operational alerts
 
          External financial providers   Payment execution, banking, statutory accounting, payroll
-
-                       Layer                                             Proposed responsibility
+                       Layer                                             Proposed responsibility
 
          AI providers                       Approved requests through the governed gateway only
 
@@ -252,8 +248,7 @@ Recommended domain coverage:
 
                      Domain                                        Components and workflows
                Today / Action Center     Prioritized actions, blockers, deadlines, explanations, source links
-
-                    Domain                                  Components and workflows
+                    Domain                                  Components and workflows
 
            My Path                Goals, academic milestones, degree progress, next-step planning
 
@@ -304,8 +299,7 @@ Build institution-specific capabilities for:
     IT, identity, security, and accessibility administrators.
     Department and institution leadership.
 Each workspace should expose responsibilities, not an unrestricted copy of the entire platform.
-
-For example, an advisor’s caseload assignment should not automatically grant access to every
+For example, an advisor’s caseload assignment should not automatically grant access to every
 financial, health-related, disciplinary, or private student item. Make the access decision explicit
 in the policy matrix.
 
@@ -359,8 +353,7 @@ Core entity groups
     memberships, role_assignments, delegations
 
   Authorization:
-
-    policies, resource_grants, consents
+    policies, resource_grants, consents
     access_reviews, privileged_access_requests
 
   Academic:
@@ -412,8 +405,7 @@ For each entity type, specify:
     - registration_readiness
   retention_policy: institution_contract_defined
   ai_egress_policy: prohibited
-
-Do not add these exact fields blindly to every table. Use the specification to decide what belongs
+Do not add these exact fields blindly to every table. Use the specification to decide what belongs
 on the record, in an associated metadata table, or in the policy registry.
 The authoritative-source rule matters: your materials explicitly keep the SIS authoritative
 during the pilot and require source-aware information throughout the experience. [1]
@@ -460,8 +452,7 @@ Example: customer sale to activation
       → security and accessibility evidence
       → institution acceptance
       → cohort activation
-
-      → adoption and outcome reporting
+      → adoption and outcome reporting
       → renewal decision
 
 
@@ -510,8 +501,7 @@ Paste this into your coding agent from the existing Semester repository.
 
   PRESERVATION
   Inspect before editing.
-
-Preserve working features, routes, data, migrations, design tokens,
+Preserve working features, routes, data, migrations, design tokens,
 components, accessibility behavior, and existing tests.
 Do not rewrite the application merely to match a proposed folder tree.
 Do not change the package manager or framework without a documented need.
@@ -567,8 +557,7 @@ Propose modular domain boundaries and shared platform contracts.
 Use explicit workspace context.
 Separate personal, institutional, commercial, and company data scopes.
 Enforce permissions server-side and at the database where appropriate.
-
-  Keep external authoritative records distinct from Semester-derived data.
+  Keep external authoritative records distinct from Semester-derived data.
 
   AI
   Preserve the current student-record no-egress policy.
@@ -620,8 +609,7 @@ Prompt 1 — Reconcile the source documents
 
   Do not choose legal or contractual commitments autonomously.
   Do not reproduce draft customer or certification claims as verified facts.
-
-  Produce a requirements traceability matrix and ADR backlog.
+  Produce a requirements traceability matrix and ADR backlog.
 
 
 This is important because Book 1 explicitly identifies disagreements across accessibility
@@ -672,8 +660,7 @@ Prompt 3 — Build the design system and shared shell
 
 These requirements follow the reuse-first, token-first, accessibility-centered approach in Book
 3. [2]
-
-Prompt 4 — Build the first complete education workflow
+Prompt 4 — Build the first complete education workflow
 
   Implement registration readiness as a complete vertical slice.
 
@@ -721,8 +708,7 @@ Use this template once per domain listed in Section 3:
 
   Do not implement disconnected CRUD screens.
   Do not enable the domain in production automatically.
-
-Prompt 6 — Implement Company OS
+Prompt 6 — Implement Company OS
 
  Implement Semester Company OS using the same domain contracts and design
  system, but separate staff permissions and sensitive company data.
@@ -777,8 +763,7 @@ Prompt 8 — Verify launch readiness
  integration reconciliation, billing integrity, accessibility,
  AI boundaries, monitoring, support readiness, restore capability,
  retention/deletion behavior, and rollback procedures.
-
-  Classify each gate:
+  Classify each gate:
   pass, fail, blocked, not_applicable.
 
   For every pass attach:
@@ -827,8 +812,7 @@ existing tooling:
   verify:migrations
   verify:accessibility
   verify:design-system
-
-  verify:contracts
+  verify:contracts
   verify:security
   verify:build
   verify:all
@@ -881,8 +865,7 @@ The coding agent should create a decision register for these inputs rather than 
             First customer segment and launch cohort                Initial acceptance journeys
 
             Institution-authorized data fields                      Integration and storage scope
-
-                               Required input                                       Decision it controls
+                               Required input                                       Decision it controls
 
            Authoritative system for each record type                  Read models, reconciliation, write-back limits
 
@@ -926,8 +909,7 @@ evidence:
     End-to-end acceptance results.
 For Company OS components, add approval thresholds, financial or contractual controls, and
 the operating review that uses their outputs. For UI components, add token compliance,
-
-component reuse, stories, and accessibility checks—requirements already emphasized in your
+component reuse, stories, and accessibility checks—requirements already emphasized in your
 design book. [2] [1]
 The immediate execution step is Prompt 1 of the master workflow: inspect the repository,
 reconcile the books, and produce the component-level traceability matrix. That gives every
@@ -947,6 +929,5 @@ claims.
   9. projects.semester.operations_console
  10. projects.semester.gtm_strategy
  11. https://www.perplexity.ai/search/edffd24a-5a93-4d2d-a30f-4ac487746c56
-
-
+
 ```

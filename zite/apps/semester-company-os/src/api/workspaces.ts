@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { COMPANY_TENANT, ensureFinSchema, pg } from '../lib/fin';
 
 // Read-only company workspaces. Every figure is a live count from Company OS tables; synthetic (isSample) rows are
 // excluded and reported separately. No student records are queried here.
@@ -37,6 +38,10 @@ export default createEndpoint({
     ]);
 
     const by = <T extends { n: number }>(rows: (T & Record<string, unknown>)[], key: string, v: string) => rows.find((r) => r[key] === v)?.n ?? 0;
+    // Entitlements live in the finance backend; only reconciled invoices create them.
+    await ensureFinSchema();
+    const ent = (await pg().query(`SELECT DISTINCT contract_id FROM fin_entitlements WHERE tenant_id = $1 AND status = 'Active'`, [COMPANY_TENANT])) as { contract_id: string }[];
+    const entitled = new Set(ent.map((e) => e.contract_id));
     const won = deals.find((d) => d.stage === 'Won');
     const pipeline = deals.filter((d) => !['Won', 'Lost'].includes(d.stage)).reduce((s, d) => s + Number(d.amt), 0);
     const active = contracts.filter((c) => c.state === 'Active');
@@ -67,8 +72,10 @@ export default createEndpoint({
         links: [['/deals', 'Deals'], ['/accounts', 'Accounts'], ['/requests', 'Inbound requests']], gaps: [] },
       { key: 'success', title: 'Customer Success', purpose: 'Renewals, launches and customer health.',
         figures: [{ label: 'Active customers', value: String(active.length) }, { label: 'Renewals in 90 days', value: String(renewals.length) },
-          { label: 'Launches in progress', value: String(projects.filter((p) => !['Accepted', 'Activated'].includes(p.state)).length) }, { label: 'Activated', value: String(projects.filter((p) => p.state === 'Activated').length) }],
-        attention: [...renewals.map((c) => ({ title: c.title, detail: `Ends ${d(c.endsOn)} · ${usd(Number(c.annualValueMinor ?? 0))}/yr`, to: '/contracts' })),
+          { label: 'Launches in progress', value: String(projects.filter((p) => !['Accepted', 'Activated'].includes(p.state)).length) }, { label: 'Activated', value: String(projects.filter((p) => p.state === 'Activated').length) },
+          { label: 'Contracts with entitlement', value: `${active.filter((c) => entitled.has(c.id)).length}/${active.length}`, note: 'From reconciled invoices' }],
+        attention: [...active.filter((c) => !entitled.has(c.id)).map((c) => ({ title: c.title, detail: 'Active contract with no reconciled invoice — no entitlement yet', to: '/finance' })),
+          ...renewals.map((c) => ({ title: c.title, detail: `Ends ${d(c.endsOn)} · ${usd(Number(c.annualValueMinor ?? 0))}/yr${entitled.has(c.id) ? '' : ' · no entitlement'}`, to: '/contracts' })),
           ...stuck.map((p) => ({ title: p.name, detail: `${p.state} · target ${d(p.targetLaunch)}`, to: '/implementation' }))],
         links: [['/implementation', 'Implementation'], ['/contracts', 'Contracts'], ['/support', 'Support']], gaps: ['No health score: needs agreed usage signals, which would come from aggregate, not student-level, data.'] },
       { key: 'support', title: 'Support', purpose: 'Open tickets by severity. Support staff get no standing student access.',

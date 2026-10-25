@@ -66,6 +66,12 @@
       "title": "App portfolio (32 workspaces)",
       "description": "The 32 proposed workspaces by group, developer tiers T0-T2, per-app boundaries, institutional activation order and the company record chain.",
       "source": "written"
+    },
+    {
+      "path": "context/10-module-inventory.md",
+      "title": "Module inventory (135 modules, build requirements)",
+      "description": "Full proposed module list across 13 domains, the per-module build-record template, and boundary rules; design-level scope, not implementation claims.",
+      "source": "written"
     }
   ]
 }

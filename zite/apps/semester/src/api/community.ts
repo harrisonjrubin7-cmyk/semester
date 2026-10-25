@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, ids, first, forbid, userNames, audit, tenantScope } from '../lib/server';
+import { requireAccess, ids, first, forbid, userNames, audit, tenantScope, requireTenantMember } from '../lib/server';
 import { pg } from '../lib/pg';
 import { MOD_MIGRATION } from '../lib/modMigration';
 
@@ -78,6 +78,7 @@ export default createEndpoint({
     if (input.action === 'setModerator') {
       if (!a.roles.includes('Administrator')) forbid('Only administrators appoint moderators.');
       if (!(await tenantScope(T)).members.has(input.userId)) forbid('That person is not in your institution.');
+      if (input.on) await requireTenantMember(T, input.userId);
       check(((await sql.query(`SELECT mod_set_staff($1,$2,$3,$4) AS e`, [uid, T, input.userId, input.on])) as { e: string | null }[])[0].e);
       await audit(a, input.on ? 'Moderator appointed' : 'Moderator removed', `user:${input.userId}`, '', 'Administrator');
       return { ok: true };
