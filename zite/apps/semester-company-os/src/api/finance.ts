@@ -12,7 +12,7 @@ export default createEndpoint({
     invoices: z.array(z.object({
       id: z.string(), number: z.number(), customer: z.string(), amountMinor: z.number(), currency: z.string(), memo: z.string(),
       status: z.string(), createdBy: z.string(), approvedBy: z.string(), snapshot: z.string(), paidMinor: z.number(), updatedAt: z.string(),
-      contractId: z.string(), contractTitle: z.string(),
+      contractId: z.string(), contractTitle: z.string(), entitled: z.boolean(),
     })),
     contracts: z.array(z.object({ id: z.string(), title: z.string(), account: z.string() })),
     audit: z.array(z.object({ invoiceId: z.string(), action: z.string(), detail: z.string(), actor: z.string(), at: z.string() })),
@@ -27,7 +27,7 @@ export default createEndpoint({
       throw new ZiteError({ code: 'FORBIDDEN', message: m, userFacingMessage: m });
     }
     const inv = (await sql.query(
-      `SELECT i.*, fin_snapshot(i) AS snap, coalesce((SELECT sum(amount_minor) FROM fin_payments p WHERE p.tenant_id = i.tenant_id AND p.invoice_id = i.id), 0)::bigint AS paid
+      `SELECT i.*, fin_snapshot(i) AS snap, EXISTS (SELECT 1 FROM fin_entitlements e WHERE e.tenant_id = i.tenant_id AND e.invoice_id = i.id) AS entitled, coalesce((SELECT sum(amount_minor) FROM fin_payments p WHERE p.tenant_id = i.tenant_id AND p.invoice_id = i.id), 0)::bigint AS paid
        FROM fin_invoices i WHERE tenant_id = $1 ORDER BY number DESC LIMIT 200`, [COMPANY_TENANT])) as Record<string, string | number | null>[];
     const audit = (await sql.query(`SELECT coalesce(invoice_id,'') AS invoice_id, action, detail, actor_id, created_at FROM fin_audit WHERE tenant_id = $1 ORDER BY id DESC LIMIT 300`, [COMPANY_TENANT])) as Record<string, string>[];
     const ob = (await sql.query(`SELECT count(*)::int AS n FROM fin_outbox WHERE tenant_id = $1 AND status = 'disabled'`, [COMPANY_TENANT])) as { n: number }[];
@@ -51,7 +51,7 @@ export default createEndpoint({
       invoices: inv.map((i) => ({
         id: String(i.id), number: Number(i.number), customer: String(i.customer), amountMinor: Number(i.amount_minor), currency: String(i.currency), memo: String(i.memo),
         status: String(i.status), createdBy: String(i.created_by), approvedBy: who(i.approved_by), snapshot: String(i.snap), paidMinor: Number(i.paid), updatedAt: new Date(String(i.updated_at)).toISOString(),
-        contractId: String(i.contract_id ?? ''), contractTitle: i.contract_id ? ctrTitle.get(String(i.contract_id)) ?? 'Contract removed' : 'Not linked (legacy)',
+        contractId: String(i.contract_id ?? ''), contractTitle: i.contract_id ? ctrTitle.get(String(i.contract_id)) ?? 'Contract removed' : 'Not linked (legacy)', entitled: Boolean(i.entitled),
       })),
       audit: audit.map((a) => ({ invoiceId: a.invoice_id, action: a.action, detail: a.detail, actor: who(a.actor_id), at: new Date(a.created_at).toISOString() })),
       outboxDisabled: ob[0].n,

@@ -12,6 +12,7 @@ export const FIN_MIGRATION: string[] = [
   `CREATE TABLE IF NOT EXISTS fin_outbox (id bigserial PRIMARY KEY, tenant_id text NOT NULL, command_key text NOT NULL, topic text NOT NULL, payload jsonb NOT NULL, status text NOT NULL DEFAULT 'disabled', created_at timestamptz NOT NULL DEFAULT now(), UNIQUE (tenant_id, command_key, topic))`,
   `ALTER TABLE fin_invoices ADD COLUMN IF NOT EXISTS contract_id text`,
   `ALTER TABLE fin_invoices ADD COLUMN IF NOT EXISTS account_id text`,
+  `CREATE TABLE IF NOT EXISTS fin_entitlements (tenant_id text NOT NULL, invoice_id text NOT NULL, contract_id text NOT NULL, account_id text, command_key text NOT NULL, status text NOT NULL DEFAULT 'Active', synthetic boolean NOT NULL DEFAULT true CHECK (synthetic), created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, invoice_id), FOREIGN KEY (tenant_id, invoice_id) REFERENCES fin_invoices (tenant_id, id))`,
   `CREATE OR REPLACE FUNCTION fin_snapshot(i fin_invoices) RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT md5(i.id || '|' || i.customer || '|' || i.amount_minor || '|' || i.currency || '|' || i.memo) $$`,
   `CREATE OR REPLACE FUNCTION fin_cmd(p_tenant text, p_key text, p_hash text, p_actor text, p_action text, p_invoice text, p jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE c fin_commands%ROWTYPE; inv fin_invoices%ROWTYPE; v_code text := 'OK'; v_msg text; v_id text := p_invoice; v_paid bigint;
@@ -55,6 +56,11 @@ BEGIN
       ELSE
         SELECT coalesce(sum(amount_minor), 0) INTO v_paid FROM fin_payments WHERE tenant_id = p_tenant AND invoice_id = p_invoice;
         IF v_paid = inv.amount_minor THEN UPDATE fin_invoices SET status = 'Paid', updated_at = now() WHERE tenant_id = p_tenant AND id = p_invoice; v_msg := 'Reconciled: payments match the invoice.';
+          -- Entitlement follows reconciliation in the same transaction; never from a draft, approval or unmatched payment.
+          IF inv.contract_id IS NOT NULL THEN
+            INSERT INTO fin_entitlements (tenant_id, invoice_id, contract_id, account_id, command_key) VALUES (p_tenant, p_invoice, inv.contract_id, inv.account_id, p_key) ON CONFLICT DO NOTHING;
+            v_msg := v_msg || ' Entitlement recorded for the contract (synthetic; nothing is provisioned).';
+          END IF;
         ELSE UPDATE fin_invoices SET status = 'Mismatch', updated_at = now() WHERE tenant_id = p_tenant AND id = p_invoice; v_code := 'MISMATCH'; v_msg := 'Payments total ' || v_paid || ' vs invoice ' || inv.amount_minor || ' (minor units).'; END IF;
       END IF;
     ELSE v_code := 'UNKNOWN_ACTION'; v_msg := 'Unknown action.'; END IF;

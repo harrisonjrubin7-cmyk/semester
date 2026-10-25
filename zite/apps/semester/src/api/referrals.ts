@@ -3,7 +3,7 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, first, audit, userNames } from '../lib/server';
 import { pg } from '../lib/pg';
-import { ensurePlt, currentEpoch } from '../lib/platform';
+import { ensurePlt, currentEpoch, processOutbox } from '../lib/platform';
 import { appsForRoles, roleAppByKey } from '../lib/roleApps';
 
 type Row = Record<string, unknown>;
@@ -63,6 +63,8 @@ export default createEndpoint({
       await audit(a, `Referral ${input.cmd}`, `handoff:${input.id}`, String(after?.state ?? ''), input.cmd === 'consent' || input.cmd === 'refuse' ? 'Owner' : 'Staff');
     }
 
+    // Consumer runs inline after a command; failures stay queued for the Integration Admin console.
+    if (receipt) await processOutbox(T).catch(() => undefined);
     const epoch = await currentEpoch(T, uid);
     const inOffices = myApps.filter((k) => REFERRABLE.includes(k));
     const [mine, sent, queue] = await Promise.all([

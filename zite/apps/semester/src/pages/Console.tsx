@@ -9,6 +9,7 @@ import { Checkbox } from '@project/components/ui/checkbox';
 import PrivacyOffice from '../components/RecordsRights';
 import IntelligenceRegistry from '../components/Intelligence';
 import { RoleAppsGapMap } from './RoleApps';
+import EventDelivery from '../components/EventDelivery';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@project/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
@@ -55,7 +56,7 @@ export default function Console() {
           <Link to="/today" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Back to Semester</Link>
           <p className="eyebrow">Institution Console</p><h1 className="mb-5 text-3xl">{d.institution.name}</h1>
           <Tabs defaultValue="readiness">
-            <TabsList className="flex-wrap"><TabsTrigger value="readiness">Readiness</TabsTrigger><TabsTrigger value="integrations">Integrations</TabsTrigger><TabsTrigger value="roles">Roles</TabsTrigger><TabsTrigger value="people">Memberships</TabsTrigger><TabsTrigger value="approvals">Approvals</TabsTrigger><TabsTrigger value="features">Feature status</TabsTrigger><TabsTrigger value="data">Retention</TabsTrigger><TabsTrigger value="audit">Audit log</TabsTrigger><TabsTrigger value="security">Security operations</TabsTrigger><TabsTrigger value="support">Support queue</TabsTrigger><TabsTrigger value="apps">Developer apps</TabsTrigger><TabsTrigger value="migrations">Migrations</TabsTrigger><TabsTrigger value="supportaccess">Support access</TabsTrigger><TabsTrigger value="privacy">Privacy & access reviews</TabsTrigger><TabsTrigger value="intelligence">Intelligence registry</TabsTrigger><TabsTrigger value="roleapps">Role apps</TabsTrigger></TabsList>
+            <TabsList className="flex-wrap"><TabsTrigger value="readiness">Readiness</TabsTrigger><TabsTrigger value="integrations">Integrations</TabsTrigger><TabsTrigger value="roles">Roles</TabsTrigger><TabsTrigger value="people">Memberships</TabsTrigger><TabsTrigger value="approvals">Approvals</TabsTrigger><TabsTrigger value="features">Feature status</TabsTrigger><TabsTrigger value="data">Retention</TabsTrigger><TabsTrigger value="audit">Audit log</TabsTrigger><TabsTrigger value="security">Security operations</TabsTrigger><TabsTrigger value="support">Support queue</TabsTrigger><TabsTrigger value="apps">Developer apps</TabsTrigger><TabsTrigger value="migrations">Migrations</TabsTrigger><TabsTrigger value="supportaccess">Support access</TabsTrigger><TabsTrigger value="privacy">Privacy & access reviews</TabsTrigger><TabsTrigger value="intelligence">Intelligence registry</TabsTrigger><TabsTrigger value="roleapps">Role apps</TabsTrigger><TabsTrigger value="events">Event delivery</TabsTrigger></TabsList>
             <TabsContent value="readiness"><Readiness /></TabsContent>
             <TabsContent value="apps"><DevApps /></TabsContent>
             <TabsContent value="migrations"><MigrationApprovals /></TabsContent>
@@ -63,6 +64,7 @@ export default function Console() {
             <TabsContent value="privacy"><PrivacyOffice /></TabsContent>
             <TabsContent value="intelligence"><IntelligenceRegistry /></TabsContent>
             <TabsContent value="roleapps"><RoleAppsGapMap /></TabsContent>
+            <TabsContent value="events"><EventDelivery /></TabsContent>
             <TabsContent value="roles"><RoleRegister /></TabsContent>
             <TabsContent value="security"><SecurityOps /></TabsContent>
             <TabsContent value="support"><SupportQueue /></TabsContent>

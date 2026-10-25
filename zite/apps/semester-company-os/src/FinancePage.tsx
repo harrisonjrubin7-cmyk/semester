@@ -71,7 +71,7 @@ function Body({ d, q, setQ, status, setStatus, open, setOpen, reload }: { d: Fin
       <div className="grid gap-3 sm:grid-cols-4">
         <Figure label="Awaiting your approval" value={waiting} />
         <Figure label="Mismatched" value={d.invoices.filter((i) => i.status === 'Mismatch').length} />
-        <Figure label="Reconciled" value={d.invoices.filter((i) => i.status === 'Paid').length} />
+        <Figure label="Reconciled" value={d.invoices.filter((i) => i.status === 'Paid').length} note={`${d.invoices.filter((i) => i.entitled).length} with entitlement`} />
         <Figure label="Notices held" value={d.outboxDisabled} note="Outbound sending is disabled" />
       </div>
       <NewInvoice contracts={d.contracts} onDone={reload} />
@@ -84,7 +84,7 @@ function Body({ d, q, setQ, status, setStatus, open, setOpen, reload }: { d: Fin
           <table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">#</th><th>Customer</th><th className="text-right">Amount</th><th className="pl-3">Status</th><th className="hidden sm:table-cell">Updated</th></tr></thead>
             <tbody>{rows.map((i) => (
               <tr key={i.id} tabIndex={0} onClick={() => setOpen(i.id)} onKeyDown={(e) => e.key === 'Enter' && setOpen(i.id)} className="cursor-pointer border-t border-border hover:bg-muted/50 focus:bg-muted/50 focus:outline-none">
-                <td className="py-2 font-mono text-xs">INV-{i.number}</td><td>{i.customer}<span className="block text-xs text-muted-foreground">{i.contractTitle}</span></td><td className="text-right tabular-nums">{money(i.amountMinor, i.currency)}</td>
+                <td className="py-2 font-mono text-xs">INV-{i.number}</td><td>{i.customer}<span className="block text-xs text-muted-foreground">{i.contractTitle}{i.entitled ? ' · Entitlement active' : ''}</span></td><td className="text-right tabular-nums">{money(i.amountMinor, i.currency)}</td>
                 <td className="pl-3"><Chip value={i.status} /></td><td className="hidden text-xs text-muted-foreground sm:table-cell">{fmt(i.updatedAt)}</td>
               </tr>))}</tbody></table>
         ) : <p className="py-6 text-center text-sm text-muted-foreground">{d.invoices.length ? 'No invoices match.' : 'No invoices yet — create a synthetic draft above.'}</p>}
