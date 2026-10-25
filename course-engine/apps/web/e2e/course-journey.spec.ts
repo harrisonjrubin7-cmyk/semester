@@ -85,6 +85,8 @@ test("desktop and mobile overview match reviewed visual snapshots", async ({ pag
   test.skip(!["darwin", "linux"].includes(process.platform), "Reviewed visual baselines currently cover macOS and Linux.");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/courses/course-1/overview");
+  const studyAssetsMetric = page.getByRole("article").filter({ hasText: "Study assets" });
+  await expect(studyAssetsMetric.getByText(String(course.counts.study_assets), { exact: true })).toBeVisible();
   await expect.soft(page).toHaveScreenshot("overview-desktop.png", { fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();

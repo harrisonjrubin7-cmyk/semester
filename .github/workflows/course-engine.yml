@@ -22,7 +22,7 @@ permissions:
 jobs:
   api:
     name: API (${{ matrix.database }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -49,6 +49,9 @@ jobs:
         working-directory: course-engine/apps/api
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - name: Create Python 3.12 environment
         run: |
           python3 --version | grep '^Python 3\.12\.'
@@ -62,7 +65,7 @@ jobs:
         run: pytest -q
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: course-engine/apps/web
