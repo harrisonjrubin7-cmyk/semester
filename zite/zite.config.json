@@ -1,0 +1,75 @@
+{
+  "project": {
+    "name": "Education OS",
+    "basePublicIdentifier": "1c4b0d16210e8d4b"
+  },
+  "integrations": {
+    "openai": {
+      "type": "openai",
+      "connectionId": "svc_567942"
+    },
+    "gmail": {
+      "type": "gmail",
+      "connectionId": "svc_568678"
+    },
+    "github": {
+      "type": "github",
+      "connectionId": "svc_567308"
+    },
+    "email": {
+      "type": "email",
+      "connectionId": null,
+      "provider": "zite_email"
+    },
+    "googleDrive": {
+      "type": "googleDrive",
+      "connectionId": "svc_567887"
+    },
+    "slack": {
+      "type": "slack",
+      "connectionId": "svc_568682"
+    },
+    "airtable": {
+      "type": "airtable",
+      "connectionId": "svc_568684"
+    },
+    "googleDocs": {
+      "type": "googleDocs",
+      "connectionId": "svc_568685"
+    },
+    "anthropic": {
+      "type": "anthropic",
+      "connectionId": "svc_568688"
+    },
+    "stripe": {
+      "type": "stripe",
+      "connectionId": "svc_568701"
+    },
+    "onedrive": {
+      "type": "onedrive",
+      "connectionId": "svc_568702"
+    },
+    "linkedin": {
+      "type": "linkedin",
+      "connectionId": "svc_568703"
+    },
+    "outlook": {
+      "type": "outlook",
+      "connectionId": "svc_568704"
+    },
+    "linear": {
+      "type": "linear",
+      "connectionId": "svc_568705"
+    },
+    "email-2": {
+      "type": "email",
+      "connectionId": "svc_568678",
+      "provider": "gmail"
+    }
+  },
+  "envVars": {
+    "ZITE_POSTGRES_URL": {
+      "description": "Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string)"
+    }
+  }
+}

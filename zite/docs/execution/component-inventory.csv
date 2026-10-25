@@ -1,0 +1,23 @@
+id,domain,component,users,owner,routes / app,entities,permissions,data classification,status,tests,risks,next action
+C01,Platform,Identity and sign-in,All,Founder,all external apps,ziteUsers,Platform session,Personal,implemented_unverified,,Open sign-up; no SAML,Decide sign-up policy; verify SAML
+C02,Platform,Membership and tenant scope,All,Founder,lib/server.ts,Institutions; Memberships,requireAccess; tenantScope,Institutional,verified_in_test,Live isolation probe 22 Oct,No DB-level RLS,Structural endpoint check
+C03,Platform,Audit log,Staff; students (own history),Founder,Audit Events,Audit Events,Written by endpoints,Restricted,implemented_unverified,,Editable by workspace editors,Append-only endpoint
+C04,Platform,Notifications (in-app),All,Founder,Inbox,Messages,Recipient only,Personal,implemented_unverified,,,Preferences and email delivery
+C05,Platform,Search (permission-aware),Members,Founder,api/search.ts; lib/search.ts,many,Own + tenant catalog,Mixed,implemented_unverified,Tenant scoping probed via scope SQL,,Negative test with second tenant data
+C06,Platform,AI gateway (Ask Semester),Students,Founder,api/ask.ts; lib/aiGate.ts,—,Consent + course rules,Catalog only to provider,verified_in_test,aiGate 11/11,No evaluation fixtures,Prompt 7
+C07,Education,Today,Students,Founder,/today,Tasks; Events; Appointments,Owner,Personal,implemented_unverified,,,
+C08,Education,Tasks and completion,Students,Founder,api/manageTask.ts,Tasks,Owner,Personal,implemented_unverified,Live sibling probe,,
+C09,Education,Registration readiness and requests,Students; Registrar,Founder,/plan/registration; /staff/registrar,Enrollments; Tasks,Student own; Registrar tenant,Education record,verified_in_test,readiness 9/9,No SIS connector,Fixture adapter
+C10,Education,Courses and grading,Faculty; students,Founder,/learn; /staff/gradebook,Sections; Submissions; Enrollments,Instructor of section,Education record,implemented_unverified,,Grade release audit untested,
+C11,Education,Regrades,Students; faculty; Registrar,Founder,/progress/grades; /staff/regrades,Regrade Requests,Student own; instructor or Registrar,Education record,verified_in_test,regrade 12/12,,
+C12,Education,Advising and advisor sharing,Students; advisors,Founder,/help/advising; /staff/shared,Consents; Appointments,Consent-scoped,Education record,verified_in_test,shares 10/10,,
+C13,Education,Family sharing,Students; guardians,Founder,semester-family app,Consents,Consent-scoped,Education record,implemented_unverified,,,
+C14,Education,Campus and community,Students,Founder,/campus,Groups; Events; Messages,Tenant; membership,Personal,implemented_unverified,,,
+C15,Education,Career and employers,Students; employers,Founder,/plan/career; semester-employers app,Opportunities; Resources,Public portfolio only,Personal,implemented_unverified,,,
+C16,Education,Admissions,Applicants; staff,Founder,semester-applicants app; /staff/admissions,Applications,Own; staff,Personal,implemented_unverified,,,
+C17,Institution,Institution Console,Administrators,Founder,/console,Memberships; Integrations; Feature Status; Audit Events,Administrator,Institutional,implemented_unverified,,,
+C18,Institution,Integrations (SIS/LMS/SSO),Administrators,Founder,/console,Integrations,Institution authorization required,Institutional,specified,,No live connection,Fixture adapter
+C19,Company,Public site and lead intake,Public; founder,Founder,semester-site app,Inbound Requests,Write-only public endpoint,Contact data,implemented_unverified,Write path probe,Not published,Publish approval
+C20,Company,Company OS (restricted),Semester staff,Founder,semester-company app,Inbound Requests; Feature Status; Source Register; Institutions (counts),Org members only; no student content,Company,specified,,,Build (phase 3)
+C21,Company,Architecture and Launch Simulator,Founder,Founder,semester-company app,Scenarios,Org members only,Planning,specified,,,Build
+C22,Company,Billing and entitlements,Founder,Founder,—,—,—,Commercial,not_started,,,Phase 5
