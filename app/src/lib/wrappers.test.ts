@@ -121,9 +121,10 @@ describe('numbered', () => {
 });
 
 describe('blobOf and zipOf', () => {
-  it('gives text a charset, so an accented name is not mangled on open', () => {
+  it('encodes text as UTF-8 bytes with a charset, so accented text is not mangled on open', async () => {
     const blob = blobOf({ name: 'a.md', body: '# Héloïse', mime: 'text/markdown' });
     expect(blob.type).toBe('text/markdown;charset=utf-8');
+    expect(await blob.text()).toBe('# Héloïse');
   });
 
   it('passes a blob through as it is', () => {
