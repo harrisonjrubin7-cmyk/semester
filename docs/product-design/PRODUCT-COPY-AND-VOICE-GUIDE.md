@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: docs/design/SEMESTER-CONTENT-STANDARDS.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Product Copy and Voice Guide
 
 | Control | Value |

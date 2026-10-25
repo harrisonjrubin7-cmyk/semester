@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Pilot event definitions
 
 **Status: definitions only, per D-005 (approved 27 Sep 2026).** Nothing on this

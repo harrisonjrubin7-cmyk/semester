@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/CONFIGURATION-TIERS.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/market-readiness/ACCESSIBILITY_READINESS.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Accessibility governance beyond compliance
 
 The engineering side already has guards. `npm run lint` runs the label audit. `lib/contrast.test.ts` walks the whole

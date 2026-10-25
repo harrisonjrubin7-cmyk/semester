@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-01 · App unreachable or serving the wrong build
 
 Class C1 · role platform · alerts `probe:public-failed`, `probe:half-configured`, `probe:no-recent-run`, `burn:today_load`, `burn:search` · components `github-pages`, `web-app`, `status-page`, `pipeline:production-smoke`.

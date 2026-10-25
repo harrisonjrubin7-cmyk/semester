@@ -1,3 +1,118 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/sis-adapter.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/which-integration-path.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/event-consumer.md
+    changed_at: "2026-10-19T16:39:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/gateway-client.md
+    changed_at: "2026-10-19T16:39:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/guides/integrations/scim-provisioner.md
+    changed_at: "2026-10-19T16:39:43"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/scim-provisioner/README.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/sis-adapter/README.md
+    changed_at: "2026-10-19T16:39:57"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/event-consumer/README.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/gateway-client/README.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Reference applications
 
 > **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

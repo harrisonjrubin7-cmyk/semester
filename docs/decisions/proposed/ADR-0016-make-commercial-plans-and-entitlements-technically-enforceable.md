@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md
+    changed_at: "2026-10-19T18:51:01"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # ADR-0016 · One dated price book, enforced at quote, entitlement and meter, replaces three inconsistent number sets
 
 | Field | Value |

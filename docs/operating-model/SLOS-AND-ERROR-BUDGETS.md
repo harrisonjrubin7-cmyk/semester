@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-HARDENING-REPORT.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # SLOs and error budgets
 
 **Code: `app/src/lib/governance/error-budgets.ts`.** [SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md](../SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md)

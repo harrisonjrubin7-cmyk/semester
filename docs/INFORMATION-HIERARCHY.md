@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/SEMESTER-PLATFORM-UNITY-PATTERNS.md
+    changed_at: "2026-10-19T16:39:41"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Information hierarchy
 
 ## The three questions

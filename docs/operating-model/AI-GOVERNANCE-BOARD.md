@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/operating-model/PORTFOLIO-GOVERNANCE.md
+    changed_at: "2026-10-19T16:39:52"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-LIFECYCLE-GATES.md
+    changed_at: "2026-10-19T16:39:51"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Ethical AI governance board
 
 The AI evaluation harness, the classification gate, course policy precedence and the kill switch are technical

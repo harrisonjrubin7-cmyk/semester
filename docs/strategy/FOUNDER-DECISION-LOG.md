@@ -1,3 +1,140 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/ADVISORS.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/BOARD-MEMO.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/MARKET-ENTRY-PLAN.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/MOAT-PLAN.md
+    changed_at: "2026-10-19T16:39:54"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/RISK-REGISTER.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/SCORECARD.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/strategy/THREE-YEAR-STRATEGY.md
+    changed_at: "2026-10-19T16:39:54"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Founder decision log (strategy)
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).

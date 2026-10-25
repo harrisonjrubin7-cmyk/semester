@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Design-system integration plan
 
 **Refreshed** 2026-10-17 · **Latest observed `origin/main`** `955d9e06e` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`

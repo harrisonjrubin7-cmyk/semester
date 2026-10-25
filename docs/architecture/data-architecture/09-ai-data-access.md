@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/01-canonical-entity-model.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 9 · AI data access and retrieval controls
 
 ## 9.1 What exists, verified against code

@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Architecture — current system and the unified-platform target
 
 Baseline `origin/main` `c029822`. This page is the map. The reasoning lives in

@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/finance/FINANCE_RELEASE_GATES.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/NATIVE_FINANCIAL_PLATFORM.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Payment provider adapter architecture
 
 | Control | Value |

@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/LAUNCH-DECISIONS.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # First-day checklist — for pilot users
 
 **As of 2026-10-03.** One page to tick through on the first day of a pilot,

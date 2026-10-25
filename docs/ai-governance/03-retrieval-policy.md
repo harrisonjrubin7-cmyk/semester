@@ -1,3 +1,44 @@
+---
+stale-refs:
+  - source: docs/trust/AI-DATA-USE-STANDARD.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/04-tool-broker.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/09-user-transparency.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 03 · Retrieval policy
 
 **Builds on:** [`../trust/AI-DATA-USE-STANDARD.md`](../trust/AI-DATA-USE-STANDARD.md),

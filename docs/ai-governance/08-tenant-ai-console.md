@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/CONFIGURATION-STUDIO.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/09-user-transparency.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 08 · Tenant AI configuration console
 
 **Builds on:** [`../CONFIGURATION-STUDIO.md`](../CONFIGURATION-STUDIO.md) (versioned, reviewed configuration),
