@@ -18,6 +18,19 @@ Run from `app/` unless noted. Results are for the baseline above; they verify th
 
 **Not run this session:** `npm run test:shuffle`, `npm run design-system:check`, `npm run design-system:report`, browser/visual checks, and any route or tenant-isolation verification in a deployed environment.
 
+**Re-run at `origin/main` @ `436687a1` (2026-10-13).** Same commands, current head, after `npm ci` at the repository root (exit 0; Node 22.22.0 is below the `^22.22.2` engine range, warning only).
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Types | `npx tsc -b` | exit 0 |
+| Gateway types | `npm run check:university` | exit 0 |
+| Lint + style/label/terms audits | `npm run lint` | exit 0; warnings only (`react(purity)` `Date.now` in `MaintenanceRequests.tsx`) |
+| Tests | `npm test` | 1535 files passed, 2 skipped; 24,381 passed, 81 skipped; exit 0 |
+| Shuffled tests | `npm run test:shuffle` | 1535 files passed, 2 skipped; 24,381 passed, 81 skipped; exit 0; seed `1791907902460` |
+| Production build | `npm run build` | exit 0; chunk-size warning (>500 kB) only |
+
+Not run: `design-system:check` / `design-system:report`, browser and visual checks, and any tenant-isolation check against a deployed environment. These results verify the code at this SHA; they are not operating proof for any workspace.
+
 ## 2. Promotion state
 
 Every workspace is **designed** (source §4). None is implemented-and-verified against the operating-proof items, so none moves up. Production states stay locked: at least 10 of 12 items must be evidenced before any production state, and all 12 before active.
@@ -91,3 +104,24 @@ None of these items is complete. Items 1–2 and 4 are outside the repository (i
 1. Name a person for each workspace (item 7). Without this no row can move past designed.
 2. Write a route evidence reference per workspace, or leave item 1 as ◐.
 3. Decide whether to publish the candidate to a staging target. That is an external-state change and needs the founder's approval.
+
+## 8. Continuation record (2026-10-13)
+
+**Source:** the uploaded ship-program brief (19 pages), already transcribed as `SHIP_PROGRAM_RUNBOOK.md`. Its build order is mapped against this repository below. The brief's pnpm/turbo/Next.js layout was not adopted: the repository is npm workspaces with a Vite/React app in `app/` and Supabase in `supabase/`, and replacing it would be a rewrite, not a release step.
+
+| Brief build step | State on `origin/main` @ `436687a1` |
+| --- | --- |
+| 1. Executable repository | Gates exist and pass (§1 re-run). Missing from the brief's list: `registry:validate`, `evidence:collect`, `release:preview` / `release:approve` / `release:rollback`, `flags:enable` / `flags:disable`, `verify:first-live-journey`, `incidents:create`. None is implemented. |
+| 2. Trust boundaries | Partly present: tenant and RLS tests exist for parts of the platform. Not verified for the readiness capability. The AI red-team cases (AI-RDY-001 to 004) are not in the repository. |
+| 3. Durable workflows | An `outbox_events` table is referenced by the productivity schema tests (`app/server/productivity/schema.test.ts`). The readiness state machine and its transition tests are not in the repository. |
+| 4. Institutional kit | Pilot artifacts landed (#1537, `docs/decisions/D-1537.md`). Their approvals are not recorded. |
+| 5. Release evidence | `app/src/lib/governance/release-profiles.ts` already evaluates evidence status and approver roles (`evaluateReleaseProfile`). A second `canApproveRelease` was deliberately not added. No manifest for `REL-READINESS-001` exists, and none was created: a manifest would record approvals that have not been given. |
+| 6. Launch | Blocked on the named approvals in §5, and on the merge rule in §6: merging to `main` deploys production. |
+
+**Not done in this session, in order:**
+1. Name a person for each workspace (§7 step 1). Nothing moves past designed without it.
+2. Write the readiness state machine and its transition tests (brief step 3), then the AI-boundary cases as tests against the readiness assistant (brief step 2).
+3. Add the missing release commands, with `evaluateReleaseProfile` as the single gate.
+4. Stage the candidate once the founder approves a staging target (§6).
+
+**Nothing was merged, deployed, or approved.** The branch carries only this register update.
