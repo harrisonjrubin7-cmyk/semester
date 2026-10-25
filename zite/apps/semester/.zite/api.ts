@@ -10,6 +10,7 @@ import type { default as _AlumniEp } from '../src/api/alumni';
 import type { default as _ApprovalsEp } from '../src/api/approvals';
 import type { default as _AskEp } from '../src/api/ask';
 import type { default as _CampusEp } from '../src/api/campus';
+import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _GetTodayEp } from '../src/api/getToday';
@@ -84,6 +85,11 @@ type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
 export type CampusOutputType = Awaited<ReturnType<_CampusCfg['execute']>>;
 export const campus = createCaller<CampusInputType, CampusOutputType>('campus');
+
+type _CatalogCfg = typeof _CatalogEp;
+export type CatalogInputType = NonNullable<_CatalogCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CatalogCfg['execute']>[0]['input'];
+export type CatalogOutputType = Awaited<ReturnType<_CatalogCfg['execute']>>;
+export const catalog = createCaller<CatalogInputType, CatalogOutputType>('catalog');
 
 type _CommunityCfg = typeof _CommunityEp;
 export type CommunityInputType = NonNullable<_CommunityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CommunityCfg['execute']>[0]['input'];
@@ -265,6 +271,7 @@ export const api = {
   approvals,
   ask,
   campus,
+  catalog,
   community,
   devApps,
   getToday,

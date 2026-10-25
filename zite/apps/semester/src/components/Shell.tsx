@@ -24,6 +24,7 @@ const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[];
   { to: '/staff/shared', label: 'Shared with me', icon: Share2, roles: ['Advisor'], action: 'caseload.read' },
   { to: '/staff/registrar', label: 'Registrar desk', icon: ClipboardCheck, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/calendar', label: 'Academic calendar', icon: CalendarDays, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
+  { to: '/staff/catalog', label: 'Catalog & rules', icon: BookOpen, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/holds', label: 'Registration holds', icon: Ban, roles: ['Staff', 'Administrator'], action: 'registration.request.decide' },
   { to: '/staff/analytics', label: 'Analytics', icon: BarChart3, roles: ['Staff', 'Administrator'], action: 'readiness.read' },
   { to: '/staff/accounts', label: 'Student accounts', icon: Receipt, roles: ['Staff', 'Administrator'], action: 'accounts.read' },

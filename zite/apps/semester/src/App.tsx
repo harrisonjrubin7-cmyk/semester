@@ -23,6 +23,7 @@ import Tutoring from './pages/Tutoring';
 import Graduate from './pages/Graduate';
 import Referrals from './pages/Referrals';
 import AcademicCalendar from './pages/AcademicCalendar';
+import Catalog from './pages/Catalog';
 import Progress from './pages/Progress';
 import You from './pages/You';
 import Console from './pages/Console';
@@ -104,6 +105,7 @@ export default function App() {
             <Route path="/staff/shared" element={<SharedWithMe />} />
             <Route path="/staff/registrar" element={<RegistrarDesk />} />
             <Route path="/staff/calendar" element={<AcademicCalendar />} />
+            <Route path="/staff/catalog" element={<Catalog />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/accounts" element={<StudentAccounts />} />

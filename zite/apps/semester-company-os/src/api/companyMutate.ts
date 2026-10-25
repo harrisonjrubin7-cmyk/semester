@@ -44,13 +44,21 @@ export default createEndpoint({
     const table = input.table as Table;
     const me = context.user.id;
     const notes: string[] = [];
+    // Single audit log: company actions go to auditEvents (institution: null, authority 'Semester company').
+    // companyAuditLog is read-only legacy history, still read so approvals started before the merge keep their trail.
     const audit = (action: string, targetTable: string, targetId: string, detail: string) =>
-      zite.companyAuditLog.create({ record: { action, targetTable, targetId, actor: me, detail } });
+      zite.auditEvents.create({ record: { action, actor: me, institution: null, recordRef: `${targetTable}:${targetId}`, authority: 'Semester company', viaAssistant: false, details: detail } as never });
 
     const fail = (msg: string): never => { throw new Error(msg); };
     const dealHistory = async (id: string): Promise<HistoryEntry[]> => {
-      const { records } = await zite.companyAuditLog.findAll({ filters: { targetTable: 'deals', targetId: id }, limit: 500 });
-      return records.map((r) => ({ actor: first(r.actor) ?? '', action: String(r.action ?? ''), detail: String(r.detail ?? '') }));
+      const [cur, legacy] = await Promise.all([
+        zite.auditEvents.findAll({ filters: { recordRef: `deals:${id}` }, limit: 500 }),
+        zite.companyAuditLog.findAll({ filters: { targetTable: 'deals', targetId: id }, limit: 500 }),
+      ]);
+      return [
+        ...legacy.records.map((r) => ({ actor: first(r.actor) ?? '', action: String(r.action ?? ''), detail: String(r.detail ?? '') })),
+        ...cur.records.map((r) => ({ actor: first(r.actor) ?? '', action: String(r.action ?? ''), detail: String(r.details ?? '') })),
+      ];
     };
 
     if (input.op === 'delete') {

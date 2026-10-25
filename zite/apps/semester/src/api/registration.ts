@@ -4,7 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, tenantScope } from '../lib/server';
 import { computeReadiness, firstBlocker } from '../lib/readiness';
 import { replayDecision } from '../lib/registrarRules';
-import { registrationWindow } from '../lib/calendarServer';
+import { registrationWindow, maxCredits } from '../lib/calendarServer';
 
 const parse = (t: string) => {
   const m = t.match(/^([A-Za-z/]+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
@@ -100,6 +100,13 @@ export default createEndpoint({
       const win = await registrationWindow(a.institutionId, input.term);
       if (win === 'not_yet') forbid(`Registration for ${input.term} has not opened yet.`);
       if (win === 'closed') forbid(`Registration for ${input.term} is closed. Ask the registrar about late changes.`);
+      // Approved registration rules: credit limit across what is planned now and already requested/enrolled this term.
+      const cap = await maxCredits(a.institutionId);
+      if (cap != null) {
+        const held = mine.records.filter((e) => inTerm(e) && ['Requested', 'Enrolled', 'Waitlisted'].includes(e.status ?? '')).reduce((n, e) => n + Number(describe(first(e.section)!).credits || 0), 0);
+        const total = held + draft.reduce((n, d) => n + Number(d.credits || 0), 0);
+        if (total > cap) forbid(`That would be ${total} credits this term; the limit is ${cap}. Remove a course or ask your advisor about an overload.`);
+      }
       // Retry safety: the same request key returns the earlier result instead of submitting again.
       if (input.requestKey) {
         const prior = await zite.registrationRequests.findAll({ filters: { requestKey: input.requestKey }, limit: 50 });

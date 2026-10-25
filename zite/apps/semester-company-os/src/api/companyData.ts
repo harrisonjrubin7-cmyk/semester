@@ -28,9 +28,15 @@ export default createEndpoint({
       zite.implementationProjects.findAll({ limit: 2000 }),
       zite.supportTickets.findAll({ limit: 2000 }),
       zite.sql({
-        query: `SELECT l."id", l."action", l."targetTable", l."targetId", l."detail", l."occurredAt", u."name" AS "actorName"
-                FROM "CompanyAuditLog" l LEFT JOIN "ziteUsers" u ON u."id" = (l."actor"->>0)
-                ORDER BY l."occurredAt" DESC LIMIT 200`,
+        query: `SELECT x.*, u."name" AS "actorName" FROM (
+                  SELECT a."id", a."action", split_part(a."recordRef", ':', 1) AS "targetTable", split_part(a."recordRef", ':', 2) AS "targetId",
+                         a."details" AS "detail", a."occurredAt", a."actor"->>0 AS "actorId"
+                    FROM "AuditEvents" a WHERE a."authority" = 'Semester company'
+                  UNION ALL
+                  SELECT l."id", l."action", l."targetTable", l."targetId", l."detail", l."occurredAt", l."actor"->>0
+                    FROM "CompanyAuditLog" l
+                ) x LEFT JOIN "ziteUsers" u ON u."id" = x."actorId"
+                ORDER BY x."occurredAt" DESC LIMIT 200`,
       }).catch(() => ({ rows: [] as Record<string, unknown>[] })),
       zite.auth.findAllUsers({ limit: 200 }),
     ]);
