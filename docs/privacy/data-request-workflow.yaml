@@ -1,0 +1,27 @@
+# Data-subject request workflow. Status: specified. Not implemented.
+
+workflow:
+  states:
+    - received
+    - identity_verification_required
+    - scoped
+    - institution_review
+    - processing
+    - fulfilled
+    - partially_fulfilled
+    - denied
+    - closed
+
+  request_types:
+    - access
+    - export
+    - correction_referral
+    - deletion
+    - consent_withdrawal
+    - delegated_access_review
+
+  rules:
+    - "Semester routes requests involving official institutional records to the authorized institution office."
+    - "Semester can correct its own derived records and product account data through its own workflow."
+    - "Identity verification is required before revealing or exporting restricted information."
+    - "Each request has a receipt, audit trail, deadline, and accountable owner."

@@ -1,0 +1,51 @@
+# Data lifecycle schedule. Status: specified. Retention periods are not invented here;
+# each tenant records its approved schedule.
+
+classes:
+  restricted_institutional:
+    examples:
+      - student academic records
+      - holds
+      - institutional identifiers
+      - readiness case details
+    storage: production_database_with_tenant_isolation
+    logging: metadata_only_or_redacted
+    export: institution_authorized_process_only
+    deletion: contract_and_institution_policy_controlled
+
+  student_personal:
+    examples:
+      - student-entered goals
+      - personal planning notes
+    storage: tenant_scoped
+    logging: redact_content
+    export: student_rights_and_institution_policy_process
+    deletion: supported_when_not_subject_to_retention_or_hold
+
+  operational:
+    examples:
+      - audit events
+      - job metadata
+      - source freshness measurements
+      - aggregate health metrics
+    storage: operations_store
+    logging: permitted_with_minimization
+    export: role_scoped
+    deletion: security_and_operational_retention_schedule
+
+  public_or_non_sensitive:
+    examples:
+      - product documentation
+      - published release notes
+      - non-PII aggregate service status
+    storage: standard_content_store
+    logging: permitted
+    export: allowed
+    deletion: ordinary_content_lifecycle
+
+lifecycle_requirements:
+  - "No retention period is invented; each tenant records its approved schedule."
+  - "Deletion requests are recorded, scoped, verified, and receipted."
+  - "Legal or institutional holds pause deletion and visibly explain the hold to authorized users."
+  - "Backups follow a documented expiry path; deletion is not claimed complete until the backup expiry path has run."
+  - "Operational telemetry excludes raw restricted payloads unless a specific, controlled purpose is recorded and approved."
