@@ -17,6 +17,7 @@ import {
   PROOF_SHAPE,
   STATES,
   byFamily,
+  control,
   coversDomain,
   tally,
   type Control,
@@ -83,8 +84,71 @@ describe('the control register', () => {
   });
 
   it('has unique ids and every family', () => {
+    expect(CONTROLS).toHaveLength(57);
     expect(new Set(CONTROLS.map((c) => c.id)).size).toBe(CONTROLS.length);
     for (const f of FAMILIES) expect(byFamily(f).length, f).toBeGreaterThan(0);
+  });
+
+  it('records the integrated controls that exist without claiming production or outside approval', () => {
+    expect(control('TC-SEC-04')?.gap).toMatch(/registered functions/i);
+    expect(control('TC-SEC-04')?.gap).not.toMatch(/\bsixteen\b/i);
+
+    expect(control('TC-SEC-06')).toMatchObject({
+      mechanism: 'ci',
+      state: 'partial',
+      proof: expect.arrayContaining(['.github/workflows/codeql.yml']),
+    });
+    expect(control('TC-SEC-06')?.gap).toMatch(/security-extended.*JavaScript\/TypeScript/i);
+    expect(control('TC-SEC-06')?.gap).toMatch(/skipped.*private repositories/i);
+    expect(control('TC-SEC-06')?.gap).toMatch(/not an independent penetration test/i);
+
+    expect(control('TC-PRV-01')?.proof).toContain('app/src/lib/cloud.test.ts');
+    expect(control('TC-PRV-01')?.gap).toMatch(/server JSON export.*combined device.*archive/i);
+
+    expect(control('TC-PRV-02')?.proof).toContain('supabase/hold-blind-sweeps.check.sql');
+    expect(control('TC-PRV-02')?.gap).toMatch(/provider backups.*device deletion/i);
+    expect(control('TC-PRV-02')?.gap).not.toMatch(/financial purges are not.*hold-gated/i);
+
+    expect(control('TC-PRV-03')?.proof).toEqual(expect.arrayContaining([
+      'app/src/lib/scheduler.test.ts',
+      'supabase/support-retention.check.sql',
+    ]));
+    expect(control('TC-PRV-03')?.gap).toMatch(/180-day.*individual-beta/i);
+    expect(control('TC-PRV-03')?.gap).toMatch(/institutional.*unclassified legacy/i);
+
+    expect(control('TC-PRV-04')?.proof).toEqual(expect.arrayContaining([
+      'supabase/privacy-case-workspace.check.sql',
+      'supabase/privacy-case-actions.check.sql',
+      'app/src/components/console/PrivacyRequests.test.tsx',
+    ]));
+    expect(control('TC-PRV-04')?.gap).toMatch(/scheduled notifications.*production completion.*counsel/i);
+
+    expect(control('TC-PRV-06')?.proof).toEqual(expect.arrayContaining([
+      'supabase/k12-guardians.check.sql',
+      'supabase/guardian-projection.check.sql',
+      'app/src/components/GuardianProjection.test.tsx',
+    ]));
+    expect(control('TC-PRV-06')?.gap).toMatch(/production parental-consent operation.*counsel/i);
+
+    expect(control('TC-PRV-07')?.gap).toMatch(/seven surfaces are assessed and seven are owed/i);
+
+    expect(control('TC-A11-04')?.gap).toMatch(/9.*10.*11 October 2026/i);
+    expect(control('TC-A11-04')?.gap).toMatch(/five of sixty-three.*14,025/i);
+
+    expect(control('TC-SUP-02')?.proof).toEqual(expect.arrayContaining([
+      'app/src/lib/scheduler.test.ts',
+      'supabase/support-retention.check.sql',
+    ]));
+    expect(control('TC-SUP-02')?.described).toContain('docs/launch-readiness/2026-10-03-support-production-uat.md');
+    expect(control('TC-SUP-02')?.gap).toMatch(/in-app.*October 3.*email vendor.*inbox receipt.*coverage hours/i);
+
+    expect(control('TC-AI-01')?.proof).toEqual(expect.arrayContaining([
+      'app/src/lib/aispend.test.ts',
+      'app/src/lib/tenantai.test.ts',
+    ]));
+    expect(control('TC-AI-01')?.gap).toMatch(/browser BYOK.*parity.*production.*reconciliation/i);
+    expect(control('TC-AI-02')?.proof).toContain('app/src/lib/tenantai.test.ts');
+    expect(control('TC-AI-02')?.gap).toMatch(/browser BYOK.*parity.*production.*reconciliation/i);
   });
 
   it('covers every product domain with at least one control, and names only real domains', () => {
