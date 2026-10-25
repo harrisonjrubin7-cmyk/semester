@@ -1,0 +1,15 @@
+{
+  "id": "qd1fxwimuc",
+  "accessMode": "external",
+  "seoSettings": {
+    "title": "Semester — One clear next step for every student",
+    "description": "Semester turns the semester into the next thing to do, and shows where each fact came from. Your official systems stay official.",
+    "thumbnailUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jeabiv2536/widgetid-default/vQDbrYisXbkShRCcA1yDvH/Screenshot-2026-10-22-at-2.43.12aPM.png",
+    "faviconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jeabiv2536/widgetid-default/3TPrpAbSFcEbp9r1tWWFHb/download-1.png"
+  },
+  "envVars": {
+    "ZITE_POSTGRES_URL": {
+      "description": "Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string)"
+    }
+  }
+}
