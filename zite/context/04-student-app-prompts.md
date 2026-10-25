@@ -6,7 +6,8 @@
 ```text
 8. Exact coding prompts for the student app
 Paste the master context first. Then run these prompts sequentially.
-Prompt 1 — Foundation and onboarding
+
+Prompt 1 — Foundation and onboarding
 
  Implement Semester's student application foundation.
 
@@ -58,7 +59,8 @@ Prompt 2 — Today and Action Center
 
  Test loading, empty, stale, error, restricted,
  duplicate events, and delayed projection updates.
-Prompt 3 — Plan, calendar, and tasks
+
+Prompt 3 — Plan, calendar, and tasks
 
  Implement persistent tasks, plans, and calendar events.
 
@@ -111,7 +113,8 @@ Prompt 5 — Study and productivity
 
  Keep private by default.
  Reuse the shared resource and consent model.
- AI-generated study content may use only approved sources.
+
+ AI-generated study content may use only approved sources.
  Do not send institutional student records to a provider.
 
  Show generated content as AI-assisted.
@@ -166,7 +169,8 @@ Prompt 7 — Search and Ask Semester
  and a separately authorized command.
 
  Test prompt injection, unauthorized retrieval,
- cross-tenant search, revoked sharing,
+
+ cross-tenant search, revoked sharing,
  provider outage, and unsupported answers.
 
 
@@ -219,7 +223,8 @@ Prompt 9 — Campus, community, career, and marketplace
  Enable modules separately with verified permissions,
  working persistence, operational ownership,
  and complete failure states.
-Prompt 10 — Student-app acceptance and hardening
+
+Prompt 10 — Student-app acceptance and hardening
 
  Audit the complete student application.
 

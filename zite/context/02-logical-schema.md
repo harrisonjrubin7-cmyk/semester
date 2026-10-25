@@ -10,7 +10,8 @@
         platform.users                             id, display_name, status, timestamps
 
         platform.identity_links                    id, user_id, provider, provider_subject
-                          Table                                  Principal columns
+
+                          Table                                  Principal columns
 
          platform.workspaces                 id, kind, name, status, region
 
@@ -72,7 +73,8 @@
                  tasks(id, workspace_id, owner_user_id, title, due_at, state,
  Tasks
                  source_resource_id, version)
-      Domain                                   Tables and key fields
+
+      Domain                                   Tables and key fields
 
                   calendars(id, workspace_id, owner_user_id, timezone);
   Calendar        calendar_events(id, calendar_id, starts_at, ends_at,
@@ -135,7 +137,8 @@ sharing rules, not a single institution-owned student row containing everything.
                     courses(id, workspace_id, code, title, credits); course_sections(id,
   Courses
                     workspace_id, course_id, term_id, status)
-     Domain                                  Tables and key fields
+
+     Domain                                  Tables and key fields
 
                   section_staff(id, workspace_id, section_id, user_id,
 Teaching
@@ -200,7 +203,8 @@ Communications    state); communication_approvals(id, campaign_id, approver_id,
                   connections(id, workspace_id, adapter_type, secret_ref, state);
 Integrations      external_mappings(id, workspace_id, connection_id, external_id,
                   resource_id)
-          Domain                                Tables and key fields
+
+          Domain                                Tables and key fields
 
                     sync_runs(id, workspace_id, connection_id, state);
   Reconciliation    reconciliation_findings(id, sync_run_id, resource_id, kind,
@@ -266,7 +270,8 @@ Use a separate company scope and restricted database access.
                    decisions(id, owner_id, decision, rationale_ref); risks(id, severity,
   Operations       owner_id, mitigation_ref, state); work_items(id, owner_id, state,
                    due_at)
-     Domain                                  Tables and key fields
+
+     Domain                                  Tables and key fields
 
                incidents(id, severity, state, started_at, resolved_at);
  Reliability
@@ -329,7 +334,8 @@ Use a separate company scope and restricted database access.
 
  billing.payment_attempts
    id, invoice_id, provider, provider_reference,
-    state, amount_minor, currency
+
+    state, amount_minor, currency
 
   billing.webhook_receipts
     id, provider, provider_event_id,
