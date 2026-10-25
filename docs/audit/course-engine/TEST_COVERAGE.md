@@ -1,10 +1,10 @@
 # Test coverage
 
-## Verified on 2026-10-16
+## Verified on 2026-10-25
 
 | Check | Result |
 |---|---|
-| Course-engine web unit/component tests | 29 passed across 11 files |
+| Course-engine web unit/component tests | 36 passed across 12 files |
 | Production-mode Chromium browser tests | 7 passed with deterministic API fixtures |
 | Browser axe scan | passed with zero violations at the desktop ready state |
 | TypeScript `tsc --noEmit` | passed |
@@ -23,7 +23,7 @@
 - Offline, loading, empty, and error states are announced and actionable.
 - Canonical Ink/Parchment/motion tokens and reduced-motion/forced-color rules are locked by tests.
 - The production browser journey covers source-sheet focus and dismissal, review confirmation, calendar consequence preview, cited card recall, self-graded quiz persistence, authenticated DOCX download naming, mobile command navigation, and console/page errors.
-- Desktop and mobile overview screenshots are versioned as platform-specific Linux and macOS visual baselines.
+- Desktop and mobile overview screenshots are versioned as platform-specific Linux and macOS visual baselines; a semantic assertion verifies the rendered study-asset count before the pixel comparison.
 
 ## Not yet covered
 
@@ -33,4 +33,4 @@
 - Reviewed Windows visual-regression baselines; the visual assertion is explicitly skipped outside Linux and macOS until those references exist.
 - Provider-backed extraction/generation and production object storage.
 - Docker Compose on this host (Docker is unavailable).
-- HawkScan DAST (runtime and API key unavailable).
+- Local HawkScan DAST (runtime and API key unavailable); the exact-head hosted workflow remains the security gate.
