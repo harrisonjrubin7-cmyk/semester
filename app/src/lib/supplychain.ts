@@ -193,6 +193,7 @@ export const REGISTRY = 'https://registry.npmjs.org/';
 export const ACTIONS: Record<string, { publisher: string; why: string }> = {
   'actions/checkout': { publisher: 'GitHub', why: 'Checks out the repository.' },
   'actions/setup-node': { publisher: 'GitHub', why: 'Installs Node and caches npm.' },
+  'actions/setup-python': { publisher: 'GitHub', why: 'Installs the pinned Python runtime used by Course Engine API tests.' },
   'actions/upload-artifact': { publisher: 'GitHub', why: 'Keeps the SBOM and test reports with the run.' },
   'actions/github-script': { publisher: 'GitHub', why: 'Posts CI summaries with the job token.' },
   'actions/configure-pages': { publisher: 'GitHub', why: 'Pages deploy.' },
