@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward } from 'lucide-react';
+import { CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward, ArrowLeftRight } from 'lucide-react';
 import { logout } from 'zitejs/auth';
 import { cn } from '@project/components/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@project/components/ui/dropdown-menu';
@@ -9,7 +9,7 @@ import CommandPalette from './CommandPalette';
 
 const NAV = [
   { group: null, items: [{ to: '/today', label: 'Today', icon: Sun }, { to: '/today/notifications', label: 'Notifications', icon: Bell }, { to: '/today/mail', label: 'Mail', icon: Mail }] },
-  { group: 'Plan', items: [{ to: '/plan', label: 'Calendar', icon: CalendarDays }, { to: '/plan/registration', label: 'Registration', icon: ClipboardList }, { to: '/plan/career', label: 'Career', icon: Briefcase }] },
+  { group: 'Plan', items: [{ to: '/plan', label: 'Calendar', icon: CalendarDays }, { to: '/plan/registration', label: 'Registration', icon: ClipboardList }, { to: '/plan/transfer', label: 'Transfer credit', icon: ArrowLeftRight }, { to: '/plan/career', label: 'Career', icon: Briefcase }] },
   { group: 'Learn', items: [{ to: '/learn', label: 'Courses', icon: BookOpen }, { to: '/learn/study', label: 'Study', icon: Layers }, { to: '/learn/tutoring', label: 'Tutoring', icon: Handshake }, { to: '/learn/write', label: 'Write', icon: PenLine }, { to: '/learn/decks', label: 'Decks', icon: Copy }, { to: '/learn/ask', label: 'Ask Semester', icon: Sparkles }] },
   { group: 'Help', items: [{ to: '/help', label: 'Advising & support', icon: LifeBuoy }, { to: '/help/advising', label: 'Advising prep', icon: MessageSquare }, { to: '/help/referrals', label: 'Referrals', icon: Forward }] },
   { group: 'Campus', items: [{ to: '/campus', label: 'Clubs & events', icon: Users }, { to: '/campus/community', label: 'Community', icon: MessagesSquare }, { to: '/campus/places', label: 'Places', icon: MapPin }, { to: '/campus/accommodations', label: 'Accommodations', icon: Accessibility }] },

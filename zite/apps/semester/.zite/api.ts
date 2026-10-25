@@ -44,6 +44,7 @@ import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _StudyEp } from '../src/api/study';
 import type { default as _SupportAccessApprovalEp } from '../src/api/supportAccessApproval';
 import type { default as _TeachingEp } from '../src/api/teaching';
+import type { default as _TransferEp } from '../src/api/transfer';
 import type { default as _TutoringEp } from '../src/api/tutoring';
 
 type _AcademicCalendarCfg = typeof _AcademicCalendarEp;
@@ -256,6 +257,11 @@ export type TeachingInputType = NonNullable<_TeachingCfg['inputSchema']> extends
 export type TeachingOutputType = Awaited<ReturnType<_TeachingCfg['execute']>>;
 export const teaching = createCaller<TeachingInputType, TeachingOutputType>('teaching');
 
+type _TransferCfg = typeof _TransferEp;
+export type TransferInputType = NonNullable<_TransferCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TransferCfg['execute']>[0]['input'];
+export type TransferOutputType = Awaited<ReturnType<_TransferCfg['execute']>>;
+export const transfer = createCaller<TransferInputType, TransferOutputType>('transfer');
+
 type _TutoringCfg = typeof _TutoringEp;
 export type TutoringInputType = NonNullable<_TutoringCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TutoringCfg['execute']>[0]['input'];
 export type TutoringOutputType = Awaited<ReturnType<_TutoringCfg['execute']>>;
@@ -305,5 +311,6 @@ export const api = {
   study,
   supportAccessApproval,
   teaching,
+  transfer,
   tutoring,
 };
