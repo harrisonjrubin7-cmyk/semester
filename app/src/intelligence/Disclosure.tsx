@@ -1,4 +1,4 @@
-import type { IntelligenceResponse, SourceOrigin } from './contracts';
+import type { EvidenceReference, IntelligenceResponse, SourceOrigin } from './contracts';
 import { SourceBadge } from '../components/SourceBadge';
 
 const ORIGIN_LABEL: Record<SourceOrigin, string> = {
@@ -11,6 +11,52 @@ const ORIGIN_LABEL: Record<SourceOrigin, string> = {
 
 const modeLabel = (mode: IntelligenceResponse['mode']) =>
   `${mode[0].toUpperCase()}${mode.slice(1)} mode`;
+
+const AUTHORITY_LABEL: Record<EvidenceReference['authority'], string> = {
+  authoritative: 'Authoritative',
+  confirmed: 'Confirmed',
+  unverified: 'Unverified',
+  inferred: 'Inferred',
+};
+
+const ISO_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+function isIsoTimestamp(value: string): boolean {
+  const match = ISO_TIMESTAMP.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return day <= daysInMonth;
+}
+
+function htmlDateTime(value: string): string {
+  // HTML's global date-time syntax carries at most milliseconds. Keep the
+  // source's exact value on screen, but truncate finer precision only in the
+  // machine-readable attribute rather than emitting invalid markup.
+  return value.replace(/(\.\d{3})\d+(?=Z|[+-]\d{2}:\d{2}$)/, '$1');
+}
+
+function sourceFreshness(verifiedAt: string | null | undefined): {
+  lastChecked: string;
+  freshness: 'Unknown' | 'Not classified';
+  dateTime?: string;
+} {
+  if (typeof verifiedAt !== 'string' || !verifiedAt.trim()) {
+    return { lastChecked: 'Not recorded', freshness: 'Unknown' };
+  }
+  const dateTime = verifiedAt.trim();
+  if (!isIsoTimestamp(dateTime)) {
+    return { lastChecked: 'Invalid timestamp', freshness: 'Unknown' };
+  }
+  // A timestamp records an observation, not how long this kind of source may
+  // be trusted. EvidenceReference carries no source-specific freshness rule,
+  // so the disclosure must not invent one here.
+  return { lastChecked: dateTime, freshness: 'Not classified', dateTime: htmlDateTime(dateTime) };
+}
 
 /** The provenance receipt shown under an answer, owned by Semester's UI. */
 export function IntelligenceDisclosure({
@@ -55,24 +101,44 @@ export function IntelligenceDisclosure({
 
       {response.evidence.length > 0 && (
         <div aria-label="Sources" style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
-          {response.evidence.map((item) => (
-            <details
-              key={item.id}
-              className="bare"
-              data-evidence-id={item.id}
-              style={{
-                width: 'auto',
-                color: 'var(--app-fg)',
-                fontSize: 'var(--type-xs)',
-              }}
-            >
-              <summary tabIndex={0} style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                {item.title} · {item.locator}
-              </summary>
-              <p>{item.excerpt || 'No excerpt is available.'}</p>
-              <p>Verified {item.verifiedAt}</p>
-            </details>
-          ))}
+          {response.evidence.map((item) => {
+            const checked = sourceFreshness(item.verifiedAt);
+            return (
+              <details
+                key={item.id}
+                className="bare"
+                data-evidence-id={item.id}
+                style={{
+                  width: 'auto',
+                  color: 'var(--app-fg)',
+                  fontSize: 'var(--type-xs)',
+                }}
+              >
+                <summary tabIndex={0} style={{ cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  {item.title} · {item.locator}
+                </summary>
+                <p>{item.excerpt || 'No excerpt is available.'}</p>
+                <dl aria-label={`${item.title} source authority and freshness`}>
+                  <div>
+                    <dt>Authority: </dt>
+                    <dd>{AUTHORITY_LABEL[item.authority]}</dd>
+                  </div>
+                  <div>
+                    <dt>Last checked: </dt>
+                    <dd>
+                      {checked.dateTime
+                        ? <time dateTime={checked.dateTime}>{checked.lastChecked}</time>
+                        : checked.lastChecked}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Freshness: </dt>
+                    <dd>{checked.freshness}</dd>
+                  </div>
+                </dl>
+              </details>
+            );
+          })}
         </div>
       )}
 
