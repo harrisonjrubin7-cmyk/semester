@@ -10,6 +10,8 @@ export const FIN_MIGRATION: string[] = [
   `CREATE TABLE IF NOT EXISTS fin_receipts (tenant_id text NOT NULL, command_key text NOT NULL, invoice_id text, result_code text NOT NULL, message text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (tenant_id, command_key), FOREIGN KEY (tenant_id, command_key) REFERENCES fin_commands (tenant_id, command_key))`,
   `CREATE TABLE IF NOT EXISTS fin_audit (id bigserial PRIMARY KEY, tenant_id text NOT NULL, invoice_id text, command_key text NOT NULL, actor_id text NOT NULL, action text NOT NULL, detail text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now())`,
   `CREATE TABLE IF NOT EXISTS fin_outbox (id bigserial PRIMARY KEY, tenant_id text NOT NULL, command_key text NOT NULL, topic text NOT NULL, payload jsonb NOT NULL, status text NOT NULL DEFAULT 'disabled', created_at timestamptz NOT NULL DEFAULT now(), UNIQUE (tenant_id, command_key, topic))`,
+  `ALTER TABLE fin_invoices ADD COLUMN IF NOT EXISTS contract_id text`,
+  `ALTER TABLE fin_invoices ADD COLUMN IF NOT EXISTS account_id text`,
   `CREATE OR REPLACE FUNCTION fin_snapshot(i fin_invoices) RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT md5(i.id || '|' || i.customer || '|' || i.amount_minor || '|' || i.currency || '|' || i.memo) $$`,
   `CREATE OR REPLACE FUNCTION fin_cmd(p_tenant text, p_key text, p_hash text, p_actor text, p_action text, p_invoice text, p jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE c fin_commands%ROWTYPE; inv fin_invoices%ROWTYPE; v_code text := 'OK'; v_msg text; v_id text := p_invoice; v_paid bigint;
@@ -28,8 +30,8 @@ BEGIN
 
   IF p_action = 'create' THEN
     v_id := 'inv_' || substr(md5(p_tenant || p_key), 1, 12);
-    INSERT INTO fin_invoices (tenant_id, id, customer, amount_minor, currency, memo, status, created_by)
-    VALUES (p_tenant, v_id, p->>'customer', (p->>'amountMinor')::bigint, upper(p->>'currency'), coalesce(p->>'memo', ''), 'Draft', p_actor);
+    INSERT INTO fin_invoices (tenant_id, id, customer, amount_minor, currency, memo, status, created_by, contract_id, account_id)
+    VALUES (p_tenant, v_id, p->>'customer', (p->>'amountMinor')::bigint, upper(p->>'currency'), coalesce(p->>'memo', ''), 'Draft', p_actor, p->>'contractId', p->>'accountId');
     v_msg := 'Draft invoice created.';
   ELSE
     SELECT * INTO inv FROM fin_invoices WHERE tenant_id = p_tenant AND id = p_invoice FOR UPDATE;

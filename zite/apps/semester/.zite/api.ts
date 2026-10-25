@@ -4,6 +4,7 @@ import { createCaller } from 'zitejs/caller';
 
 import type { default as _AcademicCalendarEp } from '../src/api/academicCalendar';
 import type { default as _AccommodationsEp } from '../src/api/accommodations';
+import type { default as _AccountServicesEp } from '../src/api/accountServices';
 import type { default as _AdmissionsEp } from '../src/api/admissions';
 import type { default as _AdvisorShareEp } from '../src/api/advisorShare';
 import type { default as _AlumniEp } from '../src/api/alumni';
@@ -57,6 +58,11 @@ type _AccommodationsCfg = typeof _AccommodationsEp;
 export type AccommodationsInputType = NonNullable<_AccommodationsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AccommodationsCfg['execute']>[0]['input'];
 export type AccommodationsOutputType = Awaited<ReturnType<_AccommodationsCfg['execute']>>;
 export const accommodations = createCaller<AccommodationsInputType, AccommodationsOutputType>('accommodations');
+
+type _AccountServicesCfg = typeof _AccountServicesEp;
+export type AccountServicesInputType = NonNullable<_AccountServicesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AccountServicesCfg['execute']>[0]['input'];
+export type AccountServicesOutputType = Awaited<ReturnType<_AccountServicesCfg['execute']>>;
+export const accountServices = createCaller<AccountServicesInputType, AccountServicesOutputType>('accountServices');
 
 type _AdmissionsCfg = typeof _AdmissionsEp;
 export type AdmissionsInputType = NonNullable<_AdmissionsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdmissionsCfg['execute']>[0]['input'];
@@ -277,6 +283,7 @@ export const tutoring = createCaller<TutoringInputType, TutoringOutputType>('tut
 export const api = {
   academicCalendar,
   accommodations,
+  accountServices,
   admissions,
   advisorShare,
   alumni,

@@ -37,7 +37,7 @@ export default function InvoiceDetail({ inv, me, audit, onClose, onChanged }: { 
             ? <p className="rounded-[3px] border border-border p-3 text-xs">Waiting for another person. You can't approve an invoice you created.</p>
             : <div className="space-y-2 rounded-[3px] border border-border p-3">
                 <p className="eyebrow">Approval preview</p>
-                <p>You are approving exactly: <b>{inv.customer}</b>, <b>{money(inv.amountMinor, inv.currency)}</b>, memo “{inv.memo || '—'}”.</p>
+                <p>You are approving exactly: <b>{inv.customer}</b> under <b>{inv.contractTitle}</b>, <b>{money(inv.amountMinor, inv.currency)}</b>, memo “{inv.memo || '—'}”.</p>
                 <p className="font-mono text-[11px] text-muted-foreground">Bound to snapshot {inv.snapshot.slice(0, 16)}. If anything changes before you confirm, the approval is refused.</p>
                 <div className="flex gap-2">
                   <Button disabled={busy} onClick={() => act(() => run({ action: 'approve', invoiceId: inv.id, snapshot: inv.snapshot }, key('approve')))}>Approve exactly this</Button>

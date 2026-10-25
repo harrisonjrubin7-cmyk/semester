@@ -26,6 +26,7 @@ import AcademicCalendar from './pages/AcademicCalendar';
 import Catalog from './pages/Catalog';
 import Transfer from './pages/Transfer';
 import FinancialAid from './pages/FinancialAid';
+import { MyAccountServices, AccountServicesStaff } from './components/AccountServices';
 import Progress from './pages/Progress';
 import You from './pages/You';
 import Console from './pages/Console';
@@ -112,7 +113,7 @@ export default function App() {
             <Route path="/you/aid" element={<FinancialAid />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/staff/analytics" element={<Analytics />} />
-            <Route path="/staff/accounts" element={<StudentAccounts />} />
+            <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
             <Route path="/staff/mentoring" element={<Mentoring />} />
             <Route path="/staff/admissions" element={<Admissions />} />
@@ -126,7 +127,7 @@ export default function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/campus" element={<Campus />} />
             <Route path="/progress" element={<Progress />} />
-            <Route path="/you/account" element={<Account />} />
+            <Route path="/you/account" element={<><Account /><MyAccountServices /></>} />
             <Route path="/you" element={<You />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>

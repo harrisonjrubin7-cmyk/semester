@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { finance, financeCommand, FinanceOutputType, FinanceCommandInputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { Header, Panel, Figure, Chip, Loadable, useLoad, fmt, errMsg } from './ui';
 import InvoiceDetail from './InvoiceDetail';
 
@@ -18,26 +19,31 @@ export async function run(input: Omit<FinanceCommandInputType, 'commandKey'>, ke
   } catch (e) { toast.error(errMsg(e)); return false; }
 }
 
-function NewInvoice({ onDone }: { onDone: () => void }) {
-  const [f, setF] = useState({ customer: '', amount: '', currency: 'USD', memo: '' });
+function NewInvoice({ contracts, onDone }: { contracts: FinanceOutputType['contracts']; onDone: () => void }) {
+  const blank = { contractId: '', amount: '', currency: 'USD', memo: '' };
+  const [f, setF] = useState(blank);
   const [key, setKey] = useState(() => crypto.randomUUID());
   const [busy, setBusy] = useState(false);
   const amt = Math.round(Number(f.amount) * 100);
-  const valid = f.customer.trim() && amt > 0 && /^[A-Z]{3}$/.test(f.currency);
+  const valid = f.contractId && amt > 0 && /^[A-Z]{3}$/.test(f.currency);
   const go = async () => {
     setBusy(true);
-    if (await run({ action: 'create', customer: f.customer.trim(), amountMinor: amt, currency: f.currency, memo: f.memo }, key)) { setF({ customer: '', amount: '', currency: 'USD', memo: '' }); setKey(crypto.randomUUID()); onDone(); }
+    if (await run({ action: 'create', contractId: f.contractId, amountMinor: amt, currency: f.currency, memo: f.memo }, key)) { setF(blank); setKey(crypto.randomUUID()); onDone(); }
     setBusy(false);
   };
   return (
     <Panel title="New draft invoice (synthetic)">
+      {contracts.length === 0 ? <p className="text-sm text-muted-foreground">No active contracts. Invoices are raised against an active CRM contract; the customer comes from its account.</p> : (
       <form className="grid gap-2 sm:grid-cols-[2fr_1fr_80px_2fr_auto]" onSubmit={(e) => { e.preventDefault(); if (valid) go(); }}>
-        <Input aria-label="Customer" placeholder="Synthetic customer" value={f.customer} onChange={(e) => setF({ ...f, customer: e.target.value })} />
+        <Select value={f.contractId} onValueChange={(v) => setF({ ...f, contractId: v })}>
+          <SelectTrigger aria-label="Contract"><SelectValue placeholder="Active contract" /></SelectTrigger>
+          <SelectContent>{contracts.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}{c.account ? ` · ${c.account}` : ''}</SelectItem>)}</SelectContent>
+        </Select>
         <Input aria-label="Amount" inputMode="decimal" placeholder="Amount" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
         <Input aria-label="Currency" maxLength={3} value={f.currency} onChange={(e) => setF({ ...f, currency: e.target.value.toUpperCase() })} />
         <Input aria-label="Memo" placeholder="Memo" value={f.memo} onChange={(e) => setF({ ...f, memo: e.target.value })} />
         <Button type="submit" disabled={!valid || busy}>Create draft</Button>
-      </form>
+      </form>)}
     </Panel>
   );
 }
@@ -68,7 +74,7 @@ function Body({ d, q, setQ, status, setStatus, open, setOpen, reload }: { d: Fin
         <Figure label="Reconciled" value={d.invoices.filter((i) => i.status === 'Paid').length} />
         <Figure label="Notices held" value={d.outboxDisabled} note="Outbound sending is disabled" />
       </div>
-      <NewInvoice onDone={reload} />
+      <NewInvoice contracts={d.contracts} onDone={reload} />
       <Panel title="Queue">
         <div className="mb-3 flex flex-wrap gap-2">
           <Input className="max-w-xs" placeholder="Search number, customer, memo" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -78,7 +84,7 @@ function Body({ d, q, setQ, status, setStatus, open, setOpen, reload }: { d: Fin
           <table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">#</th><th>Customer</th><th className="text-right">Amount</th><th className="pl-3">Status</th><th className="hidden sm:table-cell">Updated</th></tr></thead>
             <tbody>{rows.map((i) => (
               <tr key={i.id} tabIndex={0} onClick={() => setOpen(i.id)} onKeyDown={(e) => e.key === 'Enter' && setOpen(i.id)} className="cursor-pointer border-t border-border hover:bg-muted/50 focus:bg-muted/50 focus:outline-none">
-                <td className="py-2 font-mono text-xs">INV-{i.number}</td><td>{i.customer}</td><td className="text-right tabular-nums">{money(i.amountMinor, i.currency)}</td>
+                <td className="py-2 font-mono text-xs">INV-{i.number}</td><td>{i.customer}<span className="block text-xs text-muted-foreground">{i.contractTitle}</span></td><td className="text-right tabular-nums">{money(i.amountMinor, i.currency)}</td>
                 <td className="pl-3"><Chip value={i.status} /></td><td className="hidden text-xs text-muted-foreground sm:table-cell">{fmt(i.updatedAt)}</td>
               </tr>))}</tbody></table>
         ) : <p className="py-6 text-center text-sm text-muted-foreground">{d.invoices.length ? 'No invoices match.' : 'No invoices yet — create a synthetic draft above.'}</p>}
