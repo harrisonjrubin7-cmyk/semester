@@ -11012,6 +11012,104 @@ button.adband-bar {
   font-size: var(--type-sm);
 }
 
+.integration-error-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.integration-error-nav .btn {
+  width: auto;
+  margin-top: 0;
+}
+
+.integration-conflict-note,
+.integration-error-window {
+  margin-block: var(--sp-3);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.integration-error-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--target-primary) * 4)), 1fr));
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.integration-error-filters legend {
+  padding-inline: var(--sp-2);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.integration-error-filters label {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--type-sm);
+}
+
+.integration-error-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--target-primary);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font: inherit;
+}
+
+.integration-error-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.integration-error-list details {
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.integration-error-list summary {
+  display: list-item;
+  min-height: var(--target-primary);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.integration-error-list details[open] summary {
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.integration-error-list dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+  padding: var(--sp-4);
+  font-size: var(--type-sm);
+}
+
+.integration-error-list dt {
+  color: var(--app-dim);
+}
+
+.integration-error-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .integration-table-wrap {
   overflow-x: auto;
   max-width: 100%;
@@ -11123,7 +11221,8 @@ button.adband-bar {
 }
 
 @media (max-width: 560px) {
-  .integration-detail dl {
+  .integration-detail dl,
+  .integration-error-list dl {
     grid-template-columns: 1fr;
   }
 }
