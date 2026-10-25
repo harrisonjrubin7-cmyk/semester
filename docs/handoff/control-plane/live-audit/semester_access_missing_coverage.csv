@@ -1,0 +1,9 @@
+method,path,operation_id,evidence_status,needed_cases,source_scope
+POST,/pep/access-requests,createAccessRequest,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+GET,/pep/access-requests/{requestId},getAccessRequest,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+POST,/pe/evaluations,evaluatePolicy,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+POST,/pa/grants,prepareGrant,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+PUT,/pep/grants/{grantId},installGrant,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+GET,/pep/grants/{grantId},inspectEnforcement,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+POST,/pa/grants/{grantId}/revocations,revokeGrant,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
+POST,/evidence/observations,recordObservation,not evidenced,success; unauthenticated; forbidden; invalid payload; conflict where applicable,handoff/control-plane/access.openapi.yaml; not full Semester
