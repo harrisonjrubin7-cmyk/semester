@@ -1,0 +1,44 @@
+# Routes for the pilot capabilities. None is built: `status: not_built` means no
+# screen, route handler or navigation entry exists on main. Paths marked
+# `status: proposed` were chosen here and need confirming against the nav model.
+#
+# Each route lists the capabilities that authorize it; the contract test checks
+# that this list and each capability's `routes` agree in both directions.
+
+routes:
+  /app/registration:
+    screen: student_registration_readiness
+    actors:
+      - student
+    capabilities:
+      - student.readiness.read
+      - student.readiness.refresh
+    auth: required
+    status: not_built
+
+  /advisor/readiness:
+    screen: advisor_readiness_caseload
+    actors:
+      - advisor
+    capabilities:
+      - advisor.readiness.caseload.read
+    auth: required
+    status: proposed
+
+  /registrar/readiness:
+    screen: registrar_readiness_queue
+    actors:
+      - registrar
+    capabilities:
+      - registrar.readiness.queue.read
+    auth: required
+    status: not_built
+
+  /institution/readiness/audit:
+    screen: institution_readiness_audit
+    actors:
+      - institution_admin
+    capabilities:
+      - institution_admin.readiness.audit.read
+    auth: required
+    status: proposed

@@ -1,0 +1,161 @@
+# Commands, the state machine, the sensitive-command authorization chain, and
+# the failure drills.
+#
+# Commands are the two that the existing store implements: `readiness.start`
+# (the RPC path for a new `requested` evaluation) and `readiness.transition`
+# (the compare-and-swap save of every later change). `readiness.refresh` is a
+# transition from a completed state back to `evaluating`, so it is not a
+# separate command. Routing and referral commands from the brief are not in
+# the store and are recorded as open items in README.md.
+#
+# Invariants the contract test enforces:
+#   - every writes entry is a record;
+#   - a record's write_path.commands and the commands' writes agree;
+#   - a command that publishes writes domain_outbox_events;
+#   - every write to the store also writes gateway_audit;
+#   - publishes entries are catalogued in events.yaml.
+
+readiness_states:
+  canonical:
+    - requested
+    - evaluating
+    - ready
+    - blocked
+    - needs_review
+    - unknown
+    - stale
+    - reconciling
+  # The five readiness outcomes confirmed for the pilot. Each maps onto one
+  # canonical state. `in_progress` is not a readiness outcome: it covers the
+  # three transitional states, which a student sees as "updating".
+  display:
+    unknown: unknown
+    stale: stale
+    blocked: blocked
+    needs_review: needs_review
+    resolved: ready
+  transitional: [requested, evaluating, reconciling]
+
+# Edges the save RPC enforces (private.registration_readiness_edge_ok).
+state_edges:
+  - [requested, evaluating]
+  - [evaluating, ready]
+  - [evaluating, blocked]
+  - [evaluating, needs_review]
+  - [evaluating, unknown]
+  - [evaluating, stale]
+  - [evaluating, reconciling]
+  - [ready, evaluating]
+  - [blocked, evaluating]
+  - [needs_review, reconciling]
+  - [unknown, reconciling]
+  - [stale, reconciling]
+  - [reconciling, evaluating]
+
+authorization_chain:
+  - parse_and_validate_input
+  - authenticate_session
+  - resolve_tenant_context
+  - resolve_workspace_context
+  - resolve_active_membership
+  - verify_membership_status
+  - verify_role_and_grants
+  - load_resource_scope
+  - apply_consent_and_delegation_rules
+  - evaluate_policy
+  - verify_source_freshness_requirement
+  - enforce_state_transition_guard
+  - persist_audit_and_outbox_in_transaction
+  - return_receipt_or_safe_error
+
+commands:
+  - name: readiness.start
+    version: 1
+    # Target actors from the brief; the RPC does not check roles itself.
+    actor_roles:
+      - student
+      - advisor
+      - registrar
+    input_schema:
+      tenant_id: uuid
+      subject_id: string
+      term_id: string
+      requested_by: string
+      idempotency_key: string
+    state_guard:
+      creates: requested
+      allowed_from: []
+    writes:
+      - registration_readiness_evaluations
+      - registration_readiness_receipts
+      - domain_outbox_events
+      - gateway_audit
+    publishes:
+      - registration.readiness_requested
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+  - name: readiness.transition
+    version: 1
+    actor_roles:
+      - student
+      - registrar
+    input_schema:
+      tenant_id: uuid
+      evaluation_id: string
+      expected_version: integer
+      next_state: string
+      idempotency_key: string
+    state_guard:
+      # Every canonical state that has an outgoing edge.
+      allowed_from:
+        - requested
+        - evaluating
+        - ready
+        - blocked
+        - needs_review
+        - unknown
+        - stale
+        - reconciling
+    writes:
+      - registration_readiness_evaluations
+      - registration_readiness_tasks
+      - registration_readiness_receipts
+      - domain_outbox_events
+      - gateway_audit
+    publishes:
+      - registration.readiness_evaluated
+      - registration.readiness_reconciliation_requested
+    requires_audit: true
+    requires_idempotency: true
+    safe_failure:
+      - do_not_change_official_records
+      - return_retryable_or_review_state
+      - preserve_existing_case_history
+
+failure_drills:
+  # Recorded from the brief. None of these is executed by any test yet.
+  - drill: SIS timeout
+    expected: Mark data stale, prevent definitive readiness claim, offer refresh/review path
+  - drill: Duplicate evaluation request
+    expected: Return the same active receipt; do not create duplicate cases
+  - drill: Staff role removal mid-session
+    expected: Revoke action access at command time; log denial
+  - drill: Late worker success after revocation
+    expected: Reject stale result through generation/revocation barrier
+  - drill: Outbox delivery duplicate
+    expected: Consumer idempotency preserves one business effect
+  - drill: RLS bypass attempt
+    expected: Query returns no unauthorized row
+  - drill: Policy engine unavailable
+    expected: Fail closed for sensitive writes; explain safe next step
+  - drill: Bad migration
+    expected: Roll back app deployment; forward-fix DB migration using documented procedure
+  - drill: Read-model lag
+    expected: Present "updating" or freshness notice; do not claim current data
+  - drill: AI prompt injection in source text
+    expected: Keep answer bounded to approved sources; do not expose hidden/system data
