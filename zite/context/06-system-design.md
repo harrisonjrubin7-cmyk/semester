@@ -35,7 +35,8 @@ justify the added operational complexity.
 
   Education          Students, faculty, advisors, invited   Learning, planning, productivity, support, campus, career,
   Experience         supporters, employers                  community
-   Operating layer                          Users                                    Responsibilities
+
+   Operating layer                          Users                                    Responsibilities
 
                                                                 Academic administration, services, policies, integrations,
   Institution OS         Authorized institution staff
@@ -91,7 +92,8 @@ automatically reading a student’s notes, grades, or service-case content.
                            ┌────────────────┼─────────────────┐
                            │                │                 │
                      Job workers               Object storage    Read projections
-               Integration               Scoped files            Search indexes
+
+               Integration               Scoped files            Search indexes
                Billing                   Retention               Analytics
                Notifications
                      │
@@ -145,7 +147,8 @@ Recommended definitions:
   Role assignment:
   A verified capability bundle scoped to a workspace,
   department, course section, caseload, or specific resource.
-  Resource grant:
+
+  Resource grant:
   An explicit permission for a particular object.
 
   Delegation:
@@ -195,7 +198,8 @@ Passing one does not imply passing the other.
     │
     ▼
   Load current tenant memberships
-    │
+
+    │
     ▼
   User selects workspace
     │
@@ -247,7 +251,8 @@ Enforce tenant scope at all relevant boundaries:
 RLS must be paired with appropriate database grants. Supabase documents these as separate
 checks; it also warns that views and privileged credentials can bypass the protections expected
 from ordinary table policies. [1]
-3. Database schema
+
+3. Database schema
 
 3.1 Schema organization
 
@@ -296,7 +301,8 @@ Schema names organize ownership. They are not sufficient security boundaries by 
     ├── audit_events
     └── outbox_events
             └── consumer_receipts
-3.3 Identity and tenant schema
+
+3.3 Identity and tenant schema
                        Table                                           Essential fields and constraints
 
   iam.users                                   id, display_name, status, timestamps
@@ -355,7 +361,8 @@ Each institution-controlled record should carry:
 
   tenant_id
   workspace_id where relevant
-  source_connection_id where relevant
+
+  source_connection_id where relevant
   external_id where relevant
   authority_mode
   source_updated_at
@@ -409,7 +416,8 @@ support interfaces.
   company.quotes
   company.quote_lines
   company.contracts
-  company.contract_obligations
+
+  company.contract_obligations
   company.implementation_projects
   company.implementation_milestones
   company.success_plans
@@ -463,7 +471,8 @@ authorization implementation.
     status text not null default 'active'
       check (status in ('active', 'archived')),
     unique (tenant_id, id)
-);
+
+);
 
 create table iam.memberships (
   id uuid primary key default gen_random_uuid(),
@@ -518,7 +527,8 @@ create table education.tasks (
 
 create index tasks_tenant_owner_due
   on education.tasks(tenant_id, owner_user_id, due_at);
-  alter table iam.memberships enable row level security;
+
+  alter table iam.memberships enable row level security;
   alter table education.plans enable row level security;
   alter table education.tasks enable row level security;
 
@@ -560,7 +570,8 @@ Semester should own the commercial domain:
     → Reconciliation
     → Entitlement
     → Renewal
-A payment provider supplies payment infrastructure through an adapter. It should not define
+
+A payment provider supplies payment infrastructure through an adapter. It should not define
 Semester’s entire product, contract, or entitlement model.
 Stripe can be one adapter, but the design below does not require Stripe.
 
@@ -609,7 +620,8 @@ Recommended relationships:
              billing.meters                         Usage definitions and aggregation rules
 
              billing.usage_events                   Deduplicated billable usage
-                            Table                                     Purpose
+
+                            Table                                     Purpose
 
              billing.usage_adjustments              Audited corrections
 
@@ -664,7 +676,8 @@ Compute effective access from:
   validity dates
   tenant scope
   product limits
-  contract policy
+
+  contract policy
   suspension rules
 
 
@@ -716,7 +729,8 @@ Example meters:
   governed_ai_requests
   ai_input_tokens
   ai_output_tokens
-  licensed_seats
+
+  licensed_seats
   storage_bytes
   approved_premium_workflow_runs
 
@@ -753,7 +767,8 @@ Separate:
     Data export and contractual exit rights.
 Define suspension behavior with the institution rather than treating “payment failed” as a
 universal instruction to lock every student out.
-5. API routing and request processing
+
+5. API routing and request processing
 
 5.1 Route families
 
@@ -806,7 +821,8 @@ institution-admin routes.
   8. Resource authorization
   9. Entitlement and policy checks
   10. Command/query execution
-  11. Safe response serialization
+
+  11. Safe response serialization
   12. Audit/metrics completion
 
 
@@ -855,7 +871,8 @@ different operation.
         "correlationId": "correlation-id"
       }
   }
-5.5 Error contract
+
+5.5 Error contract
 
   {
       "error": {
@@ -907,7 +924,8 @@ Generate and maintain:
                      ▼
           Student-scoped Today read model
                      ▼
-         Explanation + source + freshness
+
+         Explanation + source + freshness
                      ▼
          Approved institutional handoff
 
@@ -960,7 +978,8 @@ promise that revocation deletes copies outside Semester’s control.
          Output validation and citations
                  ▼
          AI-assisted response
-                     ▼
+
+                     ▼
          Separate approved command for any consequential action
 
 
@@ -1018,7 +1037,8 @@ institutional and professional review.
           Change management       Reviewed migrations, tests, release gates, rollback readiness
 
           Recovery                Tested backups and timed restoration exercises
-                Policy                                        Required behavior
+
+                Policy                                        Required behavior
 
           Vendor management    Purpose, access, assessment, obligations, owner, exit plan
 
@@ -1067,7 +1087,8 @@ Without these inputs, “production scale” is a design target, not a validated
     Stateless API instances.
     Bounded database connection pools.
     Tenant-aware rate limits.
-    Fair job scheduling to prevent one institution monopolizing workers.
+
+    Fair job scheduling to prevent one institution monopolizing workers.
     Backpressure and queue-depth alerts.
     Cursor pagination and bounded exports.
     Indexed tenant and permission predicates.
@@ -1112,7 +1133,8 @@ Paste the following after the Semester master context:
   1. Education Experience.
   2. Institution OS.
   3. Semester Company OS.
-Do not build only forms and status dropdowns.
+
+Do not build only forms and status dropdowns.
 Implement authorized state transitions with durable history,
 idempotency, failure handling, and operational visibility.
 
@@ -1168,7 +1190,8 @@ workflow_approval_requests:
 id, tenant_id, instance_id, step_key,
 required_capability, required_scope,
 requester_id, due_at, state
-workflow_approval_decisions:
+
+workflow_approval_decisions:
 id, tenant_id, approval_request_id,
 approver_id, decision, reason_ref, decided_at
 
@@ -1223,7 +1246,8 @@ Do not claim enrollment is complete without authoritative confirmation.
 C. Student consent
 payload selection → exact preview →
 recipient/purpose/expiry confirmation →
-grant → access history → expiry/revocation.
+
+grant → access history → expiry/revocation.
 
 D. Institutional service request
 intake → classification → authorized routing →
@@ -1279,7 +1303,8 @@ Use Semester's existing design system.
 TESTS
 Include:
 cross-tenant denial
- unauthorized transition
+
+ unauthorized transition
  self-approval denial
  changed-payload approval invalidation
  duplicate command
@@ -1328,7 +1353,8 @@ cross-tenant denial
  14. Approve a limited cohort.
  15. Activate and monitor.
  16. Expand only after evidence review.
-10.2 Deployment blockers to resolve
+
+10.2 Deployment blockers to resolve
                         Decision                                  Required input
                  Authoritative database    Zite database, external PostgreSQL, or domain-specific split
 
@@ -1367,7 +1393,8 @@ A production release should have:
     Rollback instructions.
     Named operational owner.
     Explicit launch approval.
-10.4 Repository deliverable structure
+
+10.4 Repository deliverable structure
 Have the implementation agent produce:
 
   docs/system-design/
@@ -1417,7 +1444,8 @@ guarantee that cannot be verified there must live in a backend designed and test
   6. https://deepwiki.com/supabase/dbdev/4.3-security-and-row-level-security
   7. https://www.agilesoftlabs.com/blog/2026/06/supabase-row-level-security-guide-2026
   8. https://www.precursorsecurity.com/blog/row-level-recklessness-testing-supabase-security
- 9. https://github.com/orgs/supabase/discussions/13068
+
+ 9. https://github.com/orgs/supabase/discussions/13068
 10. https://www.zite.com/integrations
 11. https://www.linkedin.com/posts/dominicwhyte_one-of-our-most-requested-zite-features-is-activity-747085384308638
     9248-hrYd
@@ -1426,5 +1454,6 @@ guarantee that cannot be verified there must live in a backend designed and test
 14. https://zite.com/help/database/automations/relay
 15. https://automationace.com/blog/how-zite-combines-databases-apps-forms-workflows
 16. https://dev.to/ethan__par_ker/supabase-row-level-security-the-policies-that-actually-ship-saas-1ell
-
+
+
 ```
