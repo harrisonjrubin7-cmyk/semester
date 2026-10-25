@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { zite } from 'zitejs/db';
 import { MIGRATION_001 } from './pgMigration';
+import { SER_MIGRATION } from './serMigration';
 import { DEV_MIGRATION } from './devMigration';
 
 // Controlled backend for invariant-bearing writes. Server-only: the connection string never reaches the browser.
@@ -13,7 +14,7 @@ export function pg() {
 export function ensureSchema() {
   if (!ready) {
     const sql = pg();
-    ready = (async () => { for (const stmt of MIGRATION_001) await sql.query(stmt); })().catch((e) => { ready = null; throw e; });
+    ready = (async () => { for (const stmt of [...MIGRATION_001, ...SER_MIGRATION]) await sql.query(stmt); })().catch((e) => { ready = null; throw e; });
   }
   return ready;
 }

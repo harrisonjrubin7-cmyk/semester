@@ -33,6 +33,9 @@ export default createEndpoint({
       status = 'Pending';
       isSampleInst = !!inst!.isSample;
     } else if (input.workspace === 'sample') {
+      // Decision D-onboard (25 Oct): the Sample institution is shared by everyone who signs up, so nobody may make
+      // themselves its administrator. Demo teaching and advising roles stay available over synthetic data.
+      if (input.role === 'Administrator') forbid('Administrator access is not self-service in the shared sample. Choose a personal workspace to try the admin console.');
       institutionId = await ensureSampleInstitution();
     } else {
       const inst = await zite.institutions.create({

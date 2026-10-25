@@ -56,9 +56,9 @@ export default function Onboarding({ onDone, name }: { onDone: () => void; name:
           <h1 className="mt-2 text-4xl">Where do you study{name ? `, ${name}` : ''}?</h1>
           <p className="mt-2 text-muted-foreground">Semester starts with what you have. It works alongside your school’s systems and doesn’t replace them.</p>
           <div className="mt-6 space-y-2">
-            <Choice active={workspace === 'sample'} onClick={() => setWorkspace('sample')} title={<>Northgate University <span className="ml-2"><SourceTag source="Sample" /></span></>} note="Open for demo" />
+            <Choice active={workspace === 'sample'} onClick={() => { setWorkspace('sample'); if (role === 'Administrator') setRole('Student'); }} title={<>Northgate University <span className="ml-2"><SourceTag source="Sample" /></span></>} note="Open for demo" />
             <Choice active={workspace === 'personal'} onClick={() => setWorkspace('personal')} title="Personal workspace" note="Only you" />
-            <Choice active={workspace === 'invite'} onClick={() => setWorkspace('invite')} title="I have an invite code" note="Needs approval" />
+            <Choice active={workspace === 'invite'} onClick={() => { setWorkspace('invite'); if (role === 'Administrator') setRole('Student'); }} title="I have an invite code" note="Needs approval" />
           </div>
           {workspace === 'invite' && <Input className="mt-3 font-mono uppercase" placeholder="e.g. K7QM2X" value={code} onChange={(e) => setCode(e.target.value)} />}
           <p className="mt-3 text-xs text-muted-foreground">Institutions are invite-only. Your administrator gives you a code, and your membership stays pending until they approve it.</p>
@@ -67,7 +67,7 @@ export default function Onboarding({ onDone, name }: { onDone: () => void; name:
           <h1 className="mt-2 text-4xl">What’s your role?</h1>
           <p className="mt-2 text-muted-foreground">Your role decides your workspace and what you can see. Everyone also gets a student workspace in the sample.</p>
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            {(['Student', 'Faculty', 'Advisor', 'Administrator'] as Role[]).filter((r) => workspace !== 'invite' || r !== 'Administrator').map((r) => <Choice key={r} active={role === r} onClick={() => setRole(r)} title={r} note="" />)}
+            {(['Student', 'Faculty', 'Advisor', 'Administrator'] as Role[]).filter((r) => workspace === 'personal' || r !== 'Administrator').map((r) => <Choice key={r} active={role === r} onClick={() => setRole(r)} title={r} note="" />)}
           </div>
         </>)}
         {step === 3 && (<>

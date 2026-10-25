@@ -50,6 +50,9 @@ export default createEndpoint({
     // Invariant-bearing write: command + seat + receipt + audit + outbox in ONE Postgres transaction (reg_decide).
     // Capacity is enforced there under a row lock, so concurrent commits cannot oversell a section.
     // Stale source feeds block consequential commands (contract). Rejections still go through.
+    // REG-023: read the student's ledger version before the checks; the commit refuses if any seat of theirs changed since.
+    await ensureSchema();
+    const studentVersion = Number(((await pg().query(`SELECT reg_student_version($1,$2) AS v`, [a.institutionId, first(req!.student) ?? ''])) as { v: string }[])[0].v);
     if (out.kind !== 'reject') {
       const blocked = sisBlock(await tenantSources(a.institutionId));
       if (blocked) return { state: req!.state ?? 'Submitted', resultCode: 'SOURCE_STALE', message: blocked };
@@ -81,15 +84,15 @@ export default createEndpoint({
       });
       if (why) return { state: req!.state ?? 'Submitted', resultCode: 'NEEDS_REVIEW', message: `Not committed. ${why}` };
     }
-    await ensureSchema();
     const studentId = first(req!.student) ?? '';
     const decision = out.kind === 'reject' ? 'reject' : 'commit';
     const note = out.kind === 'reject' ? (input.decision === 'reject' && input.note ? input.note : out.message) : input.note ?? '';
     const commandKey = `registrar:${req!.id}`;
     const hash = await sha256(JSON.stringify({ requestId: req!.id, decision, sectionId, studentId }));
-    const res = (await pg().query(`SELECT reg_decide($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) AS r`,
-      [a.institutionId, commandKey, hash, a.userId, decision, sectionId, studentId, req!.id, section?.capacity ?? null, note])) as { r: { conflict?: boolean; replay?: boolean; state: string; resultCode: string; message: string } }[];
+    const res = (await pg().query(`SELECT reg_decide_serial($11,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10) AS r`,
+      [a.institutionId, commandKey, hash, a.userId, decision, sectionId, studentId, req!.id, section?.capacity ?? null, note, studentVersion])) as { r: { conflict?: boolean; studentChanged?: boolean; replay?: boolean; state: string; resultCode: string; message: string } }[];
     const r = res[0].r;
+    if (r.studentChanged) return { state: req!.state ?? 'Submitted', resultCode: 'STUDENT_CHANGED', message: "Another decision changed this student's schedule while you were reviewing. Nothing was committed — decide again to re-check credits and time clashes." };
     if (r.conflict) throw new ZiteError('This request was already decided differently. Reload before deciding again.');
     if (!r.replay) {
       await audit(a, `Registration ${r.state.toLowerCase()}`, `registrationRequest:${req!.id}`, `${r.resultCode} · receipt ${commandKey}`, 'Registrar');
