@@ -41,7 +41,7 @@ function ready(): LaunchState {
   }));
   return {
     gates,
-    council: COUNCIL.map((s) => ({ ...s, holder: `${s.title} (accepted)` })),
+    council: COUNCIL.map((s) => ({ ...s, holder: `${s.title} (accepted)`, interimOwner: null })),
     signoffs: [...SEATS],
     blockers: [],
     acceptances: [],
@@ -119,6 +119,7 @@ describe('the launch go/no-go', () => {
       for (const seat of COUNCIL) {
         const row = text.split('\n').find((line) => line.startsWith(`| \`${seat.seat}\``));
         expect(row, `the council document has no row for ${seat.seat}`).toBeTruthy();
+        expect(row).toContain(seat.interimOwner ?? 'None');
         expect(row).toContain(seat.holder ?? 'Vacant');
       }
     });
@@ -151,24 +152,49 @@ describe('the launch go/no-go', () => {
     it('is no-go today, and says why at length', () => {
       const { verdict, reasons } = decide(CURRENT);
       expect(verdict).toBe('no-go');
-      // Four seats held since 2026-09-28, three more since 2026-09-30, and none
-      // signed: holding is not signing.
+      // Interim accountability records who coordinates the work. It does not
+      // alter the accepted holders, qualifications, institutional
+      // representation, independent review or signatures.
+      expect(COUNCIL).toHaveLength(SEATS.length);
+      for (const seat of COUNCIL) {
+        expect(seat.interimOwner, seat.seat).toBe('Harrison Rubin');
+      }
       const held = COUNCIL.filter((s) => s.holder !== null).map((s) => s.seat);
       expect(held).toEqual(['founder', 'product', 'engineering', 'privacy', 'accessibility', 'success', 'operations']);
       expect(reasons.filter((r) => r.endsWith('is vacant.'))).toHaveLength(SEATS.length - held.length);
       for (const seat of held) expect(reasons).toContain(`Seat ${seat} has not signed.`);
+      expect(COUNCIL.find((s) => s.seat === 'security')?.holder).toBeNull();
+      expect(COUNCIL.find((s) => s.seat === 'champion')).toMatchObject({ holder: null, institutional: true });
       expect(CURRENT.signoffs).toEqual([]);
       expect(reasons.some((r) => r.startsWith('golden-path:'))).toBe(true);
       // The one met gate is not a reason; every other gate is.
       expect(reasons.some((r) => r.startsWith('known-limitations:'))).toBe(false);
       expect(reasons.filter((r) => /^[a-z-]+: (partial|unmet) — /.test(r))).toHaveLength(GATES.length - 1);
+      expect(reasons.filter((r) => r.startsWith('Launch condition “'))).toHaveLength(CONDITION.length);
+      expect(reasons.filter((r) => r.endsWith('has not signed.'))).toHaveLength(held.length);
+      expect(reasons).toHaveLength(31);
     });
 
-    it('holds a seat only by a role label, never an address or a username', () => {
+    it('never uses an address or repository username as a council holder', () => {
       for (const seat of COUNCIL) {
-        if (seat.holder === null) continue;
-        expect(seat.holder, seat.seat).not.toMatch(/@|github|harrison/i);
+        for (const owner of [seat.holder, seat.interimOwner]) {
+          if (owner === null) continue;
+          expect(owner, seat.seat).not.toMatch(/@|github/i);
+        }
       }
+    });
+
+    it('does not let interim accountability satisfy specialist, institutional, independent-review or staffed-operation evidence', () => {
+      for (const seat of ['security', 'trust', 'data', 'finance', 'champion'] as const) {
+        expect(COUNCIL.find((c) => c.seat === seat)).toMatchObject({ holder: null, interimOwner: 'Harrison Rubin' });
+      }
+      expect(GATES.find((g) => g.id === 'no-blockers')?.status).toBe('unmet');
+      expect(GATES.find((g) => g.id === 'terms-reviewed')?.status).toBe('partial');
+      expect(GATES.find((g) => g.id === 'onboarding-support')?.status).toBe('partial');
+      expect(GATES.find((g) => g.id === 'operations-live')?.status).toBe('partial');
+      expect(GATES.find((g) => g.id === 'data-scope')?.status).toBe('unmet');
+      expect(GATES.find((g) => g.id === 'pilot-outcome')?.status).toBe('partial');
+      expect(CURRENT.signoffs).toEqual([]);
     });
 
     it('refuses a gate that is not met', () => {

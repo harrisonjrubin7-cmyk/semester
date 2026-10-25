@@ -40,40 +40,42 @@ export interface SeatDefinition {
   title: string;
   decides: string;
   /**
-   * A role label once somebody has accepted the seat in writing — never a
-   * personal address, and never a repository username standing in for an
-   * accountability nobody accepted. `null` is vacant.
+   * An accepted or institution-appointed holder. Existing readiness consumers
+   * use this field; interim accountability must not be written here because a
+   * non-null value can satisfy staffing checks. `null` is vacant.
    */
   holder: string | null;
+  /**
+   * Who coordinates work and follow-up under the interim assignment,
+   * independently of whether an accepted holder is already recorded. This is
+   * accountability only: no qualification, institutional representation,
+   * independent review, approval, permission or sign-off follows from it.
+   */
+  interimOwner: string | null;
   /** The seat must be held by someone at the institution, not at Semester. */
   institutional?: true;
 }
 
 /*
- * Four seats held since 2026-09-28, on the founder's instruction (decision 1 in
- * `docs/LAUNCH-DECISIONS.md`): the founder seat, and product, engineering and
- * customer success held by the same person, acting, until someone else
- * accepts each — which the council document allows at pilot scale. Role
- * labels, as the document requires; never an address. Holding a seat is not
- * signing: `signoffs` stays empty until there is a decision to sign for, so
- * `decide()` now says "has not signed" for these four rather than "is vacant".
- *
- * Three more on 2026-09-30, on the founder's word: privacy / legal by outside
- * counsel, and accessibility and operations by the founder, acting.
+ * The accepted-holder values below stay exactly as previously recorded. On the
+ * owner's instruction, Harrison Rubin is additionally the interim accountable
+ * owner for every seat. That separate field does not fill a vacant accepted
+ * holder, change a qualification, appoint an institutional champion, supply an
+ * independent reviewer or sign the launch decision.
  */
 export const COUNCIL: readonly SeatDefinition[] = [
-  { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: 'Founder' },
-  { seat: 'product', title: 'Product lead', decides: 'Golden path and its acceptance criteria', holder: 'Founder, acting' },
-  { seat: 'engineering', title: 'Engineering lead', decides: 'Reliability, release, rollback', holder: 'Founder, acting' },
-  { seat: 'security', title: 'Security / vCISO', decides: 'Threat model, pen-test findings, access controls', holder: null },
-  { seat: 'privacy', title: 'Privacy / legal', decides: 'Terms, privacy, DPA/FERPA/COPPA posture, consent', holder: 'Outside counsel' },
-  { seat: 'accessibility', title: 'Accessibility lead', decides: 'WCAG/VPAT status, blockers, remediation', holder: 'Founder, acting' },
-  { seat: 'success', title: 'Customer success', decides: 'Onboarding, training, support, communication', holder: 'Founder, acting' },
-  { seat: 'trust', title: 'Trust & Safety', decides: 'Reporting, escalation, moderation scope', holder: null },
-  { seat: 'data', title: 'Data / integration owner', decides: 'Source quality, freshness, connector health', holder: null },
-  { seat: 'finance', title: 'Finance / commercial', decides: 'Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms', holder: null },
-  { seat: 'operations', title: 'Operations / SRE', decides: 'Monitoring, on-call, incident readiness, support operations, release readiness', holder: 'Founder, acting' },
-  { seat: 'champion', title: 'Pilot institution champion', decides: 'Institutional workflow and communications', holder: null, institutional: true },
+  { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: 'Founder', interimOwner: 'Harrison Rubin' },
+  { seat: 'product', title: 'Product lead', decides: 'Golden path and its acceptance criteria', holder: 'Founder, acting', interimOwner: 'Harrison Rubin' },
+  { seat: 'engineering', title: 'Engineering lead', decides: 'Reliability, release, rollback', holder: 'Founder, acting', interimOwner: 'Harrison Rubin' },
+  { seat: 'security', title: 'Security / vCISO', decides: 'Threat model, pen-test findings, access controls', holder: null, interimOwner: 'Harrison Rubin' },
+  { seat: 'privacy', title: 'Privacy / legal', decides: 'Terms, privacy, DPA/FERPA/COPPA posture, consent', holder: 'Outside counsel', interimOwner: 'Harrison Rubin' },
+  { seat: 'accessibility', title: 'Accessibility lead', decides: 'WCAG/VPAT status, blockers, remediation', holder: 'Founder, acting', interimOwner: 'Harrison Rubin' },
+  { seat: 'success', title: 'Customer success', decides: 'Onboarding, training, support, communication', holder: 'Founder, acting', interimOwner: 'Harrison Rubin' },
+  { seat: 'trust', title: 'Trust & Safety', decides: 'Reporting, escalation, moderation scope', holder: null, interimOwner: 'Harrison Rubin' },
+  { seat: 'data', title: 'Data / integration owner', decides: 'Source quality, freshness, connector health', holder: null, interimOwner: 'Harrison Rubin' },
+  { seat: 'finance', title: 'Finance / commercial', decides: 'Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms', holder: null, interimOwner: 'Harrison Rubin' },
+  { seat: 'operations', title: 'Operations / SRE', decides: 'Monitoring, on-call, incident readiness, support operations, release readiness', holder: 'Founder, acting', interimOwner: 'Harrison Rubin' },
+  { seat: 'champion', title: 'Pilot institution champion', decides: 'Institutional workflow and communications', holder: null, interimOwner: 'Harrison Rubin', institutional: true },
 ];
 
 export type GateStatus = 'met' | 'partial' | 'unmet';
