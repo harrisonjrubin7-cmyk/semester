@@ -88,11 +88,9 @@ test("desktop and mobile overview match reviewed visual snapshots", async ({ pag
   const studyAssetsMetric = page.getByRole("article").filter({ hasText: "Study assets" });
   await expect(studyAssetsMetric.getByText(String(course.counts.study_assets), { exact: true })).toBeVisible();
   await expect.soft(page).toHaveScreenshot("overview-desktop.png", { fullPage: true });
-  if (process.env.CI) await page.screenshot({ path: "test-results/overview-desktop-linux-current.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await expect.soft(page).toHaveScreenshot("overview-mobile.png", { fullPage: true });
-  if (process.env.CI) await page.screenshot({ path: "test-results/overview-mobile-linux-current.png", fullPage: true });
 });
 
 test("student completes the cited course journey without console errors", async ({ page }) => {
