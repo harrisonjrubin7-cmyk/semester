@@ -58,7 +58,8 @@
  - operational controls
  - audit trail
  - reporting
-  - support experience
+
+  - support experience
 
   Native does not mean pretending Semester is already a bank,
   payment network, identity provider, cloud provider, or model provider.
@@ -113,7 +114,8 @@ the same as present production availability. [4] [3]
   - communications
   - integrations
   - policy administration
- - approval queues
+
+ - approval queues
  - audit and reporting
  - institutional security and access administration
 
@@ -169,7 +171,8 @@ the same as present production availability. [4] [3]
  - graduate student
  - alumni
  - lifelong learner
-Institution:
+
+Institution:
 - faculty
 - teaching assistant
 - advisor
@@ -224,7 +227,8 @@ A role assignment must have:
 - revocation history
 
 ONBOARDING
- 1. Preserve the person's entry intent.
+
+ 1. Preserve the person's entry intent.
  2. Authenticate.
  3. Identify or create the correct workspace.
  4. Verify institutional membership when required.
@@ -279,7 +283,8 @@ ONBOARDING
  - approved people discovery
  - permitted community content
  - source-linked AI explanations
-PLAN
+
+PLAN
 - calendar
 - tasks
 - deadlines
@@ -334,7 +339,8 @@ orders, disputes, commissions, partner certification.
 Family and supporters:
 explicitly scoped sharing, payload preview,
 expiry, revocation, access history.
-  ASK SEMESTER
+
+  ASK SEMESTER
   A clearly labelled AI-assisted interface.
   No human persona.
   No implication that the assistant is the registrar,
@@ -389,7 +395,8 @@ and operating books. [3] [4]
   sync runs, errors, reconciliation findings.
 
   Policy:
- versioned policies, applicability,
+
+ versioned policies, applicability,
  deterministic rules, explanations, exceptions.
 
  Analytics:
@@ -444,7 +451,8 @@ and operating books. [3] [4]
  website, content, campaigns, lifecycle messages,
  claims register, approvals, customer-reference permissions,
  channel performance.
-  PRODUCT AND ENGINEERING
+
+  PRODUCT AND ENGINEERING
   requirements, backlog, releases, flags,
   quality, dependency risks, feedback,
   architecture decisions, evidence.
@@ -499,7 +507,8 @@ accounting. [3]
   or a generic SaaS dashboard.
 
   FOUNDATIONS
-- Ink chrome: #090a0e
+
+- Ink chrome: #090a0e
 - Parchment content: #f4f1ea
 - Parchment panels: #fbf9f4
 - Semester blue on light: #416180
@@ -554,7 +563,8 @@ Explain:
 Examples:
 "Your course connection has not updated since Tuesday.
 Deadlines may have changed. Reconnect it or check the course page."
-  "Your request was sent to the Registrar.
+
+  "Your request was sent to the Registrar.
   You are not enrolled until the institution confirms it."
 
   SOURCE LABELS
@@ -609,7 +619,8 @@ than overwriting them blindly. [4] [3]
   Use no student-record egress as the default.
   Do not enable broader access until the founder and institution approve
   a reconciled policy and required technical controls.
-  AI CAN
+
+  AI CAN
   Explain permitted policies.
   Help with approved learning materials.
   Draft from allowed inputs.
@@ -663,7 +674,8 @@ egress. The restrictive default above is deliberate until that conflict is resol
   - environment separation
   - regional deployment controls
   - backups and restore evidence
-  Do not assume a feature exists because the platform has a database.
+
+  Do not assume a feature exists because the platform has a database.
 
   For each requirement classify:
   supported directly
