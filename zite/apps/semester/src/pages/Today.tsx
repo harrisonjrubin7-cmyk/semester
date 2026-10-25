@@ -57,7 +57,6 @@ export default function Today() {
       <Loadable state={state}>{(d) => {
         const tasks = d.tasks.map((t) => ({ ...t, status: overrides[t.id] ?? t.status }));
         const top = tasks.filter((t) => !t.parentId && t.type !== 'Hold').sort((a, b) => (a.status === 'Done' ? 1 : 0) - (b.status === 'Done' ? 1 : 0) || (a.dueAt ?? '9').localeCompare(b.dueAt ?? '9'));
-        const holds = tasks.filter((t) => t.type === 'Hold' && t.status === 'Open');
         const next = top.find((t) => t.status !== 'Done');
         return (
           <div className="grid gap-4 lg:grid-cols-3">
@@ -73,11 +72,18 @@ export default function Today() {
               </Panel>
             </div>
             <div className="space-y-4">
-              <Panel title="Needs you">
-                {holds.length + d.approvals.length === 0 ? <Empty>✓ Nothing is blocking you.</Empty> : (
+              <Panel title="Action Center">
+                {d.actions.length === 0 ? <Empty>✓ Nothing is blocking you.</Empty> : (
                   <div className="space-y-3 text-sm">
-                    {holds.map((h) => <Link to="/help" key={h.id} className="block"><p>! {h.title}</p><p className="text-xs text-muted-foreground">Owned by {h.owningOffice.split(' · ')[0]}</p></Link>)}
-                    {d.approvals.map((a) => <Link to={a.mine ? '/plan/registration' : '/help'} key={a.id} className="block"><p>… {a.title}</p><p className="text-xs text-muted-foreground">{a.mine ? 'Waiting on ' + (a.office || 'approver') : 'Waiting on you'}</p></Link>)}
+                    {d.actions.map((a) => (
+                      <div key={a.priority + a.id} className="border-b border-border pb-3 last:border-0">
+                        <div className="flex items-center justify-between gap-2"><p className="font-medium">{a.title}</p><span className="shrink-0 text-xs text-muted-foreground">{a.state}</span></div>
+                        <p className="text-xs text-muted-foreground">{a.reason}</p>
+                        <p className="text-xs text-muted-foreground">Source: {a.source}{a.handoff ? ' · Official handoff' : ''}</p>
+                        <Link to={a.link} className="mt-1 inline-block text-xs font-medium text-primary underline-offset-2 hover:underline">{a.permittedAction} →</Link>
+                        <p className="mt-1 text-xs text-muted-foreground">{a.recovery}</p>
+                      </div>))}
+                    <p className="text-xs text-muted-foreground">As of {fmt(d.asOf)}</p>
                   </div>)}
               </Panel>
               <Panel title="Coming up">

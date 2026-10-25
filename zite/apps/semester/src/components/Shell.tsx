@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward, ArrowLeftRight } from 'lucide-react';
+import { CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward, ArrowLeftRight, ListChecks } from 'lucide-react';
 import { logout } from 'zitejs/auth';
 import { cn } from '@project/components/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@project/components/ui/dropdown-menu';
@@ -15,7 +15,7 @@ const NAV = [
   { group: 'Campus', items: [{ to: '/campus', label: 'Clubs & events', icon: Users }, { to: '/campus/community', label: 'Community', icon: MessagesSquare }, { to: '/campus/places', label: 'Places', icon: MapPin }, { to: '/campus/accommodations', label: 'Accommodations', icon: Accessibility }] },
   { group: 'Apps', items: [{ to: '/apps', label: 'Your apps', icon: LayoutGrid }] },
   { group: 'Progress', items: [{ to: '/progress', label: 'Degree path', icon: TrendingUp }, { to: '/progress/degree', label: 'Requirements', icon: GraduationCap }, { to: '/progress/graduate', label: 'Graduate milestones', icon: ScrollText }, { to: '/progress/grades', label: 'Grades', icon: Award }] },
-  { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
+  { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you/aid', label: 'Financial aid checklist', icon: ListChecks }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
 ];
 const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[]; action: string }[] = [
   { to: '/staff/gradebook', label: 'Gradebook', icon: Table2, roles: ['Faculty'], action: 'grade.write' },

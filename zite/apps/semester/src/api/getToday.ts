@@ -32,7 +32,46 @@ export default createEndpoint({
     const needs = approvals.records
       .filter((t) => ids(t.requestedBy).includes(uid) || (canApprove && !ids(t.requestedBy).includes(uid)))
       .map((t) => ({ id: t.id, title: t.title ?? '', mine: ids(t.requestedBy).includes(uid), office: t.owningOffice ?? '' }));
+    // Action Center: fixed priority rules, no scoring. 1 holds (block registration),
+    // 2 approvals waiting on this member, 3 overdue work, 4 work due within 48h, 5 own requests in flight.
+    const now = Date.now();
+    const asOf = new Date(now).toISOString();
+    const open = tasks.filter((t) => t.status === 'Open' && !t.parentId);
+    const actions = [
+      ...open.filter((t) => t.type === 'Hold').map((t) => ({
+        id: t.id, priority: 1, title: t.title, state: 'Blocked',
+        reason: 'A hold can stop registration and official requests.',
+        source: t.owningOffice.split(' · ')[0] || 'Institution office', handoff: true,
+        permittedAction: 'Contact the owning office', link: '/help',
+        recovery: 'Only the owning office can clear a hold. Semester shows it cleared once the office confirms.',
+      })),
+      ...needs.filter((n) => !n.mine).map((n) => ({
+        id: n.id, priority: 2, title: n.title, state: 'Waiting on you',
+        reason: 'A request is pending your decision.', source: n.office || 'Semester', handoff: false,
+        permittedAction: 'Review and decide', link: '/staff/registrar',
+        recovery: 'You cannot approve your own request; another approver can pick it up.',
+      })),
+      ...open.filter((t) => t.type !== 'Hold' && t.dueAt).flatMap((t) => {
+        const ms = Date.parse(t.dueAt!) - now;
+        if (ms > 48 * 3600e3) return [];
+        const overdue = ms < 0;
+        return [{
+          id: t.id, priority: overdue ? 3 : 4, title: t.title, state: overdue ? 'Overdue' : 'Due soon',
+          reason: overdue ? 'The due date has passed.' : 'Due within 48 hours.',
+          source: t.source, handoff: false, permittedAction: 'Open your work', link: '/today',
+          recovery: overdue ? 'Ask your instructor about late work; the course policy decides.' : 'Mark it done when submitted.',
+        }];
+      }),
+      ...needs.filter((n) => n.mine).map((n) => ({
+        id: n.id, priority: 5, title: n.title, state: 'Waiting on ' + (n.office || 'approver'),
+        reason: 'Your request is not complete until the approver confirms.', source: n.office || 'Semester', handoff: true,
+        permittedAction: 'Check status', link: '/plan/registration',
+        recovery: 'If it stalls, contact the office through Help.',
+      })),
+    ].sort((x, y) => x.priority - y.priority || x.title.localeCompare(y.title));
     return {
+      asOf,
+      actions,
       tasks,
       approvals: needs,
       events: events.records.map((e) => ({ id: e.id, title: e.title ?? '', startsAt: e.startsAt ?? null, location: e.location ?? '' })),

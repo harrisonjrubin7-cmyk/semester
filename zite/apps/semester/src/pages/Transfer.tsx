@@ -88,6 +88,13 @@ export default function Transfer() {
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Transcript uploads stay off until private storage is in place; the registrar may ask for an official transcript separately.</p>
           </Panel>
+          {d.pathComparison && d.pathComparison.requirements.length > 0 && <Panel title="How transfer credit would apply to your degree">
+            <p className="text-xs text-muted-foreground">A planning scenario, not your official degree audit. Evaluated = decided by the registrar; provisional = published rules for courses not yet evaluated.</p>
+            <table className="mt-2 w-full text-sm"><thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">Requirement</th><th>Official</th><th>+ evaluated</th><th>+ provisional</th></tr></thead>
+              <tbody>{d.pathComparison.requirements.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1.5">{r.name}</td><td>{r.official}/{r.required}</td><td>{r.withEvaluated}/{r.required}</td><td>{r.withProvisional}/{r.required}</td></tr>)}</tbody></table>
+            {(d.pathComparison.electiveEvaluated > 0 || d.pathComparison.electiveProvisional > 0) && <p className="mt-2 text-sm">Elective credit: {d.pathComparison.electiveEvaluated} evaluated, {d.pathComparison.electiveProvisional} provisional (counts toward total credits, not a specific requirement).</p>}
+            {d.pathComparison.unmatched.length > 0 && <p className="mt-1 text-xs text-muted-foreground">Not in our course list: {d.pathComparison.unmatched.join(', ')}.</p>}
+          </Panel>}
           <Panel title={`Published articulation rules · ${d.rules.length}`}>
             {!d.rules.length ? <Empty>No published rules yet.</Empty> : <ul className="text-sm">{d.rules.map((x: any) => <li key={x.id} className="border-t border-border py-1.5 first:border-0">{x.institution} {x.course} → {OUT[x.outcome]}{x.code && ` ${x.code}`}{x.credits && ` · ${x.credits} cr`} · from {x.term}</li>)}</ul>}
           </Panel>

@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAccess, requireAction, audit, userNames } from '../lib/server';
+import { requireAccess, requireAction, audit, userNames, ids, first } from '../lib/server';
 import { pg } from '../lib/pg';
 import { TRF_MIGRATION } from '../lib/trfMigration';
+import { pathComparison, Course } from '../lib/transferPath';
 
 let ready: Promise<void> | null = null;
 const ensureTrf = () => {
@@ -72,6 +73,20 @@ export default createEndpoint({
     const out: Record<string, unknown> = { isRegistrar, rules: approved.map(rv), mine: mine.map((q) => ({ ...view(q, []), lines: [] as unknown[] })) };
     const myLines = await loadLines(mine.map((q) => String(q.id)));
     out.mine = mine.map((q) => view(q, myLines));
+    // Degree-path comparison (Transfer Student app): how transfer credit would land on this institution's requirements.
+    // Three layers, never merged: official completed work; evaluated transfer decisions; provisional matches from published
+    // rules for courses not yet evaluated. A scenario only: the registrar's degree audit stays the official determination.
+    {
+      const [reqs, courses, secs, enr] = await Promise.all([
+        zite.requirements.findAll({ filters: { institution: T }, limit: 500 }), zite.courses.findAll({ limit: 1000 }), zite.sections.findAll({ limit: 1000, fields: ['course'] }),
+        zite.enrollments.findAll({ filters: { student: uid }, limit: 500 }),
+      ]);
+      const cById = Object.fromEntries(courses.records.map((c) => [c.id, c]));
+      const sById = Object.fromEntries(secs.records.map((x) => [x.id, x]));
+      const toCourse = (c: (typeof courses.records)[0]): Course => ({ code: c.code ?? '', credits: c.credits ?? 0, satisfies: ids(c.satisfies) });
+      const done = enr.records.filter((e) => e.status === 'Completed' && e.gradeReleased).map((e) => cById[first(sById[first(e.section) ?? '']?.course) ?? '']).filter(Boolean).map(toCourse);
+      out.pathComparison = pathComparison(reqs.records.map((r) => ({ id: r.id, name: r.name ?? '', required: r.creditsRequired ?? 0 })), done, out.mine as never, courses.records.map(toCourse));
+    }
     if (isRegistrar) {
       const queue = (await sql.query(`SELECT * FROM trf_requests WHERE tenant_id = $1 AND state IN ('submitted','appealed') AND student_id <> $2 ORDER BY number`, [T, uid])) as Row[];
       const ql = await loadLines(queue.map((q) => String(q.id)));

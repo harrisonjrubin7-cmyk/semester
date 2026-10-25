@@ -13,6 +13,7 @@ import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
 import type { default as _DevAppsEp } from '../src/api/devApps';
+import type { default as _FinancialAidEp } from '../src/api/financialAid';
 import type { default as _GetTodayEp } from '../src/api/getToday';
 import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
 import type { default as _GraduateEp } from '../src/api/graduate';
@@ -101,6 +102,11 @@ type _DevAppsCfg = typeof _DevAppsEp;
 export type DevAppsInputType = NonNullable<_DevAppsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DevAppsCfg['execute']>[0]['input'];
 export type DevAppsOutputType = Awaited<ReturnType<_DevAppsCfg['execute']>>;
 export const devApps = createCaller<DevAppsInputType, DevAppsOutputType>('devApps');
+
+type _FinancialAidCfg = typeof _FinancialAidEp;
+export type FinancialAidInputType = NonNullable<_FinancialAidCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FinancialAidCfg['execute']>[0]['input'];
+export type FinancialAidOutputType = Awaited<ReturnType<_FinancialAidCfg['execute']>>;
+export const financialAid = createCaller<FinancialAidInputType, FinancialAidOutputType>('financialAid');
 
 type _GetTodayCfg = typeof _GetTodayEp;
 export type GetTodayInputType = NonNullable<_GetTodayCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetTodayCfg['execute']>[0]['input'];
@@ -280,6 +286,7 @@ export const api = {
   catalog,
   community,
   devApps,
+  financialAid,
   getToday,
   getWorkspace,
   graduate,
