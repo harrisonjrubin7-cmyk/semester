@@ -208,16 +208,19 @@ begin
   update public.schools set is_demo = false where id = 'preview-demo';
   reset role;
   perform pg_temp.become(operator_three);
-  perform pg_temp.must_refuse('a non-demo tenant purge preview',
-    format($q$select public.preview_school_purge(%L, 'preview-key-real')$q$, offboarding_case_id));
+  preview := public.preview_school_purge(offboarding_case_id, 'preview-key-real');
   reset role;
+  perform pg_temp.counted('a non-demo tenant gets an audited structured refusal',
+    ((not (preview ->> 'ok')::boolean)
+      and preview -> 'error' ->> 'code' = 'non_demo_tenant'
+      and not (preview ? 'preview'))::int, 1);
   set local role postgres;
   update public.schools set is_demo = true where id = 'preview-demo';
   reset role;
 
-  perform pg_temp.counted('generated, replayed, refused and changed-snapshot attempts are audited',
+  perform pg_temp.counted('generated, replayed, refused, changed-snapshot and real-tenant attempts are audited',
     (select count(*) from public.audit_event
-      where tenant_id = 'preview-demo' and action like 'school.offboarding_purge_preview_%'), 5);
+      where tenant_id = 'preview-demo' and action like 'school.offboarding_purge_preview_%'), 6);
   perform pg_temp.counted('audit metadata contains no email address',
     (select count(*) from public.audit_event
       where tenant_id = 'preview-demo' and action like 'school.offboarding_purge_preview_%'

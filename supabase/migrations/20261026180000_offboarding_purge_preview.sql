@@ -145,7 +145,12 @@ begin
     perform private.record_audit(target_tenant, 'school.offboarding_purge_preview_rejected',
       'school_offboarding', want::text, 'denied', null,
       jsonb_build_object('reason', 'non_demo_tenant'));
-    raise exception 'Purge preview is available only for a synthetic demo tenant.' using errcode = '42501';
+    -- Return a structured refusal instead of raising: an exception would roll
+    -- back the security audit row together with the rest of this statement.
+    return jsonb_build_object('ok', false, 'error', jsonb_build_object(
+      'code', 'non_demo_tenant',
+      'message', 'Purge preview is available only for a synthetic demo tenant.',
+      'fallback', 'No case snapshot was returned and no records changed.'));
   end if;
   c := private.offboarding_case(want, array['archived']);
 
