@@ -15,6 +15,7 @@ const baseAsset: Asset = {
   asset_type: "comprehensive_guide",
   title: "Evidence guide",
   status: "confirmed",
+  active_citation_ids: [citationId],
   generation_version: 2,
   updated_at: "2026-10-11T12:00:00Z",
   content: {
@@ -123,11 +124,11 @@ describe("stored study asset interactions", () => {
 
   it("renders a citation-bound reading brief as an applied case", () => {
     renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", title: "Coordination case", content: {
-      sections: [{
+      cases: [{
         heading: "The unclear launch owner",
-        explanation: "Two teams believe the other owns the final launch decision.",
-        key_points: ["Who has final authority?", "What evidence should inform the choice?"],
-        examples: ["Name one owner and publish the escalation path."],
+        scenario: "Two teams believe the other owns the final launch decision.",
+        questions: ["Who has final authority?", "What evidence should inform the choice?"],
+        applications: ["Name one owner and publish the escalation path."],
         citation_ids: [citationId],
       }],
       citations: baseAsset.content.citations,
@@ -145,13 +146,18 @@ describe("stored study asset interactions", () => {
   });
 
   it("fails closed when an applied case has no resolvable citation", () => {
-    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", content: {
-      sections: [{ heading: "Uncited case", explanation: "This must not render.", citation_ids: ["missing-citation"] }],
+    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", active_citation_ids: [], content: {
+      cases: [{
+        heading: "Revoked case",
+        scenario: "This stale embedded content must not render.",
+        questions: ["Should this display?"],
+        citation_ids: [citationId],
+      }],
       citations: baseAsset.content.citations,
     } });
 
     expect(screen.getByRole("status")).toHaveTextContent("no valid cited cases");
-    expect(screen.queryByRole("heading", { name: "Uncited case" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Revoked case" })).not.toBeInTheDocument();
   });
 
   it("rejects malformed optional guide lists instead of crashing the panel", () => {

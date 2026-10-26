@@ -25,6 +25,7 @@ from app.models.entities import (
     StudyAssetCitation,
     UploadCompletion,
 )
+from app.services.citations import validate_study_asset_content
 from app.services.job_leases import (
     claim_job,
     commit_job,
@@ -492,6 +493,47 @@ def _commit_generation(
     ))
 
 
+def _study_asset_content(asset_type: str, evidence: list, citation_catalog: dict) -> dict:
+    sections = [
+        {
+            "heading": f"Verified source {index + 1}",
+            "explanation": citation.quote,
+            "key_points": [],
+            "examples": [],
+            "citation_ids": [str(citation.id)],
+        }
+        for index, (citation, _chunk, _document) in enumerate(evidence[:12])
+    ]
+    if asset_type != "reading_brief":
+        return {"sections": sections, "study_questions": [], "source_gaps": [], "citations": citation_catalog}
+
+    cases = [
+        {
+            "heading": f"Apply evidence from {document.filename}",
+            "scenario": (
+                "You must decide what action is justified by this verified course evidence: "
+                f"{citation.quote}"
+            ),
+            "questions": [
+                "What action is directly supported by the cited evidence?",
+                "What would require additional evidence before acting?",
+            ],
+            "applications": [
+                "State one next step that stays within the evidence and name any unresolved assumption."
+            ],
+            "citation_ids": [str(citation.id)],
+        }
+        for citation, _chunk, document in evidence[:12]
+    ]
+    return {
+        "sections": sections,
+        "cases": cases,
+        "study_questions": [],
+        "source_gaps": [],
+        "citations": citation_catalog,
+    }
+
+
 @celery.task(name="generate_study_asset")
 def generate_study_asset(job_id: str) -> dict:
     db = SessionLocal()
@@ -602,17 +644,12 @@ def generate_study_asset(job_id: str) -> dict:
             ]
             content = {"cards": cards, "citations": citation_catalog}
         else:
-            sections = [
-                {
-                    "heading": f"Verified source {index + 1}",
-                    "explanation": citation.quote,
-                    "key_points": [],
-                    "examples": [],
-                    "citation_ids": [str(citation.id)],
-                }
-                for index, (citation, _chunk, _document) in enumerate(evidence[:12])
-            ]
-            content = {"sections": sections, "study_questions": [], "source_gaps": [], "citations": citation_catalog}
+            content = _study_asset_content(asset_type, evidence, citation_catalog)
+        validate_study_asset_content(
+            asset_type,
+            content,
+            {citation.id for citation, _chunk, _document in evidence},
+        )
         existing_id = job.target_id or (
             UUID(job.result["asset_id"]) if job.result.get("asset_id") else None
         )
