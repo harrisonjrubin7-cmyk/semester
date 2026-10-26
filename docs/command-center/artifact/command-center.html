@@ -179,7 +179,7 @@ const STATE_SAYS = {
 const now = Date.now();
 const H = 3600e3;
 const iso = (h) => new Date(now + h * H).toISOString();
-const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'not recorded';
+const fmt = (s) => s ? esc(new Date(s).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) : 'not recorded';
 
 const SOURCES = [
   { id: 'command', label: 'Operational exceptions', reader: 'console_command_center', state: 'read' },
@@ -295,8 +295,8 @@ function workHTML(embedded) {
       <label class="field">Sort by<select id="sort"><option value="priority" ${st.sort === 'priority' ? 'selected' : ''}>Priority</option><option value="due" ${st.sort === 'due' ? 'selected' : ''}>Due date</option></select></label>
     </div>
     <div class="work">
-      <div>${list.length ? `<ul class="queue" aria-label="Work queue">${list.map(i => `<li><button type="button" class="item" data-item="${i.id}" data-p="${i.p}" aria-pressed="${i.id === st.sel}">
-        <span class="pri">${i.p}</span><span class="t">${esc(i.title)}</span>
+      <div>${list.length ? `<ul class="queue" aria-label="Work queue">${list.map(i => `<li><button type="button" class="item" data-item="${i.id}" data-p="${esc(i.p)}" aria-pressed="${i.id === st.sel}">
+        <span class="pri">${esc(i.p)}</span><span class="t">${esc(i.title)}</span>
         <span class="m">${SOURCES.find(s => s.id === i.src).label} · ${esc(i.status)} · owner ${esc(i.owner || 'unassigned')} · due ${fmt(i.due)}</span></button></li>`).join('')}</ul>`
         : `<p class="panel" role="status" style="margin:0">No matching work in this scope. ${st.q || st.focus ? 'Clear the search or filter to see everything open.' : 'Sources that could not be read may still hold work.'}</p>`}</div>
       <div>${sel ? detailHTML(sel) : `<div class="panel dim">Select a record to see why it is yours, its evidence and its next safe step.</div>`}</div>
@@ -307,7 +307,7 @@ function workHTML(embedded) {
 function detailHTML(i) {
   const src = SOURCES.find(s => s.id === i.src);
   return `<aside class="panel" aria-label="Record details: ${esc(i.title)}" style="display:grid;gap:var(--sp-3)">
-    <div class="head"><h3>${esc(i.title)}</h3><span class="pri">${i.p}</span></div>
+    <div class="head"><h3>${esc(i.title)}</h3><span class="pri">${esc(i.p)}</span></div>
     <dl class="fields">
       <dt>Status</dt><dd>${esc(i.status)}</dd><dt>Owner</dt><dd>${esc(i.owner || 'unassigned')}</dd>
       <dt>Scope</dt><dd>${i.tenant ? 'Northgate University (synthetic)' : 'Semester company'}</dd><dt>Due</dt><dd>${fmt(i.due)}</dd>
@@ -503,7 +503,7 @@ document.addEventListener('submit', (e) => {
     const title = $('#nt-title').value.trim();
     if (!title) { $('#nt-err').hidden = false; $('#nt-title').setAttribute('aria-invalid', 'true'); $('#nt-title').focus(); return; }
     const d = $('#nt-due').value;
-    ITEMS.push({ id: 'n' + Date.now(), src: 'command', p: $('#nt-p').value, title, status: 'Open', owner: 'you', tenant: $('#nt-scope').value || null, due: d ? new Date(d + 'T17:00:00').toISOString() : null, next: $('#nt-next').value || 'None recorded', evidence: 'Created on this demo page', limitation: 'Synthetic. Not stored anywhere.', kind: 'task', when: new Date().toISOString() });
+    ITEMS.push({ id: 'n' + Date.now(), src: 'command', p: ['high', 'medium', 'low'].includes($('#nt-p').value) ? $('#nt-p').value : 'medium', title, status: 'Open', owner: 'you', tenant: $('#nt-scope').value || null, due: d ? new Date(d + 'T17:00:00').toISOString() : null, next: $('#nt-next').value || 'None recorded', evidence: 'Created on this demo page', limitation: 'Synthetic. Not stored anywhere.', kind: 'task', when: new Date().toISOString() });
     st.view = 'work'; render();
   }
 });
