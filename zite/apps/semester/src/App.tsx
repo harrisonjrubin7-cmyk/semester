@@ -54,6 +54,7 @@ import Scholarships from './pages/Scholarships';
 import Curriculum from './pages/Curriculum';
 import Programs from './pages/Programs';
 import Dining from './pages/Dining';
+import GradeTracker from './pages/GradeTracker';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -115,6 +116,7 @@ export default function App() {
             <Route path="/apps/:key" element={<RoleAppHome />} />
             <Route path="/progress/degree" element={<Degree />} />
             <Route path="/progress/grades" element={<Grades />} />
+            <Route path="/progress/tracker" element={<GradeTracker />} />
             <Route path="/staff/gradebook" element={<Gradebook />} />
             <Route path="/staff/queue" element={<TAQueue />} />
             <Route path="/staff/regrades" element={<RegradeQueue />} />

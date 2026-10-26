@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { BedDouble, Plane, UtensilsCrossed, CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward, ArrowLeftRight, ListChecks } from 'lucide-react';
+import { BedDouble, Plane, UtensilsCrossed, Calculator, CalendarDays, ClipboardList, Briefcase, BookOpen, Layers, Sparkles, LifeBuoy, Users, TrendingUp, Shield, Sun, Search, LogOut, Building2, Bell, Mail, PenLine, Copy, MessageSquare, MessagesSquare, MapPin, GraduationCap, Award, Table2, Inbox, ClipboardCheck, Receipt, HeartHandshake, Scale, Share2, Ban, BarChart3, Accessibility, LayoutGrid, Handshake, ScrollText, Forward, ArrowLeftRight, ListChecks } from 'lucide-react';
 import { logout } from 'zitejs/auth';
 import { cn } from '@project/components/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@project/components/ui/dropdown-menu';
@@ -15,7 +15,7 @@ const NAV = [
   { group: 'Help', items: [{ to: '/help', label: 'Advising & support', icon: LifeBuoy }, { to: '/help/appointments', label: 'Office hours', icon: CalendarDays }, { to: '/help/advising', label: 'Advising prep', icon: MessageSquare }, { to: '/help/referrals', label: 'Referrals', icon: Forward }] },
   { group: 'Campus', items: [{ to: '/campus', label: 'Clubs & events', icon: Users }, { to: '/campus/community', label: 'Community', icon: MessagesSquare }, { to: '/campus/places', label: 'Places', icon: MapPin }, { to: '/campus/accommodations', label: 'Accommodations', icon: Accessibility }, { to: '/campus/housing', label: 'Housing', icon: BedDouble }, { to: '/campus/dining', label: 'Dining', icon: UtensilsCrossed }] },
   { group: 'Apps', items: [{ to: '/apps', label: 'Your apps', icon: LayoutGrid }] },
-  { group: 'Progress', items: [{ to: '/progress', label: 'Degree path', icon: TrendingUp }, { to: '/progress/degree', label: 'Requirements', icon: GraduationCap }, { to: '/progress/graduate', label: 'Graduate milestones', icon: ScrollText }, { to: '/progress/grades', label: 'Grades', icon: Award }] },
+  { group: 'Progress', items: [{ to: '/progress', label: 'Degree path', icon: TrendingUp }, { to: '/progress/degree', label: 'Requirements', icon: GraduationCap }, { to: '/progress/graduate', label: 'Graduate milestones', icon: ScrollText }, { to: '/progress/grades', label: 'Grades', icon: Award }, { to: '/progress/tracker', label: 'Grade tracker', icon: Calculator }] },
   { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you/aid', label: 'Financial aid checklist', icon: ListChecks }, { to: '/you/scholarships', label: 'Scholarships', icon: Award }, { to: '/you/integrity', label: 'Integrity cases', icon: Scale }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
 ];
 const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[]; action: string }[] = [

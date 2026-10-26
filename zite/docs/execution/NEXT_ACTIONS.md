@@ -20,7 +20,7 @@ curriculum governance (9bc8d47), programs and pathways (a52825d), dining (b58d38
    registers (roleApps.ts, source-manifest.csv, conflicts-and-decisions.md, migrations), with independent status dimensions
    (maturity / authorization / activation / evidence / delivery / health), source and conflict registers, missing-coverage view,
    per-app build-prompt generator, JSON export. Statuses come from code evidence only; nothing is marked accepted or activated.
-8. Student Workspace grade tracker (S-72): transparent weighted and points-based calculations with the S-72 validation rules
+8. DONE 26 Oct (grade tracker + GPA simulator, /progress/tracker; syllabus hub still open): Student Workspace grade tracker (S-72): transparent weighted and points-based calculations with the S-72 validation rules
    (no negative scores, ungraded is not zero, excused leaves the denominator, weights must total 100% or no final grade, "Not
    enough graded work"), GPA scenarios kept separate from the official record, syllabus-rule review proposing policy updates.
 9. Programs: outcome-to-assessment map (S-70), teach-out rules; institution time-zone field (dining reads America/Chicago).
