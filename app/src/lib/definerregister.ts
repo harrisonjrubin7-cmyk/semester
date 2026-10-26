@@ -220,6 +220,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['forget_my_support_access', 'self-service', ['auth.uid()']],
   ['forget_my_support_shares', 'self-service', ['auth.uid()']],
   ['forget_my_support_tickets', 'self-service', ['auth.uid()']],
+  ['generate_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['gradebook_add_item', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gradebook_enter', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.subject_has_capability', 'want_student = me']],
   ['gradebook_export', 'admin', ['private.gradebook_school', 'private.gradebook_require', "g.status = 'released'"]],
@@ -310,6 +311,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['record_generated_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['record_incident_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['record_incident_evidence_custody', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -513,6 +515,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * function still counts among those applied on production.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
+  {
+    file: '20261026150000_offboarding_export_package.sql',
+    functions: ['generate_offboarding_export', 'record_generated_offboarding_export'],
+  },
   {
     file: '20261011000000_incident_evidence_custody.sql',
     functions: ['incident_evidence_custody', 'record_incident_evidence', 'record_incident_evidence_custody'],
