@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Markdown } from '@project/components/markdown';
 import { ArrowLeft } from 'lucide-react';
 import { NewAssignment, Attendance, Discussion } from '../components/CourseOps';
+import Assessments from '../components/Assessments';
 import { PageHeader, Panel, Empty, SourceTag, Status, fmt, useLoad, Loadable, errMsg } from '../components/kit';
 import { uploadPrivate, saveBytes } from '../lib/fileClient';
 import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
@@ -71,8 +72,9 @@ export default function SectionPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs defaultValue="assignments">
-              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.teaching && <TabsTrigger value="grading">Grading</TabsTrigger>}</TabsList>
+              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.teaching && <TabsTrigger value="grading">Grading</TabsTrigger>}</TabsList>
               <TabsContent value="discussion"><Discussion sectionId={sectionId} /></TabsContent>
+              <TabsContent value="assessments"><Assessments sectionId={sectionId} /></TabsContent>
               <TabsContent value="attendance"><Attendance sectionId={sectionId} isTeacher={d.teaching} /></TabsContent>
               <TabsContent value="assignments" className="space-y-3">
                 {d.teaching && <NewAssignment sectionId={sectionId} onDone={() => state.reload()} />}

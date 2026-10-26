@@ -1,7 +1,7 @@
 # Semester on Zite
 
 This folder is a snapshot of the Semester Zite monorepo (workspace `1c4b0d16210e8d4b`), imported from Zite commit
-`4b7c81a0522b575d296ad566c289c2ad83f0b876` on 2026-10-26 (previous import: `d8ee54e`, 2026-10-24).
+`9ec2d57089975c1b4543a152031732d459c4ee8c` on 2026-10-26 (previous import: `d8ee54e`, 2026-10-24).
 
 **Zite is still the source of truth for this folder.** Edits are made in the Zite project and re-imported here; a change made
 only in this folder will not reach the running Zite apps. It is kept separate from `app/` and is not part of the root npm

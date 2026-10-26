@@ -17,7 +17,7 @@ import type { Connected, NeedsConnect } from 'zitejs/runtime';
 
 export type { Connected, NeedsConnect };
 
-export type IntegrationName = 'anthropic' | 'github' | 'gmail' | 'googleDocs' | 'googleDrive' | 'linear' | 'linkedin' | 'notion' | 'onedrive' | 'openai' | 'outlook' | 'slack' | 'stripe';
+export type IntegrationName = 'anthropic' | 'github' | 'gmail' | 'googleDocs' | 'googleDrive' | 'jira' | 'linear' | 'linkedin' | 'notion' | 'onedrive' | 'openai' | 'outlook' | 'slack' | 'stripe';
 
 export type IntegrationByName = {
   'anthropic': Connected;
@@ -25,6 +25,7 @@ export type IntegrationByName = {
   'gmail': Connected;
   'googleDocs': Connected;
   'googleDrive': Connected;
+  'jira': Connected<{ cloudId: string; siteUrl?: string }>;
   'linear': Connected;
   'linkedin': Connected<{ personUrn: string }>;
   'notion': Connected;

@@ -31,6 +31,7 @@ check_app -> unit suites -> mutation check on pure modules -> commit -> re-impor
 ## Decided 25 Oct
 See `decisions-2026-10-25.md` (D1–D6). GitHub branch `zite/sync-2026-10-25` holds the Zite tree.
 DONE 26 Oct: private file store (D2) — You → Files. DONE 26 Oct: files attach to course submissions and achievement evidence (locked at submit/verify); fixed cross-institution leak in the staff achievement review list. (Rate limits SEC-045/046 landed from the parallel session in 6ab3f6c.)
+DONE 26 Oct: Course Studio assessments (asm-001). Not yet: rubrics, question banks reused across assessments, accommodations (extended time), regrade requests for assessments. Next: separate DDL credential (SEC-051) and staging database (SEC-061) need owner action; locally, rubrics or TA delegation.
 
 ## Blocked (owner)
 - Publish Semester / Company OS: founder presses Publish in Zite (publish_app was denied; do not work around).
