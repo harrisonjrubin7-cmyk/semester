@@ -11,6 +11,7 @@ import { Skeleton } from '@project/components/ui/skeleton';
 import { Toaster } from '@project/components/ui/sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@project/components/ui/alert-dialog';
+import { Wordmark } from '@project/components/brand/Mark';
 
 type D = NonNullable<ApplicationsOutputType>;
 type App = NonNullable<D['applications']>[number];
@@ -89,7 +90,7 @@ export default function App() {
   const load = () => { setErr(null); applications({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) load(); }, [user]);
-  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar font-display tracking-[0.3em] text-sidebar-foreground">SEMESTER</div>;
+  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
   return (
     <div className="min-h-screen bg-background">
       <Toaster />

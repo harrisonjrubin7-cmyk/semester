@@ -76,6 +76,25 @@ function Take({ sectionId, id, onDone }: { sectionId: string; id: number; onDone
   );
 }
 
+/** Second-person review of a graded attempt: agree, or adjust the total with a reason. Draft until released. */
+function Moderate({ t, total, onModerate }: { t: any; total: number | null; onModerate: (decision: 'agree' | 'adjust', score: number | null, note: string) => void }) {
+  const [score, setScore] = useState('');
+  const [note, setNote] = useState('');
+  const current = (t.moderations ?? []).filter((m: any) => m.current);
+  return (
+    <div className="mb-2 ml-2 border-l border-border pl-3 text-xs">
+      {t.gradedBy && <p className="text-muted-foreground">Graded by {t.gradedBy}</p>}
+      {(t.moderations ?? []).map((m: any, i: number) => <p key={i} className={m.current ? '' : 'text-muted-foreground line-through'}>{m.decision === 'agree' ? '✓ Agreed' : `≠ Adjusted to ${m.score}`} by {m.by} · {fmt(m.at)}{m.note ? ` · ${m.note}` : ''}{!m.current && ' (re-graded since)'}</p>)}
+      {t.canModerate && !current.length && <div className="mt-1 flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => onModerate('agree', null, note)}>Agree</Button>
+        <Input aria-label="Adjusted total" type="number" className="w-24" placeholder={total != null ? `0–${total}` : 'Total'} value={score} onChange={(e) => setScore(e.target.value)} />
+        <Input aria-label="Reason" placeholder="Reason (needed to adjust)" value={note} onChange={(e) => setNote(e.target.value)} />
+        <Button size="sm" variant="outline" disabled={!score || note.trim().length < 10} onClick={() => onModerate('adjust', Number(score), note)}>Adjust</Button>
+      </div>}
+    </div>
+  );
+}
+
 function GradeAttempt({ t, total, onGrade }: { t: any; total: number | null; onGrade: (manual: number, fb: string) => void }) {
   const [m, setM] = useState(t.manual?.toString() ?? '0');
   const [fb, setFb] = useState(t.feedback ?? '');
@@ -119,7 +138,13 @@ export default function Assessments({ sectionId }: { sectionId: string }) {
               <div>
                 <div className="flex items-center justify-between"><p className="text-sm font-medium">Attempts · {x.attempts.length}</p>
                   {d.teaching && <Button size="sm" variant="outline" onClick={() => call({ action: 'release', sectionId, id: x.id }, 'Graded scores released.')}>Release graded scores</Button>}</div>
-                {!x.attempts.length ? <Empty>No attempts yet.</Empty> : x.attempts.map((t: any) => <GradeAttempt key={t.id} t={t} total={x.total} onGrade={(manual, feedback) => call({ action: 'grade', sectionId, attemptId: t.id, manual, feedback }, 'Grade saved, not released.')} />)}
+                {d.teaching ? <label className="mt-1 block text-xs">Second-person review before release
+                  <select className="ml-2 rounded-md border border-border bg-background p-1 text-sm" value={x.moderationPct}
+                    onChange={(e) => call({ action: 'setModeration', sectionId, id: x.id, pct: Number(e.target.value) }, 'Moderation updated.')}>
+                    {[0, 10, 20, 25, 50, 100].map((p) => <option key={p} value={p}>{p === 0 ? 'Off' : `${p}% of graded attempts`}</option>)}
+                  </select></label> : x.moderationPct > 0 && <p className="mt-1 text-xs">This assessment needs a second-person review of {x.moderationPct}% of graded attempts before release.</p>}
+                {!x.attempts.length ? <Empty>No attempts yet.</Empty> : x.attempts.map((t: any) => <div key={t.id}><GradeAttempt t={t} total={x.total} onGrade={(manual, feedback) => call({ action: 'grade', sectionId, attemptId: t.id, manual, feedback }, 'Grade saved, not released.')} />
+                  <Moderate t={t} total={x.total} onModerate={(decision, score, note) => call({ action: 'moderate', sectionId, attemptId: t.id, decision, score, note }, decision === 'agree' ? 'Review recorded.' : 'Score adjusted and review recorded.')} /></div>)}
               </div>
             </div>) : (<div className="mt-2 space-y-2 text-sm">
               {x.attempts.map((t: any) => <p key={t.id}><Status value={t.state === 'released' ? 'Released' : t.state === 'in_progress' ? 'In progress' : 'Submitted'} />{t.late && ' · late'}{t.state === 'released' && ` · ${t.score}${x.total != null ? ` / ${x.total}` : ''}${t.feedback ? ` · ${t.feedback}` : ''}`}</p>)}

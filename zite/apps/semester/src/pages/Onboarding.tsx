@@ -7,6 +7,7 @@ import { Upload, CalendarDays, FlaskConical } from 'lucide-react';
 import { cn } from '@project/components/lib/utils';
 import SyllabusImport, { DraftTask } from '../components/SyllabusImport';
 import { SourceTag, errMsg } from '../components/kit';
+import { Wordmark } from '@project/components/brand/Mark';
 
 type Role = 'Student' | 'Faculty' | 'Advisor' | 'Administrator';
 const CONSENTS = [
@@ -49,7 +50,7 @@ export default function Onboarding({ onDone, name }: { onDone: () => void; name:
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-sidebar px-8 py-4 font-display tracking-[0.3em] text-sidebar-accent-foreground">SEMESTER</header>
+      <header className="bg-sidebar px-8 py-4 text-base text-sidebar-accent-foreground"><Wordmark /></header>
       <div className="mx-auto max-w-2xl px-6 py-12">
         <p className="eyebrow">Step {step} of 4</p>
         {step === 1 && (<>

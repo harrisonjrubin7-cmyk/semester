@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@project/components/lib/utils';
 import { Button } from '@project/components/ui/button';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const NAV = [
   { to: '/pilot', label: 'Pilot' },
@@ -14,7 +15,7 @@ const NAV = [
 ];
 
 export function Mark({ className }: { className?: string }) {
-  return <span className={cn('font-mark text-lg text-foreground', className)}>SEMESTER</span>;
+  return <span className={cn('text-lg text-foreground', className)}><Wordmark /></span>;
 }
 
 export function Eyebrow({ children }: { children: ReactNode }) {

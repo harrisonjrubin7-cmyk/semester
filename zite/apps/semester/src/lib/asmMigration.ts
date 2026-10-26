@@ -126,4 +126,74 @@ export const ASM_MIGRATION: string[] = [
        state = CASE WHEN p_needs_manual THEN 'submitted' ELSE 'graded' END WHERE id = p_attempt;
      RETURN NULL;
    END $$`,
+  // asm-003: grade moderation before release. An instructor sets a share of graded attempts (0-100%) that a second person
+  // must review; a moderation agrees or adjusts the total with a reason. graded_at moves on every (re)grading, so a review
+  // older than the latest grading does not count. asm_release refuses (returns minus the shortfall) until enough are done.
+  `ALTER TABLE asm_assessments ADD COLUMN IF NOT EXISTS moderation_pct int NOT NULL DEFAULT 0 CHECK (moderation_pct BETWEEN 0 AND 100)`,
+  `ALTER TABLE asm_attempts ADD COLUMN IF NOT EXISTS graded_at timestamptz`,
+  `CREATE OR REPLACE FUNCTION asm_stamp_graded() RETURNS trigger LANGUAGE plpgsql AS $$
+   BEGIN
+     IF NEW.state = 'graded' AND (OLD.state IS DISTINCT FROM 'graded' OR NEW.manual_score IS DISTINCT FROM OLD.manual_score OR NEW.auto_score IS DISTINCT FROM OLD.auto_score) THEN
+       NEW.graded_at := clock_timestamp();
+     END IF;
+     RETURN NEW;
+   END $$`,
+  `DO $$ BEGIN
+     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'asm_attempts_stamp_graded') THEN
+       CREATE TRIGGER asm_attempts_stamp_graded BEFORE UPDATE ON asm_attempts FOR EACH ROW EXECUTE FUNCTION asm_stamp_graded();
+     END IF;
+   END $$`,
+  `CREATE TABLE IF NOT EXISTS asm_moderations (id bigserial PRIMARY KEY, tenant_id text NOT NULL, attempt_id bigint NOT NULL REFERENCES asm_attempts(id),
+     moderator_id text NOT NULL, decision text NOT NULL CHECK (decision IN ('agree','adjust')), score numeric NOT NULL, note text NOT NULL DEFAULT '',
+     at timestamptz NOT NULL DEFAULT clock_timestamp())`,
+  `DO $$ BEGIN
+     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'asm_moderations_append_only') THEN
+       CREATE TRIGGER asm_moderations_append_only BEFORE UPDATE OR DELETE OR TRUNCATE ON asm_moderations FOR EACH STATEMENT EXECUTE FUNCTION asm_refuse_change();
+     END IF;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION asm_set_moderation(p_tenant text, p_id bigint, p_pct int) RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     IF p_pct < 0 OR p_pct > 100 THEN RETURN 'Choose 0 to 100 percent.'; END IF;
+     PERFORM 1 FROM asm_assessments WHERE id = p_id AND tenant_id = p_tenant FOR UPDATE;
+     IF NOT FOUND THEN RETURN 'Assessment not found.'; END IF;
+     IF EXISTS (SELECT 1 FROM asm_attempts WHERE assessment_id = p_id AND state = 'released') THEN RETURN 'Scores were already released; moderation cannot change now.'; END IF;
+     UPDATE asm_assessments SET moderation_pct = p_pct WHERE id = p_id;
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION asm_moderate(p_tenant text, p_attempt bigint, p_moderator text, p_decision text, p_score numeric, p_note text) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE t asm_attempts%ROWTYPE; total numeric; cur numeric;
+   BEGIN
+     SELECT * INTO t FROM asm_attempts WHERE id = p_attempt AND tenant_id = p_tenant FOR UPDATE;
+     IF NOT FOUND THEN RETURN 'Attempt not found.'; END IF;
+     IF t.state <> 'graded' THEN RETURN 'Only graded, unreleased attempts can be moderated.'; END IF;
+     IF p_moderator = t.student_id THEN RETURN 'You cannot moderate your own attempt.'; END IF;
+     IF t.graded_by IS NOT NULL AND p_moderator = t.graded_by THEN RETURN 'A second person must moderate; you graded this attempt.'; END IF;
+     cur := coalesce(t.auto_score, 0) + coalesce(t.manual_score, 0);
+     IF p_decision = 'agree' THEN
+       INSERT INTO asm_moderations (tenant_id, attempt_id, moderator_id, decision, score, note) VALUES (p_tenant, p_attempt, p_moderator, 'agree', cur, left(coalesce(p_note, ''), 1000));
+     ELSIF p_decision = 'adjust' THEN
+       IF length(trim(coalesce(p_note, ''))) < 10 THEN RETURN 'Explain the adjustment (10+ characters).'; END IF;
+       SELECT total_points INTO total FROM asm_versions WHERE assessment_id = t.assessment_id AND version = t.version;
+       IF p_score IS NULL OR p_score < coalesce(t.auto_score, 0) OR p_score > total THEN RETURN 'The adjusted total must be between the automatic score and the total points.'; END IF;
+       IF p_score = cur THEN RETURN 'That is the current score; choose agree instead.'; END IF;
+       UPDATE asm_attempts SET manual_score = p_score - coalesce(t.auto_score, 0) WHERE id = p_attempt;
+       INSERT INTO asm_moderations (tenant_id, attempt_id, moderator_id, decision, score, note) VALUES (p_tenant, p_attempt, p_moderator, 'adjust', p_score, left(trim(p_note), 1000));
+     ELSE RETURN 'Agree or adjust.'; END IF;
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION asm_release(p_tenant text, p_id bigint) RETURNS int LANGUAGE plpgsql AS $$
+   DECLARE n int; pct int; graded int; have int; need int;
+   BEGIN
+     SELECT moderation_pct INTO pct FROM asm_assessments WHERE id = p_id AND tenant_id = p_tenant FOR UPDATE;
+     IF coalesce(pct, 0) > 0 THEN
+       SELECT count(*) INTO graded FROM asm_attempts WHERE assessment_id = p_id AND state = 'graded';
+       need := CASE WHEN graded = 0 THEN 0 ELSE ceil(graded * pct / 100.0)::int END;
+       SELECT count(*) INTO have FROM asm_attempts a WHERE a.assessment_id = p_id AND a.state = 'graded'
+         AND EXISTS (SELECT 1 FROM asm_moderations m WHERE m.attempt_id = a.id AND m.at >= coalesce(a.graded_at, a.submitted_at));
+       IF have < need THEN RETURN have - need; END IF;
+     END IF;
+     UPDATE asm_attempts SET state = 'released', released_at = now() WHERE assessment_id = p_id AND tenant_id = p_tenant AND state = 'graded';
+     GET DIAGNOSTICS n = ROW_COUNT;
+     RETURN n;
+   END $$`,
 ];

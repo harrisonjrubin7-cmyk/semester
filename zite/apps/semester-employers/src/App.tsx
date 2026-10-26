@@ -10,6 +10,7 @@ import { Skeleton } from '@project/components/ui/skeleton';
 import { Toaster } from '@project/components/ui/sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@project/components/ui/alert-dialog';
+import { Wordmark } from '@project/components/brand/Mark';
 
 type Opp = NonNullable<EmployerOutputType['opportunities']>[number];
 type Draft = { id?: string; version?: number; title: string; kind: 'Internship' | 'Job' | 'Research' | 'Mentorship'; employerName: string; description: string; location: string; closesOn: string | null };
@@ -72,7 +73,7 @@ export default function App() {
   const load = () => { setErr(null); employer({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) load(); }, [user]);
-  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar font-display tracking-[0.3em] text-sidebar-foreground">SEMESTER</div>;
+  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
   const save = async (x: Draft) => { try { await employer({ action: 'save', ...x }); toast(x.id ? 'Saved.' : 'Posted. Students can now apply.'); setEdit(null); load(); } catch (e) { toast(`! ${msg(e)}`); } };
   const decide = async (o: Opp, applicant: string, version: number, decision: 'Shortlisted' | 'Declined' | 'Reset') => { try { await employer({ action: 'decide', id: o.id, applicant, version, decision }); toast(decision === 'Reset' ? 'Moved back to new.' : `${decision}. The student has been notified in Semester.`); load(); } catch (e) { toast(`! ${msg(e)}`); } };
   const remove = async (o: Opp) => { try { await employer({ action: 'delete', id: o.id, version: o.version }); toast('Opportunity removed.'); load(); } catch (e) { toast(`! ${msg(e)}`); } };

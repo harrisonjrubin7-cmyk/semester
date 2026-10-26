@@ -19,6 +19,7 @@ import BoardPage from './BoardPage';
 import DecisionsPage from './DecisionsPage';
 import RoleRegistryPage from './RoleRegistryPage';
 import WorkspacePage, { WORKSPACE_KEYS } from './WorkspacePage';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
@@ -34,7 +35,7 @@ export default function App() {
         <div className="min-h-screen bg-background md:grid md:grid-cols-[220px_1fr]">
           <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">Skip to content</a>
           <aside className="border-b border-sidebar-border bg-sidebar-background text-sidebar-foreground md:min-h-screen md:border-b-0 md:border-r">
-            <div className="px-4 py-4"><p className="font-display text-lg tracking-[0.18em] text-sidebar-accent-foreground">SEMESTER</p><p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70">Company OS · restricted</p></div>
+            <div className="px-4 py-4"><p className="text-lg text-sidebar-accent-foreground"><Wordmark /></p><p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70">Company OS · restricted</p></div>
             <nav aria-label="Company OS" className="flex gap-1 overflow-x-auto px-2 pb-3 md:flex-col md:overflow-visible">
               {GROUPS.map(([g, items]) => (
                 <div key={g} className="flex gap-1 md:flex-col">

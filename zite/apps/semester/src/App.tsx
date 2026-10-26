@@ -48,9 +48,10 @@ import RegradeQueue from './pages/RegradeQueue';
 import { InstitutionHome, SectionRequests } from './pages/InstitutionHome';
 import Faculty, { Appointments } from './pages/Faculty';
 import SharedWithMe from './pages/SharedWithMe';
+import { Wordmark } from '@project/components/brand/Mark';
 
 function Splash({ text = 'Loading Semester…' }: { text?: string }) {
-  return <div className="flex min-h-screen items-center justify-center bg-sidebar text-sidebar-foreground"><p className="font-display tracking-[0.3em]">SEMESTER</p><span className="sr-only">{text}</span></div>;
+  return <div className="flex min-h-screen items-center justify-center bg-sidebar text-sidebar-foreground"><p className="text-lg"><Wordmark /></p><span className="sr-only">{text}</span></div>;
 }
 
 export default function App() {

@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from 'zitejs/auth';
 import { Activity, Boxes, FileCheck2, Gauge, KeyRound, Layers, LayoutGrid, ListChecks, Map, ShieldAlert, ScrollText } from 'lucide-react';
 import { cn } from '@project/components/lib/utils';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const nav = [
   { to: '/', label: 'Overview', icon: Activity },
@@ -23,7 +24,7 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0">
         <div className="px-5 py-5">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-sidebar-primary">Semester</div>
+          <div className="text-sm text-sidebar-primary"><Wordmark /></div>
           <div className="text-lg font-semibold text-sidebar-accent-foreground">Security Lab</div>
           <div className="mt-1 text-[11px] text-sidebar-foreground/60">Restricted · synthetic data only</div>
         </div>

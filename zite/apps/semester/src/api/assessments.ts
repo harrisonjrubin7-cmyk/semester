@@ -27,6 +27,8 @@ export default createEndpoint({
     z.object({ action: z.literal('submit'), sectionId: z.string(), attemptId: z.number().int(), answers: z.record(z.union([z.array(z.number().int()), z.string().max(10000)])) }),
     z.object({ action: z.literal('grade'), sectionId: z.string(), attemptId: z.number().int(), manual: z.number(), feedback: z.string().max(4000) }),
     z.object({ action: z.literal('release'), sectionId: z.string(), id: z.number().int() }),
+    z.object({ action: z.literal('setModeration'), sectionId: z.string(), id: z.number().int(), pct: z.number().int().min(0).max(100) }),
+    z.object({ action: z.literal('moderate'), sectionId: z.string(), attemptId: z.number().int(), decision: z.enum(['agree', 'adjust']), score: z.number().nullable(), note: z.string().max(1000) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -95,9 +97,23 @@ export default createEndpoint({
       fail(((await sql.query(`SELECT asm_grade($1,$2,$3,$4,$5) AS e`, [T, input.attemptId, me, input.manual, input.feedback])) as { e: string | null }[])[0].e);
       await audit(a, 'Assessment attempt graded', `assessmentAttempt:${input.attemptId}`, `manual ${input.manual}`, teaching ? 'Instructor of record' : 'Grading delegate');
     }
+    if (input.action === 'setModeration') {
+      teacherOnly(); await own(input.id);
+      fail(((await sql.query(`SELECT asm_set_moderation($1,$2,$3) AS e`, [T, input.id, input.pct])) as { e: string | null }[])[0].e);
+      await audit(a, 'Moderation share set', `assessment:${input.id}`, `${input.pct}%`, 'Instructor of record');
+    }
+    if (input.action === 'moderate') {
+      if (!grader) forbid('Only the instructor or a grading delegate can moderate.');
+      const t = ((await sql.query(`SELECT assessment_id FROM asm_attempts WHERE id = $1 AND tenant_id = $2`, [input.attemptId, T])) as Row[])[0];
+      if (!t) forbid('Attempt not found.');
+      await own(Number(t!.assessment_id));
+      fail(((await sql.query(`SELECT asm_moderate($1,$2,$3,$4,$5,$6) AS e`, [T, input.attemptId, me, input.decision, input.score, input.note])) as { e: string | null }[])[0].e);
+      await audit(a, input.decision === 'agree' ? 'Grade moderated: agreed' : 'Grade moderated: adjusted', `assessmentAttempt:${input.attemptId}`, input.decision === 'adjust' ? `to ${input.score}` : '', teaching ? 'Instructor of record' : 'Grading delegate');
+    }
     if (input.action === 'release') {
       teacherOnly(); await own(input.id);
       const n = Number(((await sql.query(`SELECT asm_release($1,$2) AS n`, [T, input.id])) as { n: number }[])[0].n);
+      if (n < 0) forbid(`${-n} more graded attempt${n === -1 ? '' : 's'} need review by a second person before scores can be released.`);
       await audit(a, 'Assessment scores released', `assessment:${input.id}`, `${n} attempts`, 'Instructor of record');
       const st = ((await sql.query(`SELECT DISTINCT student_id FROM asm_attempts WHERE assessment_id = $1 AND state = 'released' AND released_at > now() - interval '1 minute'`, [input.id])) as Row[]).map((r) => String(r.student_id));
       if (st.length) await zite.messages.create({ record: { body: 'An assessment score was released. Open the course to see it.', sender: me, recipients: st, isNotification: true } as never }).catch(() => undefined);
@@ -111,13 +127,21 @@ export default createEndpoint({
     const seesAll = grader;
     const attempts = (await sql.query(`SELECT * FROM asm_attempts WHERE tenant_id = $1 AND assessment_id = ANY($2)${seesAll ? '' : ' AND student_id = $3'} ORDER BY id`,
       seesAll ? [T, visible.map((x) => Number(x.id))] : [T, visible.map((x) => Number(x.id)), me])) as Row[];
-    const names = seesAll ? await userNames(attempts.map((t) => String(t.student_id))) : {};
+    const mods = seesAll && attempts.length ? (await sql.query(`SELECT * FROM asm_moderations WHERE tenant_id = $1 AND attempt_id = ANY($2::bigint[]) ORDER BY at`, [T, attempts.map((t) => Number(t.id))])) as Row[] : [];
+    const names = seesAll ? await userNames([...attempts.map((t) => String(t.student_id)), ...mods.map((m) => String(m.moderator_id)), ...attempts.map((t) => String(t.graded_by ?? '')).filter(Boolean)]) : {};
+    const modsFor = (t: Row) => {
+      const since = new Date(String(t.graded_at ?? t.submitted_at ?? 0)).getTime();
+      return mods.filter((m) => Number(m.attempt_id) === Number(t.id)).map((m) => ({ decision: String(m.decision), by: names[String(m.moderator_id)] ?? 'Member', score: Number(m.score),
+        note: String(m.note), at: iso(m.at), current: new Date(String(m.at)).getTime() >= since }));
+    };
     const out = await Promise.all(visible.map(async (x) => {
       const mine = attempts.filter((t) => Number(t.assessment_id) === Number(x.id));
       const base = { id: Number(x.id), title: String(x.title), state: String(x.state), opensAt: iso(x.opens_at), closesAt: iso(x.closes_at), timeLimitMin: x.time_limit_min == null ? null : Number(x.time_limit_min), attemptsAllowed: Number(x.attempts_allowed), version: x.version == null ? 0 : Number(x.version), total: x.total == null ? null : Number(x.total) };
       if (seesAll) {
         return { ...base, questions: !teaching ? [] : base.version ? await frozen(base.id, base.version) : [],
-          attempts: mine.map((t) => ({ id: Number(t.id), student: names[String(t.student_id)] ?? 'Student', state: String(t.state), late: !!t.late, extended: Number(t.extra_min ?? 0) > 0, auto: t.auto_score == null ? null : Number(t.auto_score), manual: t.manual_score == null ? null : Number(t.manual_score), feedback: String(t.feedback), submittedAt: iso(t.submitted_at), answers: t.answers })) };
+          attempts: mine.map((t) => ({ id: Number(t.id), student: names[String(t.student_id)] ?? 'Student', state: String(t.state), late: !!t.late, extended: Number(t.extra_min ?? 0) > 0, auto: t.auto_score == null ? null : Number(t.auto_score), manual: t.manual_score == null ? null : Number(t.manual_score), feedback: String(t.feedback), submittedAt: iso(t.submitted_at), answers: t.answers,
+            gradedBy: t.graded_by ? names[String(t.graded_by)] ?? 'Member' : null, moderations: modsFor(t),
+            canModerate: t.state === 'graded' && t.graded_by !== me && t.student_id !== me })), moderationPct: Number(x.moderation_pct ?? 0) };
       }
       return { ...base, attempts: mine.map((t) => {
         const rel = t.state === 'released';

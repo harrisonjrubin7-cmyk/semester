@@ -80,3 +80,29 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
 - Evidence: 5 unit tests; 18 database checks rolled back; a mutation check showed that removing section scoping leaks 1.5x into another course, and the test caught it. Browser NOT RUN.
 - Next: readiness view (S-56 Prompt F) driven by capability-registry.csv and acceptance-scenarios.csv. Then T01, a cross-tenant sweep across all endpoints.
 - BLOCKER (C23): apps/semester-institution (3nybmrumkp, from another agent session at 09:08) duplicates the section-request flow. Its "Section Requests" table is not in the live database and it fails typecheck. Founder to decide: keep it as a thin front door or remove it. One builder in Zite (D5) also needs re-confirming.
+
+## 26 Oct: Brand kit applied to every Zite app (S-59)
+- packages/components/brand:
+  - semester-brand.css: Graphite and Brass colours mapped onto each app's shadcn variables. Parchment is the default; Ink is available behind .dark and is opt-in. The Ink chrome rail is used in both modes.
+  - palette.ts: the source hex values and a contrast function.
+  - Mark.tsx: the three-slab mark and the wordmark, using the geometry from the repo's mark.data.ts.
+  - fonts/: 6 OFL woff2 files. Their sha256 hashes match the repo's app/public/semester-design/fonts.
+- All 9 apps import the layer after index.css. Every Google Fonts @import is removed, so no third-party font request remains.
+- The Wordmark replaces the text-only "SEMESTER" logos on splash screens, shell rails, onboarding, the site, Company OS, Developers and Security Lab.
+- Deviation, recorded in palette.ts: the Ink warning ink is lifted from #cb7b62 to #d5937f to hold 4.6:1 on every dark surface.
+- Evidence: tests/brand.test.ts (9 tests: contrast for every surface pair, mark centring, the import order guard and the no-Google-Fonts guard). The two structural tests failed before the change and pass after it. check_app passes for 8 of 9 apps; semester-institution was already failing (C23). Visual check NOT RUN (no browser).
+- Not done:
+  - The 13 grounds and 11 accents look picker from look.ts. Zite apps carry the canonical Parchment/Ink pair only.
+  - The workspace-action orange is defined but not yet used.
+  - Tenant branding envelope (ADR-0037).
+
+## 26 Oct: S-60 recorded; grade moderation before release (W10)
+- S-60 is mostly a restatement of S-55. faculty-modules.csv maps its 24 Faculty modules: 14 implemented, 6 partial, 3 missing (discussions, academic integrity, course accessibility review), and official grade handoff disabled by design.
+- DONE: asm-003.
+  - Instructors set a second-person review share (0–100%). Moderators agree, or adjust the total with a reason of 10+ characters, within the automatic score and the total points.
+  - The grader and the student can never moderate.
+  - Re-grading makes earlier reviews stale.
+  - asm_release refuses until enough current reviews exist. The share cannot change after release.
+  - The asm_moderations log is append-only.
+- Evidence: 5 unit tests; 17 database checks rolled back; a mutation check showed that removing freshness lets a stale review count. Browser NOT RUN.
+- Next (Faculty gaps): academic integrity case workflow; course discussions; accessibility check before publishing.

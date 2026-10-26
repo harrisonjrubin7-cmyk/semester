@@ -1,0 +1,95 @@
+/* Semester brand layer: Graphite and Brass. Values are from the Semester Brand Kit, which reads them from
+ * harrisonjrubin7-cmyk/semester app/src/lib/look.ts tokensFor() (Parchment and Ink grounds, Brass accent) and tokens.css.
+ * Source of truth for the hex values: ./palette.ts (contrast tested in apps/semester/tests/brand.test.ts).
+ * Every Zite app imports this from main.tsx AFTER its own index.css. It is unlayered, so it wins over each app's
+ * @layer base defaults.
+ * Fonts are self-hosted and byte-equal to the repo's app/public/semester-design/fonts (OFL, see fonts/OFL-LICENSE.txt):
+ * no third-party font request, per the brand kit.
+ * Light = Parchment ground with the Brass shade stop for accent ink. Dark (.dark, opt-in) = Ink ground with Brass base.
+ * The chrome (sidebar) is Ink in both. Colour carries one meaning; every state also says a word (components/kit Status). */
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/Barlow-400-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 500; font-display: swap; src: url('./fonts/Barlow-500-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 700; font-display: swap; src: url('./fonts/Barlow-700-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 400; font-display: swap; src: url('./fonts/BarlowCondensed-400-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow Condensed'; font-style: normal; font-weight: 600; font-display: swap; src: url('./fonts/BarlowCondensed-600-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('./fonts/Cinzel-latin.woff2') format('woff2'); }
+
+:root {
+    --background: 42 31.3% 93.7%;
+    --foreground: 45 8.0% 9.8%;
+    --card: 0 0.0% 100.0%;
+    --card-foreground: 45 8.0% 9.8%;
+    --popover: 0 0.0% 100.0%;
+    --popover-foreground: 45 8.0% 9.8%;
+    --muted: 40 20.7% 88.6%;
+    --muted-foreground: 40 3.5% 33.3%;
+    --border: 47 11.7% 84.9%;
+    --input: 45 6.2% 74.5%;
+    --primary: 43 34.6% 30.6%;
+    --primary-foreground: 43 46.7% 97.1%;
+    --editorial: 43 34.6% 30.6%;
+    --secondary: 40 20.7% 88.6%;
+    --secondary-foreground: 45 8.0% 9.8%;
+    --accent: 40 20.7% 88.6%;
+    --accent-foreground: 45 8.0% 9.8%;
+    --destructive: 14 51.0% 40.0%;
+    --destructive-foreground: 43 46.7% 97.1%;
+    --ring: 43 34.6% 30.6%;
+    --success: 137 27.4% 32.9%;
+    --chart-1: 43 34.6% 30.6%;
+    --chart-2: 137 27.4% 32.9%;
+    --chart-3: 14 51.0% 40.0%;
+    --chart-4: 40 3.5% 33.3%;
+    --chart-5: 45 6.2% 74.5%;
+    --sidebar-background: 220 12.0% 9.8%;
+    --sidebar-foreground: 220 18.7% 93.7%;
+    --sidebar-primary: 44 44.3% 72.5%;
+    --sidebar-primary-foreground: 225 12.5% 6.3%;
+    --sidebar-accent: 220 13.0% 18.0%;
+    --sidebar-accent-foreground: 220 18.7% 93.7%;
+    --sidebar-border: 220 11.5% 25.7%;
+    --sidebar-ring: 44 44.3% 72.5%;
+    --font-sans: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+    --font-display: 'Cinzel', Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --brand-workspace-action: #e87441;
+    --brand-workspace-action-ink: #0b2022;
+}
+.dark {
+    --background: 220 12.0% 9.8%;
+    --foreground: 220 18.7% 93.7%;
+    --card: 222 13.9% 14.1%;
+    --card-foreground: 220 18.7% 93.7%;
+    --popover: 222 13.9% 14.1%;
+    --popover-foreground: 220 18.7% 93.7%;
+    --muted: 221 13.6% 23.1%;
+    --muted-foreground: 224 7.9% 72.7%;
+    --border: 220 11.5% 25.7%;
+    --input: 220 9.8% 36.1%;
+    --primary: 44 44.3% 72.5%;
+    --primary-foreground: 225 12.5% 6.3%;
+    --editorial: 44 44.3% 72.5%;
+    --secondary: 221 13.6% 23.1%;
+    --secondary-foreground: 220 18.7% 93.7%;
+    --accent: 221 13.6% 23.1%;
+    --accent-foreground: 220 18.7% 93.7%;
+    --destructive: 14 50.6% 66.7%;
+    --destructive-foreground: 225 12.5% 6.3%;
+    --ring: 44 44.3% 72.5%;
+    --success: 134 21.1% 72.2%;
+    --chart-1: 44 44.3% 72.5%;
+    --chart-2: 134 21.1% 72.2%;
+    --chart-3: 14 50.6% 66.7%;
+    --chart-4: 224 7.9% 72.7%;
+    --chart-5: 220 9.8% 36.1%;
+}
+/* Cinzel is for large page statements only: never body, labels, status, warnings or small sizes. */
+.brand-display { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.02em; }
+/* SEMESTER in the lockup is a logo, not a spelling; in running text the name is "Semester". */
+.brand-wordmark { font-family: var(--font-serif); font-weight: 600; text-transform: uppercase; letter-spacing: 0.22em; }
+.brand-lock { display: inline-flex; align-items: center; gap: 0.5em; }
+.brand-lock svg { height: 1.22em; width: auto; }
+/* 16px minimum in forms so phones do not zoom. */
+input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: max(16px, 1em); }
+.tabular { font-variant-numeric: tabular-nums; }

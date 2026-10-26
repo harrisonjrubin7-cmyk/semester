@@ -6,6 +6,7 @@ import { cn } from '@project/components/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@project/components/ui/dropdown-menu';
 import { useWorkspace } from '../lib/workspace';
 import CommandPalette from './CommandPalette';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const NAV = [
   { group: null, items: [{ to: '/today', label: 'Today', icon: Sun }, { to: '/today/notifications', label: 'Notifications', icon: Bell }, { to: '/today/mail', label: 'Mail', icon: Mail }] },
@@ -59,7 +60,7 @@ export default function Shell() {
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-3 py-4 text-sm text-sidebar-foreground md:flex">
-        <p className="mb-4 px-2 font-display tracking-[0.3em] text-sidebar-accent-foreground">SEMESTER</p>
+        <p className="mb-4 px-2 text-base text-sidebar-accent-foreground"><Wordmark /></p>
         <DropdownMenu>
           <DropdownMenuTrigger className="mb-4 flex w-full items-center gap-2 rounded-[3px] bg-sidebar-accent px-2 py-2 text-left text-xs">
             <Building2 className="h-3.5 w-3.5" strokeWidth={1.5} /><span className="flex-1 truncate">{membership.institutionName} · {role}</span>▾

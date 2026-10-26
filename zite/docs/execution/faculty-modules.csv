@@ -1,0 +1,25 @@
+module,status,where,evidence,gap,source
+Today and teaching schedule,implemented,/faculty,officeHours get (teaching sections; today's office hours),no timetable view of meeting times,S-60 §5
+Course list,implemented,/learn and /faculty,learn list,,S-60 §5
+Course Studio,implemented,/learn/:sectionId,SectionPage tabs,,S-60 §5
+Syllabus and objectives,partial,/learn/:sectionId,syllabus versions,objectives not modelled,S-60 §5
+Content and approved sources,partial,/learn/:sectionId,materials and source tags,no approval step for sources,S-60 §5
+Course AI policy,implemented,/learn/:sectionId,courseAiPolicy per section,,S-60 §5
+Assignments,implemented,/learn/:sectionId,tasks + submissions with locked private files,,S-60 §5
+Assessments and question banks,partial,Assessments tab,asm-001/002 frozen versions,no reusable question bank,S-60 §5
+Rubrics,implemented,Teaching team tab,team-001 rbr_versions/rbr_scores,,S-60 §5
+Submissions,implemented,SectionPage,fil attachments locked on submit,interrupted-upload test NOT RUN,S-60 §5
+Feedback,implemented,GradingPanel,draft until release,,S-60 §5
+Gradebook,implemented,/staff/gradebook,course grades only,,S-60 §5
+Grade moderation and release,implemented,Assessments tab,"asm-003: second-person review share 0-100%, agree/adjust with reason, stale after re-grade, release refused until met; DB rolled-back 17/17 + mutation check",moderation applies to assessments only (not assignment submissions),S-60 §5/§13
+Regrade requests,implemented,/staff/regrades,regrade flow,,S-60 §5
+Groups and TA delegation,implemented,Groups and Teaching team tabs,grp-001; team-001 time-limited delegation,,S-60 §5
+Discussions,missing,,,no course discussion board (community exists campus-wide),S-60 §5
+Office hours,implemented,/faculty,apt-001 29/29 DB checks,,S-60 §5
+Accommodation implementation,implemented,Assessments + letters,acc-002/asm-002 18/18 DB checks,testing-centre logistics,S-60 §5
+Academic integrity,missing,,,no integrity case workflow,S-60 §5
+Learning-progress views,partial,Gradebook,,no per-objective progress,S-60 §5
+Evidence verification,implemented,/progress (staff review),achievement evidence verify + lock,,S-60 §5
+Course accessibility review,missing,,,no pre-publication accessibility check,S-60 §5
+Archive export and versions,partial,,syllabus/assessment/rubric versions are append-only,no course archive or export,S-60 §5
+Official grade handoff,disabled by design,,grade.write needs institution authority,activation needs institution authorization,S-60 §5/§13

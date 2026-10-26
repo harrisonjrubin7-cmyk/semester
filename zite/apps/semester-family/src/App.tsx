@@ -8,6 +8,7 @@ import { Toaster } from '@project/components/ui/sonner';
 import { toast } from 'sonner';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { cn } from '@project/components/lib/utils';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const G: Record<string, string> = { Official: '◆', Connected: '⇄', 'Made Here': '◇', Yours: '○', Sample: '◌', 'AI Assisted': '✦' };
 const Tag = ({ s }: { s: string }) => <span className={cn('inline-flex gap-1 rounded-[3px] border border-border px-1.5 text-[11px] text-muted-foreground', s === 'Sample' && 'border-dashed')}>{G[s] ?? '○'} {s}</span>;
@@ -33,7 +34,7 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) { setErr(null); familyView({ studentId: sid }).then(setD).catch((e) => setErr(e instanceof Error ? e.message : 'This didn’t load')); } }, [user, sid]);
-  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar font-display tracking-[0.3em] text-sidebar-foreground">SEMESTER</div>;
+  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
   const v = d?.view;
   return (
     <div className="min-h-screen bg-background">

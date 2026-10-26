@@ -8,6 +8,7 @@ import { cn } from '@project/components/lib/utils';
 import { useLoad } from './hooks';
 import { ReviewQueue, AppsTable, KeysTable, AuditLog } from './components/Console';
 import { Sandbox, Docs } from './components/Sandbox';
+import { Wordmark } from '@project/components/brand/Mark';
 
 const TABS = [
   { id: 'review', label: 'Review queue', group: 'Platform' }, { id: 'apps', label: 'Apps', group: 'Platform' },
@@ -48,7 +49,7 @@ export default function App() {
     <div className="min-h-screen">
       <header className="bg-sidebar text-sidebar-foreground">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div><p className="eyebrow !text-sidebar-foreground/60">Semester</p><h1 className="text-xl text-sidebar-accent-foreground">Developer platform</h1></div>
+          <div><p className="text-sm text-sidebar-foreground/80"><Wordmark /></p><h1 className="text-xl text-sidebar-accent-foreground">Developer platform</h1></div>
           <span className="text-xs">{user.email}</span>
         </div>
         <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4">
