@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { sources as walk } from '../styles/rules';
 import { prefersLessMotion, revealKindly, scrollKindly } from '../lib/prefers';
@@ -27,6 +27,8 @@ function match(reduce: boolean) {
     removeEventListener() {},
   }));
 }
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('when the device asks for less motion', () => {
   it('reads the setting', () => {
