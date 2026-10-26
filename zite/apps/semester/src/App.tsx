@@ -47,6 +47,7 @@ import { Analytics, RegistrationHolds } from './pages/Institution';
 import RegradeQueue from './pages/RegradeQueue';
 import { InstitutionHome, SectionRequests } from './pages/InstitutionHome';
 import Faculty, { Appointments } from './pages/Faculty';
+import Integrity from './pages/Integrity';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -118,6 +119,7 @@ export default function App() {
             <Route path="/you/files" element={<Files />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/faculty" element={<Faculty />} />
+            <Route path="/you/integrity" element={<Integrity />} />
             <Route path="/help/appointments" element={<Appointments />} />
             <Route path="/institution" element={<InstitutionHome />} />
             <Route path="/institution/sections" element={<SectionRequests />} />

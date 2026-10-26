@@ -29,6 +29,7 @@ import type { default as _InstitutionConsoleEp } from '../src/api/institutionCon
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
 import type { default as _InstitutionReadinessEp } from '../src/api/institutionReadiness';
 import type { default as _IntegrationMappingsEp } from '../src/api/integrationMappings';
+import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _IntelligenceEp } from '../src/api/intelligence';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
@@ -193,6 +194,11 @@ type _IntegrationMappingsCfg = typeof _IntegrationMappingsEp;
 export type IntegrationMappingsInputType = NonNullable<_IntegrationMappingsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntegrationMappingsCfg['execute']>[0]['input'];
 export type IntegrationMappingsOutputType = Awaited<ReturnType<_IntegrationMappingsCfg['execute']>>;
 export const integrationMappings = createCaller<IntegrationMappingsInputType, IntegrationMappingsOutputType>('integrationMappings');
+
+type _IntegrityCfg = typeof _IntegrityEp;
+export type IntegrityInputType = NonNullable<_IntegrityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntegrityCfg['execute']>[0]['input'];
+export type IntegrityOutputType = Awaited<ReturnType<_IntegrityCfg['execute']>>;
+export const integrity = createCaller<IntegrityInputType, IntegrityOutputType>('integrity');
 
 type _IntelligenceCfg = typeof _IntelligenceEp;
 export type IntelligenceInputType = NonNullable<_IntelligenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntelligenceCfg['execute']>[0]['input'];
@@ -368,6 +374,7 @@ export const api = {
   institutionOps,
   institutionReadiness,
   integrationMappings,
+  integrity,
   intelligence,
   learn,
   manageTask,

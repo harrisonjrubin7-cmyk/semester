@@ -17,7 +17,7 @@ Groups and TA delegation,implemented,Groups and Teaching team tabs,grp-001; team
 Discussions,missing,,,no course discussion board (community exists campus-wide),S-60 §5
 Office hours,implemented,/faculty,apt-001 29/29 DB checks,,S-60 §5
 Accommodation implementation,implemented,Assessments + letters,acc-002/asm-002 18/18 DB checks,testing-centre logistics,S-60 §5
-Academic integrity,missing,,,no integrity case workflow,S-60 §5
+Academic integrity,implemented,/you/integrity,"int-001: report by instructor of record about an enrolled student; student response; course-level resolution only if accepted; referral; officer decision independent of reporter; appeal to a different officer within 14 days; DB rolled-back 30/30 + mutation check","evidence files not attachable yet; no repeat-offence lookup; outcome never changes a grade automatically (by design)",S-60 §5
 Learning-progress views,partial,Gradebook,,no per-objective progress,S-60 §5
 Evidence verification,implemented,/progress (staff review),achievement evidence verify + lock,,S-60 §5
 Course accessibility review,missing,,,no pre-publication accessibility check,S-60 §5

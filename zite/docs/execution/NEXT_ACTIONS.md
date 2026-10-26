@@ -106,3 +106,14 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
   - The asm_moderations log is append-only.
 - Evidence: 5 unit tests; 17 database checks rolled back; a mutation check showed that removing freshness lets a stale review count. Browser NOT RUN.
 - Next (Faculty gaps): academic integrity case workflow; course discussions; accessibility check before publishing.
+
+## 26 Oct: Academic integrity cases (int-001)
+- /you/integrity is shared by students, reporting instructors and integrity officers. Officers are managed by administrators, who cannot grant themselves access.
+- The instructor of record reports about a student who is Enrolled or Completed in their section. Reporting is idempotent, and only one live case is allowed per student and piece of work.
+- The student responds.
+- A course-level resolution stands only if the student accepts it; declining sends the case to the integrity office. The reporter can also refer directly.
+- An officer who did not report the case, and is not its subject, records a finding with a sanction and a reason of 20+ characters.
+- The student may appeal within 14 days. A different officer upholds, overturns or reduces the outcome.
+- Visible only to the three parties. Notifications carry no details. No grade changes automatically.
+- Evidence: 5 unit tests; 30 database checks rolled back; a mutation check showed that removing appeal independence lets the same officer decide the appeal. Browser NOT RUN.
+- Faculty modules still missing: course discussions; accessibility check before publishing.

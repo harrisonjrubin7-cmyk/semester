@@ -16,7 +16,7 @@ const NAV = [
   { group: 'Campus', items: [{ to: '/campus', label: 'Clubs & events', icon: Users }, { to: '/campus/community', label: 'Community', icon: MessagesSquare }, { to: '/campus/places', label: 'Places', icon: MapPin }, { to: '/campus/accommodations', label: 'Accommodations', icon: Accessibility }] },
   { group: 'Apps', items: [{ to: '/apps', label: 'Your apps', icon: LayoutGrid }] },
   { group: 'Progress', items: [{ to: '/progress', label: 'Degree path', icon: TrendingUp }, { to: '/progress/degree', label: 'Requirements', icon: GraduationCap }, { to: '/progress/graduate', label: 'Graduate milestones', icon: ScrollText }, { to: '/progress/grades', label: 'Grades', icon: Award }] },
-  { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you/aid', label: 'Financial aid checklist', icon: ListChecks }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
+  { group: 'You', items: [{ to: '/you/account', label: 'Tuition & payments', icon: Receipt }, { to: '/you/aid', label: 'Financial aid checklist', icon: ListChecks }, { to: '/you/integrity', label: 'Integrity cases', icon: Scale }, { to: '/you', label: 'Privacy & data', icon: Shield }] },
 ];
 const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[]; action: string }[] = [
   { to: '/staff/gradebook', label: 'Gradebook', icon: Table2, roles: ['Faculty'], action: 'grade.write' },
