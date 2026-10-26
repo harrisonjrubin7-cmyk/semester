@@ -1,10 +1,52 @@
 # Implementation roadmap
 
-The roadmap builds the student course/study loop first. Campus, marketplace, finance, staff, and institutional control-plane expansion should not outrun validated use of this loop.
+Semester is one educational-journey operating system, not a collection of vertical applications. The Course Engine is the first deeply tested student loop inside that system; it is not the boundary of the company or product thesis.
 
-## Phase 0 — Foundation (current branch)
+The architecture and roadmap retain all eight product planes from the start:
 
-State: tested, not deployed.
+1. student operating system;
+2. productivity suite;
+3. campus super-app;
+4. institutional system;
+5. governed AI assistant;
+6. trusted marketplace;
+7. family and guardian platform; and
+8. career, alumni, credential, and lifelong-journey platform.
+
+Scope discipline is expressed through evidence-backed maturity, never by deleting a plane from the model. Every capability must be labeled **Live**, **Connected**, **Pilot**, **Early access**, **Institution-controlled**, or **Planned but not exposed**. “Live” requires implementation, tests, support ownership, permissions, observability, and an operational owner; a design, schema, prototype, integration card, or passing repository test is not enough.
+
+## Shared platform contract
+
+Every Course Engine increment and every adjacent product plane must reuse the same governed platform primitives:
+
+- identity/account and person/relationship graph;
+- organization, campus, tenant, role, consent, permission, and entitlement authority;
+- academic and life timeline plus shared source/provenance graph;
+- capability registry and maturity evidence;
+- event and analytics taxonomy;
+- AI policy, authorization, action approval, and audit layer;
+- design system and cross-platform web/mobile shell;
+- internal operations console; and
+- trust, retention, incident, support, and data-rights workflows.
+
+No family, marketplace, AI, partner, or institutional surface may create a parallel identity or permissions model. AI actions stay inside the caller's authorization. Marketplace access is never an unrestricted education-record channel. Family access requires explicit student consent plus applicable institutional policy.
+
+The default student navigation remains **Home**, **My Journey**, **Campus**, **Opportunities**, **Support**, **Family**, and **Settings**. Capabilities that are not exposed at the current maturity stay in the registry and architecture without cluttering that default experience. Institutional users and internal operators receive role-appropriate surfaces over the same governed records and controls.
+
+For every capability, the implementation record must answer:
+
+1. Which core entities does it use?
+2. Which role, tenant, permission, and consent rules govern it?
+3. Is it student-, family-, institution-, partner-, or operator-facing?
+4. What is its current maturity, based on evidence?
+5. Which metrics demonstrate value?
+6. What is the fail-closed behavior when an integration, permission, or source of truth is unavailable?
+7. What does the mobile experience include?
+8. Which audit, support, and incident workflows own it?
+
+## Phase 0 — Foundation
+
+State: code-present and tested in the repository; production deployment and operational ownership are not established by this roadmap.
 
 - Citation-first course schema and ownership-scoped API.
 - Upload/extraction/review/calendar/study/export/progress vertical slice.
@@ -41,6 +83,8 @@ Exit: every generated claim has a stored citation or is blocked from publication
 
 Exit: named-tenant approval and observed UAT evidence. Repository tests or a deployment alone do not satisfy this gate.
 
-## Phase 4 — Expansion after validation
+## Phase 4 — Cross-plane maturity expansion
 
-Expand Campus, housing, dining, career, finance, family, community, marketplace, staff, and institutional control-plane workflows only after student-loop adoption, reliability, support load, and outcomes justify them.
+Advance Campus, housing, dining, career, finance, family, community, marketplace, staff, alumni, lifelong, partner, and institutional-control capabilities from **Planned but not exposed** toward **Connected**, **Pilot**, **Early access**, **Institution-controlled**, or **Live** only when their own evidence gates are satisfied.
+
+These planes are already part of the shared architecture, entity graph, permissions model, brand, operating model, and roadmap. Validation controls when a capability is exposed and what may be claimed about it; validation does not remove the capability category from Semester's thesis.
