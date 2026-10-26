@@ -99,7 +99,7 @@ const submitOnEnter =
  * lands in a field and a stray keystroke changes something, and the tick box —
  * the thing this screen is mostly for — becomes harder to hit.
  */
-function TaskRow({ task: t }: { task: PersonalTask }) {
+function TaskRow({ task: t, position, total }: { task: PersonalTask; position: number; total: number }) {
   const { state, dispatch, courseCode } = useStore();
   const taskActions = useTaskActions();
   const [editing, setEditing] = useState(false);
@@ -209,7 +209,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           <SectionLabel style={{ margin: '0 0 var(--sp-3)' }}>
             {through.of > 0 ? `Steps · ${through.done} of ${through.of}` : 'Steps'}
           </SectionLabel>
-          {steps.map((sp) => (
+          {steps.map((sp, index) => (
             <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
               <button
                 type="button"
@@ -238,7 +238,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'dropStep', id: t.id, stepId: sp.id })}
-                aria-label={`Remove ${sp.text}`}
+                aria-label={`Remove step ${index + 1} of ${steps.length} from ${t.title}: ${sp.text} · ${sp.done ? 'done' : 'not done'}`}
                 style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', ...secondLine() }}
               >
                 Remove
@@ -288,7 +288,13 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => taskActions.remove(t.id)}
-            aria-label={`Delete ${t.title}`}
+            aria-label={`Delete action ${position} of ${total}, ${t.title}: ${[
+              t.courseId ? courseCode(t.courseId) : 'Personal',
+              t.date ? longLabel(isoToDate(t.date)) : 'No date',
+              t.time ? shownTime(t.time) : '',
+              t.repeat ? lowerFirst(describeRepeat(t.repeat)) : '',
+              through.of > 0 ? `${through.done}/${through.of} steps` : '',
+            ].filter(Boolean).join(' · ')}`}
             /* Marked so the assistant's floating button lifts clear of it at
                any overlap rather than at half of it — see `tappable` in
                `ai/Assistant.tsx`. */
@@ -557,8 +563,8 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             <Folding name="Actions">
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-              {g.tasks.map((t) => (
-                <TaskRow key={t.id} task={t} />
+              {g.tasks.map((t, index) => (
+                <TaskRow key={t.id} task={t} position={index + 1} total={g.tasks.length} />
               ))}
             </div>
             </Folding>
@@ -887,7 +893,15 @@ function HowLongAndOften({
   );
 }
 
-function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
+function AppointmentRow({
+  appointment: a,
+  position,
+  total,
+}: {
+  appointment: Appointment;
+  position: number;
+  total: number;
+}) {
   const { state, dispatch } = useStore();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(a.title);
@@ -1041,7 +1055,14 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-            aria-label={`Delete ${a.title}`}
+            aria-label={`Delete appointment ${position} of ${total}, ${a.title}: ${[
+              longLabel(isoToDate(a.date)),
+              shownTime(a.time),
+              kindOf(a.kind).label,
+              a.where || 'No location',
+              a.at === null ? spanLabel(a.days ?? 1) : lengthLabel(a.minutes ?? 60),
+              a.repeat ? describeRepeat(a.repeat) : '',
+            ].filter(Boolean).join(' · ')}`}
             data-danger=""
             style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
@@ -1314,8 +1335,8 @@ function Appointments() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
-        {upcoming.map((a) => (
-          <AppointmentRow key={a.id} appointment={a} />
+        {upcoming.map((a, index) => (
+          <AppointmentRow key={a.id} appointment={a} position={index + 1} total={upcoming.length} />
         ))}
       </div>
       <div style={{ height: 22 }} />

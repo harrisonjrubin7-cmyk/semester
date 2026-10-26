@@ -12,6 +12,7 @@ export type Asset = {
   title: string;
   status: string;
   content: Record<string, unknown>;
+  active_citation_ids?: string[];
   generation_version: number;
   updated_at: string;
 };
@@ -23,6 +24,14 @@ export type GuideSection = {
   explanation: string;
   key_points?: string[];
   examples?: string[];
+  citation_ids: string[];
+};
+
+export type AppliedCase = {
+  heading: string;
+  scenario: string;
+  questions: string[];
+  applications?: string[];
   citation_ids: string[];
 };
 
@@ -91,6 +100,16 @@ export type SourceChunk = {
   cell_range?: string | null;
   start_seconds?: number | null;
   end_seconds?: number | null;
+  bounding_box?: {
+    coordinate_space: "normalized";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+  review_item_id?: string | null;
+  review_status?: string | null;
+  preview_available?: boolean;
   confidence: number | null;
 };
 

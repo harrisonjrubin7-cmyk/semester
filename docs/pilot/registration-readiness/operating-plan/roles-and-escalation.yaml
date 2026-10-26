@@ -1,0 +1,32 @@
+# Operating plan object 5: decision owners.
+# Institution and Semester columns name functional roles. Named people are TBD
+# and are recorded in scope-record.yaml signatures before stage 1 exits.
+decision_areas:
+  - area: student_eligibility_and_cohort
+    institution_owner: pilot_sponsor
+    semester_owner: implementation_lead
+    escalate_when: eligibility_rule_is_unclear
+  - area: source_authority_and_meaning
+    institution_owner: registrar_or_source_owner
+    semester_owner: connector_owner
+    escalate_when: source_conflicts_or_is_stale
+  - area: policy_interpretation
+    institution_owner: authorized_institutional_owner
+    semester_owner: product_owner
+    escalate_when: workflow_would_imply_a_policy_decision
+  - area: student_support_routing
+    institution_owner: advising_or_registrar_lead
+    semester_owner: support_lead
+    escalate_when: no_approved_office_can_resolve_case
+  - area: security_privacy_access
+    institution_owner: IT_or_security_owner
+    semester_owner: security_owner
+    escalate_when: access_anomaly_incident_or_data_request
+  - area: product_behavior
+    institution_owner: product_sponsor
+    semester_owner: product_or_engineering_owner
+    escalate_when: defect_changes_expected_workflow
+  - area: activation_and_safe_off
+    institution_owner: executive_sponsor
+    semester_owner: operations_owner
+    escalate_when: release_gate_fails_or_material_risk_emerges

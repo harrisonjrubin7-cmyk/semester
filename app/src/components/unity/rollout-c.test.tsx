@@ -274,6 +274,7 @@ describe('SupportAccess: permission changes and a failed load', () => {
     vi.spyOn(supportAccess, 'loadSupportAccess').mockResolvedValue({ supporters: [], tickets: [], windows: [WINDOW] } as never);
     vi.spyOn(supportAccess, 'revokeSupportAccess').mockResolvedValue(undefined as never);
     await mount(<SupportAccess account={ACCOUNT} />, false);
+    // The shared DelegationRow confirms inline: Revoke, then Revoke now.
     await press('Revoke');
     expect(text()).toContain('Advisor Rivera loses access right away');
     await press('Revoke now');

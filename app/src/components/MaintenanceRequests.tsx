@@ -91,7 +91,7 @@ export function MaintenanceRequests() {
 
       {open.length > 0 ? (
         <ul className="maintenance-list" aria-label="Open repair requests">
-          {open.map((r) => <RequestRow key={r.id} request={r} now={now} />)}
+          {open.map((r, index) => <RequestRow key={r.id} request={r} now={now} position={index + 1} list="open" />)}
         </ul>
       ) : null}
 
@@ -107,7 +107,7 @@ export function MaintenanceRequests() {
         <>
           <SectionLabel>Closed this term</SectionLabel>
           <ul className="maintenance-list" aria-label="Closed repair requests">
-            {closed.map((r) => <RequestRow key={r.id} request={r} now={now} />)}
+            {closed.map((r, index) => <RequestRow key={r.id} request={r} now={now} position={index + 1} list="closed" />)}
           </ul>
         </>
       ) : null}
@@ -133,7 +133,7 @@ const MOVE_LABEL: Partial<Record<MaintenanceStatus, string>> = {
   withdrawn: 'No longer needed',
 };
 
-function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: number }) {
+function RequestRow({ request: r, now, position, list }: { request: MaintenanceRequest; now: number; position: number; list: 'open' | 'closed' }) {
   const { dispatch } = useStore();
   const [scheduling, setScheduling] = useState(false);
   const [reReporting, setReReporting] = useState(false);
@@ -149,6 +149,7 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
   const visitId = useId();
   const due = needsFollowUp(r, now);
   const title = useId();
+  const removeLabel = `Remove ${list} repair ${position}: ${titleOf(r)}; ${placeLine(r)}; ${URGENCY_TEXT[r.urgency]}; ${STATUS_TEXT[r.status]}; ${r.reference ? `Reference ${r.reference}` : 'No reference recorded'}; reported by ${CHANNEL_TEXT[r.channel].toLowerCase()}, ${whenLine(r.reportedAt)}`;
 
   const go = (to: MaintenanceStatus) => {
     if (to === 'scheduled') {
@@ -309,7 +310,12 @@ function RequestRow({ request: r, now }: { request: MaintenanceRequest; now: num
               Remind me tomorrow
             </button>
           ) : null}
-          <button type="button" className="btn btn-ghost" onClick={() => dispatch({ type: 'dropMaintenance', id: r.id })}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            aria-label={removeLabel}
+            onClick={() => dispatch({ type: 'dropMaintenance', id: r.id })}
+          >
             Remove
           </button>
         </div>

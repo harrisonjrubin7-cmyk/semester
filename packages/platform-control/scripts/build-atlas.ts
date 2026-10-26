@@ -18,5 +18,6 @@ await Promise.all([
   writeGenerated('readiness-report.json', readiness),
   writeGenerated('execution-board.json', snapshot.backlog),
   writeGenerated('execution-plan.json', buildExecutionPlan(snapshot.backlog)),
+  writeGenerated('operations-readiness.json', snapshot.operationsReadiness ?? []),
 ]);
-console.log(JSON.stringify({ generated: 7, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length }, null, 2));
+console.log(JSON.stringify({ generated: 8, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length }, null, 2));

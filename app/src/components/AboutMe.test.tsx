@@ -9,7 +9,7 @@ const mock = vi.hoisted(() => ({
     shell: 'plain',
     aboutMe: [
       { id: 'work', text: 'I work twenty hours a week', at: 1 },
-      { id: 'morning', text: 'I prefer mornings', at: 2 },
+      { id: 'work-copy', text: 'I work twenty hours a week', at: 2 },
     ],
   },
 }));
@@ -46,10 +46,11 @@ const button = (name: RegExp, within: ParentNode = host) => {
   return found;
 };
 
-it('previews one remembered-line deletion and writes only after confirmation', () => {
+it('distinguishes repeated remembered lines and deletes only the represented record after confirmation', () => {
   act(() => root.render(<AboutMe />));
 
-  act(() => button(/^Delete: I work twenty hours a week$/).click());
+  expect(button(/^Delete remembered line 1 of 2: I work twenty hours a week$/)).not.toBeNull();
+  act(() => button(/^Delete remembered line 2 of 2: I work twenty hours a week$/).click());
 
   expect(mock.dispatch).not.toHaveBeenCalled();
   const dialog = host.querySelector('[role="dialog"]')!;
@@ -64,12 +65,12 @@ it('previews one remembered-line deletion and writes only after confirmation', (
   expect(mock.dispatch).not.toHaveBeenCalled();
   expect(host.querySelector('[role="dialog"]')).toBeNull();
 
-  act(() => button(/^Delete: I work twenty hours a week$/).click());
+  act(() => button(/^Delete remembered line 2 of 2: I work twenty hours a week$/).click());
   act(() => button(/^Forget$/, host.querySelector('[role="dialog"]')!).click());
 
   expect(mock.dispatch).toHaveBeenCalledTimes(1);
   expect(mock.dispatch).toHaveBeenCalledWith({
     type: 'setAboutMe',
-    facts: [{ id: 'morning', text: 'I prefer mornings', at: 2 }],
+    facts: [{ id: 'work', text: 'I work twenty hours a week', at: 1 }],
   });
 });

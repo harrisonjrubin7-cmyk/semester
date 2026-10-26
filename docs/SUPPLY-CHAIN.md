@@ -121,6 +121,7 @@ tables to each other.
 | --- | --- | --- |
 | `actions/checkout` | GitHub | Checks out the repository. |
 | `actions/setup-node` | GitHub | Installs Node and caches npm. |
+| `actions/setup-python` | GitHub | Installs the pinned Python runtime used by Course Engine API tests. |
 | `actions/upload-artifact` | GitHub | Keeps the SBOM and test reports with the run. |
 | `actions/github-script` | GitHub | Posts CI summaries with the job token. |
 | `actions/configure-pages` | GitHub | Pages deploy. |
@@ -134,3 +135,5 @@ tables to each other.
 | `actions/attest-sbom` | GitHub | Binds the CycloneDX SBOM to the same bundle (Sigstore). See supply-chain.yml. |
 | `hashicorp/setup-terraform` | HashiCorp | Installs a pinned Terraform for the infrastructure plans; holds no credential itself. See infra.yml. |
 | `supabase/setup-cli` | Supabase | Installs the CLI that deploys the Edge Functions; Supabase already holds the data. |
+| `open-policy-agent/setup-opa` | Open Policy Agent | Installs a pinned OPA for the starter policy tests in starter-ci.yml. Holds no credential; the job token stays read-only. |
+| `pnpm/action-setup` | pnpm | Installs the pnpm named by starter/package.json for starter-ci.yml. Holds no credential. |

@@ -78,6 +78,7 @@ begin
     when 'bigint' then '1::bigint'
     when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
+    when 'time without time zone' then quote_literal('00:00') || '::time'
     when 'date' then 'current_date'
     else null
   end;
@@ -190,6 +191,7 @@ declare
    */
   expected constant jsonb := jsonb_build_object(
     'adopt_lti_identity',          jsonb_build_object('answers', '^"stale"$',   'why', 'a ticket nobody minted is "stale"; attaches nothing'),
+    'career_evidence_mine',        jsonb_build_object('answers', '^\{"grants": \[\], "evidence": \[\], "revision": 0\}$', 'why', 'the caller''s own portfolio, which is empty'),
     'claim_family_invite',         jsonb_build_object('answers', '^"unknown"$', 'why', 'a code nobody made is "unknown"; grants nothing'),
     'claim_referral',              jsonb_build_object('answers', '^"unknown"$', 'why', 'a code nobody made is "unknown"; records nothing'),
     'community_reviewer_standing', jsonb_build_object('answers', '^"none"$',    'why', 'the caller''s own reviewer standing, which is none'),

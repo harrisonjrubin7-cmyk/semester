@@ -34,6 +34,10 @@ let root: Root;
 beforeEach(() => {
   mock.dispatch.mockClear();
   mock.say.mockClear();
+  mock.state.plots = [
+    { id: 'demand', text: 'y = 10 - x', on: true },
+    { id: 'supply', text: 'y = x + 2', on: true },
+  ];
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -54,4 +58,26 @@ it('uses the recoverable graph-clear action without changing example loading', (
   expect(mock.dispatch).toHaveBeenCalledWith({ type: 'clearPlots' });
   expect(mock.dispatch).not.toHaveBeenCalledWith({ type: 'setPlot', lines: [] });
   expect(mock.say).toHaveBeenCalledWith('The graph is clear. You can undo that for eight seconds.');
+});
+
+it('identifies repeated graph lines before removing the represented plot', () => {
+  mock.state.plots = [
+    { id: 'demand', text: 'y = 10 - x', on: true },
+    { id: 'supply', text: 'y = 10 - x', on: false },
+  ];
+
+  act(() => root.render(<Grapher />));
+
+  expect(
+    host.querySelector('button[aria-label="Remove line 1 of 2, y = 10 - x · shown"]'),
+  ).toBeTruthy();
+  const second = host.querySelector<HTMLButtonElement>(
+    'button[aria-label="Remove line 2 of 2, y = 10 - x · hidden"]',
+  );
+  expect(second).toBeTruthy();
+
+  act(() => second!.click());
+
+  expect(mock.dispatch).toHaveBeenCalledWith({ type: 'dropPlot', id: 'supply' });
+  expect(mock.dispatch).not.toHaveBeenCalledWith({ type: 'dropPlot', id: 'demand' });
 });

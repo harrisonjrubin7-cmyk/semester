@@ -24,6 +24,30 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
+
+Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. An approved extension on an assignment now moves that student's due date for it (see below). Nobody else will notice anything.
+
+### Gradebook assignments have due dates, and an approved extension moves yours
+
+Same school and same not-yet-applied database change. In the **Gradebook**, each course now lists **Due dates**. A student sees when each assignment is due, and once the instructor approves an extension on one, the line reads **Extended to** the granted day, with the original date under it. Instructors see each assignment's date and which students have an extension. Whoever adds assignments can set, change or clear a date, at a time in their own time zone. Teaching assistants can read the dates but not change them. If a colleague changed the date first, the screen says so and offers to reload. A granted day lasts until the end of that day anywhere in the world, and an extension never makes a date earlier.
+
+### School administrators get a Roster tab for binding roster people to accounts
+
+Only for university and integration administrators, and only once the database change is applied (it is not yet). On **University**, a **Roster** tab lists the people on your school's roster who have no Semester account bound, with the courses a binding would give them. **Bind** asks you to search for the person's account by part of its handle or school address — only accounts at your school that are not bound yet are searched, at most 20 come back, and the address is shown masked (`m•••@school.edu`) — then previews exactly what they will get and shows the receipt; your own account and a second account for the same person are refused. Below it, **People with an account** lists who is bound; **Unbind** removes a binding and, in the same step, ends the course access the roster gave that account (access an administrator, an LTI launch or SCIM gave is kept). If someone bound the person to a different account since you loaded the tab, nothing changes. Binding the same account again brings the same access back. The same tab shows whether **absence-means-removal** is on; turning it on says how many roster-given course grants would end and asks you to confirm. Nobody else will notice anything.
+
+### An office resolves the registration holds it placed, and readiness says when something changed
+
+Only at a school that runs registration through Semester, and only once the database change is applied (it is not yet). On **Registration**, staff whose office can resolve holds get a **Holds** tab listing that office's open holds by student account — never the reason. **Resolve the hold** opens a preview that says plainly this is not enrollment, then shows the receipt; another office's hold is refused. Students see **Your school’s record** in the readiness view: a hold names its office; after an office resolves it, readiness worked out while it stood shows **Something changed — check again**; and a clear check is a dated receipt that says it is not enrollment. Nobody else will notice anything.
+
+### Mine names the exact action, step or event before removing it
+
+In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
+
+### Removing a degree requirement now explains the planning consequence first
+
+On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.
+
 ### Operators can inspect Semester as one connected ecosystem
 
 For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.

@@ -1,0 +1,38 @@
+{
+  "id": "eqm85cdpm7",
+  "accessMode": "external",
+  "seoSettings": {
+    "title": "Semester Applicants",
+    "description": "",
+    "thumbnailUrl": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/widgetid-default/9brUh6DDaUjKGrtCQSWoiK/Screenshot-2026-10-22-at-2.43.12aPM.png",
+    "faviconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/widgetid-default/74hey38MRgnws9KDEywAMd/semester-favicon.png"
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "Semester Applicants",
+    "appIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/pwa/0bf561c61eaf804d/source-779b5a093be166f377e3355c16d6a639",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/pwa/0bf561c61eaf804d/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/pwa/0bf561c61eaf804d/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/pwa/0bf561c61eaf804d/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-eqm85cdpm7/pwa/0bf561c61eaf804d/favicon-32.png"
+    },
+    "backgroundColor": "#ffffff"
+  },
+  "authentication": {
+    "signup": "open",
+    "authenticationMethods": {
+      "magicLink": true,
+      "googleSignIn": true,
+      "sso": false
+    },
+    "emailSender": {
+      "integrationId": "email-2"
+    }
+  },
+  "integrationSettings": {
+    "email-2": {
+      "fromName": "Semester"
+    }
+  }
+}

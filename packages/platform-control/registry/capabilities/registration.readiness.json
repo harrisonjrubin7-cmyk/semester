@@ -31,7 +31,7 @@
     "designed": true,
     "schema": true,
     "policies": true,
-    "api": false,
+    "api": true,
     "user_interface": false,
     "e2e_tested": false,
     "staged": false,
@@ -52,6 +52,12 @@
       {"path":"packages/institution/src/policy.ts","kind":"code"},
       {"path":"packages/institution/src/policy.test.ts","kind":"test"},
       {"path":"packages/platform/src/tenancy/context.ts","kind":"code"}
+    ],
+    "api": [
+      {"path":"app/server/institution/registration-readiness-commands.ts","kind":"code"},
+      {"path":"app/server/institution/registration-readiness-commands.test.ts","kind":"test"},
+      {"path":"app/server/institution/gateway.ts","kind":"code"},
+      {"path":"app/server/institution/registration-readiness-gateway.test.ts","kind":"test"}
     ]
   }
 }

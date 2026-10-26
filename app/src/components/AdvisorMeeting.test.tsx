@@ -194,6 +194,54 @@ describe('the Degree tab', () => {
 });
 
 describe('preparing and exporting', () => {
+  it('distinguishes repeated preparation lines and removes only the represented follow-up', async () => {
+    localStorage.setItem(
+      meetingKey(null),
+      JSON.stringify({
+        version: 1,
+        meetings: [{
+          id: 'meeting-1',
+          title: 'Planning check-in',
+          date: '2027-02-10',
+          agenda: [
+            { id: 'agenda-1', text: 'Course plan' },
+            { id: 'agenda-2', text: 'Course plan' },
+          ],
+          questions: [
+            { id: 'question-1', text: 'Can this count?', answer: 'Yes, as an elective.' },
+            { id: 'question-2', text: 'Can this count?', answer: '' },
+          ],
+          attach: { scenario: null, courses: [], followUps: false },
+          followUps: [
+            { id: 'follow-up-1', text: 'Email the department', done: false, due: '2027-02-12' },
+            { id: 'follow-up-2', text: 'Email the department', done: true, due: null },
+          ],
+          notes: '',
+          created: 1,
+        }],
+      }),
+    );
+
+    await mount(null);
+
+    expect(host.querySelector('button[aria-label="Remove agenda item 1 of 2, Course plan"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove agenda item 2 of 2, Course plan"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove question 1 of 2, Can this count? · answer: Yes, as an elective."]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove question 2 of 2, Can this count? · no answer recorded"]')).toBeTruthy();
+
+    const secondFollowUp = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Remove follow-up 2 of 2, Email the department · done · no due date"]',
+    )!;
+    expect(secondFollowUp).toBeTruthy();
+    await act(async () => secondFollowUp.click());
+
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings[0].followUps).toEqual([
+      { id: 'follow-up-1', text: 'Email the department', done: false, due: '2027-02-12' },
+    ]);
+    expect(host.querySelector('button[aria-label="Remove follow-up 1 of 1, Email the department · not done · due 2027-02-12"]')).toBeTruthy();
+  });
+
   it('keeps the meeting on the device, and exports only after a preview that leaves out private notes', async () => {
     const created = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});

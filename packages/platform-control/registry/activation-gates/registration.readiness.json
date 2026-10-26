@@ -1,0 +1,33 @@
+{
+  "key": "activation.registration.readiness",
+  "capability": "registration.readiness",
+  "name": "Registration-readiness pilot activation gate",
+  "owner": "product-registration",
+  "status": "not_ready",
+  "decision": {
+    "record": null,
+    "approvers": ["institution_operational_owner", "Semester_product_owner", "Semester_security_or_operations_owner"]
+  },
+  "required": [
+    {"id": "product.student_journey_tested", "area": "product", "status": "not_verified", "evidence": [], "gap": "No student journey has been run end to end against a pilot-configured tenant."},
+    {"id": "product.staff_queue_tested", "area": "product", "status": "not_verified", "evidence": [], "gap": "Staff queue has no recorded end-to-end run."},
+    {"id": "product.source_labels_visible", "area": "product", "status": "not_verified", "evidence": [], "gap": "SourceBadge component tests exist (docs/CLM-018-SOURCE-LABEL-EVIDENCE.md); no browser run of the readiness screens is recorded."},
+    {"id": "product.stale_and_unknown_states_tested", "area": "product", "status": "not_verified", "evidence": [], "gap": "Stale and unknown source states have no recorded journey test."},
+    {"id": "product.receipt_tested", "area": "product", "status": "not_verified", "evidence": [], "gap": "Receipt that states it is not enrollment has no recorded end-to-end test."},
+    {"id": "product.support_handoff_tested", "area": "product", "status": "not_verified", "evidence": [], "gap": "Support handoff has no recorded end-to-end test."},
+    {"id": "authority_and_policy.institution_authority_confirmed", "area": "authority_and_policy", "status": "not_verified", "evidence": [], "gap": "No institution has confirmed authority over readiness records."},
+    {"id": "authority_and_policy.term_and_cohort_scope_confirmed", "area": "authority_and_policy", "status": "not_verified", "evidence": [], "gap": "No term or cohort scope is confirmed for a pilot."},
+    {"id": "authority_and_policy.policy_tests_passing", "area": "authority_and_policy", "status": "passed", "evidence": ["packages/institution/src/policy.test.ts"], "gap": "Verified on this revision only: 55 tests passed via npx vitest run src/policy.test.ts on 2026-10-13. Re-run at activation."},
+    {"id": "authority_and_policy.RLS_tests_passing", "area": "authority_and_policy", "status": "not_verified", "evidence": [], "gap": "supabase/registration-readiness-store.check.sql is a database check that was not run against a target database."},
+    {"id": "authority_and_policy.approval_and_exception_path_confirmed", "area": "authority_and_policy", "status": "not_verified", "evidence": [], "gap": "Approval and exception path has no recorded confirmation."},
+    {"id": "operations.source_health_monitoring_live", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No live source-health monitoring is recorded for a pilot tenant."},
+    {"id": "operations.reconciliation_owner_named", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No reconciliation owner is named."},
+    {"id": "operations.incident_runbook_exercised", "area": "operations", "status": "not_verified", "evidence": [], "gap": "Incident runbook has not been exercised for this capability."},
+    {"id": "operations.safe_off_path_tested", "area": "operations", "status": "not_verified", "evidence": [], "gap": "Safe-off path has not been tested against a pilot tenant."},
+    {"id": "operations.hypercare_roster_confirmed", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No hypercare roster is confirmed."},
+    {"id": "trust.student_copy_approved", "area": "trust", "status": "not_verified", "evidence": [], "gap": "Student-facing copy has no recorded approval."},
+    {"id": "trust.privacy_and_data_scope_reviewed", "area": "trust", "status": "not_verified", "evidence": [], "gap": "Privacy and data scope have no recorded review for a pilot (see docs/trust/DATA-INVENTORY.md)."},
+    {"id": "trust.accessibility_critical_path_reviewed", "area": "trust", "status": "not_verified", "evidence": [], "gap": "No manual accessibility review of the critical path is recorded (see PUBLIC-CLAIMS-APPROVAL-REGISTER.md CLM-008)."},
+    {"id": "trust.institution_support_contacts_published", "area": "trust", "status": "not_verified", "evidence": [], "gap": "No institution support contacts are published for this pilot."}
+  ]
+}

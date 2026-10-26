@@ -94,7 +94,12 @@ export function GoalPlan({
                   value={m.by ?? ''}
                   onChange={(e) => change(editMilestone(plan, m.id, { by: e.target.value || null }))}
                 />
-                <button type="button" className="btn workspace-text-button" aria-label={`Remove milestone ${i + 1}`} onClick={() => change(removeMilestone(plan, m.id))}>
+                <button
+                  type="button"
+                  className="btn workspace-text-button"
+                  aria-label={`Remove milestone ${i + 1} of ${plan.milestones.length}, ${m.title || 'Untitled milestone'}: ${m.by ? `due ${shown(m.by)}` : 'no date'}`}
+                  onClick={() => change(removeMilestone(plan, m.id))}
+                >
                   Remove
                 </button>
               </li>
@@ -118,17 +123,25 @@ export function GoalPlan({
 
           <h3>Actions</h3>
           <ul>
-            {plan.actions.map((a) => (
-              <li key={a.id}>
-                <label>
-                  <input type="checkbox" checked={a.done} onChange={() => change(toggleAction(plan, a.id))} />
-                  {a.title}
-                </label>
-                <button type="button" className="btn workspace-text-button" aria-label={`Remove action ${a.title}`} onClick={() => change(removeAction(plan, a.id))}>
-                  Remove
-                </button>
-              </li>
-            ))}
+            {plan.actions.map((a, i) => {
+              const milestone = plan.milestones.find((item) => item.id === a.milestone);
+              return (
+                <li key={a.id}>
+                  <label>
+                    <input type="checkbox" checked={a.done} onChange={() => change(toggleAction(plan, a.id))} />
+                    {a.title}
+                  </label>
+                  <button
+                    type="button"
+                    className="btn workspace-text-button"
+                    aria-label={`Remove action ${i + 1} of ${plan.actions.length}, ${a.title || 'Untitled action'}: ${a.done ? 'done' : 'not done'} · ${milestone ? `under ${milestone.title || 'untitled milestone'}` : 'not attached to a milestone'}`}
+                    onClick={() => change(removeAction(plan, a.id))}
+                  >
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
           </ul>
           <label>
             Add an action
@@ -162,7 +175,12 @@ export function GoalPlan({
                     min={dateToIso(now)}
                     onChange={(e) => change(moveBlock(plan, b.id, { day: e.target.value }))}
                   />
-                  <button type="button" className="btn workspace-text-button" aria-label={`Remove block ${i + 1}`} onClick={() => change(removeBlock(plan, b.id))}>
+                  <button
+                    type="button"
+                    className="btn workspace-text-button"
+                    aria-label={`Remove proposed block ${i + 1} of ${plan.calendarBlocks.length}, ${b.title || 'Untitled block'}: ${shown(b.day)} · ${b.minutes} ${b.minutes === 1 ? 'minute' : 'minutes'}`}
+                    onClick={() => change(removeBlock(plan, b.id))}
+                  >
                     Remove
                   </button>
                 </li>

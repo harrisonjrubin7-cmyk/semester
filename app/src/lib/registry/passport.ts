@@ -30,10 +30,19 @@ function isObject(value: unknown): value is Obj {
 const isText = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 const isTextList = (value: unknown): value is string[] => Array.isArray(value) && value.every(isText);
 
+// A reference to another artifact must carry that artifact's prefix: POL-, EVD-, TST-, REL-, SLO-.
+const refPattern = (prefix: string) => new RegExp(`^${prefix}-[A-Z0-9]+(-[A-Z0-9]+)*$`);
+
 export function validatePassport(value: unknown): PassportProblem[] {
   const problems: PassportProblem[] = [];
   const need = (ok: boolean, path: string, message: string) => {
     if (!ok) problems.push({ path, message });
+  };
+  const refs = (path: string, list: unknown, prefix: string) => {
+    if (!Array.isArray(list)) return;
+    list.forEach((item, i) =>
+      need(isText(item) && refPattern(prefix).test(item), `${path}[${i}]`, `must be a ${prefix}- identifier`),
+    );
   };
 
   if (!isObject(value) || !isObject(value.passport)) {
@@ -88,6 +97,11 @@ export function validatePassport(value: unknown): PassportProblem[] {
   for (const field of ['release_gate', 'safe_off_path']) {
     need(isText(controls[field]), `control_plane.${field}`, 'is required');
   }
+  refs('control_plane.policy_ids', controls.policy_ids, 'POL');
+  refs('control_plane.required_evidence', controls.required_evidence, 'EVD');
+  if (isText(controls.release_gate)) {
+    need(refPattern('REL').test(controls.release_gate), 'control_plane.release_gate', 'must be a REL- identifier');
+  }
 
   const quality = section('quality');
   need(isTextList(quality.test_suites) && (quality.test_suites as string[]).length > 0, 'quality.test_suites', 'must list at least one suite');
@@ -96,8 +110,10 @@ export function validatePassport(value: unknown): PassportProblem[] {
     'quality.accessibility_requirements',
     'must list at least one requirement',
   );
+  refs('quality.test_suites', quality.test_suites, 'TST');
   if (quality.service_objectives !== undefined) {
     need(isTextList(quality.service_objectives), 'quality.service_objectives', 'must be a list of text');
+    refs('quality.service_objectives', quality.service_objectives, 'SLO');
   }
   if (quality.source_freshness_requirements !== undefined) {
     need(isText(quality.source_freshness_requirements), 'quality.source_freshness_requirements', 'must be text');

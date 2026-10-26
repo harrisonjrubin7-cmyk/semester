@@ -48,10 +48,13 @@ import {
   enroll,
   explain,
   grantOverride,
+  holdOffices,
   holdsRegistrar,
   inPlan,
   landing,
   loadMyHold,
+  loadMyReadiness,
+  loadOfficeHolds,
   loadMyRegistration,
   loadPending,
   loadSections,
@@ -61,6 +64,8 @@ import {
   putSection,
   putTerm,
   readAnswer,
+  resolveHold,
+  staleTerms,
   withdraw,
   type LiveSection,
 } from './client';
@@ -233,5 +238,76 @@ describe('beside the plan', () => {
     expect(inPlan(section({ section: '02' }), cart)).toBe('course');
     expect(inPlan(other, cart)).toBeNull();
     expect(meetsSaid(section().meetings)).toBe('Mon Wed 09:00–09:50');
+  });
+});
+
+describe('a hold, for the office that placed it', () => {
+  it('opens the holds desk only for an office grant at this school', () => {
+    const grants = [
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu/bursar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu/bursar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'other-u/bursar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'school', scopeId: 'vu' },
+      // Shaped like an office scope, but a department grant: has_capability('office', …) would not match it.
+      { capability: 'registration_hold:resolve', scopeKind: 'department', scopeId: 'vu/econ' },
+      { capability: 'registration:administer', scopeKind: 'office', scopeId: 'vu/registrar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu/' },
+      // A school whose id is a prefix of this one is not this one.
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu2/bursar' },
+    ];
+    expect(holdOffices(grants, 'vu')).toEqual(['vu/bursar']);
+    expect(holdOffices(grants, '')).toEqual([]);
+  });
+
+  it('lists one office’s holds by its scope, and reads no reason even if one is sent', async () => {
+    replies.set('rpc:registration_holds_for_office', { data: [{ hold_id: 'h-1', student: 'stu-1', placed_at: '2026-10-01T00:00:00Z', reason: 'unpaid tuition' }] });
+    const holds = await loadOfficeHolds('vu/bursar');
+    expect(calls[0]).toMatchObject({ kind: 'rpc', name: 'registration_holds_for_office', args: { want_office: 'vu/bursar' } });
+    expect(holds).toEqual([{ holdId: 'h-1', student: 'stu-1', placedAt: '2026-10-01T00:00:00Z' }]);
+    expect(JSON.stringify(holds)).not.toContain('unpaid');
+  });
+
+  it('resolves with the hold, the key and the state the office saw, and keeps the receipt’s words', async () => {
+    replies.set('rpc:registration_hold_resolve', {
+      data: { ok: true, outcome: 'hold_resolved', reason: 'ok', message: 'The hold is resolved. This is not enrollment: the student still has to enroll.', replayed: false, promoted: 0, resolved_at: '2026-10-20T12:00:00Z', hold: { id: 'h-1', office: 'vu/bursar' } },
+    });
+    const a = await resolveHold('h-1', 'hold:h-1.k1');
+    expect(calls[0]).toMatchObject({ name: 'registration_hold_resolve', args: { want_hold: 'h-1', want_key: 'hold:h-1.k1', want_expect: 'held' } });
+    expect(a).toMatchObject({ ok: true, outcome: 'hold_resolved', resolvedAt: '2026-10-20T12:00:00Z' });
+    expect(a.message).toContain('This is not enrollment');
+  });
+
+  it('says a hold already released, or at another school, in words', async () => {
+    replies.set('rpc:registration_hold_resolve', { data: { ok: false, outcome: 'refused', reason: 'stale_hold', message: 'x' } });
+    expect((await resolveHold('h-1', 'hold:h-1.k2')).message).toMatch(/released this hold since you looked/);
+    replies.set('rpc:registration_hold_resolve', { data: { ok: false, outcome: 'refused', reason: 'unknown_hold', message: 'x' } });
+    expect((await resolveHold('h-9', 'hold:h-9.k1')).message).toMatch(/not at your school/);
+  });
+
+  it('throws the server’s sentence for another office, and an unanswered call is not settled', async () => {
+    replies.set('rpc:registration_hold_resolve', { error: { message: 'semester: only the office that placed this hold can resolve it', code: '42501' } });
+    const refused = await resolveHold('h-1', 'hold:h-1.k3').catch((e: unknown) => e);
+    expect(refused).toBeInstanceOf(ServiceError);
+    expect((refused as ServiceError).answered).toBe(true);
+    expect((refused as Error).message).toBe('Only the office that placed this hold can resolve it.');
+    replies.set('rpc:registration_hold_resolve', { error: { message: 'Failed to fetch' } });
+    expect(((await resolveHold('h-1', 'hold:h-1.k4').catch((e: unknown) => e)) as ServiceError).answered).toBe(false);
+  });
+});
+
+describe('the student’s readiness, as the server holds it', () => {
+  it('reads my_registration_readiness and names the terms that went stale', async () => {
+    replies.set('rpc:my_registration_readiness', {
+      data: [
+        { term: '2026FA', state: 'stale', updated_at: 'a' },
+        { term: '2027SP', state: 'stale', updated_at: 'b' },
+        { term: '2027SU', state: 'requested', updated_at: 'c' },
+      ],
+    });
+    const standing = await loadMyReadiness();
+    expect(calls[0]).toMatchObject({ kind: 'rpc', name: 'my_registration_readiness' });
+    expect(standing[0]).toEqual({ term: '2026FA', state: 'stale', updatedAt: 'a' });
+    expect(staleTerms(standing)).toEqual(['2026FA', '2027SP']);
+    expect(staleTerms([{ term: '2026FA', state: 'ready', updatedAt: 'a' }])).toEqual([]);
   });
 });
