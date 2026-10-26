@@ -23,6 +23,7 @@ import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
+import type { default as _FacilitiesEp } from '../src/api/facilities';
 import type { default as _FilesEp } from '../src/api/files';
 import type { default as _FinancialAidEp } from '../src/api/financialAid';
 import type { default as _GetTodayEp } from '../src/api/getToday';
@@ -178,6 +179,11 @@ type _EventDeliveryCfg = typeof _EventDeliveryEp;
 export type EventDeliveryInputType = NonNullable<_EventDeliveryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EventDeliveryCfg['execute']>[0]['input'];
 export type EventDeliveryOutputType = Awaited<ReturnType<_EventDeliveryCfg['execute']>>;
 export const eventDelivery = createCaller<EventDeliveryInputType, EventDeliveryOutputType>('eventDelivery');
+
+type _FacilitiesCfg = typeof _FacilitiesEp;
+export type FacilitiesInputType = NonNullable<_FacilitiesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FacilitiesCfg['execute']>[0]['input'];
+export type FacilitiesOutputType = Awaited<ReturnType<_FacilitiesCfg['execute']>>;
+export const facilities = createCaller<FacilitiesInputType, FacilitiesOutputType>('facilities');
 
 type _FilesCfg = typeof _FilesEp;
 export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FilesCfg['execute']>[0]['input'];
@@ -452,6 +458,7 @@ export const api = {
   devApps,
   dining,
   eventDelivery,
+  facilities,
   files,
   financialAid,
   getToday,

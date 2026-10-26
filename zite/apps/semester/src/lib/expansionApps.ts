@@ -19,7 +19,7 @@ export const EXPANSION_APPS: ExpansionRow[] = [
   { id: 'E10', name: 'Institutional Finance', stage: 4, cls: 'blocked', reuse: 'none', blockedBy: 'Money movement stays disabled; ledger ownership decision needed' },
   { id: 'E11', name: 'Budget and Planning', stage: 4, cls: 'new', reuse: 'none' },
   { id: 'E12', name: 'Contracts', stage: 4, cls: 'new', reuse: 'Hash-pinned acceptance (housing contracts)' },
-  { id: 'E13', name: 'Facilities', stage: 6, cls: 'extend', reuse: 'Housing maintenance requests (hsg_maint) cover residence halls only' },
+  { id: 'E13', name: 'Facilities', stage: 6, cls: 'built', reuse: 'Campus → Facilities (fac_*): reports with minimum-necessary status, duplicates, authorized and assigned work orders, completion evidence, independent inspection, restricted locations, expiring contractor access, planned maintenance. Residence halls stay in Housing (hsg_maint); parts are not yet linked to Inventory' },
   { id: 'E14', name: 'Assets and Inventory', stage: 6, cls: 'built', reuse: 'Campus → Inventory (ast_*): tagged assets with custody and inspection history, independent disposal approval, stock that never goes negative, reservations, issues, returns, counts with independent adjustment approval' },
   { id: 'E15', name: 'IT Service Management', stage: 6, cls: 'built', reuse: 'Campus → IT help (its_*): tickets, incidents, restricted security incidents, owner-approved changes' },
   { id: 'E16', name: 'Campus Identity and Card', stage: 6, cls: 'new', reuse: 'Dining entitlements (dng_entitlements)' },
