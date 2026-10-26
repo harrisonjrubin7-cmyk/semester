@@ -50,6 +50,7 @@ import Faculty, { Appointments } from './pages/Faculty';
 import Integrity from './pages/Integrity';
 import Housing from './pages/Housing';
 import ITService from './pages/ITService';
+import Library from './pages/Library';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
 import Curriculum from './pages/Curriculum';
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="/campus/accommodations" element={<Accommodations />} />
             <Route path="/campus/housing" element={<Housing />} />
             <Route path="/campus/it" element={<ITService />} />
+            <Route path="/campus/library" element={<Library />} />
             <Route path="/campus/dining" element={<Dining />} />
             <Route path="/learn/tutoring" element={<Tutoring />} />
             <Route path="/progress/graduate" element={<Graduate />} />

@@ -39,6 +39,7 @@ import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _IntelligenceEp } from '../src/api/intelligence';
 import type { default as _ItServiceEp } from '../src/api/itService';
 import type { default as _LearnEp } from '../src/api/learn';
+import type { default as _LibraryEp } from '../src/api/library';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
@@ -256,6 +257,11 @@ export type LearnInputType = NonNullable<_LearnCfg['inputSchema']> extends { _in
 export type LearnOutputType = Awaited<ReturnType<_LearnCfg['execute']>>;
 export const learn = createCaller<LearnInputType, LearnOutputType>('learn');
 
+type _LibraryCfg = typeof _LibraryEp;
+export type LibraryInputType = NonNullable<_LibraryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_LibraryCfg['execute']>[0]['input'];
+export type LibraryOutputType = Awaited<ReturnType<_LibraryCfg['execute']>>;
+export const library = createCaller<LibraryInputType, LibraryOutputType>('library');
+
 type _ManageTaskCfg = typeof _ManageTaskEp;
 export type ManageTaskInputType = NonNullable<_ManageTaskCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ManageTaskCfg['execute']>[0]['input'];
 export type ManageTaskOutputType = Awaited<ReturnType<_ManageTaskCfg['execute']>>;
@@ -450,6 +456,7 @@ export const api = {
   intelligence,
   itService,
   learn,
+  library,
   manageTask,
   migrationApproval,
   officeHours,
