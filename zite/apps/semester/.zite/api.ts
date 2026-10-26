@@ -20,6 +20,7 @@ import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DevAppsEp } from '../src/api/devApps';
+import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
 import type { default as _FilesEp } from '../src/api/files';
 import type { default as _FinancialAidEp } from '../src/api/financialAid';
@@ -156,6 +157,11 @@ type _DevAppsCfg = typeof _DevAppsEp;
 export type DevAppsInputType = NonNullable<_DevAppsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DevAppsCfg['execute']>[0]['input'];
 export type DevAppsOutputType = Awaited<ReturnType<_DevAppsCfg['execute']>>;
 export const devApps = createCaller<DevAppsInputType, DevAppsOutputType>('devApps');
+
+type _DiningCfg = typeof _DiningEp;
+export type DiningInputType = NonNullable<_DiningCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DiningCfg['execute']>[0]['input'];
+export type DiningOutputType = Awaited<ReturnType<_DiningCfg['execute']>>;
+export const dining = createCaller<DiningInputType, DiningOutputType>('dining');
 
 type _EventDeliveryCfg = typeof _EventDeliveryEp;
 export type EventDeliveryInputType = NonNullable<_EventDeliveryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EventDeliveryCfg['execute']>[0]['input'];
@@ -407,6 +413,7 @@ export const api = {
   courseTeam,
   curriculum,
   devApps,
+  dining,
   eventDelivery,
   files,
   financialAid,
