@@ -12,6 +12,7 @@ import { ArrowLeft } from 'lucide-react';
 import { NewAssignment, Attendance, Discussion } from '../components/CourseOps';
 import Assessments from '../components/Assessments';
 import CourseTeam from '../components/CourseTeam';
+import CourseGroups from '../components/CourseGroups';
 import { courseTeam } from 'zitejs/api';
 import { rubricScore, Criterion } from '../lib/rubricRules';
 import { PageHeader, Panel, Empty, SourceTag, Status, fmt, useLoad, Loadable, errMsg } from '../components/kit';
@@ -100,8 +101,9 @@ export default function SectionPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs defaultValue="assignments">
-              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}</TabsList>
+              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="groups">Groups</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}</TabsList>
               <TabsContent value="discussion"><Discussion sectionId={sectionId} /></TabsContent>
+              <TabsContent value="groups"><CourseGroups sectionId={sectionId} /></TabsContent>
               <TabsContent value="assessments"><Assessments sectionId={sectionId} /></TabsContent>
               <TabsContent value="attendance"><Attendance sectionId={sectionId} isTeacher={d.teaching} /></TabsContent>
               <TabsContent value="assignments" className="space-y-3">

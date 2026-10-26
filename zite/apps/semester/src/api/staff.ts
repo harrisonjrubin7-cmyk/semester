@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAction, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
+import { delegatedSections } from '../lib/teamServer';
+import { requireAction, requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
 
 const GRADES = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F', 'W', 'I'];
 
@@ -22,8 +23,13 @@ export default createEndpoint({
     const uid = context.user.id;
 
     if (input.action === 'gradebook' || input.action === 'setFinal' || input.action === 'taQueue') {
-      const a = await requireAction(uid, 'teaching.queue');
-      const secs = (await zite.sections.findAll({ filters: { instructors: uid }, limit: 200 })).records;
+      // The TA queue also serves grading delegates (team-001), who may hold any role; gradebook and final grades stay
+      // with teaching roles and the sections they teach.
+      const delegated = input.action === 'taQueue' ? await (async () => { const m = await requireAccess(uid); return { a: m, ids: await delegatedSections(m.institutionId, uid) }; })() : null;
+      const a = delegated && delegated.ids.length ? delegated.a : await requireAction(uid, 'teaching.queue');
+      const taught = (await zite.sections.findAll({ filters: { instructors: uid }, limit: 200 })).records;
+      const extra = delegated?.ids.length ? (await Promise.all(delegated.ids.filter((id) => !taught.some((t) => t.id === id)).map((id) => zite.sections.findOne({ id })))).filter(Boolean) as typeof taught : [];
+      const secs = [...taught, ...extra];
       const secIds = new Set(secs.map((s) => s.id));
       if (input.action === 'setFinal') {
         const e = await zite.enrollments.findOne({ id: input.enrollmentId });
