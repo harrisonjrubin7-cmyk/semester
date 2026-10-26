@@ -308,7 +308,7 @@ begin
   -- visibly and returns no package; a reviewed retry uses a new key.
   set local role postgres;
   perform set_config('request.jwt.claims', '', true);
-  update public.legal_holds set released_by = op3, released_at = now(), release_reason = 'Export review complete'
+  update public.legal_holds set released_by = op2, released_at = now(), release_reason = 'Export review complete'
    where matter_ref = 'EXPORT-MATTER';
   reset role;
   perform pg_temp.become(op1);
@@ -418,7 +418,8 @@ begin
 
   set local role postgres;
   perform set_config('request.jwt.claims', '', true);
-  update public.legal_holds set released_by = op1, released_at = now(), release_reason = 'Matter closed';
+  update public.legal_holds set released_by = op1, released_at = now(), release_reason = 'Matter closed'
+   where matter_ref = 'MATTER-1';
   reset role;
   perform pg_temp.become(op1);
   perform pg_temp.must_refuse('the approver authorizing the purge',
