@@ -39,6 +39,7 @@ export default function You() {
               </div>))}
           </Panel>
           <Panel title="Your data">
+            <p className="mb-2 text-sm"><a href="/you/files" className="text-primary underline">Files</a> — private uploads, shared only with people you name, until a date you set.</p>
             <p className="text-sm text-muted-foreground">Download everything Semester holds about you, or ask for it to be deleted. Private notes are never shared.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button variant="outline" onClick={exportData}>Export my data</Button>

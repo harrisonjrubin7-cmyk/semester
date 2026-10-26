@@ -19,6 +19,8 @@ chosen, why, and what it changes. They can be reversed by the founder; reversing
   Size cap per file; larger files wait for an external private bucket with short-lived signed URLs.
 - Uploads stay switched off until the store passes its tests (cross-tenant and cross-user denial, revoked-share
   denial, size limit).
+- Status 26 Oct: built (`api/files.ts`, `lib/filMigration.ts`, You → Files) and passing those tests. Personal uploads are
+  on; attaching files to course submissions and career evidence is the next step (they still refuse URLs).
 
 ## D3 Institutional sign-on before real data
 - SSO (SAML or OIDC through the institution's identity provider) is **required before any real student record**

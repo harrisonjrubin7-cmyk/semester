@@ -6,7 +6,7 @@ MOD-004,Core workspace,Tasks & Goals,S-53 §1,student-owned,native,/today manage
 MOD-005,Core workspace,Notifications,S-53 §1,derived,native,/today/notifications zite.messages,yes,partial,built parts only,no,no,no
 MOD-006,Core workspace,Communications,S-53 §1,institution-official,native,/today/mail inbox,yes,partial,built parts only,no,no,no
 MOD-007,Core workspace,Notes & Documents,S-53 §1,student-owned,native,/learn/write,yes,partial,built parts only,no,no,no
-MOD-008,Core workspace,Files & Resources,S-53 §1,student-owned,native,none (private storage blocked),yes,missing,NOT RUN,no,no,no
+MOD-008,Core workspace,Files & Resources,S-53 §1,student-owned,native,/you/files api/files fil-001 (private store; folders and attachments to submissions not yet),yes,partial,unit + rolled-back DB checks,no,no,no
 MOD-009,Core workspace,Projects & Group Workspaces,S-53 §1,student-owned,native,none,yes,missing,NOT RUN,no,no,no
 MOD-010,Core workspace,Focus & Study Sessions,S-53 §1,student-owned,native,/learn/study study,yes,partial,built parts only,no,no,no
 MOD-011,Core workspace,Universal Search,S-53 §1,derived,native,search,yes,partial,built parts only,no,no,no

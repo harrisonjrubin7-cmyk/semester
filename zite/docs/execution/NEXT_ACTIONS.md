@@ -19,7 +19,8 @@ check_app -> unit suites -> mutation check on pure modules -> commit -> re-impor
    reg.seat outbox rows applied (REG-060), reg_audit/reg_receipts append-only (REG-058).
    DONE 25 Oct: commit-time re-check (REG-036) and idempotent, resumable submit (REG-065).
    DONE 25 Oct: per-student commit serialization (REG-023).
-   Next from the registers, local and unblocked: deny-decision audit with correlation id (SEC-039); per-user rate limit on ask.ts and onboarding (SEC-045/046);
+   DONE 26 Oct: allow/deny decision log with correlation id (SEC-039, partial: forbid()/requireAccess denials not yet logged).
+   Next from the registers, local and unblocked: per-user rate limit on ask.ts and onboarding (SEC-045/046);
    add/drop deadline and course withdrawal 'W' (REG-006/049).
 2. DONE 25 Oct: waitlists and registrar-decided drop/atomic swap. Follow-up: C17 resolved 25 Oct (staff desk direct write removed); concurrent decide load test.
 3. DONE 25 Oct: Integration Admin scopes and reconciliation runs (api/reconciliation.ts, Console tab, lib/reconRules tests).
@@ -29,7 +30,7 @@ check_app -> unit suites -> mutation check on pure modules -> commit -> re-impor
 
 ## Decided 25 Oct
 See `decisions-2026-10-25.md` (D1–D6). GitHub branch `zite/sync-2026-10-25` holds the Zite tree.
-Next (this session): private file store (D2).
+DONE 26 Oct: private file store (D2) — You → Files. Next: attach stored files to course submissions and career evidence.
 
 ## Blocked (owner)
 - Publish Semester / Company OS: founder presses Publish in Zite (publish_app was denied; do not work around).

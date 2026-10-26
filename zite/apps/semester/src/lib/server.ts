@@ -3,6 +3,7 @@ import { ZiteError } from 'zitejs/backend';
 import { authorize, Action } from './authz';
 import { pg } from './pg';
 import { roleForApp } from './roleApps';
+import { DEC_MIGRATION } from './decMigration';
 
 export const ids = (v: string | string[] | undefined | null): string[] =>
   !v ? [] : Array.isArray(v) ? v : [v];
@@ -16,6 +17,8 @@ export type Access = {
   roles: string[];
   /** the tenant is a demo/sample institution: its catalog records are labelled Sample */
   isSample: boolean;
+  /** ties this request's authorization decision (authz_decisions) to the audit events it writes */
+  correlationId?: string;
 };
 
 /** Deny by default: caller must hold an active membership in a tenant. */
@@ -43,9 +46,26 @@ export async function requireAction(userId: string, action: Action, extra: { pol
   const activeRole = m ? await activeRoleOf(tenantId, userId, m.roles ?? []) : undefined;
   const d = authorize({ actorId: userId, membership: m ? { status: m.status ?? '', tenantId, roles: m.roles ?? [], templates: m.roleTemplates ?? [], activeRole } : null, action,
     resource: { tenantId, classification: 'directory' }, ...extra });
-  if (!d.allow) throw new ZiteError({ code: 'FORBIDDEN', message: `authz:${d.failed}:${action}`, userFacingMessage: d.reason });
+  const correlationId = crypto.randomUUID();
+  await logDecision({ correlationId, actorId: userId, tenantId, action, allow: d.allow, failedRule: d.allow ? null : String(d.failed ?? '') });
+  if (!d.allow) throw new ZiteError({ code: 'FORBIDDEN', message: `authz:${d.failed}:${action}:${correlationId}`, userFacingMessage: `${d.reason} (Reference ${correlationId.slice(0, 8)})` });
   const inst = await zite.institutions.findOne({ id: tenantId });
-  return { userId, membershipId: m!.id, institutionId: tenantId, institutionName: inst?.name ?? '', roles: m!.roles ?? [], isSample: !!inst?.isSample };
+  return { userId, membershipId: m!.id, institutionId: tenantId, institutionName: inst?.name ?? '', roles: m!.roles ?? [], isSample: !!inst?.isSample, correlationId };
+}
+
+let decReady: Promise<void> | null = null;
+/** SEC-039: every requireAction decision, allow or deny, goes to the append-only authz_decisions log. A deny is logged before it
+ *  throws; if the log write itself fails the request is refused rather than proceeding unlogged. */
+async function logDecision(e: { correlationId: string; actorId: string; tenantId: string; action: string; allow: boolean; failedRule: string | null }) {
+  const sql = pg();
+  if (!decReady) decReady = (async () => { for (const q of DEC_MIGRATION) await sql.query(q); })().catch((x) => { decReady = null; throw x; });
+  try {
+    await decReady;
+    await sql.query(`INSERT INTO authz_decisions (correlation_id, actor_id, tenant_id, action, decision, failed_rule) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [e.correlationId, e.actorId, e.tenantId, e.action, e.allow ? 'allow' : 'deny', e.failedRule]);
+  } catch {
+    throw new ZiteError({ code: 'FORBIDDEN', message: 'authz:log_unavailable', userFacingMessage: 'This action is unavailable right now. Try again in a moment.' });
+  }
 }
 
 /** The role a multi-role person is acting as, from the app they explicitly switched to. Single-role people, people who never
@@ -93,11 +113,12 @@ export async function tenantScope(institutionId: string): Promise<Tenant> {
 /** True when any id in a linked/user field value is inside the set. */
 export const inSet = (v: string | string[] | undefined | null, set: Set<string>) => ids(v).some((x) => set.has(x));
 
-export async function audit(a: Access | { userId: string; institutionId?: string }, action: string, recordRef: string, details = '', authority = '', viaAssistant = false) {
+export async function audit(a: Access | { userId: string; institutionId?: string; correlationId?: string }, action: string, recordRef: string, details = '', authority = '', viaAssistant = false) {
+  const cid = 'correlationId' in a && a.correlationId ? ` · ref ${a.correlationId}` : '';
   await zite.auditEvents.create({
     record: {
       action, actor: a.userId, institution: a.institutionId ?? null, recordRef,
-      authority, viaAssistant, details,
+      authority, viaAssistant, details: `${details}${cid}`,
     },
   });
 }

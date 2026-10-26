@@ -26,6 +26,7 @@ import AcademicCalendar from './pages/AcademicCalendar';
 import Catalog from './pages/Catalog';
 import Transfer from './pages/Transfer';
 import FinancialAid from './pages/FinancialAid';
+import Files from './pages/Files';
 import { MyAccountServices, AccountServicesStaff } from './components/AccountServices';
 import Progress from './pages/Progress';
 import You from './pages/You';
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="/staff/catalog" element={<Catalog />} />
             <Route path="/plan/transfer" element={<Transfer />} />
             <Route path="/you/aid" element={<FinancialAid />} />
+            <Route path="/you/files" element={<Files />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />

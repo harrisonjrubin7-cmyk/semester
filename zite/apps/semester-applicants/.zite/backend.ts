@@ -114,6 +114,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       "ZITE_APP_URL": string;
+      "ZITE_POSTGRES_URL": string;
     }
   }
 }
