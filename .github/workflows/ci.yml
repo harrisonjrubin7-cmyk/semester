@@ -112,7 +112,7 @@ jobs:
 
       - name: Keep platform-control reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: platform-control-reports
           path: packages/platform-control/generated/
@@ -203,7 +203,7 @@ jobs:
 
       - name: Keep the design-system report
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: design-system-report
           path: app/reports/design-system/
@@ -626,7 +626,7 @@ jobs:
       # is evidence of this ephemeral run, not a production-isolation claim.
       - name: Keep the PostgreSQL policy evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pg17-policy-evidence-${{ github.sha }}
           path: artifacts/database/pg17-policy-evidence.json
