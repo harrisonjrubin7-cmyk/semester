@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'ecosystem', 'releases', 'launch', 'controls', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'offboarding', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'ecosystem', 'releases', 'launch', 'controls', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('console workspace registry', () => {
     expect(visibleConsoleWorkspaces([grant('console:operate')]).map(({ id }) => id)).not.toContain('support');
     expect(visibleConsoleWorkspaces([grant('console:operate'), grant('support:ticket')]).map(({ id }) => id)).not.toContain('tenant-operations');
     expect(visibleConsoleWorkspaces([
-      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'), grant('data_request:handle', 'school', 'vu'), grant('integration:view', 'school', 'vu'), grant('incident:communicate'),
+      grant('console:operate'), grant('support:ticket'), grant('platform:configure'), grant('tenant:implement', 'school', 'vu'), grant('data_request:handle', 'school', 'vu'), grant('integration:view', 'school', 'vu'), grant('incident:communicate'),
     ])).toEqual(CONSOLE_WORKSPACES);
     expect(visibleConsoleWorkspaces([grant('console:operate', 'school', 'vu')])).toEqual([]);
   });
@@ -53,6 +53,13 @@ describe('console workspace registry', () => {
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', 'vu')])).toBe(true);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'platform')])).toBe(false);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', '')])).toBe(false);
+  });
+
+  it('discovers offboarding only from exact platform configuration authority', () => {
+    const offboarding = CONSOLE_WORKSPACES.find(({ id }) => id === 'offboarding')!;
+    expect(canDiscoverWorkspace(offboarding, [grant('platform:configure')])).toBe(true);
+    expect(canDiscoverWorkspace(offboarding, [grant('platform:configure', 'school', 'vu')])).toBe(false);
+    expect(canDiscoverWorkspace(offboarding, [grant('console:operate')])).toBe(false);
   });
 
   it('discovers privacy requests from an exact-school or platform data-rights grant', () => {

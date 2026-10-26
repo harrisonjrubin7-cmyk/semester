@@ -251,6 +251,7 @@
    "private.ledger_chain_start",
    "private.ledger_chain_verification",
    "private.offboarding_export_generation",
+   "private.offboarding_purge_preview_receipt",
    "private.ops_tenant_entitlement_projection",
    "private.ops_tenant_rollout_projection",
    "private.productivity_command",

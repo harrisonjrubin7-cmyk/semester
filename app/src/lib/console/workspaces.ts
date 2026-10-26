@@ -8,6 +8,7 @@ export type ConsoleWorkspaceId =
   | 'approvals'
   | 'breakglass'
   | 'audit'
+  | 'offboarding'
   | 'tenant-operations'
   | 'integration-health'
   | 'release-incidents'
@@ -63,6 +64,14 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
   shell('approvals', 'Approvals', 'restricted'),
   shell('breakglass', 'Break-glass', 'restricted'),
   shell('audit', 'Audit', 'restricted'),
+  {
+    id: 'offboarding',
+    label: 'Offboarding',
+    capability: 'platform:configure',
+    scopeKind: 'platform',
+    scopeId: '',
+    classification: 'restricted',
+  },
   {
     id: 'tenant-operations',
     label: 'Tenant operations',

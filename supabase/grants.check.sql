@@ -236,6 +236,7 @@ declare
     'cancel_offboarding(want uuid, why text)',
     'record_offboarding_notice(want uuid, given_on date)',
     'disable_school_access(want uuid)',
+    'console_offboarding_cases()',
     'generate_offboarding_export(want uuid, want_idempotency_key text)',
     'record_generated_offboarding_export(want uuid, want_generation uuid, delivered_to text)',
     'record_offboarding_export(want uuid, manifest_sha256 text, counts jsonb, delivered_to text)',
@@ -244,6 +245,7 @@ declare
     'restore_school(want uuid, why text)',
     'school_purge_eligibility(want uuid)',
     'authorize_school_purge(want uuid, why text)',
+    'preview_school_purge(want uuid, want_idempotency_key text)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write
