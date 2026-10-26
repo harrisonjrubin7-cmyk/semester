@@ -52,6 +52,7 @@ import Housing from './pages/Housing';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
 import Curriculum from './pages/Curriculum';
+import Programs from './pages/Programs';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="/institution" element={<InstitutionHome />} />
             <Route path="/institution/sections" element={<SectionRequests />} />
             <Route path="/institution/curriculum" element={<Curriculum />} />
+            <Route path="/institution/programs" element={<Programs />} />
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />

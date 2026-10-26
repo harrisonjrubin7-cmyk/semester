@@ -41,6 +41,7 @@ import type { default as _MigrationApprovalEp } from '../src/api/migrationApprov
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _PrivacyEp } from '../src/api/privacy';
+import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
 import type { default as _ReconciliationEp } from '../src/api/reconciliation';
 import type { default as _RecordsRightsEp } from '../src/api/recordsRights';
@@ -261,6 +262,11 @@ export type PrivacyInputType = NonNullable<_PrivacyCfg['inputSchema']> extends {
 export type PrivacyOutputType = Awaited<ReturnType<_PrivacyCfg['execute']>>;
 export const privacy = createCaller<PrivacyInputType, PrivacyOutputType>('privacy');
 
+type _ProgramsCfg = typeof _ProgramsEp;
+export type ProgramsInputType = NonNullable<_ProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgramsCfg['execute']>[0]['input'];
+export type ProgramsOutputType = Awaited<ReturnType<_ProgramsCfg['execute']>>;
+export const programs = createCaller<ProgramsInputType, ProgramsOutputType>('programs');
+
 type _ProgressCfg = typeof _ProgressEp;
 export type ProgressInputType = NonNullable<_ProgressCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgressCfg['execute']>[0]['input'];
 export type ProgressOutputType = Awaited<ReturnType<_ProgressCfg['execute']>>;
@@ -422,6 +428,7 @@ export const api = {
   officeHours,
   onboard,
   privacy,
+  programs,
   progress,
   reconciliation,
   recordsRights,

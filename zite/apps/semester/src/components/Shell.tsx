@@ -10,7 +10,7 @@ import { Wordmark } from '@project/components/brand/Mark';
 
 const NAV = [
   { group: null, items: [{ to: '/today', label: 'Today', icon: Sun }, { to: '/today/notifications', label: 'Notifications', icon: Bell }, { to: '/today/mail', label: 'Mail', icon: Mail }] },
-  { group: 'Plan', items: [{ to: '/plan', label: 'Calendar', icon: CalendarDays }, { to: '/plan/registration', label: 'Registration', icon: ClipboardList }, { to: '/plan/transfer', label: 'Transfer credit', icon: ArrowLeftRight }, { to: '/plan/abroad', label: 'Study abroad', icon: Plane }, { to: '/plan/career', label: 'Career', icon: Briefcase }] },
+  { group: 'Plan', items: [{ to: '/plan', label: 'Calendar', icon: CalendarDays }, { to: '/plan/registration', label: 'Registration', icon: ClipboardList }, { to: '/plan/transfer', label: 'Transfer credit', icon: ArrowLeftRight }, { to: '/plan/abroad', label: 'Study abroad', icon: Plane }, { to: '/institution/programs', label: 'Programs', icon: GraduationCap }, { to: '/plan/career', label: 'Career', icon: Briefcase }] },
   { group: 'Learn', items: [{ to: '/learn', label: 'Courses', icon: BookOpen }, { to: '/learn/study', label: 'Study', icon: Layers }, { to: '/learn/tutoring', label: 'Tutoring', icon: Handshake }, { to: '/learn/write', label: 'Write', icon: PenLine }, { to: '/learn/decks', label: 'Decks', icon: Copy }, { to: '/learn/ask', label: 'Ask Semester', icon: Sparkles }] },
   { group: 'Help', items: [{ to: '/help', label: 'Advising & support', icon: LifeBuoy }, { to: '/help/appointments', label: 'Office hours', icon: CalendarDays }, { to: '/help/advising', label: 'Advising prep', icon: MessageSquare }, { to: '/help/referrals', label: 'Referrals', icon: Forward }] },
   { group: 'Campus', items: [{ to: '/campus', label: 'Clubs & events', icon: Users }, { to: '/campus/community', label: 'Community', icon: MessagesSquare }, { to: '/campus/places', label: 'Places', icon: MapPin }, { to: '/campus/accommodations', label: 'Accommodations', icon: Accessibility }, { to: '/campus/housing', label: 'Housing', icon: BedDouble }] },
@@ -26,6 +26,7 @@ const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[];
   { to: '/faculty', label: 'Teaching', icon: BookOpen, roles: ['Faculty'], action: 'teaching.queue' },
   { to: '/institution', label: 'Institution', icon: Building2, roles: ['Faculty', 'Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/institution/curriculum', label: 'Curriculum', icon: BookOpen, roles: ['Faculty', 'Staff', 'Administrator'], action: 'catalog.manage' },
+  { to: '/institution/programs', label: 'Programs', icon: GraduationCap, roles: ['Faculty', 'Staff', 'Administrator'], action: 'catalog.manage' },
   { to: '/staff/registrar', label: 'Registrar desk', icon: ClipboardCheck, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/calendar', label: 'Academic calendar', icon: CalendarDays, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/catalog', label: 'Catalog & rules', icon: BookOpen, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
