@@ -253,7 +253,8 @@ begin
     end if;
     perform private.record_audit(c.tenant_id, 'school.offboarding_export_replayed',
       'school_offboarding', want::text, 'allowed', null,
-      jsonb_build_object('generation', prior.id, 'tables', jsonb_object_length(prior.counts)));
+      jsonb_build_object('generation', prior.id, 'tables',
+        (select count(*) from jsonb_object_keys(prior.counts))));
     return jsonb_build_object('ok', true, 'replayed', true, 'generation_id', prior.id,
       'manifest_sha256', manifest_hash, 'package_sha256', package_hash, 'counts', counts, 'package', package);
   end if;
@@ -268,7 +269,8 @@ begin
 
   perform private.record_audit(c.tenant_id, 'school.offboarding_export_generated',
     'school_offboarding', want::text, 'allowed', null,
-    jsonb_build_object('generation', made.id, 'tables', jsonb_object_length(counts),
+    jsonb_build_object('generation', made.id, 'tables',
+      (select count(*) from jsonb_object_keys(counts)),
       'manifest_sha256', manifest_hash, 'package_sha256', package_hash,
       'legal_holds_observed', manifest -> 'legal_holds_observed'));
 
@@ -314,7 +316,8 @@ begin
   perform private.record_audit(c.tenant_id, 'school.offboarding_export_recorded',
     'school_offboarding', want::text, 'allowed', null,
     jsonb_build_object('generation', g.id, 'manifest_sha256', g.manifest_sha256,
-      'package_sha256', g.package_sha256, 'tables', jsonb_object_length(g.counts)));
+      'package_sha256', g.package_sha256, 'tables',
+      (select count(*) from jsonb_object_keys(g.counts))));
 end $$;
 
 revoke all on function public.record_generated_offboarding_export(uuid, uuid, text) from public, anon;

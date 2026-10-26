@@ -49,6 +49,8 @@ describe('institution offboarding export package', () => {
     expect(generate).toContain("pg_catalog.sha256(pg_catalog.convert_to(manifest::text, 'UTF8'))");
     expect(generate).toContain("pg_catalog.sha256(pg_catalog.convert_to(package::text, 'UTF8'))");
     expect(build).toContain("'legal_hold_effect', 'preserve_data; export_does_not_authorize_deletion'");
+    expect(sql).not.toContain('jsonb_object_length');
+    expect(generate).toContain('from jsonb_object_keys(counts)');
   });
 
   it('makes retries actor-bound and returns no package when the snapshot changed', () => {
