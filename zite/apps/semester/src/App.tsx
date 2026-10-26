@@ -49,6 +49,7 @@ import { InstitutionHome, SectionRequests } from './pages/InstitutionHome';
 import Faculty, { Appointments } from './pages/Faculty';
 import Integrity from './pages/Integrity';
 import Housing from './pages/Housing';
+import StudyAbroad from './pages/StudyAbroad';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -117,6 +118,7 @@ export default function App() {
             <Route path="/staff/calendar" element={<AcademicCalendar />} />
             <Route path="/staff/catalog" element={<Catalog />} />
             <Route path="/plan/transfer" element={<Transfer />} />
+            <Route path="/plan/abroad" element={<StudyAbroad />} />
             <Route path="/you/aid" element={<FinancialAid />} />
             <Route path="/you/files" element={<Files />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
