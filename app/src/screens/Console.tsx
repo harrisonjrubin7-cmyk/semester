@@ -31,6 +31,7 @@ import { CommandCenter } from '../components/console/CommandCenter';
 import { MyWork } from '../components/console/MyWork';
 import { SupportQueue } from '../components/console/SupportQueue';
 import { TenantOperations } from '../components/console/TenantOperations';
+import { Pilots } from '../components/console/Pilots';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
@@ -280,6 +281,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
+        {tab === 'pilots' && <Pilots {...viewProps} now={now} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
         {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}

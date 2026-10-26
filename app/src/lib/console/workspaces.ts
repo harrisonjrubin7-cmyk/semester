@@ -10,6 +10,7 @@ export type ConsoleWorkspaceId =
   | 'breakglass'
   | 'audit'
   | 'tenant-operations'
+  | 'pilots'
   | 'integration-health'
   | 'release-incidents'
   | 'privacy'
@@ -71,6 +72,14 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
     capability: 'tenant:implement',
     scopeKind: 'school',
     scopeId: null,
+    classification: 'restricted',
+  },
+  {
+    id: 'pilots',
+    label: 'Pilots',
+    capability: 'account:manage',
+    scopeKind: 'platform',
+    scopeId: '',
     classification: 'restricted',
   },
   {

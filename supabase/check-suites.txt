@@ -29,6 +29,7 @@ console-command-center
 console-control-plane
 console-integration-health
 console-no-student-rows
+console-pilots
 console-release-incidents
 console-scoped-tenant-access
 console-security-reads

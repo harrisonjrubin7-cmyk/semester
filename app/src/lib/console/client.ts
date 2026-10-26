@@ -845,6 +845,77 @@ export async function loadIntegrationHealth(includeDemo = false): Promise<Integr
   return rows(data).map(readIntegrationHealth);
 }
 
+// ── pilot portfolio ───────────────────────────────────────────────────────
+
+export type PilotStatus = 'proposed' | 'active' | 'decided';
+export type PilotDecisionKind = 'convert' | 'expand' | 'pause' | 'stop';
+
+export interface PilotPortfolioRow {
+  pilotId: string;
+  accountId: string;
+  accountPublicId: string;
+  accountName: string;
+  accountStatus: string;
+  segment: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  isDemo: boolean;
+  workflow: string;
+  status: PilotStatus;
+  startDate: string;
+  endDate: string;
+  midpointReviewDate: string | null;
+  conversionDate: string | null;
+  hasSponsor: boolean;
+  hasChampion: boolean;
+  annualPriceAgreed: boolean;
+  productionDataApproved: boolean;
+  metricCount: number;
+  readinessProblems: string[];
+  outcomeDecision: PilotDecisionKind | null;
+  outcomeSignedAt: string | null;
+  unresolvedHighSeverity: number | null;
+  updatedAt: string | null;
+  provenance: string;
+  limitation: string;
+}
+
+const PILOT_STATUSES: PilotStatus[] = ['proposed', 'active', 'decided'];
+const PILOT_DECISIONS: PilotDecisionKind[] = ['convert', 'expand', 'pause', 'stop'];
+
+export function readPilot(r: Row): PilotPortfolioRow {
+  if (!PILOT_STATUSES.includes(r.status as PilotStatus)) {
+    throw new Error('The pilot portfolio response contained an unknown pilot status.');
+  }
+  const decision = maybe(r.outcome_decision);
+  if (decision !== null && !PILOT_DECISIONS.includes(decision as PilotDecisionKind)) {
+    throw new Error('The pilot portfolio response contained an unknown outcome decision.');
+  }
+  return {
+    pilotId: text(r.pilot_id), accountId: text(r.account_id), accountPublicId: text(r.account_public_id),
+    accountName: text(r.account_name), accountStatus: text(r.account_status), segment: text(r.segment),
+    tenantId: maybe(r.tenant_id), tenantName: maybe(r.tenant_name), isDemo: r.is_demo === true,
+    workflow: text(r.workflow), status: r.status as PilotStatus,
+    startDate: text(r.start_date), endDate: text(r.end_date),
+    midpointReviewDate: maybe(r.midpoint_review_date), conversionDate: maybe(r.conversion_date),
+    hasSponsor: r.has_sponsor === true, hasChampion: r.has_champion === true,
+    annualPriceAgreed: r.annual_price_agreed === true, productionDataApproved: r.production_data_approved === true,
+    metricCount: num(r.metric_count),
+    readinessProblems: Array.isArray(r.readiness_problems) ? r.readiness_problems.map((p) => text(p)) : [],
+    outcomeDecision: decision as PilotDecisionKind | null, outcomeSignedAt: maybe(r.outcome_signed_at),
+    unresolvedHighSeverity: r.unresolved_high_severity == null ? null : num(r.unresolved_high_severity),
+    updatedAt: maybe(r.updated_at), provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Semester's pilot pipeline, for holders of both the console shell and platform account:manage. */
+export async function loadPilots(includeDemo = false): Promise<PilotPortfolioRow[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_pilots', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read the pilot portfolio.'));
+  return rows(data).map(readPilot);
+}
+
 export type ReleaseIncidentState =
   | 'blocked'
   | 'release_candidate'
