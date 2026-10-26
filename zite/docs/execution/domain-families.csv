@@ -1,0 +1,46 @@
+id,family,submodules,modules,coverage,notes,source
+D01,"Accounts, Identity & Organizations","Accounts, memberships, SSO, provisioning, role grants, delegation, recovery, organization verification","MOD-098,MOD-012",partial,"memberships + epochs, invite/pending joins, role register, context switching; no SSO (D3), no recovery flow",S-54 §3
+D02,Workspace & Productivity,"Today, Action Center, tasks, goals, calendar, notes, documents, files, projects, focus, offline drafts",MOD-001..MOD-012,partial,"Today, tasks, notes, private files; no projects, offline drafts",S-54 §3
+D03,"Search, Knowledge & Education Graph","Search, identifiers, source authority, provenance, freshness, graph","MOD-011,MOD-108",partial,"permission-aware search, source freshness; no graph store",S-54 §3
+D04,Recruitment & Admissions,"CRM, inquiries, visits, applications, recommendations, committee review, decisions, yield","Applicants app, admissions",partial,"applicant portal and admissions decisions; no committee review, recommendations, yield",S-54 §3
+D05,Onboarding & Transition,"Acceptance, orientation, placement, checklists, transition, return from leave",onboard,partial,onboarding consents; no orientation/placement/return from leave,S-54 §3
+D06,Academic Planning & Degree Audit,"Program exploration, requirements, what-if, audit, schedules, comparison, workload/cost",MOD-013..MOD-020,partial,"degree progress, transfer path comparison; no what-if, comparison, cost",S-54 §3
+D07,Curriculum & Academic Scheduling,"Proposals, catalog versions, terms, sections, rooms, assignments, prerequisites, review","MOD-051,MOD-052",partial,"catalog rules, academic calendar; no rooms, curriculum proposals",S-54 §3
+D08,Registration & Enrollment,"Readiness, holds, eligibility, cart, enrollment, seats, waitlists, add/drop, withdrawal","MOD-021..MOD-023,MOD-053",partial,"ledger commits, waitlists, drop/swap, re-check, idempotent submit, per-student serialization; no course withdrawal (W)",S-54 §3
+D09,Academic Records & Credentials,"Official grades, corrections, transcripts, graduation, conferral, verification, revocation",MOD-055..MOD-059,partial,ledger and records rights; posting/conferral/transcripts disabled until authorized,S-54 §3
+D10,Transfer & Articulation,"Intake, equivalencies, agreements, evaluations, pathways, reconciliation","MOD-024,MOD-057",partial,"evaluations, path comparison; no agreements, no transcript posting",S-54 §3
+D11,Learning & Course Studio,"Authoring, syllabus, modules, resources, announcements, rosters, archive, accessibility checks",MOD-026..MOD-029,partial,"syllabus versions, materials, assignments; no modules/archive",S-54 §3
+D12,"Assessment, Grading & Integrity","Assignments, submissions, quizzes, exams, item banks, rubrics, feedback, moderation, appeals, integrity","MOD-030..MOD-032,MOD-039",partial,"submissions with private files, assessments, rubrics, delegated grading, regrades; no item banks, integrity cases",S-54 §3
+D13,"Study, Research & Writing Tools","Study packs, practice, notes, sources, evidence, citation, drafting",MOD-035..MOD-037,partial,"study, decks, writing; no research workspace",S-54 §3
+D14,Advising & Student Success,"Caseloads, appointments, notes, shared plans, referrals, cases, interventions",MOD-040..MOD-047,partial,"cases, shares, referrals with outbox; appointments in progress (apt-001)",S-54 §3
+D15,"Tutoring, Learning Centers & Mentoring","Matching, qualifications, scheduling, peer support, attendance, evaluation","MOD-044,MOD-045",partial,tutoring sessions; mentoring desk,S-54 §3
+D16,Accessibility & Accommodations,"Intake, restricted docs, review, decisions, notices, formats, implementation, appeals",MOD-048,partial,accommodation requests and letters; restricted documents now possible via private store,S-54 §3
+D17,Wellness & Basic Needs,"Resource navigation, referrals, emergency aid, food security; clinical separately governed",MOD-049,partial,resources and referrals only (no clinical records by design),S-54 §3
+D18,"International, Veterans & Global Programs","International advising, immigration workflows, benefits, study abroad, return credit",,missing,role apps exist as shells; no workflows,S-54 §3
+D19,Athletics & Academic Support,"Eligibility, rosters, travel conflicts, support, compliance",,missing,role apps as shells; athlete-chosen shares only,S-54 §3
+D20,Financial Aid & Scholarships,"Requirements, verification, packaging, appeals, SAP, awards, disbursement","MOD-063,MOD-065",partial,checklists and requirement review; no packaging/disbursement (no money movement),S-54 §3
+D21,Student Accounts & Payments,"Charges, statements, installments, payments, refunds, disputes, holds, collections","MOD-061,MOD-066,MOD-067",partial,"statements, disputes, approved-not-posted proposals; payments disabled",S-54 §3
+D22,Housing & Residence Life,"Applications, contracts, assignments, roommates, occupancy, maintenance, programs","MOD-074,MOD-075",missing,,S-54 §3
+D23,"Dining, Campus Card & Commerce","Menus, ingredients, meal plans, inventory, POS, entitlements, meal donation",MOD-076,missing,,S-54 §3
+D24,"Facilities, Spaces & Campus Mobility","Rooms, reservations, work orders, assets, maps, transit, parking","MOD-077,MOD-078",missing,places directory only,S-54 §3
+D25,Campus Community & Organizations,"Communities, clubs, officers, elections, constitutions, budgets, events","MOD-069..MOD-071,MOD-073",partial,community with moderation; no elections/budgets,S-54 §3
+D26,Marketplace & Partner Commerce,"Listings, partner verification, orders, fulfillment, disputes",MOD-072,missing,,S-54 §3
+D27,"Career, Skills & Experiential Learning","Skills, verified evidence, portfolios, resumes, coaching, internships, outcomes",MOD-083..MOD-088,partial,achievements with private evidence and verification; no resumes/internships,S-54 §3
+D28,Employer & External Partnerships,"Employer verification, recruiting, postings, partnerships",MOD-089,partial,employer portal,S-54 §3
+D29,"Alumni, Advancement & Continuing Education","Alumni, mentoring, fundraising, gifts, stewardship, continuing learning","MOD-091,MOD-092",partial,alumni basics; no advancement,S-54 §3
+D30,Graduate Education & Research Training,"Milestones, committees, candidacy, assistantships, thesis, deposit",graduate,partial,milestones with committee review,S-54 §3
+D31,Research Administration & Sponsored Programs,"Funding, proposals, budgets, awards, effort, closeout",,missing,proposed extension,S-54 §3
+D32,"Research Ethics, Labs & Data","Ethics review, consent, labs, safety, datasets, IP",,missing,proposed extension,S-54 §3
+D33,"Library, Collections & Scholarly Publishing","Discovery, circulation, reserves, licensing, repositories",MOD-080,missing,proposed extension,S-54 §3
+D34,"Human Resources, Payroll & Workforce","Recruitment, positions, time, leave, payroll, benefits",,missing,proposed extension; payroll is money movement (disabled),S-54 §3
+D35,"Institutional Finance, Procurement & Assets","Budget, ledger, payables, purchasing, contracts, grants accounting, assets",,missing,proposed extension; money movement disabled,S-54 §3
+D36,"Governance, Accreditation & Institutional Research","Committees, policies, surveys, measures, accreditation, disclosure controls","MOD-100,MOD-102",partial,"approvals, analytics with disclosure control",S-54 §3
+D37,"Legal, Conduct, Equity & Campus Safety","Intake, investigations, hearings, appeals, records requests, emergency handoffs","MOD-082,MOD-115",partial,"records rights requests, safety handoffs; no conduct/Title IX",S-54 §3
+D38,Institution Administration & Service Management,"Hierarchy, service catalog, requests, configuration, forms, workflows","MOD-097,MOD-099",partial,Console; no workflow studio,S-54 §3
+D39,"Integrations, Data Operations & Migration","Connectors, scopes, mappings, sync, reconciliation, lineage, migration, rollback, exit exports",MOD-109..MOD-111,partial,"mappings and drift, reconciliation, outbox/replay, migrations",S-54 §3
+D40,Developer Ecosystem & App Marketplace,"APIs, SDKs, sandboxes, webhooks, app review, certification","MOD-112,MOD-113",partial,"developer console, sandbox, app review",S-54 §3
+D41,Governed AI & Automation,"Model gateway, retrieval, bounded agents, policy checks, previews, approvals, evals, cost",MOD-105..MOD-107,partial,"registry, AI egress gate, rate limits; action execution disabled by design",S-54 §3
+D42,"Security, Privacy, Trust & Reliability","Isolation, access reviews, consent, retention, holds, privacy requests, incidents, audit, recovery",MOD-114..MOD-123,partial,see security-requirements.csv,S-54 §3
+D43,Semester Commercial & Customer Operations,"CRM, proposals, contracts, subscriptions, billing, implementation, success, support",MOD-125..MOD-132,partial,Company OS,S-54 §3
+D44,"Marketing, Content & Communications","CMS, content, campaigns, claims review, consent, channels","Company OS marketing, publications",partial,,S-54 §3
+D45,"Product, Engineering & Company Operations","Roadmap, releases, flags, QA, experiments, staffing, vendors, board","MOD-131,MOD-133..MOD-135",partial,"Security Lab gates, board; no staffing/vendors",S-54 §3

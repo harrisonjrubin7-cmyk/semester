@@ -29,3 +29,5 @@ Per-capability detail for the 69 role apps: [`role-app-requirements.csv`](role-a
 | 16 | Security, audit, recovery | audit log, Security Lab, append-only triggers, two-person rules | Backups/restore drills, observability, incident runbooks exercised |
 | 17 | Brand, design system, mobile, localization | shared kit components, responsive layouts | Token parity with `app/` design system, localization, jurisdiction rules |
 | 18 | Hermes, Mail, other named items | none | Specifications not found in supplied files; recorded as unresolved |
+
+See also domain-families.csv (S-54: 45 families, 34 partial / 11 missing) and cross-app-workflows.csv (10 acceptance workflows, all NOT RUN).

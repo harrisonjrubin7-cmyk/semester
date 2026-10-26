@@ -49,3 +49,9 @@ role or tenant values. Never mark a feature complete because a page exists.
 Next: fill owner, authority and operating mode, and map each module to the existing role apps.
 `module-register.csv` (other session, same day) is a first-pass assessment of the same 135 modules against existing code.
 Merge its evidence into `module-build-records.csv` after review and retire one of the two, so they cannot drift.
+
+## 26 Oct: S-54 reconciled (expanded outline PDF)
+- domain-families.csv: 45 families D01–D45; 34 partial, 11 missing (International/Veterans, Athletics, Housing, Dining, Facilities, Marketplace, Research admin, Research ethics, Library, HR/Payroll, Institutional finance). None are complete.
+- proposed-roles.csv: 51 roles in 11 groups. 48 are proposals only and are not in roleApps.ts until the founder decides (C20). The other 3 are already covered by existing apps.
+- cross-app-workflows.csv: 10 acceptance workflows XW-01..XW-10. 8 are partial and 2 missing; no end-to-end test has been run for any of them.
+- Next: advising appointments and office hours (MOD-042, D14/D15). After that, accommodation extended time in assessments (closes a gap in XW-03).

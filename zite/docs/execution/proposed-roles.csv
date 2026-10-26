@@ -1,0 +1,52 @@
+group,role,status,note,source
+Admissions,Applicant,existing app,Covered by an existing Zite app (Applicants / Family / Developers),S-54 §4
+Admissions,Admissions Counselor,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Admissions,Admissions Reviewer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Admissions,Admissions Director,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Academic programs,Program Director,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Academic programs,Curriculum Coordinator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Academic programs,Academic Scheduler,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Academic programs,Graduate Program Coordinator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Principal Investigator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Research Administrator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Grants Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Research Ethics Reviewer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Lab Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Research Data Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Research,Technology Transfer Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Library,Librarian,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Library,Library Operations Staff,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Library,Collections/Licensing Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Library,Repository Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,Employee,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,Student Employee,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,Hiring Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,HR Administrator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,Payroll Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Workforce,Benefits Administrator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Institutional finance,Budget Owner,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Institutional finance,Procurement Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Institutional finance,Accounts Payable Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Institutional finance,Institutional Controller,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Institutional finance,Asset Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Facilities,Facilities Dispatcher,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Facilities,Maintenance Technician,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Facilities,Space Planner,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Facilities,Transportation/Parking Administrator,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Advancement,Advancement Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Advancement,Gift Processor,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Advancement,Donor Relations Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Advancement,Donor,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Institutional Auditor,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Privacy Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Records Manager,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Accreditation Lead,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Conduct Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Equity/Title IX Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Governance and protection,Campus Safety Officer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+External and personal participation,Family/Guardian,existing app,Covered by an existing Zite app (Applicants / Family / Developers),S-54 §4
+External and personal participation,Developer,existing app,Covered by an existing Zite app (Applicants / Family / Developers),S-54 §4
+External and personal participation,Integration Partner,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+External and personal participation,External Reviewer,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Specialized clinical expansion,Licensed Clinician,proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4
+Specialized clinical expansion,Clinical Administrator (only if the clinical domain is deliberately built),proposed,Not part of the 69-role baseline; enters the registry only by founder decision (C20),S-54 §4

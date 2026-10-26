@@ -27,3 +27,5 @@ The interactive HTML portfolio (S-20) was parsed as text, not run.
   recorded as unresolved, not invented.
 
 Full coverage cannot be claimed while 15 sources are unreconciled and the items above are missing.
+
+| S-54 | Expanded outline (domain families, proposed roles, cross-app workflows) | owner PDF, 22pp | Reconciled 26 Oct into domain-families.csv, proposed-roles.csv, cross-app-workflows.csv |
