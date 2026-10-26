@@ -55,7 +55,7 @@ This is source and synthetic rehearsal evidence only. No live destructive adapte
 - Any screen that can change offboarding state or operate on a real tenant, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row). The existing screen is synthetic-only and read-only.
 - Department-, office- and course-scoped grants inside the school are not revoked; only `school`-scoped ones are. The grant that gives an administrator power over a whole school is school-scoped, so their authority ends; a course instructor's course-scoped grant does not, and reaches only that course's own records.
 
-**Done once, by the author:** a compact rehearsal on a hosted Supabase preview database with synthetic data (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`). It does not replace the rehearsal below by a second person.
+**Done by the author with synthetic data:** a compact base-flow rehearsal on a hosted Supabase preview database (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`) and the rollback-only purge-rehearsal suite on isolated local PostgreSQL 17 (`docs/evidence/offboarding/2026-10-26-local-synthetic-purge-rehearsal.md`). Neither replaces the target-environment rehearsal below by a second person.
 
 ## Rehearsal before first use
 
