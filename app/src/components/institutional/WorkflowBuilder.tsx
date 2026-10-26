@@ -57,6 +57,18 @@ function freshId(prefix: string, taken: readonly string[]): string {
   return `${prefix}${n}`;
 }
 
+function stepRemovalName(step: Step, index: number, count: number): string {
+  const wait = step.sla_days === undefined
+    ? 'no wait time'
+    : `up to ${step.sla_days} ${step.sla_days === 1 ? 'day' : 'days'}`;
+  return `Remove step ${index + 1} of ${count}, ${step.title}: ${STEP_LABEL[step.kind]} · ${OWNER_LABEL[step.owner]} · ${wait}`;
+}
+
+function checkRemovalName(requirement: Requirement, index: number, count: number): string {
+  const value = typeof requirement.value === 'boolean' ? (requirement.value ? 'Yes' : 'No') : requirement.value;
+  return `Remove check ${index + 1} of ${count}, ${FACT_LABEL[requirement.fact]} ${OP_LABEL[requirement.op]} ${value}: ${requirement.explain} · Next: ${requirement.next_step}`;
+}
+
 export function WorkflowBuilder({ tenantId, viewerId, holds, api }: WorkflowBuilderProps) {
   const [client, setClient] = useState<WorkflowApi | null>(api ?? null);
   const [rows, setRows] = useState<WorkflowVersion[]>([]);
@@ -307,7 +319,7 @@ function WorkflowEditor({
                   <div style={inline}>
                     <ActionButton disabled={busy || i === 0} onClick={() => move(i, -1)} aria-label={`Move step ${i + 1} up`}>Up</ActionButton>
                     <ActionButton disabled={busy || i === def.steps.length - 1} onClick={() => move(i, 1)} aria-label={`Move step ${i + 1} down`}>Down</ActionButton>
-                    <ActionButton disabled={busy || def.steps.length <= 1} onClick={() => edit((d) => ({ ...d, steps: d.steps.filter((_, at) => at !== i) }))} aria-label={`Remove step ${i + 1}`}>Remove</ActionButton>
+                    <ActionButton disabled={busy || def.steps.length <= 1} onClick={() => edit((d) => ({ ...d, steps: d.steps.filter((_, at) => at !== i) }))} aria-label={stepRemovalName(s, i, def.steps.length)}>Remove</ActionButton>
                   </div>
                 )}
               </div>
@@ -366,7 +378,7 @@ function WorkflowEditor({
                   <input className="input" aria-label={`Check ${i + 1}: what to do next`} maxLength={LIMITS.next_step_max} disabled={!canDraft || busy} value={r.next_step} onChange={(e) => setReq(i, { next_step: e.target.value })} />
                   {canDraft && (
                     <div style={inline}>
-                      <ActionButton disabled={busy} onClick={() => edit((d) => ({ ...d, requires: (d.requires ?? []).filter((_, at) => at !== i) }))} aria-label={`Remove check ${i + 1}`}>Remove</ActionButton>
+                      <ActionButton disabled={busy} onClick={() => edit((d) => ({ ...d, requires: (d.requires ?? []).filter((_, at) => at !== i) }))} aria-label={checkRemovalName(r, i, (def.requires ?? []).length)}>Remove</ActionButton>
                     </div>
                   )}
                 </div>

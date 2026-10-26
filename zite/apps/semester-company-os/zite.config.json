@@ -1,0 +1,9 @@
+{
+  "id": "sbjuykr2qw",
+  "accessMode": "internal",
+  "envVars": {
+    "ZITE_POSTGRES_URL": {
+      "description": "Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string)"
+    }
+  }
+}

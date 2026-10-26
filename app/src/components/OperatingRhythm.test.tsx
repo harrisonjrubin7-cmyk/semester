@@ -111,6 +111,32 @@ describe('operating rhythm integration', () => {
     await click('Carry selected outcome into next week');
     expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!)).plans[1].values.outcome).toBe('existing');
   });
+  it('identifies repeated simulator commitments and removes only the selected row', async () => {
+    await draw();
+    await select('View', 'Plan');
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove commitment "]')];
+    expect(removals.map((candidate) => candidate.getAttribute('aria-label'))).toEqual([
+      'Remove commitment 1 of 3, Untitled commitment: Writing · 25 minutes',
+      'Remove commitment 2 of 3, Untitled commitment: Admin · 10 minutes',
+      'Remove commitment 3 of 3, Untitled commitment: Writing · 25 minutes',
+    ]);
+
+    await act(async () => removals[1].click());
+
+    expect([...host.querySelectorAll('fieldset > legend')].map((legend) => legend.textContent)).not.toContain(
+      'Commitment 3',
+    );
+    expect(host.textContent).toContain('Grouped order: Add commitments above.');
+    expect(
+      [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove commitment "]')].map(
+        (candidate) => candidate.getAttribute('aria-label'),
+      ),
+    ).toEqual([
+      'Remove commitment 1 of 2, Untitled commitment: Writing · 25 minutes',
+      'Remove commitment 2 of 2, Untitled commitment: Writing · 25 minutes',
+    ]);
+  });
   it('uses labelled controls and has no serious accessibility violations', async () => {
     await draw();
     await select('View', 'Plan');

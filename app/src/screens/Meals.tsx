@@ -273,7 +273,7 @@ function MealsDetails() {
 
       {mine.length > 0 && (
         <Group header="What you have logged" framed={false}>
-          {mine.map((r) => (
+          {mine.map((r, index) => (
             <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
@@ -285,7 +285,7 @@ function MealsDetails() {
               <button
                 type="button"
                 className="bare"
-                aria-label={`Remove balance reading from ${formatDate(r.at)}: ${balanceReadingLine(r)}`}
+                aria-label={`Remove balance reading ${index + 1} of ${mine.length} from ${formatDate(r.at)}: ${balanceReadingLine(r)}`}
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
                 style={{ flex: 'none', width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >

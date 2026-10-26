@@ -107,7 +107,7 @@ export function StudentOperating() {
       <button className="bare" onClick={() => save({ ...workspace, entries: workspace.entries.map(x => x.id === e.id ? { ...x, status: 'done' } : x) })}>Mark resolved</button>{' '}
       <button className="bare" onClick={() => { setEntry({ ...e, kind: 'plan', id: crypto.randomUUID(), status: 'planned', reflection: '', submitted: '' }); setNotice('Private copy ready to edit; choose Save to keep it.'); }}>Reuse as plan</button>
     </article>)}
-    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map(e => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" aria-label={`Delete ${e.title}`} onClick={() => setDeletingEntry(e)}>Delete this item</button></p>)}</details>
+    <details><summary>All items, including completed and waiting</summary>{workspace.entries.map((e, index) => <p key={e.id}><button className="bare" onClick={() => setEntry({ ...e })}>{e.title} · {e.status}</button>{' '}<button className="bare" aria-label={`Delete saved item ${index + 1} of ${workspace.entries.length}, ${e.title}: ${labels[e.kind]} · ${e.status} · ${e.deadline ? `deadline ${e.deadline}` : 'no deadline selected'}`} onClick={() => setDeletingEntry(e)}>Delete this item</button></p>)}</details>
     {deletingEntry && <ConfirmDialog
       title="Delete this saved item?"
       preview={<ActionPreview

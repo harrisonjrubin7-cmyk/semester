@@ -114,10 +114,10 @@ function Now({ lib, set, chunk }: { lib: SupportLibrary; set: (p: Partial<Suppor
     <>
       <SectionLabel>Your own emergency contacts</SectionLabel>
       <p className="jx-muted">Kept on this device only.</p>
-      {lib.contacts.map((c) => (
+      {lib.contacts.map((c, index) => (
         <div key={c.id} className="jx-row">
           <a href={`tel:${c.phone}`}>{c.name} · {c.phone}</a>
-          <button type="button" className="bare" aria-label={`Remove ${c.name}: ${c.phone}`} onClick={() => setRemoving(c)}>
+          <button type="button" className="bare" aria-label={`Remove contact ${index + 1} of ${lib.contacts.length}, ${c.name}: ${c.phone}`} onClick={() => setRemoving(c)}>
             ×
           </button>
         </div>

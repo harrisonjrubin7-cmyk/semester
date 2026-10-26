@@ -27,7 +27,7 @@ function project(over: Partial<MigrationProject> = {}): MigrationProject {
     id: 'm1', tenant_id: 'vu', name: 'Retire the legacy gradebook', domain: 'lms', source_platform: '', source_version: '',
     data_owner: '', classifications: [], retention: '', historical_cutoff: null, duplicate_rule: null, cutover_date: null,
     rollback_plan: '', archive_location: '', required_approvals: ['data_owner', 'it'], parallel_runs_required: 2,
-    stage: 'inventory', stage_entered_at: '2026-10-01T00:00:00.000Z', created_by: LEAD, created_at: '2026-10-01T00:00:00.000Z', ...over,
+    stage: 'inventory', stage_entered_at: '2026-10-01T00:00:00.000Z', stage_back_reason: null, created_by: LEAD, created_at: '2026-10-01T00:00:00.000Z', ...over,
   };
 }
 
@@ -48,12 +48,12 @@ function fake(start: MigrationProject, maps: FieldMap[] = [], approvals: Migrati
     save: vi.fn(async (_id: string, patch: Partial<MigrationProject>) => {
       p = { ...p, ...patch };
     }),
-    move: vi.fn(async (_id: string, to: Stage) => {
+    move: vi.fn(async (_id: string, to: Stage, reason?: string) => {
       if (to === nextStage(p.stage)) {
         const owed = gateFailures(p, maps, runs, approvals);
         if (owed.length) throw refusal({ message: `This migration cannot move to ${to} yet: ${owed.join(', ')}` }, '');
       }
-      p = { ...p, stage: to, stage_entered_at: tick() };
+      p = { ...p, stage: to, stage_back_reason: reason ?? null, stage_entered_at: tick() };
     }),
     maps: vi.fn(async () => maps),
     addMap: vi.fn(async (_p: MigrationProject, m: FieldMap) => {
@@ -183,6 +183,44 @@ describe('one migration', () => {
     await open({ ...api, maps: vi.fn(async () => MAPS) } as unknown as MigrationApi);
     await click(button(/Move to cleaning rules/));
     expect(host.querySelector('[role="alert"]')?.textContent).toBe('Not ready for cleaning rules: Mark at least one field that identifies a record.');
+  });
+
+  it('asks why before it sends a migration back, and sends the reason with the move', async () => {
+    const api = fake(project({ stage: 'validation' }));
+    await open(api);
+    const box = () => host.querySelector('textarea[aria-label="Why it is going back"]') as HTMLTextAreaElement;
+    const message = () => host.querySelector(`#${box().getAttribute('aria-describedby')!.split(' ').pop()}`)?.textContent ?? '';
+
+    await click(button(/Go back to/));
+    expect(api.move).not.toHaveBeenCalled();
+    expect(message()).toContain('Say why this migration is going back.');
+    expect(box().getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(box());
+
+    await act(async () => type(box(), 'oops'));
+    expect(box().getAttribute('aria-invalid')).toBeNull();
+    await click(button(/Go back to/));
+    expect(api.move).not.toHaveBeenCalled();
+    expect(message()).toContain('at least 10 characters');
+
+    await act(async () => type(box(), `  The sample came from the wrong export.  `));
+    await click(button(/Go back to/));
+    expect(api.move).toHaveBeenCalledWith('m1', 'sample_import', 'The sample came from the wrong export.');
+  });
+
+  it('does not take the last reason again for a second move back', async () => {
+    const api = fake(project({ stage: 'validation', stage_back_reason: 'The sample came from the wrong export.' }));
+    await open(api);
+    const box = host.querySelector('textarea[aria-label="Why it is going back"]') as HTMLTextAreaElement;
+    await act(async () => type(box, 'The sample came from the wrong export.'));
+    await click(button(/Go back to/));
+    expect(api.move).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('Give a new reason');
+  });
+
+  it('offers no way back from cutover onward, so it asks for no reason there', async () => {
+    await open(fake(project({ stage: 'archive' })));
+    expect(host.querySelector('textarea[aria-label="Why it is going back"]')).toBeNull();
   });
 
   it('shows the record read-only, and no move, to an account that only views', async () => {

@@ -168,8 +168,8 @@ export function Activities() {
                   action={{ label: 'Add one', onClick: () => setTab('add') }}
                 />
               )}
-              {mine.map((c) => (
-                <Row key={c.id} commitment={c} />
+              {mine.map((c, index) => (
+                <Row key={c.id} commitment={c} position={index + 1} total={mine.length} />
               ))}
             </>
           )}
@@ -182,7 +182,7 @@ export function Activities() {
 }
 
 
-function Row({ commitment }: { commitment: Commitment }) {
+function Row({ commitment, position, total }: { commitment: Commitment; position: number; total: number }) {
   const { dispatch } = useStore();
   const rowStyle = useRowStyle(0);
   const kind = activityKind(commitment.kind);
@@ -250,7 +250,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         type="button"
         className="bare"
         onClick={() => dispatch({ type: 'removeCommitment', id: commitment.id })}
-        aria-label={`Remove ${commitment.name}: ${details}`}
+        aria-label={`Remove activity ${position} of ${total}, ${commitment.name}: ${details}`}
         style={{ width: 26, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
       >
         ×

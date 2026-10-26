@@ -91,7 +91,7 @@ export function Rules({
         </p>
       ) : (
         <ul className="mb-rules-list">
-          {rules.map((rule) => (
+          {rules.map((rule, index) => (
             <li key={rule.id} className="mb-rules-row">
               <button
                 type="button"
@@ -118,7 +118,7 @@ export function Rules({
                 type="button"
                 className="mb-ico"
                 onClick={() => onDrop(rule.id)}
-                aria-label={`Delete ${ruleName(rule)}`}
+                aria-label={`Delete mail rule ${index + 1} of ${rules.length}, ${ruleName(rule)}: ${describeRule(rule)} · ${rule.off ? 'off' : 'on'}`}
               >
                 <TrashIcon size={17} />
               </button>

@@ -1,0 +1,66 @@
+# Operating plan object 14: activation gate for the pilot.
+# Activation depends on this evidence registry, not on meeting consensus.
+# Status is PENDING. The evidence IDs below are pilot-specific records and none
+# exist on main yet. Each needs a retained record before activation can be considered.
+release:
+  id: REL-READINESS-001
+  capability: registration.readiness
+  tenant: TBD
+  cohort: TBD
+  status: pending
+  pilot_scope_record: scope-record.yaml
+  # go-no-go.yaml remains the production decision. This file adds the pilot-scope gate.
+  production_decision: ../go-no-go.yaml
+  production_decision_required_state: approved   # go-no-go.yaml decision.state is pending today
+
+  required_evidence:
+    product:
+      - EVD-JOURNEY-READINESS-001
+      - EVD-STATES-READINESS-001
+      - EVD-RECEIPT-READINESS-001
+    access:
+      - EVD-RLS-READINESS-001
+      - EVD-POLICY-READINESS-001
+      - EVD-REVOCATION-READINESS-001
+    source:
+      - EVD-SOURCE-MAPPING-001
+      - EVD-FRESHNESS-READINESS-001
+      - EVD-RECONCILIATION-001
+    operations:
+      - EVD-RUNBOOK-001
+      - EVD-SAFE-OFF-001
+      - EVD-HYPERCARE-001
+    quality:
+      - EVD-ACCESSIBILITY-CRITICAL-PATH-001
+      - EVD-FAILURE-DRILLS-001
+      - EVD-RELEASE-NOTES-001
+
+  required_evidence_records_present_on_main: none
+
+  invalidates_on:
+    - policy_change
+    - source_mapping_change
+    - RLS_change
+    - workflow_state_change
+    - connector_change
+    - cohort_change
+    - approved_scope_change
+    - material_UI_or_consequence_copy_change
+
+  approvals:
+    required:
+      - semester_product_owner
+      - semester_engineering_or_security_owner
+      - semester_operations_owner
+      - institution_pilot_owner
+
+  approval_records:   # one entry per required approver, filled by that approver
+    semester_product_owner: {approved: false, approver: TBD, approved_at: TBD}
+    semester_engineering_or_security_owner: {approved: false, approver: TBD, approved_at: TBD}
+    semester_operations_owner: {approved: false, approver: TBD, approved_at: TBD}
+    institution_pilot_owner: {approved: false, approver: TBD, approved_at: TBD}
+
+  activation_rule: >
+    All required evidence must be current, no blocking finding may remain open,
+    scope must match approval, safe-off must be proven, and the referenced
+    production decision (go-no-go.yaml) must be approved, and every approval_records entry must carry approved: true, approver, and approved_at. The canonical registration.readiness capability must be current and pass the platform-control release and activation validators, and the readiness event schema and tested capture, the scoped control register, and the approved retention and communication plan must each be present and current.

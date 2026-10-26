@@ -274,7 +274,7 @@ export function CaraLog({
               Week of {w.label} — {weekLine(w, limit)}
             </summary>
             <ul style={{ margin: 'var(--sp-3) 0 0', paddingLeft: 'var(--sp-7)' }}>
-              {w.entries.map((e) => (
+              {w.entries.map((e, index) => (
                 <li
                   key={e.id}
                   style={{
@@ -289,7 +289,7 @@ export function CaraLog({
                   <button
                     type="button"
                     className="bare tappable"
-                    aria-label={`Remove ${e.hours} ${e.hours === 1 ? 'hour' : 'hours'} of ${e.kind} on ${e.date}`}
+                    aria-label={`Remove hours entry ${index + 1} of ${w.entries.length}, ${e.hours} ${e.hours === 1 ? 'hour' : 'hours'} of ${e.kind} on ${e.date}: ${e.note || 'no note'}`}
                     onClick={() => remove(e)}
                     style={{ textDecoration: 'underline', display: 'inline', width: 'auto' }}
                   >

@@ -67,6 +67,36 @@ already exist on `main`. These artifacts have not been reconciled with that code
 Checking the code against `connection-states.yaml` and the state vocabulary is
 an open item.
 
+## Pilot operating plan (`operating-plan/`)
+
+The pilot operating plan brief turns this package into one executable cadence. Its
+files are in `operating-plan/`. Per D-1537, the brief's suggested top-level `evidence/`
+and `registry/` paths are mapped into this folder, not created as new trees.
+
+| Object | File | Notes |
+|--------|------|-------|
+| Pilot identity and boundary | `pilot.yaml` | Institution TBD. |
+| Success questions and indicators | `success-plan.yaml` | |
+| Scope record | `scope-record.yaml` | Unsigned. Tenant, term, sources TBD. |
+| Five-stage launch cadence | `launch-cadence.yaml` | All stages not started. Dates TBD. |
+| Roles and decision owners | `roles-and-escalation.yaml` | Named people TBD. |
+| Escalation (P0/P1/P2) | `escalation-matrix.yaml` | Response targets TBD. |
+| Student journey and copy | `student-journey.yaml` | Copy is draft. Blocked, unknown, failed, and cancelled copy not in the brief. |
+| Staff workflow | `staff-workflow.yaml` | |
+| Hypercare | `hypercare.yaml` | Duration and attendees TBD. |
+| Daily pilot health (template) | `daily-pilot-health.yaml` | Placeholder values. |
+| Measurement plan | `measurement-plan.yaml` | Each metric has the seven reporting fields. |
+| Change freeze | `change-freeze.yaml` | |
+| End-of-pilot decision | `end-of-pilot-decision.yaml` | |
+| Activation gate (REL-READINESS-001) | `activation-release.yaml` | Pending. None of the referenced `EVD-*` IDs exist on main. |
+| First two weeks | `first-two-weeks.yaml` | All steps not started. |
+
+Not done, and blocking activation: a named institution and tenant, signed scope,
+named owners, dates, approved copy, evidence records for every `EVD-*` ID, and the
+canonical `registration.readiness` capability reaching production-ready maturity with
+current support and recovery evidence. No pilot has been activated. Repository and
+public-surface deployments do not establish an approved institutional connection.
+
 ## Verification
 
 Run from the repo root:

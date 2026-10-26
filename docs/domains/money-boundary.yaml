@@ -1,0 +1,23 @@
+# Source: "Money and native finance" section of the brief.
+money:
+  phase_1:
+    placement: embedded
+    features:
+      - institution_billing_summary_when_approved
+      - due_date_reminders
+      - official_payment_portal_handoff
+      - payment_receipt_link
+  phase_2:
+    placement: native_or_adapter_backed
+    features:
+      - payment_initiation
+      - payment_status_receipts
+      - refunds_workflow
+      - finance_reconciliation
+      - plan_and_subscription_billing_for_semester_customers
+  hard_boundaries:
+    - "Semester does not determine financial aid eligibility."
+    - "Semester does not alter an institutional student-account balance without an approved command path."
+    # TRUNCATED IN SOURCE PDF after "approved command path": confirm the exact wording.
+    - "Payment status must distinguish pending, authorized, settled, failed, refunded states (see packages/domain-core/src/payments.ts)."
+    # TRUNCATED IN SOURCE PDF after "refunded": confirm the exact wording.

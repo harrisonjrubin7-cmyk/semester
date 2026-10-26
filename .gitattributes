@@ -1,0 +1,3 @@
+# The native kit is a hashed archive (MANIFEST.json). Keep its bytes as committed,
+# whatever core.autocrlf says on the contributor machine, so verification holds.
+docs/native-kit/** -text

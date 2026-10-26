@@ -77,6 +77,8 @@ import type { Quiet } from '../lib/notify';
 import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
+import { HELD_KEY, clearIngressDrops, droppedOnRead, heldInSaved, noteIngressDrops } from '../lib/deletions';
+import { forgetCarried } from '../lib/carried';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { readMaintenance, type MaintenanceChange, type MaintenanceRequest } from '../lib/maintenance';
@@ -722,6 +724,12 @@ export interface Persisted {
   mutedCourses: CourseId[];
   seenOnboarding: boolean;
   /**
+   * Which onboarding step is open, saved so that closing the app on step
+   * three opens it again on step three. It used to live in the ephemeral
+   * half, which made every interrupted onboarding start over.
+   */
+  onb: number;
+  /**
    * Whether an account has ever been made or signed into on this device.
    *
    * Not a session and not a claim about being signed in — `store.account` is
@@ -1051,7 +1059,6 @@ export interface Ephemeral {
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
   updateUnit: number | null;
-  onb: number;
   openUnit: number;
   drillUnit: number | null;
   /**
@@ -1434,6 +1441,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   notifs: { ...DEFAULT_NOTIFS },
   mutedCourses: [],
   seenOnboarding: false,
+  onb: 0,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
@@ -1683,7 +1691,6 @@ export function initialEphemeral(): Ephemeral {
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
-    onb: 0,
     openUnit: 0,
     drillUnit: null,
     drillMix: false,
@@ -1796,12 +1803,15 @@ export function loadPersisted(): Persisted {
      */
     const moved = migrate(JSON.parse(raw));
     lastMigration = moved;
-    const saved = moved.state as Partial<Persisted>;
-    return {
+    // A note the saved copy carried for the sync (`withIngressNote`) is read
+    // below and is never part of the state.
+    const { [HELD_KEY]: _held, ...saved } = moved.state as Partial<Persisted> & { [HELD_KEY]?: unknown };
+    const read: Persisted = {
       ...DEFAULT_PERSISTED,
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
       mutedCourses: list(saved.mutedCourses),
+      onb: typeof saved.onb === 'number' && Number.isInteger(saved.onb) && saved.onb >= 0 ? saved.onb : 0,
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
       tasks: list(saved.tasks),
@@ -1980,6 +1990,16 @@ export function loadPersisted(): Persisted {
       // silently dropped on the next reload.
       ...readLook(saved as Look),
     };
+    /*
+     * Rows a reader above could not keep, in a list deletions are settled
+     * for. Noted so the first sync puts the account's copies back instead of
+     * reading the gap as a deletion. See `ingressDrops` in `lib/deletions.ts`.
+     */
+    noteIngressDrops([
+      ...droppedOnRead(saved as Record<string, unknown>, read as unknown as Record<string, unknown>),
+      ...heldInSaved(moved.state as Record<string, unknown>),
+    ]);
+    return read;
   } catch {
     // A private window, or storage disabled. Run with defaults.
     return { ...DEFAULT_PERSISTED };
@@ -2050,6 +2070,9 @@ export function rememberSyncedAs(id: string): void {
  * list. Not the semester itself, which is the student's and stays.
  */
 export function forgetSyncMemory(): void {
+  forgetCarried();
+  // In memory too: the next account must not hold back its own deletions for this one's damage.
+  clearIngressDrops();
   for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
     try {
       localStorage.removeItem(key);
@@ -2085,6 +2108,7 @@ export function pickPersisted(state: State): Persisted {
     notifs: state.notifs,
     mutedCourses: state.mutedCourses,
     seenOnboarding: state.seenOnboarding,
+    onb: state.onb,
     registered: state.registered,
     cleared: state.cleared,
     tasks: state.tasks,

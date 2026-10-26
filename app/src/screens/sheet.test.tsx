@@ -70,7 +70,8 @@ function pressNamed(label: string) {
  * test that passes nothing and fails confusingly.
  */
 function tab(name: string) {
-  const el = [...host.querySelectorAll('[role="tab"]')].find(
+  const ribbon = host.querySelector('[role="tablist"][aria-label="Ribbon"]');
+  const el = [...(ribbon ?? host).querySelectorAll('[role="tab"]')].find(
     (t) => (t.textContent ?? '').trim() === name,
   ) as HTMLButtonElement | undefined;
   if (!el) throw new Error(`no ribbon tab called “${name}”`);
@@ -237,6 +238,41 @@ describe('the ribbon', () => {
       (g.textContent ?? '').trim(),
     );
     expect(groups).toEqual(['Show', 'Zoom']);
+  });
+});
+
+describe('rule removal names', () => {
+  it('distinguishes otherwise identical colour rules and removes only the chosen row', () => {
+    press(/^Colour by value$/);
+    press(/^Colour A1$/);
+    press(/^Colour A1$/);
+
+    const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove colour rule "]')]
+      .map((button) => button.getAttribute('aria-label'));
+    expect(names).toEqual([
+      'Remove colour rule 1 of 2, A1 · less than  · red behind it',
+      'Remove colour rule 2 of 2, A1 · less than  · red behind it',
+    ]);
+
+    pressNamed(names[1]!);
+    expect(host.querySelector('button[aria-label="Remove colour rule 1 of 1, A1 · less than  · red behind it"]')).not.toBeNull();
+  });
+
+  it('distinguishes otherwise identical cell rules and removes only the chosen row', () => {
+    tab('Data');
+    pressNamed('Check entries');
+    press(/^Check A1$/);
+    press(/^Check A1$/);
+
+    const names = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Remove cell rule "]')]
+      .map((button) => button.getAttribute('aria-label'));
+    expect(names).toEqual([
+      'Remove cell rule 1 of 2, A1 · one of no values · empty cells allowed',
+      'Remove cell rule 2 of 2, A1 · one of no values · empty cells allowed',
+    ]);
+
+    pressNamed(names[1]!);
+    expect(host.querySelector('button[aria-label="Remove cell rule 1 of 1, A1 · one of no values · empty cells allowed"]')).not.toBeNull();
   });
 });
 

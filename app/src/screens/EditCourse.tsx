@@ -32,26 +32,36 @@ function listed(values: string[]): string {
   return `${values.slice(0, -1).join(', ')}, and ${values.at(-1)}`;
 }
 
-function gradingRemovalName(row: CourseModule['course']['grading'][number]): string {
-  return `Remove grading row ${row.what.trim() || 'without a name'}: ${row.pct.trim() || 'weight not set'}`;
+function gradingRemovalName(
+  row: CourseModule['course']['grading'][number],
+  index: number,
+  total: number,
+): string {
+  return `Remove grading row ${index + 1} of ${total}, ${row.what.trim() || 'without a name'}: ${row.pct.trim() || 'weight not set'}`;
 }
 
-function meetingRemovalName(block: CourseModule['schedule'][number]): string {
+function meetingRemovalName(
+  block: CourseModule['schedule'][number],
+  index: number,
+  total: number,
+): string {
   const days = listed(block.days.map(weekdayLongOf));
   const optional = block.optional ? ' · optional' : '';
-  return `Remove meeting ${block.title.trim() || 'without a title'}: ${days} · ${block.time.trim() || 'time not set'}${optional}`;
+  return `Remove meeting ${index + 1} of ${total}, ${block.title.trim() || 'without a title'}: ${days} · ${block.time.trim() || 'time not set'}${optional}`;
 }
 
 function deadlineRemovalName(
   item: CourseModule['items'][number],
   year: number,
+  index: number,
+  total: number,
 ): string {
   const date = formatDate(new Date(year, item.month, item.day), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
-  return `Remove deadline ${item.title.trim() || 'without a title'}: ${date} · ${item.dueTime.trim() || 'time not set'} · ${item.kind.trim() || 'kind not set'} · ${item.weight.trim() || 'weight not set'}`;
+  return `Remove deadline ${index + 1} of ${total}, ${item.title.trim() || 'without a title'}: ${date} · ${item.dueTime.trim() || 'time not set'} · ${item.kind.trim() || 'kind not set'} · ${item.weight.trim() || 'weight not set'}`;
 }
 
 /**
@@ -314,7 +324,7 @@ export function EditCourse() {
             onClick={() =>
               change(withGrading(draft, draft.course.grading.filter((_, n) => n !== i)))
             }
-            aria-label={gradingRemovalName(row)}
+            aria-label={gradingRemovalName(row, i, draft.course.grading.length)}
             style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
           >
             ×
@@ -419,7 +429,7 @@ export function EditCourse() {
               type="button"
               className="bare"
               onClick={() => change(withSchedule(draft, draft.schedule.filter((_, n) => n !== i)))}
-              aria-label={meetingRemovalName(block)}
+              aria-label={meetingRemovalName(block, i, draft.schedule.length)}
               style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
@@ -480,7 +490,7 @@ export function EditCourse() {
       <SectionLabel>
         Deadlines
       </SectionLabel>
-      {draft.items.map((i) => (
+      {draft.items.map((i, index) => (
         <Blueprint plain key={i.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'calc(9px * var(--density, 1))' }}>
           <input
             aria-label="What is due"
@@ -537,7 +547,12 @@ export function EditCourse() {
               type="button"
               className="bare"
               onClick={() => change(dropItem(draft, i.id))}
-              aria-label={deadlineRemovalName(i, yearFor(readTerm(draft.course.term), i.month))}
+              aria-label={deadlineRemovalName(
+                i,
+                yearFor(readTerm(draft.course.term), i.month),
+                index,
+                draft.items.length,
+              )}
               style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×

@@ -1,0 +1,55 @@
+# Native finance sequence: Semester's own commercial billing comes first.
+native_finance:
+  stage_1_company_billing:
+    purpose: Semester_customer_invoicing_and_subscription_management
+    # The one-rail native finance layer is gated by FRG-01 to FRG-12
+    # (docs/finance/EMBEDDED_FINANCE_ROADMAP.md, layer 1). Completing this stage
+    # does not by itself permit money movement.
+    requires_release_gates: docs/finance/FINANCE_RELEASE_GATES.md
+    release_gates: [FRG-01, FRG-02, FRG-03, FRG-04, FRG-05, FRG-06, FRG-07, FRG-08, FRG-09, FRG-10, FRG-11, FRG-12]
+    includes:
+      - quote_to_contract_link
+      - invoice_status
+      - subscription_lifecycle
+      - payment_receipt
+      - internal_ledger
+      - finance_reconciliation
+
+  stage_2_partner_payment_adapters:
+    requires_stage: stage_1_company_billing
+    # Stage 1 is necessary but not sufficient: the adapter layer stays behind the
+    # finance release gates (FRG-01 owner decision, professional, rail,
+    # reconciliation and operating gates).
+    requires_release_gates: docs/finance/FINANCE_RELEASE_GATES.md
+    purpose: approved_external_payment_handoff
+    includes:
+      - external_checkout
+      - payment_status_import
+      - refund_status_visibility
+      - reconciliation_case
+
+  stage_3_institutional_finance:
+    requires_stage: stage_2_partner_payment_adapters
+    # Stages 3 to 5 are held (docs/finance/EMBEDDED_FINANCE_ROADMAP.md, claim ceiling).
+    # Contract and legal review do not lift the hold on their own.
+    requires_owner_decision: new_decision_superseding_D-146_and_D-1236_for_the_named_capability
+    requires_counsel_answer: true
+    requires_written_authorization:   # docs/MONEY-MODULES-SWITCH-ON.md item 9
+      - school
+      - finance_owner
+      - provider
+      - first_term_of_use
+      - who_can_switch_it_off
+    preconditions:
+      - institution_authority_contract
+      - legal_and_regulatory_review
+      - financial_controls
+      - segregation_of_duties
+      - immutable_ledger
+      - dispute_and_refund_process
+      - recovery_and_audit_drills
+
+  rule: >
+    Do not accept, hold, move, or decide student institutional funds until the
+    authority, controls, regulatory obligations, and operating model are
+    explicitly established.
