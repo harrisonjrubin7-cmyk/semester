@@ -3,12 +3,13 @@ import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-do
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { Home, Scale, CalendarClock, LogOut, GraduationCap, Table2, Inbox, ShieldAlert, GitPullRequestArrow } from 'lucide-react';
+import { Home, Scale, CalendarClock, LogOut, GraduationCap, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked } from 'lucide-react';
 import { getWorkspace, GetWorkspaceOutputType } from 'zitejs/api';
 import { WorkspaceContext } from '../../semester/src/lib/workspace';
 import CourseStudio from '../../semester/src/pages/SectionPage';
 import { Gradebook, TAQueue } from '../../semester/src/pages/Staff';
 import Integrity from '../../semester/src/pages/Integrity';
+import Curriculum from '../../semester/src/pages/Curriculum';
 import { SectionRequests } from '../../semester/src/pages/InstitutionHome';
 import { cn } from '@project/components/lib/utils';
 import Teaching from './pages/Teaching';
@@ -24,6 +25,7 @@ const NAV = [
   { to: '/gradebook', label: 'Gradebook', icon: Table2 },
   { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert },
   { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
+  { to: '/curriculum', label: 'Curriculum', icon: BookMarked },
 ];
 
 /** The shared pages link to the main app's paths; these send them to this app's equivalents. */
@@ -66,6 +68,9 @@ function Shell() {
             <Route path="/gradebook" element={<Gradebook />} />
             <Route path="/integrity" element={<Integrity />} />
             <Route path="/section-requests" element={<SectionRequests />} />
+            <Route path="/curriculum" element={<Curriculum />} />
+            <Route path="/institution/curriculum" element={<Navigate to="/curriculum" replace />} />
+            <Route path="/staff/catalog" element={<Navigate to="/curriculum" replace />} />
             <Route path="/learn/*" element={<LearnRedirect />} />
             <Route path="/learn" element={<Navigate to="/" replace />} />
             <Route path="/staff/regrades" element={<Navigate to="/regrades" replace />} />

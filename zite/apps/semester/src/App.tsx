@@ -51,6 +51,7 @@ import Integrity from './pages/Integrity';
 import Housing from './pages/Housing';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
+import Curriculum from './pages/Curriculum';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -129,6 +130,7 @@ export default function App() {
             <Route path="/help/appointments" element={<Appointments />} />
             <Route path="/institution" element={<InstitutionHome />} />
             <Route path="/institution/sections" element={<SectionRequests />} />
+            <Route path="/institution/curriculum" element={<Curriculum />} />
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />

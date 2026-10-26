@@ -12,6 +12,7 @@ const TOOLS = [
   { to: '/staff/regrades', title: 'Regrade requests', note: 'Student requests to review a released grade' },
   { to: '/you/integrity', title: 'Academic integrity', note: 'Report a concern, offer a course-level resolution, follow a referral' },
   { to: '/institution/sections', title: 'New sections', note: 'Request a section or see teaching assignments' },
+  { to: '/institution/curriculum', title: 'Curriculum', note: 'Propose a course or new version; chairs and the committee review it here' },
 ];
 
 export default function Faculty() {
