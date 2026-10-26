@@ -4,7 +4,9 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { parse } from "yaml";
 import { verifyFeatureFlags, verifyFlag } from "../../scripts/verify/feature-flags.ts";
 import { verifyEnvironments } from "../../scripts/verify/environment-boundaries.ts";
@@ -37,8 +39,27 @@ test("a flag without a safe-off effect or owner fails verification", () => {
   assert.ok(violations.some((v) => v.reason.includes("owner")));
 });
 
-test("the repository flag registry passes verification", () => {
+// The committed registry holds only the standard, which discovery excludes, so the
+// verifier must reject it rather than pass with zero records checked. Flip this when
+// real flag records are added to registry/flags.
+test("the committed flag registry is rejected while it holds no records", () => {
   const result = verifyFeatureFlags(root);
+  assert.equal(result.checked, 0);
+  assert.deepEqual(result.violations.map((v) => v.reason), ["no flag records discovered"]);
+});
+
+test("a populated flag registry passes verification", () => {
+  const standard = parse(readFileSync(join(root, "registry/flags/feature-flag-standard.yaml"), "utf8")).feature_flags;
+  const dir = mkdtempSync(join(tmpdir(), "flags-"));
+  mkdirSync(join(dir, "registry/flags"), { recursive: true });
+  writeFileSync(join(dir, "registry/flags/feature-flag-standard.yaml"), readFileSync(join(root, "registry/flags/feature-flag-standard.yaml"), "utf8"));
+  const record = Object.fromEntries(standard.required_metadata.map((k: string) => [k, `${k}-value`]));
+  record.safe_off_effect = standard.safe_off_effects[0];
+  record.environment_scope = [standard.environments[0]];
+  writeFileSync(join(dir, "registry/flags/example.yaml"), `flag:\n${Object.entries(record).map(([k, v]) => `  ${k}: ${JSON.stringify(v)}`).join("\n")}\n`);
+  const result = verifyFeatureFlags(dir);
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(result.checked, 1);
   assert.deepEqual(result.violations, []);
 });
 
