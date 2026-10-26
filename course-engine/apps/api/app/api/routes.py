@@ -1186,6 +1186,17 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
     if not quiz:
         raise HTTPException(404, "Quiz not found")
     questions = valid_guide_sections(quiz.content)
+    try:
+        allowed_citations, _citation_catalog = current_asset_citations(db, quiz)
+    except UnsupportedCitationError as exc:
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt") from exc
+    allowed_citation_ids = {str(citation_id) for citation_id in allowed_citations}
+    if any(
+        not section["citation_ids"]
+        or any(citation_id not in allowed_citation_ids for citation_id in section["citation_ids"])
+        for section in questions
+    ):
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt")
     expected_indexes = set(range(len(questions)))
     rated_indexes = {answer.question_index for answer in payload.answers}
     if (

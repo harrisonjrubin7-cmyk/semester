@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BookOpenCheck, Check, Download, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, download } from "@/lib/api";
 import { studyAssetTypes } from "./navigation";
 import { SourceStatusBadge } from "./source-status";
@@ -95,8 +95,14 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const [revealed, setRevealed] = useState(false);
   const [confidence, setConfidence] = useState(3);
   const [announcement, setAnnouncement] = useState("");
+  const cardIds = cards.map((card) => card.id).join("|");
+  const safeIndex = index < cards.length ? index : 0;
+  useEffect(() => {
+    setIndex((current) => current < cards.length ? current : 0);
+    setRevealed(false);
+  }, [cardIds, cards.length]);
   const review = useMutation({
-    mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[index].id}/review`, {
+    mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[safeIndex].id}/review`, {
       method: "POST",
       body: JSON.stringify({ course_id: courseId, asset_id: asset.id, concept_id: null, correct, confidence }),
     }),
@@ -108,9 +114,9 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
     },
   });
   if (!cards.length) return <p className="muted mt-6" role="status">This stored card set has no valid cited cards.</p>;
-  const card = cards[index];
+  const card = cards[safeIndex];
   return <div className="mt-6">
-    <p className="muted text-sm"><span className="mono">{index + 1}</span> of <span className="mono">{cards.length}</span></p>
+    <p className="muted text-sm"><span className="mono">{safeIndex + 1}</span> of <span className="mono">{cards.length}</span></p>
     <div className="mt-3 rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-6">
       <p className="text-lg font-semibold">{card.front}</p>
       {revealed ? <div className="mt-6 border-t border-[color:var(--border-default)] pt-5"><p>{card.back}</p><Citations catalog={catalog} ids={card.citation_ids} /></div> : null}
@@ -237,7 +243,9 @@ function CasesView({ asset, courseId }: { asset: Asset; courseId: string }) {
 
 function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
   const catalog = citationCatalog(asset);
+  const storedQuestions = guideSections(asset.content);
   const questions = citationBoundSections(asset.content, catalog);
+  const citationsCurrent = questions.length === storedQuestions.length;
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   const complete = useMutation({
@@ -260,8 +268,8 @@ function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
       </div>
     </div>}
   </section>)}
-    <button className="button button-primary" disabled={!allRated || complete.isPending || complete.isSuccess} onClick={() => complete.mutate()} type="button"><BookOpenCheck size={16} /> {complete.isSuccess ? "Attempt recorded" : "Finish quiz"}</button>
-    {!allRated ? <p className="muted text-sm">Reveal and rate every prompt to finish.</p> : null}
+    <button className="button button-primary" disabled={!citationsCurrent || !allRated || complete.isPending || complete.isSuccess} onClick={() => complete.mutate()} type="button"><BookOpenCheck size={16} /> {complete.isSuccess ? "Attempt recorded" : "Finish quiz"}</button>
+    {!citationsCurrent ? <p className="muted text-sm" role="status">This quiz’s source evidence changed. Regenerate it before recording an attempt.</p> : !allRated ? <p className="muted text-sm">Reveal and rate every prompt to finish.</p> : null}
     {complete.error ? <p className="text-sm text-[color:var(--danger)]" role="alert">{String(complete.error)}</p> : null}
     {complete.isSuccess ? <p aria-live="polite" className="text-sm text-[color:var(--success)]">Your self-graded attempt was recorded.</p> : null}
   </div>;

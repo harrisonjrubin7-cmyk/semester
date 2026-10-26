@@ -9,7 +9,18 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models.entities import Concept, Course, ReviewStatus, StudyAsset, StudySession, User
+from app.models.entities import (
+    Citation,
+    Concept,
+    Course,
+    ReviewStatus,
+    SourceChunk,
+    SourceDocument,
+    StudyAsset,
+    StudyAssetCitation,
+    StudySession,
+    User,
+)
 
 
 def _database():
@@ -34,6 +45,33 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
         outsider_course = Course(user_id=outsider.id, title="Other course")
         session.add_all([course, outsider_course])
         session.flush()
+        document = SourceDocument(
+            course_id=course.id,
+            filename="quiz-source.pdf",
+            storage_key="private/quiz-source.pdf",
+            mime_type="application/pdf",
+            size_bytes=100,
+            sha256="a" * 64,
+        )
+        session.add(document)
+        session.flush()
+        chunk = SourceChunk(document_id=document.id, chunk_index=0, content="Supported answer", page_number=1)
+        second_chunk = SourceChunk(document_id=document.id, chunk_index=1, content="Second supported answer", page_number=2)
+        session.add_all([chunk, second_chunk])
+        session.flush()
+        citation = Citation(
+            id=UUID(int=10),
+            chunk_id=chunk.id,
+            quote="Supported answer",
+            status=ReviewStatus.confirmed,
+        )
+        second_citation = Citation(
+            id=UUID(int=11),
+            chunk_id=second_chunk.id,
+            quote="Second supported answer",
+            status=ReviewStatus.confirmed,
+        )
+        session.add_all([citation, second_citation])
         outsider_concept = Concept(course_id=outsider_course.id, name="Private concept")
         cards = StudyAsset(
             course_id=course.id,
@@ -54,10 +92,16 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
             title="Quiz",
             content={"sections": [
                 {"heading": "One", "explanation": "Answer", "citation_ids": [str(UUID(int=10))]},
+                    {"heading": "Two", "explanation": "Another answer", "citation_ids": [str(UUID(int=11))]},
                 {"heading": "Malformed", "explanation": "Skip", "citation_ids": [str(UUID(int=10))], "key_points": {"bad": True}},
             ]},
         )
         session.add_all([outsider_concept, cards, rejected_cards, quiz])
+        session.flush()
+        session.add_all([
+            StudyAssetCitation(study_asset_id=quiz.id, citation_id=citation.id),
+            StudyAssetCitation(study_asset_id=quiz.id, citation_id=second_citation.id),
+        ])
         session.commit()
         owner_id, outsider_id, course_id, cards_id, rejected_cards_id, quiz_id = (
             owner.id, outsider.id, course.id, cards.id, rejected_cards.id, quiz.id
@@ -86,11 +130,14 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
         rejected_card_payload = {**card_payload, "asset_id": str(rejected_cards_id)}
         assert client.post(f"/api/v1/flashcards/{card_id}/review", json=rejected_card_payload, headers=owner_headers).status_code == 404
 
-        quiz_payload = {"course_id": str(course_id), "answers": [{"question_index": 0, "correct": True}]}
+        quiz_payload = {"course_id": str(course_id), "answers": [
+            {"question_index": 0, "correct": True},
+            {"question_index": 1, "correct": True},
+        ]}
         assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=quiz_payload, headers=outsider_headers).status_code == 404
         incomplete = {"course_id": str(course_id), "answers": []}
         assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=incomplete, headers=owner_headers).status_code == 400
-        malformed = {"course_id": str(course_id), "answers": [{"question_index": 1, "correct": True}]}
+        malformed = {"course_id": str(course_id), "answers": [{"question_index": 2, "correct": True}]}
         assert client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=malformed, headers=owner_headers).status_code == 400
         unbounded = {
             "course_id": str(course_id),
@@ -103,16 +150,26 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
         ).status_code == 422
         response = client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=quiz_payload, headers=owner_headers)
         assert response.status_code == 200
-        assert response.json()["answer_count"] == 1
+        assert response.json()["answer_count"] == 2
         with testing_session() as session:
             saved = session.scalar(select(StudySession).where(StudySession.id == UUID(response.json()["id"])))
             assert saved and saved.course_id == course_id and saved.study_asset_id == quiz_id
             assert saved.result == {
-                "answers": [{"question_index": 0, "correct": True}],
-                "correct_answers": 1,
-                "question_count": 1,
+                "answers": [
+                    {"question_index": 0, "correct": True},
+                    {"question_index": 1, "correct": True},
+                ],
+                "correct_answers": 2,
+                "question_count": 2,
             }
             assert session.scalar(select(func.count()).select_from(StudySession)) == 1
+
+        with testing_session() as session:
+            session.delete(session.get(StudyAssetCitation, (quiz_id, UUID(int=11))))
+            session.commit()
+        stale = client.post(f"/api/v1/quizzes/{quiz_id}/attempts", json=quiz_payload, headers=owner_headers)
+        assert stale.status_code == 409
+        assert stale.json()["detail"] == "Quiz source evidence changed; regenerate it before recording an attempt"
         progress = client.get(f"/api/v1/courses/{course_id}/progress", headers=owner_headers)
         assert progress.status_code == 200
         quiz_evidence = next(item for item in progress.json()["items"] if item["kind"] == "quiz")
@@ -120,8 +177,8 @@ def test_card_review_and_quiz_attempt_require_real_owned_assets():
             "id": response.json()["id"],
             "kind": "quiz",
             "mastery_score": 1.0,
-            "attempts": 1,
-            "correct_attempts": 1,
+                "attempts": 2,
+                "correct_attempts": 2,
             "next_review_at": None,
         }
         assert progress.json()["average_mastery"] == 1.0

@@ -486,6 +486,36 @@ def test_reading_brief_generation_creates_case_specific_content():
     }]
 
 
+def test_flashcard_generation_keeps_prompts_unique_for_one_document():
+    worker = _worker_module()
+    document = SourceDocument(
+        id=UUID(int=12),
+        course_id=UUID(int=13),
+        filename="decision-guide.pdf",
+        storage_key="private/decision-guide.pdf",
+        mime_type="application/pdf",
+        size_bytes=100,
+        sha256="a" * 64,
+    )
+    citations = [
+        Citation(id=UUID(int=10), chunk_id=UUID(int=20), quote="Use the published escalation path."),
+        Citation(id=UUID(int=11), chunk_id=UUID(int=21), quote="Name the final decision owner."),
+    ]
+    catalog = {
+        str(citations[0].id): {"label": "decision-guide.pdf, p. 2", "quote": citations[0].quote},
+        str(citations[1].id): {"label": "decision-guide.pdf, p. 3", "quote": citations[1].quote},
+    }
+
+    content = worker._flashcard_content(
+        [(citation, None, document) for citation in citations],
+        catalog,
+    )
+
+    fronts = [card["front"] for card in content["cards"]]
+    assert len(fronts) == len(set(fronts)) == 2
+    worker.validate_study_asset_content("flashcards", content, {citation.id for citation in citations})
+
+
 def test_unapproved_study_asset_cannot_be_exported(tmp_path: Path, monkeypatch):
     testing_session = _database()
 

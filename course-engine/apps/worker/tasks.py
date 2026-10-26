@@ -534,6 +534,25 @@ def _study_asset_content(asset_type: str, evidence: list, citation_catalog: dict
     }
 
 
+def _flashcard_content(evidence: list, citation_catalog: dict) -> dict:
+    cards = [
+        {
+            "id": str(UUID(int=(index + 1))),
+            "front": (
+                f"Source {index + 1}: Explain the evidence at "
+                f"{citation_catalog[str(citation.id)]['label']}."
+            ),
+            "back": citation.quote,
+            "difficulty": 3,
+            "unit": None,
+            "citation_ids": [str(citation.id)],
+            "source_label": citation_catalog[str(citation.id)]["label"],
+        }
+        for index, (citation, _chunk, _document) in enumerate(evidence[:10])
+    ]
+    return {"cards": cards, "citations": citation_catalog}
+
+
 @celery.task(name="generate_study_asset")
 def generate_study_asset(job_id: str) -> dict:
     db = SessionLocal()
@@ -630,19 +649,7 @@ def generate_study_asset(job_id: str) -> dict:
             )
             citation_catalog[str(citation.id)] = {"label": f"{document.filename}, {location}", "quote": citation.quote}
         if asset_type == "flashcards":
-            cards = [
-                {
-                    "id": str(UUID(int=(index + 1))),
-                    "front": f"Explain the evidence from {document.filename} at its cited location.",
-                    "back": citation.quote,
-                    "difficulty": 3,
-                    "unit": None,
-                    "citation_ids": [str(citation.id)],
-                    "source_label": citation_catalog[str(citation.id)]["label"],
-                }
-                for index, (citation, _chunk, document) in enumerate(evidence[:10])
-            ]
-            content = {"cards": cards, "citations": citation_catalog}
+            content = _flashcard_content(evidence, citation_catalog)
         else:
             content = _study_asset_content(asset_type, evidence, citation_catalog)
         validate_study_asset_content(
