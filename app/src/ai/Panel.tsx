@@ -1,10 +1,10 @@
-import { useCallback, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { assemble } from './assemble';
-import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia, useTier } from '../lib/media';
 import { canSend, useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
@@ -55,12 +55,19 @@ import { GuideOperatingContract } from '../components/GuideOperatingContract';
  *
  * The three geometries, the drag, the focus trap at full height and the
  * reading measure are all unchanged and documented where they are used
- * below. `side` is the only thing it is told rather than knowing: which
- * corner the button is resting in, so a docked card opens from it.
+ * below. It is told nothing: it knows whether the window is wide and whether
+ * it is opened out, and that is all the three shapes need.
  */
 
 /** How tall the sheet is when it first comes up, as a share of the window. */
 const PART = 0.6;
+
+/**
+ * How wide the docked column is on a wide window: a share of the window, capped
+ * so a large screen does not give the page to the assistant. The same value is
+ * written to `--assist-dock`, so the page makes room for exactly this width.
+ */
+const DOCK_WIDTH = 'min(440px, 36vw)';
 
 /**
  * How far the handle has to travel before a tap becomes a drag.
@@ -71,11 +78,17 @@ const PART = 0.6;
  */
 const DRAG = 40;
 
-export function Panel({ side }: { side: 'right' | 'left' }) {
+export function Panel() {
   const { dispatch } = useStore();
   const ai = useAI();
   const seed = useSeed();
-  const wide = useMedia(WIDE);
+  /*
+   * `wide` means a window with room for a docked column, which a phone on its
+   * side is not: `useTier` calls it a phone (`HANDHELD`) at any width, and the
+   * shell draws the phone frame for it, so it keeps the sheet.
+   */
+  const tier = useTier();
+  const wide = useMedia(WIDE) && tier !== 'phone';
   const touch = useMedia(TOUCH);
   const [full, setFull] = useState(false);
   const [draft, setDraft] = useState(seed.text);
@@ -152,16 +165,22 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * On a wide window a full-bleed strip across the bottom of a laptop is
    * neither: the measure is wrong, the composer is a metre from the answer,
    * and it covers a screen that had the room to keep showing. So there it
-   * docks as a card in the corner it was opened from — the shape every
-   * embedded assistant on the web has settled on, for the reason they all
-   * settled on it.
+   * docks as a column down the right edge, the same ground as the rest of the
+   * app, with the page making room for it. A card floating over the page reads
+   * as a second window; a column reads as part of the layout.
    *
    * Opened out, both become the same thing: a modal over a wash, capped at a
    * reading width on a wide window rather than stretched across it.
    */
   const shape = useMemo((): React.CSSProperties => {
+    const surface: React.CSSProperties = {
+      background: 'var(--app-panel)',
+      border: '1px solid var(--app-line)',
+      boxShadow: 'var(--lift-2), 0 -18px 40px rgba(0,0,0,0.45)',
+    };
     if (!wide) {
       return {
+        ...surface,
         left: 0,
         right: 0,
         bottom: 0,
@@ -173,6 +192,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
     }
     if (full) {
       return {
+        ...surface,
         top: 24,
         bottom: 24,
         left: '50%',
@@ -181,14 +201,43 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
         borderRadius: 'var(--r-lg)',
       };
     }
+    /*
+     * Docked: a column of the window, not a card laid over it.
+     *
+     * It is the same ground as the rail and the page (`--app-bg`), full height,
+     * flush to the right edge, with one hairline where it meets the page. The
+     * page makes room for it through `--assist-dock` (see the effect below), so
+     * nothing is covered and nothing floats. The corner the button sits in no
+     * longer decides where it docks: a column on the left would sit on the rail.
+     */
     return {
-      [side]: 20,
-      bottom: 20,
-      width: 'min(440px, calc(100vw - 40px))',
-      height: 'min(700px, calc(100vh - 96px))',
-      borderRadius: 'var(--r-lg)',
+      background: 'var(--app-bg)',
+      border: 0,
+      borderLeft: '1px solid var(--app-line)',
+      boxShadow: 'none',
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: DOCK_WIDTH,
+      height: '100%',
     };
-  }, [wide, full, side]);
+  }, [wide, full]);
+
+  /*
+   * Docked, the page gives the column its width instead of sitting under it.
+   *
+   * `ai/Assistant.tsx` mounts this only while the assistant is open, so the
+   * cleanup is the close: the variable goes with the column. Opened out it is a
+   * modal over a wash, and the page underneath keeps its full width.
+   */
+  useLayoutEffect(() => {
+    if (!wide || full) return;
+    const root = document.documentElement;
+    root.style.setProperty('--assist-dock', DOCK_WIDTH);
+    return () => {
+      root.style.removeProperty('--assist-dock');
+    };
+  }, [wide, full]);
   /*
    * Focus is trapped only at full height.
    *
@@ -250,6 +299,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
           )}
           <div
             ref={sheet}
+            className="assistant-sheet"
             role="dialog"
             aria-label={`Ask about ${assembled.label}`}
             aria-modal={full}
@@ -260,9 +310,6 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               display: 'flex',
               flexDirection: 'column',
               minHeight: 0,
-              background: 'var(--app-panel)',
-              border: '1px solid var(--app-line)',
-              boxShadow: 'var(--lift-2), 0 -18px 40px rgba(0,0,0,0.45)',
               ...shape,
             }}
           >
