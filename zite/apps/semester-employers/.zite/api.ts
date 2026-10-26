@@ -3,13 +3,20 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _EmployerEp } from '../src/api/employer';
+import type { default as _ScholarshipSponsorEp } from '../src/api/scholarshipSponsor';
 
 type _EmployerCfg = typeof _EmployerEp;
 export type EmployerInputType = NonNullable<_EmployerCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EmployerCfg['execute']>[0]['input'];
 export type EmployerOutputType = Awaited<ReturnType<_EmployerCfg['execute']>>;
 export const employer = createCaller<EmployerInputType, EmployerOutputType>('employer');
 
+type _ScholarshipSponsorCfg = typeof _ScholarshipSponsorEp;
+export type ScholarshipSponsorInputType = NonNullable<_ScholarshipSponsorCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ScholarshipSponsorCfg['execute']>[0]['input'];
+export type ScholarshipSponsorOutputType = Awaited<ReturnType<_ScholarshipSponsorCfg['execute']>>;
+export const scholarshipSponsor = createCaller<ScholarshipSponsorInputType, ScholarshipSponsorOutputType>('scholarshipSponsor');
+
 
 export const api = {
   employer,
+  scholarshipSponsor,
 };

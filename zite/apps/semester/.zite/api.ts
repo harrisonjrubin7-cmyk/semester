@@ -52,6 +52,7 @@ import type { default as _RegistrationChangesEp } from '../src/api/registrationC
 import type { default as _RegradeEp } from '../src/api/regrade';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
 import type { default as _SandboxApiEp } from '../src/api/sandboxApi';
+import type { default as _ScholarshipsEp } from '../src/api/scholarships';
 import type { default as _SearchEp } from '../src/api/search';
 import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
 import type { default as _SecurityOpsEp } from '../src/api/securityOps';
@@ -314,6 +315,11 @@ export type SandboxApiInputType = NonNullable<_SandboxApiCfg['inputSchema']> ext
 export type SandboxApiOutputType = Awaited<ReturnType<_SandboxApiCfg['execute']>>;
 export const sandboxApi = createCaller<SandboxApiInputType, SandboxApiOutputType>('sandboxApi');
 
+type _ScholarshipsCfg = typeof _ScholarshipsEp;
+export type ScholarshipsInputType = NonNullable<_ScholarshipsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ScholarshipsCfg['execute']>[0]['input'];
+export type ScholarshipsOutputType = Awaited<ReturnType<_ScholarshipsCfg['execute']>>;
+export const scholarships = createCaller<ScholarshipsInputType, ScholarshipsOutputType>('scholarships');
+
 type _SearchCfg = typeof _SearchEp;
 export type SearchInputType = NonNullable<_SearchCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SearchCfg['execute']>[0]['input'];
 export type SearchOutputType = Awaited<ReturnType<_SearchCfg['execute']>>;
@@ -421,6 +427,7 @@ export const api = {
   regrade,
   roleApps,
   sandboxApi,
+  scholarships,
   search,
   sectionRequests,
   securityOps,

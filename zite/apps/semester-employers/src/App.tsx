@@ -11,6 +11,7 @@ import { Toaster } from '@project/components/ui/sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@project/components/ui/alert-dialog';
 import { Wordmark } from '@project/components/brand/Mark';
+import Scholarships from './Scholarships';
 
 type Opp = NonNullable<EmployerOutputType['opportunities']>[number];
 type Draft = { id?: string; version?: number; title: string; kind: 'Internship' | 'Job' | 'Research' | 'Mentorship'; employerName: string; description: string; location: string; closesOn: string | null };
@@ -70,6 +71,8 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   const [edit, setEdit] = useState<Draft | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [tab, setTab] = useState<'jobs' | 'scholarships'>(() => (location.hash === '#scholarships' ? 'scholarships' : 'jobs'));
+  const pick = (t: 'jobs' | 'scholarships') => { setTab(t); history.replaceState(null, '', t === 'scholarships' ? '#scholarships' : '#'); };
   const load = () => { setErr(null); employer({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) load(); }, [user]);
@@ -83,7 +86,12 @@ export default function App() {
         <span className="font-display tracking-[0.3em]">SEMESTER <span className="ml-2 text-xs tracking-normal opacity-60">Employers</span></span>
         <span className="flex items-center gap-3 text-xs"><span className="hidden sm:inline">{user.email}</span><button onClick={() => logout()} className="underline">Sign out</button></span>
       </header>
+      <nav aria-label="Employer sections" className="mx-auto flex max-w-5xl gap-1 px-4 pt-4 md:px-8">
+        {([['jobs', 'Opportunities'], ['scholarships', 'Scholarships']] as const).map(([k, l]) => (
+          <button key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => pick(k)} className={`rounded px-3 py-2 text-sm ${tab === k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>{l}</button>))}
+      </nav>
       <main className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+        {tab === 'scholarships' ? <Scholarships /> : <>
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Your opportunities</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Post roles for students, then review who applied. You only see what each applicant chose to make public.</p></div>
           {!edit && <Button onClick={() => setEdit({ title: '', kind: 'Internship', employerName: d?.opportunities?.[0]?.employerName ?? '', description: '', location: '', closesOn: null })}>Post an opportunity</Button>}
@@ -111,6 +119,7 @@ export default function App() {
             </section>
           ))}
         </div>
+        </>}
       </main>
       <Toaster />
     </div>
