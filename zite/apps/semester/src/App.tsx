@@ -55,6 +55,7 @@ import Curriculum from './pages/Curriculum';
 import Programs from './pages/Programs';
 import Dining from './pages/Dining';
 import GradeTracker from './pages/GradeTracker';
+import SyllabusHub from './pages/SyllabusHub';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -148,6 +149,7 @@ export default function App() {
             <Route path="/learn" element={<Courses />} />
             <Route path="/learn/study" element={<Study />} />
             <Route path="/learn/ask" element={<Ask />} />
+            <Route path="/learn/syllabi" element={<SyllabusHub />} />
             <Route path="/learn/:sectionId" element={<SectionPage />} />
             <Route path="/help" element={<Help />} />
             <Route path="/campus" element={<Campus />} />

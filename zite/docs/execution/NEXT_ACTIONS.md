@@ -20,7 +20,7 @@ curriculum governance (9bc8d47), programs and pathways (a52825d), dining (b58d38
    registers (roleApps.ts, source-manifest.csv, conflicts-and-decisions.md, migrations), with independent status dimensions
    (maturity / authorization / activation / evidence / delivery / health), source and conflict registers, missing-coverage view,
    per-app build-prompt generator, JSON export. Statuses come from code evidence only; nothing is marked accepted or activated.
-8. DONE 26 Oct (grade tracker + GPA simulator, /progress/tracker; syllabus hub still open): Student Workspace grade tracker (S-72): transparent weighted and points-based calculations with the S-72 validation rules
+8. DONE 26 Oct (grade tracker + GPA simulator, /progress/tracker): Student Workspace grade tracker (S-72): transparent weighted and points-based calculations with the S-72 validation rules — DONE incl. syllabus hub (/learn/syllabi)
    (no negative scores, ungraded is not zero, excused leaves the denominator, weights must total 100% or no final grade, "Not
    enough graded work"), GPA scenarios kept separate from the official record, syllabus-rule review proposing policy updates.
 9. Programs: outcome-to-assessment map (S-70), teach-out rules; institution time-zone field (dining reads America/Chicago).
@@ -150,3 +150,12 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
   - Browser NOT RUN.
 - Faculty modules: all 24 now implemented or partial. Official grade handoff stays disabled by design.
 - Next: Institution side (W07). Teaching-assignment changes after a section is created, and a demand view for chairs. Then a cross-tenant sweep (T01) across endpoints.
+
+## S-75 mapping (26 Oct)
+S-75's schema is a proposed logical contract; it says itself not to migrate it over an existing database. Mapping:
+- Identity/scopes/memberships/role_assignments → existing users, tenant memberships, staff role tables (granted_by <> user_id everywhere).
+- extraction_candidates → `syl_reviews` (syllabus hub): nothing becomes a task or grade rule without the student accepting it.
+- delegations / delegation_resources / delegation_actions → Family app grants; `delegation_access_events` is NOT built yet — queued.
+- organization_verifications / opportunity_versions / publications → Employers app; version-bound publication approval to be re-checked.
+- institutions.timezone → NOT present (dining hardcodes America/Chicago) — queued.
+- UI states `stale` and `uncertain` → not yet in components/kit — queued.

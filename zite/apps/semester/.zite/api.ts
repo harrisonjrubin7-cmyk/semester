@@ -65,6 +65,7 @@ import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _StudyEp } from '../src/api/study';
 import type { default as _StudyAbroadEp } from '../src/api/studyAbroad';
 import type { default as _SupportAccessApprovalEp } from '../src/api/supportAccessApproval';
+import type { default as _SyllabusHubEp } from '../src/api/syllabusHub';
 import type { default as _TeachingEp } from '../src/api/teaching';
 import type { default as _TransferEp } from '../src/api/transfer';
 import type { default as _TutoringEp } from '../src/api/tutoring';
@@ -384,6 +385,11 @@ export type SupportAccessApprovalInputType = NonNullable<_SupportAccessApprovalC
 export type SupportAccessApprovalOutputType = Awaited<ReturnType<_SupportAccessApprovalCfg['execute']>>;
 export const supportAccessApproval = createCaller<SupportAccessApprovalInputType, SupportAccessApprovalOutputType>('supportAccessApproval');
 
+type _SyllabusHubCfg = typeof _SyllabusHubEp;
+export type SyllabusHubInputType = NonNullable<_SyllabusHubCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SyllabusHubCfg['execute']>[0]['input'];
+export type SyllabusHubOutputType = Awaited<ReturnType<_SyllabusHubCfg['execute']>>;
+export const syllabusHub = createCaller<SyllabusHubInputType, SyllabusHubOutputType>('syllabusHub');
+
 type _TeachingCfg = typeof _TeachingEp;
 export type TeachingInputType = NonNullable<_TeachingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TeachingCfg['execute']>[0]['input'];
 export type TeachingOutputType = Awaited<ReturnType<_TeachingCfg['execute']>>;
@@ -464,6 +470,7 @@ export const api = {
   study,
   studyAbroad,
   supportAccessApproval,
+  syllabusHub,
   teaching,
   transfer,
   tutoring,
