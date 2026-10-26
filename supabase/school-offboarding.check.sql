@@ -106,6 +106,8 @@ begin
     (n_admin,  'university_admin', 'school', 'north-off', 'institution'),
     (n_admin2, 'university_admin', 'school', 'north-off', 'institution'),
     (s_admin,  'university_admin', 'school', 'south-off', 'institution');
+  select id into s_grant from public.role_grants
+   where subject = s_admin and scope_kind = 'school' and scope_id = 'south-off';
 
   insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name, status, credentials_reference, approved_at)
   values ('north-off', 'lms', 'Canvas', 'North LMS', 'healthy', 'vault:north/lms', now()) returning id into n_conn;
@@ -441,8 +443,40 @@ begin
   perform pg_temp.must_refuse('the school''s own administrator restoring',
     format($q$select public.restore_school(%L, 'please')$q$, s_case));
   reset role;
+
+  -- A recorded undo target can disappear through a privileged repair or a
+  -- later migration. Restoration must stop before it changes any other target
+  -- or closes the case; attempted updates are not restoration evidence.
+  set local role postgres;
+  delete from public.role_grants where id = s_grant;
+  reset role;
+  perform pg_temp.become(op2);
+  if not pg_temp.refused_saying(
+    format($q$select public.restore_school(%L, 'The trial resumed.')$q$, s_case),
+    'Restore paused'
+  ) then
+    raise exception 'FAILED: a restoration with a missing undo target did not fail closed';
+  end if;
+  reset role;
+  perform pg_temp.counted('failed restore leaves the case open',
+    (select count(*) from public.school_offboarding where id = s_case and status = 'access_disabled'), 1);
+  perform pg_temp.counted('failed restore rolls the connection change back',
+    (select count(*) from public.integration_connections where id = s_conn and status = 'disconnected' and credentials_reference is null), 1);
+  perform pg_temp.counted('failed restore rolls the rollout change back',
+    (select count(*) from public.tenant_rollout where tenant_id = 'south-off' and state = 'suspended'), 1);
+
+  -- Repair the synthetic target in the disposable transaction, then prove the
+  -- same case can be restored completely. The bypass is scoped to this repair.
+  set local role postgres;
+  perform set_config('semester.offboarding_restore', 'on', true);
+  insert into public.role_grants (id, subject, role, scope_kind, scope_id, provenance, revoked_at)
+  values (s_grant, s_admin, 'university_admin', 'school', 'south-off', 'institution', now());
+  perform set_config('semester.offboarding_restore', 'off', true);
+  reset role;
   perform pg_temp.become(op2);
   res := public.restore_school(s_case, 'The trial resumed by agreement of both parties.');
+  perform pg_temp.must_refuse('replaying a completed restoration',
+    format($q$select public.restore_school(%L, 'again')$q$, s_case));
   reset role;
   perform pg_temp.counted('restore gives the grant back', (res->>'grants')::bigint, 1);
   perform pg_temp.counted('and the connection, as it was',

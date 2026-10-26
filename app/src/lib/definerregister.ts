@@ -667,6 +667,19 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   },
 ];
 
+/**
+ * Functions that still belong to their historical reading cohort above but
+ * whose winning body moved to a later hardening migration. Kept separate from
+ * `AFTER_SECOND_READING` so a replacement is not counted as a new callable
+ * definer function.
+ */
+export const WINNING_REDEFINITIONS: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261026120000_offboarding_restore_integrity.sql',
+    functions: ['restore_school'],
+  },
+];
+
 /** How many functions the advisor listed on production on `READ_ON`. */
 export const READ_COUNT = 151;
 
