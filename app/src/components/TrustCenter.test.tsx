@@ -3,7 +3,7 @@ import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
-import type { ShareRow } from '../lib/advisor-shares';
+import type { ShareEvent, ShareRow } from '../lib/advisor-shares';
 import * as erase from '../lib/erase';
 import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider, useStore } from '../state/store';
@@ -23,13 +23,14 @@ import { StoreProvider, useStore } from '../state/store';
 
 const future = new Date(Date.now() + 20 * 86_400_000).toISOString();
 let shares: ShareRow[] = [];
+let shareEvents: ShareEvent[] = [];
 const revoked: string[] = [];
 let revokeFailure: Error | null = null;
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
   return {
     ...real,
-    myShares: vi.fn(async () => ({ shares, events: [] })),
+    myShares: vi.fn(async () => ({ shares, events: shareEvents })),
     revokeShare: vi.fn(async (id: string) => {
       if (revokeFailure) throw revokeFailure;
       revoked.push(id);
@@ -82,6 +83,7 @@ beforeEach(() => {
     { id: 's1', title: 'Spring planning', created_at: new Date().toISOString(), expires_at: future, revoked_at: null },
     { id: 's2', title: 'Old agenda', created_at: '2026-01-01T00:00:00Z', expires_at: '2026-02-01T00:00:00Z', revoked_at: null },
   ];
+  shareEvents = [];
   revoked.length = 0;
   revokeFailure = null;
   seen = null;
@@ -182,12 +184,53 @@ describe('with trust_center on', () => {
     expect(text(section('Shares and access'))).toContain('Nothing is shared: this device is not signed in.');
   });
 
+  it('shows bounded advisor-share history without exposing row identifiers', async () => {
+    shares = [
+      { id: 'secret-active-id', title: 'Spring planning', created_at: '2026-10-01T12:00:00Z', expires_at: future, revoked_at: null },
+      { id: 'secret-expired-id', title: 'Old agenda', created_at: '2026-01-01T00:00:00Z', expires_at: '2026-02-01T00:00:00Z', revoked_at: null },
+      { id: 'secret-revoked-id', title: 'Backup plan', created_at: '2026-09-01T00:00:00Z', expires_at: future, revoked_at: '2026-09-20T15:00:00Z' },
+      { id: 'secret-damaged-id', title: 'Damaged record', created_at: '0', expires_at: '2026-02-30T08:00:00Z', revoked_at: null },
+      { id: 'secret-damaged-revocation-id', title: 'Damaged revocation', created_at: '2026-09-01T00:00:00Z', expires_at: future, revoked_at: '0' },
+    ];
+    shareEvents = [
+      { share_id: 'secret-active-id', read_at: '2026-10-10T10:00:00Z' },
+      { share_id: 'secret-active-id', read_at: '2026-10-11T11:00:00Z' },
+      { share_id: 'secret-expired-id', read_at: '2026-01-20T09:00:00Z' },
+      { share_id: 'secret-damaged-id', read_at: '2026-09-18T08:00:00Z' },
+      { share_id: 'secret-damaged-id', read_at: '2026-02-30T08:00:00Z' },
+    ];
+
+    await render(<TrustCenter accountId="u1" />);
+    await settle(() => host.querySelectorAll('[aria-label="Advisor share history"] details').length === 5);
+
+    const history = host.querySelector('[aria-label="Advisor share history"]')!;
+    const summaries = [...history.querySelectorAll('summary')];
+    expect(summaries.map((summary) => text(summary))).toEqual([
+      'Spring planning — Active',
+      'Old agenda — Expired',
+      'Backup plan — Revoked',
+      'Damaged record — State unavailable',
+      'Damaged revocation — State unavailable',
+    ]);
+    expect(summaries.every((summary) => (summary as HTMLElement).tabIndex === 0)).toBe(true);
+    expect(text(summaries[0].closest('details')!)).toMatch(/2 recorded opens\. Latest [^.]+\./);
+    expect(text(summaries[1].closest('details')!)).toMatch(/1 recorded open\. Latest [^.]+\./);
+    expect(text(history)).toContain('No recorded advisor opens.');
+    expect(text(history)).toContain('2 recorded opens. Latest date unavailable.');
+    expect(text(history)).toContain('Created Date unavailable.');
+    expect(text(section('Shares and access'))).toContain('This list covers advisor shares only. Family and supporter access is managed separately.');
+    expect(history.querySelectorAll('button')).toHaveLength(1);
+    for (const raw of ['secret-active-id', 'secret-expired-id', 'secret-revoked-id', 'secret-damaged-id', 'secret-damaged-revocation-id', '2026-02-30T08:00:00Z']) {
+      expect(history.innerHTML).not.toContain(raw);
+    }
+  });
+
   it('keeps a refused live-share revocation open, then shows a confirmed retry', async () => {
     await render(<TrustCenter accountId="u1" />);
     await settle(() => text().includes('Spring planning'));
     const shares = section('Shares and access');
-    expect(text(shares)).toContain('Spring planning — shared with your advisor, until');
-    expect(text(shares)).toContain('1 earlier share has expired or been revoked.');
+    expect(text(shares)).toContain('Spring planning — Active');
+    expect(text(shares)).toContain('Old agenda — Expired');
     await act(async () => button(/^Revoke…$/, shares).click());
     expect(revoked).toEqual([]);
     expect(text(dialog()!)).toContain('Your advisor loses access to this shared meeting immediately.');
@@ -201,9 +244,9 @@ describe('with trust_center on', () => {
 
     revokeFailure = null;
     await act(async () => button(/^Revoke$/, dialog()!).click());
-    await settle(() => text().includes('No advisor can open'));
+    await settle(() => text().includes('Spring planning — Revoked'));
     expect(revoked).toEqual(['s1']);
-    expect(text()).toContain('No advisor can open anything of yours right now.');
+    expect(text()).toContain('Spring planning — Revoked');
   });
 
   it('forgets one remembered line, and only after a confirmation', async () => {
