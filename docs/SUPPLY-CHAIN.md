@@ -121,6 +121,7 @@ tables to each other.
 | --- | --- | --- |
 | `actions/checkout` | GitHub | Checks out the repository. |
 | `actions/setup-node` | GitHub | Installs Node and caches npm. |
+| `actions/setup-python` | GitHub | Installs the pinned Python runtime used by Course Engine API tests. |
 | `actions/upload-artifact` | GitHub | Keeps the SBOM and test reports with the run. |
 | `actions/github-script` | GitHub | Posts CI summaries with the job token. |
 | `actions/configure-pages` | GitHub | Pages deploy. |
