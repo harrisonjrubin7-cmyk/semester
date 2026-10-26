@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Semester operators get a My work tab in the Console
+
+Only for Semester staff who can open the **Console**. A **My work** tab now sits after **Command center** and lists, in one queue, what needs you: open operational exceptions, approvals you can decide or that you asked for and are still waiting or ready to act on, and integration connectors that are failing, degraded, stale or unconfigured. It reads only what your other Console tabs already let you read; a source you hold no grant for says so and is not read. If a source cannot be read, the total says **At least N** instead of a count. Pick an item to see why it is yours, its owner, school, due date, next safe step, evidence and limitation; **Open in …** takes you to the tab where you act on it. Nothing can be changed from this tab. Nobody else will notice anything.
+
 ### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
 
 Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. An approved extension on an assignment now moves that student's due date for it (see below). Nobody else will notice anything.
