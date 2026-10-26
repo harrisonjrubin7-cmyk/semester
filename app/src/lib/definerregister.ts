@@ -301,6 +301,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['publish_course_material_retention_policy', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['queue_school_purge_rehearsal', 'admin', ['private.offboarding_operator', 'private.has_capability']],
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
@@ -374,6 +375,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
+  ['stop_school_purge_rehearsal', 'admin', ['private.offboarding_operator', 'private.has_capability', 'private.is_app_admin']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['support_case_access', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active']],
@@ -517,6 +519,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * function still counts among those applied on production.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
+  {
+    file: '20261026200000_offboarding_purge_rehearsal.sql',
+    functions: ['queue_school_purge_rehearsal', 'stop_school_purge_rehearsal'],
+  },
   {
     file: '20261026180000_offboarding_purge_preview.sql',
     functions: ['console_offboarding_cases', 'preview_school_purge'],
