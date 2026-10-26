@@ -145,7 +145,7 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `account_executive` | provisionable | ✓ ✓ ✓ · ✓ · · | `account:manage`<br>`success:manage` | — | `console-pilots.check.sql`<br>`gtm.check.sql`<br>`trust-room.check.sql` | — | `docs/gtm/EXECUTION-PLAN.md` | Manage a prospect account and send its procurement room | Any student data |
+| `account_executive` | provisionable | ✓ ✓ ✓ · ✓ · · | `account:manage`<br>`success:manage` | — | `console-no-student-rows.check.sql`<br>`console-pilots.check.sql`<br>`gtm.check.sql`<br>`trust-room.check.sql` | — | `docs/gtm/EXECUTION-PLAN.md` | Manage a prospect account and send its procurement room | Any student data |
 | `trust_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `trust:publish`<br>`console:operate`<br>`access_review:manage` | — | `console-control-plane.check.sql`<br>`console-security-reads.check.sql`<br>`privileged-access-review.check.sql`<br>`trust-room.check.sql` | `docs/trust/README.md` | — | Publish documents to the trust room | Any student data |
 | `marketing_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:manage`<br>`campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Manage and report on campaigns | Any student data; sending a campaign nobody reviewed |
 | `marketing_analyst` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Read campaign reports | Editing or sending campaigns; any student data |
