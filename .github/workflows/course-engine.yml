@@ -89,15 +89,6 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Browser acceptance
         run: pnpm run test:e2e
-      - name: Refresh Linux visual baselines for review
-        run: pnpm exec playwright test e2e/course-journey.spec.ts -g "desktop and mobile overview match reviewed visual snapshots" --update-snapshots=all
-      - name: Keep refreshed Linux visual baselines
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
-        with:
-          name: course-engine-linux-baselines-${{ github.sha }}
-          path: course-engine/apps/web/e2e/course-journey.spec.ts-snapshots/*-linux.png
-          if-no-files-found: error
-          retention-days: 1
       - name: Keep browser evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
