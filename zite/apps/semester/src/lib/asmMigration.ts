@@ -90,4 +90,40 @@ export const ASM_MIGRATION: string[] = [
      GET DIAGNOSTICS n = ROW_COUNT;
      RETURN n;
    END $$`,
+  // asm-002: extended time. The attempt stores the extra minutes decided at start from an approved accommodation the
+  // student sent to this section (acc_time_multiplier, if the accommodations tables exist). Instructors see only that time
+  // was extended, never the request. Lateness and the start window use the extended figures.
+  `ALTER TABLE asm_attempts ADD COLUMN IF NOT EXISTS extra_min int NOT NULL DEFAULT 0 CHECK (extra_min BETWEEN 0 AND 1200)`,
+  `CREATE OR REPLACE FUNCTION asm_start(p_tenant text, p_id bigint, p_student text) RETURNS jsonb LANGUAGE plpgsql AS $$
+   DECLARE a asm_assessments%ROWTYPE; v int; used int; att bigint; ex int; mult numeric := 1;
+   BEGIN
+     SELECT * INTO a FROM asm_assessments WHERE id = p_id AND tenant_id = p_tenant;
+     IF NOT FOUND OR a.state <> 'published' THEN RETURN jsonb_build_object('error', 'This assessment is not open.'); END IF;
+     PERFORM pg_advisory_xact_lock(hashtext('asm:' || p_id || ':' || p_student));
+     SELECT id, version, extra_min INTO att, v, ex FROM asm_attempts WHERE assessment_id = p_id AND student_id = p_student AND state = 'in_progress';
+     IF FOUND THEN RETURN jsonb_build_object('attemptId', att, 'version', v, 'limitMin', a.time_limit_min, 'extraMin', ex); END IF;
+     IF now() < a.opens_at OR now() >= a.closes_at THEN RETURN jsonb_build_object('error', 'This assessment is not open right now.'); END IF;
+     SELECT count(*) INTO used FROM asm_attempts WHERE assessment_id = p_id AND student_id = p_student;
+     IF used >= a.attempts_allowed THEN RETURN jsonb_build_object('error', 'You have used all your attempts.'); END IF;
+     IF a.time_limit_min IS NOT NULL AND to_regprocedure('acc_time_multiplier(text,text,text)') IS NOT NULL THEN
+       mult := acc_time_multiplier(p_tenant, p_student, a.section_id);
+     END IF;
+     ex := CASE WHEN a.time_limit_min IS NULL OR mult <= 1 THEN 0 ELSE ceil(a.time_limit_min * (mult - 1))::int END;
+     SELECT max(version) INTO v FROM asm_versions WHERE assessment_id = p_id;
+     INSERT INTO asm_attempts (tenant_id, assessment_id, version, student_id, extra_min) VALUES (p_tenant, p_id, v, p_student, ex) RETURNING id INTO att;
+     RETURN jsonb_build_object('attemptId', att, 'version', v, 'limitMin', a.time_limit_min, 'extraMin', ex);
+   END $$`,
+  `CREATE OR REPLACE FUNCTION asm_submit(p_tenant text, p_attempt bigint, p_student text, p_answers jsonb, p_auto numeric, p_needs_manual boolean) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE t asm_attempts%ROWTYPE; a asm_assessments%ROWTYPE; is_late boolean;
+   BEGIN
+     SELECT * INTO t FROM asm_attempts WHERE id = p_attempt AND tenant_id = p_tenant AND student_id = p_student FOR UPDATE;
+     IF NOT FOUND THEN RETURN 'Attempt not found.'; END IF;
+     IF t.state <> 'in_progress' THEN RETURN 'This attempt was already submitted.'; END IF;
+     SELECT * INTO a FROM asm_assessments WHERE id = t.assessment_id;
+     is_late := now() > a.closes_at + make_interval(mins => t.extra_min) + interval '2 minutes'
+       OR (a.time_limit_min IS NOT NULL AND now() > t.started_at + make_interval(mins => a.time_limit_min + t.extra_min) + interval '2 minutes');
+     UPDATE asm_attempts SET answers = p_answers, auto_score = p_auto, submitted_at = now(), late = is_late,
+       state = CASE WHEN p_needs_manual THEN 'submitted' ELSE 'graded' END WHERE id = p_attempt;
+     RETURN NULL;
+   END $$`,
 ];

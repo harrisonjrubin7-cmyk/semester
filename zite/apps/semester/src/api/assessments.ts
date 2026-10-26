@@ -74,7 +74,7 @@ export default createEndpoint({
       await own(input.id);
       const r = ((await sql.query(`SELECT asm_start($1,$2,$3) AS r`, [T, input.id, me])) as { r: Row }[])[0].r;
       if (r.error) forbid(String(r.error));
-      return { attemptId: Number(r.attemptId), questions: studentView(await frozen(input.id, Number(r.version))) };
+      return { attemptId: Number(r.attemptId), limitMin: r.limitMin == null ? null : Number(r.limitMin), extraMin: Number(r.extraMin ?? 0), questions: studentView(await frozen(input.id, Number(r.version))) };
     }
     if (input.action === 'submit') {
       const t = ((await sql.query(`SELECT * FROM asm_attempts WHERE id = $1 AND tenant_id = $2 AND student_id = $3`, [input.attemptId, T, me])) as Row[])[0];
@@ -117,7 +117,7 @@ export default createEndpoint({
       const base = { id: Number(x.id), title: String(x.title), state: String(x.state), opensAt: iso(x.opens_at), closesAt: iso(x.closes_at), timeLimitMin: x.time_limit_min == null ? null : Number(x.time_limit_min), attemptsAllowed: Number(x.attempts_allowed), version: x.version == null ? 0 : Number(x.version), total: x.total == null ? null : Number(x.total) };
       if (seesAll) {
         return { ...base, questions: !teaching ? [] : base.version ? await frozen(base.id, base.version) : [],
-          attempts: mine.map((t) => ({ id: Number(t.id), student: names[String(t.student_id)] ?? 'Student', state: String(t.state), late: !!t.late, auto: t.auto_score == null ? null : Number(t.auto_score), manual: t.manual_score == null ? null : Number(t.manual_score), feedback: String(t.feedback), submittedAt: iso(t.submitted_at), answers: t.answers })) };
+          attempts: mine.map((t) => ({ id: Number(t.id), student: names[String(t.student_id)] ?? 'Student', state: String(t.state), late: !!t.late, extended: Number(t.extra_min ?? 0) > 0, auto: t.auto_score == null ? null : Number(t.auto_score), manual: t.manual_score == null ? null : Number(t.manual_score), feedback: String(t.feedback), submittedAt: iso(t.submitted_at), answers: t.answers })) };
       }
       return { ...base, attempts: mine.map((t) => {
         const rel = t.state === 'released';

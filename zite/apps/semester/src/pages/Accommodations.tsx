@@ -37,7 +37,7 @@ function Mine({ d, reload }: { d: any; reload: () => void }) {
           <p className="flex flex-wrap items-center gap-2 text-sm"><Status value={r.state.replace('_', ' ')} /> {CAT[r.category]} · requested {fmt(r.createdAt)}</p>
           {r.note && <p className="mt-1 text-sm">Office: {r.note}</p>}
           {r.state === 'approved' && <>
-            <p className="mt-1 text-sm">Approved until {r.validUntil}: {r.arrangements.join('; ')}</p>
+            <p className="mt-1 text-sm">Approved until {r.validUntil}: {r.arrangements.join('; ')}{r.timeMultiplier ? ` · Extended time ${r.timeMultiplier}× on timed assessments in courses you send this letter to` : ''}</p>
             <p className="mt-2 text-xs font-medium">Send the letter to:</p>
             {d.mySections.length ? <div className="mt-1 flex flex-wrap gap-1">{d.mySections.map((s: any) => {
               const sent = r.sent.includes(s.id);
@@ -67,6 +67,11 @@ function Decide({ r, reload }: { r: any; reload: () => void }) {
         <Button size="sm" variant="outline" onClick={() => go('request_info')}>Ask for more information</Button>
         <Button size="sm" variant="outline" onClick={() => go('decline')}>Decline</Button>
       </div>
+      {r.state === 'approved' && <label className="block text-xs">Extended time on timed assessments (applies only in courses the student sends their letter to)
+        <select className="mt-1 block rounded-md border border-border bg-background p-2 text-sm" value={r.timeMultiplier ?? ''}
+          onChange={(e) => call({ action: 'setTime', id: r.id, version: r.version, multiplier: e.target.value ? Number(e.target.value) : null }, 'Extended time saved.', reload)}>
+          <option value="">None</option>{[1.25, 1.5, 2, 2.5, 3].map((m) => <option key={m} value={m}>{m}× the time limit</option>)}
+        </select></label>}
     </div>
   );
 }

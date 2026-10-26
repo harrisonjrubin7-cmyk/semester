@@ -100,10 +100,6 @@
 //   "CapabilityEvidenceCapabilityRegister" — columns: "capabilityEvidenceId", "capabilityRegisterId" (joins "Capability Evidence" and "Capability Register")
 //   "AccountLedgerEntriesInstitutions" — columns: "accountLedgerEntriesId", "institutionsId" (joins "Account Ledger Entries" and "Institutions")
 //   "InstitutionsPaymentPlanRequests" — columns: "institutionsId", "paymentPlanRequestsId" (joins "Institutions" and "Payment Plan Requests")
-//   "InstitutionsSectionRequests" — columns: "institutionsId", "sectionRequestsId" (joins "Institutions" and "Section Requests")
-//   "CoursesSectionRequests" — columns: "coursesId", "sectionRequestsId" (joins "Courses" and "Section Requests")
-//   "AcademicTermsSectionRequests" — columns: "academicTermsId", "sectionRequestsId" (joins "Academic Terms" and "Section Requests")
-//   "SectionRequestsSections" — columns: "sectionRequestsId", "sectionsId" (joins "Section Requests" and "Sections")
 import { createTableClient, createSqlClient, createAuthClient } from 'zitejs/runtime';
 
 /** An attachment as returned when reading a record. */
@@ -163,7 +159,7 @@ export type InstitutionsRecordType = {
   accountLedgerEntries?: string | string[];
   /** Links to paymentPlanRequests ("Payment Plan Requests"). "Payment Plan Requests" */
   paymentPlanRequests?: string | string[];
-  /** Links to sectionRequests ("Section Requests"). "Section Requests" */
+  /** Links to tfZMC5wd1px. "Section Requests" */
   sectionRequests?: string | string[];
 };
 
@@ -252,7 +248,7 @@ export type CoursesRecordType = {
   sections?: string | string[];
   /** Links to courses ("Courses"). "Prerequisites" */
   prerequisites?: string | string[];
-  /** Links to sectionRequests ("Section Requests"). "Section Requests" */
+  /** Links to tfZMC5wd1px. "Section Requests" */
   sectionRequests?: string | string[];
 };
 
@@ -301,7 +297,7 @@ export type SectionsRecordType = {
   recordVersion?: number;
   /** Links to registrationRequests ("Registration Requests"). "Registration Requests" */
   registrationRequests?: string | string[];
-  /** Links to sectionRequests ("Section Requests"). "Section Requests" */
+  /** Links to tfZMC5wd1px. "Section Requests" */
   sectionRequests?: string | string[];
 };
 
@@ -1420,7 +1416,7 @@ export type AcademicTermsRecordType = {
   isSample?: boolean;
   /** Links to sections ("Sections"). "Sections" */
   sections?: string | string[];
-  /** Links to sectionRequests ("Section Requests"). "Section Requests" */
+  /** Links to tfZMC5wd1px. "Section Requests" */
   sectionRequests?: string | string[];
 };
 
@@ -1691,63 +1687,6 @@ export type PaymentPlanRequestsRecordInput = {
   decisionNote: string | null;
 };
 
-/** A record in the "Section Requests" table, as it is read back. */
-export type SectionRequestsRecordType = {
-  id: string;
-  /** Primary field. "Request Title" */
-  requestTitle?: string;
-  /** Links to institutions ("Institutions"). "Institution" */
-  institution?: string | string[];
-  /** Links to courses ("Courses"). "Course" */
-  course?: string | string[];
-  /** Links to academicTerms ("Academic Terms"). "Academic Term" */
-  academicTerm?: string | string[];
-  department?: string;
-  requestedBy?: string | string[];
-  /** "Requested Capacity". 0 decimal places, format: local (e.g. 1,000,000.50) */
-  requestedCapacity?: number;
-  meetingTimes?: string;
-  room?: string;
-  proposedInstructor?: string | string[];
-  justification?: string;
-  stage?: "Chair Review" | "Scheduling Check" | "Registrar Authorization" | "Faculty Assignment" | "Reconciliation" | "Completed" | "Rejected" | "Withdrawn" | string;
-  decisionNotes?: string;
-  resourceCheckResult?: string;
-  /** Links to sections ("Sections"). "Created Section" */
-  createdSection?: string | string[];
-  requestKey?: string;
-  /** "Record Version". 0 decimal places, format: local (e.g. 1,000,000.50) */
-  recordVersion?: number;
-  receipt?: string;
-  /** "Due Date". Date-only field (YYYY-MM-DD string), null when unset, display as "local" format */
-  dueDate?: string;
-  /** Read-only. "Submitted At". Auto-set when record was created (ISO 8601) */
-  submittedAt?: string;
-};
-
-/** What you may write when creating or updating a record in the "Section Requests" table. */
-export type SectionRequestsRecordInput = {
-  requestTitle: string | null;
-  institution: string | string[] | null;
-  course: string | string[] | null;
-  academicTerm: string | string[] | null;
-  department: string | null;
-  requestedBy: string | string[] | null;
-  requestedCapacity: string | number | null;
-  meetingTimes: string | null;
-  room: string | null;
-  proposedInstructor: string | string[] | null;
-  justification: string | null;
-  stage: "Chair Review" | "Scheduling Check" | "Registrar Authorization" | "Faculty Assignment" | "Reconciliation" | "Completed" | "Rejected" | "Withdrawn" | string | null;
-  decisionNotes: string | null;
-  resourceCheckResult: string | null;
-  createdSection: string | string[] | null;
-  requestKey: string | null;
-  recordVersion: string | number | null;
-  receipt: string | null;
-  dueDate: string | Date | null;
-};
-
 export interface ZiteAuthUser {
   id: string;
   name: string;
@@ -1810,7 +1749,6 @@ export const zite = {
   sitePublications: createTableClient<SitePublicationsRecordType, SitePublicationsRecordInput>('SitePublications'), // "Site Publications"
   accountLedgerEntries: createTableClient<AccountLedgerEntriesRecordType, AccountLedgerEntriesRecordInput>('AccountLedgerEntries'), // "Account Ledger Entries"
   paymentPlanRequests: createTableClient<PaymentPlanRequestsRecordType, PaymentPlanRequestsRecordInput>('PaymentPlanRequests'), // "Payment Plan Requests"
-  sectionRequests: createTableClient<SectionRequestsRecordType, SectionRequestsRecordInput>('SectionRequests'), // "Section Requests"
   sql: createSqlClient(),
   auth: createAuthClient<ZiteAuthUser>(),
 };

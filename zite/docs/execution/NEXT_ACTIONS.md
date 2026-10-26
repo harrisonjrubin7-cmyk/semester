@@ -72,3 +72,11 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
 - Role apps: "office hours", "appointments" and "availability" previously pointed at /plan and were marked existing. They now route to the real pages; the TA row is marked incomplete.
 - S-57 (zip) and S-58 recorded: work-packages.csv (W01–W18) and acceptance-scenarios.csv (T01–T18), each with status, evidence and gaps.
 - Next: accommodation extended time in assessments (W10/W11, T10). Then a readiness view driven by capability-registry.csv and acceptance-scenarios.csv (S-56 Prompt F).
+
+## 26 Oct: Accommodation implementation, extended exam time (W10/W11, T10)
+- DONE: acc-002. The accessibility office sets a 1.25x–3x time multiplier on an approved accommodation (staff only, not on their own request, with a version check; logged in acc_events).
+- DONE: asm-002. At attempt start the database works out the extra minutes. They apply only if the student has an active letter for that section, the approval is still valid, and the assessment is timed. The extra time is stored on the attempt, so a resumed attempt keeps it. The late flag uses the extended limit and close time.
+- The student sees their total time. Instructors see only "extended time applied" and never the request. The client never supplies the multiplier.
+- Evidence: 5 unit tests; 18 database checks rolled back; a mutation check showed that removing section scoping leaks 1.5x into another course, and the test caught it. Browser NOT RUN.
+- Next: readiness view (S-56 Prompt F) driven by capability-registry.csv and acceptance-scenarios.csv. Then T01, a cross-tenant sweep across all endpoints.
+- BLOCKER (C23): apps/semester-institution (3nybmrumkp, from another agent session at 09:08) duplicates the section-request flow. Its "Section Requests" table is not in the live database and it fails typecheck. Founder to decide: keep it as a thin front door or remove it. One builder in Zite (D5) also needs re-confirming.

@@ -52,11 +52,12 @@ function QuestionEditor({ initial, onPublish }: { initial: Q[]; onPublish: (qs: 
 }
 
 function Take({ sectionId, id, onDone }: { sectionId: string; id: number; onDone: () => void }) {
-  const [att, setAtt] = useState<{ attemptId: number; questions: Omit<Q, 'answer'>[] } | null>(null);
+  const [att, setAtt] = useState<{ attemptId: number; limitMin: number | null; extraMin: number; questions: Omit<Q, 'answer'>[] } | null>(null);
   const [ans, setAns] = useState<Record<string, number[] | string>>({});
   if (!att) return <Button size="sm" onClick={async () => { try { setAtt(await assessments({ action: 'start', sectionId, id }) as any); } catch (e) { toast(`! ${errMsg(e)}`); } }}>Start or resume</Button>;
   return (
     <form className="mt-2 space-y-3 text-sm" onSubmit={(e) => e.preventDefault()}>
+      {att.limitMin != null && <p role="status" className="text-xs">Your time limit: {att.limitMin + att.extraMin} minutes{att.extraMin > 0 ? ` (includes ${att.extraMin} minutes of approved extended time)` : ''}. The clock started when you first opened this attempt.</p>}
       {att.questions.map((q, i) => (
         <fieldset key={q.id} className="rounded-md border border-border p-3">
           <legend className="px-1 text-xs text-muted-foreground">Question {i + 1} · {q.points} pts</legend>
@@ -80,7 +81,7 @@ function GradeAttempt({ t, total, onGrade }: { t: any; total: number | null; onG
   const [fb, setFb] = useState(t.feedback ?? '');
   return (
     <div className="border-t border-border py-2 text-sm first:border-0">
-      <p>{t.student} · <Status value={t.state} />{t.late && ' · late'} · automatic {t.auto ?? '—'}{total != null && ` / ${total}`}</p>
+      <p>{t.student} · <Status value={t.state} />{t.late && ' · late'}{t.extended && ' · extended time applied'} · automatic {t.auto ?? '—'}{total != null && ` / ${total}`}</p>
       {Object.entries(t.answers ?? {}).filter(([, v]) => typeof v === 'string').map(([k, v]) => <p key={k} className="mt-1 whitespace-pre-wrap rounded bg-muted p-2 text-xs">{k}: {String(v)}</p>)}
       {t.state !== 'released' && t.state !== 'in_progress' && <div className="mt-1 flex flex-wrap gap-2">
         <Input aria-label="Hand-graded points" type="number" className="w-24" value={m} onChange={(e) => setM(e.target.value)} />

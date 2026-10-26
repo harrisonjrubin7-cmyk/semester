@@ -97,4 +97,25 @@ export const ACC_MIGRATION: string[] = [
      SELECT r.id, r.student_id, l.section_id, r.arrangements, r.valid_until, l.sent_at
      FROM acc_letters l JOIN acc_requests r ON r.id = l.request_id
      WHERE r.tenant_id = p_tenant AND l.section_id = ANY (p_sections) AND l.withdrawn_at IS NULL AND r.state = 'approved' AND r.valid_until >= current_date $$`,
+  // acc-002: structured extended exam time. The office sets a multiplier on an approved request; assessments read it only
+  // for sections the student has an active letter to (lib/extTimeRules.ts mirrors this).
+  `ALTER TABLE acc_requests ADD COLUMN IF NOT EXISTS time_multiplier numeric CHECK (time_multiplier IS NULL OR time_multiplier IN (1.25, 1.5, 2, 2.5, 3))`,
+  `CREATE OR REPLACE FUNCTION acc_set_time(p_actor text, p_tenant text, p_id text, p_version int, p_mult numeric) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE r acc_requests%ROWTYPE;
+   BEGIN
+     IF NOT acc_is_staff(p_tenant, p_actor) THEN RETURN 'Only the accessibility office sets extended time.'; END IF;
+     SELECT * INTO r FROM acc_requests WHERE id = p_id FOR UPDATE;
+     IF NOT FOUND OR r.tenant_id <> p_tenant THEN RETURN 'Request not found.'; END IF;
+     IF r.student_id = p_actor THEN RETURN 'You cannot decide your own request.'; END IF;
+     IF r.version <> p_version THEN RETURN 'This request changed since you opened it. Reload.'; END IF;
+     IF r.state <> 'approved' THEN RETURN 'Set extended time on an approved accommodation.'; END IF;
+     IF p_mult IS NOT NULL AND p_mult NOT IN (1.25, 1.5, 2, 2.5, 3) THEN RETURN 'Choose 1.25x, 1.5x, 2x, 2.5x or 3x.'; END IF;
+     UPDATE acc_requests SET time_multiplier = p_mult, version = version + 1 WHERE id = r.id;
+     INSERT INTO acc_events (tenant_id, request_id, actor_id, action, detail) VALUES (p_tenant, r.id, p_actor, 'time_multiplier', coalesce(p_mult::text || 'x', 'none'));
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION acc_time_multiplier(p_tenant text, p_student text, p_section text) RETURNS numeric LANGUAGE sql STABLE AS $$
+     SELECT coalesce(max(r.time_multiplier), 1) FROM acc_requests r JOIN acc_letters l ON l.request_id = r.id
+     WHERE r.tenant_id = p_tenant AND r.student_id = p_student AND l.section_id = p_section AND l.withdrawn_at IS NULL
+       AND r.state = 'approved' AND r.valid_until >= current_date AND r.time_multiplier IS NOT NULL $$`,
 ];

@@ -26,6 +26,7 @@ export default createEndpoint({
     z.object({ action: z.literal('letter'), id: z.string(), sectionId: z.string(), send: z.boolean() }),
     z.object({ action: z.literal('decide'), id: z.string(), version: z.number().int(), decision: z.enum(['approve', 'decline', 'request_info']),
       arrangements: z.array(z.string().min(3).max(200)).max(10), note: z.string().max(1000), validUntil: z.string().nullable() }),
+    z.object({ action: z.literal('setTime'), id: z.string(), version: z.number().int(), multiplier: z.union([z.literal(1.25), z.literal(1.5), z.literal(2), z.literal(2.5), z.literal(3)]).nullable() }),
     z.object({ action: z.literal('setOffice'), userId: z.string(), on: z.boolean() }),
   ]),
   outputSchema: z.any(),
@@ -59,6 +60,11 @@ export default createEndpoint({
       await audit(a, `Accommodation ${input.decision.replace('_', ' ')}`, `accommodation:${input.id}`, '', 'Accessibility office');
       return { ok: true };
     }
+    if (input.action === 'setTime') {
+      fail(((await sql.query(`SELECT acc_set_time($1,$2,$3,$4,$5) AS e`, [uid, T, input.id, input.version, input.multiplier])) as { e: string | null }[])[0].e);
+      await audit(a, 'Extended exam time set', `accommodation:${input.id}`, input.multiplier ? `${input.multiplier}x` : 'none', 'Accessibility office');
+      return { ok: true };
+    }
     if (input.action === 'setOffice') {
       if (!isAdmin) fail('Only administrators manage accessibility-office access.');
       const tenant = await tenantScope(T);
@@ -86,11 +92,11 @@ export default createEndpoint({
       office, isAdmin,
       mine: mine.map((r) => ({ id: String(r.id), number: Number(r.number), category: String(r.category), description: String(r.description), state: String(r.state),
         arrangements: (r.arrangements as string[]) ?? [], note: (r.decision_note as string) ?? '', validUntil: r.valid_until ? String(r.valid_until).slice(0, 10) : null,
-        sent: (r.sent as string[]) ?? [], createdAt: iso(r.created_at) })),
+        sent: (r.sent as string[]) ?? [], createdAt: iso(r.created_at), timeMultiplier: r.time_multiplier == null ? null : Number(r.time_multiplier) })),
       mySections: secRows.map((s) => ({ id: s.id, label: s.label ?? 'Course' })),
       queue: queue.map((r) => ({ id: String(r.id), number: Number(r.number), student: names[String(r.student_id)] ?? 'Student', category: String(r.category), description: String(r.description),
         documentation: !!r.documentation_offered, state: String(r.state), version: Number(r.version), arrangements: (r.arrangements as string[]) ?? [], note: (r.decision_note as string) ?? '',
-        validUntil: r.valid_until ? String(r.valid_until).slice(0, 10) : null, createdAt: iso(r.created_at) })),
+        validUntil: r.valid_until ? String(r.valid_until).slice(0, 10) : null, createdAt: iso(r.created_at), timeMultiplier: r.time_multiplier == null ? null : Number(r.time_multiplier) })),
       letters: letters.map((l) => ({ student: names[String(l.student_id)] ?? 'Student', section: secLabel(String(l.section_id)), arrangements: (l.arrangements as string[]) ?? [],
         validUntil: String(l.valid_until).slice(0, 10), sentAt: iso(l.sent_at) })),
       officeMembers: officeMembers.map((m) => ({ id: m.user_id, name: names[m.user_id] ?? 'Member' })),
