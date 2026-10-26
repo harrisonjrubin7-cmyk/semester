@@ -44,6 +44,7 @@ import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OnboardEp } from '../src/api/onboard';
+import type { default as _ParkingEp } from '../src/api/parking';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
@@ -282,6 +283,11 @@ export type OnboardInputType = NonNullable<_OnboardCfg['inputSchema']> extends {
 export type OnboardOutputType = Awaited<ReturnType<_OnboardCfg['execute']>>;
 export const onboard = createCaller<OnboardInputType, OnboardOutputType>('onboard');
 
+type _ParkingCfg = typeof _ParkingEp;
+export type ParkingInputType = NonNullable<_ParkingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ParkingCfg['execute']>[0]['input'];
+export type ParkingOutputType = Awaited<ReturnType<_ParkingCfg['execute']>>;
+export const parking = createCaller<ParkingInputType, ParkingOutputType>('parking');
+
 type _PrivacyCfg = typeof _PrivacyEp;
 export type PrivacyInputType = NonNullable<_PrivacyCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PrivacyCfg['execute']>[0]['input'];
 export type PrivacyOutputType = Awaited<ReturnType<_PrivacyCfg['execute']>>;
@@ -461,6 +467,7 @@ export const api = {
   migrationApproval,
   officeHours,
   onboard,
+  parking,
   privacy,
   programs,
   progress,

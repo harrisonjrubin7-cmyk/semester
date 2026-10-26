@@ -23,7 +23,7 @@ export const EXPANSION_APPS: ExpansionRow[] = [
   { id: 'E14', name: 'Assets and Inventory', stage: 6, cls: 'new', reuse: 'none' },
   { id: 'E15', name: 'IT Service Management', stage: 6, cls: 'built', reuse: 'Campus → IT help (its_*): tickets, incidents, restricted security incidents, owner-approved changes' },
   { id: 'E16', name: 'Campus Identity and Card', stage: 6, cls: 'new', reuse: 'Dining entitlements (dng_entitlements)' },
-  { id: 'E17', name: 'Transportation and Parking', stage: 6, cls: 'new', reuse: 'none' },
+  { id: 'E17', name: 'Transportation and Parking', stage: 6, cls: 'built', reuse: 'Campus → Parking (prk_*): vehicles, zones, permits with capacity and waitlist, citations, independent appeals; no payments, no location tracking; trips and schedules not built' },
   { id: 'E18', name: 'Library', stage: 6, cls: 'built', reuse: 'Campus → Library (lby_*): catalog, loans, holds, renewals, desk returns, licence-reviewed resource requests; no reading history kept; no fines' },
   { id: 'E19', name: 'Campus Safety', stage: 8, cls: 'blocked', reuse: 'none', blockedBy: 'Specialist operational authorization; Semester is not emergency dispatch' },
   { id: 'E20', name: 'Emergency Communications', stage: 8, cls: 'blocked', reuse: 'none', blockedBy: 'Specialist operational authorization; external sending stays disabled' },
