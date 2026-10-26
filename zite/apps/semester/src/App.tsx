@@ -48,6 +48,7 @@ import RegradeQueue from './pages/RegradeQueue';
 import { InstitutionHome, SectionRequests } from './pages/InstitutionHome';
 import Faculty, { Appointments } from './pages/Faculty';
 import Integrity from './pages/Integrity';
+import Housing from './pages/Housing';
 import SharedWithMe from './pages/SharedWithMe';
 import { Wordmark } from '@project/components/brand/Mark';
 
@@ -100,6 +101,7 @@ export default function App() {
             <Route path="/campus/community" element={<Community />} />
             <Route path="/campus/places" element={<Maps />} />
             <Route path="/campus/accommodations" element={<Accommodations />} />
+            <Route path="/campus/housing" element={<Housing />} />
             <Route path="/learn/tutoring" element={<Tutoring />} />
             <Route path="/progress/graduate" element={<Graduate />} />
             <Route path="/help/referrals" element={<Referrals />} />

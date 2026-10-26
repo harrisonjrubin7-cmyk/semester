@@ -21,6 +21,7 @@ export default function SectionPage() {
     <div>
       <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />Teaching</Link>
       <PageHeader title={label} sub="Roster, attendance and assignments. Only the instructor of record can make changes." />
+      <p className="mb-4 text-sm"><Link className="font-medium underline" to={`/course/${id}`}>Open the full course studio</Link><span className="text-muted-foreground"> — assessments, moderation, team, groups, discussion and accessibility review</span></p>
       {roster.loading && !roster.data ? <LoadingBlock /> : roster.error ? <DeniedOrError message={roster.error} onRetry={roster.reload} /> : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList><TabsTrigger value="roster">Roster ({roster.data!.students.length})</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assign">New assignment</TabsTrigger></TabsList>

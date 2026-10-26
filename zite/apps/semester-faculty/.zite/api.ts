@@ -2,19 +2,121 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AssessmentsEp } from '../src/api/assessments';
+import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
+import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
+import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
+import type { default as _CourseTeamEp } from '../src/api/courseTeam';
+import type { default as _FilesEp } from '../src/api/files';
+import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
+import type { default as _HelpEp } from '../src/api/help';
+import type { default as _IntegrityEp } from '../src/api/integrity';
+import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
+import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
+import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
+import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
+import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _RegradeEp } from '../src/api/regrade';
+import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
+import type { default as _StaffEp } from '../src/api/staff';
+import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _TeachingEp } from '../src/api/teaching';
+
+type _AssessmentsCfg = typeof _AssessmentsEp;
+export type AssessmentsInputType = NonNullable<_AssessmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssessmentsCfg['execute']>[0]['input'];
+export type AssessmentsOutputType = Awaited<ReturnType<_AssessmentsCfg['execute']>>;
+export const assessments = createCaller<AssessmentsInputType, AssessmentsOutputType>('assessments');
+
+type _CourseAccessibilityCfg = typeof _CourseAccessibilityEp;
+export type CourseAccessibilityInputType = NonNullable<_CourseAccessibilityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseAccessibilityCfg['execute']>[0]['input'];
+export type CourseAccessibilityOutputType = Awaited<ReturnType<_CourseAccessibilityCfg['execute']>>;
+export const courseAccessibility = createCaller<CourseAccessibilityInputType, CourseAccessibilityOutputType>('courseAccessibility');
+
+type _CourseDiscussionCfg = typeof _CourseDiscussionEp;
+export type CourseDiscussionInputType = NonNullable<_CourseDiscussionCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseDiscussionCfg['execute']>[0]['input'];
+export type CourseDiscussionOutputType = Awaited<ReturnType<_CourseDiscussionCfg['execute']>>;
+export const courseDiscussion = createCaller<CourseDiscussionInputType, CourseDiscussionOutputType>('courseDiscussion');
+
+type _CourseGroupsCfg = typeof _CourseGroupsEp;
+export type CourseGroupsInputType = NonNullable<_CourseGroupsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseGroupsCfg['execute']>[0]['input'];
+export type CourseGroupsOutputType = Awaited<ReturnType<_CourseGroupsCfg['execute']>>;
+export const courseGroups = createCaller<CourseGroupsInputType, CourseGroupsOutputType>('courseGroups');
+
+type _CourseTeamCfg = typeof _CourseTeamEp;
+export type CourseTeamInputType = NonNullable<_CourseTeamCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseTeamCfg['execute']>[0]['input'];
+export type CourseTeamOutputType = Awaited<ReturnType<_CourseTeamCfg['execute']>>;
+export const courseTeam = createCaller<CourseTeamInputType, CourseTeamOutputType>('courseTeam');
+
+type _FilesCfg = typeof _FilesEp;
+export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FilesCfg['execute']>[0]['input'];
+export type FilesOutputType = Awaited<ReturnType<_FilesCfg['execute']>>;
+export const files = createCaller<FilesInputType, FilesOutputType>('files');
+
+type _GetWorkspaceCfg = typeof _GetWorkspaceEp;
+export type GetWorkspaceInputType = NonNullable<_GetWorkspaceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetWorkspaceCfg['execute']>[0]['input'];
+export type GetWorkspaceOutputType = Awaited<ReturnType<_GetWorkspaceCfg['execute']>>;
+export const getWorkspace = createCaller<GetWorkspaceInputType, GetWorkspaceOutputType>('getWorkspace');
+
+type _HelpCfg = typeof _HelpEp;
+export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpCfg['execute']>[0]['input'];
+export type HelpOutputType = Awaited<ReturnType<_HelpCfg['execute']>>;
+export const help = createCaller<HelpInputType, HelpOutputType>('help');
+
+type _IntegrityCfg = typeof _IntegrityEp;
+export type IntegrityInputType = NonNullable<_IntegrityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntegrityCfg['execute']>[0]['input'];
+export type IntegrityOutputType = Awaited<ReturnType<_IntegrityCfg['execute']>>;
+export const integrity = createCaller<IntegrityInputType, IntegrityOutputType>('integrity');
+
+type _LearnCfg = typeof _LearnEp;
+export type LearnInputType = NonNullable<_LearnCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_LearnCfg['execute']>[0]['input'];
+export type LearnOutputType = Awaited<ReturnType<_LearnCfg['execute']>>;
+export const learn = createCaller<LearnInputType, LearnOutputType>('learn');
 
 type _OfficeHoursCfg = typeof _OfficeHoursEp;
 export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeHoursCfg['execute']>[0]['input'];
 export type OfficeHoursOutputType = Awaited<ReturnType<_OfficeHoursCfg['execute']>>;
 export const officeHours = createCaller<OfficeHoursInputType, OfficeHoursOutputType>('officeHours');
 
+type _RegistrarDecideCfg = typeof _RegistrarDecideEp;
+export type RegistrarDecideInputType = NonNullable<_RegistrarDecideCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarDecideCfg['execute']>[0]['input'];
+export type RegistrarDecideOutputType = Awaited<ReturnType<_RegistrarDecideCfg['execute']>>;
+export const registrarDecide = createCaller<RegistrarDecideInputType, RegistrarDecideOutputType>('registrarDecide');
+
+type _RegistrarLedgerCfg = typeof _RegistrarLedgerEp;
+export type RegistrarLedgerInputType = NonNullable<_RegistrarLedgerCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarLedgerCfg['execute']>[0]['input'];
+export type RegistrarLedgerOutputType = Awaited<ReturnType<_RegistrarLedgerCfg['execute']>>;
+export const registrarLedger = createCaller<RegistrarLedgerInputType, RegistrarLedgerOutputType>('registrarLedger');
+
+type _RegistrarQueueCfg = typeof _RegistrarQueueEp;
+export type RegistrarQueueInputType = NonNullable<_RegistrarQueueCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarQueueCfg['execute']>[0]['input'];
+export type RegistrarQueueOutputType = Awaited<ReturnType<_RegistrarQueueCfg['execute']>>;
+export const registrarQueue = createCaller<RegistrarQueueInputType, RegistrarQueueOutputType>('registrarQueue');
+
+type _RegistrationChangesCfg = typeof _RegistrationChangesEp;
+export type RegistrationChangesInputType = NonNullable<_RegistrationChangesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrationChangesCfg['execute']>[0]['input'];
+export type RegistrationChangesOutputType = Awaited<ReturnType<_RegistrationChangesCfg['execute']>>;
+export const registrationChanges = createCaller<RegistrationChangesInputType, RegistrationChangesOutputType>('registrationChanges');
+
 type _RegradeCfg = typeof _RegradeEp;
 export type RegradeInputType = NonNullable<_RegradeCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegradeCfg['execute']>[0]['input'];
 export type RegradeOutputType = Awaited<ReturnType<_RegradeCfg['execute']>>;
 export const regrade = createCaller<RegradeInputType, RegradeOutputType>('regrade');
+
+type _SectionRequestsCfg = typeof _SectionRequestsEp;
+export type SectionRequestsInputType = NonNullable<_SectionRequestsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SectionRequestsCfg['execute']>[0]['input'];
+export type SectionRequestsOutputType = Awaited<ReturnType<_SectionRequestsCfg['execute']>>;
+export const sectionRequests = createCaller<SectionRequestsInputType, SectionRequestsOutputType>('sectionRequests');
+
+type _StaffCfg = typeof _StaffEp;
+export type StaffInputType = NonNullable<_StaffCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StaffCfg['execute']>[0]['input'];
+export type StaffOutputType = Awaited<ReturnType<_StaffCfg['execute']>>;
+export const staff = createCaller<StaffInputType, StaffOutputType>('staff');
+
+type _StudentAccountCfg = typeof _StudentAccountEp;
+export type StudentAccountInputType = NonNullable<_StudentAccountCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StudentAccountCfg['execute']>[0]['input'];
+export type StudentAccountOutputType = Awaited<ReturnType<_StudentAccountCfg['execute']>>;
+export const studentAccount = createCaller<StudentAccountInputType, StudentAccountOutputType>('studentAccount');
 
 type _TeachingCfg = typeof _TeachingEp;
 export type TeachingInputType = NonNullable<_TeachingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TeachingCfg['execute']>[0]['input'];
@@ -23,7 +125,24 @@ export const teaching = createCaller<TeachingInputType, TeachingOutputType>('tea
 
 
 export const api = {
+  assessments,
+  courseAccessibility,
+  courseDiscussion,
+  courseGroups,
+  courseTeam,
+  files,
+  getWorkspace,
+  help,
+  integrity,
+  learn,
   officeHours,
+  registrarDecide,
+  registrarLedger,
+  registrarQueue,
+  registrationChanges,
   regrade,
+  sectionRequests,
+  staff,
+  studentAccount,
   teaching,
 };
