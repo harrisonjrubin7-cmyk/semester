@@ -338,6 +338,7 @@ export const EXEMPT: readonly Exempt[] = [
   { id: 'lib/chart.ts#suggest', reason: 'Guesses a chart type from the cells selected; the guess is overruled on the chart itself.' },
   { id: 'lib/pivot.ts#suggest', reason: 'Guesses which two columns a pivot groups and measures, from the cells; overridable on the card.' },
   { id: 'lib/drivehome.ts#suggest', reason: 'Orders the student’s own files by when they opened, added or starred them.' },
+  { id: 'lib/maintenance.ts#ordered', reason: 'Orders the student’s own repair requests by the check-back time they chose; open before closed. Ranks no people.' },
   { id: 'lib/feed.ts#ordered', reason: 'Makes a stored section order safe to render; it is the student’s own arrangement.' },
   { id: 'lib/apply.ts#order', reason: 'Orders the student’s own applications, offers first, by the stage they recorded.' },
 ];

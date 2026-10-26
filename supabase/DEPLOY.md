@@ -7,26 +7,27 @@ are missing.
 
 ## What is live
 
-Read off the project at 21:27 UTC on 29 September 2026, not remembered. The
+Read off the project at 14:23 UTC on 17 October 2026, not remembered. The
 last column is which pipeline deployed that version, and it is the one worth
 reading:
 
-    claude            ACTIVE, v244, verify_jwt off  platform
-    push              ACTIVE, v198, verify_jwt off  platform
-    calendar          ACTIVE, v195, verify_jwt off  platform
-    fetchcal          ACTIVE, v239, verify_jwt off  platform
-    canvas            ACTIVE, v230, verify_jwt off  platform
-    lti               ACTIVE, v232, verify_jwt off  platform
-    integration-tick  ACTIVE, v88, verify_jwt off   platform
-    ops-projector     PENDING, dormant until its dedicated secret is provisioned; no scheduler entry
-    trust-room        ACTIVE, v95, verify_jwt off   platform
-    delete-account    ACTIVE, v72, verify_jwt off   platform
-    billing-cancel    ACTIVE, v2, verify_jwt off    platform
-    billing-checkout  ACTIVE, v32, verify_jwt off   platform
-    billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
-    billing-webhook   ACTIVE, v32, verify_jwt off   platform
-    lead-intake       ACTIVE, v32, verify_jwt off   platform
-    support-reply-notify ACTIVE, v5, verify_jwt off, delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
+    claude            ACTIVE, v692, verify_jwt off  platform
+    push              ACTIVE, v640, verify_jwt off  platform
+    calendar          ACTIVE, v636, verify_jwt off  platform
+    fetchcal          ACTIVE, v681, verify_jwt off  platform
+    canvas            ACTIVE, v678, verify_jwt off  platform
+    lti               ACTIVE, v680, verify_jwt off  platform
+    integration-tick  ACTIVE, v537, verify_jwt off  platform
+    access-saga-tick  ACTIVE, v56, verify_jwt off   platform; its job `access-saga-worker` remains parked until the test request below answers
+    ops-projector     ACTIVE, v146, verify_jwt off  platform; dormant until its dedicated secret is provisioned; no scheduler entry
+    trust-room        ACTIVE, v539, verify_jwt off  platform
+    delete-account    ACTIVE, v516, verify_jwt off  platform
+    billing-cancel    ACTIVE, v451, verify_jwt off  platform
+    billing-checkout  ACTIVE, v480, verify_jwt off  platform
+    billing-portal    ACTIVE, v339, verify_jwt off  platform; remains off until configured as described below
+    billing-webhook   ACTIVE, v480, verify_jwt off  platform
+    lead-intake       ACTIVE, v479, verify_jwt off  platform
+    support-reply-notify ACTIVE, v348, verify_jwt off, platform; delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
 
 The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
 remove resolved or closed tickets after 180 days unless a legal hold applies.
@@ -34,15 +35,15 @@ The migration installs and explicitly activates that credential-free job when
 pg_cron is present. It is not listed as live until a post-deploy read of
 `cron.job` and its first successful execution are recorded.
 
-    productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
+    productivity-sourcecheck ACTIVE, v370, verify_jwt off   platform
 
-`ops-projector` is source-complete but not activated or deployed by this local
-slice. On a future merge the function remains dormant until an operator sets a
+`ops-projector` is source-complete and deployed but not activated. The function
+remains dormant until an operator sets a
 dedicated `OPS_PROJECTOR_SECRET`; there is no `scheduler.sql` entry. A valid
 manual POST runs one service-role-only database batch capped at 25 matching
 events. Retention sweeps and scheduler activation are later release gates.
 
-The new source-check function was deployed through the authenticated Management API on 1 October 2026; its initial entrypoint is `/tmp/user_fn_.../source/productivity-sourcecheck/index.ts`. This is recorded as `manual` provenance in the snapshot, awaiting the first platform deploy after merge. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
+The source-check function was first deployed through the authenticated Management API on 1 October 2026. The 17 October reading confirms that the continuous platform deploy has since replaced that manual bundle. Every POST verifies the user's JWT with `auth.getUser`; OPTIONS carries no token. It reports public page availability and exact-excerpt presence, caps redirects, bytes and time, and rejects private DNS addresses. `PRODUCTIVITY_SOURCE_HOSTS` adds approved exact hosts outside .edu. It does not store or log source URLs/page bodies.
 
 **This file once said two, at v1, and filed three of the other four under "Not
 deployed yet".** `fetchcal` had been live since 9 September when that was
@@ -748,6 +749,31 @@ never applied; the other two came with the integration scheduler. Read off `cron
 **28 September: `integration-sync` unparked.** The runbook's test request, sent from the project with pg_net,
 answered 200 with `{"outcome":"ran","due":0,"ran":0,...}`; `cron.alter_job(..., active := true)` followed and
 `cron.job` reads `active = true`. `scheduler.sql` now states it active, so a re-run keeps it on.
+
+**12 October: `access-saga-worker` added, parked.** `scheduler.sql` now creates `access_saga_cron_secret` in
+Vault and the `access-saga-worker` job, which every five minutes (minutes 1, 6, 11 … 56, clear of `push` and
+`integration-sync`) posts to the `access-saga-tick` Edge Function. The function runs
+`app/server/institution/access-saga-tick.ts` over the Postgres saga store: the database lists the sagas that are due
+(`public.access_saga_due`) and the runner moves each one a step. The token check is
+`public.access_saga_tick_authorized` (20261012040000), the same shape as `integration_tick_authorized`. The job is
+**parked** in the file, and `health.sql` expects it parked, because the function is PENDING above: it deploys with
+the merge that adds it, and nothing has read it yet. No participants are registered
+(`app/server/institution/access-saga-registry.ts` holds null), so until they are every tick answers
+`{"outcome":"unregistered","due":N,...}` and claims no saga; the job can be unparked on that answer, as
+`integration-sync` was, and the count then says how much work waits for a real policy administrator and enforcement
+point. The test request, from the project with pg_net:
+
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/access-saga-tick',
+      headers := jsonb_build_object('Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'access_saga_cron_secret')),
+      body := '{}'::jsonb, timeout_milliseconds := 60000);
+
+A 200 with `outcome: unregistered` and a `due` count is the function, the token check and the due list all working;
+then `select cron.alter_job((select jobid from cron.job where jobname = 'access-saga-worker'), active := true);`,
+and change the `alter_job` at the end of the job's block in `scheduler.sql` to `active := true` (with the row in
+`health.sql` to `false`) so a re-run keeps it on. A 401 is the token check refusing the Vault token; a 503 is the
+function without its service credentials or without the check.
 
 Re-running the whole file stays safe. Every statement is idempotent, and it parks `push` again (and keeps
 `integration-sync` on), so re-run it only while `push` is meant to be parked. Otherwise run the one `cron.schedule` you need. To

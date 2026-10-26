@@ -1,5 +1,52 @@
-import { flatten } from '../cite';
-import { finite, obj, textValue } from '../device-library';
+import { type Claim, type Evidence, verificationIssues } from './research-storage';
+import { type Design, type SourceKind } from './research-ids';
+
+export { blankEvidence, readProjects, type Claim, type Evidence, type Project } from './research-storage';
+export { type Design, type SourceKind } from './research-ids';
+
+export const SOURCE_KINDS = [
+  ['peer-reviewed', 'Peer-reviewed study'],
+  ['preprint', 'Preprint — not yet peer reviewed'],
+  ['institutional-report', 'Institutional or government report'],
+  ['book', 'Book or chapter'],
+  ['course-provided', 'Course-provided reading'],
+  ['news', 'News'],
+  ['commentary', 'Commentary or opinion'],
+  ['student-note', 'Student note'],
+  ['ai-summary', 'AI summary — navigation only, never citable'],
+  ['unverified', 'Unverified'],
+] as const satisfies readonly (readonly [SourceKind, string])[];
+
+export const DESIGNS = [
+  ['randomized', 'Randomized experiment'],
+  ['quasi', 'Quasi-experiment'],
+  ['cohort', 'Cohort (longitudinal)'],
+  ['case-control', 'Case-control'],
+  ['cross-sectional', 'Cross-sectional or survey'],
+  ['qualitative', 'Qualitative'],
+  ['review', 'Systematic review or meta-analysis'],
+  ['theory', 'Theory or argument'],
+  ['other', 'Other or not stated'],
+] as const satisfies readonly (readonly [Design, string])[];
+
+export const citable = (kind: SourceKind) => kind !== 'ai-summary' && kind !== 'unverified';
+
+const VERIFICATION_MESSAGES: Record<ReturnType<typeof verificationIssues>[number], string> = {
+  'original-not-opened': 'Open the original source and confirm you read it.',
+  'ai-summary': 'An AI summary is a navigation aid. Find and cite the original it summarized.',
+  'unverified-kind': 'Say what kind of source this is.',
+  'missing-authors': 'Add the authors (or the organization).',
+  'invalid-year': 'Add the year as four digits, or “n.d.”.',
+  'missing-title': 'Add the title.',
+  'quote-not-in-excerpt': 'The quotation does not appear in the excerpt you pasted from the original.',
+  'quote-location-missing': 'Add the page or location of the quotation, or paste the passage it comes from.',
+  excluded: 'This source is excluded in screening.',
+};
+
+/** Why this entry cannot be verified yet. Empty means it can. */
+export function blockers(e: Evidence): string[] {
+  return verificationIssues(e).map((issue) => VERIFICATION_MESSAGES[issue]);
+}
 
 /**
  * The Research Studio's rules: what a piece of evidence has to have before it
@@ -33,121 +80,9 @@ import { finite, obj, textValue } from '../device-library';
  * case, which is the one students actually write.
  */
 
-export const SOURCE_KINDS = [
-  ['peer-reviewed', 'Peer-reviewed study'],
-  ['preprint', 'Preprint — not yet peer reviewed'],
-  ['institutional-report', 'Institutional or government report'],
-  ['book', 'Book or chapter'],
-  ['course-provided', 'Course-provided reading'],
-  ['news', 'News'],
-  ['commentary', 'Commentary or opinion'],
-  ['student-note', 'Student note'],
-  ['ai-summary', 'AI summary — navigation only, never citable'],
-  ['unverified', 'Unverified'],
-] as const;
-
-export type SourceKind = (typeof SOURCE_KINDS)[number][0];
-
-export const DESIGNS = [
-  ['randomized', 'Randomized experiment'],
-  ['quasi', 'Quasi-experiment'],
-  ['cohort', 'Cohort (longitudinal)'],
-  ['case-control', 'Case-control'],
-  ['cross-sectional', 'Cross-sectional or survey'],
-  ['qualitative', 'Qualitative'],
-  ['review', 'Systematic review or meta-analysis'],
-  ['theory', 'Theory or argument'],
-  ['other', 'Other or not stated'],
-] as const;
-
-export type Design = (typeof DESIGNS)[number][0];
-
 const OBSERVATIONAL: ReadonlySet<Design> = new Set(['cohort', 'case-control', 'cross-sectional', 'qualitative']);
 /** Designs that cannot carry a causal claim: the observational ones, plus theory and an unstated design. */
 const NOT_CAUSAL: ReadonlySet<Design> = new Set([...OBSERVATIONAL, 'theory', 'other']);
-
-export interface Evidence {
-  id: string;
-  kind: SourceKind;
-  authors: string;
-  year: string;
-  title: string;
-  venue: string;
-  doi: string;
-  url: string;
-  question: string;
-  design: Design;
-  sample: string;
-  /** Participants or units, when the study states it. */
-  n?: number;
-  variables: string;
-  measures: string;
-  analysis: string;
-  finding: string;
-  uncertainty: string;
-  limitations: string;
-  conflicts: string;
-  relevance: string;
-  quote: string;
-  page: string;
-  /** Text the student pasted from the original, used to check the quotation. */
-  excerpt: string;
-  screening: 'keep' | 'maybe' | 'exclude' | 'unscreened';
-  screeningReason: string;
-  originalOpened: boolean;
-  verified: boolean;
-}
-
-export function blankEvidence(id: string): Evidence {
-  return {
-    id,
-    kind: 'unverified',
-    authors: '',
-    year: '',
-    title: '',
-    venue: '',
-    doi: '',
-    url: '',
-    question: '',
-    design: 'other',
-    sample: '',
-    variables: '',
-    measures: '',
-    analysis: '',
-    finding: '',
-    uncertainty: '',
-    limitations: '',
-    conflicts: '',
-    relevance: '',
-    quote: '',
-    page: '',
-    excerpt: '',
-    screening: 'unscreened',
-    screeningReason: '',
-    originalOpened: false,
-    verified: false,
-  };
-}
-
-export const citable = (kind: SourceKind) => kind !== 'ai-summary' && kind !== 'unverified';
-
-/** Why this entry cannot be verified yet. Empty means it can. */
-export function blockers(e: Evidence): string[] {
-  const out: string[] = [];
-  if (!e.originalOpened) out.push('Open the original source and confirm you read it.');
-  if (e.kind === 'ai-summary') out.push('An AI summary is a navigation aid. Find and cite the original it summarized.');
-  else if (e.kind === 'unverified') out.push('Say what kind of source this is.');
-  if (!e.authors.trim()) out.push('Add the authors (or the organization).');
-  if (!/^\d{4}[a-z]?$/.test(e.year.trim()) && e.year.trim().toLowerCase() !== 'n.d.') out.push('Add the year as four digits, or “n.d.”.');
-  if (!e.title.trim()) out.push('Add the title.');
-  if (e.quote.trim()) {
-    if (e.excerpt.trim()) {
-      if (!flatten(e.excerpt).includes(flatten(e.quote))) out.push('The quotation does not appear in the excerpt you pasted from the original.');
-    } else if (!e.page.trim()) out.push('Add the page or location of the quotation, or paste the passage it comes from.');
-  }
-  if (e.screening === 'exclude') out.push('This source is excluded in screening.');
-  return out;
-}
 
 export type VerifyResult = { ok: true; evidence: Evidence } | { ok: false; reasons: string[] };
 
@@ -184,12 +119,6 @@ export function cautions(e: Evidence): string[] {
   if (!e.limitations.trim()) out.push('No limitations recorded yet.');
   if (OBSERVATIONAL.has(e.design)) out.push('Observational design: supports association, not cause.');
   return out;
-}
-
-export interface Claim {
-  id: string;
-  text: string;
-  evidence: string[];
 }
 
 const CAUSAL =
@@ -303,19 +232,6 @@ export function bibtex(entries: readonly Evidence[]): string {
     .join('\n\n');
 }
 
-export interface Project {
-  id: string;
-  question: string;
-  concepts: string;
-  synonyms: string;
-  databases: string;
-  dateRange: string;
-  include: string;
-  exclude: string;
-  evidence: Evidence[];
-  claims: Claim[];
-}
-
 /** A Boolean search string built from the concept and synonym lists — one OR group per line. */
 export function searchString(concepts: string, synonyms: string): string {
   const groups = concepts
@@ -323,52 +239,4 @@ export function searchString(concepts: string, synonyms: string): string {
     .map((c, i) => [c, ...(synonyms.split('\n')[i] ?? '').split(',')].map((w) => w.trim()).filter(Boolean))
     .filter((g) => g.length);
   return groups.map((g) => `(${g.map((w) => (/\s/.test(w) ? `"${w}"` : w)).join(' OR ')})`).join(' AND ');
-}
-
-const KINDS = new Set(SOURCE_KINDS.map(([k]) => k));
-const DESIGN_SET = new Set(DESIGNS.map(([d]) => d));
-
-function readEvidence(v: unknown): Evidence {
-  if (!obj(v) || !textValue(v.id, 80)) throw new Error('An evidence entry is malformed.');
-  const base = blankEvidence(v.id);
-  const out = { ...base } as Record<string, unknown>;
-  for (const key of Object.keys(base) as (keyof Evidence)[]) {
-    const value = v[key];
-    if (typeof base[key] === 'string' && textValue(value, 40_000)) out[key] = value;
-  }
-  out.kind = KINDS.has(v.kind as SourceKind) ? v.kind : 'unverified';
-  out.design = DESIGN_SET.has(v.design as Design) ? v.design : 'other';
-  out.screening = ['keep', 'maybe', 'exclude', 'unscreened'].includes(v.screening as string) ? v.screening : 'unscreened';
-  out.n = finite(v.n, 0, 1e9) ? v.n : undefined;
-  out.originalOpened = v.originalOpened === true;
-  const evidence = out as unknown as Evidence;
-  // Re-check on the way in: a hand-edited file cannot carry a verification its fields do not earn.
-  evidence.verified = v.verified === true && blockers(evidence).length === 0;
-  return evidence;
-}
-
-export function readProjects(value: unknown): Project[] {
-  if (!Array.isArray(value)) throw new Error('Research projects are not a list.');
-  return value.map((p) => {
-    if (!obj(p) || !textValue(p.id, 80)) throw new Error('A research project is malformed.');
-    const str = (k: string) => (textValue(p[k], 20_000) ? (p[k] as string) : '');
-    return {
-      id: p.id,
-      question: str('question'),
-      concepts: str('concepts'),
-      synonyms: str('synonyms'),
-      databases: str('databases'),
-      dateRange: str('dateRange'),
-      include: str('include'),
-      exclude: str('exclude'),
-      evidence: Array.isArray(p.evidence) ? p.evidence.map(readEvidence) : [],
-      claims: Array.isArray(p.claims)
-        ? p.claims.filter(obj).map((c) => ({
-            id: textValue(c.id, 80) ? c.id : '',
-            text: textValue(c.text, 5000) ? c.text : '',
-            evidence: Array.isArray(c.evidence) ? c.evidence.filter((x): x is string => textValue(x, 80)) : [],
-          }))
-        : [],
-    };
-  });
 }

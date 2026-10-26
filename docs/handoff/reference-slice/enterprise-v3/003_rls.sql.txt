@@ -1,0 +1,20 @@
+-- 003_rls.sql: all ordinary clients read-only; mutations require trusted commands.
+BEGIN;
+CREATE FUNCTION sem_private.account_can_read(a uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+ SELECT EXISTS(SELECT 1 FROM sem_billing.accounts b WHERE b.id=a AND sem_private.can(b.owner_tenant_id,'billing.read')) OR EXISTS(
+ SELECT 1 FROM sem_private.account_access x JOIN sem_private.memberships m ON m.tenant_id=x.tenant_id AND m.id=x.membership_id JOIN sem_core.tenants t ON t.id=m.tenant_id
+ WHERE x.account_id=a AND x.can_read AND m.user_id=auth.uid() AND m.status='active' AND t.status='active' AND (x.expires_at IS NULL OR x.expires_at>now())); $$;
+DO $$ DECLARE r record; BEGIN FOR r IN SELECT schemaname,tablename FROM pg_tables WHERE schemaname IN ('sem_core','sem_private','sem_billing') LOOP EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY',r.schemaname,r.tablename); END LOOP; END $$;
+CREATE FUNCTION sem_private.tenant_member(t uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$ SELECT EXISTS(SELECT 1 FROM sem_private.memberships m JOIN sem_core.tenants x ON x.id=m.tenant_id WHERE m.tenant_id=t AND m.user_id=auth.uid() AND m.status='active' AND x.status='active'); $$;
+CREATE POLICY tenant_read ON sem_core.tenants FOR SELECT TO authenticated USING(sem_private.tenant_member(id));
+CREATE POLICY account_read ON sem_billing.accounts FOR SELECT TO authenticated USING(sem_private.account_can_read(id));
+DO $$ DECLARE n text; BEGIN FOREACH n IN ARRAY ARRAY['account_tenants','contracts','subscriptions','subscription_items','invoices','invoice_lines','payment_intents','payment_attempts','payments','payment_allocations','credits','refunds','reconciliation_runs','reconciliation_items'] LOOP EXECUTE format('CREATE POLICY account_read ON sem_billing.%I FOR SELECT TO authenticated USING(sem_private.account_can_read(account_id))',n); END LOOP; END $$;
+DO $$ DECLARE n text; BEGIN FOREACH n IN ARRAY ARRAY['products','plans','price_versions'] LOOP EXECUTE format('CREATE POLICY catalog_read ON sem_billing.%I FOR SELECT TO authenticated USING(sem_private.can(owner_tenant_id,''catalog.read''))',n); END LOOP; END $$;
+CREATE POLICY entitlement_read ON sem_billing.entitlements FOR SELECT TO authenticated USING(sem_private.account_can_read(account_id) OR sem_private.can(licensed_tenant_id,'entitlement.read'));
+REVOKE ALL ON ALL TABLES IN SCHEMA sem_core,sem_private,sem_billing FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA sem_core,sem_billing TO authenticated;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA sem_private FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION sem_private.can(uuid,text),sem_private.account_can_read(uuid),sem_private.tenant_member(uuid) TO authenticated;
+-- No insert/update/delete grants or client policies. can_manage is reserved for future commands.
+-- Function owners must be trusted; helpers rely on owner RLS bypass. FORCE RLS is not enabled.
+COMMIT;

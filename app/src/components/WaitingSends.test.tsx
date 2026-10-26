@@ -266,6 +266,38 @@ describe('when the browser will not save', () => {
 });
 
 describe('for a keyboard and a screen reader', () => {
+  it('distinguishes fact-identical requests and discards only the chosen row', async () => {
+    const { HOLD_MS, newEntry, openPort } = await import('../lib/sync/outbox');
+    const now = Date.now();
+    const first = {
+      ...newEntry({ ...offer, accountId: 'u1', now }),
+      id: 'ob-first',
+      expiresAt: now + HOLD_MS,
+    };
+    const second = {
+      ...newEntry({ ...offer, accountId: 'u1', now: now + 1 }),
+      id: 'ob-second',
+      expiresAt: now + HOLD_MS + 1,
+    };
+    const port = await openPort();
+    await port.put(first);
+    await port.put(second);
+    resetOutbox();
+
+    await mount();
+
+    expect(button(new RegExp(`^Send: request 1 of 2, Share with your advisor, ${offer.summary}$`))).toBeTruthy();
+    expect(button(new RegExp(`^Send: request 2 of 2, Share with your advisor, ${offer.summary}$`))).toBeTruthy();
+    const discardSecond = button(new RegExp(`^Discard: request 2 of 2, Share with your advisor, ${offer.summary}$`));
+    expect(discardSecond).toBeTruthy();
+
+    await act(async () => discardSecond!.click());
+    await flush();
+
+    expect((await port.all()).map((entry) => entry.id)).toEqual(['ob-first']);
+    expect(button(new RegExp(`^Send: request 1 of 1, Share with your advisor, ${offer.summary}$`))).toBeTruthy();
+  });
+
   it('has a labelled section, a live region, named buttons at a touch size, and no duplicate ids', async () => {
     await keepOne();
     const section = host.querySelector('section[aria-labelledby="waiting-head"]')!;

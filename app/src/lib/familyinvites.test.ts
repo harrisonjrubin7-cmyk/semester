@@ -1,11 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => {
-  const eq = vi.fn(() => Promise.resolve({ error: null }));
-  const update = vi.fn(() => ({ eq }));
+  const update = vi.fn();
+  const eq = vi.fn((_column: string, code: string) => {
+    const patch = update.mock.calls.at(-1)?.[0] as { revoked_at?: string } | undefined;
+    return Promise.resolve({ data: [{ code, revoked_at: patch?.revoked_at }], error: null });
+  });
+  const updateQuery = vi.fn((patch: unknown) => {
+    update(patch);
+    return { select: () => ({ eq }) };
+  });
   const order = vi.fn(() => Promise.resolve({ data: [], error: null }));
   const select = vi.fn(() => ({ order }));
-  const from = vi.fn(() => ({ select, update }));
+  const from = vi.fn(() => ({ select, update: updateQuery }));
   const rpc = vi.fn();
   return { rpc, from, update, eq };
 });
@@ -74,6 +81,16 @@ describe('the student’s own codes', () => {
     expect(mock.update).toHaveBeenCalledWith({ revoked_at: expect.any(String) });
     expect(Object.keys((mock.update.mock.calls[0] as unknown[])[0] as object)).toEqual(['revoked_at']);
     expect(mock.eq).toHaveBeenCalledWith('code', 'K7M2Q9ZP');
+  });
+
+  it('refuses to report success when no owned current row is returned', async () => {
+    mock.eq.mockResolvedValueOnce({ data: [], error: null });
+    await expect(revokeInvite('K7M2Q9ZP')).rejects.toThrow('The code was not called off');
+  });
+
+  it('refuses a receipt for a different code', async () => {
+    mock.eq.mockResolvedValueOnce({ data: [{ code: 'ABCDEFGH', revoked_at: new Date().toISOString() }], error: null });
+    await expect(revokeInvite('K7M2Q9ZP')).rejects.toThrow('The code was not called off');
   });
 
   it('says where each code stands', () => {

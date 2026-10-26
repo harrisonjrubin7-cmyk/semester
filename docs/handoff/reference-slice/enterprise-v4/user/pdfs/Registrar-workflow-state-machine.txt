@@ -1,0 +1,394 @@
+Computer
+RBAC permission matrix: map view, edit, export, and approval rights across Registrar,
+Department Chair, and Dean roles
+Computer
+Show the rest of the state machine table and transition rules
+Map out the role-based permission matrix for department schedulers
+Show the conflict detection engine for instructor and room overlaps
+A strong registrar workflow should move from department dra through chair/dean review,
+registrar validation, Academic Affairs exceptions when needed, and final publication, with
+rule-based checks for meeting patterns, room use, and overlaps. University scheduling policies
+commonly require standard meeting patterns, designated departmental submissions,
+chair/dean review, registrar conformity checks, and special approval for non-standard times or
+exceptional offerings.
+The full schedule workflow should separate ordinary approvals from exception approvals,
+because non-standard meeting times, special room needs, and unusual offerings oen require
+dean or Academic Affairs involvement beyond basic registrar review. Several registrar policies
+explicitly require dean review and final approval for non-standard requests or special
+scheduling exceptions.
+State Primary owner Meaning Exit paths
+Dra Department scheduler Section exists but is incomplete and
+editable Submit for validation, cancel
+Validation in
+progress System Rules engine checks required fields,
+overlaps, pattern compliance
+Validation failed, department
+ready
+Validation failed Department scheduler Blocking errors or policy violations
+found Return to dra, request exception
+Department
+ready Department scheduler Department believes section is ready
+for unit review Send to chair review
+Registrar workflow state machine: map course
+schedule approvals from department dra to
+Academic Affairs and final publish
+[1] [2] [3]
+Approval state machine
+[4] [3] [1]
+Full state table
+State Primary owner Meaning Exit paths
+Chair review Department
+chair/program director
+Unit leadership confirms academic
+need, staffing, and compliance
+Approve to dean, return for edits,
+request exception
+Dean review Dean/associate dean College-level policy and resource
+review
+Approve to registrar, return for
+edits, request Academic Affairs
+exception
+Registrar review Registrar
+scheduler/admin
+Official schedule, policy, and data-
+quality review
+Approve room coordination,
+return for edits, route to Academic
+Affairs
+Room
+coordination
+Registrar room team /
+room manager
+Central-room assignment and room
+conflict resolution
+Assigned, alternative required,
+return to registrar
+Academic Affairs
+review Academic Affairs Reviews exceptional/non-
+standard/policy-sensitive requests
+Approved to registrar, denied,
+returned
+Approved for
+publish Registrar admin Section is complete, compliant, and
+publishable Publish, hold
+Published Registrar admin Visible in official schedule Change request, lock
+Change
+requested Department or registrar Post-publish modification proposed Re-validate, registrar review
+Locked Registrar admin Only emergency/authorized edits
+allowed Unlock by registrar admin only
+Archived System/registrar Historical, read-only None
+Draft
+→ Validation in progress
+→ Cancelled
+Validation in progress
+→ Validation failed
+→ Department ready
+Validation failed
+→ Draft
+→ Exception requested
+Department ready
+→ Chair review
+Chair review
+→ Dean review
+→ Returned to department
+→ Exception requested
+Dean review
+→ Registrar review
+→ Returned to department
+→ Academic Affairs review
+Transition rules
+Registrar review
+→ Room coordination
+→ Returned to department
+→ Academic Affairs review
+→ Approved for publish
+Room coordination
+→ Approved for publish
+→ Returned to registrar
+→ Returned to department
+Academic Affairs review
+→ Registrar review
+→ Denied
+→ Returned to department
+Approved for publish
+→ Published
+→ On hold
+Published
+→ Change requested
+→ Locked
+Change requested
+→ Validation in progress
+→ Registrar review
+Locked
+→ Archived
+→ Emergency unlock
+Denied / Cancelled
+→ Archived
+Route to Academic Affairs when:
+A section uses a non-standard meeting pattern during controlled hours.
+A special class type requires nonstandard build treatment.
+Contact-hour or curricular exceptions apply.
+Policy waiver requests exceed dean or registrar authority.
+Institutions commonly require standard time blocks for centrally scheduled space and reserve
+non-standard approvals for registrar or higher academic authority review.
+Exception routing rules
+[5] [6] [7]
+Role design should distinguish operational creation from formal approval, and separate
+ordinary edit rights from override and export rights. Education RBAC guidance recommends
+mapping access by action type and scope rather than broad page access.
+Role Typical scope Function
+Department scheduler Department/program Builds and submits schedule data
+Department chair/program director Department/program Academic approval and department oversight
+Dean/associate dean College/school College-level approval and exception sponsorship
+Registrar scheduler Institution/campus Policy review and central schedule coordination
+Registrar admin Institution/campus Final publish authority and official overrides
+Academic Affairs reviewer Institution/college Reviews special exceptions and policy deviations
+Room manager Central/department room pool Room assignment and spatial conflict handling
+Auditor/read-only reviewer Scoped Audit-only access
+Capability Dept
+scheduler Chair Dean Registrar
+scheduler
+Registrar
+admin
+Academic
+Affairs
+Room
+manager
+View department
+sections Yes Yes Yes Yes Yes Scoped Scoped
+View college-
+wide sections No Limited Yes Yes Yes Scoped Scoped
+Create dra
+sections Yes Limited No Yes Yes No No
+Edit dra
+sections Yes Limited No Yes Yes No No
+Submit to
+workflow Yes Yes Yes Yes Yes No No
+Return to
+department No Yes Yes Yes Yes Yes No
+Approve to next
+stage No Yes Yes Yes Yes Yes No
+Request
+exception Yes Yes Yes Yes Yes Yes No
+Sponsor non-
+standard request No Yes Yes Yes Yes Yes No
+Role-based permission matrix
+[8]
+Core roles
+Permission matrix
+Capability Dept
+scheduler Chair Dean Registrar
+scheduler
+Registrar
+admin
+Academic
+Affairs
+Room
+manager
+Assign
+department
+rooms
+Scoped No No Yes Yes No Yes
+Assign central
+rooms No No No Yes Yes No Yes
+Override room
+conflict No No No Limited Yes No Limited
+Override time-
+pattern rule No No Limited Limited Yes Yes No
+Publish official
+schedule No No No No Yes No No
+Lock published
+schedule No No No Limited Yes No No
+Export full
+schedule dataset Scoped Scoped Scoped Yes Yes Limited Scoped
+View audit logs No No Limited Limited Yes Limited No
+Department schedulers need a narrower, action-focused matrix.
+Function Allowed Notes
+View prior-term schedules Yes Scoped to department/program
+Copy prior-term sections Yes Creates new dra only
+Create/edit dra section Yes Before approval or when returned
+Change instructor assignment Yes Subject to conflict validation
+Request central room Yes Does not guarantee assignment
+Assign department-owned room Yes Only within allowed room pool
+Submit comments to reviewers Yes Workflow-visible notes
+Submit full department package Yes Can be term-wide or section-level
+Edit aer chair/dean submission No Unless returned or reopened
+Override compliance rule No Must request exception
+Publish or lock No Registrar-admin functions
+Bulk export beyond scope No Scoped exports only
+Department scheduler matrix
+A section can move from Draft to Validation in progress only if all required structural fields
+exist:
+Course and section identity.
+Term and part of term.
+Capacity.
+Meeting pattern or approved placeholder.
+Instructor assignment, if institutionally required at that stage.
+Room request or location status.
+Ownership unit and funding/attribute fields where required.
+A section cannot move to Department ready if blocking validation errors remain. Scheduling
+rules are commonly used to prevent time conflicts, double-booked instructors, and policy
+deviations before formal review.
+Chair review should confirm:
+Academic necessity.
+Faculty staffing plausibility.
+Internal program balance.
+Department-level compliance.
+Dean review should confirm:
+College-level balance.
+Resource feasibility.
+Exceptional requests worthy of escalation.
+Compliance with peak-time or distribution rules where used.
+Some institutions explicitly place department chairs and deans in the scheduling compliance
+chain and require dean approval for exceptions or non-standard times.
+Registrar review should enforce:
+Approved time-block model.
+Contact-hour compatibility.
+Cross-list and shared-room integrity.
+Transition rules in detail
+Department stage rules
+[9]
+Chair/dean rules
+[10] [1] [4]
+Registrar rules
+Data completeness for publication.
+Central classroom eligibility.
+Standard meeting-pattern enforcement is a widely used registrar control for minimizing
+conflicts and improving classroom utilization.
+A section should enter Approved for publish only if:
+All required approvals are complete.
+All blocking conflicts are resolved or explicitly waived.
+Room assignment is final or intentionally marked as TBA under policy.
+Exception cases have written disposition.
+Publication snapshot can be generated.
+The conflict engine should run at save time, submission time, nightly batch scans, and pre-
+publish certification. Scheduling best practices explicitly call out the need to detect double-
+booked instructors, room overlaps, and rule violations automatically.
+Conflict type Severity Example
+Instructor overlap Blocking Same instructor assigned to overlapping meetings
+Room overlap Blocking Two sections in same room at same time
+Capacity mismatch Warning/blocking Enrollment cap exceeds room capacity
+Pattern violation Blocking or warning Non-standard time in controlled hours
+Contact-hour mismatch Blocking Weekly minutes do not satisfy credit/contact expectations
+Prime-time imbalance Warning/escalation Department exceeds allowed peak-hour share
+Room-feature mismatch Warning/blocking Requested accessibility/AV feature unavailable
+Cross-listed split error Blocking Shared sections misaligned in time/room
+Travel-time issue Warning Back-to-back instructor rooms too far apart
+For each section meeting:
+1. Expand the meeting into normalized meeting instances using term dates, meeting days,
+start time, and end time.
+2. Group by resource:
+[5] [9] [10]
+Publish rules
+Conflict detection engine
+[11] [9]
+Conflict categories
+Overlap detection logic
+Instructor.
+Room.
+Cross-list group.
+3. Detect time interval intersections on shared days within the same active date range.
+4. Exclude cancelled or inactive meetings.
+5. Apply exception/waiver rules where an approved override exists.
+6. Emit blocking or warning conflicts with human-readable explanations.
+function overlaps(a, b) {
+return (
+a.day === b.day &&
+a.start < b.end &&
+b.start < a.end &&
+a.dateStart <= b.dateEnd &&
+b.dateStart <= a.dateEnd
+);
+}
+function detectInstructorConflicts(meetings) {
+const byInstructor = groupBy(
+meetings.filter(m => m.instructorId),
+m => m.instructorId
+);
+const conflicts = [];
+for (const instructorId of Object.keys(byInstructor)) {
+const items = byInstructor[instructorId];
+for (let i = 0; i < items.length; i++) {
+for (let j = i + 1; j < items.length; j++) {
+if (overlaps(items[i], items[j])) {
+conflicts.push({
+type: "INSTRUCTOR_OVERLAP",
+severity: "BLOCKING",
+instructorId,
+leftSectionId: items[i].sectionId,
+rightSectionId: items[j].sectionId
+});
+}
+}
+}
+}
+return conflicts;
+}
+function detectRoomConflicts(meetings) {
+const byRoom = groupBy(
+meetings.filter(m => m.roomId),
+Pseudocode
+m => m.roomId
+);
+const conflicts = [];
+for (const roomId of Object.keys(byRoom)) {
+const items = byRoom[roomId];
+for (let i = 0; i < items.length; i++) {
+for (let j = i + 1; j < items.length; j++) {
+if (overlaps(items[i], items[j])) {
+conflicts.push({
+type: "ROOM_OVERLAP",
+severity: "BLOCKING",
+roomId,
+leftSectionId: items[i].sectionId,
+rightSectionId: items[j].sectionId
+});
+}
+}
+}
+}
+return conflicts;
+}
+Add policy rules for:
+Standard meeting blocks by term and room pool.
+Peak-hour distribution targets.
+Minimum turnaround between room uses.
+Instructor travel constraints between buildings.
+Department-owned room priority.
+Centrally scheduled room priority for standard-pattern sections.
+Policies from multiple universities show that standard-time compliance and central-room
+priority rules are common, and nonstandard sections may lose room priority or need explicit
+approval.
+The engine should produce:
+Inline form errors during editing.
+A conflict queue for department schedulers.
+A registrar resolution dashboard.
+Pre-publish certification reports.
+Trend analytics on repeated rule violations.
+Rule engine extensions
+[6] [7] [10]
+Operational outputs
+That gives departments immediate feedback while preserving central oversight.
+Use four key workflow views:
+Department workspace: dra, validation, corrections, submit.
+Approver inbox: chair, dean, Academic Affairs, registrar decisions.
+Conflict console: grouped by instructor, room, time-pattern, and severity.
+Publication console: final checks, release preview, and snapshot creation.
+This mirrors real institutional workflows where departments submit, approvers review,
+registrars coordinate rooms and compliance, and final publication happens centrally.
+⁂
+1. https://www.stmarytx.edu/policies/academic-affairs/class-scheduling-policy/
+2. https://registrar.tulane.edu/sites/default/files/2023-11/fall-2024-class-scheduling-timeline.pdf
+3. https://it.osu.edu/student-information-system-sis/sis-room-class-scheduling/1-course-class-workflow
+4. https://bookstack.clarkson.edu/books/sas-student-achievement-services/page/class-scheduling-guidelines
+5. https://registrar.uiowa.edu/faculty-and-staff/classroom-scheduling/course-scheduling-policies-and-procedures
+6. https://registrar.arizona.edu/faculty-staff-resources/room-course-scheduling/room-course-scheduling-policies-proced
+ures
+7. https://registrar.washu.edu/classroom-scheduling-standards-expectations/
+8. https://bluepes.com/blog/role-based-access-education-systems
+9. https://coursedog.com/articles/best-practices-for-strategic-scheduling
+10. https://www.unomaha.edu/registrar/faculty-and-staff/clss/course-schedule-building-guidelines.php
+11. https://moderncampus.com/blog/streamlining-course-scheduling-for-universities-challenges-and-solutions.html
+12. https://registrar.vanderbilt.edu/registration/yes-help/Undergrad-Prof-Class-Enrollment-GPCM-Approval-workflow.php
+Recommended UI surfaces
+[2] [3]

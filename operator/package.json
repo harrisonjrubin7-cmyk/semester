@@ -1,0 +1,14 @@
+{
+  "name": "@semester/operator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The Semester Operator: persistent tasks, deterministic policy and approval enforcement, bounded agent contracts, isolated workspaces, verification evidence, audit and kill switch, and the operator CLI.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "build": "node --experimental-strip-types scripts/build.ts",
+    "demo": "node --experimental-strip-types scripts/demo.ts",
+    "operator": "node --experimental-strip-types scripts/operator.ts"
+  }
+}

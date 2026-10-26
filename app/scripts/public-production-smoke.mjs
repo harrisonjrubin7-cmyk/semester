@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-
-const DEFAULT_APP = 'https://harrisonjrubin7-cmyk.github.io/semester';
+import { resolveProductionTarget } from './production-target.mjs';
 
 function parseEnv(text) {
   const values = {};
@@ -21,8 +20,12 @@ async function configuration() {
     // A deployment may supply both values without carrying the repository's
     // defaults. The validation below remains the one source of truth.
   }
+  const target = resolveProductionTarget(
+    process.env.SEMESTER_PUBLIC_APP_TARGET,
+    process.env.SEMESTER_PUBLIC_APP_URL,
+  );
   return {
-    app: (process.env.SEMESTER_PUBLIC_APP_URL || DEFAULT_APP).replace(/\/$/, ''),
+    ...target,
     supabase: (process.env.VITE_SUPABASE_URL || committed.VITE_SUPABASE_URL || '').replace(/\/$/, ''),
     key: process.env.VITE_SUPABASE_KEY || committed.VITE_SUPABASE_KEY || '',
   };
@@ -51,8 +54,7 @@ function asset(html, expression, label) {
 }
 
 export async function runPublicProductionSmoke() {
-  const { app, supabase, key } = await configuration();
-  if (!app.startsWith('https://')) throw new Error('The public app URL must use HTTPS.');
+  const { app, label, supabase, key } = await configuration();
   if (!supabase.startsWith('https://') || !key) {
     throw new Error('Production Supabase URL and publishable key must both be configured.');
   }
@@ -77,7 +79,7 @@ export async function runPublicProductionSmoke() {
   const body = await schools.json();
   if (!Array.isArray(body)) throw new Error('Supabase PostgREST did not return a JSON array.');
 
-  console.log('\nProduction frontend, deployed assets and Supabase API are reachable.');
+  console.log(`\n${label}, deployed assets and Supabase API are reachable.`);
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {

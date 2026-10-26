@@ -17,6 +17,7 @@ import { CourseTag } from '../CourseTag';
 import { secondLine } from '../../lib/dim';
 import {
   fullStamp,
+  participants,
   shown,
   splitQuote,
   type Mail,
@@ -75,6 +76,13 @@ export function Reader({
 }) {
   const last = thread.mails[thread.mails.length - 1];
   const [more, setMore] = useState(false);
+  const outgoing = last.folder === 'sent' || last.folder === 'drafts';
+  const people = outgoing
+    ? last.to.length
+      ? `to ${last.to.map(shown).join(', ')}`
+      : 'to nobody yet'
+    : `from ${participants(thread.mails)}`;
+  const identity = `conversation ${people}, ${last.subject}, ${fullStamp(last.at)}`;
 
   return (
     <div className="mb-read">
@@ -84,16 +92,16 @@ export function Reader({
             <ChevronLeft size={19} />
           </button>
         )}
-        <button type="button" className="mb-ico" aria-label="Archive" title="Archive" onClick={onArchive}>
+        <button type="button" className="mb-ico" aria-label={`Archive ${identity} here`} title="Archive" onClick={onArchive}>
           <ArchiveIcon size={18} />
         </button>
-        <button type="button" className="mb-ico" aria-label="Delete" title="Delete" onClick={onTrash}>
+        <button type="button" className="mb-ico" aria-label={`Move ${identity} to trash here`} title="Move to Trash here" onClick={onTrash}>
           <TrashIcon size={18} />
         </button>
         <button
           type="button"
           className="mb-ico"
-          aria-label="Snooze"
+          aria-label={`Snooze ${identity}`}
           title="Snooze until…"
           onClick={(e) => onMenu('snooze', e.currentTarget)}
         >
@@ -102,7 +110,7 @@ export function Reader({
         <button
           type="button"
           className="mb-ico"
-          aria-label={thread.unread ? 'Mark read' : 'Mark unread'}
+          aria-label={thread.unread ? `Mark ${identity} read` : `Mark ${identity} unread`}
           title={thread.unread ? 'Mark read' : 'Mark unread'}
           onClick={onRead}
         >
@@ -111,7 +119,7 @@ export function Reader({
         <button
           type="button"
           className={thread.starred ? 'mb-ico is-on' : 'mb-ico'}
-          aria-label={thread.starred ? 'Unstar' : 'Star'}
+          aria-label={thread.starred ? `Unstar ${identity}` : `Star ${identity}`}
           aria-pressed={thread.starred}
           onClick={onStar}
         >

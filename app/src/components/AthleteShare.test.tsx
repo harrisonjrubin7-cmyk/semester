@@ -11,15 +11,25 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
  */
 
 const mock = vi.hoisted(() => {
-  const eq = vi.fn(() => Promise.resolve({ error: null }));
+  const update = vi.fn();
+  const eq = vi.fn((_column: string, id: string) => {
+    const patch = update.mock.calls.at(-1)?.[0] as { revoked_at?: string } | undefined;
+    return Promise.resolve({ data: [{ id, revoked_at: patch?.revoked_at }], error: null });
+  });
   const shares: Record<string, unknown>[] = [];
   const events: Record<string, unknown>[] = [];
   const from = vi.fn((table: string) =>
     table === 'support_share_events'
       ? { select: () => ({ order: () => ({ limit: () => Promise.resolve({ data: events, error: null }) }) }) }
-      : { select: () => ({ order: () => Promise.resolve({ data: shares, error: null }) }), update: () => ({ eq }) },
+      : {
+          select: () => ({ order: () => Promise.resolve({ data: shares, error: null }) }),
+          update: (patch: unknown) => {
+            update(patch);
+            return { select: () => ({ eq }) };
+          },
+        },
   );
-  return { rpc: vi.fn(), from, eq, shares, events, account: { id: 'athlete' } as { id: string } | null };
+  return { rpc: vi.fn(), from, update, eq, shares, events, account: { id: 'athlete' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc, from: mock.from }) }));
 vi.mock('../state/store', () => ({
@@ -44,6 +54,7 @@ let host: HTMLDivElement;
 
 beforeEach(() => {
   mock.rpc.mockReset();
+  mock.update.mockClear();
   mock.eq.mockClear();
   mock.shares.length = 0;
   mock.events.length = 0;
@@ -117,13 +128,26 @@ it('says what the server refused, word for word, and shares nothing', async () =
   expect(host.textContent).toContain('Not shared: no athletic academic support staff at your school');
 });
 
-it('shows each share with when it was opened, and stops one', async () => {
+it('previews the consequence before stopping a share and requires a returned-row receipt', async () => {
   mock.shares.push({ id: 's1', created_at: '2026-09-20T10:00:00Z', expires_at: '2099-01-01T00:00:00Z', revoked_at: null });
   mock.events.push({ share_id: 's1', read_at: new Date(2026, 8, 26, 14, 30).toISOString() });
   await render();
   expect(host.textContent).toContain('opened 1 time, last 2026-09-26 14:30');
-  await act(async () => button(/Stop this share/)!.click());
+  act(() => button(/Stop this share/)!.click());
+  expect(mock.eq).not.toHaveBeenCalled();
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('academic support loses access immediately');
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('The share and its read history stay in your account');
+  expect(host.querySelector('[role="dialog"]')?.textContent).toContain('make a new share later');
+
+  mock.eq.mockResolvedValueOnce({ data: [], error: null });
+  await act(async () => button(/^Stop access$/)!.click());
   expect(mock.eq).toHaveBeenCalledWith('id', 's1');
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('The share was not stopped');
+  expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+
+  await act(async () => button(/^Stop access$/)!.click());
+  expect(host.querySelector('[role="dialog"]')).toBeNull();
+  expect(host.querySelector('[role="status"]')?.textContent).toContain('Academic support can no longer open this share.');
 });
 
 it('is a plan on this device when nobody is signed in', async () => {

@@ -1,0 +1,289 @@
+Computer
+Build an interactive study dashboard comparing Semester AI's document reader, AI tutor, and
+note organizer with feature-by-feature workflows
+Computer
+How does the AI reading companion work in practice
+What note scanning features does Semester AI include
+Compare Semester AI with other student study apps
+I built an interactive study-dashboard prototype with module filters, feature search, evidence-
+status filters, and an app-comparison table. The audit below separates Semester AIʼs advertised
+reading, tutoring, and note-scanning features from quiz-generation capabilities that remain
+unverified.
+One important correction: your separate Semester platform project should not be conflated
+with Bawano Technologiesʼ “Semester AI – Reader, Tutors” Android app. My previous answers
+described the Bawano app; this audit continues that public-app scope, not an audit of your
+implementation.
+The attached HTML dashboard includes:
+Reader, Tutor, Notes, and Quiz module filters.
+Search across features, workflows, and documentation gaps.
+“Advertised” and “Unverified” evidence filters.
+Feature-by-feature illustrative workflows.
+A comparison with Googleʼs NotebookLM/Gemini Notebook and RemNote.
+Links to the underlying product sources.
+Open the HTML document in a browser to use its controls. It is an interactive audit prototype—
+not a live AI reader, scanner, tutor, or quiz generator.
+The dashboard distinguishes developer-advertised capabilities from independently tested
+functionality. Semester AIʼs retrieved store description was last updated April 18, 2025, and
+does not document quiz generation.
+Semester AI feature audit: every reading, tutoring,
+note-scanning, and quiz-generation capability broken
+down by module
+[1]
+[1]
+Interactive dashboard
+[1]
+This covers the capabilities named in the public description. It cannot establish every function
+available inside the installed app.
+Capability Evidence
+status Illustrative workflow What is not established
+Open and browse PDFs Advertised Open a PDF → browse its content → read the
+relevant section.
+File-size limits, navigation
+tools, and performance.
+Create PDFs Advertised Create a PDF → open it in the reader. Creation methods and editing
+options.
+Ask the reading
+companion questions Advertised
+Read a difficult passage → ask for an
+explanation → compare the response with the
+original.
+Page citations, exact context
+handling, and accuracy.
+Summarize PDF
+content Advertised Open a document → request a summary →
+check it against the document.
+Summary length controls and
+section selection.
+Convert Word
+documents to PDF Advertised Convert a Word document → open the resulting
+PDF → interact with the AI.
+Supported Word formats and
+formatting fidelity.
+All five capabilities appear in the developerʼs store description. No technical documentation
+there establishes the model, retrieval architecture, or document-processing pipeline.
+Capability Evidence
+status Illustrative workflow What is not established
+Course-specific
+AI tutors Advertised Find a course tutor → ask a concept
+question → review the explanation.
+Covered subjects, model choice, and
+access to your documents.
+Human tutors Advertised Find a relevant tutor → consult or ask
+questions.
+Qualifications, prices, booking, and
+response times.
+Tutor availability Marketed as
+“24/7”
+Access the tutor catalog when help is
+needed.
+Whether human tutors are immediately
+available around the clock.
+The listing supports a tutoring catalog, but does not establish adaptive lesson plans, mastery
+tracking, automated grading, or live video tutoring.
+Capability Evidence
+status Illustrative workflow What is not established
+Scan notes Advertised Capture notes → review the captured
+content.
+Camera controls, automatic
+cropping, and batch scanning.
+AI digitization and
+organization Advertised Capture notes → obtain organized digital
+content → check for errors.
+Handwriting accuracy, OCR method,
+and organization rules.
+Module-by-module audit
+Document reader
+[1]
+Tutoring
+[1]
+Note organizer
+Capability Evidence
+status Illustrative workflow What is not established
+Enhance and edit
+notes Advertised Open digitized notes → edit or enhance
+them → review the changes. Specific AI editing commands.
+Annotate notes Advertised Open notes → add annotations. Highlighting, drawing, comments, or
+other exact tool types.
+Back up documents Advertised Back up a document → retain access to it. Storage quotas, version history, and
+recovery behavior.
+Synchronize across
+devices Advertised Synchronize documents → access them
+from another device.
+Supported platforms and offline
+conflict handling.
+Share documents and
+classwork Advertised Choose a document → share it with other
+Semester AI users.
+Sharing permissions, expiration, and
+revocation.
+These are developer claims, not tested results. Cross-device synchronization does not by itself
+prove that native desktop or iOS apps exist.
+Capability Audit result
+Generate quizzes from PDFs Unverified
+Generate flashcards from notes Unverified
+Select difficulty or question count Unverified
+Multiple-choice or free-response questions Unverified
+Score answers and explain mistakes Unverified
+Schedule spaced-repetition practice Unverified
+The earlier search preview mentioned learning games and quizzes, but the retrieved full store
+description does not substantiate them. Consequently, quiz generation should remain an open
+verification item—not a confirmed feature or a proven absence.
+The documented user-facing behavior is straightforward: read a PDF, ask about confusing
+content, or request a summary. The listing does not explain what happens internally.
+Here is an illustrative soware-engineering study session—not a tested walkthrough of the app:
+1. Open a PDF about database transactions.
+2. Ask: “Explain atomicity using the examples in this document.”
+3. Follow up: “How is atomicity different from isolation?”
+4. Request: “Summarize the main points in five bullets.”
+5. Compare the explanation with the relevant passages in the PDF.
+[1]
+Quiz generation
+[1]
+Reading companion in practice
+[1]
+Those prompts illustrate the advertised explanation and summarization functions. They do not
+establish that the app can return accurate page citations, interpret diagrams, or restrict every
+answer to the uploaded document.
+The important distinction is between an advertised reading companion and a verified source-
+grounded assistant. Semester AI advertises the former; its public listing does not document the
+citation or grounding controls needed to establish the latter.
+Semester AI specifically advertises capturing notes and having AI transform them into
+organized digital content, followed by editing, enhancement, and annotation.
+A useful acceptance-test workflow would be:
+1. Capture a clearly written page of notes.
+2. Inspect the resulting digital content for omissions.
+3. Check headings, numbers, equations, and unusual terminology.
+4. Edit an error and confirm the correction persists.
+5. Add an annotation.
+6. Verify backup, synchronization, and sharing separately.
+That is a proposed test procedure—not a claim that each step has been independently verified.
+Before relying on the scanner for coursework, these are the unresolved capabilities to test:
+Scanning dimension Public evidence
+Capturing notes Explicitly advertised.
+Producing organized digital content Explicitly advertised.
+Editing and annotation aerward Explicitly advertised.
+Handwritten-text recognition accuracy Not specified.
+Equation and diagram recognition Not specified.
+Multi-page scanning Not specified.
+Automatic cropping and perspective correction Not specified.
+Searchable PDF export Not specified.
+Offline scanning or processing Not specified.
+The listing establishes the broad capture-to-digital-notes workflow, but not these
+implementation details.
+[1]
+[1]
+Note scanning in practice
+[1]
+[1]
+Googleʼs current student page identifies NotebookLM as “Gemini Notebook” following a July
+2026 rename. The comparison uses both names to make the product recognizable.
+Dimension Semester AI Google NotebookLM / Gemini
+Notebook RemNote
+Document
+reading
+PDF reader with questions
+and summaries advertised.
+Source-based study materials
+and explanations documented.
+Reader with highlights,
+annotations, and linked notes
+documented.
+AI tutoring
+Course-specific AI tutors
+advertised; document context
+unspecified.
+Learning Guide and explanations
+tied to source materials
+documented.
+Tutor can see the PDF and search
+other notes when helpful.
+Notes
+Scanning, digitization,
+editing, backup, and
+synchronization advertised.
+Upload notes and other class
+materials; a dedicated scanner is
+not established by these sources.
+Integrated notes, document
+annotations, and learning from
+your own notes documented.
+Flashcards Unverified in the retrieved full
+description.
+Document-based flashcards with
+customization documented.
+Cards generated from notes, PDFs,
+and study materials documented.
+Quizzes Unverified.
+Personalized source-based
+quizzes with explanations
+documented.
+Multiple-choice and free-response
+quizzes with adjustable difficulty
+documented.
+Guided study
+workflow
+No detailed sequence
+documented.
+Learning Guide plus source-
+grounded practice tools
+documented.
+Section-by-section summaries,
+flashcards, and quizzes
+documented.
+Human help
+and
+community
+Human tutor catalog, course
+communities, chat, and study
+groups advertised.
+The cited study documentation
+does not establish a human-tutor
+marketplace.
+The cited reader and guided-
+learning documentation does not
+establish a human-tutor
+marketplace.
+For document-based explanations and cited practice questions, Googleʼs product has clearer
+public evidence. For a connected reader → notes → flashcards → quiz workflow, RemNote has the
+most explicit documentation among these three. Semester AIʼs advertised distinction is
+combining scanning and reading with course communities and human tutors—but its quiz
+functionality and several implementation details still require verification.
+⁂
+1. https://play.google.com/store/apps/details?id=tech.bawano.semester&hl=en_US
+2. https://notebooklm.google/students
+3. https://blog.google/innovation-and-ai/models-and-research/google-labs/notebooklm-student-features/
+4. https://help.remnote.com/en/articles/6690975-learning-from-pdfs-and-files-with-the-remnote-reader
+5. https://help.remnote.com/en/articles/15724936-guided-learn-mode
+6. https://www.remnote.com/feature/ai-flashcards
+7. https://www.remnote.com/
+Comparison with other apps
+[2]
+[1] [3] [2] [4]
+[1] [3] [4]
+[1] [2] [5] [4]
+[1] [3]
+[6]
+[1]
+[3] [2] [5]
+[1]
+[3] [5]
+[1] [3] [2]
+[5] [4]
+[3] [4] [5] [1]
+8. https://www.remnote.com/pricing
+9. https://www.remnote.com/feature/learn-any-pdf
+10. https://www.androidauthority.com/notebooklm-flashcards-quizzes-update-3613999/
+11. https://www.reddit.com/r/AISEOInsider/comments/1t1vewn/how_to_use_notebooklm_new_upgraded_flashcards_an
+d/
+12. https://www.cnet.com/tech/services-and-soware/notebooklm-can-now-make-flashcards-and-quizzes-to-help-you-st
+udy/
+13. https://tldv.io/blog/remnote/
+14. projects.semester.cross_device_experience
+15. projects.semester.end_to_end_system_blueprint
+16. projects.semester.product_vision
+17. projects.semester.architecture_scope
+18. https://www.perplexity.ai/search/7249ab05-f244-41ee-9573-13192050bbd6
+19. https://www.perplexity.ai/search/e524fd81-2753-4601-a5d0-bfcbfb9eec3c
+20. https://workspaceupdates.googleblog.com/2025/09/flashcards-quizzes-reports-notebook-lm-google-education.html
+21. https://workspaceupdates.googleblog.com/search/label/Gemini Notebook?hl=en_EN
+22. https://apps.apple.com/us/app/ai-tutor-scan-question/id6504000524

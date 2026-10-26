@@ -1,0 +1,300 @@
+diff --git a/docs/launch-control-guide/README.md b/docs/launch-control-guide/README.md
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/README.md
+@@ -0,0 +1,18 @@
++# Production launch and activation contract
++This pack is not a complete build or deployment. No external state changed.
++## Verified baseline
++Gateway, auth, startup and adapters read at pinned commit. Routes are source-defined, not live-probed. Approved adapters array is empty. start.ts only adds sandbox adapters when explicitly enabled. Registration-readiness dependency is absent from inspected startup config. /health/ready can be green with zero adapters. Current runtime may differ and must be inspected.
++## Setup
++Use existing root npm lockfile and Node >=22 commands; npm ci; npm run dev --workspace app; npm run test --workspace app; npm run build --workspace app; npm run registry:validate; npm run platform-control:test; npm run release:check; npm run release:report. They were not run in this environment. Existing setup includes optional personal account sync; institutional gateway requires server-resolved SSO memberships.
++## Gateway server values — from start.ts
++SEMESTER_APP_ORIGIN exact HTTPS origin (loopback HTTP for development); SEMESTER_JOURNAL_KEY 32 random bytes hex server-only; SEMESTER_AUTH_URL/PUBLIC_KEY/SERVICE_KEY; SEMESTER_GATEWAY_STORE=postgres needs auth URL/service key; SSO domain/label loader; server-only model/provider/budget configuration. Never put secrets in VITE variables. Default gateway loopback port 8787; TLS/exposure topology requires an explicit deployment decision. No secrets are provided by this pack.
++## Migration
++Resolve sole approved database/project and executor; compare remote ledger/object fingerprint with repository migration hashes; design backward-compatible expand change; test fresh and existing-state migration, RLS denials, old/new app compatibility and recovery; approve exact SQL/target/owner; sole executor applies; inspect ledger and objects; reconcile; enable domain; later independent contract cleanup. No DDL in this patch. Do not apply SQLite reference schema to Supabase.
++## Deployment
++PR CI → isolated preview/auth stack → schema rehearsal → immutable release manifest → blocking release gate/approval → compatible database expand → functions/API → app → observed smoke/role workflows → staged domain authorization → evidence. Existing Vercel, Pages, Edge Functions and Supabase integration require current mapping; do not add a second executor. A READY deployment or healthy database does not prove product completeness.
++## Rollback
++Contain authorized writes → choose tested compatible prior app/function versions → verify current schema compatibility → roll back the selected delivery surface → check actual page and caches/service worker → auth/write/read/reconciliation tests → record incident. No automatic destructive database down migration. Server read-only excludes /actions/reconcile by design; preserve recovery. Application rollback and database recovery are separate.
++## Entire ecosystem activation
++For every cataloged domain/role/capability: owner; implementation path; data authority; grants; UI states; positive/negative tests; failure recovery; deployment/config fingerprint; source freshness; institutional approval where required; production evidence. Preserve overall scope but enable only verified domains. Missing artifacts block capabilities, not justify sample success.
++## Stakeholder deliverables
++Signed release manifest; target map; schema diff/migration hash; role-workflow evidence; accessibility results; provider approval; tenant/grant evidence; restore/rollback receipts; incident/support contacts; financial/disclosure review; per-domain activation receipts. No invented certifications, deployment URLs or institution permissions.
+diff --git a/docs/launch-control-guide/DIFF-REVIEW.md b/docs/launch-control-guide/DIFF-REVIEW.md
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/DIFF-REVIEW.md
+@@ -0,0 +1,13 @@
++# Review of previous proposed patch and orchestrator
++Status: revise before claiming launch evidence. Review based on exact source shown in the prior conversation; prior generated archive was not available in this execution environment.
++1. Original diff adds eight documentation/orchestration files only. No product, API or database capability is implemented by that diff.
++2. Previous git-apply check was against a clean temporary repository, not the actual Semester worktree. Baseline 4b4f8ca742242132f5b2dd254d23422ae70eaa7a must be rechecked/rebased before application.
++3. Original orchestrator handled timeout but not missing npm/OS launch errors. Revised runner records unavailable/launch_error.
++4. Original setup failures printed text without a report. Revised CLI persists a failed report where possible; persistence failure exits 2.
++5. Original runner passed the local service key to all child suites. Revised runner removes that key except for account-sync. Other inherited credentials are not sandboxed; use a clean ephemeral test environment.
++6. Child stdout/stderr are now discarded by default, preventing unbounded in-memory captured logs and accidental report credential persistence. Individual child scripts must be run directly in an approved environment for diagnostics.
++7. Loopback URL does not prove all backend/provider requests are local. Keep the existing account-sync guard and inspect actual build configuration.
++8. Exit-zero trusts child exit semantics. This runner cannot independently verify every browser step; preserve underlying suite evidence. It never labels a selected student scope as full-platform readiness.
++9. Full Course Studio, institutional authority, company reporting and production rollback are excluded. They need mapped tests and fixtures.
++10. Missing test prerequisites must block, never skip or fabricate success. New unit tests validate orchestration only.
++This revised patch is a new additive review package under docs/launch-control-guide. It does not automatically replace the prior proposed files, change package scripts or integrate CI. Choose one canonical runner during repository review; do not deploy parallel competing launch mechanisms.
+diff --git a/docs/launch-control-guide/TEMPLATE-ENDPOINT-MAP.md b/docs/launch-control-guide/TEMPLATE-ENDPOINT-MAP.md
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/TEMPLATE-ENDPOINT-MAP.md
+@@ -0,0 +1,11 @@
++# Product-template to developer contract mapping
++Source baseline: 4b4f8ca742242132f5b2dd254d23422ae70eaa7a.
++- Institution console: GET /status + GET /records; adapter and membership gates. Source route exists, real records not established.
++- Registrar readiness: POST /v1/registration-readiness/evaluations and /:id/evaluate; gateway handlers exist, inspected start.ts does not pass registrationReadiness dependency. Wiring, service schema and institution approval remain required.
++- Consequential action/registrar: POST /actions/prepare, /commit, /reconcile. No generic create-course API is inferred from these routes.
++- Course Studio: domain target needs authoring, immutable release, section scopes, submissions, feedback and grades. Gateway adapter boundary is a potential integration surface, not verified Course Studio CRUD endpoints. No new route name invented here.
++- AI answer/coplan: GET /v1/intelligence/policy, POST /respond, POST /actions/:id/confirm. Provider/policy/data/budget gates remain.
++- Device/privacy: app preference, OS permission, consent and session revocation are different contracts. Gateway auth revalidation is only one layer; privacy CRUD endpoints not verified in this inspection.
++- Board/investor: company-only sources and immutable approved aggregates; financial reporting/data-room endpoints not verified here. Do not send raw student records to company reports.
++- Company deck/policy/training/research: controlled documents, not necessarily APIs. Stable IDs/version/review/disclosure and ownership required.
++Exact new code changes in this delivery: documentation, API catalog and reviewed test orchestration. No runtime gateway, adapter, auth, DDL or feature enablement modifications. A production implementation diff requires inspecting the relevant existing service, schema and test seams first.
+diff --git a/docs/launch-control-guide/run_integration.py b/docs/launch-control-guide/run_integration.py
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/run_integration.py
+@@ -0,0 +1,47 @@
++"""Reviewed local-only orchestrator. Does not provision, migrate, or deploy."""
++import argparse,json,os,subprocess,time
++from pathlib import Path
++from urllib.parse import urlsplit
++LOOPBACK={'localhost','127.0.0.1','::1'}
++def local_url(value):
++ try:u=urlsplit(value);port=u.port
++ except ValueError:raise ValueError('Invalid test URL')
++ if u.scheme not in {'http','https'} or u.hostname not in LOOPBACK or u.username or u.password or u.query or u.fragment:
++  raise ValueError('Explicit loopback URLs only; no credentials/query/fragment')
++ return value.rstrip('/')+'/'
++def plan(mode,url,sync_url=None):
++ jobs=[('cold','smoke:cold',local_url(url)),('accessibility','smoke:a11y',local_url(url)),('golden','smoke:golden',local_url(url))]
++ if mode=='personal-account':
++  if not sync_url:raise ValueError('Separate local account preview required')
++  jobs.append(('account-sync','smoke:sync',local_url(sync_url)))
++ elif mode!='personal-baseline':raise ValueError('Unknown test scope')
++ return jobs
++def child_env(script,target):
++ env=os.environ.copy();env['SMOKE_URL']=target
++ if script!='smoke:sync':env.pop('SMOKE_SUPABASE_SERVICE_KEY',None)
++ return env
++def execute(root,mode,url,sync_url=None,run=subprocess.run):
++ jobs=plan(mode,url,sync_url);app=Path(root).resolve()/'app'
++ if not (app/'package.json').exists():raise ValueError('Missing app/package.json')
++ if mode=='personal-account' and not os.environ.get('SMOKE_SUPABASE_SERVICE_KEY'):raise ValueError('Ephemeral LOCAL service key required')
++ results=[]
++ for name,script,target in jobs:
++  start=time.monotonic();reason=None
++  try:
++   p=run(['npm','run',script],cwd=app,env=child_env(script,target),stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=900)
++   code=p.returncode;status='passed' if code==0 else 'failed' if code==1 else 'unavailable'
++   if code not in (0,1):reason='instrument_exit'
++  except subprocess.TimeoutExpired:code=2;status='unavailable';reason='timeout'
++  except OSError:code=2;status='unavailable';reason='launch_error'
++  results.append({'suite':name,'status':status,'exit_code':code,'reason':reason,'seconds':round(time.monotonic()-start,3)})
++ return {'scope':mode,'scope_passed':bool(results) and all(r['status']=='passed' for r in results),'production_ready':False,'results':results,'excluded':['institutional authority','course submissions/grades','company disclosures','live deployment/rollback']}
++def write_report(path,value):
++ path=Path(path);path.parent.mkdir(parents=True,exist_ok=True);tmp=path.with_name(path.name+'.tmp');tmp.write_text(json.dumps(value,indent=2));os.replace(tmp,path)
++if __name__=='__main__':
++ p=argparse.ArgumentParser();p.add_argument('--root',default='.');p.add_argument('--mode',required=True,choices=['personal-baseline','personal-account']);p.add_argument('--url',required=True);p.add_argument('--sync-url');p.add_argument('--report',required=True);a=p.parse_args()
++ try:r=execute(a.root,a.mode,a.url,a.sync_url)
++ except ValueError as e:r={'scope':a.mode,'scope_passed':False,'production_ready':False,'setup_error':str(e),'results':[]}
++ try:write_report(a.report,r)
++ except OSError:print('Report could not be persisted; scope unverified');raise SystemExit(2)
++ print('Selected scope passed' if r['scope_passed'] else 'Selected scope did not pass; inspect report')
++ raise SystemExit(0 if r['scope_passed'] else 1 if any(x['status']=='failed' for x in r['results']) else 2)
+diff --git a/docs/launch-control-guide/test_run_integration.py b/docs/launch-control-guide/test_run_integration.py
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/test_run_integration.py
+@@ -0,0 +1,39 @@
++import unittest,tempfile,os,subprocess,json
++from pathlib import Path
++from unittest.mock import patch
++from types import SimpleNamespace
++from run_integration import local_url,plan,execute,child_env,write_report
++class Tests(unittest.TestCase):
++ def test_public(self):
++  with self.assertRaises(ValueError):local_url('https://prod.example')
++ def test_credentials(self):
++  with self.assertRaises(ValueError):local_url('http://x:y@localhost')
++ def test_query(self):
++  with self.assertRaises(ValueError):local_url('http://localhost/?secret=x')
++ def test_port(self):
++  with self.assertRaises(ValueError):local_url('http://localhost:wrong')
++ def test_account_preview(self):
++  with self.assertRaises(ValueError):plan('personal-account','http://localhost')
++ def test_baseline(self):self.assertEqual(len(plan('personal-baseline','http://localhost')),3)
++ def test_scopes(self):self.assertEqual(len(plan('personal-account','http://localhost','http://127.0.0.1:4174')),4)
++ def test_key_not_forwarded(self):
++  with patch.dict(os.environ,{'SMOKE_SUPABASE_SERVICE_KEY':'synthetic-not-a-key'}):self.assertNotIn('SMOKE_SUPABASE_SERVICE_KEY',child_env('smoke:golden','http://localhost'))
++ def test_account_key_forwarded(self):
++  with patch.dict(os.environ,{'SMOKE_SUPABASE_SERVICE_KEY':'synthetic-not-a-key'}):self.assertIn('SMOKE_SUPABASE_SERVICE_KEY',child_env('smoke:sync','http://localhost'))
++ def invoke(self,fn):
++  with tempfile.TemporaryDirectory() as d:
++   (Path(d)/'app').mkdir();(Path(d)/'app/package.json').write_text('{}');return execute(d,'personal-baseline','http://localhost',run=fn)
++ def test_success_not_production(self):
++  r=self.invoke(lambda *a,**k:SimpleNamespace(returncode=0));self.assertTrue(r['scope_passed']);self.assertFalse(r['production_ready'])
++ def test_assertion(self):self.assertFalse(self.invoke(lambda *a,**k:SimpleNamespace(returncode=1))['scope_passed'])
++ def test_unavailable(self):self.assertEqual(self.invoke(lambda *a,**k:SimpleNamespace(returncode=2))['results'][0]['status'],'unavailable')
++ def test_launch_error(self):
++  def fail(*a,**k):raise FileNotFoundError()
++  self.assertEqual(self.invoke(fail)['results'][0]['reason'],'launch_error')
++ def test_timeout(self):
++  def fail(*a,**k):raise subprocess.TimeoutExpired('npm',900)
++  self.assertEqual(self.invoke(fail)['results'][0]['reason'],'timeout')
++ def test_report(self):
++  with tempfile.TemporaryDirectory() as d:
++   p=Path(d)/'report.json';write_report(p,{'production_ready':False});self.assertFalse(json.loads(p.read_text())['production_ready'])
++if __name__=='__main__':unittest.main()
+diff --git a/docs/launch-control-guide/api-catalog.json b/docs/launch-control-guide/api-catalog.json
+new file mode 100644
+--- /dev/null
++++ b/docs/launch-control-guide/api-catalog.json
+@@ -0,0 +1,142 @@
++[
++  {
++    "method": "GET",
++    "path": "/health/live",
++    "auth": "Public; origin rules",
++    "purpose": "Process liveness",
++    "activation_gate": "Not business readiness",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/health/ready",
++    "auth": "Public; origin rules",
++    "purpose": "Journal/custom readiness; adapter count; AI/read-only state",
++    "activation_gate": "200 does not establish active adapters",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/health",
++    "auth": "Public; origin rules",
++    "purpose": "Readiness alias",
++    "activation_gate": "Same limitation as /health/ready",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/v1/auth/config",
++    "auth": "Public; origin rules",
++    "purpose": "SSO presentation configuration",
++    "activation_gate": "Returns disabled when unavailable",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/status",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Connection status, roles and institution",
++    "activation_gate": "Installed tenant/area adapters",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/records",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Area-scoped records; area/search/cursor query",
++    "activation_gate": "Approved adapter and canRead",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/actions/prepare",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Validate record/version; prepare expiring review",
++    "activation_gate": "Approved adapter and canWrite",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/actions/commit",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Confirm review; recheck current access/record",
++    "activation_gate": "Explicit true, valid review, compatible adapter",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/actions/reconcile",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Resolve uncertain outcome; not repeat execution",
++    "activation_gate": "Adapter reconciliation; allowed in read-only mode",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "GET",
++    "path": "/v1/intelligence/policy",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Read institutional AI policy",
++    "activation_gate": "Configured intelligence service",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/v1/intelligence/respond",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Policy-controlled intelligence request",
++    "activation_gate": "Server provider, policy, sources and budget",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/v1/intelligence/actions/:id/confirm",
++    "auth": "Bearer + institutional membership",
++    "purpose": "Confirm bounded intelligence action",
++    "activation_gate": "Service confirmation rules/current access",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/v1/registration-readiness/evaluations",
++    "auth": "Bearer + refreshed membership",
++    "purpose": "Start readiness evaluation; 202 receipt",
++    "activation_gate": "registrationReadiness handler; omitted in inspected start.ts",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  },
++  {
++    "method": "POST",
++    "path": "/v1/registration-readiness/evaluations/:id/evaluate",
++    "auth": "Bearer + refreshed membership",
++    "purpose": "Evaluate existing request; empty object body",
++    "activation_gate": "Handler required; result 200 or 202",
++    "evidence": "Source-defined; not live-probed",
++    "source": "app/server/institution/gateway.ts",
++    "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a"
++  }
++]

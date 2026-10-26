@@ -5,9 +5,9 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2154 # check.sh supplies here, work and port.
 
-echo "· the productivity adapter, against this database"
+echo "· the productivity and access-saga adapters, against this database"
 (
   cd "$here/../app" || exit
   SEMESTER_PG_HOST="$work" SEMESTER_PG_PORT="$port" \
-    npx vitest run server/productivity/postgres.integration
+    npx vitest run server/productivity/postgres.integration server/institution/postgres-access-saga.integration
 )

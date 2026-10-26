@@ -6,6 +6,7 @@ import {
 import { freshness, NO_OPT_IN, policyFor, type DataClass, type Freshness, type TenantOfflinePolicy } from './policy.ts'
 import { STATE_COPY, type SyncState } from './status.ts'
 import type { EntityRow, LocalStore, SyncTransport } from './types.ts'
+import type { PolicyPurgeResult } from './storage-policy.ts'
 
 // ---- what a platform must provide ------------------------------------------
 // One interface per native capability, so iOS, Android and web differ only in
@@ -68,6 +69,8 @@ export type Unavailable = { ok: false; why: Extract<AccessDecision, { verdict: '
 export type Available<T> = { ok: true; view: View<T> }
 
 export interface SemesterOfflineSdk {
+  /** Complete storage-policy cleanup independently of session access. */
+  ready(): Promise<void>
   read<T = unknown>(dataClass: DataClass, id: string): Promise<Available<T> | Unavailable | { ok: false; why: { verdict: 'missing' } }>
   list(dataClass: DataClass): Promise<View[]>
   write(input: WriteInput): Promise<View>
@@ -78,6 +81,8 @@ export interface SemesterOfflineSdk {
   discard(commandId: string): Promise<void>
   sync(): Promise<SyncReport>
   summary(): Promise<SyncSummary>
+  /** Purge rows forbidden by the current central storage policy. */
+  enforceStoragePolicy(): Promise<PolicyPurgeResult>
   access(): AccessDecision
   /** Foreground or biometric success: the person is here. */
   touch(): void
@@ -101,6 +106,7 @@ export interface SdkConfig {
   policyVersion?: () => string
   permissionEpoch?: () => number
   onRevokedRows?: EngineDeps['onRevokedRows']
+  onPolicyPurge?: EngineDeps['onPolicyPurge']
 }
 
 export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
@@ -125,6 +131,7 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
     policyVersion: c.policyVersion,
     permissionEpoch: c.permissionEpoch,
     onRevokedRows: c.onRevokedRows,
+    onPolicyPurge: c.onPolicyPurge,
     // Sync asks the same question reads do. `locked` still lets a background sync run: the data is not shown.
     access: (): AccessVerdict => {
       const d = decide()
@@ -137,6 +144,26 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
     },
   })
 
+  const enforce = async (): Promise<PolicyPurgeResult> => {
+    try {
+      const result = await engine.enforceStoragePolicy()
+      if (result.rows.length) changed()
+      return result
+    } catch (error) {
+      // Primary deletion and its retry journal may already be committed.
+      changed()
+      throw error
+    }
+  }
+  let readiness: Promise<void> | undefined
+  const ready = (): Promise<void> => {
+    if (!readiness) {
+      const start = decide().verdict === 'wipe' ? engine.syncOnce().then(() => undefined) : enforce().then(() => undefined)
+      readiness = start.catch((error) => { readiness = undefined; throw error })
+    }
+    return readiness
+  }
+
   const toView = (e: EntityRow): View => {
     const state = engine.stateOf(e)
     const copy = STATE_COPY[state]
@@ -148,7 +175,9 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
   }
 
   return {
+    ready,
     async read(dataClass, id) {
+      await ready()
       const d = decide()
       if (d.verdict !== 'ok') return { ok: false, why: d }
       const e = await c.store.entities.get(dataClass, id)
@@ -159,27 +188,31 @@ export function createOfflineSdk(c: SdkConfig): SemesterOfflineSdk {
       return { ok: true, view: v as View<never> }
     },
     async list(dataClass) {
+      await ready()
       if (decide().verdict !== 'ok') return []
       return (await c.store.entities.all()).filter((e) => e.dataClass === dataClass).map(toView).filter((v) => !(v.state === 'synced' && v.freshness === 'expired'))
     },
     async write(input) {
+      await ready()
       const d = decide()
       if (d.verdict !== 'ok') throw new Error(`locked: ${d.verdict}`)
       const e = await engine.write(input)
       changed()
       return toView(e)
     },
-    async confirm(id) { await engine.confirm(id); changed() },
-    async resolveConflict(id, choice) { await engine.resolveConflict(id, choice); changed() },
-    async retry(id) { await engine.retry(id); changed() },
-    async discard(id) { await engine.discard(id); changed() },
+    async confirm(id) { await ready(); await engine.confirm(id); changed() },
+    async resolveConflict(id, choice) { await ready(); await engine.resolveConflict(id, choice); changed() },
+    async retry(id) { await ready(); await engine.retry(id); changed() },
+    async discard(id) { await ready(); await engine.discard(id); changed() },
     async sync() {
+      await ready()
       const r = await engine.syncOnce()
       if (!r.stopped) lease = { ...lease, verifiedAt: c.now() }
       changed()
       return r
     },
     summary: () => engine.summary(),
+    enforceStoragePolicy: enforce,
     access: decide,
     touch() { lease = { ...observe(lease, c.now()), lastActiveAt: c.now() } },
     verified(grant) { lease = { ...lease, grant: { ...lease.grant, ...grant }, verifiedAt: c.now(), lastActiveAt: c.now() } },

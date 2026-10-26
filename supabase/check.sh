@@ -21,7 +21,7 @@
 # socket, and removes it on the way out; it never touches a configured PGHOST
 # or a real project.
 #
-#     supabase/check.sh                 # every suite
+#     supabase/check.sh                 # every suite in check-suites.txt
 #     supabase/check.sh groups records  # only these
 #
 # Naming suites is for iterating on one: the cluster and the migrations are the
@@ -49,7 +49,30 @@ if [ "$#" -gt 0 ]; then
     suites+=("$c")
   done
 else
-  for c in "$here"/*.check.sql; do suites+=("$c"); done
+  # The unnamed run is the one CI makes, and it used to come from the glob
+  # alone — so a suite deleted, renamed or left out of a checkout was not a
+  # failure, it was a run that passed having proved less. `check-suites.txt`
+  # is the committed list of what a full run must include; a name on it with
+  # no file, or a file not on it, stops the run before a cluster is built.
+  # Both directions, because each is a way for the list and the directory to
+  # disagree and only one of them reads as "something is missing".
+  # `app/src/lib/docs/check-suites.test.ts` holds the same two assertions in
+  # the vitest suite, so a pull request learns of the disagreement there
+  # before this step does.
+  manifest="$here/check-suites.txt"
+  if [ ! -f "$manifest" ]; then
+    echo "No suite manifest at $manifest; a full run cannot say what it should have included." >&2
+    exit 2
+  fi
+  listed=$(grep -vE '^[[:space:]]*(#|$)' "$manifest" | LC_ALL=C sort)
+  present=$(cd "$here" && ls *.check.sql | sed 's/\.check\.sql$//' | LC_ALL=C sort)
+  if [ "$listed" != "$present" ]; then
+    echo "check-suites.txt and the *.check.sql files disagree:" >&2
+    diff <(echo "$listed") <(echo "$present") | grep -E '^[<>]' \
+      | sed 's/^</  listed but no file:  /; s/^>/  file but not listed: /' >&2 || true
+    exit 2
+  fi
+  while IFS= read -r name; do suites+=("$here/$name.check.sql"); done <<< "$listed"
 fi
 
 work=$(mktemp -d)

@@ -46,9 +46,11 @@ export function Adopting({
   sides: Sides;
   /** The line from `decide`, stating both sides. */
   say: string;
-  onChoose: (choice: Choice, backup: string | null) => void;
+  onChoose: (choice: Choice, backup: string | null) => void | Promise<void>;
 }) {
   const [picked, setPicked] = useState<Choice>(SAFEST);
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState('');
   /*
    * No `onClose`, and that is the point. Escape is deliberately not a way out
    * of this question — see the note above — so what the trap adds here is the
@@ -60,10 +62,18 @@ export function Adopting({
   const wide = useMedia(DESKTOP);
   const list = options(sides);
 
-  const go = () => {
+  const go = async () => {
+    if (saving) return;
     // The filename is handed back rather than made by the caller, so the
     // decision to take a backup and the name it is taken under stay together.
-    onChoose(picked, destructive(picked) ? backupName(Date.now()) : null);
+    setSaving(true);
+    setFailed('');
+    try {
+      await onChoose(picked, destructive(picked) ? backupName(Date.now()) : null);
+    } catch {
+      setFailed('This copy could not be saved on this device. Nothing was changed. Try again.');
+      setSaving(false);
+    }
   };
 
   const sheet = (
@@ -135,6 +145,7 @@ export function Adopting({
               key={o.id}
               type="button"
               aria-pressed={on}
+              disabled={saving}
               onClick={() => setPicked(o.id)}
               className="bare"
               style={{
@@ -173,12 +184,19 @@ export function Adopting({
         })}
       </div>
 
+      {failed ? (
+        <p role="alert" style={{ marginTop: 'var(--sp-5)', marginBottom: 0, color: 'var(--app-dim)' }}>
+          {failed}
+        </p>
+      ) : null}
+
       <ActionButton
         onClick={go}
+        disabled={saving}
         tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
-        {picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}
+        {saving ? 'Saving…' : picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}
       </ActionButton>
       </div>
     </div>

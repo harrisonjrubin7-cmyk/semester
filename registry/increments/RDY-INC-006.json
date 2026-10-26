@@ -1,0 +1,9 @@
+{
+  "id": "RDY-INC-006",
+  "title": "Role provisioning",
+  "state": "proposed",
+  "release_train": "foundation",
+  "capability_key": "registration.readiness",
+  "source": "Spec next-12 item 2 names this increment. Scope is not described in the source and must be shaped before work starts.",
+  "gaps": ["every field in operating-model.json every_increment_requires", "shaping"]
+}

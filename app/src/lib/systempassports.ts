@@ -190,7 +190,7 @@ export const SYSTEM_PASSPORTS: readonly SystemPassport[] = [
     auditEvidence: ['Input facts and freshness', 'Policy decision', 'Approval separation', 'Idempotency key', 'SIS result and reconciliation'],
     dependencies: ['identity', 'authorization', 'academic', 'degree', 'integrations', 'operations'], capabilityIds: ['CAP-050'],
     externalGates: ['Approved SIS read adapter before pilot claims', 'Separate write authorization', 'Tenant UAT and rollback rehearsal'],
-    operations: { owner: 'Registrar platform and integration operations', serviceLevel: 'Define readiness and registration-window SLOs with the pilot institution.', alerts: ['Stale readiness fact', 'SIS request uncertainty', 'Reconciliation backlog'] },
+    operations: { owner: 'Registrar platform and integration operations', serviceLevel: 'Define readiness and registration-window SLOs with the pilot institution.', alerts: ['Stale readiness fact', 'SIS request uncertainty', 'Reconciliation backlog'], runbook: 'docs/runbooks/registration.md' },
   }),
   passport({
     id: 'degree', name: 'Degree Planning', purpose: 'Support source-linked what-if planning without presenting a projection as an official degree audit.',

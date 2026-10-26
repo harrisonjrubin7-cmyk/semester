@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semester.app/schemas/registration-readiness/readiness-event.schema.json",
+  "title": "Registration readiness workflow event",
+  "description": "The minimal event descriptor committed with a registration-readiness receipt before it is expanded into the shared Semester event envelope and transactional outbox.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventType", "aggregateId", "idempotencyKey", "correlationId", "payload"],
+  "properties": {
+    "eventType": {
+      "enum": [
+        "registration.readiness_requested",
+        "registration.readiness_evaluated",
+        "registration.readiness_reconciliation_requested"
+      ]
+    },
+    "aggregateId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "correlationId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluationId", "termId", "version"],
+      "properties": {
+        "evaluationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "termId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reason": {
+          "enum": ["evaluator_timeout"]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "not": {"const": "registration.readiness_evaluated"}
+          }
+        },
+        "required": ["eventType"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "not": {"required": ["reason"]}
+          }
+        }
+      }
+    }
+  ]
+}

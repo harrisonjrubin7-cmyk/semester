@@ -7,7 +7,7 @@ CHAINS = {
     "classification": "Classify the uploaded source by its explicit contents.",
     "fact_extraction": "Extract atomic course facts, including explicit dates and whether time is unspecified.",
     "unit_mapping": "Map only clearly supported chunks to units or weeks.",
-    "reading_brief": "Summarize the reading's claim, evidence, concepts, and implications.",
+    "reading_brief": "Summarize the reading's claim, evidence, concepts, and implications, then create citation-bound applied cases with decision questions and evidence-limited next steps.",
     "comprehensive_guide": "Create connected explanations from verified evidence.",
     "glossary": "Create terms and definitions supported verbatim or contextually by sources.",
     "flashcards": "Create non-duplicate active-recall cards with cited answers.",

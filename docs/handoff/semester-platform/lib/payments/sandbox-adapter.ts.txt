@@ -1,0 +1,29 @@
+// lib/payments/sandbox-adapter.ts — a mock rail for local and preview environments. Never enabled in production.
+import { createHmac, createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+import type { PaymentProviderAdapter, VerifiedPaymentEvent, NormalizedType } from './types';
+const SECRET = () => { const s = process.env.SANDBOX_WEBHOOK_SECRET; if (!s) throw new Error('SANDBOX_WEBHOOK_SECRET missing'); return s; };
+if (process.env.VERCEL_ENV === 'production') throw new Error('sandbox payment adapter must not load in production');
+export function signSandbox(rawBody: string, t = Math.floor(Date.now() / 1000)): string {
+  return `t=${t},v1=${createHmac('sha256', SECRET()).update(`${t}.${rawBody}`).digest('hex')}`;
+}
+const TOLERANCE_S = 300;
+export const sandboxAdapter: PaymentProviderAdapter = {
+  provider: 'sandbox',
+  async createPaymentMethod(i) { if (!i.clientToken.startsWith('tok_')) throw new Error('expected a rail token'); return { token: 'pm_' + randomUUID(), brand: 'visa', last4: '4242' }; },
+  async authorize(i) { if (i.amountCents <= 0) return { status: 'failed', providerRef: '', failureCode: 'invalid_amount' }; if (i.token.endsWith('_3ds')) return { status: 'requires_action', providerRef: 'pi_' + i.attemptId, actionUrl: '/sandbox/3ds' }; return { status: 'authorized', providerRef: 'pi_' + i.attemptId }; },
+  async capture(i) { return { status: 'captured', providerRef: i.providerRef }; },
+  async refund(i) { return { status: 'succeeded', refundRef: 're_' + i.idempotencyKey }; },
+  async cancel() { return { status: 'cancelled' }; },
+  async getSettlement(q) { return { batchId: 'stl_' + q.from, settledOn: q.to, lines: [] }; },
+  async verifyWebhook(r): Promise<VerifiedPaymentEvent> {
+    const sig = r.headers['x-sandbox-signature'] ?? '';
+    const m = /^t=(\d+),v1=([a-f0-9]{64})$/.exec(sig); if (!m) throw new Error('missing or malformed signature');
+    const t = Number(m[1]); if (Math.abs(Date.now() / 1000 - t) > TOLERANCE_S) throw new Error('signature timestamp outside tolerance');
+    const expected = createHmac('sha256', SECRET()).update(`${t}.${r.rawBody}`).digest();
+    const given = Buffer.from(m[2], 'hex'); if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new Error('invalid signature');
+    const body = JSON.parse(r.rawBody) as { id: string; type: string; data: { ref: string; amount: number; currency: string } };
+    const map: Record<string, NormalizedType> = { 'charge.authorized': 'payment.authorized', 'charge.captured': 'payment.captured', 'charge.failed': 'payment.failed', 'charge.action_required': 'payment.requires_action', 'payout.settled': 'payment.settled', 'refund.succeeded': 'refund.succeeded', 'dispute.created': 'dispute.opened', 'dispute.won': 'dispute.won', 'dispute.lost': 'dispute.lost' };
+    const type = map[body.type]; if (!type) throw new Error('unsupported event type ' + body.type);
+    return { provider: 'sandbox', providerEventId: body.id, type, providerRef: body.data.ref, amountCents: body.data.amount, currency: body.data.currency, payloadHash: createHash('sha256').update(r.rawBody).digest('hex') };
+  },
+};

@@ -1,0 +1,25 @@
+Fresh-database reference, not an upgrade to the earlier 129-table schema. Do not apply both
+schemas together. Shared dependencies are reduced portal-facing records, especially billing
+and payments. No PostgreSQL execution or tests were performed here.
+All tables have default-deny forced RLS and no permissive policies. Implement reviewed
+identity-backed policies, grants and server commands before runtime use. Database
+administrators and BYPASSRLS roles remain privileged.
+Ten baseline pgTAP assertions are supplied, not a complete production authorization suite.
+Empty housing/dining assertions are baseline only; populate runtime fixtures and test positive
+own-tenant access, other-tenant denial, same-tenant ownership, advisor and faculty scope,
+exports, storage, role revocation, and concurrent mutations. Run fixture setup in an isolated
+sandbox as an administrator capable of bypassing RLS. pgTAP is assumed installed in public.
+Test role must not already exist. No changes survive the rollback.
+Required command checks: same-cycle roommates; same-application assignment consistency;
+allocation expiry inside locked confirmation; native spend atomicity and overdra prevention;
+funding account ownership; valid benefits/location/date; refunds and allocation sums;
+matching-account reversals; immutable publication/signature workflows; validated JSON rules;
+no client-authoritative legal basis or consent. Grants in plan benefits are templates; posted
+entitlement entries determine native balances. Connected balances remain external authority.
+Retention safeguards must be applied to the full governance schema, not this reduced
+housing/dining schema. Statutory disclosure records and operational logs require different
+approved retention rules. Protect required records while education records remain and while
+applicable requests or holds are active. Revoke TRUNCATE, log approved disposition, and
+coordinate concurrent hold placement with deletion.
+Review notes
+-- 1 of 1 --

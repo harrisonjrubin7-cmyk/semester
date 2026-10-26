@@ -1,0 +1,31 @@
+{
+  "semester": {
+    "policy_revision": "pilot-policy-1",
+    "actions": {
+      "registration.readiness.view": {
+        "required_capability": "registration.readiness.view",
+        "allowed_relationships": [
+          "student_self",
+          "assigned_advisor",
+          "authorized_registrar"
+        ],
+        "requires_sharing_grant": false,
+        "trust_model_version": "semester-access-risk-1",
+        "minimum_score": 60,
+        "required_authentication_level": 1,
+        "requires_approval": false
+      },
+      "registration.override.approve": {
+        "required_capability": "registration.override.approve",
+        "allowed_relationships": [
+          "authorized_registrar"
+        ],
+        "requires_sharing_grant": false,
+        "trust_model_version": "semester-access-risk-1",
+        "minimum_score": 80,
+        "required_authentication_level": 2,
+        "requires_approval": false
+      }
+    }
+  }
+}

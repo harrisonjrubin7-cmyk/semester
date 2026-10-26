@@ -1,0 +1,36 @@
+# Incident package (artifact 22). Template-level plan. Named roles and contact
+# paths are TBD until the pilot institution confirms them.
+incident:
+  id: INC-READINESS-001
+  title: "Readiness results may be based on stale SIS data"
+  severity: SEV-2
+  trigger:
+    - "SIS freshness threshold exceeded for active pilot tenant"
+    - "A confirmed source/projection mismatch affects readiness result"
+  immediate_product_action:
+    - set_readiness_results_to_stale
+    - disable_definitive_ready_status
+    - retain_existing_receipts_and_audit_records
+    - expose_support_and_office_handoff
+  first_15_minutes:
+    - acknowledge_incident
+    - assign_incident_commander
+    - identify_tenant_and_affected_records
+    - confirm_source_watermark_and_last_success
+    - pause_affected_automations
+    - notify_institution_technical_owner
+  update_cadence:
+    internal: "Every 30 minutes until contained"
+    institution: "At declaration, containment, resolution, and post-incident report"
+  resolution:
+    - restore_source_connection
+    - run_reconciliation
+    - verify_sampled_authoritative_results
+    - re_enable_feature_only_after_approval
+    - attach_evidence_to_incident
+
+student_safe_message: >
+  A source used for registration readiness is not updating normally. Your
+  readiness result may be incomplete or out of date. This does not change your
+  official registration record. Check with the Registrar's Office for a final
+  decision.

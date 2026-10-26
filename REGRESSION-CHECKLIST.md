@@ -88,6 +88,13 @@ times in the run logs below while the other sat still.
       that describes it, or the description says `Docs: none because <reason>`.
       CI runs it as `.github/workflows/docs.yml`. The rest of the documentation
       gates run inside A1; `docs/documentation/QUALITY-GATES.md` lists them.
+- [ ] **A6** (pull requests) `.github/workflows/release-package-ci.yml` — the
+      supplemental release gate: `python -m unittest discover -s scripts/release
+      -p 'test_evidence_bundle.py'`, `bash -n scripts/release/deploy-vercel.sh`,
+      then the app lint, test, build and `check:university` commands, the
+      platform-control tests and the registry validation. It adds to the existing
+      jobs and does not replace them. Its evidence checker is integrity only and
+      never authorizes a release.
 
 ## B. Bundle and load — the prompt's own performance rule
 

@@ -407,10 +407,11 @@ export async function thin(now = new Date()): Promise<void> {
 }
 
 /** Everything, for "delete all my data". */
-export async function clearSnapshots(): Promise<void> {
+export async function clearSnapshots(): Promise<boolean> {
   try {
     await tx('readwrite', (s) => s.clear());
+    return true;
   } catch {
-    // As above.
+    return false;
   }
 }

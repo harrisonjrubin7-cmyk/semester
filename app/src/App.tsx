@@ -74,6 +74,7 @@ import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
+import { WorkspaceEntry } from './components/shell/WorkspaceNavigation';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
 import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
@@ -119,6 +120,8 @@ import type { Screen } from './lib/types';
 import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
 import { forRole } from './lib/role';
 import { MODULE_FLAGS, moduleOn } from './lib/experience-flags';
+import { cloudConfigured } from './lib/cloud';
+import { PrivilegedMfaBoundary } from './components/PrivilegedMfaBoundary';
 
 // Offline mode (Phase M). The badge is lazy, in screens.tsx, so the flag off costs nothing.
 const OFFLINE_MODE = moduleOn(MODULE_FLAGS.offline_mode);
@@ -1078,7 +1081,7 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
           <button
             key={id}
             type="button"
-            className="bare rail-item"
+            className={on ? 'bare rail-item is-on' : 'bare rail-item'}
             onClick={() => {
               // Tapping the tab you are already on goes to the top. That is
               // what every phone does, and it is the only way back up a long
@@ -1096,15 +1099,6 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
             }}
             title={shut ? label : undefined}
             aria-current={on ? 'page' : undefined}
-            style={{
-              // The rail is the tab bar's wide-screen counterpart and its
-              // labels are the same words, so they take the same strength —
-              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
-              // 3.64:1 on Ink, 2.98:1 on Parchment.
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <TabGlyph screen={id} size={18} />
             <span>{label}</span>
@@ -1116,32 +1110,28 @@ function Rail({ collapsed = false }: { collapsed?: boolean }) {
         // The same treatment a tab gets, because it means the same thing: this
         // is the screen you are on. A colour shift alone lost that argument to
         // the lit pill `litTab` used to put on the tab above.
-        const on = state.screen === screen;
+        // Course Studio has its own current item in the permission-aware
+        // workspace group below. Keep Account as the fallback for every
+        // other Account view, without announcing two current pages at once.
+        const on = state.screen === screen
+          && !(screen === 'account' && state.workspaceView === 'course-studio');
         return (
           <button
             key={screen}
             type="button"
-            className="bare rail-item rail-quiet"
+            className={on ? 'bare rail-item rail-quiet is-on' : 'bare rail-item rail-quiet'}
             onClick={() => {
               if (expanded) setOpen(false);
               dispatch({ type: 'go', screen });
             }}
             title={blurb}
             aria-current={on ? 'page' : undefined}
-            style={{
-              // The rail is the tab bar's wide-screen counterpart and its
-              // labels are the same words, so they take the same strength —
-              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
-              // 3.64:1 on Ink, 2.98:1 on Parchment.
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <span>{label}</span>
           </button>
         );
       })}
+      {!shut && <WorkspaceEntry placement="navigation" onNavigate={() => expanded && setOpen(false)} />}
     </nav>
     </>
   );
@@ -1159,7 +1149,7 @@ export default function App() {
 }
 
 function AppFrame() {
-  const { state, dispatch, saveTrouble, asking, settle } = useStore();
+  const { state, dispatch, saveTrouble, asking, settle, account } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
    *
@@ -1398,7 +1388,7 @@ function AppFrame() {
     return wide || chrome.railCollapsed ? wideFrame() : phoneFrame();
   };
   return (
-    <>
+    <PrivilegedMfaBoundary subject={cloudConfigured ? account?.id ?? null : null}>
       <Sound />
       {frame()}
       {INSTITUTIONAL_PREVIEW && (
@@ -1406,7 +1396,7 @@ function AppFrame() {
           <InstitutionalPreviewBar />
         </Suspense>
       )}
-    </>
+    </PrivilegedMfaBoundary>
   );
 
   function wideFrame() {

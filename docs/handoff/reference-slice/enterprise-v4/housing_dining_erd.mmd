@@ -1,0 +1,620 @@
+%% Housing + dining logical ERD (from "Higher-ed ERP database schema" PDF part 2, 6 Oct). Logical only: Mermaid does not enforce
+%% tenant isolation, uniqueness or concurrency. SQL in 010/011 is authoritative. All tenant tables key on (tenant_id, id).
+erDiagram
+  INSTITUTIONS {
+    uuid id PK
+    string name
+    string slug UK
+    string default_timezone
+    string status
+  }
+  CAMPUSES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string name
+    string timezone
+    string status
+  }
+  PEOPLE {
+    uuid tenant_id PK, FK
+  }
+  ACADEMIC_TERMS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string code
+    date starts_on
+    date ends_on
+  }
+  POLICY_VERSIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string policy_type
+    int version_number
+    json definition
+    datetime effective_from
+    datetime effective_until
+    string status
+  }
+  DOCUMENTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid owner_person_id FK
+    string storage_key
+    string classification
+    string scan_status
+    string checksum
+    uuid retention_policy_id
+  }
+  HOUSING_CYCLES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid term_id FK
+    uuid policy_version_id FK
+    string name
+    datetime opens_at
+    datetime closes_at
+    string status
+  }
+  HOUSING_BUILDINGS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid campus_id FK
+    string name
+    string address
+    string status
+  }
+  HOUSING_ROOMS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid building_id FK
+    string room_number
+    string room_type
+    string status
+  }
+  HOUSING_BEDS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid room_id FK
+    string bed_label
+    string status
+  }
+  HOUSING_APPLICATIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    uuid cycle_id FK
+    string status
+    datetime submitted_at
+    bigint version
+  }
+  HOUSING_PREFERENCES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid application_id FK
+    string preference_code
+    int rank
+    json value
+  }
+  HOUSING_ELIGIBILITY_RESULTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid application_id FK
+    uuid policy_version_id FK
+    string result
+    json reason_codes
+    datetime evaluated_at
+  }
+  HOUSING_PLACEMENT_INSTRUCTIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    uuid cycle_id FK
+    string instruction_code
+    string approved_requirement
+    string authorization_reference
+    datetime effective_from
+    datetime effective_until
+    string status
+  }
+  ROOMMATE_GROUPS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid cycle_id FK
+    uuid owner_person_id FK
+    string status
+  }
+  ROOMMATE_GROUP_MEMBERS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid group_id FK
+    uuid person_id FK
+    string invitation_status
+    datetime accepted_at
+  }
+  HOUSING_SELECTION_WINDOWS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid cycle_id FK
+    uuid person_id FK
+    uuid group_id FK
+    datetime opens_at
+    datetime closes_at
+    string status
+  }
+  HOUSING_ALLOCATIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid cycle_id FK
+    uuid bed_id FK
+    uuid person_id FK
+    string occupancy_range
+    string state
+    datetime expires_at
+    string request_key
+    bigint version
+  }
+  HOUSING_ASSIGNMENTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid allocation_id FK
+    uuid application_id FK
+    uuid assigned_by FK
+    datetime confirmed_at
+  }
+  HOUSING_CONTRACTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    uuid template_version_id FK
+    uuid document_id FK
+    string signature_reference
+    string status
+    datetime signed_at
+  }
+  HOUSING_INSPECTIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    uuid inspector_id FK
+    string inspection_type
+    string status
+    datetime completed_at
+  }
+  HOUSING_INSPECTION_ITEMS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid inspection_id FK
+    string item_code
+    string condition_code
+    string description
+  }
+  HOUSING_INSPECTION_EVIDENCE {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid inspection_item_id FK
+    uuid document_id FK
+  }
+  HOUSING_WORK_ORDERS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid room_id FK
+    uuid reported_by FK
+    uuid assigned_team_id
+    string category
+    string priority
+    string status
+    string entry_permission
+    datetime reported_at
+    datetime resolved_at
+  }
+  HOUSING_EXTENSION_REQUESTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    uuid decided_by FK
+    datetime requested_until
+    datetime approved_until
+    string status
+    string reason_code
+    datetime decided_at
+  }
+  HOUSING_DEADLINE_EVALUATIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    uuid policy_version_id FK
+    uuid extension_request_id FK
+    datetime official_deadline
+    json input_references
+    json reason_codes
+    string evaluation_status
+    datetime evaluated_at
+  }
+  HOUSING_CHECKOUT_EVENTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    datetime scheduled_at
+    datetime completed_at
+    datetime keys_returned_at
+    string status
+  }
+  BILLING_CHARGES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    string category
+    bigint amount_minor
+    string currency
+    string status
+    string external_charge_reference
+  }
+  HOUSING_ASSESSMENTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assignment_id FK
+    uuid inspection_item_id FK
+    uuid billing_charge_id FK
+    string reason_code
+    string status
+  }
+  HOUSING_ASSESSMENT_APPEALS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid assessment_id FK
+    uuid submitted_by FK
+    uuid decided_by FK
+    string reason
+    string status
+    datetime submitted_at
+    datetime decided_at
+  }
+  INTEGRATION_CONNECTIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string provider
+    string authority_mode
+    string credential_reference
+    string status
+  }
+  DINING_PLAN_VERSIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid term_id FK
+    uuid rules_version_id FK
+    string plan_code
+    int version_number
+    string name
+    bigint price_minor
+    string currency
+    string status
+  }
+  DINING_ELIGIBILITY_RULES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid plan_version_id FK
+    json definition
+    date effective_from
+    date effective_until
+  }
+  DINING_PLAN_ENROLLMENTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    uuid plan_version_id FK
+    uuid source_connection_id FK
+    string external_id
+    date starts_on
+    date ends_on
+    string status
+  }
+  DINING_PLAN_CHANGE_REQUESTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid enrollment_id FK
+    uuid requested_plan_version_id FK
+    uuid decided_by FK
+    date requested_effective_on
+    string status
+    datetime submitted_at
+    datetime decided_at
+  }
+  DINING_ENTITLEMENT_TYPES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string code
+    string unit
+    json usage_rules
+  }
+  DINING_PLAN_BENEFITS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid plan_version_id FK
+    uuid entitlement_type_id FK
+    int grant_quantity
+    string reset_rule
+    string rollover_rule
+    string expiration_rule
+  }
+  DINING_ENTITLEMENT_PERIODS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid plan_enrollment_id FK
+    uuid entitlement_type_id FK
+    datetime starts_at
+    datetime ends_at
+    string status
+  }
+  DINING_ENTITLEMENT_ENTRIES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid period_id FK
+    uuid transaction_line_id FK
+    uuid adjustment_request_id FK
+    uuid reverses_entry_id FK
+    int delta_quantity
+    string entry_type
+    string idempotency_key
+    datetime posted_at
+  }
+  CAMPUS_WALLET_TYPES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string code
+    string name
+    json usage_rules
+    json refund_rules
+    json expiration_rules
+  }
+  CAMPUS_WALLETS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    uuid wallet_type_id FK
+    uuid authority_connection_id FK
+    string currency
+    string external_account_id
+    string status
+  }
+  CAMPUS_WALLET_ENTRIES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid wallet_id FK
+    uuid transaction_line_id FK
+    uuid adjustment_request_id FK
+    uuid payment_order_id FK
+    uuid reverses_entry_id FK
+    bigint delta_minor
+    string entry_type
+    string idempotency_key
+    datetime posted_at
+  }
+  DINING_LOCATIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid campus_id FK
+    string name
+    string place_reference
+    string status
+  }
+  DINING_LOCATION_ACCEPTANCE {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid location_id FK
+    uuid wallet_type_id FK
+    uuid entitlement_type_id FK
+    uuid policy_version_id FK
+    date effective_from
+    date effective_until
+  }
+  DINING_HOURS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid location_id FK
+    date service_date
+    datetime opens_at
+    datetime closes_at
+    string closure_reason
+  }
+  MENUS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid location_id FK
+    date service_date
+    string service_period
+    int version_number
+    string status
+  }
+  MENU_ITEMS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    string name
+    string description
+    string ingredient_source
+    datetime last_verified_at
+  }
+  MENU_ITEM_ATTRIBUTES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid menu_item_id FK
+    string attribute_code
+    string verification_status
+    string source_reference
+  }
+  MENU_ENTRIES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid menu_id FK
+    uuid menu_item_id FK
+    string station_name
+  }
+  DINING_TRANSACTIONS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    uuid location_id FK
+    uuid source_connection_id FK
+    string external_transaction_id
+    datetime occurred_at
+    string status
+  }
+  DINING_TRANSACTION_LINES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid transaction_id FK
+    uuid wallet_id FK
+    uuid entitlement_period_id FK
+    bigint amount_minor
+    int quantity
+  }
+  DINING_BALANCE_SNAPSHOTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid wallet_id FK
+    uuid entitlement_period_id FK
+    uuid source_connection_id FK
+    bigint money_balance_minor
+    int quantity_balance
+    string source_version
+    datetime as_of
+    datetime received_at
+  }
+  DINING_DISPUTES {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid transaction_id FK
+    uuid person_id FK
+    string reason_code
+    string status
+    datetime submitted_at
+    datetime resolved_at
+  }
+  DINING_ADJUSTMENT_REQUESTS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid wallet_id FK
+    uuid entitlement_period_id FK
+    uuid dispute_id FK
+    uuid requested_by FK
+    uuid approved_by FK
+    bigint delta_minor
+    int delta_quantity
+    string reason_code
+    string status
+    datetime approved_at
+  }
+  PAYMENT_ORDERS {
+    uuid tenant_id PK, FK
+    uuid id PK
+    uuid person_id FK
+    bigint amount_minor
+    string currency
+    string merchant_reference
+    string idempotency_key
+    string status
+  }
+  INSTITUTIONS ||--o{ CAMPUSES : contains
+  INSTITUTIONS ||--o{ PEOPLE : contains
+  INSTITUTIONS ||--o{ ACADEMIC_TERMS : defines
+  INSTITUTIONS ||--o{ POLICY_VERSIONS : governs
+  INSTITUTIONS ||--o{ DOCUMENTS : holds
+  CAMPUSES ||--o{ HOUSING_BUILDINGS : contains
+  HOUSING_BUILDINGS ||--o{ HOUSING_ROOMS : contains
+  HOUSING_ROOMS ||--o{ HOUSING_BEDS : contains
+  ACADEMIC_TERMS ||--o{ HOUSING_CYCLES : organizes
+  POLICY_VERSIONS ||--o{ HOUSING_CYCLES : governs
+  PEOPLE ||--o{ HOUSING_APPLICATIONS : submits
+  HOUSING_CYCLES ||--o{ HOUSING_APPLICATIONS : receives
+  HOUSING_APPLICATIONS ||--o{ HOUSING_PREFERENCES : specifies
+  HOUSING_APPLICATIONS ||--o{ HOUSING_ELIGIBILITY_RESULTS : evaluated_by
+  POLICY_VERSIONS ||--o{ HOUSING_ELIGIBILITY_RESULTS : supplies_rules
+  PEOPLE ||--o{ HOUSING_PLACEMENT_INSTRUCTIONS : receives
+  HOUSING_CYCLES ||--o{ HOUSING_PLACEMENT_INSTRUCTIONS : scopes
+  HOUSING_CYCLES ||--o{ ROOMMATE_GROUPS : organizes
+  PEOPLE ||--o{ ROOMMATE_GROUPS : owns
+  ROOMMATE_GROUPS ||--o{ ROOMMATE_GROUP_MEMBERS : includes
+  PEOPLE ||--o{ ROOMMATE_GROUP_MEMBERS : participates
+  HOUSING_CYCLES ||--o{ HOUSING_SELECTION_WINDOWS : schedules
+  PEOPLE o|--o{ HOUSING_SELECTION_WINDOWS : individual_target
+  ROOMMATE_GROUPS o|--o{ HOUSING_SELECTION_WINDOWS : group_target
+  HOUSING_CYCLES ||--o{ HOUSING_ALLOCATIONS : governs
+  HOUSING_BEDS ||--o{ HOUSING_ALLOCATIONS : allocated_through
+  PEOPLE ||--o{ HOUSING_ALLOCATIONS : receives
+  HOUSING_ALLOCATIONS ||--o| HOUSING_ASSIGNMENTS : becomes
+  HOUSING_APPLICATIONS o|--o{ HOUSING_ASSIGNMENTS : supports
+  PEOPLE ||--o{ HOUSING_ASSIGNMENTS : assigns
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_CONTRACTS : documented_by
+  POLICY_VERSIONS ||--o{ HOUSING_CONTRACTS : templates
+  DOCUMENTS ||--o{ HOUSING_CONTRACTS : stores
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_INSPECTIONS : inspected_through
+  PEOPLE ||--o{ HOUSING_INSPECTIONS : conducts
+  HOUSING_INSPECTIONS ||--o{ HOUSING_INSPECTION_ITEMS : contains
+  HOUSING_INSPECTION_ITEMS ||--o{ HOUSING_INSPECTION_EVIDENCE : supported_by
+  DOCUMENTS ||--o{ HOUSING_INSPECTION_EVIDENCE : supplies
+  HOUSING_ROOMS ||--o{ HOUSING_WORK_ORDERS : serviced_through
+  PEOPLE ||--o{ HOUSING_WORK_ORDERS : reports
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_EXTENSION_REQUESTS : extended_through
+  PEOPLE o|--o{ HOUSING_EXTENSION_REQUESTS : decides
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_DEADLINE_EVALUATIONS : evaluated_through
+  POLICY_VERSIONS ||--o{ HOUSING_DEADLINE_EVALUATIONS : supplies_rules
+  HOUSING_EXTENSION_REQUESTS o|--o{ HOUSING_DEADLINE_EVALUATIONS : modifies
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_CHECKOUT_EVENTS : checked_out_through
+  PEOPLE ||--o{ BILLING_CHARGES : owes
+  HOUSING_ASSIGNMENTS ||--o{ HOUSING_ASSESSMENTS : assessed_through
+  HOUSING_INSPECTION_ITEMS o|--o{ HOUSING_ASSESSMENTS : supports
+  BILLING_CHARGES o|--o{ HOUSING_ASSESSMENTS : posts
+  HOUSING_ASSESSMENTS ||--o{ HOUSING_ASSESSMENT_APPEALS : appealed_through
+  PEOPLE ||--o{ HOUSING_ASSESSMENT_APPEALS : submits
+  INSTITUTIONS ||--o{ INTEGRATION_CONNECTIONS : connects
+  ACADEMIC_TERMS ||--o{ DINING_PLAN_VERSIONS : offers
+  POLICY_VERSIONS ||--o{ DINING_PLAN_VERSIONS : governs
+  DINING_PLAN_VERSIONS ||--o{ DINING_ELIGIBILITY_RULES : restricts
+  DINING_PLAN_VERSIONS ||--o{ DINING_PLAN_BENEFITS : grants
+  DINING_ENTITLEMENT_TYPES ||--o{ DINING_PLAN_BENEFITS : classifies
+  PEOPLE ||--o{ DINING_PLAN_ENROLLMENTS : holds
+  DINING_PLAN_VERSIONS ||--o{ DINING_PLAN_ENROLLMENTS : selected_as
+  INTEGRATION_CONNECTIONS o|--o{ DINING_PLAN_ENROLLMENTS : supplies
+  DINING_PLAN_ENROLLMENTS ||--o{ DINING_PLAN_CHANGE_REQUESTS : changed_through
+  DINING_PLAN_VERSIONS ||--o{ DINING_PLAN_CHANGE_REQUESTS : requested_plan
+  PEOPLE o|--o{ DINING_PLAN_CHANGE_REQUESTS : decides
+  DINING_PLAN_ENROLLMENTS ||--o{ DINING_ENTITLEMENT_PERIODS : grants
+  DINING_ENTITLEMENT_TYPES ||--o{ DINING_ENTITLEMENT_PERIODS : classifies
+  DINING_ENTITLEMENT_PERIODS ||--o{ DINING_ENTITLEMENT_ENTRIES : changes_through
+  DINING_ENTITLEMENT_ENTRIES o|--o{ DINING_ENTITLEMENT_ENTRIES : reversed_by
+  PEOPLE ||--o{ CAMPUS_WALLETS : holds
+  CAMPUS_WALLET_TYPES ||--o{ CAMPUS_WALLETS : classifies
+  INTEGRATION_CONNECTIONS o|--o{ CAMPUS_WALLETS : authoritative_source
+  CAMPUS_WALLETS ||--o{ CAMPUS_WALLET_ENTRIES : changes_through
+  CAMPUS_WALLET_ENTRIES o|--o{ CAMPUS_WALLET_ENTRIES : reversed_by
+  CAMPUSES ||--o{ DINING_LOCATIONS : contains
+  DINING_LOCATIONS ||--o{ DINING_LOCATION_ACCEPTANCE : accepts_through
+  CAMPUS_WALLET_TYPES o|--o{ DINING_LOCATION_ACCEPTANCE : monetary_type
+  DINING_ENTITLEMENT_TYPES o|--o{ DINING_LOCATION_ACCEPTANCE : quantity_type
+  POLICY_VERSIONS ||--o{ DINING_LOCATION_ACCEPTANCE : governs
+  DINING_LOCATIONS ||--o{ DINING_HOURS : schedules
+  DINING_LOCATIONS ||--o{ MENUS : publishes
+  MENUS ||--o{ MENU_ENTRIES : contains
+  MENU_ITEMS ||--o{ MENU_ENTRIES : appears_in
+  MENU_ITEMS ||--o{ MENU_ITEM_ATTRIBUTES : described_by
+  PEOPLE ||--o{ DINING_TRANSACTIONS : participates_in
+  DINING_LOCATIONS ||--o{ DINING_TRANSACTIONS : processes
+  INTEGRATION_CONNECTIONS o|--o{ DINING_TRANSACTIONS : supplies
+  DINING_TRANSACTIONS ||--o{ DINING_TRANSACTION_LINES : contains
+  CAMPUS_WALLETS o|--o{ DINING_TRANSACTION_LINES : monetary_funding
+  DINING_ENTITLEMENT_PERIODS o|--o{ DINING_TRANSACTION_LINES : quantity_funding
+  DINING_TRANSACTION_LINES o|--o{ CAMPUS_WALLET_ENTRIES : produces
+  DINING_TRANSACTION_LINES o|--o{ DINING_ENTITLEMENT_ENTRIES : produces
+  CAMPUS_WALLETS o|--o{ DINING_BALANCE_SNAPSHOTS : monetary_balance
+  DINING_ENTITLEMENT_PERIODS o|--o{ DINING_BALANCE_SNAPSHOTS : quantity_balance
+  INTEGRATION_CONNECTIONS ||--o{ DINING_BALANCE_SNAPSHOTS : supplies
+  DINING_TRANSACTIONS ||--o{ DINING_DISPUTES : disputed_through
+  PEOPLE ||--o{ DINING_DISPUTES : submits
+  CAMPUS_WALLETS o|--o{ DINING_ADJUSTMENT_REQUESTS : monetary_target
+  DINING_ENTITLEMENT_PERIODS o|--o{ DINING_ADJUSTMENT_REQUESTS : quantity_target
+  DINING_DISPUTES o|--o{ DINING_ADJUSTMENT_REQUESTS : supports
+  PEOPLE ||--o{ DINING_ADJUSTMENT_REQUESTS : requests
+  PEOPLE o|--o{ DINING_ADJUSTMENT_REQUESTS : approves
+  DINING_ADJUSTMENT_REQUESTS o|--o{ CAMPUS_WALLET_ENTRIES : produces
+  DINING_ADJUSTMENT_REQUESTS o|--o{ DINING_ENTITLEMENT_ENTRIES : produces
+  PEOPLE ||--o{ PAYMENT_ORDERS : initiates
+  PAYMENT_ORDERS o|--o{ CAMPUS_WALLET_ENTRIES : funds

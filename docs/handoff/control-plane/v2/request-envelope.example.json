@@ -1,0 +1,12 @@
+{
+  "sagaId": "generated-by-server",
+  "tenantId": "resolved-from-resource",
+  "subjectId": "resolved-from-authentication",
+  "requestDigest": "canonical-intent-digest",
+  "definitionVersion": "access-saga-1",
+  "generation": 1,
+  "revision": 0,
+  "state": "RECEIVED",
+  "deadlineAt": "server-defined",
+  "correlationId": "server-generated"
+}

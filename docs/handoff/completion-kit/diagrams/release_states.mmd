@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> Designed
+  Designed --> Implemented: runtime-connected + durable + policy-enforced
+  Implemented --> Tested: required runs and independent review accepted
+  Tested --> DeployedDark: exact release target verified / flags off
+  DeployedDark --> Authorized: current scope-matched authority
+  Authorized --> Enabled: named cohort activation + staffed operations
+  Enabled --> Held: incident / stale evidence / withdrawn authority
+  Held --> Reconciled: stop dispatch / preserve data / repair
+  Reconciled --> Authorized: new acceptance required

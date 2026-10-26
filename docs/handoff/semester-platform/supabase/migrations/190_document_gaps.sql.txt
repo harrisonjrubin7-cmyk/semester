@@ -1,0 +1,81 @@
+-- 190 · Closes the open gaps listed in handoff/api/README.md:
+--   (1) audience-specific access for sensitive document classes, (2) external signers,
+--   (3) verified signature-provider callbacks (receipts), (4) retention scheduling that respects legal holds.
+-- Not applied or tested. Depends on 170 and 180.
+
+-- (1) Sensitive classes never use the general docs.can_read path. They need an explicit audience row.
+alter table docs.documents add column if not exists sensitivity text not null default 'general'
+  check (sensitivity in ('general','payroll','accommodation','legal_matter','investigation','student_service'));
+create table if not exists docs.audiences(
+  document_id uuid not null references docs.documents on delete cascade, person_id uuid not null references auth.users,
+  purpose text not null check (length(purpose) between 3 and 200), granted_by uuid not null default auth.uid(),
+  granted_at timestamptz not null default now(), expires_at timestamptz, revoked_at timestamptz, primary key (document_id, person_id));
+alter table docs.audiences enable row level security;
+create policy aud_self on docs.audiences for select using (person_id = auth.uid());
+grant select on docs.audiences to authenticated;
+create or replace function docs.can_read(p_doc uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from docs.documents d join core.workspaces w on w.id = d.workspace_id where d.id = p_doc and (
+    case when d.sensitivity <> 'general' then
+      -- Sensitive: owner or explicit, unexpired, unrevoked audience only. No capability shortcut, no support shortcut.
+      d.owner_id = auth.uid() or exists (select 1 from docs.audiences a where a.document_id = d.id and a.person_id = auth.uid() and a.revoked_at is null and (a.expires_at is null or a.expires_at > now()))
+    else
+      d.classification = 'public' or (w.kind = 'personal' and w.owner_user_id = auth.uid()) or
+      (w.kind = 'company' and ctl.can(case when d.classification = 'restricted' then 'docs:restricted' else 'docs:read' end, w.organization_id)) or
+      (w.kind = 'institution' and w.organization_id = core.my_institution() and ctl.can('docs:read', w.organization_id))
+    end)) $$;
+create or replace function api.grant_document_audience(p_doc uuid, p_person uuid, p_purpose text, p_until timestamptz) returns void language plpgsql security definer set search_path = '' as $$
+declare d docs.documents; begin
+  select * into d from docs.documents where id = p_doc;
+  if d.id is null or d.sensitivity = 'general' then raise exception 'INVALID_REQUEST' using detail = 'audiences are for sensitive documents'; end if;
+  if not (d.owner_id = auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  insert into docs.audiences(document_id, person_id, purpose, expires_at) values (p_doc, p_person, p_purpose, p_until)
+    on conflict (document_id, person_id) do update set purpose = excluded.purpose, expires_at = excluded.expires_at, revoked_at = null, granted_at = now(), granted_by = auth.uid();
+  perform audit.log('document.audience_granted', p_doc::text, null, jsonb_build_object('person', p_person, 'until', p_until, 'purpose', p_purpose)); end $$;
+grant execute on function api.grant_document_audience(uuid,uuid,text,timestamptz) to authenticated;
+
+-- (2) External signers: a verified party, not a membership. Verification is by the signing provider (email + OTP or ID check).
+create table if not exists docs.external_parties(
+  id uuid primary key default gen_random_uuid(), account_id uuid references biz.accounts, name text not null, email text not null,
+  organization text, verified_by text, verified_at timestamptz, unique (account_id, email));
+alter table docs.signature_requests add column if not exists external_party_id uuid references docs.external_parties;
+alter table docs.signature_requests drop constraint if exists signer_is_known;
+alter table docs.signature_requests add constraint signer_is_known check (external_party_id is not null or signer_email is not null);
+alter table docs.external_parties enable row level security;
+create policy ep_staff on docs.external_parties for select using (biz.staff('contracts:read'));
+grant select on docs.external_parties to authenticated;
+
+-- (3) Provider callbacks: written only by the server route (service role) after verifying the provider signature.
+create table if not exists docs.provider_events(
+  provider text not null, event_id text not null, received_at timestamptz not null default now(), payload_sha256 text not null,
+  outcome text not null check (outcome in ('recorded','duplicate','rejected_hash_mismatch','rejected_unknown_request')), primary key (provider, event_id));
+alter table docs.provider_events enable row level security;   -- no client policy
+create or replace function docs.record_signature_event(p_provider text, p_event_id text, p_payload_sha256 text, p_request uuid, p_signed_hash text, p_provider_ref text, p_signed_at timestamptz, p_certificate_ref text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare r docs.signature_requests; v docs.document_versions; begin
+  if exists (select 1 from docs.provider_events where provider = p_provider and event_id = p_event_id) then return 'duplicate'; end if;
+  select * into r from docs.signature_requests where id = p_request for update;
+  if r.id is null then insert into docs.provider_events values (p_provider, p_event_id, now(), p_payload_sha256, 'rejected_unknown_request'); return 'rejected_unknown_request'; end if;
+  select * into v from docs.document_versions where id = r.document_version_id;
+  -- The provider must have signed exactly the version under review.
+  if v.checksum <> p_signed_hash then insert into docs.provider_events values (p_provider, p_event_id, now(), p_payload_sha256, 'rejected_hash_mismatch');
+    perform audit.log('signature.hash_mismatch', r.id::text, to_jsonb(v.checksum), to_jsonb(p_signed_hash)); return 'rejected_hash_mismatch'; end if;
+  insert into docs.signature_evidence(signature_request_id, document_version_id, provider, provider_ref, signed_at, certificate_ref) values (r.id, v.id, p_provider, p_provider_ref, p_signed_at, p_certificate_ref);
+  update docs.signature_requests set state = 'signed' where id = r.id;
+  insert into docs.provider_events values (p_provider, p_event_id, now(), p_payload_sha256, 'recorded');
+  insert into ctl.outbox(topic, tenant_id, payload) values ('signature.recorded', null, jsonb_build_object('request', r.id, 'version', v.id));
+  return 'recorded'; end $$;
+revoke all on function docs.record_signature_event(text,text,text,uuid,text,text,timestamptz,text) from public, anon, authenticated;
+
+-- (4) Retention: a schedule the nightly worker reads. Holds always win; deletion is evidenced, never silent.
+alter table docs.documents add constraint documents_retention_fk foreign key (retention_rule_id) references docs.retention_rules not valid;
+create table if not exists docs.retention_actions(
+  id bigserial primary key, document_id uuid not null references docs.documents, due_on date not null,
+  action text not null check (action in ('review','delete_content','anonymize')), state text not null default 'scheduled' check (state in ('scheduled','blocked_by_hold','done','cancelled')),
+  executed_at timestamptz, evidence_ref text, unique (document_id, action, due_on));
+alter table docs.retention_actions enable row level security;
+create policy ra_staff on docs.retention_actions for select using (biz.staff('contracts:read'));
+grant select on docs.retention_actions to authenticated;
+create or replace view docs.retention_due as
+  select ra.*, (d.legal_hold or exists (select 1 from docs.legal_holds h where h.document_id = d.id and h.released_at is null)) as held
+  from docs.retention_actions ra join docs.documents d on d.id = ra.document_id where ra.state = 'scheduled' and ra.due_on <= current_date;
+revoke all on docs.retention_due from public, anon, authenticated;

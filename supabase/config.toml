@@ -101,6 +101,9 @@ verify_jwt = false
 [functions.integration-tick]
 verify_jwt = false
 
+[functions.access-saga-tick]
+verify_jwt = false
+
 # Manually invoked only. There is no scheduler entry, and the handler returns
 # 503 until its dedicated OPS_PROJECTOR_SECRET is explicitly provisioned.
 [functions.ops-projector]

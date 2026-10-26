@@ -29,6 +29,7 @@ def dispatch_upload_completion(db: Session, receipt_id: UUID, sender) -> bool:
             ),
         )
         .values(dispatch_status="dispatching", dispatch_claimed_at=now)
+        .execution_options(synchronize_session=False)
     ).rowcount
     db.commit()
     if not claimed:
@@ -49,6 +50,7 @@ def dispatch_upload_completion(db: Session, receipt_id: UUID, sender) -> bool:
                 UploadCompletion.dispatch_status == "dispatching",
             )
             .values(dispatch_status="pending", dispatch_claimed_at=None)
+            .execution_options(synchronize_session=False)
         )
         db.commit()
         raise
@@ -57,6 +59,7 @@ def dispatch_upload_completion(db: Session, receipt_id: UUID, sender) -> bool:
         update(UploadCompletion)
         .where(UploadCompletion.id == receipt_id)
         .values(dispatch_status="dispatched", dispatched_at=datetime.now(UTC))
+        .execution_options(synchronize_session=False)
     )
     db.commit()
     return True

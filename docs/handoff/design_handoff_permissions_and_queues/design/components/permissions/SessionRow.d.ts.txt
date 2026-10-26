@@ -1,0 +1,3 @@
+import * as React from 'react';
+export interface SessionRowProps { device: string; place?: string; lastActive?: string; method?: string; current?: boolean; onSignOut?: () => void; }
+export declare function SessionRow(props: SessionRowProps): JSX.Element;

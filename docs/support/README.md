@@ -38,6 +38,7 @@ For the person answering. Students can read them; they are not written for stude
 | [Macro library](internal/macro-library.md) | Send one of twelve replies that claim only what is backed |
 | [Escalation map](internal/escalation-map.md) | Send a case to the security, privacy, safety, accessibility, data or finance route |
 | [What a supporter may see](internal/supporter-access.md) | Know what data you can reach, and how a student opens a bounded window |
+| [Connected ecosystem integration evidence](../execute/31-connected-ecosystem-integration.md) | Distinguish the imported specification from implementation, deployment, authorization and activation evidence |
 
 ## Staffing today
 

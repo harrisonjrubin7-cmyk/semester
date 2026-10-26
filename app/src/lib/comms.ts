@@ -108,6 +108,8 @@ export interface HubPrefs {
   followUp: string[];
 }
 
+export const HUB_PREFS_PREFIX = 'semester.hub.v1';
+
 export const EMPTY_PREFS: HubPrefs = {
   muted: [],
   quietFrom: 22 * 60,
@@ -182,6 +184,23 @@ export function readHubPrefs(v: unknown): HubPrefs {
     read: ids(o.read),
     saved: ids(o.saved),
     followUp: ids(o.followUp),
+  };
+}
+
+/** Portable delivery choices without message ids that are only meaningful on this device. */
+export function withoutMessageMarkers(preferences: HubPrefs): HubPrefs {
+  return { ...preferences, read: [], saved: [], followUp: [] };
+}
+
+/** Restore portable choices while retaining this device's current message markers. */
+export function keepMessageMarkers(incoming: unknown, existing: unknown): HubPrefs {
+  const portable = readHubPrefs(incoming);
+  const current = readHubPrefs(existing);
+  return {
+    ...portable,
+    read: current.read,
+    saved: current.saved,
+    followUp: current.followUp,
   };
 }
 

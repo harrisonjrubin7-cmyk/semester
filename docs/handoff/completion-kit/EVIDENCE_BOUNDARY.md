@@ -1,0 +1,8 @@
+# Source and evidence boundary
+
+Screenshot: user attachment Completion register, 16 domains and 21 default-off flag snapshot; six maturity facts remain separate. Screenshot package counts are not a recovered list of named packages.
+Prior-turn GitHub reads: GO-NO-GO-DECISION.md (file SHA 905b60398daf68aec5da14b599db8fc058db0b12); PRODUCT_LIVE_STATUS.md (098c34718cb67d981e1e6d4786287764d3028581); COMPLETE_CAPABILITY_REGISTER.md (1e650b1d725fa5011c376b35492d14f89e2fed04). Assessment dates 2026-10-03/04, not fresh runtime proof.
+Current-turn GitHub reads: app/src/lib/flags.ts (d0fd98d5200501ee169433f572399b5c8444ce3b): 28 enumerated entries; all defaults off; evaluator response truncated so tail not reverified. ROLLBACK.md (e2a2ca3499c4abb75aa07e0ed669cb80f9aa332b): Pages/functions separate; DB rollback not automated; mixed historical statements; live settings must be inspected.
+Project design files: docs/native-platform/NATIVE_AUTHORITY_GATES.md and NATIVE_DOMAIN_CATALOG.md under The Main Semester design system (2) copy. These are design-stage artifacts, not deployment or approval evidence. Long-term authority gates include full terms/two-term evidence in some domains. Illustrative prices and targets are not commercially accepted commitments.
+No current Vercel/Supabase runtime audit performed. No real app tests or migrations run. No professional/customer approvals created. This kit has no credentials or customer/student records.
+Public verification: https://vercel.com/docs/instant-rollback ; https://vercel.com/docs/environment-variables ; https://supabase.com/docs/guides/platform/backups ; https://www.w3.org/WAI/test-evaluate/conformance/wcag-em/

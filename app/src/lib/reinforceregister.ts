@@ -396,7 +396,7 @@ export const P0: readonly Blocker[] = [
   { id: 'SEC-01', control: 'Security governance', owner: 'security', status: D, evidence: 'SECURITY.md', next: 'The security seat accepted.' },
   { id: 'SEC-02', control: 'Secure SDLC', owner: 'engineering', status: T, evidence: 'app/src/lib/branchprotection.test.ts', next: 'CI screenshots kept as evidence.' },
   { id: 'SEC-03', control: 'Secrets management', owner: 'engineering', status: T, evidence: 'app/src/lib/security.test.ts', next: 'A rotation runbook exercised.' },
-  { id: 'SEC-04', control: 'Authentication and admin MFA', owner: 'security', status: T, evidence: 'supabase/console-control-plane.check.sql', next: 'Fresh MFA is held for the operations console only; the claims register still says planned (IAM-005) for every other privileged role.' },
+  { id: 'SEC-04', control: 'Authentication and admin MFA', owner: 'security', status: T, evidence: 'supabase/privileged-mfa.check.sql', next: 'Extend the tested aal2 boundary beyond platform_admin and support_agent, add student/passkey enrolment and recovery coverage, and file production Auth and provider-console proof.' },
   { id: 'SEC-05', control: 'Authorisation and tenant isolation', owner: 'security', status: T, evidence: 'supabase/rls-coverage.check.sql', next: 'An external review.' },
   { id: 'SEC-06', control: 'SECURITY DEFINER review', owner: 'security', status: T, evidence: 'app/src/lib/definerregister.test.ts', next: 'Kept current as functions are added.' },
   { id: 'SEC-07', control: 'Database RLS', owner: 'security', status: T, evidence: 'supabase/rls-coverage.check.sql', next: 'A linter baseline kept.' },

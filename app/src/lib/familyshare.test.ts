@@ -6,11 +6,26 @@ import { describe, expect, it, vi } from 'vitest';
  */
 
 const mock = vi.hoisted(() => {
-  const is = vi.fn(() => Promise.resolve({ error: null }));
+  const update = vi.fn();
+  const is = vi.fn(() => {
+    const patch = update.mock.calls.at(-1)?.[0] as { revoked_at?: string } | undefined;
+    return Promise.resolve({ data: [{ id: 'grant-1', revoked_at: patch?.revoked_at }], error: null });
+  });
   const overlaps = vi.fn(() => ({ is }));
-  const removed = vi.fn(() => Promise.resolve({ error: null }));
-  const from = vi.fn((table: string) => (table === 'family_grants' ? { update: vi.fn(() => ({ overlaps })) } : { delete: () => ({ in: removed }) }));
-  return { rpc: vi.fn(), from, overlaps, is, removed };
+  const selectRevoked = vi.fn(() => ({ overlaps }));
+  const removed = vi.fn<() => Promise<{ data: { code: string; item_id: string }[] | null; error: { message: string } | null }>>(
+    () => Promise.resolve({ data: [{ code: 'CODE1234', item_id: 'a' }, { code: 'CODE1234', item_id: 'b' }], error: null }),
+  );
+  const selectRemoved = vi.fn(() => ({ in: removed }));
+  const from = vi.fn((table: string) =>
+    table === 'family_grants'
+      ? { update: (patch: unknown) => {
+          update(patch);
+          return { select: selectRevoked };
+        } }
+      : { delete: () => ({ select: selectRemoved }) },
+  );
+  return { rpc: vi.fn(), from, update, selectRevoked, overlaps, is, selectRemoved, removed };
 });
 vi.mock('./cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc, from: mock.from }) }));
 const { endedShares, groupShares, localMinute, makeShare, readSeen, readsOf, sharePayload, stopSharing } = await import('./familyshare');
@@ -80,16 +95,29 @@ describe("the student's side", () => {
     expect(localMinute('not a time')).toBe('not a time');
   });
 
-  it('stops by revoking every live grant naming the items, then removing the copies', async () => {
-    await stopSharing(['a', 'b']);
+  it('stops by requiring exact receipts for revoked grants and removed copies', async () => {
+    await expect(stopSharing(['a', 'b'])).resolves.toEqual({ revokedGrants: 1, removedCopies: 2 });
+    expect(mock.selectRevoked).toHaveBeenCalledWith('id, revoked_at');
     expect(mock.overlaps).toHaveBeenCalledWith('resource_ids', ['a', 'b']);
     expect(mock.is).toHaveBeenCalledWith('revoked_at', null);
+    expect(mock.selectRemoved).toHaveBeenCalledWith('code, item_id');
     expect(mock.removed).toHaveBeenCalledWith('item_id', ['a', 'b']);
+  });
+
+  it('does not delete copies without a verified grant-revocation receipt', async () => {
+    mock.is.mockResolvedValueOnce({ data: [], error: null });
+    await expect(stopSharing(['a'])).rejects.toMatchObject({ accessEnded: false });
+    expect(mock.selectRemoved).not.toHaveBeenCalled();
+  });
+
+  it('reports that access ended when stored-copy cleanup fails', async () => {
+    mock.removed.mockResolvedValueOnce({ data: null, error: { message: 'cleanup refused' } });
+    await expect(stopSharing(['a'])).rejects.toMatchObject({ accessEnded: true, message: expect.stringContaining('Access ended') });
   });
 
   it('does nothing at all for nothing', async () => {
     mock.from.mockClear();
-    await stopSharing([]);
+    await expect(stopSharing([])).resolves.toEqual({ revokedGrants: 0, removedCopies: 0 });
     expect(mock.from).not.toHaveBeenCalled();
   });
 });

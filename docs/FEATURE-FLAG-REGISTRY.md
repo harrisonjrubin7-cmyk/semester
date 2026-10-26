@@ -80,11 +80,11 @@ Rollout plans and success criteria for each are in `flags.ts` beside the key.
 
 ### Grade passback and this flag
 
-`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for any
+`writeback.lms_grade_passback` governs the existing Brightspace score passback (`functions/lti`, `/score`) for an
 LTI registration **bound to a school**, through `public.lti_passback_decision`, which the SQL suite
-`lti-integration.check.sql` walks gate by gate. A registration not yet bound keeps the pre-existing behaviour
-(instructor-gated), stopped only by the global `kill.writeback` / `kill.integration_sync`. See the migration
-plan, D-1, for why and for the binding steps.
+`lti-integration.check.sql` walks gate by gate. A registration not yet bound is refused as
+`registration-unbound`; global kill switches still take precedence. See the migration plan, D-1, for the
+remaining binding and approval steps.
 
 ## Kill switches
 
@@ -246,8 +246,8 @@ feature; none of them stops a student's semester going up.
 
 - **Owner:** the `engineering` seat (`docs/LAUNCH-READINESS-COUNCIL.md`).
 - **Type:** ops, build-time on the app, environment on the gateway. Default off. Not a tenant flag: it is for every school at once, which is what a restore is.
-- **Engage (app):** set `VITE_READ_ONLY=true` in the deploy's environment and run `pages.yml`; the deploy is the switch, measured under five minutes in `ROLLBACK.md`. **Engage (gateway):** set `SEMESTER_READ_ONLY=on` on the process; it is read per request.
+- **Engage (app):** set `VITE_READ_ONLY=true` in the deploy's environment and run `pages.yml`; the deploy is the switch, measured under five minutes in `ROLLBACK.md`. **Engage (gateway):** set `SEMESTER_READ_ONLY=on`; both entry points re-read their runtime environment object per request. A hosted Vercel environment change can still require a redeploy or process restart before the new value reaches that object.
 - **Confirm:** the banner is on the live page, and `curl …/health` answers `"readOnly": true`.
-- **Rollback:** unset the variable (or any value but the exact word) and deploy again; restart nothing on the gateway. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
+- **Rollback:** unset the variable (or use any value but the exact word) and deploy the app again. For the gateway, propagate the changed environment to the running process; a hosted Vercel runtime may require a redeploy or restart. Once the runtime environment changes, the next request observes it without an additional in-process cache delay. Every edit made in the window is on the device, marked unpushed, and the first build without the flag pushes it by the same path a reconnect takes — nothing is lost and nothing has to be replayed by hand.
 - **Not yet done:** it has never been engaged against production. `docs/GO-NO-GO-CHECKLIST.md` (`flags-rollback`) keeps that line open.
 - **Tests:** `app/src/lib/readonly.test.ts`, `cloud.test.ts` ("push under read-only mode"), `app/src/state/readonly.test.tsx`, `app/src/components/ReadOnlyBanner.test.tsx`, `app/server/institution/gateway.test.ts` ("read-only mode").

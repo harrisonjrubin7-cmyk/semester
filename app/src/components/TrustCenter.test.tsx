@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadSeed } from '../data/seed';
 import type { ShareRow } from '../lib/advisor-shares';
+import * as erase from '../lib/erase';
 import { STORAGE_KEY } from '../state/shape';
 import { StoreProvider, useStore } from '../state/store';
 
@@ -23,12 +24,14 @@ import { StoreProvider, useStore } from '../state/store';
 const future = new Date(Date.now() + 20 * 86_400_000).toISOString();
 let shares: ShareRow[] = [];
 const revoked: string[] = [];
+let revokeFailure: Error | null = null;
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
   return {
     ...real,
     myShares: vi.fn(async () => ({ shares, events: [] })),
     revokeShare: vi.fn(async (id: string) => {
+      if (revokeFailure) throw revokeFailure;
       revoked.push(id);
       shares = shares.map((s) => (s.id === id ? { ...s, revoked_at: new Date().toISOString() } : s));
     }),
@@ -80,6 +83,7 @@ beforeEach(() => {
     { id: 's2', title: 'Old agenda', created_at: '2026-01-01T00:00:00Z', expires_at: '2026-02-01T00:00:00Z', revoked_at: null },
   ];
   revoked.length = 0;
+  revokeFailure = null;
   seen = null;
   host = document.createElement('div');
   host.className = 'device';
@@ -135,6 +139,37 @@ describe('with trust_center off', () => {
     await act(async () => button(/^Trust & data/).click());
     expect(seen!.screen).toBe('privacy');
   });
+
+  it('keeps the device-erase screen open with recovery guidance when erasure is incomplete', async () => {
+    const reload = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, 'location', { value: { ...original, reload }, configurable: true, writable: true });
+    const eraseSpy = vi.spyOn(erase, 'eraseDevice').mockRejectedValueOnce(new Error('storage refused'));
+    try {
+      await render(<Privacy trustCenter={false} />);
+      const eraseButtons = [...host.querySelectorAll('button')].filter((candidate) => candidate.textContent?.trim() === 'Erase from this device');
+      expect(eraseButtons).toHaveLength(2);
+      await act(async () => eraseButtons[1].click());
+      await settle(() => document.querySelector('[role="dialog"]') !== null);
+      const confirm = document.querySelector('[role="dialog"]')!;
+      const input = confirm.querySelector('input')!;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'ERASE');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await act(async () => button(/^Erase it$/, confirm).click());
+      await settle(() => host.querySelector('[role="alert"]') !== null);
+      expect(eraseSpy).toHaveBeenCalledTimes(1);
+      expect(reload).not.toHaveBeenCalled();
+      expect(host.querySelector('[role="alert"]')?.textContent).toContain('The browser did not erase everything');
+      expect(text()).toContain('Close other Semester tabs, then try again.');
+      const retry = [...host.querySelectorAll<HTMLButtonElement>('button')].filter((candidate) => candidate.textContent?.trim() === 'Erase from this device').at(-1)!;
+      expect(retry.disabled).toBe(false);
+    } finally {
+      eraseSpy.mockRestore();
+      Object.defineProperty(window, 'location', { value: original, configurable: true, writable: true });
+    }
+  });
 });
 
 describe('with trust_center on', () => {
@@ -147,7 +182,7 @@ describe('with trust_center on', () => {
     expect(text(section('Shares and access'))).toContain('Nothing is shared: this device is not signed in.');
   });
 
-  it('revokes a live share only after saying what happens, and shows it gone', async () => {
+  it('keeps a refused live-share revocation open, then shows a confirmed retry', async () => {
     await render(<TrustCenter accountId="u1" />);
     await settle(() => text().includes('Spring planning'));
     const shares = section('Shares and access');
@@ -155,8 +190,16 @@ describe('with trust_center on', () => {
     expect(text(shares)).toContain('1 earlier share has expired or been revoked.');
     await act(async () => button(/^Revoke…$/, shares).click());
     expect(revoked).toEqual([]);
-    expect(text(dialog()!)).toContain('Your advisor will no longer be able to open it.');
+    expect(text(dialog()!)).toContain('Your advisor loses access to this shared meeting immediately.');
+    expect(text(dialog()!)).toContain('The share and its access log stay in your account');
+    expect(text(dialog()!)).toContain('This can’t be undone. You can make a new share later.');
     expect(document.activeElement?.textContent).toBe('Cancel');
+    revokeFailure = new Error('The share was not revoked. Refresh your shares, then try again.');
+    await act(async () => button(/^Revoke$/, dialog()!).click());
+    expect(revoked).toEqual([]);
+    expect(text(dialog()!)).toContain('The share was not revoked. Refresh your shares, then try again.');
+
+    revokeFailure = null;
     await act(async () => button(/^Revoke$/, dialog()!).click());
     await settle(() => text().includes('No advisor can open'));
     expect(revoked).toEqual(['s1']);
@@ -169,6 +212,12 @@ describe('with trust_center on', () => {
     expect(text(remembered)).toContain('“I work twenty hours a week”');
     await act(async () => button(/^Forget…$/, remembered).click());
     expect(seen!.aboutMe.map((f) => f.id)).toEqual(['f1', 'f2']);
+    const preview = dialog()!.querySelector('.action-preview');
+    expect(preview).not.toBeNull();
+    expect(text(preview!)).toContain('Semester stops using this line straight away on this device and, once it syncs, on your account.');
+    expect(text(preview!)).toContain('Your other remembered lines, conversations, notes and plans stay unchanged.');
+    expect(text(preview!)).toContain('This can’t be undone. You can add the line again if you still know it.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     await act(async () => button(/^Forget$/, dialog()!).click());
     expect(seen!.aboutMe.map((f) => f.id)).toEqual(['f2']);
   });

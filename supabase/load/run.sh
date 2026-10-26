@@ -11,6 +11,8 @@
 set +e +o pipefail
 
 here_load=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=supabase/load/diagnostics.sh
+source "$here_load/diagnostics.sh"
 students=${LOAD_STUDENTS:-2000}
 clients=${LOAD_CLIENTS:-16}
 seconds=${LOAD_SECONDS:-20}
@@ -170,6 +172,7 @@ soak_window() {
   echo "· soak window $window of $total_windows"
   run_pass
   run_invariants
+  load_diagnostics_capture "$window"
   now=$(clients)
   if [ "${now:-0}" -gt $((baseline + 2)) ]; then
     echo "  ✗ connections: $now open after window $window against $baseline before the first"
@@ -180,6 +183,7 @@ soak_window() {
 if [ "$soak" -gt 0 ]; then
   echo "· soak: $soak windows of ${seconds}s"
   baseline=$(clients)
+  load_diagnostics_start
   total_windows=$soak
   for window in $(seq 1 "$soak"); do soak_window; done
   echo "· soak: did anything get slower the longer it ran"

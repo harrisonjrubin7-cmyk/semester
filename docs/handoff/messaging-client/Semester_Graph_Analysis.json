@@ -1,0 +1,295 @@
+{
+  "modules": 31,
+  "edges": 142,
+  "strongly_connected_components": [
+    [
+      "audit",
+      "graph",
+      "identity",
+      "policy"
+    ]
+  ],
+  "meaning": "Computed from prior proposed graph, not measured runtime dependencies",
+  "score_formula": "4*(2*C+2*X+min(5,1+floor(direct_dependents/4)))",
+  "scorecard": [
+    {
+      "module": "policy",
+      "structural_risk_100": 100,
+      "dependency_count": 3,
+      "direct_dependents": 26,
+      "transitive_dependents": 30,
+      "cycle_component_size": 4,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "identity",
+      "structural_risk_100": 92,
+      "dependency_count": 2,
+      "direct_dependents": 25,
+      "transitive_dependents": 30,
+      "cycle_component_size": 4,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "workflow",
+      "structural_risk_100": 92,
+      "dependency_count": 5,
+      "direct_dependents": 16,
+      "transitive_dependents": 18,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "integrations",
+      "structural_risk_100": 92,
+      "dependency_count": 5,
+      "direct_dependents": 8,
+      "transitive_dependents": 17,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "finance",
+      "structural_risk_100": 88,
+      "dependency_count": 6,
+      "direct_dependents": 6,
+      "transitive_dependents": 6,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "registrar",
+      "structural_risk_100": 88,
+      "dependency_count": 6,
+      "direct_dependents": 4,
+      "transitive_dependents": 6,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "audit",
+      "structural_risk_100": 84,
+      "dependency_count": 1,
+      "direct_dependents": 17,
+      "transitive_dependents": 30,
+      "cycle_component_size": 4,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "events",
+      "structural_risk_100": 84,
+      "dependency_count": 3,
+      "direct_dependents": 11,
+      "transitive_dependents": 26,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "graph",
+      "structural_risk_100": 84,
+      "dependency_count": 2,
+      "direct_dependents": 8,
+      "transitive_dependents": 30,
+      "cycle_component_size": 4,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "learning",
+      "structural_risk_100": 84,
+      "dependency_count": 5,
+      "direct_dependents": 2,
+      "transitive_dependents": 2,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "migration",
+      "structural_risk_100": 84,
+      "dependency_count": 4,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "erp",
+      "structural_risk_100": 84,
+      "dependency_count": 6,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "intelligence",
+      "structural_risk_100": 84,
+      "dependency_count": 6,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "control",
+      "structural_risk_100": 76,
+      "dependency_count": 5,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "developer",
+      "structural_risk_100": 76,
+      "dependency_count": 5,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "mail",
+      "structural_risk_100": 76,
+      "dependency_count": 5,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "reliability",
+      "structural_risk_100": 76,
+      "dependency_count": 4,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "files",
+      "structural_risk_100": 72,
+      "dependency_count": 4,
+      "direct_dependents": 7,
+      "transitive_dependents": 9,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "communication",
+      "structural_risk_100": 72,
+      "dependency_count": 4,
+      "direct_dependents": 6,
+      "transitive_dependents": 8,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "search",
+      "structural_risk_100": 68,
+      "dependency_count": 4,
+      "direct_dependents": 2,
+      "transitive_dependents": 2,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "warehouse",
+      "structural_risk_100": 68,
+      "dependency_count": 4,
+      "direct_dependents": 2,
+      "transitive_dependents": 2,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "success",
+      "structural_risk_100": 68,
+      "dependency_count": 5,
+      "direct_dependents": 1,
+      "transitive_dependents": 1,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "admissions",
+      "structural_risk_100": 68,
+      "dependency_count": 6,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "student",
+      "structural_risk_100": 68,
+      "dependency_count": 7,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "services",
+      "structural_risk_100": 68,
+      "dependency_count": 5,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "partners",
+      "structural_risk_100": 68,
+      "dependency_count": 5,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "company",
+      "structural_risk_100": 68,
+      "dependency_count": 6,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "campus",
+      "structural_risk_100": 60,
+      "dependency_count": 5,
+      "direct_dependents": 1,
+      "transitive_dependents": 1,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "family",
+      "structural_risk_100": 60,
+      "dependency_count": 4,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "executive",
+      "structural_risk_100": 60,
+      "dependency_count": 4,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    },
+    {
+      "module": "career",
+      "structural_risk_100": 52,
+      "dependency_count": 6,
+      "direct_dependents": 0,
+      "transitive_dependents": 0,
+      "cycle_component_size": 1,
+      "status": "architecture only; runtime unverified"
+    }
+  ]
+}

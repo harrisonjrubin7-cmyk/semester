@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { atPage, isPdf, search, settled, TRASH_DAYS, type FileMeta, type Settled } from './files';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { atPage, isPdf, purgeTrash, search, settled, sweepTrash, TRASH_DAYS, type FileMeta, type Settled } from './files';
 
 const meta = (over: Partial<FileMeta> = {}): FileMeta => ({
   id: 'f1',
@@ -85,7 +85,102 @@ describe('the bin', () => {
   it('holds things for a month before anything sweeps them', () => {
     expect(TRASH_DAYS).toBe(30);
   });
+
+  it('purges only previewed records that are still in the bin', async () => {
+    const rows = fakeIndexedDB({
+      previewed: stored('previewed', 1),
+      restored: stored('restored', null),
+      later: stored('later', 2),
+    });
+
+    expect(await purgeTrash(['previewed', 'restored', 'missing', 'previewed'])).toBe(1);
+    expect(Object.keys(rows).sort()).toEqual(['later', 'restored']);
+  });
+
+  it('automatically removes only files whose full retention window has elapsed', async () => {
+    const day = 86_400_000;
+    const now = 100 * day;
+    const rows = fakeIndexedDB({
+      expired: stored('expired', now - TRASH_DAYS * day),
+      stillHeld: stored('stillHeld', now - TRASH_DAYS * day + 1),
+      restored: stored('restored', null),
+    });
+
+    expect(await sweepTrash(now)).toBe(1);
+    expect(Object.keys(rows).sort()).toEqual(['restored', 'stillHeld']);
+  });
+
+  it('reports a storage failure instead of claiming that zero files expired', async () => {
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        throw new Error('storage refused');
+      },
+    });
+
+    await expect(sweepTrash()).rejects.toThrow('storage refused');
+  });
 });
+
+afterEach(() => vi.unstubAllGlobals());
+
+const stored = (id: string, trashedAt: number | null) => ({
+  ...meta({ id }),
+  folderId: null,
+  starred: false,
+  trashedAt,
+  openedAt: null,
+  itemId: null,
+  blob: new Blob(['file']),
+});
+
+function fakeIndexedDB(rows: Record<string, ReturnType<typeof stored>>) {
+  const open = () => {
+    const request: Record<string, unknown> = {};
+    setTimeout(() => {
+      request.result = {
+        close: () => undefined,
+        transaction: () => {
+          const queue: Array<() => void> = [];
+          let complete: (() => void) | undefined;
+          const issue = <T,>(read: () => T) => {
+            const pending: Record<string, unknown> = {};
+            queue.push(() => {
+              pending.result = read();
+              (pending.onsuccess as (() => void) | undefined)?.();
+            });
+            return pending as unknown as IDBRequest<T>;
+          };
+          const store = {
+            getAll: () => issue(() => Object.values(rows)),
+            get: (id: string) => issue(() => rows[id]),
+            delete: (id: string) => issue(() => {
+              delete rows[id];
+              return undefined;
+            }),
+          };
+          const transaction = {
+            objectStore: () => store as unknown as IDBObjectStore,
+            set oncomplete(next: () => void) {
+              complete = next;
+              setTimeout(() => {
+                while (queue.length > 0) queue.shift()!();
+                complete?.();
+              }, 0);
+            },
+            onerror: null,
+            onabort: null,
+            error: null,
+          };
+          return transaction;
+        },
+      };
+      (request.onsuccess as (() => void) | undefined)?.();
+    }, 0);
+    return request;
+  };
+  vi.stubGlobal('indexedDB', { open });
+  return rows;
+}
 
 /**
  * Opening a stored document at a page.

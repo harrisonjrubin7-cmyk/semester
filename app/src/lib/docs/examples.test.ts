@@ -92,6 +92,7 @@ function world(options: WorldOptions = {}) {
     authenticate: async (token) => TOKENS[token] ?? null,
     adapters: [adapter],
     journal,
+    idempotency: journal,
     ...(options.rateLimiter ? { rateLimiter: options.rateLimiter } : {}),
     ...(options.readOnly ? { readOnly: options.readOnly } : {}),
   });
@@ -759,6 +760,9 @@ describe('examples/event-consumer', () => {
       'app/src/lib/integration/lmsmatrix.ts',
       'app/server/productivity/memory.ts',
       'app/server/productivity/service.ts',
+      // The assignment-submission command builds submission.finalized and grade.posted into the outbox in the same
+      // step as its record. No route or worker imports it yet: it is library code, exercised by its own tests.
+      'packages/institution/src/assignment-submission.ts',
       'packages/platform/src/events/emit.ts',
       'packages/platform/src/seam/institution.ts',
       'packages/platform/src/testing/memory.ts',
@@ -774,6 +778,10 @@ describe('examples/event-consumer', () => {
       'app/server/institution/adapter.ts',
       'app/server/institution/context.ts',
       'app/server/institution/gateway.ts',
+      'app/server/institution/journal.ts',
+      'app/server/institution/membership.ts',
+      'app/server/institution/registration-readiness-commands.ts',
+      'app/server/institution/readiness-repository.ts',
       'app/server/course-sources/contract.ts',
       'app/server/institution/intelligence-repository.ts',
       'app/server/institution/intelligence.ts',
@@ -797,12 +805,17 @@ describe('examples/event-consumer', () => {
     // consumer-transition code, and rolled-back checks. SQL-native producers
     // call the helper and therefore do not appear in this direct-insert scan.
     expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
+      // Plants a malformed grades_released row and an unrelated projection.changed beside the real releases, inside its
+      // rolled-back relay check, to prove the relay dead-letters the one and never claims the other; a check, not a producer.
+      'supabase/event-relay.check.sql',
       'supabase/migrations/20261004123000_productivity_commands.sql',
       'supabase/migrations/20261004180000_productivity_reads.sql',
       // Defines the same commit function again, with the app's task fields; the later definition is the one that applies.
       'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
       // The helper a SQL producer will call (P1-02), not a producer: nothing calls it yet. Its check calls the helper, so it is not listed.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Plants synthetic outbox rows inside its rolled-back dashboard check to count pending, dead-lettered and failed events; it is a check, not a producer.
+      'supabase/ops-projection-dashboard.check.sql',
       // Rolled-back checks for selective dispatch.
       'supabase/ops-projector-worker.check.sql',
       'supabase/outbox.check.sql',

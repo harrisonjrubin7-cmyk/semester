@@ -1,0 +1,2 @@
+# Worktrees are scratch. The records of a run (state/*.json, audit.jsonl, patches) are the evidence and are committed.
+**/state/workspaces/

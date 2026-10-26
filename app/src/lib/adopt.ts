@@ -165,16 +165,62 @@ export function backupName(at: number): string {
  * row and a student who has only ever changed the accent should still be told
  * their device is empty.
  */
-export function countRows(state: unknown): { rows: number; courses: number } {
+function sameStored(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((value, index) => sameStored(value, b[index]))
+    );
+  }
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  const left = Object.keys(a as Record<string, unknown>);
+  const right = Object.keys(b as Record<string, unknown>);
+  return (
+    left.length === right.length &&
+    left.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(b, key) &&
+        sameStored(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key],
+        ),
+    )
+  );
+}
+
+export function countRows(
+  state: unknown,
+  baseline?: unknown,
+): { rows: number; courses: number } {
   if (!state || typeof state !== 'object') return { rows: 0, courses: 0 };
+  const base =
+    baseline && typeof baseline === 'object'
+      ? (baseline as Record<string, unknown>)
+      : undefined;
   let rows = 0;
   let courses = 0;
   for (const [key, value] of Object.entries(state as Record<string, unknown>)) {
+    if (base && sameStored(value, base[key])) continue;
     if (Array.isArray(value)) {
       rows += value.length;
       if (key === 'courses') courses = value.length;
     } else if (value && typeof value === 'object') {
-      rows += Object.keys(value).length;
+      const valueRecord = value as Record<string, unknown>;
+      const baseValue = base?.[key];
+      rows +=
+        baseValue && typeof baseValue === 'object' && !Array.isArray(baseValue)
+          ? Object.keys(valueRecord).filter(
+              (entry) =>
+                !Object.prototype.hasOwnProperty.call(baseValue, entry) ||
+                !sameStored(
+                  valueRecord[entry],
+                  (baseValue as Record<string, unknown>)[entry],
+                ),
+            ).length
+          : Object.keys(valueRecord).length;
     }
   }
   return { rows, courses };

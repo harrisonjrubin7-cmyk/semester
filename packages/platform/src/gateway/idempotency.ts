@@ -42,15 +42,15 @@ export interface IdempotencyScope {
 }
 
 export type BeginOutcome =
-  | { kind: 'started' }
+  | { kind: 'started'; leaseId: string }
   | { kind: 'replay'; response: StoredResponse }
   | { kind: 'conflict' }
   | { kind: 'in_progress'; retryAfterSeconds: number };
 
 export interface IdempotencyStore {
   begin(scope: IdempotencyScope, requestHash: string, now: Date, leaseMs: number, ttlMs: number): Promise<BeginOutcome>;
-  complete(scope: IdempotencyScope, response: StoredResponse, now: Date): Promise<void>;
-  release(scope: IdempotencyScope): Promise<void>;
+  complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean>;
+  release(scope: IdempotencyScope, leaseId: string): Promise<boolean>;
 }
 
 export const IDEMPOTENCY_LEASE_MS = 60_000;
@@ -60,6 +60,7 @@ export const IDEMPOTENCY_TTL_EXTENDED_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface Row {
   requestHash: string;
+  leaseId: string;
   state: 'in_progress' | 'completed';
   response?: StoredResponse;
   leaseUntil: number;
@@ -70,6 +71,7 @@ const idOf = (s: IdempotencyScope): string => JSON.stringify([s.tenantId, s.acto
 
 export class MemoryIdempotencyStore implements IdempotencyStore {
   private readonly rows = new Map<string, Row>();
+  private nextLease = 0;
 
   async begin(scope: IdempotencyScope, requestHash: string, now: Date, leaseMs: number, ttlMs: number): Promise<BeginOutcome> {
     const id = idOf(scope);
@@ -81,18 +83,23 @@ export class MemoryIdempotencyStore implements IdempotencyStore {
       if (row.leaseUntil > t) return { kind: 'in_progress', retryAfterSeconds: Math.ceil((row.leaseUntil - t) / 1000) };
       // Lease lapsed: the first worker is presumed dead. Take over.
     }
-    this.rows.set(id, { requestHash, state: 'in_progress', leaseUntil: t + leaseMs, expiresAt: t + ttlMs });
-    return { kind: 'started' };
+    const leaseId = `memory-lease-${++this.nextLease}`;
+    this.rows.set(id, { requestHash, leaseId, state: 'in_progress', leaseUntil: t + leaseMs, expiresAt: t + ttlMs });
+    return { kind: 'started', leaseId };
   }
 
-  async complete(scope: IdempotencyScope, response: StoredResponse, now: Date): Promise<void> {
+  async complete(scope: IdempotencyScope, leaseId: string, response: StoredResponse, now: Date): Promise<boolean> {
     const row = this.rows.get(idOf(scope));
-    if (!row) return;
+    if (!row || row.leaseId !== leaseId) return false;
     this.rows.set(idOf(scope), { ...row, state: 'completed', response, leaseUntil: now.getTime() });
+    return true;
   }
 
-  async release(scope: IdempotencyScope): Promise<void> {
-    this.rows.delete(idOf(scope));
+  async release(scope: IdempotencyScope, leaseId: string): Promise<boolean> {
+    const id = idOf(scope);
+    if (this.rows.get(id)?.leaseId !== leaseId) return false;
+    this.rows.delete(id);
+    return true;
   }
 }
 
@@ -141,16 +148,20 @@ export async function withIdempotency<T>(
     return { value: stored.body as T, replayed: true };
   }
 
+  let value: T;
   try {
-    const value = await fn();
-    await store.complete(scope, { status: 200, body: value }, deps.clock.now());
-    return { value, replayed: false };
+    value = await fn();
   } catch (e) {
     if (isPlatformError(e) && isDeterministicRefusal(e)) {
-      await store.complete(scope, { status: e.status, body: { code: e.code, message: e.message } }, deps.clock.now());
+      const owned = await store.complete(scope, begun.leaseId, { status: e.status, body: { code: e.code, message: e.message } }, deps.clock.now());
+      if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
     } else {
-      await store.release(scope);
+      const owned = await store.release(scope, begun.leaseId);
+      if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
     }
     throw e;
   }
+  const owned = await store.complete(scope, begun.leaseId, { status: 200, body: value }, deps.clock.now());
+  if (!owned) throw new PlatformError('idempotency_in_progress', 'This request lost its idempotency lease. Retry with the same key.');
+  return { value, replayed: false };
 }

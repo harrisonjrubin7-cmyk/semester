@@ -16,8 +16,7 @@
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { COMPONENTS, emptyHistory, probeAll, record, summarise } from './status-history.mjs';
-
-const DEFAULT_APP = 'https://harrisonjrubin7-cmyk.github.io/semester';
+import { resolveProductionTarget } from './production-target.mjs';
 
 async function committed() {
   const values = {};
@@ -40,8 +39,15 @@ if (!path) {
 }
 
 const env = await committed();
+const target = resolveProductionTarget(
+  process.env.SEMESTER_PUBLIC_APP_TARGET,
+  process.env.SEMESTER_PUBLIC_APP_URL,
+);
+const isAvailabilityMonitor = target.evidence === 'availability-monitor';
+const isNotReleaseProof = target.provesRelease === false;
+if (!isAvailabilityMonitor || !isNotReleaseProof) throw new Error('Invalid production-monitor evidence contract.');
 const config = {
-  app: (process.env.SEMESTER_PUBLIC_APP_URL || DEFAULT_APP).replace(/\/$/, ''),
+  app: target.app,
   supabase: (process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL || '').replace(/\/$/, ''),
   key: process.env.VITE_SUPABASE_KEY || env.VITE_SUPABASE_KEY || '',
 };
@@ -67,3 +73,4 @@ for (const c of COMPONENTS) {
   const s = summary[c.id];
   console.log(`${results[c.id] ? '  ok  ' : '  DOWN'} ${c.name}${s.percent === null ? '' : ` (${s.percent}% of ${s.total} checks over ${s.daysWithData} days)`}`);
 }
+console.log(`Recorded ${target.label}. Recorder success confirms persistence, not service health.`);

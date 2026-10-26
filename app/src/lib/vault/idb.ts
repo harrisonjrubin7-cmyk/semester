@@ -23,10 +23,11 @@ export function idbStorage(): VaultStorage {
 }
 
 /** Empty the whole database: every vault on this device, every key. For Erase device. */
-export async function eraseVaults(): Promise<void> {
+export async function eraseVaults(): Promise<boolean> {
   try {
     await store(VAULT_DB, STORE).tx('readwrite', (o) => o.clear());
+    return true;
   } catch {
-    // Never opened, so nothing was ever kept.
+    return false;
   }
 }

@@ -1,0 +1,16 @@
+{
+  "key": "control.operator-policy",
+  "name": "Semester Operator policy, approval and kill-switch enforcement",
+  "owner": "platform-engineering",
+  "status": "implemented",
+  "classification": "preventive",
+  "test": "operator/tests/controls.test.ts",
+  "evidence": [
+    "operator/src/control/policy.ts",
+    "operator/src/control/approvals.ts",
+    "operator/src/control/audit.ts",
+    "operator/policy/policy.json",
+    "operator/tests/controls.test.ts",
+    "operator/tests/runtime.test.ts"
+  ]
+}

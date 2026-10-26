@@ -1,0 +1,79 @@
+// Semester Slack app (Bolt for JavaScript). Slack is a notification + decision surface only; Semester remains the system of record.
+// Rules enforced here: no restricted data in messages, every button re-checks policy in Semester at execution, idempotent actions, private (ephemeral/DM) answers.
+import bolt from '@slack/bolt';
+import crypto from 'node:crypto';
+const { App, ExpressReceiver } = bolt;
+
+const receiver = new ExpressReceiver({ signingSecret: process.env.SLACK_SIGNING_SECRET, endpoints: '/slack/events' });
+const app = new App({ token: process.env.SLACK_BOT_TOKEN, receiver });
+const SEM = process.env.SEMESTER_API; // e.g. https://api.semester.example/v1
+const SEM_TOKEN = process.env.SEMESTER_SERVICE_TOKEN; // service identity scoped to tenant + slack.* capabilities
+
+async function sem(path, { method = 'GET', body, actor, idem } = {}) {
+  const r = await fetch(SEM + path, { method, headers: { authorization: 'Bearer ' + SEM_TOKEN, 'content-type': 'application/json', ...(actor ? { 'x-semester-actor': actor } : {}), ...(idem ? { 'idempotency-key': idem } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.reason || r.statusText); e.code = j.code || r.status; throw e; }
+  return j;
+}
+// Map a Slack user to a Semester principal. Only verified, linked accounts act; email match alone never grants access.
+async function principal(client, slackUser, teamId) {
+  const link = await sem(`/slack/links/${teamId}/${slackUser}`).catch(() => null);
+  return link && link.status === 'active' ? link.principal_id : null;
+}
+const linkPrompt = (url) => ({ text: 'Link your Semester account first.', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Link your Semester account to use this. Semester asks you to sign in with your school account.' } }, { type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Link account' }, url }] }] });
+
+// 1. Slash command: private lookups only
+app.command('/semester', async ({ command, ack, respond, client }) => {
+  await ack();
+  const who = await principal(client, command.user_id, command.team_id);
+  const [sub = 'help'] = command.text.trim().split(/\s+/);
+  if (!who) return respond({ response_type: 'ephemeral', ...linkPrompt(`${SEM}/slack/link/start?team=${command.team_id}&user=${command.user_id}`) });
+  try {
+    if (sub === 'due') { const d = await sem('/me/today?limit=5', { actor: who }); return respond({ response_type: 'ephemeral', blocks: [{ type: 'header', text: { type: 'plain_text', text: 'Due next' } }, ...d.items.map((i) => ({ type: 'section', text: { type: 'mrkdwn', text: `*${i.title}* · ${i.course}\nDue ${i.due_at_local} · _${i.source} · checked ${i.checked_ago}_` } })), { type: 'context', elements: [{ type: 'mrkdwn', text: 'Only you can see this. Official dates come from your course; open Semester for details.' }] }] }); }
+    if (sub === 'holds') { const h = await sem('/me/holds', { actor: who }); return respond({ response_type: 'ephemeral', text: h.count ? `You have ${h.count} hold(s) that affect registration. Open Semester to see what to do.` : 'No holds right now.', blocks: [{ type: 'section', text: { type: 'mrkdwn', text: h.count ? `You have *${h.count}* hold(s) that affect registration.` : 'No holds right now.' } }, { type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Open in Semester' }, url: h.url }] }] }); }
+    if (sub === 'requests') { const q = await sem('/me/requests?open=true', { actor: who }); return respond({ response_type: 'ephemeral', text: q.items.map((x) => `${x.ref} · ${x.kind} · ${x.status}`).join('\n') || 'No open requests.' }); }
+    return respond({ response_type: 'ephemeral', text: 'Try `/semester due`, `/semester holds`, `/semester requests`. Grades, aid and records are never shown in Slack — open Semester for those.' });
+  } catch (e) { return respond({ response_type: 'ephemeral', text: e.code === 'forbidden' ? 'You don’t have access to that.' : 'Semester is unavailable right now. Nothing was changed.' }); }
+});
+
+// 2. Approvals: button click re-checks everything in Semester at execution time
+app.action(/^approval_(approve|deny)$/, async ({ ack, body, action, client }) => {
+  await ack();
+  const who = await principal(client, body.user.id, body.team.id);
+  const { request_id, version } = JSON.parse(action.value);
+  const decision = action.action_id.endsWith('approve') ? 'approve' : 'deny';
+  if (!who) return client.chat.postEphemeral({ channel: body.channel.id, user: body.user.id, ...linkPrompt(`${SEM}/slack/link/start`) });
+  try {
+    const r = await sem(`/approvals/${request_id}/decide`, { method: 'POST', actor: who, idem: `slack:${request_id}:${body.user.id}:${decision}`, body: { decision, version, via: 'slack' } });
+    await client.chat.update({ channel: body.channel.id, ts: body.message.ts, text: `${decision === 'approve' ? 'Approved' : 'Denied'} · ${r.receipt}`, blocks: [{ type: 'section', text: { type: 'mrkdwn', text: `*${r.title}*\n${decision === 'approve' ? '✅ Approved' : '⛔ Denied'} by <@${body.user.id}> · receipt \`${r.receipt}\`` } }, { type: 'context', elements: [{ type: 'mrkdwn', text: r.effect_note || 'Recorded in Semester.' }] }] });
+  } catch (e) {
+    const why = { self_approval: 'You requested this, so someone else has to approve it.', stale_version: 'The request changed after this message was sent. Review the new version in Semester.', expired: 'This request expired.', forbidden: 'You’re not an approver for this.', already_decided: 'Someone already decided this.' }[e.code] || 'Couldn’t record that. Nothing was changed.';
+    await client.chat.postEphemeral({ channel: body.channel.id, user: body.user.id, text: why });
+  }
+});
+
+// 3. Outbound: Semester outbox → signed webhook → Slack. Payloads carry IDs and reason codes, never record content.
+receiver.router.post('/semester/outbox', bolt.express ? bolt.express.json() : (req, res, next) => next(), async (req, res) => {
+  const sig = req.get('x-semester-signature'); const raw = JSON.stringify(req.body);
+  const ok = sig && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(crypto.createHmac('sha256', process.env.SEMESTER_WEBHOOK_SECRET).update(raw).digest('hex')));
+  if (!ok) return res.status(401).end();
+  const ev = req.body; // { id, type, tenant_id, slack: { channel | user }, render: {...} }
+  const seen = await sem(`/slack/outbox/${ev.id}/claim`, { method: 'POST' }).catch(() => ({ claimed: false }));
+  if (!seen.claimed) return res.status(200).json({ duplicate: true });
+  const to = ev.slack.user ? (await app.client.conversations.open({ users: ev.slack.user })).channel.id : ev.slack.channel;
+  const R = ev.render;
+  const blocks = {
+    'deadline.changed': [{ type: 'section', text: { type: 'mrkdwn', text: `*${R.title}* moved to *${R.new_due}* (was ${R.old_due})\n_${R.source} · changed ${R.changed_ago}_` } }, { type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Open in Semester' }, url: R.url }, { type: 'button', text: { type: 'plain_text', text: 'Mute this course' }, action_id: 'mute_course', value: R.course_id }] }],
+    'approval.requested': [{ type: 'section', text: { type: 'mrkdwn', text: `*${R.title}*\nRequested by ${R.requester} · ${R.summary}` } }, { type: 'actions', elements: [{ type: 'button', style: 'primary', text: { type: 'plain_text', text: 'Approve' }, action_id: 'approval_approve', value: JSON.stringify({ request_id: R.request_id, version: R.version }) }, { type: 'button', style: 'danger', text: { type: 'plain_text', text: 'Deny' }, action_id: 'approval_deny', value: JSON.stringify({ request_id: R.request_id, version: R.version }) }, { type: 'button', text: { type: 'plain_text', text: 'Review in Semester' }, url: R.url }] }],
+    'incident.opened': [{ type: 'section', text: { type: 'mrkdwn', text: `:rotating_light: *${R.sev}* · ${R.title}\nIC: ${R.ic || 'unassigned'} · started ${R.started}` } }, { type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Acknowledge' }, action_id: 'incident_ack', value: R.incident_id }, { type: 'button', text: { type: 'plain_text', text: 'Open incident' }, url: R.url }] }],
+    'advising.outreach': [{ type: 'section', text: { type: 'mrkdwn', text: `${R.advisor} sent you a message in Semester.` } }, { type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Read and reply in Semester' }, url: R.url }] }]
+  }[ev.type];
+  if (!blocks) return res.status(422).end();
+  await app.client.chat.postMessage({ channel: to, text: R.fallback, blocks, unfurl_links: false });
+  res.status(200).json({ sent: true });
+});
+
+app.action('incident_ack', async ({ ack, body, action, client }) => { await ack(); const who = await principal(client, body.user.id, body.team.id); await sem(`/incidents/${action.value}/ack`, { method: 'POST', actor: who, idem: `slack:ack:${action.value}:${body.user.id}` }).catch(() => null); await client.chat.postEphemeral({ channel: body.channel.id, user: body.user.id, text: 'Acknowledged in Semester.' }); });
+app.action('mute_course', async ({ ack, body, action, client }) => { await ack(); const who = await principal(client, body.user.id, body.team.id); await sem('/me/notifications/mute', { method: 'POST', actor: who, body: { course_id: action.value, channel: 'slack' } }).catch(() => null); await client.chat.postEphemeral({ channel: body.channel.id, user: body.user.id, text: 'Muted in Slack. You’ll still see it in Semester.' }); });
+
+(async () => { await app.start(process.env.PORT || 3000); console.log('Semester Slack app running'); })();

@@ -1,5 +1,5 @@
--- LTI bound to the integration control plane: the passback gate walked one
--- gate at a time, the pre-binding behaviour kept, and the launch's context
+-- LTI bound to the integration control plane: the passback gate walks one
+-- gate at a time, unbound passback fails closed, and the launch's context is
 -- recorded only when every condition holds. Run as the Edge Function's
 -- service role, which is who calls these. LOCAL/DISPOSABLE DATABASES ONLY.
 --
@@ -66,9 +66,9 @@ begin
   perform pg_temp.said('the service role can call the gate',
     pg_temp.callable_by('service_role', 'public.lti_passback_decision(text, text)')::text, 'true');
 
-  -- Unbound: the behaviour that shipped on 22 September --------------------
+  -- Unbound: fail closed until an operator binds the registration ----------
 
-  perform pg_temp.said('an unbound registration keeps passback', pg_temp.decide('https://legacy.example', 'c-legacy'), 'allowed-unbound');
+  perform pg_temp.said('an unbound registration is refused', pg_temp.decide('https://legacy.example', 'c-legacy'), 'registration-unbound');
   perform pg_temp.said('an unknown registration', pg_temp.decide('https://nobody.example', 'x'), 'no-registration');
   insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason)
   values (null, 'kill.writeback', true, 'incident');
@@ -77,8 +77,8 @@ begin
   update public.feature_kill_switch set engaged = false where tenant_id is null;
   insert into public.feature_kill_switch (tenant_id, switch_key, engaged, reason)
   values ('lti-a', 'kill.writeback', true, 'school incident');
-  perform pg_temp.said('a school''s stop does not reach a registration that names no school',
-    pg_temp.decide('https://legacy.example', 'c-legacy'), 'allowed-unbound');
+  perform pg_temp.said('a school''s stop cannot authorize a registration that names no school',
+    pg_temp.decide('https://legacy.example', 'c-legacy'), 'registration-unbound');
   delete from public.feature_kill_switch where tenant_id = 'lti-a';
   perform pg_temp.said('and an unbound registration records no context',
     pg_temp.record('https://legacy.example', 'c-legacy', 'course-1'), 'unbound');

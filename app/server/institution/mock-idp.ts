@@ -70,6 +70,7 @@ export function createMockIdp(options: MockIdpOptions): MockIdp {
       const id = `auth-${user.nameId}`;
       if (!members.has(user.nameId)) {
         members.set(user.nameId, {
+          id: `membership-${id.replace(/[^A-Za-z0-9._:-]/g, '_')}`,
           userId: id,
           tenantId,
           providerId: provider.id,
@@ -78,7 +79,7 @@ export function createMockIdp(options: MockIdpOptions): MockIdp {
           userName: user.nameId,
         });
       }
-      return { id, providerIdentifier, userName: user.nameId };
+      return { id, providerIdentifier, userName: user.nameId, sessionExpiresAt: '2099-01-01T00:00:00.000Z' };
     },
     setStatus(nameId, status) {
       const member = members.get(nameId);

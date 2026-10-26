@@ -12,7 +12,7 @@ import { draftLine, draftRows, type DraftRow } from '../lib/recoverydrafts';
 import { KEEP_DAYS as COPY_DAYS } from '../lib/snapshots';
 import { EMPTY_LEDGER, LEDGER_PREFIX, readLedger } from '../lib/offline-mode';
 import { SYNC_WORDS } from '../lib/syncstatus';
-import { workspaceBackup } from '../lib/workspace-backup';
+import { workspaceBackup } from '../lib/workspace-backup-create';
 import { useNow, useStore } from '../state/store';
 import {
   RECOVERY_PLANS,

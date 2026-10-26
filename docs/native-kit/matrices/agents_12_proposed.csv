@@ -1,0 +1,13 @@
+id,name,purpose,mode,maximum_depth,maximum_total_handoffs,status,owner
+AG01,Intake router,Minimal-context classification/routing,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG02,Evidence reconciler,Missing/stale/conflicting evidence,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG03,Release observer,Rollout and release signals,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG04,Integration observer,Sync drift/reconciliation,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG05,Finance reconciliation observer,Processor/ledger/accounting comparison,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG06,Billing assistant,Invoice/dunning/refund drafts,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG07,Support triage assistant,Minimum-context routing/KB drafts,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG08,Trust-and-safety assistant,"Report classification, no enforcement",observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG09,Privacy/legal assistant,Rights/obligation drafts,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG10,Customer-success assistant,Pilot/adoption/QBR drafts,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG11,People/vendor assistant,Business onboarding/renewals,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED
+AG12,Reporting preparer,Audience-specific aggregate report drafts,observe,3,3,PROPOSED; existing identities not recovered,UNASSIGNED

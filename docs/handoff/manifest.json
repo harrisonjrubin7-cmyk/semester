@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-05",
+  "version": "2026-10-06",
   "entry": "handoff/BUILD.md",
   "scripts": [
     "handoff/preflight.sh",
@@ -14,7 +14,11 @@
     "050_security_hardening",
     "060_command_functions",
     "070_ai_gateway",
-    "080_sources_storage_delegations"
+    "080_sources_storage_delegations",
+    "090_native_finance",
+    "100_controlled_actions",
+    "110_onboarding_growth",
+    "120_handoff_preview_devices"
   ],
   "files": [
     {
@@ -23,7 +27,7 @@
       "check": "unit tests"
     },
     {
-      "from": "semester-platform/supabase/migrations/010–080",
+      "from": "semester-platform/supabase/migrations/010–120",
       "to": "supabase/migrations/",
       "check": "db reset + RLS/security/command tests"
     },
@@ -66,6 +70,26 @@
       "from": "claude-code-toolkit/**",
       "to": "repo root per its EXECUTE.md",
       "check": "design-system:check"
+    },
+    {
+      "from": "control-plane/baseline/policies/*.rego, data.json",
+      "to": "policies/ (or the repo's OPA location)",
+      "check": "bash control-plane/baseline/scripts/verify.sh"
+    },
+    {
+      "from": "control-plane/baseline/worker/*.ts.txt",
+      "to": "packages/institution/src/ (reconcile with access-saga.ts; strip .txt)",
+      "check": "repo TypeScript test runner"
+    },
+    {
+      "from": "control-plane/baseline/db/001_access_jobs.sql",
+      "to": "supabase/migrations/<timestamp>_access_jobs.sql (repo convention, add RLS)",
+      "check": "supabase/check.sh"
+    },
+    {
+      "from": "ops-console-visibility/PROMPT.md",
+      "to": "agent prompt for stream 08",
+      "check": "operator sees entry; student denied at UI and RPC"
     }
   ],
   "pilotCriticalPath": [
@@ -89,5 +113,49 @@
     "PR approvals",
     "cutover approval",
     "AI provider terms"
-  ]
+  ],
+  "supersededBy": {
+    "control-plane/ (v1–v4.1)": "control-plane/baseline/",
+    "stream 08 /ops": "existing #/console + ops-console-visibility/PROMPT.md"
+  },
+  "start": "handoff/START-HERE.md",
+  "prototype": {
+    "entry": "ui_kits/semester-app/index.html",
+    "mobile": "ui_kits/semester-app/mobile.html",
+    "inventory": "handoff/prototype/SCREEN-INVENTORY.md",
+    "screens": "handoff/prototype/screens.json",
+    "routes": 281,
+    "workspaces": 25
+  },
+  "streams": [
+    "handoff/execute/00-setup.md",
+    "handoff/execute/01-platform-core.md",
+    "handoff/execute/02-identity-sso.md",
+    "handoff/execute/03-student-os.md",
+    "handoff/execute/04-staff-academic.md",
+    "handoff/execute/05-institution-integrations.md",
+    "handoff/execute/06-ai-gateway.md",
+    "handoff/execute/07-community-career-family.md",
+    "handoff/execute/08-ops-command-center.md",
+    "handoff/execute/09-trust-security.md",
+    "handoff/execute/10-launch.md",
+    "handoff/execute/11-company-site-grow.md",
+    "handoff/execute/12-one-place.md",
+    "handoff/execute/13-platform-maturity.md",
+    "handoff/execute/14-native-platform.md",
+    "handoff/execute/15-native-finance.md",
+    "handoff/execute/16-native-operations.md",
+    "handoff/execute/17-web-to-app-journey.md",
+    "handoff/execute/18-role-system.md",
+    "handoff/execute/19-academic-records.md",
+    "handoff/execute/20-social.md",
+    "handoff/execute/21-work-studio.md",
+    "handoff/execute/22-trust-ferpa-data.md",
+    "handoff/execute/23-collab-reliability.md",
+    "handoff/execute/24-shell-nav-mobile.md"
+  ],
+  "specifications": {
+    "source": "uploads/*.pdf → docs/specifications/source/",
+    "index": "handoff/prototype/SPEC-INDEX.md"
+  }
 }

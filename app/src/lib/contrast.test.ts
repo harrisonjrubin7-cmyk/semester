@@ -550,6 +550,19 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       for (const token of ['--app-dim', '--app-faint', '--app-line', '--app-line-soft', '--app-track']) {
         expect(alphaOf(loud[token]), `${g.id} ${token}`).toBeGreaterThan(alphaOf(plain[token]));
       }
+      expect(alphaOf(plain['--workspace-rail-muted']), `${g.id} ordinary workspace rail muted`).toBe(0.72);
+      expect(loud['--workspace-rail-muted'], `${g.id} high-contrast workspace rail muted`).toBe(loud['--app-fg']);
+      const ordinaryRailMuted = over(plain['--app-fg'], plain['--workspace-rail'], 0.72)!;
+      expect(
+        contrast(loud['--workspace-rail-muted'], loud['--workspace-rail'])!,
+        `${g.id} workspace rail muted contrast`,
+      ).toBeGreaterThan(contrast(ordinaryRailMuted, plain['--workspace-rail'])!);
+      expect(alphaOf(plain['--workspace-rail-border']), `${g.id} ordinary workspace rail border`).toBe(0.16);
+      expect(alphaOf(loud['--workspace-rail-border']), `${g.id} high-contrast workspace rail border`).toBe(0.38);
+      expect(
+        alphaOf(loud['--workspace-rail-border']),
+        `${g.id} workspace rail border contrast`,
+      ).toBeGreaterThan(alphaOf(plain['--workspace-rail-border']));
       // Written as a bare number rather than as a colour, so it is read
       // rather than parsed for an alpha. See `lib/dim.ts` on why the one
       // dimming that stays an opacity is still a token.
@@ -573,6 +586,11 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       '--app-line-soft',
       '--app-track',
       '--app-row-dim',
+      // The workspace rail follows the active ground, so its quiet text and
+      // border rise against that ground's surface. The test above holds both
+      // changes to their exact strengths and proves they become more distinct.
+      '--workspace-rail-muted',
+      '--workspace-rail-border',
       // Not a dimming that gets stronger like the rest of this list — the
       // assistant's button stops fading altogether. It is the one token here
       // whose job under this setting is to switch a rendering off rather than

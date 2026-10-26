@@ -1,4 +1,5 @@
 import { capabilityReport } from '../validators/capability-validator.ts';
+import { buildExecutionPlan } from '../validators/backlog-validator.ts';
 import { loadRegistry, writeGenerated } from './registry-io.ts';
 import { validateSnapshot } from './validation.ts';
 
@@ -16,5 +17,7 @@ await Promise.all([
   writeGenerated('event-catalog.json', events),
   writeGenerated('readiness-report.json', readiness),
   writeGenerated('execution-board.json', snapshot.backlog),
+  writeGenerated('execution-plan.json', buildExecutionPlan(snapshot.backlog)),
+  writeGenerated('operations-readiness.json', snapshot.operationsReadiness ?? []),
 ]);
-console.log(JSON.stringify({ generated: 6, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length }, null, 2));
+console.log(JSON.stringify({ generated: 8, capabilities: snapshot.capabilities.length, screens: snapshot.screens.length, events: events.length, backlogItems: snapshot.backlog.length }, null, 2));

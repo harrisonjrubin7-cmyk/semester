@@ -1,0 +1,7 @@
+import React from 'react';
+/** Time left on a service-level target. Glyph + words carry the state; colour only reinforces. */
+export function SlaTimer({ remaining, target, state = 'ok', paused = false }) {
+  const L = { ok: '◷', soon: '!', breach: '⊘', met: '✓' };
+  const word = paused ? 'Paused' : state === 'breach' ? 'Overdue ' + remaining : state === 'met' ? 'Met' : remaining + ' left';
+  return <span className="sla" data-state={paused ? 'paused' : state}><span aria-hidden="true">{paused ? '‖' : L[state]}</span><span>{word}</span>{target && <span className="gov-sub">· target {target}</span>}</span>;
+}

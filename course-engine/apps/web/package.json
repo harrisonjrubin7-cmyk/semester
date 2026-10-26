@@ -7,17 +7,22 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "pretest:e2e": "NEXT_PUBLIC_API_URL=http://127.0.0.1:43107/api/v1 pnpm build",
+    "test:e2e": "playwright test",
+    "pretest:e2e:update": "NEXT_PUBLIC_API_URL=http://127.0.0.1:43107/api/v1 pnpm build",
+    "test:e2e:update": "playwright test --update-snapshots=all",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.66.0",
     "lucide-react": "^0.475.0",
-    "next": "^15.1.0",
+    "next": "^15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^22.10.0",
@@ -29,6 +34,6 @@
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }

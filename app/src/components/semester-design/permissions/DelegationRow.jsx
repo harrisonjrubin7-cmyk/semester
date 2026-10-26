@@ -14,7 +14,7 @@ export function DelegationRow({ who, role, scope = [], expires, state = 'active'
       <span style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
         {st === 'expiring' && onExtend && !ask && <button type="button" className="btn btn-sm" onClick={onExtend}><span>Extend</span></button>}
         {onRevoke && live && (ask ? <><button type="button" className="btn btn-sm btn-danger" disabled={revoking} onClick={() => { onRevoke(); setAsk(false); }}><span>{revoking ? 'Revoking…' : 'Revoke now'}</span></button><button type="button" className="btn btn-sm btn-ghost" onClick={() => setAsk(false)}><span>Keep</span></button></>
-          : <button type="button" className="btn btn-sm btn-danger" onClick={() => setAsk(true)} aria-label={'Revoke access for ' + who}><span>Revoke</span></button>)}
+          : <button type="button" className="btn btn-sm btn-danger" disabled={revoking} onClick={() => setAsk(true)} aria-label={'Revoke access for ' + who}><span>Revoke</span></button>)}
       </span>
     </div>
   );

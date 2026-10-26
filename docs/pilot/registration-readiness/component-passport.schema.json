@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semester.app/schemas/component-passport.schema.json",
+  "title": "Semester component passport",
+  "description": "Repository contract for governed Semester capabilities, services, connectors, workflows, policies, screens, data stores, partner applications, and operational controls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["passport"],
+  "properties": {
+    "passport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "accountability", "boundaries", "dependencies", "control_plane", "quality", "lifecycle"],
+      "properties": {
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "name", "type"],
+          "properties": {
+            "id": {"type": "string", "pattern": "^[A-Z]{2,4}(-[A-Z0-9]+)+$"},
+            "name": {"$ref": "#/$defs/nonEmptyText"},
+            "type": {
+              "enum": ["capability", "service", "connector", "workflow", "policy", "screen", "data_store", "partner_application", "operational_control"]
+            }
+          }
+        },
+        "accountability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["business_owner", "technical_owner", "operational_owner", "review_cadence"],
+          "properties": {
+            "business_owner": {"$ref": "#/$defs/nonEmptyText"},
+            "technical_owner": {"$ref": "#/$defs/nonEmptyText"},
+            "operational_owner": {"$ref": "#/$defs/nonEmptyText"},
+            "review_cadence": {"$ref": "#/$defs/nonEmptyText"}
+          }
+        },
+        "boundaries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority_owner", "data_classification", "tenant_scope", "allowed_uses", "prohibited_uses"],
+          "properties": {
+            "authority_owner": {"$ref": "#/$defs/nonEmptyText"},
+            "data_classification": {"$ref": "#/$defs/nonEmptyText"},
+            "tenant_scope": {"$ref": "#/$defs/nonEmptyText"},
+            "allowed_uses": {"$ref": "#/$defs/nonEmptyTextList"},
+            "prohibited_uses": {"$ref": "#/$defs/nonEmptyTextList"}
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["upstream", "downstream", "failure_mode", "degradation_behavior"],
+          "properties": {
+            "upstream": {"$ref": "#/$defs/textList"},
+            "downstream": {"$ref": "#/$defs/textList"},
+            "failure_mode": {"$ref": "#/$defs/nonEmptyText"},
+            "degradation_behavior": {"$ref": "#/$defs/nonEmptyText"}
+          }
+        },
+        "control_plane": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy_ids", "audit_events", "required_evidence", "release_gate", "safe_off_path"],
+          "properties": {
+            "policy_ids": {"$ref": "#/$defs/policyIds"},
+            "audit_events": {"$ref": "#/$defs/nonEmptyTextList"},
+            "required_evidence": {"$ref": "#/$defs/evidenceIds"},
+            "release_gate": {"type": "string", "pattern": "^REL-[A-Z0-9]+(-[A-Z0-9]+)*$"},
+            "safe_off_path": {"$ref": "#/$defs/nonEmptyText"}
+          }
+        },
+        "quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["test_suites", "accessibility_requirements"],
+          "properties": {
+            "test_suites": {"$ref": "#/$defs/testIds"},
+            "accessibility_requirements": {"$ref": "#/$defs/nonEmptyTextList"},
+            "source_freshness_requirements": {"$ref": "#/$defs/nonEmptyText"},
+            "service_objectives": {"$ref": "#/$defs/serviceObjectiveIds"}
+          }
+        },
+        "lifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maturity_level", "current_status", "retirement_plan"],
+          "properties": {
+            "maturity_level": {"type": "integer", "minimum": 0},
+            "current_status": {"$ref": "#/$defs/nonEmptyText"},
+            "created_at": {"type": "string"},
+            "last_reviewed_at": {"type": "string"},
+            "retirement_plan": {"$ref": "#/$defs/nonEmptyText"}
+          },
+          "if": {"properties": {"current_status": {"not": {"const": "proposed"}}}, "required": ["current_status"]},
+          "then": {
+            "required": ["created_at", "last_reviewed_at"],
+            "properties": {
+              "created_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+              "last_reviewed_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyText": {"type": "string", "pattern": "\\S"},
+    "textList": {"type": "array", "items": {"$ref": "#/$defs/nonEmptyText"}},
+    "nonEmptyTextList": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/nonEmptyText"}},
+    "policyIds": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^POL-[A-Z0-9]+(-[A-Z0-9]+)*$"}},
+    "evidenceIds": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^EVD-[A-Z0-9]+(-[A-Z0-9]+)*$"}},
+    "testIds": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^TST-[A-Z0-9]+(-[A-Z0-9]+)*$"}},
+    "serviceObjectiveIds": {"type": "array", "items": {"type": "string", "pattern": "^SLO-[A-Z0-9]+(-[A-Z0-9]+)*$"}}
+  }
+}

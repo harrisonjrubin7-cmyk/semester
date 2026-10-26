@@ -1,0 +1,30 @@
+import express from 'express';
+import {createClient} from '@supabase/supabase-js';
+import {z,ZodError} from 'zod';
+import {WorkflowError} from './transition.js';
+import {tx,permissions,requirePermission} from './db.js';
+import {executeTransition,createVersion,loadVersion} from './documentService.js';
+import {listDeadLetters,processDeadLetter} from './webhooks.js';
+const app=express();app.use(express.json({limit:'64kb'}));
+const auth=createClient(process.env.SUPABASE_URL!,process.env.SUPABASE_PUBLISHABLE_KEY!,{auth:{persistSession:false,autoRefreshToken:false}});
+const uuid=z.string().uuid();
+app.use(async(req,res,next)=>{
+ try{const header=req.headers.authorization;const token=header?.startsWith('Bearer ')?header.slice(7):'';
+ if(!token){res.status(401).json({error:{code:'UNAUTHENTICATED',message:'Bearer token required'}});return;}
+ const {data,error}=await auth.auth.getUser(token);
+ if(error||!data.user){res.status(401).json({error:{code:'UNAUTHENTICATED',message:'Invalid session'}});return;}
+ res.locals.userId=data.user.id;next();}catch(e){next(e);}
+});
+app.get('/api/tenants/:tenant/context',async(req,res)=>{const tenant=uuid.parse(req.params.tenant);const user=res.locals.userId;const p=await tx(db=>permissions(db,tenant,user));res.json({userId:user,tenantId:tenant,permissions:p});});
+app.get('/api/tenants/:tenant/versions/:version',async(req,res)=>{res.json(await loadVersion(uuid.parse(req.params.tenant),res.locals.userId,uuid.parse(req.params.version)));});
+app.post('/api/tenants/:tenant/versions',async(req,res)=>{res.status(201).json(await createVersion(uuid.parse(req.params.tenant),res.locals.userId,req.body));});
+app.post('/api/tenants/:tenant/versions/:version/transitions',async(req,res)=>{res.json(await executeTransition(uuid.parse(req.params.tenant),res.locals.userId,uuid.parse(req.params.version),uuid.parse(req.get('Idempotency-Key')),req.body));});
+app.get('/api/tenants/:tenant/dead-letters',async(req,res)=>{res.json(await listDeadLetters(uuid.parse(req.params.tenant),res.locals.userId));});
+app.post('/api/tenants/:tenant/dead-letters/:id/decision',async(req,res)=>{const body=z.object({decision:z.enum(['replay','dismiss']),reason:z.string().trim().min(1).max(2000)}).strict().parse(req.body);res.json(await processDeadLetter(uuid.parse(req.params.tenant),res.locals.userId,uuid.parse(req.params.id),body.decision,body.reason));});
+app.use((error:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{
+ if(error instanceof ZodError){res.status(400).json({error:{code:'INVALID_REQUEST',message:'Invalid input',issues:error.issues}});return;}
+ if(error instanceof WorkflowError){const status=error.code==='FORBIDDEN'?403:error.code==='NOT_FOUND'?404:['STATE_CONFLICT','IDEMPOTENCY_CONFLICT','ALREADY_DECIDED','LEASE_LOST'].includes(error.code)?409:422;res.status(status).json({error:{code:error.code,message:error.message}});return;}
+ // Log only a safe error classification; attach your structured, redacted logger.
+ console.error('request_failed',error instanceof Error?error.name:'unknown');res.status(500).json({error:{code:'INTERNAL_ERROR',message:'Operation failed'}});
+});
+app.listen(Number(process.env.PORT??3001));

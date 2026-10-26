@@ -1,0 +1,53 @@
+{
+  "$source": "Semester delivery-management specification, 'Risk register' (docs/delivery/risk-register.yaml).",
+  "risks": [
+    {
+      "id": "RSK-001",
+      "title": "Readiness is mistaken for official enrollment",
+      "class": "trust_and_product",
+      "likelihood": "medium",
+      "impact": "high",
+      "indicators": ["student_support_tickets_about_enrollment_status", "staff_training_misanswers", "UI_copy_review_findings"],
+      "mitigations": ["receipt_and_screen_disclosure", "source_labels", "registrar_training", "student_quick_start", "prohibited_claims_test"],
+      "owner": "product_owner",
+      "escalation": "institution_registrar_owner"
+    },
+    {
+      "id": "RSK-002",
+      "title": "Required source becomes stale during high-demand registration period",
+      "class": "integration_and_operations",
+      "likelihood": "medium",
+      "impact": "high",
+      "indicators": ["source_watermark_exceeds_threshold", "provider_error_rate", "stale_case_count"],
+      "mitigations": ["stale_state_guard", "definitive_result_block", "alerting", "reconciliation_queue", "office_handoff"],
+      "owner": "integration_owner",
+      "escalation": "platform_on_call"
+    },
+    {
+      "id": "RSK-003",
+      "title": "Access scope error exposes an unauthorized student record",
+      "class": "security_and_privacy",
+      "likelihood": "low",
+      "impact": "critical",
+      "indicators": ["RLS_test_failure", "unexpected_access_denial_pattern", "security_report"],
+      "mitigations": ["RLS_tests", "per_command_policy", "tenant_context_validation", "session_revocation", "break_glass_audit"],
+      "owner": "security_owner",
+      "escalation": "incident_commander"
+    },
+    {
+      "id": "RSK-004",
+      "title": "Pilot team cannot resolve reconciliation cases within the agreed window",
+      "class": "operations",
+      "likelihood": "medium",
+      "impact": "medium",
+      "indicators": ["oldest_open_case_age", "queue_backlog", "repeated_mapping_failures"],
+      "mitigations": ["case_SLA", "named_institution_owner", "categorized_repair_paths", "recurring_root_cause_review"],
+      "owner": "registrar_operations_owner",
+      "escalation": "pilot_lead"
+    }
+  ],
+  "review": {
+    "cadence": "recurring during hypercare",
+    "next_review": "UNASSIGNED: review date needs a named owner"
+  }
+}

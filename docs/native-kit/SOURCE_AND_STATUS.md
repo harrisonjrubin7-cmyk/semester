@@ -1,0 +1,6 @@
+# Source/status ledger
+Reconstructed consolidated export of preceding blueprint; original generated archive unavailable in this execution environment. Not a byte-identical original archive.
+Sources previously inspected: project docs/finance/NATIVE_FINANCIAL_PLATFORM.md; ui_kits/native-ops/ops-data.js (13 institution +9 company +11 control); native-platform/native-data.js H1 33 modules; workflow-runner/runner-data.js prototype actor heuristics. Full 692 screen inventory NOT recovered. Exact existing 12-agent IDs and runtime 14-check chain NOT recovered; proposed labels maintained.
+GitHub reads from prior turn: app/src/lib/route.ts SHA 56c227b0545a27c31236c539515b563ad2c35e6a; docs/ops/OPERATIONS_CONSOLE_CURRENT_STATE.md SHA 2b16ead9036d75ec33c99d49824bd08ed8f67270 (October 5 assessment, not new runtime audit).
+Public evidence previously inspected: https://docs.stripe.com/webhooks ; https://blog.pcisecuritystandards.org/faq-clarifies-new-saq-a-eligibility-criteria-for-e-commerce-merchants ; https://www.fincen.gov/resources/statutes-regulations/administrative-rulings/application-money-services-business . No compliance/legal certification.
+No external changes, deployments, institutional approval, actual money movement or video rendering.

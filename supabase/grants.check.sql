@@ -171,6 +171,10 @@ declare
     -- entry returns only the caller-student's bounded access history.
     'read_guardian_calendar_projection(wanted_student uuid, wanted_purpose text)',
     'read_guardian_projection_access_history()',
+    -- 20261010150000: caller-owned preferences and minimized inbox reads.
+    'mark_notification_inbox(want_id uuid, want_status text)',
+    'read_notification_inbox(want_limit integer)',
+    'set_notification_preference(want_school text, want_category text, want_channel text, want_enabled boolean, want_quiet_start time without time zone, want_quiet_end time without time zone, want_time_zone text)',
     -- 20260928308000_support_shares.sql: an athlete shares with one person
     -- holding athletic_academic_support at their school; staff list and read
     -- through functions that re-check that role on every call and log reads.
@@ -390,6 +394,10 @@ declare
     -- 20260928010000: the caller's own live capabilities, same predicate as
     -- private.has_capability, so staff screens can open for staff.
     'my_capabilities()',
+    -- 20261008223000: the caller's own yes/no signal for whether a live
+    -- platform_admin or support_agent grant still needs aal2. It exposes no
+    -- role roster or capability and is used only to show the elevation gate.
+    'privileged_mfa_required()',
     -- 20260929070000: click-to-cancel. The owner of an individual
     -- subscription ends it at the period end in one call, reason optional;
     -- cancelling must be as easy as signing up. Refuses anyone else's.
@@ -421,6 +429,10 @@ declare
     -- boolean about a switch key and a school and returns no row.
     'integration_approve_connection(want_connection text, want_direction text)',
     'integration_approve_scope(want_scope uuid)',
+    -- The way back (20261012055000): the same `integration:approve` capability
+    -- the approval took, a reason required, audited by the same trigger.
+    'integration_revoke_connection(want_connection text, want_reason text)',
+    'integration_revoke_scope(want_scope uuid, want_reason text)',
     'integration_request_replay(want_dead_letter uuid, want_reason text)',
     'integration_set_paused(want_connection text, want_paused boolean, want_reason text)',
     'kill_switch_engaged(want_switch text, want_tenant text)',
@@ -553,6 +565,64 @@ declare
     'gradebook_resolve_regrade(want_request uuid, want_outcome text, want_score numeric, want_mark text, want_note text, want_key text)',
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
+    -- 20261019120000_learning_submissions.sql: a student hands in work on a
+    -- gradebook item. Checks auth.uid(), the caller's own school and
+    -- submissions:create on the item's course and term, and spends a key on
+    -- the gradebook ledger; `learning-submissions.check.sql` proves each refusal.
+    'learning_submit(want_item uuid, want_body text, want_key text)',
+    -- 20261021120000_course_requests.sql: a student asks the course's
+    -- instructor for an extension, an excused absence or an incomplete, and
+    -- the instructor decides. Each checks auth.uid() and the caller's own
+    -- school; filing and deciding check course_requests:create / :decide on
+    -- the course and term, withdrawing and answering that the request is the
+    -- caller's own. All spend a key on the gradebook ledger, and every change
+    -- after filing names the version read. `course-requests.check.sql` proves
+    -- each refusal.
+    'course_request_file(want_course text, want_term text, want_kind text, want_item uuid, want_requested_due date, want_reason text, want_key text)',
+    'course_request_withdraw(want_request uuid, want_expect integer, want_key text)',
+    'course_request_respond(want_request uuid, want_note text, want_expect integer, want_key text)',
+    'course_request_decide(want_request uuid, want_outcome text, want_granted_due date, want_note text, want_expect integer, want_key text)',
+    -- 20261021130000_gradebook_due_dates.sql: setting an item's due date
+    -- checks auth.uid(), the caller's own school and grades:release on the
+    -- item's course and term (who adds items), spends a key on the gradebook
+    -- ledger and names the version read. Reading the dates is security
+    -- invoker: the item and request tables' own policies decide every row, so
+    -- a student reads their own extension and no other.
+    -- `gradebook-due-dates.check.sql` proves each refusal and each reader.
+    'gradebook_set_due(want_item uuid, want_due timestamp with time zone, want_expect integer, want_key text)',
+    'gradebook_due_dates(want_course text, want_term text)',
+    -- 20261022090000_grade_release_student_actions.sql: a student's Action
+    -- Center items from released grades. The feed is security invoker over the
+    -- student's own rows and their own released grade versions; the settle is a
+    -- definer that checks auth.uid() owns the action, the version read and the
+    -- key. `event-relay.check.sql` proves each refusal.
+    'my_student_actions()',
+    'settle_student_action(want_action uuid, want_state text, want_version integer, want_key text)',
+
+    -- 20261022120000_workspace_objects.sql: a person's own documents, their
+    -- versions and who they are shared with. Each checks auth.uid() and the
+    -- caller's access to the object through private.workspace_object_access;
+    -- only the owner shares or revokes; `workspace-objects.check.sql` proves
+    -- each refusal.
+    'workspace_object_create(want_kind text, want_title text, want_body text, want_mime text, want_schema text, want_key text)',
+    'workspace_object_save(want_object uuid, want_expected_revision bigint, want_title text, want_body text, want_mime text, want_schema text, want_key text)',
+    'workspace_object_grant(want_object uuid, want_version uuid, want_grantee uuid, want_permission text, want_purpose text, want_expires_at timestamp with time zone, want_key text)',
+    'workspace_object_revoke(want_grant uuid)',
+    'workspace_objects_mine()',
+    'workspace_object_read(want_object uuid, want_version uuid)',
+
+    -- 20261023120000_career_evidence.sql: portfolio evidence and employer
+    -- shares. The student's five check auth.uid() against the workspace owner;
+    -- the employer's two re-check the grant, the employer role and the
+    -- student's age at every call; `career-evidence.check.sql` proves each
+    -- refusal.
+    'career_evidence_add(want_version uuid, want_label text, want_expected_revision bigint, want_key text)',
+    'career_evidence_withdraw(want_evidence uuid, want_expected_revision bigint, want_key text)',
+    'career_evidence_grant(want_employer_email text, want_employer_scope text, want_evidence uuid[], want_shared_as text, want_purpose text, want_expires_at timestamp with time zone, want_expected_revision bigint, want_key text)',
+    'career_evidence_revoke(want_grant uuid, want_expected_revision bigint, want_key text)',
+    'career_evidence_mine()',
+    'career_evidence_shared_with_me()',
+    'career_evidence_read(want_grant uuid, want_evidence uuid)',
 
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
@@ -620,6 +690,12 @@ declare
     -- watermarks without exposing either projection table.
     'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
 
+    -- Per read model: computed freshness, lag, events behind, dead letters,
+    -- last sanitized error and last rebuild with parity. It requires platform
+    -- console:operate (aal2), reads counts and ages from the outbox and never a
+    -- payload, aggregate or tenant id, and writes nothing.
+    'ops_projection_dashboard()',
+
     -- Credential-free connector health. It requires the platform console
     -- shell, derives tenants from exact-school integration:view grants,
     -- excludes demos by default, and returns no credential, cursor, payload,
@@ -630,6 +706,25 @@ declare
     -- platform console shell and platform incident:communicate, excludes demo
     -- tenants without exact implementation scope, and performs no mutation.
     'console_release_incidents(include_demo boolean)',
+
+    -- Protected incident-evidence metadata and hash-linked custody. Every
+    -- callable path requires platform console plus incident-response
+    -- authority and fresh MFA; the backing private tables have no client or
+    -- service-role grants.
+    'incident_evidence_custody(want_incident text)',
+    'record_incident_evidence(want_incident text, want_kind text, want_source_system text, want_evidence_locator text, want_sha256 text, want_byte_size bigint, want_captured_at timestamp with time zone, want_retention_until timestamp with time zone, want_classification text)',
+    'record_incident_evidence_custody(want_evidence text, want_action text, want_custodian text, want_reason_code text, want_observed_sha256 text)',
+
+    -- Identity-minimized, three-operator privileged role-grant review. These paths require
+    -- access_review:manage at platform scope and fresh MFA; the private
+    -- snapshot, decisions and signoff have no client or service-role grants.
+    'begin_privileged_access_review(want_request_key text, want_period_start date, want_period_end date, want_next_due date)',
+    'complete_privileged_access_review(want_review text)',
+    'decide_privileged_access_review_item(want_item text, want_decision text, want_reason_code text)',
+    'privileged_access_review(want_review text)',
+    'privileged_access_review_evidence(want_review text)',
+    'resolve_privileged_access_review_investigation(want_item text, want_resolution_code text)',
+    'resolve_privileged_access_review_post_decision_change(want_item text)',
 
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
@@ -688,12 +783,43 @@ declare
     'registration_enroll(want_section uuid, want_key text, want_expect text)',
     'registration_drop(want_section uuid, want_key text)',
     'registration_withdraw(want_section uuid, want_key text)',
+    -- The fourth, from 20261018120000_registration_swap.sql: the add and the drop as one step.
+    'registration_swap(want_add uuid, want_drop uuid, want_key text, want_expect text)',
     'my_registration(want_term text)',
     'my_registration_hold()',
     'registrar_put_term(want_term text, want_opens timestamp with time zone, want_add_drop_ends timestamp with time zone, want_withdraw_ends timestamp with time zone, want_max_credits numeric)',
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+    -- The three in 20261020120000_registration_hold_resolution.sql. The
+    -- resolver raises unless the caller holds registration_hold:resolve over
+    -- exactly the hold's owning office scope, finds holds at the caller's
+    -- school only, and takes an idempotency key and the state the office saw;
+    -- the office list raises the same way; the readiness read returns the
+    -- caller's own evaluations. `registration-hold-resolution.check.sql`
+    -- attempts each refusal.
+    'registration_hold_resolve(want_hold uuid, want_key text, want_expect text)',
+    'registration_holds_for_office(want_office text)',
+    'my_registration_readiness()',
+    -- The four in 20261021090000_roster_admin_desk.sql. Each raises unless
+    -- the caller holds roster:administer over exactly the named school; the
+    -- binder refuses the caller's own account, an account at another school
+    -- and anybody not on the live roster, and both writes take an
+    -- idempotency key (the switch also the value the administrator saw).
+    -- `roster-admin-desk.check.sql` attempts each refusal.
+    'roster_admin_unbound(want_tenant text)',
+    'roster_admin_bind(want_tenant text, want_sourced_id text, want_subject uuid, want_key text)',
+    'roster_admin_config(want_tenant text)',
+    'roster_admin_set_absence(want_tenant text, want_on boolean, want_expect boolean, want_key text)',
+    -- The three in 20261021100000_roster_admin_unbind_search.sql, behind the
+    -- same roster_admin_require. The unbinder refuses the caller's own
+    -- binding and an account other than the one the administrator saw, and
+    -- takes an idempotency key; the search answers this school's unbound
+    -- accounts only, 20 at most, address masked. `roster-admin-desk.check.sql`
+    -- attempts each refusal.
+    'roster_admin_bound(want_tenant text)',
+    'roster_admin_unbind(want_tenant text, want_sourced_id text, want_expect uuid, want_key text)',
+    'roster_admin_find_accounts(want_tenant text, want_query text)',
 
     -- The two productivity workspace functions recovered from production.
     -- Saving is security invoker and can only mutate the caller's RLS-owned

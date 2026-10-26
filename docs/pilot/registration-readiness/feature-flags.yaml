@@ -1,0 +1,25 @@
+# Feature-flag registry (artifact 7). Flags need an owner, expiry, tenant scope,
+# a tested safe-off behavior, and audit events. Flags are not access control.
+# NOTE: this file is the spec. Wiring the key into app code is not done yet
+# (see README.md, open items).
+flags:
+  - key: registration_readiness_v1
+    owner: registrar_product_owner
+    type: tenant_capability
+    tenant_scope: pilot_institution_only
+    default: false
+    safe_off_behavior: >
+      Registration readiness is unavailable. Students receive an institution
+      support path; no existing records are changed.
+    prerequisites:
+      - readiness_pilot_release_approved
+      - SIS_adapter_healthy
+      - named_institution_owner
+    expires_on: 2027-06-30
+    removal_condition: >
+      Replace with a documented generally available entitlement or retire
+      following the pilot decision.
+    audit_events:
+      - feature_flag.enabled
+      - feature_flag.disabled
+      - feature_flag.override_used

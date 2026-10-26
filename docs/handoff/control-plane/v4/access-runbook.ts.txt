@@ -1,0 +1,256 @@
+// Semester access runbook v4: deterministic nextInstruction() + pure applyResult()/applyFailure(). Compensation has its own durable lifecycle.
+// From uploads/Build a state machine runbook for NIST Zero Trust.pdf. NOT compiled or executed. Strip the .txt suffix when copying into the repo.
+
+export type State =
+  | "EVALUATING"
+  | "WAITING"
+  | "PREPARING"
+  | "INSTALLING"
+  | "VERIFYING"
+  | "RECONCILING"
+  | "ACTIVE"
+  | "COMPENSATING"
+  | "RECOVERY_REQUIRED"
+  | "DENIED"
+  | "CLOSED";
+export type Operation =
+  | "evaluate"
+  | "prepare"
+  | "install"
+  | "inspect"
+  | "revoke_pa"
+  | "remove_pep"
+  | "verify_cleanup";
+export interface Saga {
+  id: string;
+  tenantId: string;
+  generation: number;
+  revision: number;
+  state: State;
+  requestDigest: string;
+  grantId?: string;
+  decisionId?: string;
+  provisioningDeadline: number;
+  grantExpiresAt?: number;
+  nextAttemptAt: number;
+  cancellationRequested: boolean;
+  compensation: {
+    paRevoked: boolean;
+    pepRemoved: boolean;
+  };
+}
+export type Result =
+  | {
+  operation: "evaluate";
+  outcome: "allow" | "deny" | "wait";
+  decisionId: string;
+}
+  | {
+  operation: "prepare";
+  grantId: string;
+  expiresAt: number;
+}
+  | {operation: "install"}
+  | {
+  operation: "inspect";
+  status: "valid" | "absent" | "conflict" | "unknown";
+}
+  | {operation: "revoke_pa"; confirmed: boolean}
+  | {operation: "remove_pep"; confirmed: boolean}
+  | {
+  operation: "verify_cleanup";
+  paRevoked: boolean;
+  pepAbsent: boolean;
+};
+export type Failure = {
+  operation: Operation;
+  code: string;
+  retryable: boolean;
+  outcomeUnknown: boolean;
+};
+export type Instruction =
+  | {kind: "wait"}
+  | {kind: "execute"; operation: Operation; key: string}
+  | {kind: "persist"; saga: Saga; reason: string};
+const terminal = new Set<State>(["DENIED", "CLOSED"]);
+export function key(s: Saga, operation: Operation): string {
+  return `${s.id}:${s.generation}:${operation}`;
+}
+function changed(s: Saga, patch: Partial<Saga>): Saga {
+  return {...s, ...patch, revision: s.revision + 1};
+}
+export function nextInstruction(
+  s: Saga,
+  now: number
+): Instruction {
+  if (terminal.has(s.state) || now < s.nextAttemptAt) {
+    return {kind: "wait"};
+  }
+  const provisioningExpired =
+  s.state !== "ACTIVE" &&
+  now >= s.provisioningDeadline;
+  const grantExpired =
+  s.grantExpiresAt !== undefined &&
+  now >= s.grantExpiresAt;
+  if (
+    (s.cancellationRequested || provisioningExpired || grantExpired) &&
+    s.state !== "COMPENSATING" &&
+    s.state !== "RECOVERY_REQUIRED"
+  ) {
+    return {
+      kind: "persist",
+      saga: changed(s, {
+          state: "COMPENSATING",
+          cancellationRequested: true
+      }),
+      reason: "CANCELLATION_OR_EXPIRY"
+    };
+  }
+  let operation: Operation | undefined;
+  switch (s.state) {
+    case "EVALUATING":
+    operation = "evaluate";
+    break;
+    case "PREPARING":
+    operation = "prepare";
+    break;
+    case "INSTALLING":
+    operation = "install";
+    break;
+    case "VERIFYING":
+    case "RECONCILING":
+    operation = "inspect";
+    break;
+    case "COMPENSATING":
+    case "RECOVERY_REQUIRED":
+    operation = !s.compensation.paRevoked
+    ? "revoke_pa"
+    : !s.compensation.pepRemoved
+    ? "remove_pep"
+    : "verify_cleanup";
+    break;
+    case "WAITING":
+    case "ACTIVE":
+    return {kind: "wait"};
+  }
+  return operation
+  ? {kind: "execute", operation, key: key(s, operation)}
+  : {kind: "wait"};
+}
+function expectedOperation(s: Saga): Operation | undefined {
+  if (
+    s.state === "COMPENSATING" ||
+    s.state === "RECOVERY_REQUIRED"
+  ) {
+    return !s.compensation.paRevoked
+    ? "revoke_pa"
+    : !s.compensation.pepRemoved
+    ? "remove_pep"
+    : "verify_cleanup";
+  }
+  const mapping: Partial<Record<State, Operation>> = {
+    EVALUATING: "evaluate",
+    PREPARING: "prepare",
+    INSTALLING: "install",
+    VERIFYING: "inspect",
+    RECONCILING: "inspect"
+  };
+  return mapping[s.state];
+}
+export function applyResult(s: Saga, r: Result): Saga {
+  if (expectedOperation(s) !== r.operation) {
+    throw new Error("UNEXPECTED_OPERATION_RESULT");
+  }
+  switch (r.operation) {
+    case "evaluate":
+    return changed(s, {
+        decisionId: r.decisionId,
+        state: r.outcome === "allow"
+        ? "PREPARING"
+        : r.outcome === "deny"
+        ? "DENIED"
+        : "WAITING"
+    });
+    case "prepare":
+    return changed(s, {
+        grantId: r.grantId,
+        grantExpiresAt: r.expiresAt,
+        state: "INSTALLING"
+    });
+    case "install":
+    return changed(s, {state: "VERIFYING"});
+    case "inspect":
+    if (r.status === "valid") {
+      return changed(s, {state: "ACTIVE"});
+    }
+    return changed(s, {
+        state: r.status === "unknown"
+        ? "RECONCILING"
+        : "COMPENSATING",
+        cancellationRequested: r.status !== "unknown"
+    });
+    case "revoke_pa":
+    return changed(s, {
+        state: r.confirmed
+        ? "COMPENSATING"
+        : "RECOVERY_REQUIRED",
+        compensation: {
+          ...s.compensation,
+          paRevoked: r.confirmed
+        }
+    });
+    case "remove_pep":
+    return changed(s, {
+        state: r.confirmed
+        ? "COMPENSATING"
+        : "RECOVERY_REQUIRED",
+        compensation: {
+          ...s.compensation,
+          pepRemoved: r.confirmed
+        }
+    });
+    case "verify_cleanup":
+    return changed(s, {
+        state: r.paRevoked && r.pepAbsent
+        ? "CLOSED"
+        : "RECOVERY_REQUIRED",
+        compensation: {
+          paRevoked: r.paRevoked,
+          pepRemoved: r.pepAbsent
+        }
+    });
+  }
+}
+export function applyFailure(
+  s: Saga,
+  f: Failure,
+  retryAt: number
+): Saga {
+  if (expectedOperation(s) !== f.operation) {
+    throw new Error("UNEXPECTED_OPERATION_FAILURE");
+  }
+  if (f.operation === "install" && f.outcomeUnknown) {
+    return changed(s, {
+        state: "RECONCILING",
+        nextAttemptAt: retryAt
+    });
+  }
+  if (
+    s.state === "COMPENSATING" ||
+    s.state === "RECOVERY_REQUIRED"
+  ) {
+    return changed(s, {
+        state: "RECOVERY_REQUIRED",
+        nextAttemptAt: retryAt
+    });
+  }
+  if (f.retryable || f.outcomeUnknown) {
+    return changed(s, {nextAttemptAt: retryAt});
+  }
+  return changed(s, {
+      state: "COMPENSATING",
+      cancellationRequested: true,
+      nextAttemptAt: 0
+  });
+}
+

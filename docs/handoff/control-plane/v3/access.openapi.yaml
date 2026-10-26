@@ -1,0 +1,103 @@
+# v3 · public intent submission + one internal participant-operation endpoint. Shares Command/Result schemas with access.asyncapi.yaml.
+# Each service must restrict which operations it accepts. A user bearer token must never authorize internal evaluation or grant administration.
+openapi: 3.1.0
+info:
+  title: Semester Zero Trust Access API
+  version: 0.1.0
+security:
+  - bearerAuth: []
+paths:
+  /access-requests:
+    post:
+      operationId: submitAccessIntent
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [resourceId, action]
+              properties:
+                resourceId: {type: string, minLength: 1}
+                action: {type: string, minLength: 1}
+      responses:
+        '202':
+          description: Durable request accepted; access not yet granted
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Status'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /access-requests/{id}:
+    get:
+      operationId: inspectAccessRequest
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Authorized view of current saga state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Status'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /internal/operations:
+    post:
+      operationId: executeParticipantOperation
+      description: |
+        Internal workload-only interface.
+        PE supports evaluate; PA supports prepare/revoke; PEP supports install/inspect.
+        Caller permissions are operation-specific.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './access.asyncapi.yaml#/components/schemas/Command'}
+      responses:
+        '200':
+          description: Durable operation result
+          content:
+            application/json:
+              schema: {$ref: './access.asyncapi.yaml#/components/schemas/Result'}
+        default:
+          $ref: '#/components/responses/Failure'
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 16, maxLength: 200}
+  responses:
+    Failure:
+      description: |
+        400 invalid input; 401 unauthenticated; 403 forbidden;
+        404 missing/undisclosed resource; 409 conflict; 429 rate limit; 503 unavailable.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+  schemas:
+    Status:
+      type: object
+      additionalProperties: false
+      required: [requestId, state, revision]
+      properties:
+        requestId: {type: string}
+        state: {enum: [EVALUATING, WAITING, PREPARING, INSTALLING, INSPECTING, ACTIVE, REVOKING, RECOVERY, DENIED, CLOSED]}
+        revision: {type: integer, minimum: 0}
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [code, retryable, outcomeUnknown, correlationId]
+      properties:
+        code: {enum: [INVALID_INPUT, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_DECISION, STALE_APPROVAL, INVALID_GENERATION, OBLIGATION_UNSUPPORTED, RATE_LIMITED, DEPENDENCY_UNAVAILABLE, ENFORCEMENT_UNKNOWN]}
+        retryable: {type: boolean}
+        outcomeUnknown: {type: boolean}
+        correlationId: {type: string}

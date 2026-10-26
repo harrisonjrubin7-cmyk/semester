@@ -1,0 +1,337 @@
+// Extracted from "Show the remaining verification logic" PDF (6 Oct). PDF text: indentation lost; prose between blocks may remain.
+// NOT compiled or run. Strip .txt and reformat (e.g. prettier) before use. Depends on node-jose; ESM.
+import { trustedUrl } from "./verification.mjs";
+const SCOPE =
+"https://purl.imsglobal.org/spec/lti-ags/scope/";
+function childEndpoint(lineItemUrl, suffix) {
+const url = new URL(lineItemUrl);
+url.pathname =
+url.pathname.replace(/\/$/, "") + "/" + suffix;
+return url.toString();
+}
+export function createAgsClient({
+config,
+getToken,
+parseNextLink
+}) {
+async function request(url, scope, options = {}) {
+const token = await getToken([SCOPE + scope]);
+const response = await fetch(
+trustedUrl(url, config.serviceOrigins),
+{
+...options,
+redirect: "error",
+signal: AbortSignal.timeout(10_000),
+headers: {
+...options.headers,
+Authorization: `Bearer ${token.accessToken}`
+}
+}
+);
+if (!response.ok) {
+const error = new Error(
+`AGS_HTTP_${response.status}`
+);
+error.status = response.status;
+error.retryAfter =
+response.headers.get("retry-after");
+throw error;
+}
+return response;
+}
+async function collection(url, scope, mediaType) {
+const output = [];
+const visited = new Set();
+while (url) {
+if (visited.has(url) || visited.size >= 100) {
+
+
+throw new Error("PAGINATION_LIMIT");
+}
+visited.add(url);
+const response = await request(url, scope, {
+headers: { Accept: mediaType }
+});
+const page = await response.json();
+if (!Array.isArray(page)) {
+throw new Error("CONTAINER_INVALID");
+}
+output.push(...page);
+// Inject a tested RFC 8288 parser.
+// Use the supplied next URL without reapplying filters.
+url = parseNextLink(
+response.headers.get("link")
+);
+}
+return output;
+}
+return {
+async discover(containerUrl, activityKey, tag) {
+const url = new URL(containerUrl);
+url.searchParams.set("resource_id", activityKey);
+url.searchParams.set("tag", tag);
+const scope = config.grantedScopes.includes(
+SCOPE + "lineitem.readonly"
+)
+? "lineitem.readonly"
+: "lineitem";
+const items = await collection(
+url.toString(),
+scope,
+"application/vnd.ims.lis.v2.lineitemcontainer+json"
+);
+return items.filter(item =>
+item.resourceId === activityKey &&
+item.tag === tag
+);
+},
+async create(containerUrl, assignment) {
+if (
+typeof assignment.title !== "string" ||
+!assignment.title.trim() ||
+!Number.isFinite(assignment.maxPoints) ||
+
+
+assignment.maxPoints <= 0
+) {
+throw new Error("LINEITEM_INVALID");
+}
+const response = await request(
+containerUrl,
+"lineitem",
+{
+method: "POST",
+headers: {
+"Content-Type":
+"application/vnd.ims.lis.v2.lineitem+json"
+},
+body: JSON.stringify({
+label: assignment.title,
+scoreMaximum: assignment.maxPoints,
+resourceId: assignment.activityKey,
+tag: assignment.tag
+})
+}
+);
+const item = await response.json();
+trustedUrl(item.id, config.serviceOrigins);
+if (
+item.resourceId !== assignment.activityKey ||
+item.tag !== assignment.tag
+) {
+throw new Error("CREATION_RESPONSE_MISMATCH");
+}
+return item;
+},
+async post(lineItemUrl, event) {
+const payload = event.payload;
+if (
+event.approved !== true ||
+typeof payload.userId !== "string" ||
+!payload.userId ||
+typeof payload.timestamp !== "string" ||
+!/\dT.*(?:Z|[+-]\d{2}:\d{2})$/.test(
+payload.timestamp
+) ||
+!Number.isFinite(Date.parse(payload.timestamp)) ||
+!Number.isFinite(payload.scoreGiven) ||
+payload.scoreGiven < 0 ||
+!Number.isFinite(payload.scoreMaximum) ||
+payload.scoreMaximum <= 0
+) {
+throw new Error("SCORE_INVALID");
+}
+
+
+if (
+![
+"Initialized",
+"Started",
+"InProgress",
+"Submitted",
+"Completed"
+].includes(payload.activityProgress) ||
+![
+"NotReady",
+"Pending",
+"PendingManual",
+"FullyGraded",
+"Failed"
+].includes(payload.gradingProgress)
+) {
+throw new Error("PROGRESS_INVALID");
+}
+return request(
+childEndpoint(lineItemUrl, "scores"),
+"score",
+{
+method: "POST",
+headers: {
+"Content-Type":
+"application/vnd.ims.lis.v1.score+json"
+},
+body: JSON.stringify(payload)
+}
+);
+},
+async result(lineItemUrl, userId) {
+const url = new URL(
+childEndpoint(lineItemUrl, "results")
+);
+url.searchParams.set("user_id", userId);
+const results = await collection(
+url.toString(),
+"result.readonly",
+"application/vnd.ims.lis.v2.resultcontainer+json"
+);
+const matches = results.filter(
+result => result.userId === userId
+);
+if (matches.length > 1) {
+throw new Error("RESULT_AMBIGUOUS");
+}
+return matches[^0] ?? null;
+
+
+}
+};
+}
+This score method intentionally rejects progress-only or score-clearing requests. Implement
+those as separately approved operations: AGS says absent or null scoreGiven indicates no
+current score and should clear the previous tool score.
+export async function syncOnce(repo, client, job) {
+return repo.withJobLocks(job, async () => {
+if (await repo.isSuperseded(job)) {
+await repo.mark(job.id, "Superseded");
+return;
+}
+let binding = await repo.getBinding(job);
+if (!binding) {
+const matches = await client.discover(
+job.containerUrl,
+job.assignment.activityKey,
+job.assignment.tag
+);
+if (matches.length > 1) {
+await repo.mark(job.id, "Conflict");
+return;
+}
+let item = matches[^0];
+if (!item) {
+if (await repo.hasUnresolvedCreation(job)) {
+await repo.mark(
+job.id,
+"CreationReconciliationRequired"
+);
+return;
+}
+await repo.recordCreationIntent(job);
+try {
+item = await client.create(
+job.containerUrl,
+job.assignment
+);
+} catch (error) {
+await repo.mark(
+job.id,
+"CreationReconciliationRequired"
+);
+Durable worker loop
+
+
+throw error;
+}
+}
+binding = await repo.saveBindingAndResolveIntent(
+job,
+item.id
+);
+}
+await repo.mark(job.id, "Delivering");
+try {
+await client.post(binding.url, job.event);
+} catch (error) {
+const state =
+error.status === 429 || error.status >= 500
+? "RetryScheduled"
+: error.status
+? "ActionRequired"
+: "OutcomeUnknown";
+await repo.mark(job.id, state);
+throw error;
+}
+await repo.mark(job.id, "Delivered");
+if (!job.canReadResults) {
+await repo.mark(job.id, "DeliveredUnverified");
+return;
+}
+let result;
+try {
+result = await client.result(
+binding.url,
+job.event.payload.userId
+);
+} catch (error) {
+await repo.mark(job.id, "VerificationPending");
+throw error;
+}
+await repo.recordObservation(job, result);
+const maximum =
+result?.resultMaximum === undefined
+? 1
+: result.resultMaximum;
+if (
+!result ||
+!Number.isFinite(result.resultScore) ||
+
+
+!Number.isFinite(maximum) ||
+maximum <= 0
+) {
+await repo.mark(job.id, "VerificationPending");
+return;
+}
+const payload = job.event.payload;
+const matches =
+Math.abs(
+result.resultScore / maximum -
+payload.scoreGiven / payload.scoreMaximum
+) <= 1e-6;
+await repo.mark(
+job.id,
+matches ? "Verified" : "Conflict"
+);
+});
+}
+export async function drain(repo, client, { signal }) {
+while (!signal.aborted) {
+const job = await repo.claimDueJob();
+if (!job) return;
+try {
+await syncOnce(repo, client, job);
+} catch (error) {
+await repo.recordFailureAndSchedule(job, error);
+} finally {
+await repo.releaseLease(job);
+}
+}
+}
+Result reconciliation uses normalized scores because platforms may scale denominators. An
+omitted resultMaximum defaults to 1, and current results reflect LMS-side grade changes.
+The remaining work is concrete:
+Dependency 	Required behavior
+store.consume 	Atomic exact-transaction comparison, expiry check, and replay prevention
+getTrustedJwks 	Approved endpoint, bounded response, cached keys, controlled rotation refresh
+authorize 	Verified deployment-to-tenant mapping and scoped academic permissions
+parseNextLink 	Tested RFC 8288 pagination parsing
+repo.withJobLocks 	Fenced locks preventing duplicate creation and out-of-order student updates
+
+
+Dependency 	Required behavior
+recordCreationIntent 	Durable record before an uncertain external create
+recordFailureAndSchedule Bounded retries, Retry-After, and uncertainty-preserving recovery
+Network layer 	Egress/DNS controls and bounded token/AGS response handling
+Do not run these methods against a live gradebook merely to test transport. The inline code has
+not been runtime-tested here; the earlier packageʼs syntax checks do not establish signature
+correctness, replay safety, or LMS compatibility.
+

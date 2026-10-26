@@ -1,0 +1,38 @@
+-- 240 · Gaps found against the uploaded module_registry.json: campus housing, family/guardian access.
+-- Not applied or tested.
+create schema if not exists housing;
+create table if not exists housing.buildings(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, campus_id uuid references iam.campuses, name text not null, accessible boolean not null default true);
+create table if not exists housing.rooms(id uuid primary key default gen_random_uuid(), building_id uuid not null references housing.buildings on delete cascade, code text not null, capacity int not null check (capacity between 1 and 8), unique (building_id, code));
+create table if not exists housing.applications(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles default auth.uid(), term_id uuid not null references acad.terms, preferences jsonb not null default '{}'::jsonb check (pg_column_size(preferences) < 4096), state text not null default 'submitted' check (state in ('submitted','assigned','waitlisted','withdrawn')), submitted_at timestamptz not null default now(), unique (student_id, term_id));
+create table if not exists housing.assignments(id uuid primary key default gen_random_uuid(), application_id uuid not null unique references housing.applications on delete cascade, room_id uuid not null references housing.rooms, assigned_by uuid not null default auth.uid(), move_in date, source text not null default 'housing_system');
+create table if not exists housing.maintenance_requests(id uuid primary key default gen_random_uuid(), room_id uuid not null references housing.rooms, requester_id uuid not null references core.profiles default auth.uid(), summary text not null check (length(summary) <= 500), urgency text not null default 'normal' check (urgency in ('normal','urgent','emergency')), state text not null default 'open' check (state in ('open','scheduled','done')), created_at timestamptz not null default now());
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'housing' loop execute format('alter table housing.%I enable row level security', t); end loop; end $$;
+create policy hb_read on housing.buildings for select using (institution_id = core.my_institution());
+create policy hr_read on housing.rooms for select using (exists (select 1 from housing.buildings b where b.id = building_id and b.institution_id = core.my_institution()));
+create policy ha_self on housing.applications for select using (student_id = auth.uid());
+create policy ha_staff on housing.applications for select using (ctl.can('housing.assign', institution_id));
+create policy has_self on housing.assignments for select using (exists (select 1 from housing.applications a where a.id = application_id and (a.student_id = auth.uid() or ctl.can('housing.assign', a.institution_id))));
+create policy hm_self on housing.maintenance_requests for select using (requester_id = auth.uid() or exists (select 1 from housing.rooms r join housing.buildings b on b.id = r.building_id where r.id = room_id and ctl.can('housing.assign', b.institution_id)));
+revoke insert, update, delete on all tables in schema housing from anon, authenticated;
+grant usage on schema housing to authenticated; grant select on all tables in schema housing to authenticated;
+create or replace function api.apply_housing(p_term uuid, p_prefs jsonb) returns uuid language plpgsql security definer set search_path = '' as $$
+declare a uuid; begin
+  insert into housing.applications(institution_id, term_id, preferences) values (core.my_institution(), p_term, coalesce(p_prefs, '{}'))
+    on conflict (student_id, term_id) do update set preferences = excluded.preferences returning id into a;
+  perform audit.log('housing.applied', a::text, null, null); return a; end $$;
+create or replace function api.request_maintenance(p_room uuid, p_summary text, p_urgency text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare m uuid; begin
+  if not exists (select 1 from housing.assignments s join housing.applications a on a.id = s.application_id where s.room_id = p_room and a.student_id = auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  insert into housing.maintenance_requests(room_id, summary, urgency) values (p_room, p_summary, p_urgency) returning id into m;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('maintenance.requested', core.my_institution(), jsonb_build_object('request', m, 'urgency', p_urgency)); return m; end $$;
+
+-- Family/guardian: never a membership. A student grants a family member a scoped, expiring delegation (core.delegations, 080).
+-- FERPA: rights transfer to the student at postsecondary level; the institution may disclose to parents only under its own policy.
+create table if not exists core.delegation_scopes(code text primary key, description text not null, includes text[] not null);
+insert into core.delegation_scopes(code, description, includes) values
+  ('family_schedule','Class schedule and calendar','{acad.enrollments,comms.calendar_events}'), ('family_balance','Student account balance and charges','{instfin.student_accounts,instfin.charges}'),
+  ('family_readiness','Registration readiness checklist','{acad.readiness_items}'), ('family_housing','Housing assignment','{housing.assignments}')
+on conflict (code) do nothing;
+alter table core.delegation_scopes enable row level security; create policy dsc_read on core.delegation_scopes for select using (true); grant select on core.delegation_scopes to authenticated;
+grant execute on function api.apply_housing(uuid,jsonb), api.request_maintenance(uuid,text,text) to authenticated;
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values ('housing.assign','Assign housing and work maintenance', false, '{}', 0) on conflict (key) do nothing;

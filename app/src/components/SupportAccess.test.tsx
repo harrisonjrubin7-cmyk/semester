@@ -81,12 +81,32 @@ describe('consented support access surface', () => {
     mock.revoke.mockResolvedValue(undefined);
     await renderSignedIn();
     expect(host.textContent).toContain('Advisor Rivera');
-    expect(host.textContent).toContain('You granted access');
+    expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
+    expect(host.textContent).toContain('Course evidence counts, averages, mistakes and last observation time');
     expect(host.textContent).not.toContain('View aggregate signals');
-    const revoke = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke now');
-    await act(async () => { revoke?.click(); });
+    expect(host.querySelector('[data-semester-design="archive-2026-10-08"]')).not.toBeNull();
+    const ask = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke');
+    act(() => { ask?.click(); });
+    expect(host.textContent).toContain('Advisor Rivera loses access right away');
+    const confirm = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Revoke now');
+    await act(async () => { confirm?.click(); });
     expect(mock.revoke).toHaveBeenCalledWith('grant-1');
     expect(host.textContent).toContain('Support access revoked');
+  });
+
+  it('marks a student grant expiring within a day without weakening its scope', async () => {
+    mock.load.mockResolvedValue({
+      supporters: [], tickets: [], windows: [{
+        grantId: 'grant-expiring', side: 'student', counterpartLabel: 'Advisor Rivera',
+        reason: 'Help me review the pattern.', expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+        revokedAt: null, createdAt: new Date().toISOString(),
+        ticketId: null, scopes: ['learning-progress'], consentState: 'active',
+      }],
+    });
+    await renderSignedIn();
+    const delegation = host.querySelector('[data-state="expiring"]');
+    expect(delegation?.textContent).toContain('Expires soon');
+    expect(delegation?.textContent).toContain('Course evidence counts, averages, mistakes and last observation time');
   });
 
   it('creates a bounded window and keeps the success confirmation visible', async () => {

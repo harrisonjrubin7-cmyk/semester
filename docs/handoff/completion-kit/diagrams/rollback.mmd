@@ -1,0 +1,11 @@
+flowchart TD
+  Incident --> Kill[Server kill + hold affected writes]
+  Kill --> Queue[Pause/checkpoint queues; reconcile in-flight]
+  Queue --> Policy[Disable scoped feature; invalidate policy cache]
+  Policy --> Compatible{Known-good release schema-compatible?}
+  Compatible -->|yes| App[Rollback app/functions/workers independently]
+  Compatible -->|no| Repair[Held mode + forward repair / isolated restore]
+  Repair --> Verify[Reconcile DB + object bytes + access + external records]
+  App --> Verify
+  Verify --> Review[Tests + operated checks + fresh approvals]
+  Review --> Resume[Scoped reactivation]

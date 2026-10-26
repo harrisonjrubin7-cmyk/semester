@@ -4,6 +4,7 @@ import importlib.util
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -61,6 +62,16 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.add(document)
         session.flush()
+        queued_document = SourceDocument(
+            course_id=course.id,
+            filename="queued.txt",
+            storage_key="courses/recovery/originals/queued.txt",
+            mime_type="text/plain",
+            size_bytes=8,
+            sha256="b" * 64,
+        )
+        session.add(queued_document)
+        session.flush()
         expired_extract = BackgroundJob(
             course_id=course.id,
             document_id=document.id,
@@ -69,6 +80,19 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
             lease_owner="crashed-extract",
             lease_generation=1,
             lease_expires_at=now - timedelta(seconds=1),
+        )
+        stranded_queued = BackgroundJob(
+            course_id=course.id,
+            document_id=queued_document.id,
+            job_type="extract",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=6),
+        )
+        fresh_queued = BackgroundJob(
+            course_id=course.id,
+            job_type="generate:flashcards",
+            status=JobStatus.queued,
+            created_at=now - timedelta(minutes=4),
         )
         expired_generation = BackgroundJob(
             course_id=course.id,
@@ -119,6 +143,8 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         session.add_all(
             [
                 expired_extract,
+                stranded_queued,
+                fresh_queued,
                 expired_generation,
                 active,
                 revoked,
@@ -128,9 +154,12 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         )
         session.commit()
         expected = {
-            ("extract_document", str(expired_extract.id)),
-            ("generate_study_asset", str(expired_generation.id)),
+            ("extract_document", str(expired_extract.id), str(expired_extract.id)),
+            ("extract_document", str(stranded_queued.id), str(stranded_queued.id)),
+            ("generate_study_asset", str(expired_generation.id), str(expired_generation.id)),
         }
+        stranded_queued_id = stranded_queued.id
+        fresh_queued_id = fresh_queued.id
         inactive_id = inactive.id
         inactive_queued_id = inactive_queued.id
 
@@ -141,10 +170,10 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
     monkeypatch.setattr(
         worker.celery,
         "send_task",
-        lambda name, args: sent.append((name, args[0])),
+        lambda name, args, task_id: sent.append((name, args[0], task_id)),
     )
 
-    assert worker.recover_expired_jobs.run() == {"redelivered": 2}
+    assert worker.recover_expired_jobs.run() == {"redelivered": 3, "failed": 0}
     assert set(sent) == expected
     with testing_session() as session:
         terminal = session.get(BackgroundJob, inactive_id)
@@ -157,6 +186,36 @@ def test_expired_worker_leases_are_redelivered_without_republishing_active_or_re
         assert queued_terminal.status == JobStatus.failed
         assert queued_terminal.revoked_at is not None
         assert queued_terminal.error == "Job scope was deleted"
+        assert session.get(BackgroundJob, stranded_queued_id).heartbeat_at is not None
+        assert session.get(BackgroundJob, fresh_queued_id).heartbeat_at is None
+
+
+def test_recovery_continues_after_one_publish_fails(monkeypatch):
+    worker = _worker_module()
+    candidates = [
+        (uuid4(), "extract"),
+        (uuid4(), "generate:study_guide"),
+    ]
+    monkeypatch.setattr(worker, "SessionLocal", lambda: type(
+        "FakeSession",
+        (),
+        {"close": lambda _self: None},
+    )())
+    monkeypatch.setattr(worker, "recovery_candidates", lambda _db, _now: candidates)
+    attempts = []
+
+    def flaky_send(name, args, **_kwargs):
+        attempts.append((name, args[0]))
+        if len(attempts) == 1:
+            raise RuntimeError("broker unavailable")
+
+    monkeypatch.setattr(worker.celery, "send_task", flaky_send)
+
+    assert worker.recover_expired_jobs.run() == {"redelivered": 1, "failed": 1}
+    assert attempts == [
+        ("extract_document", str(candidates[0][0])),
+        ("generate_study_asset", str(candidates[1][0])),
+    ]
 
 
 def test_lease_heartbeat_runs_while_worker_operation_is_blocked(monkeypatch):

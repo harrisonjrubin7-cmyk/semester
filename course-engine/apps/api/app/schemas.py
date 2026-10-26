@@ -27,6 +27,16 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class InstitutionCommandRequest(BaseModel):
+    command_type: Literal[
+        "registration.add",
+        "registration.drop",
+        "grades.submit_final",
+        "records.hold_release",
+    ]
+    payload: dict[str, Any]
+
+
 class UserOut(ORMModel):
     id: UUID
     email: EmailStr
@@ -138,6 +148,18 @@ class GuideContent(BaseModel):
     source_gaps: list[str] = Field(default_factory=list)
 
 
+class AppliedCase(BaseModel):
+    heading: str
+    scenario: str
+    questions: list[str] = Field(min_length=1)
+    applications: list[str] = Field(default_factory=list)
+    citation_ids: list[UUID] = Field(min_length=1)
+
+
+class ReadingBriefContent(GuideContent):
+    cases: list[AppliedCase] = Field(min_length=1)
+
+
 class Flashcard(BaseModel):
     id: UUID
     front: str
@@ -149,11 +171,19 @@ class Flashcard(BaseModel):
 
 class CardReview(BaseModel):
     course_id: UUID
+    asset_id: UUID
     concept_id: UUID | None = None
     correct: bool
     confidence: int = Field(ge=1, le=5)
 
 
+class QuizAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_index: int = Field(ge=0)
+    correct: bool
+
+
 class QuizAttempt(BaseModel):
     course_id: UUID
-    answers: list[dict[str, Any]]
+    answers: list[QuizAnswer]

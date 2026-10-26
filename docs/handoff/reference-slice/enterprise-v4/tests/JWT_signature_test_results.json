@@ -1,0 +1,29 @@
+{
+  "execution": "Python cryptography synthetic RS256 signature tests only; Node jose suite supplied but not executed",
+  "results": [
+    {
+      "test": "Valid RS256",
+      "expected_accept": true,
+      "actual_accept": true,
+      "passed": true
+    },
+    {
+      "test": "Tampered payload",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true
+    },
+    {
+      "test": "Wrong signing key",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true
+    },
+    {
+      "test": "Tampered signature",
+      "expected_accept": false,
+      "actual_accept": false,
+      "passed": true
+    }
+  ]
+}

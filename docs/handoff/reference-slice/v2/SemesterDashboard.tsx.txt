@@ -1,0 +1,217 @@
+import React, { useMemo, useReducer, useState } from "react";
+import { z } from "zod";
+
+// React + TypeScript + Zod. All dashboard actions are LOCAL simulations.
+export type State = "draft" | "in_review" | "changes_requested" | "approved" | "awaiting_signature" | "effective" | "rejected" | "superseded" | "archived";
+type Actor = "author" | "reviewer-a" | "reviewer-b" | "operator" | "signing-integration";
+type Command = "submit" | "approve" | "request_changes" | "reject" | "request_signatures" | "activate" | "supersede" | "archive";
+type Doc = { state: State; version: number; author: Actor; reviewers: Actor[]; approvals: Actor[]; signaturesRequired: boolean; signaturesVerified: boolean; legalHold: boolean };
+type Hook = { id: string; attempt: number; state: "pending" | "retry_wait" | "delivered" | "dead_letter"; nextDelayMs: number; error: string | null };
+type Log = { at: string; message: string };
+type Model = { doc: Doc; hooks: Hook[]; log: Log[]; error: string | null };
+export class DomainError extends Error { constructor(public code: string, message: string) { super(message); } }
+const fail = (code: string, message: string): never => { throw new DomainError(code, message); };
+
+export function transition(doc: Doc, command: Command, actor: Actor, expected: State): Doc {
+  if (doc.state !== expected) fail("STATE_CONFLICT", "Document changed; refresh before retrying.");
+  const reviewer = () => {
+    if (actor === doc.author) fail("SELF_REVIEW", "Authors cannot review their own version.");
+    if (!doc.reviewers.includes(actor)) fail("FORBIDDEN", "An assigned reviewer is required.");
+    if (doc.approvals.includes(actor)) fail("ALREADY_DECIDED", "This reviewer already approved.");
+  };
+  switch (command) {
+    case "submit":
+      if (actor !== doc.author || doc.state !== "draft") fail("FORBIDDEN", "Only the author can submit a draft.");
+      if (!doc.reviewers.length || doc.reviewers.includes(doc.author)) fail("INVALID_REVIEWERS", "Independent reviewers are required.");
+      return { ...doc, state: "in_review", approvals: [] };
+    case "approve": {
+      if (doc.state !== "in_review") fail("INVALID_TRANSITION", "Approval requires an active review.");
+      reviewer();
+      const approvals = [...doc.approvals, actor];
+      return { ...doc, approvals, state: doc.reviewers.every(r => approvals.includes(r)) ? "approved" : "in_review" };
+    }
+    case "request_changes":
+    case "reject":
+      if (doc.state !== "in_review") fail("INVALID_TRANSITION", "An active review is required.");
+      reviewer();
+      return { ...doc, state: command === "reject" ? "rejected" : "changes_requested" };
+    case "request_signatures":
+      if (actor !== "operator" || doc.state !== "approved" || !doc.signaturesRequired) fail("INVALID_TRANSITION", "An operator can request signatures for an approved signing-required version.");
+      return { ...doc, state: "awaiting_signature" };
+    case "activate":
+      if (actor !== "operator") fail("FORBIDDEN", "Activation requires an operator.");
+      if (!((doc.state === "approved" && !doc.signaturesRequired) || (doc.state === "awaiting_signature" && doc.signaturesVerified))) fail("EVIDENCE_REQUIRED", "Approved content and any required signature evidence are necessary.");
+      return { ...doc, state: "effective" };
+    case "supersede":
+      // Explorer-only illustration. Real SQL supersedes atomically with replacement activation.
+      if (actor !== "operator" || doc.state !== "effective") fail("INVALID_TRANSITION", "An effective version is required.");
+      return { ...doc, state: "superseded" };
+    case "archive":
+      if (actor !== "operator" || !["rejected", "superseded"].includes(doc.state)) fail("INVALID_TRANSITION", "Only rejected or superseded versions can be archived here.");
+      if (doc.legalHold) fail("LEGAL_HOLD", "An active legal hold blocks archiving.");
+      return { ...doc, state: "archived" };
+  }
+}
+const initial = (): Model => ({ doc: { state: "draft", version: 1, author: "author", reviewers: ["reviewer-a", "reviewer-b"], approvals: [], signaturesRequired: true, signaturesVerified: false, legalHold: false }, hooks: [], log: [], error: null });
+type Action =
+ | { type: "transition"; command: Command; actor: Actor; expected: State; at: string; eventId: string }
+ | { type: "verify"; actor: Actor; at: string }
+ | { type: "revise"; actor: Actor; at: string }
+ | { type: "hold"; value: boolean }
+ | { type: "signature_required"; value: boolean }
+ | { type: "hook"; id: string; status: number; at: string; jitter: number }
+ | { type: "reset" };
+export function reducer(model: Model, action: Action): Model {
+  if (action.type === "reset") return initial();
+  try {
+    if (action.type === "transition") {
+      const doc = transition(model.doc, action.command, action.actor, action.expected);
+      const hooks = doc.state === "effective" && model.doc.state !== "effective"
+        ? [...model.hooks, { id: action.eventId, attempt: 0, state: "pending" as const, nextDelayMs: 0, error: null }]
+        : model.hooks;
+      return { ...model, doc, hooks, error: null, log: [...model.log, { at: action.at, message: `${action.actor}: ${action.command}, ${model.doc.state} → ${doc.state}` }] };
+    }
+    if (action.type === "verify") {
+      if (action.actor !== "signing-integration" || model.doc.state !== "awaiting_signature") fail("FORBIDDEN", "Only the simulated signing integration can attach evidence while awaiting signatures.");
+      return { ...model, doc: { ...model.doc, signaturesVerified: true }, error: null, log: [...model.log, { at: action.at, message: "SIMULATED verified signature set attached; no real provider verification." }] };
+    }
+    if (action.type === "revise") {
+      if (action.actor !== "author" || !["changes_requested", "rejected", "superseded", "archived"].includes(model.doc.state)) fail("INVALID_TRANSITION", "Author revision requires a concluded candidate in this explorer.");
+      return { ...model, doc: { ...model.doc, version: model.doc.version + 1, state: "draft", approvals: [], signaturesVerified: false }, error: null, log: [...model.log, { at: action.at, message: `New content version ${model.doc.version + 1}; prior history preserved in this log.` }] };
+    }
+    if (action.type === "hold") return { ...model, doc: { ...model.doc, legalHold: action.value } };
+    if (action.type === "signature_required") {
+      if (model.doc.state !== "draft") fail("LOCKED", "Change this scenario option only in draft.");
+      return { ...model, doc: { ...model.doc, signaturesRequired: action.value }, error: null };
+    }
+    if (action.type === "hook") {
+      const hook = model.hooks.find(h => h.id === action.id);
+      if (!hook || !["pending", "retry_wait"].includes(hook.state)) fail("INVALID_DELIVERY", "Delivery is already terminal or missing.");
+      const attempt = hook.attempt + 1;
+      const success = action.status >= 200 && action.status < 300;
+      const retryable = action.status === 0 || action.status === 408 || action.status === 429 || action.status >= 500;
+      const state: Hook["state"] = success ? "delivered" : retryable && attempt < 5 ? "retry_wait" : "dead_letter";
+      const delay = state === "retry_wait" ? Math.floor(Math.min(60000, 1000 * 2 ** (attempt - 1)) * action.jitter) : 0;
+      const next: Hook = { ...hook, attempt, state, nextDelayMs: delay, error: success ? null : action.status === 0 ? "Network failure / timeout" : `HTTP ${action.status}` };
+      return { ...model, hooks: model.hooks.map(h => h.id === hook.id ? next : h), error: null, log: [...model.log, { at: action.at, message: `Webhook ${hook.id}: attempt ${attempt}, ${state}. Business document state unchanged.` }] };
+    }
+    return model;
+  } catch (error) {
+    return { ...model, error: error instanceof DomainError ? `${error.code}: ${error.message}` : "Unexpected local simulation error." };
+  }
+}
+
+export const PayloadSchema = z.discriminatedUnion("type", [
+  z.object({ schemaVersion: z.literal(1), type: z.literal("document.transition"), tenantId: z.string().uuid(), versionId: z.string().uuid(), idempotencyKey: z.string().uuid(), data: z.discriminatedUnion("action", [
+    z.object({ action: z.literal("submit"), expectedState: z.literal("draft"), reason: z.string().trim().min(1).max(2000), reviewerIds: z.array(z.string().uuid()).min(1).max(20) }).strict(),
+    z.object({ action: z.literal("approve"), expectedState: z.literal("in_review"), reason: z.string().trim().min(1).max(2000) }).strict(),
+    z.object({ action: z.literal("request_signatures"), expectedState: z.literal("approved"), reason: z.string().trim().min(1).max(2000), signerIds: z.array(z.string().uuid()).min(1).max(20) }).strict(),
+    z.object({ action: z.literal("activate"), expectedState: z.enum(["approved", "awaiting_signature"]), reason: z.string().trim().min(1).max(2000) }).strict()
+  ]) }).strict(),
+  z.object({ schemaVersion: z.literal(1), type: z.literal("support.case.create"), tenantId: z.string().uuid(), idempotencyKey: z.string().uuid(), data: z.object({ subject: z.string().trim().min(1).max(200), description: z.string().trim().min(1).max(10000), priority: z.enum(["low", "normal", "urgent"]) }).strict() }).strict()
+]);
+export type ApiPayload = z.infer<typeof PayloadSchema>;
+const sample = { schemaVersion: 1, type: "document.transition", tenantId: "11111111-1111-4111-8111-111111111111", versionId: "22222222-2222-4222-8222-222222222222", idempotencyKey: "33333333-3333-4333-8333-333333333333", data: { action: "approve", expectedState: "in_review", reason: "Scope reviewed." } };
+// This payload registry intentionally demonstrates only four document actions.
+// Add strict branches for reject/request_changes/archive before serving those endpoints.
+
+export type Stage = { name: string; minutes: number; slots: number };
+export function simulate(n: number, gap: number, stages: Stage[]) {
+  if (!Number.isInteger(n) || n < 1 || n > 500 || !Number.isFinite(gap) || gap <= 0) throw new Error("Use 1–500 documents and a positive arrival interval.");
+  if (!stages.length || stages.some(s => !Number.isFinite(s.minutes) || s.minutes <= 0 || !Number.isInteger(s.slots) || s.slots < 1 || s.slots > 100)) throw new Error("Service times must be positive; slots must be integers from 1–100.");
+  let finish = Array.from({ length: n }, (_, i) => i * gap);
+  const metrics = stages.map(stage => {
+    const available = Array<number>(stage.slots).fill(0);
+    const waits: number[] = [];
+    finish = finish.map(arrival => {
+      const earliest = Math.min(...available);
+      const slot = available.indexOf(earliest);
+      const start = Math.max(arrival, earliest);
+      waits.push(start - arrival);
+      available[slot] = start + stage.minutes;
+      return available[slot];
+    });
+    return { ...stage, capacityPerHour: 60 * stage.slots / stage.minutes, meanWait: waits.reduce((a, b) => a + b, 0) / n, maxWait: Math.max(...waits) };
+  });
+  const lead = finish.map((time, i) => time - i * gap);
+  const bottleneck = metrics.reduce((a, b) => a.meanWait >= b.meanWait ? a : b);
+  return { metrics, meanLead: lead.reduce((a, b) => a + b, 0) / n, finalCompletion: Math.max(...finish), bottleneck: bottleneck.meanWait > 0 ? bottleneck.name : "No modeled queue" };
+}
+const modules = [
+  ["Sales", "/company/sales", "GET accounts", "accounts → opportunities"],
+  ["Documents", "/company/documents", "POST document transitions", "versions → reviews → signatures"],
+  ["Implementation", "/company/implementations", "GET implementations", "accounts → projects → acceptance"],
+  ["Student", "/app/courses", "GET published assignments", "enrollments → assignments"],
+  ["Faculty", "/app/teaching/:sectionId", "GET section submissions", "section scope → submissions"],
+  ["Operations", "/ops/architecture", "GET endpoints", "endpoint registry → telemetry (future)"]
+];
+const commands: Command[] = ["submit", "approve", "request_changes", "reject", "request_signatures", "activate", "supersede", "archive"];
+const actors: Actor[] = ["author", "reviewer-a", "reviewer-b", "operator", "signing-integration"];
+const defaultStages: Stage[] = [{ name: "API", minutes: .02, slots: 4 }, { name: "Review quorum", minutes: 120, slots: 2 }, { name: "Signature set", minutes: 240, slots: 3 }, { name: "Activation", minutes: 30, slots: 2 }];
+
+export default function SemesterDashboard() {
+  const [model, dispatch] = useReducer(reducer, undefined, initial);
+  const [actor, setActor] = useState<Actor>("author");
+  const [search, setSearch] = useState("");
+  const [payload, setPayload] = useState(JSON.stringify(sample, null, 2));
+  const [validation, setValidation] = useState("");
+  const [n, setN] = useState(24);
+  const [gap, setGap] = useState(60);
+  const [stages, setStages] = useState(defaultStages);
+  const [status, setStatus] = useState(503);
+  const simulation = useMemo(() => { try { return { ok: true as const, data: simulate(n, gap, stages) }; } catch (e) { return { ok: false as const, error: e instanceof Error ? e.message : "Simulation failed" }; } }, [n, gap, stages]);
+  function validate() {
+    try {
+      if (payload.length > 65536) throw new Error("Payload editor limit: 64 KiB characters.");
+      const parsed = PayloadSchema.safeParse(JSON.parse(payload));
+      setValidation(parsed.success ? `Valid ${parsed.data.type} payload. Not submitted; authorization not checked.` : parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("\n"));
+    } catch (e) { setValidation(e instanceof Error ? e.message : "Invalid JSON"); }
+  }
+  function updateStage(index: number, key: "minutes" | "slots", value: number) {
+    setStages(current => current.map((s, i) => i === index ? { ...s, [key]: value } : s));
+  }
+  const section: React.CSSProperties = { border: "1px solid #9ba9bc", borderRadius: 10, padding: 18, marginBottom: 18 };
+  return <main style={{ maxWidth: 1100, margin: "auto", padding: 24, fontFamily: "system-ui", lineHeight: 1.5 }}>
+    <h1>Semester enterprise dashboard</h1>
+    <p role="note">Local simulation only. No API requests, real role enforcement, signature verification, production telemetry, or webhook timers. All identities below are fictional roles.</p>
+    <section style={section}>
+      <h2>Architecture connections</h2>
+      <label>Search modules <input value={search} onChange={e => setSearch(e.target.value)} /></label>
+      <div style={{ overflowX: "auto" }}><table><thead><tr>{["Module", "Route", "API", "Records"].map(x => <th key={x} scope="col" style={{ padding: 8 }}>{x}</th>)}</tr></thead><tbody>{modules.filter(row => row.join(" ").toLowerCase().includes(search.toLowerCase())).map(row => <tr key={row[0]}>{row.map((cell, i) => <td key={i} style={{ padding: 8 }}>{cell}</td>)}</tr>)}</tbody></table></div>
+    </section>
+    <section style={section}>
+      <h2>Guarded document explorer</h2>
+      <p>Version {model.doc.version} · State: <strong>{model.doc.state}</strong> · Approvals {model.doc.approvals.length}/{model.doc.reviewers.length}</p>
+      <label>Simulated actor <select value={actor} onChange={e => setActor(e.target.value as Actor)}>{actors.map(a => <option key={a}>{a}</option>)}</select></label>
+      <label><input type="checkbox" checked={model.doc.signaturesRequired} disabled={model.doc.state !== "draft"} onChange={e => dispatch({ type: "signature_required", value: e.target.checked })} /> Signatures required</label>
+      <label><input type="checkbox" checked={model.doc.legalHold} onChange={e => dispatch({ type: "hold", value: e.target.checked })} /> Simulate legal hold</label>
+      <div>{commands.map(command => <button key={command} style={{ margin: 4 }} onClick={() => dispatch({ type: "transition", command, actor, expected: model.doc.state, at: new Date().toISOString(), eventId: crypto.randomUUID() })}>{command}</button>)}</div>
+      <button onClick={() => dispatch({ type: "verify", actor, at: new Date().toISOString() })}>Simulate verified signatures</button>{" "}
+      <button onClick={() => dispatch({ type: "revise", actor, at: new Date().toISOString() })}>Create revised version</button>{" "}
+      <button onClick={() => dispatch({ type: "reset" })}>Reset all local history</button>
+      <p>Signature set verified: {String(model.doc.signaturesVerified)}. Supersede is an explorer illustration, not standalone production supersession.</p>
+      {model.error && <p role="alert">{model.error}</p>}
+    </section>
+    <section style={section}>
+      <h2>Custom API payload validation</h2>
+      <label htmlFor="payload">JSON payload</label><textarea id="payload" value={payload} onChange={e => setPayload(e.target.value)} spellCheck={false} rows={13} style={{ display: "block", width: "100%", fontFamily: "monospace", boxSizing: "border-box" }} />
+      <button onClick={validate}>Validate payload</button><pre aria-live="polite" style={{ whiteSpace: "pre-wrap" }}>{validation}</pre>
+    </section>
+    <section style={section}>
+      <h2>Hypothetical bottleneck analysis</h2>
+      <label>Documents <input type="number" min={1} max={500} value={Number.isNaN(n) ? "" : n} onChange={e => setN(e.target.valueAsNumber)} /></label>{" "}
+      <label>Arrival interval, minutes <input type="number" min={.01} step="any" value={Number.isNaN(gap) ? "" : gap} onChange={e => setGap(e.target.valueAsNumber)} /></label>
+      {stages.map((s, i) => <div key={s.name}><span>{s.name} </span><label>Minutes/document <input type="number" step="any" min={.001} value={Number.isNaN(s.minutes) ? "" : s.minutes} onChange={e => updateStage(i, "minutes", e.target.valueAsNumber)} /></label><label>Parallel slots <input type="number" min={1} max={100} value={Number.isNaN(s.slots) ? "" : s.slots} onChange={e => updateStage(i, "slots", e.target.valueAsNumber)} /></label></div>)}
+      {simulation.ok ? <><p aria-live="polite">Mean lead time: {simulation.data.meanLead.toFixed(2)} minutes. Final completion: {simulation.data.finalCompletion.toFixed(2)} minutes. Largest mean queue wait: {simulation.data.bottleneck}.</p><div style={{ overflowX: "auto" }}><table><thead><tr><th scope="col">Station</th><th scope="col">Capacity/hour</th><th scope="col">Mean wait, min</th><th scope="col">Max wait, min</th></tr></thead><tbody>{simulation.data.metrics.map(s => <tr key={s.name}><td>{s.name}</td><td>{s.capacityPerHour.toFixed(2)}</td><td>{s.meanWait.toFixed(2)}</td><td>{s.maxWait.toFixed(2)}</td></tr>)}</tbody></table></div></> : <p role="alert">{simulation.error}</p>}
+      <p>Four serial stations, fixed service times, continuous availability. Every simulated document visits signing. No rework/retries/calendars; this queue model is separate from the document explorer.</p>
+    </section>
+    <section style={section}>
+      <h2>Failed webhook trigger handling — simulation</h2>
+      <p>Activation creates one local delivery record. A failed notification does not undo document activation. Retry delay is displayed, not automatically scheduled.</p>
+      <label>Simulated result <select value={status} onChange={e => setStatus(Number(e.target.value))}>{[[200,"200 success"],[400,"400 permanent failure"],[408,"408 timeout"],[429,"429 rate limit"],[503,"503 unavailable"],[0,"Network failure"]].map(([code,label]) => <option key={code} value={code}>{label}</option>)}</select></label>
+      {!model.hooks.length && <p>No delivery records. Activate a document first.</p>}
+      {model.hooks.map(h => <div key={h.id} style={{ padding: 8 }}><code>{h.id}</code> · {h.state} · attempt {h.attempt}/5 · suggested wait {h.nextDelayMs} ms · {h.error}<button disabled={["delivered", "dead_letter"].includes(h.state)} onClick={() => dispatch({ type: "hook", id: h.id, status, at: new Date().toISOString(), jitter: Math.random() })}>Simulate delivery attempt</button></div>)}
+    </section>
+    <section style={section}><h2>Local event history</h2><ol>{model.log.map((entry, index) => <li key={index}><time>{entry.at}</time> — {entry.message}</li>)}</ol></section>
+  </main>;
+}

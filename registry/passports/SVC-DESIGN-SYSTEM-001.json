@@ -1,0 +1,65 @@
+{
+  "passport": {
+    "identity": {
+      "id": "SVC-DESIGN-SYSTEM-001",
+      "name": "Semester shared design system",
+      "type": "service"
+    },
+    "accountability": {
+      "business_owner": "product_design_owner",
+      "technical_owner": "design_systems_owner",
+      "operational_owner": "frontend_platform_owner",
+      "review_cadence": "monthly_and_on_change"
+    },
+    "boundaries": {
+      "authority_owner": "design_systems_owner",
+      "data_classification": "internal_non_record_ui_assets",
+      "tenant_scope": "shared_across_tenants_without_tenant_data",
+      "allowed_uses": [
+        "semantic_tokens",
+        "shared_accessible_components",
+        "scoped_archive_component_adoption"
+      ],
+      "prohibited_uses": [
+        "authorization_decisions",
+        "institutional_fact_authority",
+        "route_or_persistence_replacement"
+      ]
+    },
+    "dependencies": {
+      "upstream": [
+        "app/src/lib/look.ts",
+        "app/src/styles/tokens.css"
+      ],
+      "downstream": [
+        "app/src/components/semester-design/index.ts",
+        "application_screens"
+      ],
+      "failure_mode": "token_export_or_component_contract_drift",
+      "degradation_behavior": "fail_CI_and_preserve_the_last_committed_semantic_contract"
+    },
+    "control_plane": {
+      "policy_ids": ["POL-DESIGN-SYSTEM-001"],
+      "audit_events": ["ci.design_system_check"],
+      "required_evidence": ["EVD-DESIGN-SYSTEM-CI-001"],
+      "release_gate": "REL-DESIGN-SYSTEM-001",
+      "safe_off_path": "keep_archive_components_scoped_by_SemesterDesignSurface"
+    },
+    "quality": {
+      "test_suites": ["TST-DESIGN-SYSTEM-001"],
+      "accessibility_requirements": [
+        "semantic_state_not_color_only",
+        "keyboard_operable_components",
+        "programmatic_names_and_statuses"
+      ],
+      "source_freshness_requirements": "committed_tokens_exports_and_reports_must_match_source"
+    },
+    "lifecycle": {
+      "maturity_level": 4,
+      "current_status": "implemented_not_release_verified",
+      "created_at": "2026-09-27",
+      "last_reviewed_at": "2026-10-16",
+      "retirement_plan": "migrate_consumers_to_a_versioned_successor_before_removing_exports_or_tokens"
+    }
+  }
+}

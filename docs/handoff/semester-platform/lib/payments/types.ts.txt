@@ -1,0 +1,35 @@
+// lib/payments/types.ts — provider-neutral payment interface. Semester owns everything above this line; a regulated rail sits below it.
+export type RailKind = 'card' | 'ach' | 'bank_transfer' | 'wire' | 'wallet' | 'institution_po' | 'invoice_terms' | 'campus_card' | 'financial_aid';
+export type PaymentRail = {
+  id: string; kind: RailKind; provider: string; status: 'draft' | 'enabled' | 'paused' | 'retired';
+  supportedCurrencies: string[]; supportedCountries: string[];
+  supportsAuthorization: boolean; supportsCapture: boolean; supportsRefund: boolean; supportsDispute: boolean;
+  supportsRecurring: boolean; supportsInstallments: boolean; supportsTax: boolean;
+  requiresKyc: boolean; requiresKyb: boolean; requiresExternalSettlement: boolean;
+};
+export type Money = { amountCents: number; currency: string };
+export type PaymentMethodInput = { customerRef: string; clientToken: string };            // token from the rail's hosted field — never a card number
+export type PaymentMethodResult = { token: string; brand?: string; last4?: string };
+export type AuthorizationInput = Money & { idempotencyKey: string; token: string; attemptId: string };
+export type AuthorizationResult = { status: 'authorized' | 'requires_action' | 'failed'; providerRef: string; actionUrl?: string; failureCode?: string };
+export type CaptureInput = Money & { idempotencyKey: string; providerRef: string };
+export type CaptureResult = { status: 'captured' | 'failed'; providerRef: string };
+export type RefundInput = Money & { idempotencyKey: string; providerRef: string; reason: string };
+export type RefundResult = { status: 'pending' | 'succeeded' | 'failed'; refundRef: string };
+export type CancelInput = { idempotencyKey: string; providerRef: string };
+export type CancelResult = { status: 'cancelled' | 'failed' };
+export type SettlementQuery = { from: string; to: string };
+export type SettlementResult = { batchId: string; settledOn: string; lines: { providerRef: string; amountCents: number; feeCents: number }[] };
+export type WebhookRequest = { headers: Record<string, string>; rawBody: string };
+export type NormalizedType = 'payment.authorized' | 'payment.captured' | 'payment.failed' | 'payment.requires_action' | 'payment.settled' | 'refund.succeeded' | 'dispute.opened' | 'dispute.won' | 'dispute.lost';
+export type VerifiedPaymentEvent = { provider: string; providerEventId: string; type: NormalizedType; providerRef: string; amountCents: number; currency: string; payloadHash: string };
+export interface PaymentProviderAdapter {
+  provider: string;
+  createPaymentMethod(i: PaymentMethodInput): Promise<PaymentMethodResult>;
+  authorize(i: AuthorizationInput): Promise<AuthorizationResult>;
+  capture(i: CaptureInput): Promise<CaptureResult>;
+  refund(i: RefundInput): Promise<RefundResult>;
+  cancel(i: CancelInput): Promise<CancelResult>;
+  getSettlement(q: SettlementQuery): Promise<SettlementResult>;
+  verifyWebhook(r: WebhookRequest): Promise<VerifiedPaymentEvent>;   // throws if the signature is invalid
+}
