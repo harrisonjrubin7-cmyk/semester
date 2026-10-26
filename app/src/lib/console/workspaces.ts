@@ -11,6 +11,7 @@ export type ConsoleWorkspaceId =
   | 'audit'
   | 'tenant-operations'
   | 'pilots'
+  | 'delivery'
   | 'integration-health'
   | 'release-incidents'
   | 'privacy'
@@ -78,6 +79,14 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
     id: 'pilots',
     label: 'Pilots',
     capability: 'account:manage',
+    scopeKind: 'platform',
+    scopeId: '',
+    classification: 'restricted',
+  },
+  {
+    id: 'delivery',
+    label: 'Delivery',
+    capability: 'success:manage',
     scopeKind: 'platform',
     scopeId: '',
     classification: 'restricted',

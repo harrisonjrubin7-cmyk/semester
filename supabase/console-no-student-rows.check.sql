@@ -85,6 +85,7 @@ insert into fns values
   ('public.console_release_incidents(false)'), ('public.console_release_incidents(true)'),
   ('public.console_tenant_operations(false)'), ('public.console_tenant_operations(true)'),
   ('public.console_pilots(false)'),           ('public.console_pilots(true)'),
+  ('public.console_delivery(false)'),         ('public.console_delivery(true)'),
   ('public.console_tenant_access(''nostudent-live'')'),
   ('public.console_audit_status()'),
   ('public.console_audit_read(now() - interval ''1 day'', 100)');

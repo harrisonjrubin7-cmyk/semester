@@ -27,6 +27,7 @@ connections
 console-approvals
 console-command-center
 console-control-plane
+console-delivery
 console-integration-health
 console-no-student-rows
 console-pilots

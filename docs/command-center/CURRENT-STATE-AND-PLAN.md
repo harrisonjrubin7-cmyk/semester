@@ -64,7 +64,8 @@ The requested 36 navigation entries are proposals. Status against the repo:
 | Customers | Institutions and Tenants | Built (`customers`, `tenant-operations`) |
 | Customers | Support | Built (`support`, behind `support:ticket` and a flag) |
 | Customers | Pilots | Built in slice B (`pilots`, behind platform `account:manage`; read-only; `console_pilots` RPC, `supabase/console-pilots.check.sql`) |
-| Customers | Sales/Pipeline, Implementations, Customer Success | Schema exists (`gtm_foundation`, `commercial_core`); no console workspace yet |
+| Customers | Implementations, Customer Success | Built in slice B (`delivery`, behind platform `success:manage`; read-only; `console_delivery` RPC, `supabase/console-delivery.check.sql`) |
+| Customers | Sales/Pipeline | Schema exists (`gtm_foundation`); no console workspace yet |
 | Operate | Integrations and Syncs | Built (`integration-health`) |
 | Operate | Incidents | Built (`release-incidents`) |
 | Operate | Platform/Reliability, Data Quality, AI Operations, Developer/Partner Ops | Projection health only; rest not built |
@@ -82,9 +83,12 @@ The requested 36 navigation entries are proposals. Status against the repo:
    `console_my_work` RPC only if client fan-out becomes a performance problem.
 2. **B — customers.** *Pilots done (read-only): `console_pilots` requires `console:operate` and platform
    `account:manage`, returns no free text, and its SQL check (11 assertions) went red when the
-   `account:manage` gate was removed.* Next: implementation and customer-success workspaces reading `gtm_foundation` and
-   `commercial_core` as systems of record; map the legacy `customer*` console tables first (audit risk 3).
-   Each needs its own capability, scoped RPC and a negative cross-tenant check.
+   `account:manage` gate was removed.* *Delivery done (read-only): `console_delivery` requires `console:operate` and platform
+   `success:manage`, reads `commercial_core` (implementation projects and milestones, success plans,
+   QBRs, renewals, latest health snapshot), withholds goals, risks, QBR summaries, signals and owner ids,
+   and its SQL check (19 assertions) went red when either duty gate was removed.* Next: map the legacy
+   `customer*` console tables against `commercial_core` (audit risk 3), and a sales pipeline view over
+   `gtm_foundation`.
 3. **C — build and operate.** Product/engineering delivery view reading GitHub through a server-side
    adapter (no tokens in the browser); reliability from real telemetry only.
 4. **D — business and govern.** Sales, success, growth, finance, people, vendors, AI governance, risk.
