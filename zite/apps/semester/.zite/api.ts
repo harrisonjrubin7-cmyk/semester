@@ -11,6 +11,7 @@ import type { default as _AlumniEp } from '../src/api/alumni';
 import type { default as _ApprovalsEp } from '../src/api/approvals';
 import type { default as _AskEp } from '../src/api/ask';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
+import type { default as _AssetsEp } from '../src/api/assets';
 import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
@@ -117,6 +118,11 @@ type _AssessmentsCfg = typeof _AssessmentsEp;
 export type AssessmentsInputType = NonNullable<_AssessmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssessmentsCfg['execute']>[0]['input'];
 export type AssessmentsOutputType = Awaited<ReturnType<_AssessmentsCfg['execute']>>;
 export const assessments = createCaller<AssessmentsInputType, AssessmentsOutputType>('assessments');
+
+type _AssetsCfg = typeof _AssetsEp;
+export type AssetsInputType = NonNullable<_AssetsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssetsCfg['execute']>[0]['input'];
+export type AssetsOutputType = Awaited<ReturnType<_AssetsCfg['execute']>>;
+export const assets = createCaller<AssetsInputType, AssetsOutputType>('assets');
 
 type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
@@ -434,6 +440,7 @@ export const api = {
   approvals,
   ask,
   assessments,
+  assets,
   campus,
   catalog,
   community,

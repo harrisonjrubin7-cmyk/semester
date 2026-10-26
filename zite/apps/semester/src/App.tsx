@@ -52,6 +52,7 @@ import Housing from './pages/Housing';
 import ITService from './pages/ITService';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
+import Inventory from './pages/Inventory';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
 import Curriculum from './pages/Curriculum';
@@ -115,6 +116,7 @@ export default function App() {
             <Route path="/campus/it" element={<ITService />} />
             <Route path="/campus/library" element={<Library />} />
             <Route path="/campus/parking" element={<Parking />} />
+            <Route path="/campus/inventory" element={<Inventory />} />
             <Route path="/campus/dining" element={<Dining />} />
             <Route path="/learn/tutoring" element={<Tutoring />} />
             <Route path="/progress/graduate" element={<Graduate />} />
