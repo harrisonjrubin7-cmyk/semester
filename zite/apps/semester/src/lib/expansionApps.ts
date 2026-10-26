@@ -37,7 +37,7 @@ export const EXPANSION_APPS: ExpansionRow[] = [
   { id: 'E28', name: 'Independent Learner', stage: 2, cls: 'extend', reuse: 'Personal workspace (tasks, study, grade tracker, syllabi)' },
   { id: 'E29', name: 'Developer', stage: 2, cls: 'extend', reuse: 'semester-developers app (already in the 69+7 baseline)' },
   { id: 'E30', name: 'Partner Administration', stage: 2, cls: 'new', reuse: 'Company OS roles (co_roles, founder-granted)' },
-  { id: 'E31', name: 'Records and Privacy Requests', stage: 2, cls: 'new', reuse: 'Account data export' },
+  { id: 'E31', name: 'Records and Privacy Requests', stage: 2, cls: 'extend', reuse: 'Existing: recordsRights (APP-013, prv_*: inspect/amend/directory opt-out/restrict, 45-day clock, hearing notice) and privacy.ts (export, account deletion request). Missing: legal holds, routing records to their owners, per-record third-party redaction, reviewer/approver separation, expiring delivery, owner-confirmed deletion, appeals' },
   { id: 'E32', name: 'Audit and Assurance', stage: 2, cls: 'extend', reuse: 'Security Lab and Atlas evidence registers' },
 ];
 
