@@ -74,6 +74,15 @@ describe('work queue ordering', () => {
     expect(sortWork(items).map((w) => w.title)).toEqual(['C', 'H soon', 'H late', 'H none', 'M']);
     expect(sortWork(items, 'due')[0].title).toBe('H soon');
   });
+
+  it('orders undated work by priority, then title, when sorting by due date', () => {
+    const items = [
+      fromCommand(command({ id: 'a', severity: 'info', title: 'B low' })),
+      fromCommand(command({ id: 'b', severity: 'critical', title: 'Z critical' })),
+      fromCommand(command({ id: 'c', severity: 'info', title: 'A low' })),
+    ];
+    expect(sortWork(items, 'due').map((w) => w.title)).toEqual(['Z critical', 'A low', 'B low']);
+  });
 });
 
 describe('work queue overview', () => {

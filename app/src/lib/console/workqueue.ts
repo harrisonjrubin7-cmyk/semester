@@ -163,15 +163,21 @@ export function sortWork(items: readonly WorkItem[], by: WorkSort = 'priority'):
     const t = w.dueAt ? Date.parse(w.dueAt) : Number.NaN;
     return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
   };
+  // Infinity minus Infinity is NaN, so two undated items must compare equal explicitly.
+  const dueDiff = (a: WorkItem, b: WorkItem) => {
+    const da = due(a);
+    const db = due(b);
+    return da === db ? 0 : da - db;
+  };
   const sourceIndex = (w: WorkItem) => WORK_SOURCES.findIndex((s) => s.id === w.source);
   return [...items].sort((a, b) => {
     const primary = by === 'due'
-      ? due(a) - due(b)
+      ? dueDiff(a, b)
       : by === 'source'
         ? sourceIndex(a) - sourceIndex(b)
         : PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
     if (primary !== 0) return primary;
-    return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || due(a) - due(b) || a.title.localeCompare(b.title);
+    return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || dueDiff(a, b) || a.title.localeCompare(b.title);
   });
 }
 
