@@ -5,5 +5,12 @@ Each file runs a module's migration and its rule checks inside one transaction t
 (app `jeabiv2536`): `import { run } from './dbchecks/facilities'; await run();`
 
 A check row counts as passed only when it is exactly TRUE; NULL counts as failed (`ok IS NOT TRUE`).
-Earlier checks (IT help, Library, Parking, Inventory) were run with a counter that ignored NULL rows and their
-scripts were not kept; re-running them with this counting is open in docs/execution/NEXT_ACTIONS.md.
+
+Two rules for writing a check:
+- Call the function in its own statement (`x := fn(...)`) and read the table in the next one. A subquery in the same
+  statement as the call sees the row as it was before the call, which made IT help's F19b come back NULL.
+- Include the returned text in the label (`'F19b ... ' || coalesce(x,'')`) so a failure says why.
+
+Current results (26 Oct, all re-run with this counting): IT help 38/38, Library 33/33, Parking 34/34,
+Inventory 37/37, Facilities 27/27. Run all five:
+`import { run as a } from './dbchecks/it'; ...` — one import per file; the runner cannot import this README.
