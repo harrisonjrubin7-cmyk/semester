@@ -30,6 +30,12 @@ declare namespace NodeJS {
     ZITE_OUTLOOK_ACCESS_TOKEN: string;
     /** linear access token (linear) */
     ZITE_LINEAR_ACCESS_TOKEN: string;
+    /** notion access token (notion) */
+    ZITE_NOTION_ACCESS_TOKEN: string;
+    /** jira access token (jira) */
+    ZITE_JIRA_ACCESS_TOKEN: string;
+    ZITE_JIRA_CLOUD_ID: string;
+    ZITE_JIRA_SITE_URL: string;
     /** Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string) */
     ZITE_POSTGRES_URL: string;
     [key: string]: string | undefined;

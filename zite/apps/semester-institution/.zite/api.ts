@@ -2,49 +2,28 @@
 
 import { createCaller } from 'zitejs/caller';
 
-import type { default as _CreateSectionRequestEp } from '../src/api/createSectionRequest';
-import type { default as _GetMyContextEp } from '../src/api/getMyContext';
-import type { default as _GetOverviewEp } from '../src/api/getOverview';
-import type { default as _GetReferenceDataEp } from '../src/api/getReferenceData';
-import type { default as _GetSectionRequestEp } from '../src/api/getSectionRequest';
-import type { default as _ListSectionRequestsEp } from '../src/api/listSectionRequests';
+import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
+import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
+import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
 
-type _CreateSectionRequestCfg = typeof _CreateSectionRequestEp;
-export type CreateSectionRequestInputType = NonNullable<_CreateSectionRequestCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CreateSectionRequestCfg['execute']>[0]['input'];
-export type CreateSectionRequestOutputType = Awaited<ReturnType<_CreateSectionRequestCfg['execute']>>;
-export const createSectionRequest = createCaller<CreateSectionRequestInputType, CreateSectionRequestOutputType>('createSectionRequest');
+type _InstitutionConsoleCfg = typeof _InstitutionConsoleEp;
+export type InstitutionConsoleInputType = NonNullable<_InstitutionConsoleCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionConsoleCfg['execute']>[0]['input'];
+export type InstitutionConsoleOutputType = Awaited<ReturnType<_InstitutionConsoleCfg['execute']>>;
+export const institutionConsole = createCaller<InstitutionConsoleInputType, InstitutionConsoleOutputType>('institutionConsole');
 
-type _GetMyContextCfg = typeof _GetMyContextEp;
-export type GetMyContextInputType = NonNullable<_GetMyContextCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetMyContextCfg['execute']>[0]['input'];
-export type GetMyContextOutputType = Awaited<ReturnType<_GetMyContextCfg['execute']>>;
-export const getMyContext = createCaller<GetMyContextInputType, GetMyContextOutputType>('getMyContext');
+type _InstitutionOpsCfg = typeof _InstitutionOpsEp;
+export type InstitutionOpsInputType = NonNullable<_InstitutionOpsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionOpsCfg['execute']>[0]['input'];
+export type InstitutionOpsOutputType = Awaited<ReturnType<_InstitutionOpsCfg['execute']>>;
+export const institutionOps = createCaller<InstitutionOpsInputType, InstitutionOpsOutputType>('institutionOps');
 
-type _GetOverviewCfg = typeof _GetOverviewEp;
-export type GetOverviewInputType = NonNullable<_GetOverviewCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetOverviewCfg['execute']>[0]['input'];
-export type GetOverviewOutputType = Awaited<ReturnType<_GetOverviewCfg['execute']>>;
-export const getOverview = createCaller<GetOverviewInputType, GetOverviewOutputType>('getOverview');
-
-type _GetReferenceDataCfg = typeof _GetReferenceDataEp;
-export type GetReferenceDataInputType = NonNullable<_GetReferenceDataCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetReferenceDataCfg['execute']>[0]['input'];
-export type GetReferenceDataOutputType = Awaited<ReturnType<_GetReferenceDataCfg['execute']>>;
-export const getReferenceData = createCaller<GetReferenceDataInputType, GetReferenceDataOutputType>('getReferenceData');
-
-type _GetSectionRequestCfg = typeof _GetSectionRequestEp;
-export type GetSectionRequestInputType = NonNullable<_GetSectionRequestCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetSectionRequestCfg['execute']>[0]['input'];
-export type GetSectionRequestOutputType = Awaited<ReturnType<_GetSectionRequestCfg['execute']>>;
-export const getSectionRequest = createCaller<GetSectionRequestInputType, GetSectionRequestOutputType>('getSectionRequest');
-
-type _ListSectionRequestsCfg = typeof _ListSectionRequestsEp;
-export type ListSectionRequestsInputType = NonNullable<_ListSectionRequestsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ListSectionRequestsCfg['execute']>[0]['input'];
-export type ListSectionRequestsOutputType = Awaited<ReturnType<_ListSectionRequestsCfg['execute']>>;
-export const listSectionRequests = createCaller<ListSectionRequestsInputType, ListSectionRequestsOutputType>('listSectionRequests');
+type _SectionRequestsCfg = typeof _SectionRequestsEp;
+export type SectionRequestsInputType = NonNullable<_SectionRequestsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SectionRequestsCfg['execute']>[0]['input'];
+export type SectionRequestsOutputType = Awaited<ReturnType<_SectionRequestsCfg['execute']>>;
+export const sectionRequests = createCaller<SectionRequestsInputType, SectionRequestsOutputType>('sectionRequests');
 
 
 export const api = {
-  createSectionRequest,
-  getMyContext,
-  getOverview,
-  getReferenceData,
-  getSectionRequest,
-  listSectionRequests,
+  institutionConsole,
+  institutionOps,
+  sectionRequests,
 };
