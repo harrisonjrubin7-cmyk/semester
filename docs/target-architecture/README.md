@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PLATFORM-CONSTITUTION.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ARCHITECTURE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/01-TARGET-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester target architecture — CTO pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `7287ddc`.

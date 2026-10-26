@@ -1,3 +1,38 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: MONITORING.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: SECRETS.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: supabase/DEPLOY.md
+    changed_at: "2026-10-18T20:45:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Runbooks
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).

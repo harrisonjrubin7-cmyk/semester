@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/DEFINITION-OF-DONE.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/HECVAT-VPAT-PLAN.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Accessibility and inclusive design program
 
 **Status: proposal, 2026-10-04. Nothing here is a conformance claim.** Semester has automated accessibility

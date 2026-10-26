@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: PILOT.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Institutional change management
 
 Part 14 of the expansion command. Phase 6. Nothing here is built yet.

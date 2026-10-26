@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 02 · Monorepo structure
 
 > Part of the [CTO architecture pack](README.md). Status: **proposed**.

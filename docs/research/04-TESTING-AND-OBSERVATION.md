@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/product-design/CORE-USER-JOURNEYS.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/product-design/FIRST-WIN-SPECIFICATION.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/02-STAKEHOLDER-RESEARCH-PLAN.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/03-INTERVIEW-GUIDES.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/07-PILOT-AND-LONGITUDINAL.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 04 · Usability, diary, survey, concept and workflow methods
 
 Interviews are in [`03`](03-INTERVIEW-GUIDES.md). This page covers the other

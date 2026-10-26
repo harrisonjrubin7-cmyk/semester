@@ -1,3 +1,98 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/LAUNCH-READINESS-COUNCIL.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RUNBOOKS.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUBPROCESSORS.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/OPERATING-RHYTHM.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RISK-GOVERNANCE.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: MONITORING.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-18T20:45:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Operational readiness pack
 
 <!-- Rendered from app/src/lib/ops/readiness-pack.ts by readiness-pack.test.ts. Edit the data, then run `npm run registers` from app/. -->

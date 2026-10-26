@@ -1,3 +1,48 @@
+---
+stale-refs:
+  - source: docs/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/PILOT-TO-PRODUCTION.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/PAID-PILOT-FRAMEWORK.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/ROI-MODEL-AND-BUSINESS-CASE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/SEGMENT-MOTIONS-AND-BUYING-COMMITTEES.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/STAGE-COLLATERAL-AND-HANDOFF.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Commercial documents: index and precedence
 
 | Control | Value |

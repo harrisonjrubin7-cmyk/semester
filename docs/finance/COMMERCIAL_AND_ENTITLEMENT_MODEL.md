@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Commercial and entitlement model
 
 | Control | Value |

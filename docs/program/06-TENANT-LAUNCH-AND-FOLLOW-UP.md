@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 06 · Tenant launch coordination and post-launch follow-up
 
 > Part of the [program pack](README.md). Applies to one design-partner cohort,

@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: RETENTION.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/AI-GRADING-AND-INTEGRITY.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Support and Trust-and-Safety operating model
 
 | Control | Value |

@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ROLE-PERMISSION-MATRIX.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/roles/ROLE_SYSTEM_MASTER_MAP.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Role capability matrix
 
 **As of** 2026-10-05 · **Part of** [`ROLE_SYSTEM_MASTER_MAP.md`](ROLE_SYSTEM_MASTER_MAP.md) · **Status** audit evidence.

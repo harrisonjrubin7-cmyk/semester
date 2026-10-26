@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/operations/CONTROLLED_ACTION_PATTERNS.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/handoffs.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Operations workflow catalog
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision.

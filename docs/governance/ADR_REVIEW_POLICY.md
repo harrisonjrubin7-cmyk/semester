@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # ADR review policy
 
 Status: Proposed Phase 0 policy (2026-10-04). Not adopted until the founder, acting as the repository's decision authority, accepts ADR-0001. It adds to, and does not replace, [`docs/DECISION-RIGHTS.md`](../DECISION-RIGHTS.md) (what the database already enforces) and [`CLAUDE.md`](../../CLAUDE.md) (`D-<pr>` records).

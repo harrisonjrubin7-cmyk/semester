@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/ai-governance/05-feature-requirements.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ai-governance/10-red-team-and-launch-gates.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # AI governance architecture
 
 **Status: design and guard. Not an approval, not a claim about any deployed environment.**

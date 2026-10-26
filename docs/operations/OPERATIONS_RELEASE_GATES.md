@@ -1,3 +1,66 @@
+---
+stale-refs:
+  - source: docs/DATA-VISUALIZATION-SYSTEM.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/master/SEMESTER_COMPANY_OPERATING_SYSTEM.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: SECRETS.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SECURITY-THREAT-MODEL.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/OPERATIONS_AUDIT_AND_EVIDENCE.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/04-support-operating-model.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operations/coo/10-tenant-launch-risk-and-readiness.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Operations release gates, test plan and SLOs
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. SLO numbers are proposals awaiting the founder (OD-2, which is B-04 in the console backlog).

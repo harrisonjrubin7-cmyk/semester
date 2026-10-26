@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/support/articles/delete-account-export-data.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/internal/escalation-map.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Macro library
 
 > **Type:** runbook · **Audience:** support · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

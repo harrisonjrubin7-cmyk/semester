@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/04-TESTING-AND-OBSERVATION.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/06-RESEARCH-REPOSITORY.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # 03 · Interview guides
 
 Draft instruments. Consent wording and anything that touches legal meaning

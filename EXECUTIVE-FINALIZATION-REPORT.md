@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: FINALIZATION-BASELINE.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester executive finalization report
 
 | Control | Value |

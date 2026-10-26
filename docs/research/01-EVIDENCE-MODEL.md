@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/03-INTERVIEW-GUIDES.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 01 · The evidence model
 
 | Control | Value |
