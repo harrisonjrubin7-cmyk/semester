@@ -11,9 +11,16 @@ import { Markdown } from '@project/components/markdown';
 import { ArrowLeft } from 'lucide-react';
 import { NewAssignment, Attendance, Discussion } from '../components/CourseOps';
 import { PageHeader, Panel, Empty, SourceTag, Status, fmt, useLoad, Loadable, errMsg } from '../components/kit';
+import { uploadPrivate, saveBytes } from '../lib/fileClient';
+import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
 
-type Sub = { id: string; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[] };
+type Sub = { id: string; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
 type Asg = { id: string; title: string; dueAt: string | null; points: number | null; rubric: string; source: string };
+
+const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
+const AttList = ({ s, onDetach }: { s: Sub; onDetach?: (fileId: string) => void }) => (<>{(s.attachments ?? []).map((f) => (
+  <span key={f.fileId} className="flex items-center gap-2 text-xs"><button className="text-primary underline" onClick={() => openAtt(s.id, f.fileId)}>{f.name}</button>
+    {onDetach && <button className="text-muted-foreground underline" onClick={() => onDetach(f.fileId)}>Remove</button>}</span>))}</>);
 
 function GradeRow({ s, onSave }: { s: Sub; onSave: (score: number, fb: string) => void }) {
   const [score, setScore] = useState(s.score?.toString() ?? '');
@@ -22,12 +29,13 @@ function GradeRow({ s, onSave }: { s: Sub; onSave: (score: number, fb: string) =
     <div className="border-b border-border py-3 text-sm last:border-0">
       <div className="flex justify-between"><span className="font-medium">{s.student} · {s.taskTitle}</span><Status value={s.state} /></div>
       {s.files.map((f) => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">{f.name}</a>)}
+      <AttList s={s} />
       <div className="mt-2 flex gap-2"><Input className="w-24" type="number" placeholder="Score" value={score} onChange={(e) => setScore(e.target.value)} /><Input placeholder="Feedback" value={fb} onChange={(e) => setFb(e.target.value)} /><Button size="sm" variant="outline" disabled={score === ''} onClick={() => onSave(Number(score), fb)}>Save</Button></div>
     </div>
   );
 }
 
-function Assignment({ a, sub, onUpload, onSubmit, busy }: { a: Asg; sub?: Sub; onUpload: () => void; onSubmit: (id: string) => void; busy: boolean }) {
+function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { a: Asg; sub?: Sub; onUpload: () => void; onSubmit: (id: string) => void; onAttach: (f: File) => void; onDetach: (fileId: string) => void; busy: boolean }) {
   return (
     <Panel>
       <div className="flex justify-between gap-2"><p className="eyebrow">Assignment</p><SourceTag source={a.source} /></div>
@@ -39,8 +47,10 @@ function Assignment({ a, sub, onUpload, onSubmit, busy }: { a: Asg; sub?: Sub; o
       ) : (
         <div className="mt-3 space-y-2">
           {!sub && <Button size="sm" variant="outline" disabled={busy} onClick={onUpload}>Start a private draft</Button>}
-          <p className="text-xs text-muted-foreground">File uploads are turned off until private storage is in place.</p>
           {sub?.files.map((f) => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">○ {f.name}</a>)}
+          {sub && <AttList s={sub} onDetach={onDetach} />}
+          <label className="block text-xs">Attach a file (private; your instructor sees it after you submit, up to {MAX_BYTES / 1024 / 1024} MB)
+            <input type="file" className="mt-1 block text-xs" accept={Object.keys(MIME_ALLOW).join(',')} disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) onAttach(f); e.target.value = ''; }} /></label>
           {sub && <Button size="sm" onClick={() => onSubmit(sub.id)}>Submit</Button>}
         </div>
       )}
@@ -69,6 +79,8 @@ export default function SectionPage() {
                 {d.assignments.length === 0 ? <Empty>No assignments posted.</Empty> : d.assignments.map((a: Asg) => (
                   <Assignment key={a.id} a={a} busy={false} sub={d.teaching ? undefined : d.submissions.find((s: Sub) => s.taskId === a.id)}
                     onUpload={() => act(() => learn({ action: 'saveDraft', taskId: a.id }), 'Draft started')}
+                    onAttach={(f) => act(async () => { const fileId = await uploadPrivate(f, 'submission'); await learn({ action: 'saveDraft', taskId: a.id, fileId }); }, 'Attached to your draft')}
+                    onDetach={(fileId) => { const sub = d.submissions.find((s: Sub) => s.taskId === a.id); if (sub) act(() => learn({ action: 'detachFile', submissionId: sub.id, fileId }), 'Removed from your draft'); }}
                     onSubmit={(id) => act(() => learn({ action: 'submit', submissionId: id }), 'Submitted')} />))}
               </TabsContent>
               <TabsContent value="syllabus"><SyllabusTab d={d} sectionId={sectionId} reload={state.reload} /></TabsContent>

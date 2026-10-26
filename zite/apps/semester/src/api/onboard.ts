@@ -3,6 +3,7 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { ensureSampleInstitution, seedForUser } from '../lib/seed';
 import { audit, forbid } from '../lib/server';
+import { rateLimit } from '../lib/rateLimitServer';
 
 export default createEndpoint({
   description: 'Creates the member’s first workspace or invite-only join request, records consents and optionally loads sample data',
@@ -17,6 +18,7 @@ export default createEndpoint({
   outputSchema: z.object({ ok: z.boolean() }),
   execute: async ({ input, context }) => {
     const uid = context.user.id;
+    await rateLimit('onboard.user', uid);
     const existing = await zite.memberships.findAll({ filters: { member: uid }, limit: 1 });
     if (existing.records.length) return { ok: true };
 

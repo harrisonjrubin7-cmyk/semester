@@ -5,22 +5,14 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { PageHeader, Panel, Empty, fmtDay, useLoad, Loadable, errMsg } from '../components/kit';
 import { ConfirmAction } from '../components/overlays';
-import { checkUpload, MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
+import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
+import { uploadPrivate, saveBytes } from '../lib/fileClient';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const kb = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
-const toB64 = (buf: ArrayBuffer) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s); };
 
 async function open(id: string) {
-  try {
-    const r: any = await files({ action: 'download', id });
-    const bin = atob(r.base64); const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    // A local object URL that lives only in this tab; nothing is published.
-    const url = URL.createObjectURL(new Blob([bytes], { type: r.mime }));
-    const a = document.createElement('a'); a.href = url; a.download = r.name; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  } catch (e) { toast(`! ${errMsg(e)}`); }
+  try { saveBytes((await files({ action: 'download', id })) as never); } catch (e) { toast(`! ${errMsg(e)}`); }
 }
 
 function ShareForm({ onShare }: { onShare: (email: string, days: number) => void }) {
@@ -43,10 +35,8 @@ export default function Files() {
   const [share, setShare] = useState<{ id: string } | null>(null);
   const call = async (body: any, ok: string) => { try { await files(body); toast(ok); s.reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
   const upload = async (f: File) => {
-    const why = checkUpload(f.name, f.type, f.size);
-    if (why) { toast(`! ${why}`); return; }
     setBusy(true);
-    try { await files({ action: 'upload', name: f.name, mime: f.type, purpose: 'personal', base64: toB64(await f.arrayBuffer()) }); toast('Uploaded. Only you can open it.'); s.reload(); }
+    try { await uploadPrivate(f, 'personal'); toast('Uploaded. Only you can open it.'); s.reload(); }
     catch (e) { toast(`! ${errMsg(e)}`); } finally { setBusy(false); if (input.current) input.current.value = ''; }
   };
   return (

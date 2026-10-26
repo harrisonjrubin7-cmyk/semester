@@ -4,6 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { CRS_MIGRATION } from '../lib/crsMigration';
+import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
 
 let crsReady: Promise<void> | null = null;
 const ensureCrs = () => {
@@ -17,7 +18,9 @@ export default createEndpoint({
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('list') }),
     z.object({ action: z.literal('section'), sectionId: z.string() }),
-    z.object({ action: z.literal('saveDraft'), taskId: z.string(), fileUrl: z.string().optional(), fileName: z.string().optional() }),
+    z.object({ action: z.literal('saveDraft'), taskId: z.string(), fileId: z.string().uuid().optional() }),
+    z.object({ action: z.literal('detachFile'), submissionId: z.string(), fileId: z.string().uuid() }),
+    z.object({ action: z.literal('openAttachment'), submissionId: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('submit'), submissionId: z.string() }),
     z.object({ action: z.literal('grade'), submissionId: z.string(), score: z.number().min(0), feedback: z.string() }),
     z.object({ action: z.literal('release'), sectionId: z.string() }),
@@ -100,6 +103,7 @@ export default createEndpoint({
       const assignments = [...new Map(visibleTasks.map((t) => [teaching ? t.title : t.id, t])).values()];
       const subs = (await zite.submissions.findAll({ limit: 2000 })).records.filter((x) => tasks.some((t) => t.id === first(x.task)));
       const visibleSubs = subs.filter((x) => teaching ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
+      const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
       const names = teaching ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
       const resources = (await zite.resources.findAll({ filters: { section: s.id }, limit: 300 })).records
         .filter((r) => r.visibility === 'Course' || ids(r.owner).includes(uid));
@@ -109,7 +113,7 @@ export default createEndpoint({
         assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
-          return { id: x.id, taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (teaching || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })) };
+          return { id: x.id, taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (teaching || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
         }).map((x) => teaching ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
@@ -123,15 +127,43 @@ export default createEndpoint({
       if (!t || !ids(t.owner).includes(uid)) forbid();
       const existing = (await zite.submissions.findAll({ filters: { student: uid, task: input.taskId }, limit: 1 })).records[0];
       if (existing && existing.state !== 'Private Draft') forbid('This work was already submitted.');
-      // Private uploads are disabled until a private file store with per-download checks exists (founder decision 23 Oct 2026).
-      if (input.fileUrl) forbid('File uploads are turned off until private storage is in place.');
-      if (!existing) await zite.submissions.create({ record: { label: `${t!.title} · draft`, task: t!.id, student: uid, state: 'Private Draft' } as never });
+      // Files come from the private store (decision D2): the student uploads to You -> Files storage, then attaches here.
+      const sub = existing ?? await zite.submissions.create({ record: { label: `${t!.title} · draft`, task: t!.id, student: uid, state: 'Private Draft' } as never });
+      if (input.fileId) {
+        await ensureFil();
+        const e = ((await pg().query(`SELECT fil_attach($1,$2,$3,'submission',$4) AS e`, [a.institutionId, uid, input.fileId, sub.id])) as { e: string | null }[])[0].e;
+        if (e) forbid(e);
+      }
+      return { ok: true, submissionId: sub.id };
+    }
+    if (input.action === 'detachFile') {
+      const x = await zite.submissions.findOne({ id: input.submissionId });
+      if (!x || !ids(x.student).includes(uid) || x.state !== 'Private Draft') forbid('Files can be removed only from your own draft.');
+      await ensureFil();
+      const e = ((await pg().query(`SELECT fil_detach($1,$2,$3,'submission',$4) AS e`, [a.institutionId, uid, input.fileId, x!.id])) as { e: string | null }[])[0].e;
+      if (e) forbid(e);
       return { ok: true };
+    }
+    if (input.action === 'openAttachment') {
+      // Who may see this work: the student, or the instructor of its section once it is submitted.
+      const x = await zite.submissions.findOne({ id: input.submissionId });
+      if (!x) forbid('You do not have access to this file.');
+      const own = ids(x!.student).includes(uid);
+      if (!own) {
+        const t = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
+        const s2 = t ? await zite.sections.findOne({ id: first(t.section) ?? '' }) : null;
+        if (!s2 || !ids(s2.instructors).includes(uid) || x!.state === 'Private Draft') forbid('You do not have access to this file.');
+      }
+      const f = await readAttached(a.institutionId, input.fileId, uid, 'submission', x!.id);
+      if (!f) forbid('You do not have access to this file.');
+      return f!;
     }
     if (input.action === 'submit') {
       const x = await zite.submissions.findOne({ id: input.submissionId });
       if (!x || !ids(x.student).includes(uid) || x.state !== 'Private Draft') forbid();
       await zite.submissions.update({ id: x!.id, record: { state: 'Submitted' } as never });
+      await ensureFil();
+      await pg().query(`SELECT fil_lock($1,'submission',$2)`, [a.institutionId, x!.id]);
       const tid = first(x!.task);
       if (tid) await zite.tasks.update({ id: tid, record: { status: 'Done' } as never });
       await audit(a, 'Work submitted', `submission:${x!.id}`, '', 'Student');

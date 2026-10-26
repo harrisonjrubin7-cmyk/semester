@@ -13,12 +13,53 @@ export const FIL_MIGRATION: string[] = [
      CHECK (grantee_id <> granted_by), CHECK (expires_at <= created_at + interval '366 days'))`,
   `CREATE UNIQUE INDEX IF NOT EXISTS fil_grants_live ON fil_grants (file_id, grantee_id) WHERE revoked_at IS NULL`,
   `CREATE TABLE IF NOT EXISTS fil_access_log (id bigserial PRIMARY KEY, tenant_id text NOT NULL, file_id uuid, actor_id text NOT NULL,
-     action text NOT NULL CHECK (action IN ('upload','download','denied','grant','revoke','delete')), detail text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT clock_timestamp())`,
+     action text NOT NULL CHECK (action IN ('upload','download','denied','grant','revoke','delete','attach','detach')), detail text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT clock_timestamp())`,
   `CREATE OR REPLACE FUNCTION fil_refuse_change() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'APPEND_ONLY' USING ERRCODE = '42501'; END $$`,
   `DO $$ BEGIN
      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'fil_access_log_append_only') THEN
        CREATE TRIGGER fil_access_log_append_only BEFORE UPDATE OR DELETE OR TRUNCATE ON fil_access_log FOR EACH STATEMENT EXECUTE FUNCTION fil_refuse_change();
      END IF;
+   END $$`,
+  // fil-002: files attached to a submission or an achievement. Attaching is the owner's act; once the work is
+  // submitted (or the evidence verified) the attachment is locked and the file can no longer be detached or deleted.
+  `CREATE TABLE IF NOT EXISTS fil_attachments (tenant_id text NOT NULL, file_id uuid NOT NULL REFERENCES fil_files(id),
+     kind text NOT NULL CHECK (kind IN ('submission','achievement')), ref_id text NOT NULL, attached_by text NOT NULL,
+     locked boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (kind, ref_id, file_id))`,
+  `DO $$ BEGIN
+     IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fil_access_log_action_check' AND pg_get_constraintdef(oid) NOT LIKE '%attach%') THEN
+       ALTER TABLE fil_access_log DROP CONSTRAINT fil_access_log_action_check;
+       ALTER TABLE fil_access_log ADD CONSTRAINT fil_access_log_action_check CHECK (action IN ('upload','download','denied','grant','revoke','delete','attach','detach'));
+     END IF;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION fil_attach(p_tenant text, p_owner text, p_file uuid, p_kind text, p_ref text) RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     IF NOT EXISTS (SELECT 1 FROM fil_files WHERE id = p_file AND tenant_id = p_tenant AND owner_id = p_owner AND deleted_at IS NULL) THEN RETURN 'Attach one of your own files.'; END IF;
+     IF EXISTS (SELECT 1 FROM fil_attachments WHERE kind = p_kind AND ref_id = p_ref AND locked) THEN RETURN 'This work was already submitted.'; END IF;
+     IF (SELECT count(*) FROM fil_attachments WHERE kind = p_kind AND ref_id = p_ref) >= 5 THEN RETURN 'Attach up to 5 files.'; END IF;
+     INSERT INTO fil_attachments (tenant_id, file_id, kind, ref_id, attached_by) VALUES (p_tenant, p_file, p_kind, p_ref, p_owner) ON CONFLICT DO NOTHING;
+     INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action, detail) VALUES (p_tenant, p_file, p_owner, 'attach', p_kind || ':' || p_ref);
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION fil_detach(p_tenant text, p_owner text, p_file uuid, p_kind text, p_ref text) RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     DELETE FROM fil_attachments WHERE tenant_id = p_tenant AND file_id = p_file AND kind = p_kind AND ref_id = p_ref AND attached_by = p_owner AND NOT locked;
+     IF NOT FOUND THEN RETURN 'That file cannot be removed from this work.'; END IF;
+     INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action, detail) VALUES (p_tenant, p_file, p_owner, 'detach', p_kind || ':' || p_ref);
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION fil_lock(p_tenant text, p_kind text, p_ref text) RETURNS void LANGUAGE sql AS $$
+     UPDATE fil_attachments SET locked = true WHERE tenant_id = p_tenant AND kind = p_kind AND ref_id = p_ref AND NOT locked $$`,
+  // Reads a file through the work it is attached to. The endpoint has already decided that the caller may see that
+  // work (owner, instructor of the section, verifying staff); the database guarantees the file really is attached to it.
+  `CREATE OR REPLACE FUNCTION fil_read_attached(p_tenant text, p_file uuid, p_actor text, p_kind text, p_ref text) RETURNS TABLE (name text, mime text, bytes bytea) LANGUAGE plpgsql AS $$
+   BEGIN
+     IF NOT EXISTS (SELECT 1 FROM fil_attachments a JOIN fil_files f ON f.id = a.file_id
+                    WHERE a.tenant_id = p_tenant AND a.file_id = p_file AND a.kind = p_kind AND a.ref_id = p_ref AND f.deleted_at IS NULL) THEN
+       INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action, detail) VALUES (p_tenant, p_file, p_actor, 'denied', p_kind || ':' || p_ref);
+       RETURN;
+     END IF;
+     INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action, detail) VALUES (p_tenant, p_file, p_actor, 'download', p_kind || ':' || p_ref);
+     RETURN QUERY SELECT f.name, f.mime, b.bytes FROM fil_files f JOIN fil_blobs b ON b.file_id = f.id WHERE f.id = p_file;
    END $$`,
   `CREATE OR REPLACE FUNCTION fil_can_read(p_tenant text, p_file uuid, p_actor text) RETURNS boolean LANGUAGE sql STABLE AS $$
      SELECT EXISTS (SELECT 1 FROM fil_files f WHERE f.id = p_file AND f.tenant_id = p_tenant AND f.deleted_at IS NULL AND (
@@ -64,6 +105,7 @@ export const FIL_MIGRATION: string[] = [
   // Delete removes the bytes for good and keeps the metadata row (deleted_at) so the log still resolves.
   `CREATE OR REPLACE FUNCTION fil_delete(p_tenant text, p_file uuid, p_owner text) RETURNS text LANGUAGE plpgsql AS $$
    BEGIN
+     IF EXISTS (SELECT 1 FROM fil_attachments WHERE file_id = p_file AND locked) THEN RETURN 'This file is part of submitted work or verified evidence and is kept as submitted.'; END IF;
      UPDATE fil_files SET deleted_at = now() WHERE id = p_file AND tenant_id = p_tenant AND owner_id = p_owner AND deleted_at IS NULL;
      IF NOT FOUND THEN RETURN 'Only the owner can delete this file.'; END IF;
      DELETE FROM fil_blobs WHERE file_id = p_file;

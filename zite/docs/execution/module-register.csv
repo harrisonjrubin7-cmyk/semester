@@ -6,7 +6,7 @@ MOD-004,Core workspace,Tasks & Goals,S-53 §1,student-owned,native,/today manage
 MOD-005,Core workspace,Notifications,S-53 §1,derived,native,/today/notifications zite.messages,yes,partial,built parts only,no,no,no
 MOD-006,Core workspace,Communications,S-53 §1,institution-official,native,/today/mail inbox,yes,partial,built parts only,no,no,no
 MOD-007,Core workspace,Notes & Documents,S-53 §1,student-owned,native,/learn/write,yes,partial,built parts only,no,no,no
-MOD-008,Core workspace,Files & Resources,S-53 §1,student-owned,native,/you/files api/files fil-001 (private store; folders and attachments to submissions not yet),yes,partial,unit + rolled-back DB checks,no,no,no
+MOD-008,Core workspace,Files & Resources,S-53 §1,student-owned,native,/you/files api/files fil-001/002 (private store; attachments to submissions and evidence),yes,partial,unit + rolled-back DB checks,no,no,no
 MOD-009,Core workspace,Projects & Group Workspaces,S-53 §1,student-owned,native,none,yes,missing,NOT RUN,no,no,no
 MOD-010,Core workspace,Focus & Study Sessions,S-53 §1,student-owned,native,/learn/study study,yes,partial,built parts only,no,no,no
 MOD-011,Core workspace,Universal Search,S-53 §1,derived,native,search,yes,partial,built parts only,no,no,no
@@ -28,7 +28,7 @@ MOD-026,Learning and Course Studio,Courses,S-53 §3,instructor-published,native,
 MOD-027,Learning and Course Studio,Course Studio,S-53 §3,instructor-published,native,CourseStudio learn,yes,partial,built parts only,no,no,no
 MOD-028,Learning and Course Studio,Syllabus & Course Policies,S-53 §3,instructor-published,native,crs syllabus versions,yes,implemented,unit + rolled-back DB checks,no,no,no
 MOD-029,Learning and Course Studio,Learning Content & Resources,S-53 §3,instructor-published,native,learn materials,yes,partial,built parts only,no,no,no
-MOD-030,Learning and Course Studio,Assignments & Submissions,S-53 §3,instructor-published,native,teaching,yes,partial,built parts only,no,no,no
+MOD-030,Learning and Course Studio,Assignments & Submissions,S-53 §3,instructor-published,native,"teaching; learn saveDraft/submit with private-store attachments (fil-002), locked at submit",yes,partial,built parts only,no,no,no
 MOD-031,Learning and Course Studio,Assessments & Rubrics,S-53 §3,instructor-published,native,none,yes,missing,NOT RUN,no,no,no
 MOD-032,Learning and Course Studio,Gradebook & Feedback,S-53 §3,institution-official,native,/staff/gradebook regrade,yes,partial,built parts only,no,no,no
 MOD-033,Learning and Course Studio,Discussions & Course Q&A,S-53 §3,instructor-published,native,/staff/queue,yes,partial,built parts only,no,no,no
@@ -81,7 +81,7 @@ MOD-079,Campus life,Recreation & Campus Activities,S-53 §7,institution-official
 MOD-080,Campus life,Library & Bookstore Access,S-53 §7,external,read-only,none,yes,missing,NOT RUN,no,no,no
 MOD-081,Campus life,Campus Jobs & Volunteering,S-53 §7,institution-official,native,none,yes,missing,NOT RUN,no,no,no
 MOD-082,Campus life,Safety & Emergency Handoffs,S-53 §7,external,handoff,/help,yes,partial,built parts only,no,no,no
-MOD-083,Career and alumni,Skills Profile & Verification,S-53 §8,student-owned + verifier,native,/plan/career,yes,partial,built parts only,no,no,no
+MOD-083,Career and alumni,Skills Profile & Verification,S-53 §8,student-owned + verifier,native,/progress achievements with private evidence files reviewed by staff in the same institution,yes,partial,built parts only,no,no,no
 MOD-084,Career and alumni,Portfolio,S-53 §8,student-owned,native,/plan/career,yes,partial,built parts only,no,no,no
 MOD-085,Career and alumni,Credential Wallet,S-53 §8,institution-official,native,none,yes,missing,NOT RUN,no,no,no
 MOD-086,Career and alumni,Resume & Cover Letter Studio,S-53 §8,student-owned,native,none,yes,missing,NOT RUN,no,no,no

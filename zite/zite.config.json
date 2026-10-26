@@ -65,6 +65,14 @@
       "type": "email",
       "connectionId": "svc_568678",
       "provider": "gmail"
+    },
+    "notion": {
+      "type": "notion",
+      "connectionId": "svc_570586"
+    },
+    "jira": {
+      "type": "jira",
+      "connectionId": "svc_570588"
     }
   },
   "envVars": {

@@ -3,11 +3,9 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, forbid, audit, userNames } from '../lib/server';
 import { pg } from '../lib/pg';
-import { FIL_MIGRATION } from '../lib/filMigration';
+import { ensureFil } from '../lib/filServer';
 import { checkUpload, decodeBase64, PURPOSES } from '../lib/fileRules';
 
-let ready: Promise<void> | null = null;
-const ensureFil = () => { if (!ready) ready = (async () => { for (const q of FIL_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 type Row = Record<string, unknown>;
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
 const NOT_SHAREABLE = 'That person is not an active member of your institution.';

@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
+import { pg } from '../lib/pg';
+import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
 
 const POINTS: Record<string, number> = { 'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D': 1, 'F': 0 };
 
@@ -10,7 +12,8 @@ export default createEndpoint({
   authenticated: true,
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('get') }),
-    z.object({ action: z.literal('addAchievement'), title: z.string().min(2), evidenceUrl: z.string().url().optional(), evidenceName: z.string().optional() }),
+    z.object({ action: z.literal('addAchievement'), title: z.string().min(2).max(200), evidenceFileId: z.string().uuid().optional() }),
+    z.object({ action: z.literal('openEvidence'), achievementId: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('verify'), id: z.string() }),
   ]),
   outputSchema: z.any(),
@@ -19,10 +22,23 @@ export default createEndpoint({
     const uid = a.userId;
     const isStaff = a.roles.some((r) => ['Staff', 'Administrator', 'Advisor'].includes(r));
     if (input.action === 'addAchievement') {
-      // Evidence uploads are disabled until a private file store exists (founder decision 23 Oct 2026).
-      if (input.evidenceUrl) throw new Error('Evidence uploads are turned off until private storage is in place.');
-      await zite.achievements.create({ record: { title: input.title, owner: uid, verification: 'Student Entered' } as never });
+      // Evidence is a file from the private store (decision D2). Evidence makes the entry reviewable by staff.
+      const x = await zite.achievements.create({ record: { title: input.title, owner: uid, verification: input.evidenceFileId ? 'Needs Review' : 'Student Entered' } as never });
+      if (input.evidenceFileId) {
+        await ensureFil();
+        const e = ((await pg().query(`SELECT fil_attach($1,$2,$3,'achievement',$4) AS e`, [a.institutionId, uid, input.evidenceFileId, x.id])) as { e: string | null }[])[0].e;
+        if (e) { await zite.achievements.update({ id: x.id, record: { verification: 'Student Entered' } as never }); forbid(e); }
+      }
       return { ok: true };
+    }
+    if (input.action === 'openEvidence') {
+      const ach = await zite.achievements.findOne({ id: input.achievementId });
+      if (!ach) forbid('You do not have access to this file.');
+      const own = ids(ach!.owner).includes(uid);
+      if (!own && !(isStaff && inSet(ach!.owner, (await tenantScope(a.institutionId)).members))) forbid('You do not have access to this file.');
+      const f = await readAttached(a.institutionId, input.fileId, uid, 'achievement', ach!.id);
+      if (!f) forbid('You do not have access to this file.');
+      return f!;
     }
     if (input.action === 'verify') {
       if (!isStaff) forbid('Only staff can verify achievements.');
@@ -31,6 +47,8 @@ export default createEndpoint({
       if (!inSet(ach!.owner, (await tenantScope(a.institutionId)).members)) forbid('That student is not in your institution.');
       await audit(a, 'Achievement verified', `achievement:${ach!.id}`, ach!.title ?? '', a.roles.join(', '));
       await zite.achievements.update({ id: ach!.id, record: { verification: 'Institution Verified', verifiedBy: uid, verifiedOn: new Date().toISOString().slice(0, 10) } as never });
+      await ensureFil();
+      await pg().query(`SELECT fil_lock($1,'achievement',$2)`, [a.institutionId, ach!.id]);
       return { ok: true };
     }
     const [reqs, courses, secs, enr, ach] = await Promise.all([
@@ -54,14 +72,18 @@ export default createEndpoint({
     const verifierNames = await userNames(ach.records.map((x) => first(x.verifiedBy) ?? ''));
     let review: unknown[] = [];
     if (isStaff) {
-      const all = await zite.achievements.findAll({ filters: { verification: 'Needs Review' }, limit: 100 });
-      const n = await userNames(all.records.map((x) => first(x.owner) ?? ''));
-      review = all.records.filter((x) => !ids(x.owner).includes(uid)).map((x) => ({ id: x.id, title: x.title ?? '', owner: n[first(x.owner) ?? ''] ?? 'Member', evidence: x.evidence?.[0]?.url ?? null }));
+      // Only this institution's members (the review list was previously not tenant-filtered).
+      const members = (await tenantScope(a.institutionId)).members;
+      const all = (await zite.achievements.findAll({ filters: { verification: 'Needs Review' }, limit: 200 })).records.filter((x) => inSet(x.owner, members) && !ids(x.owner).includes(uid));
+      const n = await userNames(all.map((x) => first(x.owner) ?? ''));
+      const ev = await attachmentsFor(a.institutionId, 'achievement', all.map((x) => x.id));
+      review = all.map((x) => ({ id: x.id, title: x.title ?? '', owner: n[first(x.owner) ?? ''] ?? 'Member', evidence: x.evidence?.[0]?.url ?? null, files: (ev[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name })) }));
     }
+    const myEv = await attachmentsFor(a.institutionId, 'achievement', ach.records.map((x) => x.id));
     return {
       requirements, totalReq, totalEarned, gpa: cr ? Math.round((qp / cr) * 100) / 100 : null,
       grades: done.map((e) => ({ id: e.id, code: courseOf(e)?.code ?? '', title: courseOf(e)?.title ?? '', grade: e.finalGrade ?? '', term: sById[first(e.section) ?? '']?.term ?? '', source: e.source ?? 'Official' })),
-      achievements: ach.records.map((x) => ({ id: x.id, title: x.title ?? '', verification: x.verification ?? 'Student Entered', verifiedBy: verifierNames[first(x.verifiedBy) ?? ''] ?? (x.verification === 'Institution Verified' ? 'Registrar (sample)' : ''), verifiedOn: x.verifiedOn ?? null, evidence: x.evidence?.[0]?.url ?? null })),
+      achievements: ach.records.map((x) => ({ id: x.id, title: x.title ?? '', verification: x.verification ?? 'Student Entered', verifiedBy: verifierNames[first(x.verifiedBy) ?? ''] ?? (x.verification === 'Institution Verified' ? 'Registrar (sample)' : ''), verifiedOn: x.verifiedOn ?? null, evidence: x.evidence?.[0]?.url ?? null, files: (myEv[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name })) })),
       review, isStaff,
     };
   },

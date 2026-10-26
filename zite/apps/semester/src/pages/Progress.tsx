@@ -5,18 +5,26 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Progress as Bar } from '@project/components/ui/progress';
 import { PageHeader, Panel, Empty, SourceTag, fmtDay, useLoad, Loadable, errMsg } from '../components/kit';
+import { uploadPrivate, saveBytes } from '../lib/fileClient';
+import { MIME_ALLOW } from '../lib/fileRules';
+
+type F = { fileId: string; name: string };
+const openEv = async (achievementId: string, fileId: string) => { try { saveBytes((await progress({ action: 'openEvidence', achievementId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
+const EvList = ({ id, files }: { id: string; files?: F[] }) => <>{(files ?? []).map((f) => <button key={f.fileId} className="mr-2 text-xs text-primary underline" onClick={() => openEv(id, f.fileId)}>{f.name}</button>)}</>;
 
 type Req = { id: string; name: string; required: number; earned: number; pending: number };
-type Ach = { id: string; title: string; verification: string; verifiedBy: string; verifiedOn: string | null; evidence: string | null };
+type Ach = { id: string; title: string; verification: string; verifiedBy: string; verifiedOn: string | null; evidence: string | null; files?: { fileId: string; name: string }[] };
 const VG: Record<string, string> = { 'Institution Verified': '◆', 'Needs Review': '…', 'Student Entered': '○' };
 
 export default function Progress() {
   const state = useLoad(() => progress({ action: 'get' }));
   const [title, setTitle] = useState('');
+  const [ev, setEv] = useState<File | null>(null);
   const act = async (fn: () => Promise<unknown>, ok?: string) => { try { await fn(); if (ok) toast.success(ok); await state.reload(); } catch (e) { toast.error(errMsg(e)); } };
   const add = () => act(async () => {
-    await progress({ action: 'addAchievement', title });
-    setTitle('');
+    const evidenceFileId = ev ? await uploadPrivate(ev, 'evidence') : undefined;
+    await progress({ action: 'addAchievement', title, evidenceFileId });
+    setTitle(''); setEv(null);
   }, 'Added');
 
   return (
@@ -38,20 +46,22 @@ export default function Progress() {
             </Panel>
             {d.isStaff && (
               <Panel title="Achievements to verify">
-                {d.review.length === 0 ? <Empty>Nothing waiting for review.</Empty> : (d.review as { id: string; title: string; owner: string; evidence: string | null }[]).map((r) => (
-                  <div key={r.id} className="flex items-center justify-between border-b border-border py-2 text-sm last:border-0"><span>{r.title} · {r.owner} {r.evidence && <a href={r.evidence} target="_blank" rel="noreferrer" className="text-primary underline">evidence</a>}</span><Button size="sm" onClick={() => act(() => progress({ action: 'verify', id: r.id }), 'Verified')}>Verify</Button></div>))}
+                {d.review.length === 0 ? <Empty>Nothing waiting for review.</Empty> : (d.review as { id: string; title: string; owner: string; evidence: string | null; files?: F[] }[]).map((r) => (
+                  <div key={r.id} className="flex items-center justify-between border-b border-border py-2 text-sm last:border-0"><span>{r.title} · {r.owner} {r.evidence && <a href={r.evidence} target="_blank" rel="noreferrer" className="text-primary underline">evidence</a>} <EvList id={r.id} files={r.files} /></span><Button size="sm" onClick={() => act(() => progress({ action: 'verify', id: r.id }), 'Verified')}>Verify</Button></div>))}
               </Panel>)}
           </div>
           <Panel title="Achievements">
             {d.achievements.length === 0 ? <Empty>None yet.</Empty> : d.achievements.map((a: Ach) => (
               <div key={a.id} className="border-b border-border py-2 text-sm last:border-0">
-                <p>{a.title}</p>
+                <p>{a.title} <EvList id={a.id} files={a.files} /></p>
                 <p className="text-xs text-muted-foreground">{VG[a.verification]} {a.verification}{a.verifiedBy && ` · ${a.verifiedBy}`}{a.verifiedOn && ` · ${fmtDay(a.verifiedOn)}`}</p>
               </div>))}
             <div className="mt-4 space-y-2">
               <Input placeholder="Add an achievement" value={title} onChange={(e) => setTitle(e.target.value)} />
               <Button className="w-full" variant="outline" disabled={title.trim().length < 2} onClick={add}>Add</Button>
-              <p className="text-xs text-muted-foreground">Evidence uploads are turned off until private storage is in place. Entries stay marked Student Entered.</p>
+              <label className="block text-xs">Evidence (optional, private: only you and verifying staff can open it)
+                <input type="file" className="mt-1 block text-xs" accept={Object.keys(MIME_ALLOW).join(',')} onChange={(e) => setEv(e.target.files?.[0] ?? null)} /></label>
+              <p className="text-xs text-muted-foreground">With evidence, the entry goes to staff for verification; without it, it stays Student Entered.</p>
             </div>
           </Panel>
         </div>
