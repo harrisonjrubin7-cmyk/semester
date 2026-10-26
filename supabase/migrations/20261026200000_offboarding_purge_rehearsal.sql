@@ -210,10 +210,9 @@ begin
     raise exception 'Use an idempotency key of 8-120 letters, numbers, dots, colons, underscores, or hyphens.' using errcode = '22023';
   end if;
 
-  select o, s.is_demo into c, tenant_is_demo
-    from public.school_offboarding o join public.schools s on s.id = o.tenant_id
-   where o.id = want_case;
+  select * into c from public.school_offboarding where id = want_case;
   if not found then raise exception 'No such case.' using errcode = 'no_data_found'; end if;
+  select s.is_demo into tenant_is_demo from public.schools s where s.id = c.tenant_id;
   if tenant_is_demo is distinct from true then
     raise exception 'A purge rehearsal is available only for a synthetic demo tenant.' using errcode = '42501';
   end if;
