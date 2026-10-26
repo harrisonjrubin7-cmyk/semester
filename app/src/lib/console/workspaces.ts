@@ -4,6 +4,7 @@ import type { Classification } from '../ops/console';
 
 export type ConsoleWorkspaceId =
   | 'command'
+  | 'work'
   | 'support'
   | 'approvals'
   | 'breakglass'
@@ -52,6 +53,7 @@ const shell = (
  */
 export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
   shell('command', 'Command center'),
+  shell('work', 'My work', 'restricted'),
   {
     id: 'support',
     label: 'Support',
