@@ -19,6 +19,9 @@ create table if not exists private.offboarding_export_generation (
   unique (case_id, idempotency_key)
 );
 
+create index if not exists offboarding_export_generation_tenant_idx
+  on private.offboarding_export_generation (tenant_id);
+
 alter table private.offboarding_export_generation enable row level security;
 
 revoke all on table private.offboarding_export_generation from public, anon, authenticated;
@@ -44,6 +47,9 @@ alter table public.school_offboarding
   add column if not exists export_generation_id uuid references private.offboarding_export_generation (id) on delete restrict,
   add column if not exists export_package_sha256 text
     check (export_package_sha256 is null or export_package_sha256 ~ '^[0-9a-f]{64}$');
+
+create index if not exists school_offboarding_export_generation_idx
+  on public.school_offboarding (export_generation_id);
 
 create or replace function private.school_offboarding_export_binding_guard()
 returns trigger

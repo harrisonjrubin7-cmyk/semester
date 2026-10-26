@@ -12,6 +12,13 @@ const body = (name: string) =>
     .exec(sql)?.[0] ?? '';
 
 describe('institution offboarding export package', () => {
+  it('covers both new foreign-key lookup paths', () => {
+    expect(sql).toContain('offboarding_export_generation_tenant_idx');
+    expect(sql).toContain('on private.offboarding_export_generation (tenant_id)');
+    expect(sql).toContain('school_offboarding_export_generation_idx');
+    expect(sql).toContain('on public.school_offboarding (export_generation_id)');
+  });
+
   it('is operator-only and derives the tenant from an access-disabled case', () => {
     const fn = body('public.generate_offboarding_export');
     expect(fn).toContain('private.offboarding_operator()');
