@@ -59,7 +59,7 @@ test('a non-root app build cannot share shell caches with the legacy root worker
   const rootCaches = await installedCacheNamesAt('/');
   const appCaches = await installedCacheNamesAt('/app/');
   assert.ok(rootCaches.includes('semester-v1-shell'), 'the current root cache name remains stable');
-  assert.ok(appCaches.includes('semester-v1-app-shell'), 'the /app worker owns a path-scoped cache');
+  assert.ok(appCaches.includes('semester-v1-scope-app-shell'), 'the /app worker owns a path-scoped cache');
   assert.ok(!appCaches.includes('semester-v1-shell'), 'the /app worker cannot prune the legacy root shell');
 });
 
