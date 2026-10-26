@@ -350,11 +350,11 @@ describe('the workflow', () => {
     expect(r).toContain('status-record.mjs');
   });
 
-  it('monitors Vercel only from an explicit configured origin and keeps Pages history explicitly Pages-scoped', () => {
+  it('passes the configured Vercel origin or verified production alias and keeps Pages history Pages-scoped', () => {
     const publicJob = job('public');
     expect(publicJob).toContain('name: Probe Vercel production availability');
     expect(publicJob).toContain('SEMESTER_PUBLIC_APP_TARGET: vercel');
-    expect(publicJob).toContain('SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}');
+    expect(publicJob).toContain("SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL || 'https://semester-rose.vercel.app' }}");
 
     const pagesJob = job('pages');
     expect(pagesJob).toContain('name: Probe GitHub Pages availability');
@@ -364,6 +364,16 @@ describe('the workflow', () => {
     const recordJob = job('record');
     expect(recordJob).toContain('SEMESTER_PUBLIC_APP_TARGET: pages');
     expect(recordJob).not.toContain('SEMESTER_PRODUCTION_APP_URL');
+  });
+
+  it('does not treat the verified public-app fallback as a partial institutional configuration', () => {
+    const institutionalJob = job('institutional');
+    expect(institutionalJob).toContain(
+      "APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL || 'https://semester-rose.vercel.app' }}",
+    );
+    expect(institutionalJob).toContain('if [ -z "$GATEWAY_URL" ]; then');
+    expect(institutionalJob).not.toContain('if [ -z "$APP_URL" ] && [ -z "$GATEWAY_URL" ]');
+    expect(institutionalJob).not.toContain('Set both SEMESTER_PRODUCTION_APP_URL and SEMESTER_PRODUCTION_GATEWAY_URL');
   });
 
   it('does not present a successful recorder job as proof that services were healthy', () => {

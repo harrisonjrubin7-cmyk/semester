@@ -38,6 +38,10 @@ import { idOf } from './merge';
  *   what happened before this existed and is visible, instead.
  * - **Nothing without a base.** A device that has never agreed with the
  *   account has no way to tell a deletion from a record it never had.
+ * - **Nothing a reader lost.** A row this device could not read back from
+ *   its own storage says nothing about which agreed id is gone. Those lists
+ *   keep everything until a pull has merged the account's copy back
+ *   (`ingressDrops`, below).
  */
 
 /** Lists with exactly one removal, an explicit delete. Courses included. */
@@ -86,6 +90,12 @@ export function settleDeletions(
   remote: Record<string, unknown>,
   base: Base | null,
   now = Date.now(),
+  /**
+   * Lists this device lost rows from when it read its own storage
+   * (`ingressDrops`). An agreed id missing here is not a deletion anybody
+   * chose, so nothing is taken out of the account's copy for these.
+   */
+  unreadHere: readonly string[] = [],
 ): Settled {
   const out: Settled = { remote, dropHere: {}, conflicts: [], heldBack: [] };
   if (!base) return out;
@@ -98,7 +108,17 @@ export function settleDeletions(
     const theirs = byId(remote[field]);
     const agreedIds = idsInBase(base, field);
 
-    const hereGone = agreedIds.filter((id) => !mine.has(id) && theirs.has(id));
+    /*
+     * A list this device lost rows from on load cannot tell a deletion from
+     * damage: a row with no id cannot say which agreed id it was. Not deleting
+     * is the side that loses nothing, and the account's copy comes back
+     * through the merge. Only for the pull that heals it (`unreadHere`, which
+     * the store clears once that pull lands): keyed to the loose row itself,
+     * one stray row would stop every later deletion in the list for good.
+     */
+    const hereGone = unreadHere.includes(field)
+      ? []
+      : agreedIds.filter((id) => !mine.has(id) && theirs.has(id));
     const thereGone = agreedIds.filter((id) => mine.has(id) && !theirs.has(id));
     if (bulk(hereGone.length, agreedIds.length) || bulk(thereGone.length, agreedIds.length)) {
       out.heldBack.push(field);
@@ -137,10 +157,164 @@ export function settleDeletions(
  * memory, so a deletion made offline is still one after the app is closed.
  * The account deletes exactly these and nothing else.
  */
-export function coursesDeletedHere(base: Base | null, courses: readonly unknown[]): string[] {
-  if (!base) return [];
+export function coursesDeletedHere(
+  base: Base | null,
+  courses: readonly unknown[],
+  unreadHere: readonly string[] = [],
+): string[] {
+  if (!base || unreadHere.includes('courses')) return [];
   const held = new Set(courses.map((c) => idOf(c)).filter((id): id is string => id !== null));
   const agreed = idsInBase(base, 'courses');
   const gone = agreed.filter((id) => !held.has(id));
   return bulk(gone.length, agreed.length) ? [] : gone;
+}
+
+// ── Rows lost on the way in ─────────────────────────────────────────────────
+
+/**
+ * The lists this device could not read whole from its own storage, kept until
+ * a pull has put the account's copies back.
+ *
+ * The readers in `lib/stored.ts` drop a row they cannot use — a hole, or a
+ * course with no id — and `list` keeps a row with no id that nothing can
+ * address. Either way an id the device last agreed with the account is
+ * missing here, and to `settleDeletions` and `coursesDeletedHere` that is
+ * exactly what a deletion looks like. One row is under the `bulk` guard, so a
+ * single damaged note deleted the good copy from the account.
+ *
+ * In localStorage beside the base, because the drop happens once: the next
+ * save writes the list without the row, and the boot after that sees nothing
+ * missing. Cleared by the store when a pull has merged the account's copy.
+ */
+export const INGRESS_KEY = 'semester.ingress-drops';
+
+/** Which deletable lists lost rows between `raw` (as stored) and `read` (as the app holds them). */
+export function droppedOnRead(raw: Record<string, unknown>, read: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  for (const field of DELETABLE) {
+    const before = raw[field];
+    // A copy that did not carry the list says nothing about it.
+    if (before === undefined) continue;
+    // Stored as something else, the reader made it empty: every row was lost.
+    if (!Array.isArray(before)) {
+      out.push(field);
+      continue;
+    }
+    const after = read[field];
+    // Rows that still name one agreed id each: a blank id names none, and an
+    // id on two rows can only be one of them.
+    const kept = Array.isArray(after) ? new Set(after.map(idOf).filter((id): id is string => !!id)).size : 0;
+    if (before.length > kept) out.push(field);
+  }
+  return out;
+}
+
+/**
+ * And in memory, for this session: storage at its quota can refuse the note
+ * while the reader still drops the row, and the pull this session makes must
+ * know regardless.
+ */
+let noted = new Set<string>();
+
+/**
+ * Set when a clear could not remove the stored note: what storage still holds
+ * is a note this session already healed, and must not count again. Lifted by
+ * the next write that lands, which replaces it.
+ */
+let storedIsStale = false;
+
+/**
+ * Whether what this session noted reached storage. If it did and the stored
+ * note is gone, another tab healed and cleared it, and this tab's copy goes
+ * too. If it never did, the note rides on the saved copy instead (`withIngressNote`).
+ */
+let notedIsStored = false;
+
+export function ingressDrops(): string[] {
+  let stored: string[] = [];
+  if (!storedIsStale) try {
+    const raw = localStorage.getItem(INGRESS_KEY);
+    if (raw === null && notedIsStored) {
+      noted = new Set();
+      notedIsStored = false;
+    }
+    const parsed: unknown = JSON.parse(raw ?? '[]');
+    if (Array.isArray(parsed)) stored = parsed.filter((f): f is string => typeof f === 'string');
+  } catch {
+    // Unreadable: what this session noted still holds.
+  }
+  return [...new Set([...stored, ...noted])];
+}
+
+/** Adds to what is already noted: a second boot before any pull must not forget the first. */
+export function noteIngressDrops(fields: readonly string[]): void {
+  if (fields.length === 0) return;
+  // Read first: the read can let go of a note another tab cleared, and must
+  // not take these fields with it.
+  const all = [...new Set([...ingressDrops(), ...fields])];
+  noted = new Set([...noted, ...fields]);
+  try {
+    localStorage.setItem(INGRESS_KEY, JSON.stringify(all));
+    storedIsStale = false;
+    notedIsStored = true;
+  } catch {
+    // Storage full or blocked: held in memory above for this session, and on
+    // the saved copy for the next.
+    notedIsStored = false;
+  }
+}
+
+export function clearIngressDrops(): void {
+  noted = new Set();
+  notedIsStored = false;
+  try {
+    localStorage.removeItem(INGRESS_KEY);
+    storedIsStale = false;
+  } catch {
+    // Removal refused: ignore what is stored for the rest of this session.
+    storedIsStale = true;
+  }
+}
+
+/**
+ * The saved copy's own record of a note storage refused. At its quota,
+ * storage can refuse the note and still take the saved copy, which is smaller
+ * for the row the reader dropped; closed before the pull, the next boot would
+ * find the gap and nothing saying it was damage. So the note goes inside the
+ * copy that carries the gap: the localStorage text, or a settings row in the
+ * same database write (`state/persist`). The reader takes it back out
+ * (`heldInSaved`).
+ */
+export const HELD_KEY = 'heldIngressDrops';
+
+/** What this session noted that storage refused, for the saved copy to carry. Empty when storage took it. */
+export function unstoredIngressDrops(): string[] {
+  return notedIsStored ? [] : [...noted];
+}
+
+/**
+ * Another tab's heal took the note off the saved copy that carried it (the
+ * database, `state/persist`), so a note held only here goes too. A note that
+ * reached localStorage is reconciled against localStorage instead.
+ */
+export function forgetUnstoredDrops(): void {
+  if (!notedIsStored) noted = new Set();
+}
+
+/** `text`, the saved copy as JSON, carrying any note storage refused. Unchanged otherwise. */
+export function withIngressNote(text: string): string {
+  if (notedIsStored || noted.size === 0) return text;
+  try {
+    const copy = JSON.parse(text) as Record<string, unknown>;
+    return JSON.stringify({ ...copy, [HELD_KEY]: [...noted] });
+  } catch {
+    return text;
+  }
+}
+
+/** A note a previous session's saved copy carried, as deletable list names. */
+export function heldInSaved(saved: Record<string, unknown>): string[] {
+  const held = saved[HELD_KEY];
+  if (!Array.isArray(held)) return [];
+  return held.filter((f): f is string => typeof f === 'string' && (DELETABLE as readonly string[]).includes(f));
 }

@@ -85,3 +85,32 @@ it('keeps an accepted request on the mentor’s screen, with the program handoff
   expect(host.textContent).toContain('no contact details go through Semester');
   expect(button('Accept')).toBeUndefined();
 });
+
+it('names repeated request actions and sends the represented request id', async () => {
+  rosters = {
+    me: 'me',
+    offers: [
+      { kind: 'peer', userId: 'x', cohort: 'c', name: 'Ana', topics: ['Research'] },
+      { kind: 'peer', userId: 'y', cohort: 'c', name: 'Ana', topics: ['Research'] },
+    ],
+    requests: [
+      { id: 'waiting-1', kind: 'peer', requester: 's1', recipient: 'me', requesterName: 'Sam', topics: ['Research'], note: '', status: 'pending', createdAt: '' },
+      { id: 'waiting-2', kind: 'peer', requester: 's2', recipient: 'me', requesterName: 'Sam', topics: ['Research'], note: '', status: 'pending', createdAt: '' },
+      { id: 'sent-1', kind: 'peer', requester: 'me', recipient: 'x', requesterName: 'Me', topics: ['Research'], note: '', status: 'pending', createdAt: '' },
+      { id: 'sent-2', kind: 'peer', requester: 'me', recipient: 'y', requesterName: 'Me', topics: ['Research'], note: '', status: 'pending', createdAt: '' },
+    ],
+  };
+
+  await draw(['Research']);
+
+  expect(host.querySelector('button[aria-label="Accept peer mentor request 1 of 2 from Sam: Research"]')).toBeTruthy();
+  const decline = host.querySelector<HTMLButtonElement>('button[aria-label="Decline peer mentor request 2 of 2 from Sam: Research"]');
+  expect(decline).toBeTruthy();
+  expect(host.querySelector('button[aria-label="Withdraw peer mentor request 1 of 2 to Ana: Research"]')).toBeTruthy();
+  const withdraw = host.querySelector<HTMLButtonElement>('button[aria-label="Withdraw peer mentor request 2 of 2 to Ana: Research"]');
+  expect(withdraw).toBeTruthy();
+
+  await act(async () => decline!.click());
+  await act(async () => withdraw!.click());
+  expect(calls).toEqual(['declined waiting-2', 'withdrawn sent-2']);
+});

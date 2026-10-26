@@ -125,6 +125,29 @@ def test_unmeasured_extraction_confidence_has_no_numeric_default():
     assert ExtractedChunk("Text").confidence is None
 
 
+def test_archive_classification_sample_keeps_pdf_and_non_pdf_members():
+    worker = _worker_module()
+    rows = [
+        {
+            "source_label": "appendix.pdf",
+            "content": f"PDF heading {index}",
+            "page_number": 1,
+        }
+        for index in range(8)
+    ]
+    rows.append({
+        "source_label": "syllabus.txt",
+        "content": "Grading schedule and final exam",
+        "page_number": None,
+    })
+
+    sample = worker.classification_sample(rows)
+
+    assert "pdf heading 0" in sample
+    assert "pdf heading 1" not in sample
+    assert "grading schedule and final exam" in sample
+
+
 def test_extraction_routes_even_high_confidence_evidence_through_review(tmp_path: Path):
     testing_session = _database()
     source = tmp_path / "syllabus.txt"
@@ -373,6 +396,12 @@ def test_generated_study_asset_requires_review_before_use(tmp_path: Path, monkey
             headers=headers,
         )
         assert approved.status_code == 200
+        current_asset = client.get(
+            f"/api/v1/study-assets/{asset_id}",
+            headers=headers,
+        )
+        assert current_asset.status_code == 200
+        assert current_asset.json()["active_citation_ids"] == [str(citation_id)]
         with testing_session() as session:
             approved_asset = session.get(StudyAsset, asset_id)
             assert approved_asset.content["citations"][str(citation_id)]["label"] == (
@@ -416,8 +445,75 @@ def test_generated_study_asset_requires_review_before_use(tmp_path: Path, monkey
             assert session.scalar(
                 select(StudyAssetCitation).where(StudyAssetCitation.study_asset_id == asset_id)
             ) is None
+        stale_asset = client.get(
+            f"/api/v1/study-assets/{asset_id}",
+            headers=headers,
+        )
+        assert stale_asset.status_code == 200
+        assert stale_asset.json()["active_citation_ids"] == []
     finally:
         app.dependency_overrides.clear()
+
+
+def test_reading_brief_generation_creates_case_specific_content():
+    worker = _worker_module()
+    citation = Citation(id=UUID(int=10), chunk_id=UUID(int=11), quote="Use the published escalation path.")
+    document = SourceDocument(
+        id=UUID(int=12),
+        course_id=UUID(int=13),
+        filename="decision-guide.pdf",
+        storage_key="private/decision-guide.pdf",
+        mime_type="application/pdf",
+        size_bytes=100,
+        sha256="a" * 64,
+    )
+    catalog = {str(citation.id): {"label": "decision-guide.pdf, p. 2", "quote": citation.quote}}
+
+    content = worker._study_asset_content("reading_brief", [(citation, None, document)], catalog)
+
+    assert content["sections"][0]["explanation"] == citation.quote
+    assert content["cases"] == [{
+        "heading": "Apply evidence from decision-guide.pdf",
+        "scenario": "You must decide what action is justified by this verified course evidence: Use the published escalation path.",
+        "questions": [
+            "What action is directly supported by the cited evidence?",
+            "What would require additional evidence before acting?",
+        ],
+        "applications": [
+            "State one next step that stays within the evidence and name any unresolved assumption."
+        ],
+        "citation_ids": [str(citation.id)],
+    }]
+
+
+def test_flashcard_generation_keeps_prompts_unique_for_one_document():
+    worker = _worker_module()
+    document = SourceDocument(
+        id=UUID(int=12),
+        course_id=UUID(int=13),
+        filename="decision-guide.pdf",
+        storage_key="private/decision-guide.pdf",
+        mime_type="application/pdf",
+        size_bytes=100,
+        sha256="a" * 64,
+    )
+    citations = [
+        Citation(id=UUID(int=10), chunk_id=UUID(int=20), quote="Use the published escalation path."),
+        Citation(id=UUID(int=11), chunk_id=UUID(int=21), quote="Name the final decision owner."),
+    ]
+    catalog = {
+        str(citations[0].id): {"label": "decision-guide.pdf, p. 2", "quote": citations[0].quote},
+        str(citations[1].id): {"label": "decision-guide.pdf, p. 3", "quote": citations[1].quote},
+    }
+
+    content = worker._flashcard_content(
+        [(citation, None, document) for citation in citations],
+        catalog,
+    )
+
+    fronts = [card["front"] for card in content["cards"]]
+    assert len(fronts) == len(set(fronts)) == 2
+    worker.validate_study_asset_content("flashcards", content, {citation.id for citation in citations})
 
 
 def test_unapproved_study_asset_cannot_be_exported(tmp_path: Path, monkeypatch):

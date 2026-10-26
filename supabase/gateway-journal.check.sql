@@ -126,6 +126,122 @@ begin
 end $$;
 
 do $$
+declare
+  begun record;
+  repeated record;
+  takeover record;
+  other_scope record;
+  at_time timestamptz := '2026-10-11T12:00:00Z';
+begin
+  select * into begun from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time, 60000, 86400000
+  );
+  if begun.kind <> 'started' or begun.lease_id is null then
+    raise exception 'FAILED: an idempotency lease was not acquired';
+  end if;
+
+  select * into repeated from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time, 60000, 86400000
+  );
+  if repeated.kind <> 'in_progress' or repeated.retry_after_seconds <> 60 then
+    raise exception 'FAILED: concurrent work was not held behind its lease';
+  end if;
+
+  select * into repeated from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('b', 64), at_time, 60000, 86400000
+  );
+  if repeated.kind <> 'conflict' then
+    raise exception 'FAILED: a reused key with a different request was accepted';
+  end if;
+
+  select * into other_scope from public.gateway_begin_idempotency(
+    'gateway-a', 'student-b', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time, 60000, 86400000
+  );
+  if other_scope.kind <> 'started' then
+    raise exception 'FAILED: actor scopes were not isolated';
+  end if;
+
+  select * into takeover from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time + interval '1 day', 60000, 86400000
+  );
+  if takeover.kind <> 'in_progress' then
+    raise exception 'FAILED: a caller clock could replace a database-clock lease';
+  end if;
+  update private.gateway_idempotency
+     set lease_until = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a'
+     and actor_id = 'student-a'
+     and command = 'institution.action.commit'
+     and idempotency_key = 'commit-key-00000001';
+  select * into takeover from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
+  );
+  if takeover.kind <> 'started' or takeover.lease_id = begun.lease_id then
+    raise exception 'FAILED: an expired lease was not fenced and replaced';
+  end if;
+  if public.gateway_complete_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    begun.lease_id, 200, repeat('s', 40), at_time + interval '61 seconds'
+  ) then raise exception 'FAILED: a stale worker completed its successor lease'; end if;
+  if public.gateway_release_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001', begun.lease_id
+  ) then raise exception 'FAILED: a stale worker released its successor lease'; end if;
+  if not public.gateway_complete_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    takeover.lease_id, 201, repeat('r', 1000001), at_time + interval '61 seconds'
+  ) then raise exception 'FAILED: the current lease could not complete'; end if;
+
+  select * into repeated from public.gateway_begin_idempotency(
+    'gateway-a', 'student-a', 'institution.action.commit', 'commit-key-00000001',
+    repeat('a', 64), at_time + interval '61 seconds', 60000, 86400000
+  );
+  if repeated.kind <> 'replay' or repeated.response_status <> 201 or length(repeated.response_body) <> 1000001 then
+    raise exception 'FAILED: the completed response was not replayed';
+  end if;
+  if not public.gateway_release_idempotency(
+    'gateway-a', 'student-b', 'institution.action.commit', 'commit-key-00000001', other_scope.lease_id
+  ) then raise exception 'FAILED: the owner could not release active work'; end if;
+
+  select * into other_scope from public.gateway_begin_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    repeat('d', 64), now(), 1000, 86400000
+  );
+  update private.gateway_idempotency
+     set lease_until = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a' and actor_id = 'student-late';
+  if not public.gateway_complete_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    other_scope.lease_id, 200, repeat('l', 40), now()
+  ) then raise exception 'FAILED: the current holder could not persist a late result'; end if;
+  select * into repeated from public.gateway_begin_idempotency(
+    'gateway-a', 'student-late', 'institution.action.commit', 'commit-key-late-0001',
+    repeat('d', 64), now(), 1000, 86400000
+  );
+  if repeated.kind <> 'replay' or repeated.response_body <> repeat('l', 40) then
+    raise exception 'FAILED: a late result was not replayed';
+  end if;
+
+  select * into other_scope from public.gateway_begin_idempotency(
+    'gateway-a', 'student-c', 'institution.action.commit', 'commit-key-expired-01',
+    repeat('c', 64), now(), 1000, 1000
+  );
+  update private.gateway_idempotency
+     set expires_at = statement_timestamp() - interval '1 second'
+   where tenant_id = 'gateway-a' and actor_id = 'student-c';
+  perform public.gateway_purge_journal();
+  if exists (
+    select 1 from private.gateway_idempotency
+     where tenant_id = 'gateway-a' and actor_id = 'student-c'
+  ) then raise exception 'FAILED: an expired idempotency record was not purged'; end if;
+end $$;
+
+do $$
 begin
   if has_table_privilege('authenticated', 'private.gateway_review', 'select')
      or has_table_privilege('anon', 'private.gateway_review', 'select') then
@@ -150,6 +266,19 @@ begin
      or not has_function_privilege('service_role', 'public.gateway_retention_health()', 'execute') then
     raise exception 'FAILED: retention readiness privileges are not service-only';
   end if;
+  if has_table_privilege('authenticated', 'private.gateway_idempotency', 'select')
+     or has_function_privilege(
+       'authenticated',
+       'public.gateway_begin_idempotency(text,text,text,text,text,timestamptz,bigint,bigint)',
+       'execute'
+     ) then
+    raise exception 'FAILED: browser roles can reach shared idempotency state';
+  end if;
+  if not has_function_privilege(
+    'service_role',
+    'public.gateway_begin_idempotency(text,text,text,text,text,timestamptz,bigint,bigint)',
+    'execute'
+  ) then raise exception 'FAILED: the service role cannot acquire idempotency leases'; end if;
   raise notice 'ok  gateway journal state is tenant-scoped, atomic, conservative and service-only';
 end $$;
 

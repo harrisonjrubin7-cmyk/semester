@@ -53,6 +53,7 @@ import {
   flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
+  releaseHeldNote,
 } from './persist';
 import { backupOf } from '../lib/export';
 import { countsOf, takeDaily } from '../lib/snapshots';
@@ -66,6 +67,7 @@ import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } fro
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+import { localFallback } from './localfallback';
 import { firstScreen } from '../lib/chrome';
 import { resolveSchool } from '../data/schools';
 import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
@@ -95,7 +97,8 @@ import {
   writeReview,
   type Conflict,
 } from '../lib/conflicts';
-import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
+import { clearIngressDrops, coursesDeletedHere, ingressDrops, settleDeletions, withIngressNote } from '../lib/deletions';
+import { carriedInStep, forgetCarried, rememberCarried, withCarried } from '../lib/carried';
 import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
 import { withEngine } from '../lib/sync/engine/tasks';
 import { useTaskEngine } from './useTaskEngine';
@@ -147,6 +150,9 @@ function screenFromUrl(): Screen | null {
  * nothing, short enough that "I just changed it on my phone" is caught.
  */
 export const FOCUS_PULL_MS = 60_000;
+
+/** Every top-level field this build reads and writes. Anything else in the account is a newer build's. */
+const KNOWN_FIELDS: ReadonlySet<string> = new Set([...Object.keys(DEFAULT_PERSISTED), 'courses']);
 
 /** Where the account copy stands, for the Account screen to show honestly. */
 export type SyncStatus =
@@ -506,9 +512,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * every change is half of what this move is removing, and the diffing writer
    * compares references rather than text.
    */
-  const persisted = useMemo(() => (dbAvailable() ? '' : JSON.stringify(picked)), [picked]);
+  const persisted = useMemo(
+    () => (dbAvailable() ? '' : JSON.stringify(localFallback(picked))),
+    [picked],
+  );
+  const fallbackSaid =
+    !dbAvailable() && picked.appointments.length > 0
+      ? 'This browser cannot open secure device storage, so appointments stay in this tab only and will not survive a reload.'
+      : '';
   /** What was last written to localStorage, so an unchanged store is not rewritten. */
   const wrote = useRef('');
+  /**
+   * A pull or an adoption put back rows this device lost reading its own
+   * storage (`ingressDrops`), and the note goes once that copy is durable.
+   * On the database path the caller already waited for it to land; on
+   * localStorage the save is the render after, and it can be refused.
+   */
+  const healPending = useRef(false);
+  /** What localStorage last accepted, unlike `wrote`, which a refused save also sets. */
+  const savedText = useRef('');
+  const healed = useCallback(() => {
+    if (dbAvailable()) {
+      clearIngressDrops();
+      void releaseHeldNote();
+    } else healPending.current = true;
+  }, []);
   /** When the browser was last asked how much room is left. */
   const checkedRoom = useRef(0);
 
@@ -530,8 +558,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [roomSaid, setRoomSaid] = useState('');
   const [writeFailing, setWriteFailing] = useState(false);
   useEffect(() => {
-    setSaveTrouble(writeFailing ? WRITE_FAILED : roomSaid);
-  }, [writeFailing, roomSaid]);
+    setSaveTrouble(writeFailing ? WRITE_FAILED : [fallbackSaid, roomSaid].filter(Boolean).join(' '));
+  }, [fallbackSaid, writeFailing, roomSaid]);
   /*
    * The writer says whether it is landing.
    *
@@ -655,11 +683,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     // Unchanged text means nothing to write, which is what the string dep used
     // to give for free before the database path took the dep over.
-    if (persisted === wrote.current) return;
+    // A note storage refused rides on the saved copy (`withIngressNote`).
+    const text = withIngressNote(persisted);
+    /*
+     * The healed copy is on disk, so the note that the gap was damage can go.
+     * Not before: refused for room, the next boot reads the gap as clean. A
+     * note the saved copy carried goes with it, in a write of its own.
+     */
+    const heal = () => {
+      healPending.current = false;
+      clearIngressDrops();
+      if (savedText.current === persisted) return;
+      wrote.current = persisted;
+      if (save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value)).ok) savedText.current = persisted;
+    };
+    if (text === wrote.current) {
+      // A heal that added nothing: what is on disk is already the healed copy.
+      if (healPending.current && text === savedText.current) heal();
+      return;
+    }
     const quiet = fromOtherTab.current;
     fromOtherTab.current = false;
-    wrote.current = persisted;
-    const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
+    wrote.current = text;
+    const result = save(text, (value) => localStorage.setItem(STORAGE_KEY, value));
+    if (result.ok) savedText.current = text;
+    if (result.ok && healPending.current) heal();
     const said = trouble(result);
     // Only when it changes: setting the same string every dispatch would
     // re-render the whole app on every keystroke.
@@ -813,6 +861,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const was = syncedAs();
         if (was && was !== s.user.id) {
           forgetSyncMemory();
+          // The note in memory is gone now, so this takes the database's copy off too.
+          void releaseHeldNote();
           setReview([]);
           // Keep the previous owner written down until the student explicitly
           // decides what the new account may do with this device's semester.
@@ -1018,6 +1068,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const remote = await pull(accountId);
       if (!stillCurrent()) return ignored();
+      // Fields a newer build wrote, kept to go back up with the next push.
+      // See `lib/carried.ts`.
+      rememberCarried(accountId, remote.state as Record<string, unknown> | null, KNOWN_FIELDS, remote.seen?.state);
       const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
       const previousAccount = syncedAs();
@@ -1071,7 +1124,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * a device clock on one side of it, and a row that commits after the
        * pull that should have seen it. Neither survives asking this instead.
        */
-      const take = hasRemote && unseen(remote.seen, seen);
+      /*
+       * Or rows this device could not read back from its own storage
+       * (`ingressDrops`): the account holds the good copies, and only a take
+       * merges them back. Without it, an unchanged account is not pulled
+       * into, and the next push writes the gap over it.
+       */
+      const unreadHere = ingressDrops();
+      const take = hasRemote && (unseen(remote.seen, seen) || unreadHere.length > 0);
 
       /*
        * An account with nothing in it has no rows this device can have read.
@@ -1083,7 +1143,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * which has nothing to forget and a question of its own to ask.
        */
       if (!hasRemote && seen !== null && (seen.state || Object.keys(seen.courses).length > 0)) {
-        markSeen(remote.seen);
+        if (carriedInStep()) markSeen(remote.seen);
         writeBase({});
       }
 
@@ -1109,7 +1169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * is offered like two edits are, with the edit in use. See
          * `lib/deletions.ts`.
          */
-        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn);
+        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn, Date.now(), unreadHere);
         const theirs = deletions.remote as typeof theirsAll;
         const found = [
           ...conflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
@@ -1227,7 +1287,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           skipPersistenceThrough.current = persistenceRender.current;
           showTaken();
           showFailedRemote = null;
-          markSeen(remote.seen);
+          if (carriedInStep()) markSeen(remote.seen);
           // The version both sides now agree on is the account's — including
           // for the fields held back, whose difference here is still to go up,
           // and for what this device deleted, which the account still holds
@@ -1247,6 +1307,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       }
       rememberSyncedAs(accountId);
+      // The account's copies are merged back in, or there were none to lose.
+      if (unreadHere.length > 0) healed();
       pushReady.current = flight;
       setPullRetry(null);
       setSync({ status: 'synced', at: Date.now(), error: '' });
@@ -1506,10 +1568,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { courses, ...rest } = pickPersisted(state);
       // Read from the base as well as from memory, so a course deleted while
       // offline is still a deletion after the app was closed and opened.
-      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses)])];
+      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses, ingressDrops())])];
+      const outgoing = withCarried(account.id, rest as Record<string, unknown>);
       void pushCloud(
         account.id,
-        rest as Record<string, unknown>,
+        outgoing,
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
         seenRows(),
@@ -1517,7 +1580,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
           inFlight.current = false;
-          markSeen(seen);
+          // The account's row is now what was sent, at the version this push
+          // made, so the carried copy is too: a tab of an older build reading
+          // it must not send the fields of the pull before this push.
+          rememberCarried(account.id, outgoing, KNOWN_FIELDS, seen?.state);
+          // The stamp goes out only beside that copy (`carriedInStep`).
+          if (carriedInStep()) markSeen(seen);
           // And the account now holds what was sent.
           writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
           // Only if nothing changed while it was on its way: an edit made
@@ -2007,7 +2075,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // read — this device has seen it and chosen against it. The push effect
         // sends this device up on its next run, which is what makes it the
         // account's copy too, and records its own stamps when it does.
-        markSeen(remote.seen);
+        // The account's fields this build cannot read are not carried up
+        // either: that push replaces the account, as the question promised.
+        forgetCarried();
+        if (carriedInStep()) markSeen(remote.seen);
       } else {
         const theirs = {
           ...(remote.state as Partial<Persisted>),
@@ -2086,9 +2157,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           skipPersistenceThrough.current = persistenceRender.current;
           if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
           dispatch({ type: 'hydrate', persisted: theirs });
-          markSeen(remote.seen);
+          if (carriedInStep()) markSeen(remote.seen);
           // The first version this device and the account agree on.
           writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
+          // Merged or taken whole, the account's copies are back: rows lost
+          // reading this device's storage are no longer missing.
+          healed();
           safeToRelease = true;
         } catch (error) {
           // A queued identity invalidates this chooser. Its abort is expected:

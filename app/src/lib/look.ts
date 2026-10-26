@@ -1555,15 +1555,18 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
      *
      * These are primitives rather than component literals so the rail, the
      * workspace sidebar and their compact destination list cannot drift. The
-     * canvas yields to the chosen dark ground; the rail remains the stable
-     * wayfinding landmark. Orange is a surface, paired with audited dark ink
-     * rather than white text (which is below 4.5:1 on this orange).
+     * rail and selected navigation take the chosen ground's base and panel,
+     * so rail and tab chrome both honour the reader's light, dark or
+     * device-following choice while keeping their distinct affordances.
+     * Orange is a surface, paired with audited dark ink rather than white
+     * text (which is below
+     * 4.5:1 on this orange).
      */
-    '--workspace-rail': '#090a0e',
-    '--workspace-rail-raised': '#12141a',
-    '--workspace-rail-text': '#f4f3ee',
-    '--workspace-rail-muted': moreContrast ? '#f4f3ee' : fade('#f4f3ee', 0.72),
-    '--workspace-rail-border': moreContrast ? fade('#f4f3ee', 0.38) : fade('#f4f3ee', 0.16),
+    '--workspace-rail': bg,
+    '--workspace-rail-raised': panel,
+    '--workspace-rail-text': g.fg,
+    '--workspace-rail-muted': moreContrast ? g.fg : fade(g.fg, 0.72),
+    '--workspace-rail-border': moreContrast ? fade(g.fg, 0.38) : fade(g.fg, 0.16),
     '--workspace-canvas': g.light ? '#f4f3ee' : bg,
     '--workspace-action': '#e87441',
     '--workspace-action-strong': '#d9612e',

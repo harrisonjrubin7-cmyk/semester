@@ -168,8 +168,8 @@ export function Activities() {
                   action={{ label: 'Add one', onClick: () => setTab('add') }}
                 />
               )}
-              {mine.map((c) => (
-                <Row key={c.id} commitment={c} />
+              {mine.map((c, index) => (
+                <Row key={c.id} commitment={c} position={index + 1} total={mine.length} />
               ))}
             </>
           )}
@@ -182,7 +182,7 @@ export function Activities() {
 }
 
 
-function Row({ commitment }: { commitment: Commitment }) {
+function Row({ commitment, position, total }: { commitment: Commitment; position: number; total: number }) {
   const { dispatch } = useStore();
   const rowStyle = useRowStyle(0);
   const kind = activityKind(commitment.kind);
@@ -192,6 +192,7 @@ function Row({ commitment }: { commitment: Commitment }) {
       : `${commitment.days.map((d) => DAYS.find((x) => x.day === d)?.label ?? '').join('')} · ${clock(
           commitment.at,
         )}`;
+  const details = [kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ');
 
   return (
     <div
@@ -232,7 +233,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           <span style={{ fontSize: 'var(--type-md-plus)', minWidth: 0 }}>{commitment.name}</span>
         </div>
         <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
-          {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}
+          {details}
         </div>
       </div>
       {commitment.url ? (
@@ -249,7 +250,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         type="button"
         className="bare"
         onClick={() => dispatch({ type: 'removeCommitment', id: commitment.id })}
-        aria-label={`Remove ${commitment.name}`}
+        aria-label={`Remove activity ${position} of ${total}, ${commitment.name}: ${details}`}
         style={{ width: 26, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
       >
         ×

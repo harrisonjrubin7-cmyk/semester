@@ -129,6 +129,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'A rehearsal in a throwaway database with one account, not a restore of the live project. Production has never been restored; release gate G5 stays unmet until it is, on a non-production project, by someone other than the author.',
   },
   {
+    id: 'restore-rehearsal-phase-4',
+    artifact: 'Backup restore rehearsal on the Phase 4 merged head: a logical dump restored locally, 342 tables, six comparisons, timed (dump 0.6 s / 3,679,195 bytes, restore 7.6 s)',
+    path: 'docs/evidence/restore/2026-10-12-logical-rehearsal.md',
+    produced: '2026-10-12',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-004', 'SRE-005'],
+    note: 'A rehearsal in a throwaway PostgreSQL 16 with one account, not a restore of the live project, not staging, not production\'s major. The live project\'s backup tier, retention and PITR state could not be read (the management API answered 401). Release gate G5 and Phase 4 O2 stay open until a real backup is restored on a non-production project by someone other than the author.',
+  },
+  {
     id: 'm1-m2-automated-verification',
     artifact: 'M1/M2 automated verification: 21 focused workflow files, 355 tests, Master Plan controls, TypeScript, lint and a production build',
     path: 'docs/evidence/m1-m2/2026-09-30-automated-verification.md',

@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { NotOfficial } from './NotOfficial';
 import { ATHLETICS_LIMITS, type AthleticsLibrary } from '../lib/athletics';
 import { progress, progressLine, type Requirement } from '../lib/degree';
+import { SHOWN_FOR } from '../lib/undo';
+
+function removalName(requirement: Requirement, index: number, total: number) {
+  const unit = requirement.need === 'hours'
+    ? `credit ${requirement.count === 1 ? 'hour' : 'hours'}`
+    : requirement.count === 1 ? 'course' : 'courses';
+  const amount = `${requirement.count} ${unit}`;
+  const accepted = requirement.accepts.length
+    ? `accepted courses: ${requirement.accepts.join(', ')}`
+    : 'any recorded course counts';
+  return `Remove eligibility requirement ${index + 1} of ${total}, ${requirement.name} from ${requirement.programme || 'eligibility'}: ${amount} · ${accepted} · ${requirement.note || 'no source note'}`;
+}
 
 /**
  * What is left, as you were told it.
@@ -54,6 +66,13 @@ export function EligibilityCheck({
   const [accepts, setAccepts] = useState('');
   const [note, setNote] = useState('');
   const [said, setSaid] = useState('');
+  const [undo, setUndo] = useState<{ requirement: Requirement; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!undo) return;
+    const timer = window.setTimeout(() => setUndo(null), SHOWN_FOR);
+    return () => window.clearTimeout(timer);
+  }, [undo]);
 
   const line = {
     fontSize: 'var(--type-sm)',
@@ -89,6 +108,36 @@ export function EligibilityCheck({
       setAccepts('');
       setNote('');
       setSaid('Added. It counts the courses you have recorded under The degree.');
+    }
+  };
+
+  const remove = (requirement: Requirement) => {
+    const index = value.eligibility.findIndex((candidate) => candidate.id === requirement.id);
+    if (index < 0) return;
+    if (
+      update((old) => ({
+        ...old,
+        eligibility: old.eligibility.filter((candidate) => candidate.id !== requirement.id),
+      }))
+    ) {
+      setUndo({ requirement, index });
+      setSaid('Eligibility requirement removed.');
+    } else {
+      setSaid('Eligibility requirement could not be removed from this device.');
+    }
+  };
+
+  const restore = () => {
+    if (!undo) return;
+    const restored = update((old) => {
+      if (old.eligibility.some((requirement) => requirement.id === undo.requirement.id)) return old;
+      const eligibility = [...old.eligibility];
+      eligibility.splice(Math.min(undo.index, eligibility.length), 0, undo.requirement);
+      return { ...old, eligibility };
+    });
+    if (restored) {
+      setUndo(null);
+      setSaid('Eligibility requirement restored.');
     }
   };
 
@@ -131,7 +180,7 @@ export function EligibilityCheck({
           their words, and the counting is done against your own record.
         </p>
       ) : (
-        value.eligibility.map((req) => {
+        value.eligibility.map((req, index) => {
           const p = progress(req, state.taken);
           return (
             <div
@@ -154,9 +203,8 @@ export function EligibilityCheck({
               <button
                 type="button"
                 className="bare tappable"
-                onClick={() =>
-                  update((old) => ({ ...old, eligibility: old.eligibility.filter((r) => r.id !== req.id) }))
-                }
+                aria-label={removalName(req, index, value.eligibility.length)}
+                onClick={() => remove(req)}
                 style={{
                   textDecoration: 'underline',
                   fontSize: 'var(--type-sm)',
@@ -271,7 +319,12 @@ export function EligibilityCheck({
             textWrap: 'pretty',
           }}
         >
-          {said}
+          {said}{' '}
+          {undo ? (
+            <button type="button" className="workspace-text-button" onClick={restore}>
+              Undo removal
+            </button>
+          ) : null}
         </p>
       )}
     </>

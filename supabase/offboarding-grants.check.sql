@@ -80,12 +80,27 @@ begin
   perform pg_temp.answered('suspended: the grant is untouched', pg_temp.can(staff, 'tenant:configure', 'north-offboard'), 'true');
   update public.institution_membership set status = 'active' where id = m_north;
 
+  -- Sessions, so that deprovisioning can be seen to end them. The throwaway
+  -- cluster has no `auth.sessions` unless a check creates it, the same way
+  -- school-offboarding.check.sql does.
+  if to_regclass('auth.sessions') is null then
+    create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid not null);
+  end if;
+  insert into auth.sessions (user_id) values (staff), (staff), (other);
+
   -- Deprovisioned by north's identity provider.
   update public.institution_membership
      set status = 'deprovisioned', roles = '{}', deprovisioned_at = now()
    where id = m_north;
 
   perform pg_temp.answered('deprovisioned at north: north authority ends', pg_temp.can(staff, 'tenant:configure', 'north-offboard'), 'false');
+  -- A deprovisioned person's signed-in sessions end with the membership
+  -- (Phase 4, P4-I2). A token that outlived its membership kept working against
+  -- PostgREST for whatever ownership or non-school grants still allowed, until
+  -- it expired. The session ends everywhere: signing in again is what
+  -- re-establishes cedar, where the membership still stands.
+  perform pg_temp.answered('deprovisioned: the person''s sessions end', (select count(*) from auth.sessions where user_id = staff)::text, '0');
+  perform pg_temp.answered('cross-person: the other administrator''s session is untouched', (select count(*) from auth.sessions where user_id = other)::text, '1');
   perform pg_temp.answered('cross-tenant: the same person keeps cedar', pg_temp.can(staff, 'tenant:configure', 'cedar-offboard'), 'true');
   perform pg_temp.answered('cross-person: the other north administrator is untouched', pg_temp.can(other, 'tenant:configure', 'north-offboard'), 'true');
 

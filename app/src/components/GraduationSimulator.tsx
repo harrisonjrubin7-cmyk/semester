@@ -321,8 +321,16 @@ export function GraduationSimulator({
         {data.scenarios.length === 0 ? (
           <p className="portal-muted">Pick a change to see how it moves your finish and cost. Adjust its numbers after.</p>
         ) : (
-          data.scenarios.map((s) => {
+          data.scenarios.map((s, index) => {
             const p = project(plan, done, s);
+            const removalDetails = [
+              s.extra >= 0 ? `${s.extra} additional credits` : `${Math.abs(s.extra)} fewer credits`,
+              `${s.perTerm} credits per fall or spring`,
+              `${s.summer} credits each summer`,
+              s.abroad
+                ? `${s.abroad.terms} term${s.abroad.terms === 1 ? '' : 's'} abroad with ${s.abroad.credits} expected transfer credits${s.abroad.costPerTerm === null ? ' at the home-term cost' : ` at ${money(s.abroad.costPerTerm)} per term`}`
+                : 'no study abroad adjustment',
+            ].join(' · ');
             const edit = (patch: Partial<typeof s>) =>
               library.update((d) => ({ ...d, scenarios: d.scenarios.map((x) => (x.id === s.id ? { ...x, ...patch } : x)) }));
             return (
@@ -418,7 +426,10 @@ export function GraduationSimulator({
                       <button onClick={() => setConfirm({ kind: 'save', scenario: s })}>Save draft to your account</button>
                     )
                   ) : null}
-                  <button aria-label={`Remove scenario ${s.name}`} onClick={() => setConfirm({ kind: 'remove', scenario: s })}>
+                  <button
+                    aria-label={`Remove scenario ${index + 1} of ${data.scenarios.length}, ${s.name}: ${removalDetails}`}
+                    onClick={() => setConfirm({ kind: 'remove', scenario: s })}
+                  >
                     Remove
                   </button>
                 </div>

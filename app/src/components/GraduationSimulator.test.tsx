@@ -88,7 +88,8 @@ it('previews device-only scenario removal and preserves it when cancelled', () =
   );
   act(() => root.render(<GraduationSimulator done={60} accountId="u1" simulator />));
 
-  act(() => host.querySelector<HTMLButtonElement>('button[aria-label="Remove scenario Add a minor"]')!.click());
+  const removalName = 'Remove scenario 1 of 1, Add a minor: 18 additional credits · 12 credits per fall or spring · 3 credits each summer · no study abroad adjustment';
+  act(() => host.querySelector<HTMLButtonElement>(`button[aria-label="${removalName}"]`)!.click());
 
   expect(host.textContent).toContain('Remove this scenario from this device?');
   expect(host.textContent).toContain('18 additional credits, 12 credits per fall or spring, and 3 credits each summer');
@@ -99,11 +100,38 @@ it('previews device-only scenario removal and preserves it when cancelled', () =
   act(() => cancel.click());
   expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(1);
 
-  act(() => host.querySelector<HTMLButtonElement>('button[aria-label="Remove scenario Add a minor"]')!.click());
+  act(() => host.querySelector<HTMLButtonElement>(`button[aria-label="${removalName}"]`)!.click());
   const confirm = [...host.querySelectorAll('button')].find((button) => button.textContent === 'Remove scenario')!;
   act(() => confirm.click());
   expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(0);
   expect(host.textContent).toContain('removed from this device');
+});
+
+it('distinguishes same-name scenario removals by position and represented assumptions', () => {
+  localStorage.setItem(
+    GRADUATION_KEY,
+    JSON.stringify({
+      plan: { needed: 120, perTerm: 15, summer: 0, costPerTerm: 20000, summerCost: 0, next: { season: 'Spring', year: 2027 } },
+      scenarios: [
+        { id: 'minor-1', name: 'Add a minor', extra: 18, perTerm: 12, summer: 3 },
+        { id: 'minor-2', name: 'Add a minor', extra: 24, perTerm: 15, summer: 0, abroad: { terms: 1, credits: 12, costPerTerm: 25000 } },
+      ],
+    }),
+  );
+  act(() => root.render(<GraduationSimulator done={60} />));
+
+  const first = 'Remove scenario 1 of 2, Add a minor: 18 additional credits · 12 credits per fall or spring · 3 credits each summer · no study abroad adjustment';
+  const second = 'Remove scenario 2 of 2, Add a minor: 24 additional credits · 15 credits per fall or spring · 0 credits each summer · 1 term abroad with 12 expected transfer credits at $25,000 per term';
+  expect(host.querySelector(`button[aria-label="${first}"]`)).not.toBeNull();
+  const removeSecond = host.querySelector<HTMLButtonElement>(`button[aria-label="${second}"]`)!;
+  expect(removeSecond).not.toBeNull();
+
+  act(() => removeSecond.click());
+  expect(host.textContent).toContain('24 additional credits, 15 credits per fall or spring, and 0 credits each summer');
+  expect(host.textContent).toContain('1 term abroad with 12 expected transfer credits');
+  act(() => [...host.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Remove scenario')!.click());
+
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios.map((scenario: { id: string }) => scenario.id)).toEqual(['minor-1']);
 });
 
 it('shows the editable assumptions behind the plan estimate', () => {

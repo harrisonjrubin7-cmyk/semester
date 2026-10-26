@@ -94,10 +94,13 @@ export interface RegistrationReadinessEvaluationRecord {
 
 export type ReadinessTransitionReason = 'evaluator_timeout';
 
-export type ReadinessWorkflowEventType =
-  | 'registration.readiness_requested'
-  | 'registration.readiness_evaluated'
-  | 'registration.readiness_reconciliation_requested';
+export const READINESS_WORKFLOW_EVENT_TYPES = [
+  'registration.readiness_requested',
+  'registration.readiness_evaluated',
+  'registration.readiness_reconciliation_requested',
+] as const;
+
+export type ReadinessWorkflowEventType = (typeof READINESS_WORKFLOW_EVENT_TYPES)[number];
 
 export interface ReadinessWorkflowEventDescriptor {
   eventType: ReadinessWorkflowEventType;

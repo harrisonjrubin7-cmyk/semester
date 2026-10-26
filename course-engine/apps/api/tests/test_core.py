@@ -136,3 +136,28 @@ def test_study_asset_approval_rejects_empty_or_unknown_citations():
             {"sections": [{"citation_ids": list(allowed)}]},
             allowed,
         )
+
+
+def test_reading_brief_requires_a_citation_bound_applied_case():
+    citation_id = uuid4()
+    valid = {
+        "sections": [{
+            "heading": "Verified evidence",
+            "explanation": "The source states the policy.",
+            "citation_ids": [citation_id],
+        }],
+        "cases": [{
+            "heading": "Apply the policy",
+            "scenario": "A learner must decide what the cited policy permits.",
+            "questions": ["What action is directly supported?"],
+            "citation_ids": [citation_id],
+        }],
+    }
+
+    validate_study_asset_content("reading_brief", valid, {citation_id})
+    with pytest.raises(UnsupportedCitationError, match="Reading brief content is invalid"):
+        validate_study_asset_content(
+            "reading_brief",
+            {"sections": valid["sections"]},
+            {citation_id},
+        )

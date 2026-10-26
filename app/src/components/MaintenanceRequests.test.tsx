@@ -183,6 +183,29 @@ describe('MaintenanceRequests', () => {
     expect(host.textContent).toContain('It is time to check on this one');
   });
 
+  it('distinguishes repeated repair removals by the represented request', async () => {
+    seed([
+      existing(),
+      existing({
+        id: 'mr2',
+        hall: 'Morgan',
+        room: '310',
+        reference: 'WO-2002',
+        checkBackAt: NOW.getTime() + 2 * 86_400_000,
+      }),
+    ]);
+    await render();
+
+    const labels = [...host.querySelectorAll<HTMLButtonElement>('button')]
+      .filter((candidate) => candidate.textContent?.trim() === 'Remove')
+      .map((candidate) => candidate.getAttribute('aria-label'));
+
+    expect(labels).toHaveLength(2);
+    expect(new Set(labels).size).toBe(2);
+    expect(labels.some((label) => label?.includes('Branscomb 214 · Bathroom') && label.includes('Reference WO-1001'))).toBe(true);
+    expect(labels.some((label) => label?.includes('Morgan 310 · Bathroom') && label.includes('Reference WO-2002'))).toBe(true);
+  });
+
   it('needs a time before it records a scheduled visit', async () => {
     seed([existing()]);
     await render();

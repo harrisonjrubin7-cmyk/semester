@@ -1,0 +1,25 @@
+# Board packet standard. Status: PROPOSED, not adopted. It supersedes nothing.
+# docs/company/leadership-system/01-board.md is a draft (not adopted) and is not
+# authority until the founder records adoption in docs/decisions/.
+board_packet:
+  status: proposed                # proposed | adopted | superseded
+  adopted: false
+  supersedes: []
+  precedence:
+    drafts_are_authority: false
+    when_drafts_differ: founder_decision_recorded_in_docs_decisions
+  sections:
+    - headline_and_material_changes
+    - pilot_and_customer_status
+    - product_delivery_vs_evidence
+    - reliability_and_trust_status
+    - commercial_pipeline_and_cash
+    - risks_and_decisions_needed
+    - hiring_and_capacity
+    - next_period_commitments
+
+  rules:
+    - no_unverified_customer_or_product_claims
+    - label_sample_or_estimated_figures
+    - separate_activated_from_designed_capabilities
+    - report_control_gaps_with_owners_and_dates

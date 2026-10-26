@@ -7,8 +7,10 @@ import os
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Lock
 from uuid import UUID
 
+import pymupdf as fitz
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, delete, func, or_, select
@@ -71,6 +73,7 @@ from app.services.institution_commands import _is_active, submit_institution_com
 from app.services.job_leases import revoke_job
 from app.services.storage import (
     MIME_FAMILIES,
+    ObjectInspectionError,
     ObjectStorage,
     normalize_upload_mime,
     sha256_file,
@@ -81,6 +84,24 @@ from app.services.upload_dispatch import dispatch_upload_completion
 
 router = APIRouter()
 storage = ObjectStorage()
+_preview_pdf_cache_lock = Lock()
+_preview_pdf_cache_key: tuple[str, str, str] | None = None
+_preview_pdf_cache_payload: bytes | None = None
+
+
+def preview_pdf_payload(doc: SourceDocument) -> bytes:
+    global _preview_pdf_cache_key, _preview_pdf_cache_payload
+
+    key = (str(doc.id), doc.sha256, doc.storage_key)
+    with _preview_pdf_cache_lock:
+        if key == _preview_pdf_cache_key and _preview_pdf_cache_payload is not None:
+            return _preview_pdf_cache_payload
+
+    payload = storage.read_bytes(doc.storage_key, max_bytes=settings.max_upload_bytes)
+    with _preview_pdf_cache_lock:
+        _preview_pdf_cache_key = key
+        _preview_pdf_cache_payload = payload
+    return payload
 
 
 def owned_course(db: Session, user: User, course_id: UUID) -> Course:
@@ -194,6 +215,38 @@ def current_asset_citations(
     return approved, catalog
 
 
+def serialize_study_assets(db: Session, assets: list[StudyAsset]) -> list[dict]:
+    """Expose the live citation links; embedded catalogs are display caches, not authority."""
+    active_by_asset = {asset.id: [] for asset in assets}
+    if assets:
+        rows = db.execute(
+            select(StudyAssetCitation.study_asset_id, StudyAssetCitation.citation_id)
+            .join(Citation, Citation.id == StudyAssetCitation.citation_id)
+            .join(SourceChunk, SourceChunk.id == Citation.chunk_id)
+            .join(SourceDocument, SourceDocument.id == SourceChunk.document_id)
+            .join(StudyAsset, StudyAsset.id == StudyAssetCitation.study_asset_id)
+            .where(
+                StudyAssetCitation.study_asset_id.in_(active_by_asset),
+                Citation.status == ReviewStatus.confirmed,
+                SourceDocument.course_id == StudyAsset.course_id,
+                SourceDocument.deleted_at.is_(None),
+            )
+        ).all()
+        for asset_id, citation_id in rows:
+            active_by_asset[asset_id].append(str(citation_id))
+    return [
+        {
+            **serialize(asset),
+            "active_citation_ids": sorted(active_by_asset[asset.id]),
+        }
+        for asset in assets
+    ]
+
+
+def serialize_study_asset(db: Session, asset: StudyAsset) -> dict:
+    return serialize_study_assets(db, [asset])[0]
+
+
 def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
     assets = db.scalars(
         select(StudyAsset)
@@ -270,7 +323,7 @@ def list_institution_commands(
                     CommandReceipt.created_at == anchor.created_at,
                     CommandReceipt.id < anchor.id,
                 ),
-            )
+            ),
         )
     receipts = db.scalars(
         statement.order_by(CommandReceipt.created_at.desc(), CommandReceipt.id.desc()).limit(
@@ -599,14 +652,76 @@ def source_view(
         .offset(offset)
         .limit(limit)
     ).all()
+    review_by_chunk_id: dict[str, ReviewItem] = {}
+    chunk_ids = {str(chunk.id) for chunk in chunks}
+    if chunk_ids:
+        for item in db.scalars(
+            select(ReviewItem)
+            .where(
+                ReviewItem.document_id == doc.id,
+                ReviewItem.item_type == "extracted_evidence",
+                ReviewItem.payload["chunk_id"].as_string().in_(chunk_ids),
+            )
+            .order_by(ReviewItem.created_at.desc())
+        ).all():
+            chunk_id = item.payload.get("chunk_id") if isinstance(item.payload, dict) else None
+            if isinstance(chunk_id, str) and chunk_id not in review_by_chunk_id:
+                review_by_chunk_id[chunk_id] = item
+    serialized_chunks = []
+    for chunk in chunks:
+        serialized = serialize(chunk)
+        review = review_by_chunk_id.get(str(chunk.id))
+        serialized["review_item_id"] = str(review.id) if review else None
+        serialized["review_status"] = review.status.value if review else None
+        serialized["preview_available"] = (
+            Path(doc.filename).suffix.lower() == ".pdf"
+            and chunk.page_number is not None
+            and chunk.bounding_box is not None
+        )
+        serialized_chunks.append(serialized)
     return {
         "document": serialize(doc),
-        "chunks": [serialize(chunk) for chunk in chunks],
+        "chunks": serialized_chunks,
         "total": total,
         "offset": offset,
         "limit": limit,
         "has_more": offset + len(chunks) < total,
     }
+
+
+@router.get("/files/{file_id}/pages/{page_number}/preview")
+def source_page_preview(
+    file_id: UUID,
+    page_number: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    doc = db.get(SourceDocument, file_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(404)
+    owned_course(db, user, doc.course_id)
+    if Path(doc.filename).suffix.lower() != ".pdf":
+        raise HTTPException(415, "Page previews are available only for PDF sources")
+    try:
+        payload = preview_pdf_payload(doc)
+        with fitz.open(stream=payload, filetype="pdf") as document:
+            if page_number < 1 or page_number > document.page_count:
+                raise HTTPException(404, "Source page does not exist")
+            page = document.load_page(page_number - 1)
+            longest_edge = max(float(page.rect.width), float(page.rect.height), 1.0)
+            scale = min(2.0, 2048.0 / longest_edge)
+            preview = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False).tobytes("png")
+    except HTTPException:
+        raise
+    except ObjectInspectionError as exc:
+        raise HTTPException(502, "Original object could not be loaded") from exc
+    except (fitz.FileDataError, RuntimeError, ValueError) as exc:
+        raise HTTPException(422, "PDF preview could not be rendered") from exc
+    return Response(
+        content=preview,
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.get("/files/{file_id}/download")
@@ -880,7 +995,8 @@ def calendar_ics(course_id: UUID, user: User = Depends(get_current_user), db: Se
 @router.get("/courses/{course_id}/study-assets")
 def assets(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
-    return [serialize(x) for x in db.scalars(select(StudyAsset).where(StudyAsset.course_id == course_id, StudyAsset.deleted_at.is_(None)).order_by(StudyAsset.updated_at.desc())).all()]
+    rows = list(db.scalars(select(StudyAsset).where(StudyAsset.course_id == course_id, StudyAsset.deleted_at.is_(None)).order_by(StudyAsset.updated_at.desc())).all())
+    return serialize_study_assets(db, rows)
 
 
 @router.post("/courses/{course_id}/study-assets/generate", status_code=202)
@@ -896,7 +1012,7 @@ def generate_asset(course_id: UUID, payload: GenerateAssetRequest, user: User = 
 def asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.get(StudyAsset, asset_id)
     if not row or row.deleted_at: raise HTTPException(404)
-    owned_course(db, user, row.course_id); return serialize(row)
+    owned_course(db, user, row.course_id); return serialize_study_asset(db, row)
 
 
 @router.patch("/study-assets/{asset_id}")
@@ -919,7 +1035,7 @@ def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_cu
             title=f"Review {row.title}",
             payload={"asset_id": str(row.id), "generation_version": row.generation_version},
         ))
-    db.commit(); return serialize(row)
+    db.commit(); return serialize_study_asset(db, row)
 
 
 @router.post("/study-assets/{asset_id}/regenerate", status_code=202)
@@ -1070,6 +1186,17 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
     if not quiz:
         raise HTTPException(404, "Quiz not found")
     questions = valid_guide_sections(quiz.content)
+    try:
+        allowed_citations, _citation_catalog = current_asset_citations(db, quiz)
+    except UnsupportedCitationError as exc:
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt") from exc
+    allowed_citation_ids = {str(citation_id) for citation_id in allowed_citations}
+    if any(
+        not section["citation_ids"]
+        or any(citation_id not in allowed_citation_ids for citation_id in section["citation_ids"])
+        for section in questions
+    ):
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt")
     expected_indexes = set(range(len(questions)))
     rated_indexes = {answer.question_index for answer in payload.answers}
     if (

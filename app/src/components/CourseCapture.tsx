@@ -22,9 +22,11 @@ export function CourseCapture({
   onRemovePersisted?: (ids: string[]) => void | Promise<void>;
 }) {
   const [consent, setConsent] = useState(false);
-  const [originals, setOriginals] = useState<Array<CaptureOriginal & { file: File }>>([]);
+  const [originals, setOriginals] = useState<Array<CaptureOriginal & { file: File; persistedId?: string }>>([]);
+  const [removing, setRemoving] = useState<string | null>(null);
   const [status, setStatus] = useState('Waiting for explicit consent.');
   const generation = useRef(0);
+  const originalSequence = useRef(0);
   const persisted = useRef<string[]>([]);
   useEffect(() => () => { generation.current += 1; }, []);
 
@@ -33,14 +35,18 @@ export function CourseCapture({
     const run = generation.current;
     setStatus('Preserving originals and checking file integrity…');
     const made = await Promise.all(
-      files.map(async (file, index) => ({
-        id: `${courseId}:${file.name}:${file.size}:${index}`,
-        name: file.name,
-        mime: file.type || 'application/octet-stream',
-        size: file.size,
-        hash: await captureHash(file),
-        file,
-      })),
+      files.map(async (file) => {
+        const sequence = originalSequence.current;
+        originalSequence.current += 1;
+        return {
+          id: `${courseId}:${file.name}:${file.size}:${sequence}`,
+          name: file.name,
+          mime: file.type || 'application/octet-stream',
+          size: file.size,
+          hash: await captureHash(file),
+          file,
+        };
+      }),
     );
     if (run !== generation.current) return;
     const stored = await onFiles(files);
@@ -50,8 +56,36 @@ export function CourseCapture({
       return;
     }
     persisted.current.push(...ids);
-    setOriginals((current) => [...current, ...made]);
+    setOriginals((current) => [
+      ...current,
+      ...made.map((original, index) => ({ ...original, persistedId: ids[index] })),
+    ]);
     setStatus(`${made.length} ${made.length === 1 ? 'original was' : 'originals were'} preserved locally with a content hash.`);
+  };
+
+  const removeOriginal = async (original: (typeof originals)[number]) => {
+    const run = generation.current;
+    setRemoving(original.id);
+    if (original.persistedId) {
+      if (!onRemovePersisted) {
+        setStatus(`${original.name} could not be removed because its persisted copy has no removal handler.`);
+        setRemoving(null);
+        return;
+      }
+      try {
+        await onRemovePersisted([original.persistedId]);
+      } catch {
+        if (run !== generation.current) return;
+        setStatus(`${original.name} could not be removed. Its local and persisted copies remain available; try again.`);
+        setRemoving(null);
+        return;
+      }
+      if (run !== generation.current) return;
+      persisted.current = persisted.current.filter((id) => id !== original.persistedId);
+    }
+    setOriginals((current) => current.filter((item) => item.id !== original.id));
+    setStatus(`${original.name} was removed from this capture session${original.persistedId ? ' and its persisted copy was removed' : ''}.`);
+    setRemoving(null);
   };
 
   const denied = policy.recording === 'prohibited';
@@ -104,7 +138,7 @@ export function CourseCapture({
         </p>
       )}
 
-      {originals.map((original) => (
+      {originals.map((original, index) => (
         <div className="course-capture-original" key={original.id}>
           <span><strong>{original.name}</strong> · {original.mime} · hash {original.hash.slice(0, 12)}…</span>
           {original.mime.startsWith('image/') && onGuidedProblem && (
@@ -112,16 +146,11 @@ export function CourseCapture({
           )}
           <button
             type="button"
-            aria-label={`Remove ${original.name}`}
-            onClick={() => {
-              const ids = [...persisted.current];
-              persisted.current = [];
-              if (ids.length) void onRemovePersisted?.(ids);
-              setOriginals((current) => current.filter((item) => item.id !== original.id));
-              setStatus(`${original.name} was removed from this capture session; persisted copies were queued for removal.`);
-            }}
+            disabled={removing !== null}
+            aria-label={`Remove capture ${index + 1} of ${originals.length}, ${original.name}: ${original.mime} · ${original.size} ${original.size === 1 ? 'byte' : 'bytes'} · hash ${original.hash.slice(0, 12)}`}
+            onClick={() => void removeOriginal(original)}
           >
-            Remove
+            {removing === original.id ? 'Removing…' : 'Remove'}
           </button>
         </div>
       ))}

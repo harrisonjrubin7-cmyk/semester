@@ -148,6 +148,18 @@ class GuideContent(BaseModel):
     source_gaps: list[str] = Field(default_factory=list)
 
 
+class AppliedCase(BaseModel):
+    heading: str
+    scenario: str
+    questions: list[str] = Field(min_length=1)
+    applications: list[str] = Field(default_factory=list)
+    citation_ids: list[UUID] = Field(min_length=1)
+
+
+class ReadingBriefContent(GuideContent):
+    cases: list[AppliedCase] = Field(min_length=1)
+
+
 class Flashcard(BaseModel):
     id: UUID
     front: str

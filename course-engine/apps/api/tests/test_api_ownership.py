@@ -1,16 +1,18 @@
 from uuid import UUID
 
+import pymupdf as fitz
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api import routes as api_routes
 from app.core.database import Base, get_db
 from app.main import app
-from app.models.entities import ReviewItem, SourceChunk, SourceDocument
+from app.models.entities import Citation, ReviewItem, SourceChunk, SourceDocument
 
 
-def test_course_ownership_boundary_returns_not_found_for_other_user():
+def test_course_ownership_boundary_returns_not_found_for_other_user(monkeypatch, tmp_path):
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -61,25 +63,103 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
             )
             session.add(document)
             session.flush()
-            session.add(SourceChunk(
+            chunk = SourceChunk(
                 document_id=document.id,
                 chunk_index=0,
                 content="Office hours are Tuesday at 2 PM.",
-                content_type="paragraph",
-                page_number=3,
+                content_type="page_block",
+                page_number=1,
+                bounding_box={
+                    "coordinate_space": "normalized",
+                    "x": 0.1,
+                    "y": 0.2,
+                    "width": 0.4,
+                    "height": 0.1,
+                },
                 confidence=0.98,
-            ))
+            )
+            session.add(chunk)
+            session.flush()
+            citation = Citation(chunk_id=chunk.id, quote=chunk.content)
+            session.add(citation)
+            session.flush()
+            extracted_review = ReviewItem(
+                course_id=UUID(course_id),
+                document_id=document.id,
+                item_type="extracted_evidence",
+                title="Review syllabus.pdf",
+                payload={"chunk_id": str(chunk.id), "citation_id": str(citation.id)},
+            )
+            session.add(extracted_review)
             session.commit()
             document_id = document.id
+            extracted_review_id = extracted_review.id
 
         source = client.get(f"/api/v1/files/{document_id}/source-view", headers=first_headers)
         assert source.status_code == 200
         assert source.json()["document"]["filename"] == "syllabus.pdf"
-        assert source.json()["chunks"][0]["page_number"] == 3
+        assert source.json()["chunks"][0]["page_number"] == 1
         assert source.json()["chunks"][0]["content"] == "Office hours are Tuesday at 2 PM."
+        assert source.json()["chunks"][0]["bounding_box"]["x"] == 0.1
+        assert source.json()["chunks"][0]["preview_available"] is True
+        assert source.json()["chunks"][0]["review_item_id"] == str(extracted_review_id)
         assert source.json()["has_more"] is False
         assert client.get(f"/api/v1/files/{document_id}/source-view", headers=second_headers).status_code == 404
         assert client.get(f"/api/v1/files/{document_id}/source-view").status_code == 401
+
+        pdf_path = tmp_path / "syllabus.pdf"
+        with fitz.open() as pdf:
+            page = pdf.new_page()
+            page.insert_text((72, 72), "Office hours are Tuesday at 2 PM.")
+            pdf.new_page()
+            pdf.save(pdf_path)
+        preview_reads = []
+
+        def read_preview(_storage_key, *, max_bytes):
+            preview_reads.append(max_bytes)
+            return pdf_path.read_bytes()
+
+        monkeypatch.setattr(
+            api_routes.storage,
+            "read_bytes",
+            read_preview,
+        )
+        preview = client.get(
+            f"/api/v1/files/{document_id}/pages/1/preview",
+            headers=first_headers,
+        )
+        assert preview.status_code == 200
+        assert preview.headers["content-type"] == "image/png"
+        assert preview.headers["cache-control"] == "no-store"
+        second_page = client.get(
+            f"/api/v1/files/{document_id}/pages/2/preview",
+            headers=first_headers,
+        )
+        assert second_page.status_code == 200
+        assert preview_reads == [api_routes.settings.max_upload_bytes]
+        assert client.get(
+            f"/api/v1/files/{document_id}/pages/1/preview",
+            headers=second_headers,
+        ).status_code == 404
+        assert client.get(f"/api/v1/files/{document_id}/pages/1/preview").status_code == 401
+        assert client.get(
+            f"/api/v1/files/{document_id}/pages/3/preview",
+            headers=first_headers,
+        ).status_code == 404
+
+        with testing_session() as session:
+            archive = session.get(SourceDocument, document_id)
+            archive.filename = "course-materials.zip"
+            session.commit()
+        archive_source = client.get(
+            f"/api/v1/files/{document_id}/source-view",
+            headers=first_headers,
+        )
+        assert archive_source.json()["chunks"][0]["preview_available"] is False
+        assert client.get(
+            f"/api/v1/files/{document_id}/pages/1/preview",
+            headers=first_headers,
+        ).status_code == 415
 
         with testing_session() as session:
             review = ReviewItem(

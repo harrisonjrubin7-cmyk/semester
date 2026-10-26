@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { canScan, scanFrame } from '../lib/barcode';
+import { PermissionPrompt, SemesterDesignSurface } from './semester-design';
+
+type CameraState = 'ask' | 'requesting' | 'granted' | 'denied' | 'unsupported';
 
 /**
  * Point the camera at the back of a book.
@@ -16,6 +19,8 @@ import { canScan, scanFrame } from '../lib/barcode';
  */
 export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [cameraState, setCameraState] = useState<CameraState>('ask');
   const [trouble, setTrouble] = useState('');
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -48,8 +53,16 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
           video.current.srcObject = got;
           await video.current.play();
         }
-      } catch {
-        setTrouble('No camera, or permission refused. Type the number instead.');
+        setCameraState('granted');
+        setPromptOpen(false);
+      } catch (error) {
+        const unavailable = error instanceof DOMException
+          && ['NotFoundError', 'NotReadableError', 'OverconstrainedError'].includes(error.name);
+        setCameraState(unavailable ? 'unsupported' : 'denied');
+        setTrouble(unavailable
+          ? 'A camera is not available on this device. Type the ISBN instead.'
+          : 'Camera access was not allowed. Type the ISBN instead.');
+        setOpen(false);
         return;
       }
 
@@ -82,12 +95,51 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
         className="btn btn-ghost btn-block"
         onClick={() => {
           setTrouble('');
-          setOpen((was) => !was);
+          if (open) {
+            setOpen(false);
+            setCameraState('ask');
+          } else {
+            setPromptOpen(true);
+            setCameraState('ask');
+          }
         }}
         style={{ height: 38, marginBottom: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
       >
         {open ? 'Stop scanning' : 'Scan the barcode on the book'}
       </button>
+
+      {promptOpen && (
+        <div style={{ marginBottom: 'var(--sp-4)' }}>
+          <SemesterDesignSurface label="Camera permission for ISBN scanning">
+            <PermissionPrompt
+              capability="camera"
+              glyph="▣"
+              state={cameraState}
+              why="Read the ISBN printed on the back of this book."
+              when="Only while this scanner is open. The camera stops when you close it or a barcode is found."
+              fallback="Type the ISBN or book title in the field above."
+              kept="Only the ISBN number you choose to save. Images stay on this device and are not uploaded."
+              allowLabel="Open camera"
+              fallbackLabel="Type the ISBN"
+              onAllow={() => {
+                setTrouble('');
+                setCameraState('requesting');
+                setOpen(true);
+              }}
+              onNotNow={() => setCameraState('denied')}
+              onUseFallback={() => {
+                setPromptOpen(false);
+                setCameraState('ask');
+              }}
+            />
+          </SemesterDesignSurface>
+          {trouble && (
+            <p role="alert" style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBlock: 'var(--sp-3) 0' }}>
+              {trouble}
+            </p>
+          )}
+        </div>
+      )}
 
       {open && (
         <div style={{ marginBottom: 'var(--sp-4)' }}>
@@ -109,8 +161,7 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
             }}
           />
           <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-            {trouble ||
-              'Hold the barcode still in frame. The number is read on this device and goes no further — the app does not look it up, because that would mean telling somebody else what you are studying.'}
+            Hold the barcode still in frame. The number is read on this device and goes no further — the app does not look it up, because that would mean telling somebody else what you are studying.
           </div>
         </div>
       )}

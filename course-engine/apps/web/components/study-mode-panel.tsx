@@ -3,17 +3,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BookOpenCheck, Check, Download, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, download } from "@/lib/api";
 import { studyAssetTypes } from "./navigation";
 import { SourceStatusBadge } from "./source-status";
 import { EmptyState } from "./workspace-states";
-import type { Asset, CitationDetail, Flashcard, GuideSection, Progress } from "./workspace-types";
+import type { AppliedCase, Asset, CitationDetail, Flashcard, GuideSection, Progress } from "./workspace-types";
 
-function citationCatalog(content: Record<string, unknown>): Record<string, CitationDetail> {
-  const value = content.citations;
+function citationCatalog(asset: Asset): Record<string, CitationDetail> {
+  const value = asset.content.citations;
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return value as Record<string, CitationDetail>;
+  const embedded = value as Record<string, CitationDetail>;
+  if (!Array.isArray(asset.active_citation_ids)) return embedded;
+  const active = new Set(asset.active_citation_ids);
+  return Object.fromEntries(Object.entries(embedded).filter(([id]) => active.has(id)));
 }
 
 function guideSections(content: Record<string, unknown>): GuideSection[] {
@@ -40,10 +43,35 @@ function flashcards(content: Record<string, unknown>): Flashcard[] {
   ));
 }
 
+function appliedCases(content: Record<string, unknown>): AppliedCase[] {
+  if (!Array.isArray(content.cases)) return [];
+  return content.cases.filter((caseStudy): caseStudy is AppliedCase => Boolean(
+    caseStudy && typeof caseStudy === "object" &&
+    typeof caseStudy.heading === "string" && typeof caseStudy.scenario === "string" &&
+    Array.isArray(caseStudy.questions) && caseStudy.questions.every((question: unknown) => typeof question === "string") &&
+    Array.isArray(caseStudy.citation_ids) && caseStudy.citation_ids.every((id: unknown) => typeof id === "string") &&
+    (caseStudy.applications === undefined || (
+      Array.isArray(caseStudy.applications) && caseStudy.applications.every((application: unknown) => typeof application === "string")
+    )),
+  ));
+}
+
 function Citations({ ids, catalog }: { ids: string[]; catalog: Record<string, CitationDetail> }) {
   return <ul aria-label="Sources" className="mt-4 flex flex-wrap gap-2">
     {ids.map((id) => <li className="status-chip" data-tone="info" key={id}>{catalog[id]?.label ?? "Linked source"}</li>)}
   </ul>;
+}
+
+function citationBoundSections(content: Record<string, unknown>, catalog: Record<string, CitationDetail>) {
+  return guideSections(content).filter((section) => (
+    section.citation_ids.length > 0 && section.citation_ids.every((id) => Boolean(catalog[id]))
+  ));
+}
+
+function citationBoundCases(content: Record<string, unknown>, catalog: Record<string, CitationDetail>) {
+  return appliedCases(content).filter((caseStudy) => (
+    caseStudy.citation_ids.length > 0 && caseStudy.citation_ids.every((id) => Boolean(catalog[id]))
+  ));
 }
 
 function AssetHeader({ asset }: { asset: Asset }) {
@@ -58,15 +86,23 @@ function AssetHeader({ asset }: { asset: Asset }) {
 }
 
 function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
-  const cards = flashcards(asset.content);
-  const catalog = citationCatalog(asset.content);
+  const catalog = citationCatalog(asset);
+  const cards = flashcards(asset.content).filter((card) => (
+    card.citation_ids.length > 0 && card.citation_ids.every((id) => Boolean(catalog[id]))
+  ));
   const client = useQueryClient();
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [confidence, setConfidence] = useState(3);
   const [announcement, setAnnouncement] = useState("");
+  const cardIds = cards.map((card) => card.id).join("|");
+  const safeIndex = index < cards.length ? index : 0;
+  useEffect(() => {
+    setIndex((current) => current < cards.length ? current : 0);
+    setRevealed(false);
+  }, [cardIds, cards.length]);
   const review = useMutation({
-    mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[index].id}/review`, {
+    mutationFn: (correct: boolean) => api<Progress["items"][number]>(`/flashcards/${cards[safeIndex].id}/review`, {
       method: "POST",
       body: JSON.stringify({ course_id: courseId, asset_id: asset.id, concept_id: null, correct, confidence }),
     }),
@@ -78,9 +114,9 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
     },
   });
   if (!cards.length) return <p className="muted mt-6" role="status">This stored card set has no valid cited cards.</p>;
-  const card = cards[index];
+  const card = cards[safeIndex];
   return <div className="mt-6">
-    <p className="muted text-sm"><span className="mono">{index + 1}</span> of <span className="mono">{cards.length}</span></p>
+    <p className="muted text-sm"><span className="mono">{safeIndex + 1}</span> of <span className="mono">{cards.length}</span></p>
     <div className="mt-3 rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-6">
       <p className="text-lg font-semibold">{card.front}</p>
       {revealed ? <div className="mt-6 border-t border-[color:var(--border-default)] pt-5"><p>{card.back}</p><Citations catalog={catalog} ids={card.citation_ids} /></div> : null}
@@ -100,8 +136,8 @@ function CardsView({ asset, courseId }: { asset: Asset; courseId: string }) {
 }
 
 function ReadingView({ asset, courseId, mode }: { asset: Asset; courseId: string; mode: string }) {
-  const sections = guideSections(asset.content);
-  const catalog = citationCatalog(asset.content);
+  const catalog = citationCatalog(asset);
+  const sections = citationBoundSections(asset.content, catalog);
   const [exportError, setExportError] = useState("");
   const [exporting, setExporting] = useState("");
   const exportAsset = async (format: "pdf" | "docx") => {
@@ -128,9 +164,88 @@ function ReadingView({ asset, courseId, mode }: { asset: Asset; courseId: string
   </div>;
 }
 
+function FieldGuideView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset);
+  const sections = citationBoundSections(asset.content, catalog);
+  if (!sections.length) return <p className="muted mt-6" role="status">This field guide has no valid cited concepts.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{sections.length}</span> cited {sections.length === 1 ? "concept" : "concepts"}</p>
+    <div className="mt-4 grid gap-4">{sections.map((section, index) => <section className="rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-5" key={`${section.heading}-${index}`}>
+      <h3 className="font-[family-name:var(--font-heading)] text-xl font-semibold">{section.heading}</h3>
+      <p className="reading-width mt-3 leading-7">{section.explanation}</p>
+      {section.key_points?.length ? <div className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">Connections</h4>
+        <ul className="mt-3 grid gap-2">{section.key_points.map((point) => <li className="rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] px-4 py-3" key={point}>{point}</li>)}</ul>
+      </div> : null}
+      {section.examples?.length ? <div className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">In context</h4>
+        <div className="mt-3 space-y-2">{section.examples.map((example) => <p key={example}>{example}</p>)}</div>
+      </div> : null}
+      <Citations catalog={catalog} ids={section.citation_ids} />
+    </section>)}</div>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
+function SlidesView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset);
+  const slides = citationBoundSections(asset.content, catalog);
+  if (!slides.length) return <p className="muted mt-6" role="status">This lecture outline has no valid cited slides.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{slides.length}</span> cited {slides.length === 1 ? "slide" : "slides"}</p>
+    <ol className="mt-4 grid gap-5">{slides.map((slide, index) => <li className="overflow-hidden rounded border border-[color:var(--border-strong)] bg-[color:var(--surface-canvas)]" key={`${slide.heading}-${index}`}>
+      <article aria-labelledby={`slide-${asset.id}-${index}`}>
+        <header className="border-b border-[color:var(--border-default)] bg-[color:var(--surface-panel)] px-5 py-3">
+          <p className="eyebrow">Slide {index + 1}</p>
+          <h3 className="mt-2 font-[family-name:var(--font-heading)] text-xl font-semibold" id={`slide-${asset.id}-${index}`}>{slide.heading}</h3>
+        </header>
+        <div className="p-5">
+          <p className="reading-width leading-7">{slide.explanation}</p>
+          {slide.key_points?.length ? <section className="mt-5" aria-labelledby={`slide-points-${asset.id}-${index}`}>
+            <h4 className="eyebrow" id={`slide-points-${asset.id}-${index}`}>Key points</h4>
+            <ul className="mt-3 list-disc space-y-2 pl-5">{slide.key_points.map((point) => <li key={point}>{point}</li>)}</ul>
+          </section> : null}
+          {slide.examples?.length ? <section className="mt-5 rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] p-4" aria-labelledby={`slide-examples-${asset.id}-${index}`}>
+            <h4 className="eyebrow" id={`slide-examples-${asset.id}-${index}`}>Examples</h4>
+            <div className="mt-2 space-y-2">{slide.examples.map((example) => <p key={example}>{example}</p>)}</div>
+          </section> : null}
+          <Citations catalog={catalog} ids={slide.citation_ids} />
+        </div>
+      </article>
+    </li>)}</ol>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
+function CasesView({ asset, courseId }: { asset: Asset; courseId: string }) {
+  const catalog = citationCatalog(asset);
+  const cases = citationBoundCases(asset.content, catalog);
+  if (!cases.length) return <p className="muted mt-6" role="status">This case set has no valid cited cases.</p>;
+  return <div className="mt-6">
+    <p className="muted text-sm"><span className="mono">{cases.length}</span> cited {cases.length === 1 ? "case" : "cases"}</p>
+    <div className="mt-4 grid gap-5">{cases.map((caseStudy, index) => <article className="rounded border border-[color:var(--border-default)] bg-[color:var(--surface-canvas)] p-5" key={`${caseStudy.heading}-${index}`}>
+      <p className="eyebrow">Case {index + 1}</p>
+      <h3 className="mt-2 font-[family-name:var(--font-heading)] text-xl font-semibold">{caseStudy.heading}</h3>
+      <p className="reading-width mt-3 leading-7">{caseStudy.scenario}</p>
+      {caseStudy.questions.length ? <section className="mt-5 border-t border-[color:var(--border-default)] pt-4">
+        <h4 className="eyebrow">Questions to consider</h4>
+        <ol className="mt-3 grid gap-2">{caseStudy.questions.map((question, questionIndex) => <li className="flex gap-3" key={question}><span aria-hidden="true" className="mono text-[color:var(--semester-700)]">{questionIndex + 1}</span><span>{question}</span></li>)}</ol>
+      </section> : null}
+      {caseStudy.applications?.length ? <section className="mt-5 rounded border-l-4 border-[color:var(--semester-500)] bg-[color:var(--surface-panel)] p-4">
+        <h4 className="eyebrow">Applications</h4>
+        <div className="mt-2 space-y-2">{caseStudy.applications.map((application) => <p key={application}>{application}</p>)}</div>
+      </section> : null}
+      <Citations catalog={catalog} ids={caseStudy.citation_ids} />
+    </article>)}</div>
+    <Link className="button button-secondary mt-5 no-underline" href={`/courses/${courseId}/uploads`}><ExternalLink size={16} /> View source records</Link>
+  </div>;
+}
+
 function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
-  const questions = guideSections(asset.content);
-  const catalog = citationCatalog(asset.content);
+  const catalog = citationCatalog(asset);
+  const storedQuestions = guideSections(asset.content);
+  const questions = citationBoundSections(asset.content, catalog);
+  const citationsCurrent = questions.length === storedQuestions.length;
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   const complete = useMutation({
@@ -153,8 +268,8 @@ function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
       </div>
     </div>}
   </section>)}
-    <button className="button button-primary" disabled={!allRated || complete.isPending || complete.isSuccess} onClick={() => complete.mutate()} type="button"><BookOpenCheck size={16} /> {complete.isSuccess ? "Attempt recorded" : "Finish quiz"}</button>
-    {!allRated ? <p className="muted text-sm">Reveal and rate every prompt to finish.</p> : null}
+    <button className="button button-primary" disabled={!citationsCurrent || !allRated || complete.isPending || complete.isSuccess} onClick={() => complete.mutate()} type="button"><BookOpenCheck size={16} /> {complete.isSuccess ? "Attempt recorded" : "Finish quiz"}</button>
+    {!citationsCurrent ? <p className="muted text-sm" role="status">This quiz’s source evidence changed. Regenerate it before recording an attempt.</p> : !allRated ? <p className="muted text-sm">Reveal and rate every prompt to finish.</p> : null}
     {complete.error ? <p className="text-sm text-[color:var(--danger)]" role="alert">{String(complete.error)}</p> : null}
     {complete.isSuccess ? <p aria-live="polite" className="text-sm text-[color:var(--success)]">Your self-graded attempt was recorded.</p> : null}
   </div>;
@@ -163,6 +278,9 @@ function QuizView({ asset, courseId }: { asset: Asset; courseId: string }) {
 function AssetBody({ asset, courseId, mode }: { asset: Asset; courseId: string; mode: string }) {
   if (mode === "cards") return <CardsView asset={asset} courseId={courseId} />;
   if (mode === "read" || mode === "doc") return <ReadingView asset={asset} courseId={courseId} mode={mode} />;
+  if (mode === "field-guide") return <FieldGuideView asset={asset} courseId={courseId} />;
+  if (mode === "slides") return <SlidesView asset={asset} courseId={courseId} />;
+  if (mode === "cases") return <CasesView asset={asset} courseId={courseId} />;
   if (mode === "quiz") return <QuizView asset={asset} courseId={courseId} />;
   return <details className="mt-5 border-t border-[color:var(--border-default)] pt-4"><summary className="button button-primary cursor-pointer">Open material</summary><pre className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded bg-[color:var(--surface-canvas)] p-4 text-sm">{JSON.stringify(asset.content, null, 2)}</pre></details>;
 }

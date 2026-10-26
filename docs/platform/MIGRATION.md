@@ -106,22 +106,36 @@ membership or workspace requires explicit confirmation. The gateway now has an a
 the authenticated identity, carries the selected membership into `RequestContext`, and
 caps its role grants at the active-context expiry. Production authentication carries the
 authoritative membership row id and the signed session expiry after remote token
-validation. The gateway can now assemble that one proved membership into a context
-directory and authorize only the workspace classes implied by its current membership
-roles; it does not invent company, operations, or developer access. It still has no loader
-for additional memberships. No route or UI calls the adapter, so this remains an
-integration seam—not evidence of live context switching.
+validation. The gateway can assemble that one proved membership into a context directory
+and authorize only the workspace classes implied by its current membership roles; it does
+not invent company, operations, or developer access. An additive server-only directory
+loader now reloads all memberships by that remotely verified auth user id, bounds the
+result, omits inactive rows, and fails closed unless the authenticated membership still
+has the same tenant and roles. No route or UI calls the loader or adapter, and selected
+request contexts remain limited to the currently authenticated institution, so this is
+still an integration seam—not evidence of live cross-institution context switching. A
+server-only `createContextActivationRequester` now adds the next seam: it requires an
+explicit confirmation naming the membership and workspace, reloads the verified account
+directory, and returns only an `ActiveContext`. It does not build a `RequestContext`,
+select an adapter, expose a route or UI, or authorize an action. The companion
+`createVerifiedContextActivationRequester` preserves that boundary while carrying an
+immutable server-only authority record from the selected membership row, including its
+fresh roles and provider id. This gives a later request-context adoption step evidence to
+authorize without inheriting the originally authenticated institution's roles.
 The browser's `lib/university.ts` now uses the shared SDK. Its transport
 preserves the existing secure-origin, no-redirect, no-cookie and timeout rules;
 mutating calls receive one idempotency key per logical call; only safe reads or
 keyed writes retry. The gateway context now validates and carries that key to
-adapters. The local SQLite action journal implements the shared persistent
-idempotency-store contract, but the production PostgreSQL journal does not and
-the legacy institution commit route is not wrapped with the store. That route
-therefore still opts out of network retry, preserving its
-unknown-outcome-to-reconciliation rule. The two older refusal shapes are translated at this
+adapters. The local SQLite action journal and the repository's PostgreSQL
+journal both implement the shared persistent idempotency-store contract. The
+institution commit route now wraps keyed commits with that store and the browser
+may safely retry a network failure with the same key. An upstream `502`
+unknown outcome remains non-retryable and must go through reconciliation. The
+two older refusal shapes are translated at this
 migration boundary with a focused equivalence test. **Not done:** the edge
-functions have not adopted the envelope, and `environment`,
+functions have not all adopted the envelope; the Claude shared-provider edge now
+uses the same error fields and request/correlation headers through a Deno-safe
+shared helper, while the remaining functions keep their prior shapes. `environment`,
 tenant status and `verifiedBy` in the context are approximations the file says so about.
 
 ### Phase 2 — Capability resolution, side by side

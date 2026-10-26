@@ -15,6 +15,7 @@ import {
   EMPTY_OPPORTUNITIES,
   IRB_NOTICE,
   KINDS,
+  OPPORTUNITIES_PREFIX,
   STAGES,
   TEMPLATES,
   deadlines,
@@ -53,7 +54,7 @@ type Tab = (typeof TABS)[number]['id'];
 
 export function Opportunities() {
   const { account } = useStore();
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.opportunities.v1:${account?.id || 'device'}`} />;
+  return <Workspace key={account?.id || 'device'} storageKey={`${OPPORTUNITIES_PREFIX}:${account?.id || 'device'}`} />;
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
