@@ -811,6 +811,8 @@ const MOCKS_MODULES = [
   'src/components/TodayActionCenter.feedback.test.tsx',
   'src/lib/workspace/objects.test.ts',
   'src/lib/workspace/evidence.test.ts',
+  'src/components/workspace/Documents.test.tsx',
+  'src/components/career/EmployerSharing.test.tsx',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
