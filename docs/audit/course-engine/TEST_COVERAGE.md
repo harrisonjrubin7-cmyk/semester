@@ -1,18 +1,18 @@
 # Test coverage
 
-## Verified on 2026-10-25
+## Verified on 2026-10-26
 
 | Check | Result |
 |---|---|
-| Course-engine web unit/component tests | 36 passed across 12 files |
+| Course-engine web unit/component tests | 38 passed across 12 files |
 | Production-mode Chromium browser tests | 7 passed with deterministic API fixtures |
 | Browser axe scan | passed with zero violations at the desktop ready state |
 | TypeScript `tsc --noEmit` | passed |
 | Next.js production build | passed; root, Semester OS routes, and 15 dynamic course routes compiled |
 | Responsive browser checks | passed at 1440, 390, and 320 px with no document overflow |
 | Visual regression baselines | reviewed desktop and mobile overview snapshots recorded for Linux and macOS |
-| API pytest suite | previously passed on 2026-10-12: 85 tests with 41 subtests; backend was unchanged by this browser pass |
-| API Ruff/compileall | previously passed on 2026-10-12; backend was unchanged by this browser pass |
+| API pytest suite | 20 focused tests passed; the wider local suite passed 94 tests and 41 subtests, with only the two real-migration cases blocked by the absent `MIGRATION_TEST_DATABASE_URL` |
+| API Ruff | passed for the API, worker, and changed test modules |
 
 ## Covered behaviors
 
@@ -24,6 +24,7 @@
 - Canonical Ink/Parchment/motion tokens and reduced-motion/forced-color rules are locked by tests.
 - The production browser journey covers source-sheet focus and dismissal, review confirmation, calendar consequence preview, cited card recall, self-graded quiz persistence, authenticated DOCX download naming, mobile command navigation, and console/page errors.
 - Desktop and mobile overview screenshots are versioned as platform-specific Linux and macOS visual baselines; a semantic assertion verifies the rendered study-asset count before the pixel comparison.
+- Reading briefs require case-specific schema data, and all cited study modes filter embedded display catalogs through authoritative live citation links before rendering.
 
 ## Not yet covered
 

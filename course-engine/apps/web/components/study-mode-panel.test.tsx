@@ -15,6 +15,7 @@ const baseAsset: Asset = {
   asset_type: "comprehensive_guide",
   title: "Evidence guide",
   status: "confirmed",
+  active_citation_ids: [citationId],
   generation_version: 2,
   updated_at: "2026-10-11T12:00:00Z",
   content: {
@@ -25,7 +26,13 @@ const baseAsset: Asset = {
 
 function renderPanel(mode: string, asset: Asset) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return render(<QueryClientProvider client={client}><StudyModePanel assets={[asset]} courseId="course-1" mode={mode} /></QueryClientProvider>);
+  const result = render(<QueryClientProvider client={client}><StudyModePanel assets={[asset]} courseId="course-1" mode={mode} /></QueryClientProvider>);
+  return {
+    ...result,
+    rerenderPanel: (nextAsset: Asset) => result.rerender(
+      <QueryClientProvider client={client}><StudyModePanel assets={[nextAsset]} courseId="course-1" mode={mode} /></QueryClientProvider>,
+    ),
+  };
 }
 
 describe("stored study asset interactions", () => {
@@ -45,6 +52,30 @@ describe("stored study asset interactions", () => {
       "/flashcards/00000000-0000-0000-0000-000000000030/review",
       expect.objectContaining({ method: "POST", body: JSON.stringify({ course_id: "course-1", asset_id: baseAsset.id, concept_id: null, correct: true, confidence: 3 }) }),
     ));
+  });
+
+  it("keeps the selected card valid when live citation filtering shrinks the deck", async () => {
+    const secondCitationId = "00000000-0000-0000-0000-000000000011";
+    mockedApi.mockResolvedValue({ id: "progress-1" });
+    const asset = { ...baseAsset, asset_type: "flashcards", active_citation_ids: [citationId, secondCitationId], content: {
+      cards: [
+        { id: "00000000-0000-0000-0000-000000000030", front: "First card", back: "First answer", difficulty: 3, citation_ids: [citationId] },
+        { id: "00000000-0000-0000-0000-000000000031", front: "Second card", back: "Second answer", difficulty: 3, citation_ids: [secondCitationId] },
+      ],
+      citations: {
+        ...(baseAsset.content.citations as Record<string, { label: string; quote: string }>),
+        [secondCitationId]: { label: "syllabus.pdf, p. 5", quote: "Second answer" },
+      },
+    } } satisfies Asset;
+    const view = renderPanel("cards", asset);
+    fireEvent.click(screen.getByRole("button", { name: "Reveal answer" }));
+    fireEvent.click(screen.getByRole("button", { name: "I recalled it" }));
+    await screen.findByText("Second card");
+
+    view.rerenderPanel({ ...asset, active_citation_ids: [citationId] });
+
+    expect(await screen.findByText("First card")).toBeInTheDocument();
+    expect(screen.getByText((_content, element) => element?.textContent === "1 of 1")).toBeInTheDocument();
   });
 
   it("renders stored guide sections and source labels instead of raw JSON", () => {
@@ -121,6 +152,44 @@ describe("stored study asset interactions", () => {
     expect(screen.queryByRole("heading", { name: "Uncited slide" })).not.toBeInTheDocument();
   });
 
+  it("renders a citation-bound reading brief as an applied case", () => {
+    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", title: "Coordination case", content: {
+      cases: [{
+        heading: "The unclear launch owner",
+        scenario: "Two teams believe the other owns the final launch decision.",
+        questions: ["Who has final authority?", "What evidence should inform the choice?"],
+        applications: ["Name one owner and publish the escalation path."],
+        citation_ids: [citationId],
+      }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByText((_content, element) => element?.tagName === "P" && element.textContent === "1 cited case")).toBeInTheDocument();
+    expect(screen.getByText("Case 1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The unclear launch owner" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Questions to consider" })).toBeInTheDocument();
+    expect(screen.getByText("Who has final authority?")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Applications" })).toBeInTheDocument();
+    expect(screen.getByText("Name one owner and publish the escalation path.")).toBeInTheDocument();
+    expect(screen.getByText("syllabus.pdf, p. 4")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open material" })).not.toBeInTheDocument();
+  });
+
+  it("fails closed when an applied case has no resolvable citation", () => {
+    renderPanel("cases", { ...baseAsset, asset_type: "reading_brief", active_citation_ids: [], content: {
+      cases: [{
+        heading: "Revoked case",
+        scenario: "This stale embedded content must not render.",
+        questions: ["Should this display?"],
+        citation_ids: [citationId],
+      }],
+      citations: baseAsset.content.citations,
+    } });
+
+    expect(screen.getByRole("status")).toHaveTextContent("no valid cited cases");
+    expect(screen.queryByRole("heading", { name: "Revoked case" })).not.toBeInTheDocument();
+  });
+
   it("rejects malformed optional guide lists instead of crashing the panel", () => {
     renderPanel("read", { ...baseAsset, content: {
       ...baseAsset.content,
@@ -157,6 +226,23 @@ describe("stored study asset interactions", () => {
       body: JSON.stringify({ course_id: "course-1", answers: [{ question_index: 0, correct: true }] }),
     })));
     expect(await screen.findByText("Your self-graded attempt was recorded.")).toBeInTheDocument();
+  });
+
+  it("disables quiz submission when citation filtering hides a stored prompt", () => {
+    const secondCitationId = "00000000-0000-0000-0000-000000000011";
+    renderPanel("quiz", { ...baseAsset, asset_type: "practice_quiz", active_citation_ids: [citationId], content: {
+      sections: [
+        { heading: "Coordination", explanation: "Roles shape the decision path.", citation_ids: [citationId] },
+        { heading: "Escalation", explanation: "Use the published path.", citation_ids: [secondCitationId] },
+      ],
+      citations: {
+        ...(baseAsset.content.citations as Record<string, { label: string; quote: string }>),
+        [secondCitationId]: { label: "syllabus.pdf, p. 5", quote: "Use the published path." },
+      },
+    } });
+
+    expect(screen.getByRole("button", { name: "Finish quiz" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("source evidence changed");
   });
 
   it("does not offer rejected assets for interactive study", () => {

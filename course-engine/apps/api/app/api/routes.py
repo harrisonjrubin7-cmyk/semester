@@ -215,6 +215,38 @@ def current_asset_citations(
     return approved, catalog
 
 
+def serialize_study_assets(db: Session, assets: list[StudyAsset]) -> list[dict]:
+    """Expose the live citation links; embedded catalogs are display caches, not authority."""
+    active_by_asset = {asset.id: [] for asset in assets}
+    if assets:
+        rows = db.execute(
+            select(StudyAssetCitation.study_asset_id, StudyAssetCitation.citation_id)
+            .join(Citation, Citation.id == StudyAssetCitation.citation_id)
+            .join(SourceChunk, SourceChunk.id == Citation.chunk_id)
+            .join(SourceDocument, SourceDocument.id == SourceChunk.document_id)
+            .join(StudyAsset, StudyAsset.id == StudyAssetCitation.study_asset_id)
+            .where(
+                StudyAssetCitation.study_asset_id.in_(active_by_asset),
+                Citation.status == ReviewStatus.confirmed,
+                SourceDocument.course_id == StudyAsset.course_id,
+                SourceDocument.deleted_at.is_(None),
+            )
+        ).all()
+        for asset_id, citation_id in rows:
+            active_by_asset[asset_id].append(str(citation_id))
+    return [
+        {
+            **serialize(asset),
+            "active_citation_ids": sorted(active_by_asset[asset.id]),
+        }
+        for asset in assets
+    ]
+
+
+def serialize_study_asset(db: Session, asset: StudyAsset) -> dict:
+    return serialize_study_assets(db, [asset])[0]
+
+
 def invalidate_citation_dependents(db: Session, citation: Citation) -> None:
     assets = db.scalars(
         select(StudyAsset)
@@ -963,7 +995,8 @@ def calendar_ics(course_id: UUID, user: User = Depends(get_current_user), db: Se
 @router.get("/courses/{course_id}/study-assets")
 def assets(course_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     owned_course(db, user, course_id)
-    return [serialize(x) for x in db.scalars(select(StudyAsset).where(StudyAsset.course_id == course_id, StudyAsset.deleted_at.is_(None)).order_by(StudyAsset.updated_at.desc())).all()]
+    rows = list(db.scalars(select(StudyAsset).where(StudyAsset.course_id == course_id, StudyAsset.deleted_at.is_(None)).order_by(StudyAsset.updated_at.desc())).all())
+    return serialize_study_assets(db, rows)
 
 
 @router.post("/courses/{course_id}/study-assets/generate", status_code=202)
@@ -979,7 +1012,7 @@ def generate_asset(course_id: UUID, payload: GenerateAssetRequest, user: User = 
 def asset(asset_id: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = db.get(StudyAsset, asset_id)
     if not row or row.deleted_at: raise HTTPException(404)
-    owned_course(db, user, row.course_id); return serialize(row)
+    owned_course(db, user, row.course_id); return serialize_study_asset(db, row)
 
 
 @router.patch("/study-assets/{asset_id}")
@@ -1002,7 +1035,7 @@ def patch_asset(asset_id: UUID, payload: AssetPatch, user: User = Depends(get_cu
             title=f"Review {row.title}",
             payload={"asset_id": str(row.id), "generation_version": row.generation_version},
         ))
-    db.commit(); return serialize(row)
+    db.commit(); return serialize_study_asset(db, row)
 
 
 @router.post("/study-assets/{asset_id}/regenerate", status_code=202)
@@ -1153,6 +1186,17 @@ def quiz_attempt(quiz_id: UUID, payload: QuizAttempt, user: User = Depends(get_c
     if not quiz:
         raise HTTPException(404, "Quiz not found")
     questions = valid_guide_sections(quiz.content)
+    try:
+        allowed_citations, _citation_catalog = current_asset_citations(db, quiz)
+    except UnsupportedCitationError as exc:
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt") from exc
+    allowed_citation_ids = {str(citation_id) for citation_id in allowed_citations}
+    if any(
+        not section["citation_ids"]
+        or any(citation_id not in allowed_citation_ids for citation_id in section["citation_ids"])
+        for section in questions
+    ):
+        raise HTTPException(409, "Quiz source evidence changed; regenerate it before recording an attempt")
     expected_indexes = set(range(len(questions)))
     rated_indexes = {answer.question_index for answer in payload.answers}
     if (
