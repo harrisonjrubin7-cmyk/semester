@@ -110,6 +110,13 @@ jobs:
           npm run operator:build
           git diff --exit-code -- operator/generated
 
+      # The environment-boundary verifier reads docs/architecture/environments.yaml
+      # and fails on any boundary violation. The feature-flag verifier and the
+      # tests/operations suite are not gated here yet: the flag registry holds
+      # no flag records, so the flag check reports that and fails.
+      - name: Verify environment boundaries
+        run: npm run verify:environment-boundaries
+
       - name: Keep platform-control reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

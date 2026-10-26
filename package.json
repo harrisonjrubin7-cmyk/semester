@@ -9,7 +9,7 @@
     "operator"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.6"
   },
   "scripts": {
     "registry:validate": "npm run validate --workspace @semester/platform-control",
@@ -21,7 +21,13 @@
     "operator:test": "npm test --workspace @semester/operator",
     "operator:build": "npm run build --workspace @semester/operator",
     "operator:demo": "npm run demo --workspace @semester/operator",
-    "operator": "npm run operator --workspace @semester/operator --"
+    "operator": "npm run operator --workspace @semester/operator --",
+    "recovery:restore": "node --experimental-strip-types scripts/recovery/restore.ts",
+    "recovery:rebuild-projections": "node --experimental-strip-types scripts/recovery/rebuild-projections.ts",
+    "recovery:reconcile": "node --experimental-strip-types scripts/recovery/reconcile.ts",
+    "verify:feature-flags": "node --experimental-strip-types scripts/verify/feature-flags.ts",
+    "verify:environment-boundaries": "node --experimental-strip-types scripts/verify/environment-boundaries.ts",
+    "test:operations": "node --experimental-strip-types --test tests/operations/*.spec.ts"
   },
   "overrides": {
     "lodash-es": "4.18.1",
@@ -29,5 +35,8 @@
     "katex": "0.18.2",
     "source-map-js": "1.2.2",
     "vite": "8.3.3"
+  },
+  "devDependencies": {
+    "yaml": "^2.8.4"
   }
 }

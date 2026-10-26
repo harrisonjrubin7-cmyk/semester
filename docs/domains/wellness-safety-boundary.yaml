@@ -1,0 +1,27 @@
+# Semester improves access to resources. It is not a clinical, crisis,
+# disciplinary, or emergency-response system.
+wellness_and_safety:
+  semester_may:
+    - show_institution-approved_resources
+    - provide_contact_and_hours_information
+    - support_nonclinical_appointment_handoff
+    - let_students_save_private_wellbeing_reminders
+    - provide_clear_emergency_direction
+  semester_may_not:
+    - diagnose
+    - assess_crisis_risk
+    - promise_monitoring
+    - replace_emergency_services
+    - make_disciplinary_decisions
+    - expose_sensitive_support_records_to_unapproved_roles
+  emergency_experience:
+    requirements:
+      - immediate_emergency_direction
+      - local_institutional_resources_when_confirmed
+      - no_waiting_for_AI_response
+      - no_claim_of_live_monitoring
+      - accessible_low-bandwidth_fallback
+  emergency_banner_copy: >
+    If you or someone else may be in immediate danger, contact local emergency
+    services or your institution's emergency resource now. Semester does not
+    monitor this page or provide emergency response.
