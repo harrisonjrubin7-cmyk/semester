@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
+import { pg } from '../lib/pg';
+import { ensureApt } from '../lib/aptServer';
 import { STANDINGS, OUTCOMES, reviewNote, reviewBlocker, closeBlocker, studentSummary, countReviews } from '../lib/caseRules';
 
 const STAFF = ['Advisor', 'Staff', 'Administrator', 'Tutor'];
@@ -29,14 +31,25 @@ export default createEndpoint({
       const s = await zite.appointments.findOne({ id: input.id });
       if (!s || s.status !== 'Open Slot') forbid('That slot was just taken. Pick another.');
       if (!inSet(s!.host, (await tenantScope(a.institutionId)).members)) forbid('That slot is not offered at your institution.');
-      await zite.appointments.update({ id: s!.id, record: { status: 'Booked', attendee: uid } as never });
+      if (!s!.startsAt || Date.parse(s!.startsAt) <= Date.now()) forbid('That slot has already started.');
+      if (ids(s!.host).includes(uid)) forbid('You cannot book your own slot.');
+      // Atomic claim (apt-001): the first insert wins, so two students can never both book one slot.
+      await ensureApt();
+      const won = ((await pg().query(`INSERT INTO apt_claims (appointment_id, tenant_id, student_id) VALUES ($1,$2,$3) ON CONFLICT (appointment_id) DO NOTHING RETURNING appointment_id`, [s!.id, a.institutionId, uid])) as unknown[]).length;
+      if (!won) forbid('That slot was just taken. Pick another.');
+      try { await zite.appointments.update({ id: s!.id, record: { status: 'Booked', attendee: uid } as never }); }
+      catch (e) { await pg().query(`DELETE FROM apt_claims WHERE appointment_id = $1 AND student_id = $2`, [s!.id, uid]); throw e; }
       await audit(a, 'Appointment booked', `appointment:${s!.id}`, s!.label ?? '', 'Student');
       return { ok: true };
     }
     if (input.action === 'cancel') {
       const s = await zite.appointments.findOne({ id: input.id });
-      if (!s || !ids(s.attendee).includes(uid)) forbid();
+      if (!s || !ids(s.attendee).includes(uid) || s.status !== 'Booked') forbid();
+      if (s!.startsAt && Date.parse(s!.startsAt) <= Date.now()) forbid('It has already started. Ask your host instead.');
       await zite.appointments.update({ id: s!.id, record: { status: 'Open Slot', attendee: null } as never });
+      await ensureApt();
+      await pg().query(`DELETE FROM apt_claims WHERE appointment_id = $1`, [s!.id]);
+      await audit(a, 'Appointment cancelled', `appointment:${s!.id}`, s!.label ?? '', 'Student');
       return { ok: true };
     }
     if (input.action === 'request') {

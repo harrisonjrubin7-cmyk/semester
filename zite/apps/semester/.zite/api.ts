@@ -33,6 +33,7 @@ import type { default as _IntelligenceEp } from '../src/api/intelligence';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
+import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProgressEp } from '../src/api/progress';
@@ -213,6 +214,11 @@ export type MigrationApprovalInputType = NonNullable<_MigrationApprovalCfg['inpu
 export type MigrationApprovalOutputType = Awaited<ReturnType<_MigrationApprovalCfg['execute']>>;
 export const migrationApproval = createCaller<MigrationApprovalInputType, MigrationApprovalOutputType>('migrationApproval');
 
+type _OfficeHoursCfg = typeof _OfficeHoursEp;
+export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeHoursCfg['execute']>[0]['input'];
+export type OfficeHoursOutputType = Awaited<ReturnType<_OfficeHoursCfg['execute']>>;
+export const officeHours = createCaller<OfficeHoursInputType, OfficeHoursOutputType>('officeHours');
+
 type _OnboardCfg = typeof _OnboardEp;
 export type OnboardInputType = NonNullable<_OnboardCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OnboardCfg['execute']>[0]['input'];
 export type OnboardOutputType = Awaited<ReturnType<_OnboardCfg['execute']>>;
@@ -366,6 +372,7 @@ export const api = {
   learn,
   manageTask,
   migrationApproval,
+  officeHours,
   onboard,
   privacy,
   progress,

@@ -25,6 +25,7 @@ Each entry: the conflict, where it comes from, what the build does now, who deci
 | C19 | Registrar sources ask for auto-processing from queue, payment sessions and provider-webhook posting (REG-084/094/095) | registrar-requirements.csv | Not built: human-initiated decisions only; no money movement | Founder + institution | Default applied |
 | C20 | S-54 proposes ~50 roles beyond the 69 (admissions, research, library, workforce, finance, facilities, advancement, governance, clinical) | S-54 §4 vs 69-role baseline (S-09) | Recorded in proposed-roles.csv as proposals; not added to roleApps.ts | Founder | Open |
 | C21 | S-55 proposes Semester Institution and Semester Faculty as separate Zite apps | S-55 §1/§4 vs one-product rule and shared auth in apps/semester | Decided 26 Oct (delegated D-all): build both as dedicated experiences inside apps/semester (/institution, Faculty next) so identity, authorization and canonical records are not duplicated; a separate Zite app object can wrap them later if editor/access isolation requires it | Builder | Decided |
+| C22 | Two appointment stores: legacy Zite Appointments (single-person, seeded) and apt-001 slots | Existing table vs new atomic booking | Decided 26 Oct: apt-001 is canonical for new slots; legacy rows stay bookable but atomic via apt_claims; move legacy rows into apt_slots after hosted-data approval | Builder (migration needs owner approval) | Partly open |
 
 Decisions taken on 25 Oct are recorded in [`decisions-2026-10-25.md`](decisions-2026-10-25.md).
 

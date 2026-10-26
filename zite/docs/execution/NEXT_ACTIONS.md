@@ -63,3 +63,12 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
 - Gaps: creates in Semester's catalog only, with no write to the institution's SIS (operating mode: request_and_handoff for real tenants). No department membership or chair delegation. No demand view.
 - S-56 recorded; capability-registry.csv started (first record).
 - Next: Semester Faculty workspace (S-55 §11): Today for teaching, office hours, accommodation implementation, extended time. Then S-56 Prompt F readiness view, driven by capability-registry.csv.
+
+## 26 Oct: Semester Faculty and office hours (S-55 §11, S-58 app factory)
+- DONE: /faculty, the teaching home (sections taught, today's office hours, teaching tools, publishing office hours).
+- DONE: /help/appointments for students (book, cancel before the start time, see host follow-ups).
+- DONE: apt-001. Host slots have a capacity. Booking takes a per-student lock plus a row lock: no overbooking, no overlapping bookings, no host self-booking, and section office hours only for enrolled or completed students. Hosts cannot publish overlapping slots. A host cancel needs a reason and notifies booked students. Attendance and follow-up are host-only and only after the start time. The event log is append-only.
+- FIXED: the race on legacy advising slots (read-then-update). Booking now goes through an atomic apt_claims insert and refuses slots that have started; cancel is allowed only before the start time.
+- Role apps: "office hours", "appointments" and "availability" previously pointed at /plan and were marked existing. They now route to the real pages; the TA row is marked incomplete.
+- S-57 (zip) and S-58 recorded: work-packages.csv (W01–W18) and acceptance-scenarios.csv (T01–T18), each with status, evidence and gaps.
+- Next: accommodation extended time in assessments (W10/W11, T10). Then a readiness view driven by capability-registry.csv and acceptance-scenarios.csv (S-56 Prompt F).
