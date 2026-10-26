@@ -1,0 +1,1109 @@
+[
+  {
+    "route": "/",
+    "title": "Home",
+    "regions": [
+      "hero",
+      "source demo",
+      "product jobs",
+      "status disclosure",
+      "trust",
+      "CTA"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/about",
+    "title": "About",
+    "regions": [
+      "mission",
+      "principles",
+      "status",
+      "contact"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/team",
+    "title": "Team",
+    "regions": [
+      "approved biographies",
+      "roles",
+      "contact"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/contact",
+    "title": "Contact",
+    "regions": [
+      "routing",
+      "local inquiry",
+      "privacy",
+      "receipt"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/product",
+    "title": "Product",
+    "regions": [
+      "OS overview",
+      "role paths",
+      "modules",
+      "boundaries",
+      "CTA"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/product/:slug",
+    "title": "Product detail",
+    "regions": [
+      "purpose",
+      "workflow",
+      "authority",
+      "maturity",
+      "related"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/students",
+    "title": "Students",
+    "regions": [
+      "daily loop",
+      "sources",
+      "privacy",
+      "first action",
+      "FAQ"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/institutions",
+    "title": "Institutions",
+    "regions": [
+      "office jobs",
+      "authority",
+      "review status",
+      "pilot",
+      "FAQ"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/pilot",
+    "title": "Pilot proposal",
+    "regions": [
+      "scope",
+      "non goals",
+      "baseline",
+      "gates",
+      "owners",
+      "inquiry"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions",
+    "title": "Solutions",
+    "regions": [
+      "audiences",
+      "shared foundation",
+      "CTA"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/students",
+    "title": "Student solutions",
+    "regions": [
+      "Today",
+      "learning",
+      "registration",
+      "privacy"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/faculty",
+    "title": "Faculty solutions",
+    "regions": [
+      "authoring",
+      "accessibility",
+      "submission",
+      "release"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/advisors",
+    "title": "Advisor solutions",
+    "regions": [
+      "caseload",
+      "sharing",
+      "handoff",
+      "follow up"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/registrars",
+    "title": "Registrar solutions",
+    "regions": [
+      "readiness",
+      "holds",
+      "exceptions",
+      "reconciliation"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/institutions",
+    "title": "Institution solutions",
+    "regions": [
+      "tenant",
+      "roles",
+      "integrations",
+      "rollout"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/solutions/:audience",
+    "title": "Audience detail",
+    "regions": [
+      "purpose",
+      "workflow",
+      "authority",
+      "CTA"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/pricing",
+    "title": "Pricing",
+    "regions": [
+      "posture",
+      "scope",
+      "entitlements",
+      "quote"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/pricing/quote",
+    "title": "Quote request",
+    "regions": [
+      "scope",
+      "local form",
+      "consent",
+      "receipt"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/demo",
+    "title": "Demo request",
+    "regions": [
+      "synthetic boundary",
+      "local form",
+      "receipt"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/demo/tour",
+    "title": "Tour",
+    "regions": [
+      "Today",
+      "sources",
+      "privacy",
+      "action example",
+      "CTA"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/resources",
+    "title": "Resources",
+    "regions": [
+      "approved index",
+      "filters",
+      "accessible formats"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/resources/:slug",
+    "title": "Resource detail",
+    "regions": [
+      "author",
+      "version",
+      "content",
+      "sources",
+      "alternatives"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust",
+    "title": "Trust",
+    "regions": [
+      "status",
+      "privacy",
+      "security",
+      "accessibility",
+      "AI",
+      "reliability"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust/security",
+    "title": "Security",
+    "regions": [
+      "scope",
+      "review status",
+      "evidence",
+      "report path"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust/privacy",
+    "title": "Privacy",
+    "regions": [
+      "purpose",
+      "sharing",
+      "rights",
+      "retention"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust/accessibility",
+    "title": "Accessibility",
+    "regions": [
+      "target",
+      "review",
+      "barrier report",
+      "alternatives"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust/ai",
+    "title": "AI governance",
+    "regions": [
+      "scope",
+      "gateway",
+      "sources",
+      "policy",
+      "human authority"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/trust/subprocessors",
+    "title": "Subprocessors",
+    "regions": [
+      "purpose",
+      "region",
+      "classification",
+      "retention",
+      "status"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal",
+    "title": "Legal index",
+    "regions": [
+      "documents",
+      "draft status",
+      "authority",
+      "contact"
+    ],
+    "status": "prototype mapping; clean URL proposed",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal/terms",
+    "title": "Terms draft",
+    "regions": [
+      "control header",
+      "purpose",
+      "rules",
+      "exceptions",
+      "history"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal/privacy",
+    "title": "Privacy draft",
+    "regions": [
+      "control header",
+      "purpose",
+      "sharing",
+      "rights",
+      "history"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal/cookies",
+    "title": "Cookie draft",
+    "regions": [
+      "control header",
+      "categories",
+      "consent",
+      "withdrawal"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal/community",
+    "title": "Community draft",
+    "regions": [
+      "control header",
+      "conduct",
+      "reporting",
+      "appeal"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/legal/accessibility",
+    "title": "Accessibility draft",
+    "regions": [
+      "control header",
+      "target",
+      "status",
+      "barrier report"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/status",
+    "title": "Status",
+    "regions": [
+      "source",
+      "services",
+      "incidents",
+      "unavailable"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/auth/signup",
+    "title": "Signup entry",
+    "regions": [
+      "purpose",
+      "terms",
+      "identity handoff",
+      "privacy"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/auth/signin",
+    "title": "Sign in entry",
+    "regions": [
+      "provider",
+      "recovery",
+      "session boundary"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/join",
+    "title": "Join entry",
+    "regions": [
+      "invite",
+      "institution",
+      "membership vs grant",
+      "handoff"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/open",
+    "title": "App handoff",
+    "regions": [
+      "transaction",
+      "expiry",
+      "account match",
+      "claim",
+      "receipt"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/download",
+    "title": "Download entry",
+    "regions": [
+      "verified distribution",
+      "availability",
+      "web fallback"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/partners",
+    "title": "Partners",
+    "regions": [
+      "types",
+      "data boundary",
+      "local inquiry"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/careers",
+    "title": "Careers",
+    "regions": [
+      "approved roles",
+      "principles",
+      "accessible application"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/careers/:slug",
+    "title": "Job detail",
+    "regions": [
+      "summary",
+      "90 days",
+      "requirements",
+      "approved compensation"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  },
+  {
+    "route": "/404",
+    "title": "Not found",
+    "regions": [
+      "explanation",
+      "safe navigation"
+    ],
+    "status": "proposed extension",
+    "components": [
+      "SiteShell",
+      "SiteHeader",
+      "PageHero",
+      "RegionGrid",
+      "PrimaryCTA",
+      "SiteFooter"
+    ],
+    "gates": [
+      "approved claims",
+      "accessible behavior",
+      "actual server adapter if needed",
+      "exact scope publication approval"
+    ]
+  }
+]
