@@ -32,6 +32,7 @@ import type { default as _GradeTrackerEp } from '../src/api/gradeTracker';
 import type { default as _GraduateEp } from '../src/api/graduate';
 import type { default as _HelpEp } from '../src/api/help';
 import type { default as _HousingEp } from '../src/api/housing';
+import type { default as _IdCardEp } from '../src/api/idCard';
 import type { default as _InboxEp } from '../src/api/inbox';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
@@ -224,6 +225,11 @@ type _HousingCfg = typeof _HousingEp;
 export type HousingInputType = NonNullable<_HousingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HousingCfg['execute']>[0]['input'];
 export type HousingOutputType = Awaited<ReturnType<_HousingCfg['execute']>>;
 export const housing = createCaller<HousingInputType, HousingOutputType>('housing');
+
+type _IdCardCfg = typeof _IdCardEp;
+export type IdCardInputType = NonNullable<_IdCardCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IdCardCfg['execute']>[0]['input'];
+export type IdCardOutputType = Awaited<ReturnType<_IdCardCfg['execute']>>;
+export const idCard = createCaller<IdCardInputType, IdCardOutputType>('idCard');
 
 type _InboxCfg = typeof _InboxEp;
 export type InboxInputType = NonNullable<_InboxCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InboxCfg['execute']>[0]['input'];
@@ -467,6 +473,7 @@ export const api = {
   graduate,
   help,
   housing,
+  idCard,
   inbox,
   institutionConsole,
   institutionOps,
