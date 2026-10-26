@@ -48,6 +48,7 @@ import type { default as _RegradeEp } from '../src/api/regrade';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
 import type { default as _SandboxApiEp } from '../src/api/sandboxApi';
 import type { default as _SearchEp } from '../src/api/search';
+import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
 import type { default as _SecurityOpsEp } from '../src/api/securityOps';
 import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
@@ -287,6 +288,11 @@ export type SearchInputType = NonNullable<_SearchCfg['inputSchema']> extends { _
 export type SearchOutputType = Awaited<ReturnType<_SearchCfg['execute']>>;
 export const search = createCaller<SearchInputType, SearchOutputType>('search');
 
+type _SectionRequestsCfg = typeof _SectionRequestsEp;
+export type SectionRequestsInputType = NonNullable<_SectionRequestsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SectionRequestsCfg['execute']>[0]['input'];
+export type SectionRequestsOutputType = Awaited<ReturnType<_SectionRequestsCfg['execute']>>;
+export const sectionRequests = createCaller<SectionRequestsInputType, SectionRequestsOutputType>('sectionRequests');
+
 type _SecurityOpsCfg = typeof _SecurityOpsEp;
 export type SecurityOpsInputType = NonNullable<_SecurityOpsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SecurityOpsCfg['execute']>[0]['input'];
 export type SecurityOpsOutputType = Awaited<ReturnType<_SecurityOpsCfg['execute']>>;
@@ -375,6 +381,7 @@ export const api = {
   roleApps,
   sandboxApi,
   search,
+  sectionRequests,
   securityOps,
   staff,
   studentAccount,

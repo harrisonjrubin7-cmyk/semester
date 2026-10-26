@@ -22,6 +22,7 @@ const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[];
   { to: '/staff/queue', label: 'Grading queue', icon: Inbox, roles: ['Faculty', 'Tutor'], action: 'teaching.queue' },
   { to: '/staff/regrades', label: 'Regrade queue', icon: Scale, roles: ['Faculty', 'Staff', 'Administrator'], action: 'regrade.decide' },
   { to: '/staff/shared', label: 'Shared with me', icon: Share2, roles: ['Advisor'], action: 'caseload.read' },
+  { to: '/institution', label: 'Institution', icon: Building2, roles: ['Faculty', 'Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/registrar', label: 'Registrar desk', icon: ClipboardCheck, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/calendar', label: 'Academic calendar', icon: CalendarDays, roles: ['Staff', 'Administrator'], action: 'registrar.read' },
   { to: '/staff/catalog', label: 'Catalog & rules', icon: BookOpen, roles: ['Staff', 'Administrator'], action: 'registrar.read' },

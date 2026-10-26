@@ -55,3 +55,11 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
 - proposed-roles.csv: 51 roles in 11 groups. 48 are proposals only and are not in roleApps.ts until the founder decides (C20). The other 3 are already covered by existing apps.
 - cross-app-workflows.csv: 10 acceptance workflows XW-01..XW-10. 8 are partial and 2 missing; no end-to-end test has been run for any of them.
 - Next: advising appointments and office hours (MOD-042, D14/D15). After that, accommodation extended time in assessments (closes a gap in XW-03).
+
+## 26 Oct: Semester Institution, first workflow (S-55 §10)
+- DONE: /institution command center (modules by role, waiting-on-you counts) and /institution/sections.
+- Section request flow: department request → chair review (chair ≠ requester) → registrar authorization (≠ requester, ≠ approving chair; room and instructor clash re-checked under a per-term lock) → canonical Zite section created or adopted on retry (never duplicated) → instructor notified → opened for registration → reconciled against the request, with receipt SR-n.
+- Evidence: 9 unit tests; 26 database checks rolled back, including a mutation check; typecheck. Browser NOT RUN.
+- Gaps: creates in Semester's catalog only, with no write to the institution's SIS (operating mode: request_and_handoff for real tenants). No department membership or chair delegation. No demand view.
+- S-56 recorded; capability-registry.csv started (first record).
+- Next: Semester Faculty workspace (S-55 §11): Today for teaching, office hours, accommodation implementation, extended time. Then S-56 Prompt F readiness view, driven by capability-registry.csv.

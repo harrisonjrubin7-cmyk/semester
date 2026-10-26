@@ -244,6 +244,20 @@
               "inverseFieldId": "fixVjWpdh31"
             }
           }
+        },
+        {
+          "id": "f9WJ4KxA4nQ",
+          "sdkName": "sectionRequests",
+          "definition": {
+            "name": "Section Requests",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tfZMC5wd1px",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fkD1diuP4yP"
+            }
+          }
         }
       ]
     },
@@ -856,6 +870,20 @@
               "allowMultiple": true
             }
           }
+        },
+        {
+          "id": "fjp7vGv1DcB",
+          "sdkName": "sectionRequests",
+          "definition": {
+            "name": "Section Requests",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tfZMC5wd1px",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fxbmsxnv8Kn"
+            }
+          }
         }
       ]
     },
@@ -1123,6 +1151,20 @@
               "isInverse": true,
               "allowMultiple": true,
               "inverseFieldId": "fpbtMHBhYjd"
+            }
+          }
+        },
+        {
+          "id": "f2fLswBC6UZ",
+          "sdkName": "sectionRequests",
+          "definition": {
+            "name": "Section Requests",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tfZMC5wd1px",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "f32iYRMe65E"
             }
           }
         }
@@ -6401,6 +6443,20 @@
               "inverseFieldId": "f2y1pyeZJzJ"
             }
           }
+        },
+        {
+          "id": "f6dZpviEN9e",
+          "sdkName": "sectionRequests",
+          "definition": {
+            "name": "Section Requests",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tfZMC5wd1px",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fuigw6EbjjM"
+            }
+          }
         }
       ]
     },
@@ -7648,6 +7704,279 @@
           "sdkName": "requestedAt",
           "definition": {
             "name": "Requested At",
+            "type": "created_at",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tfZMC5wd1px",
+      "sdkName": "sectionRequests",
+      "name": "Section Requests",
+      "primaryFieldId": "frf9c48YLwK",
+      "fields": [
+        {
+          "id": "frf9c48YLwK",
+          "sdkName": "requestTitle",
+          "definition": {
+            "name": "Request Title",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fkD1diuP4yP",
+          "sdkName": "institution",
+          "definition": {
+            "name": "Institution",
+            "type": "linked_record",
+            "template": {
+              "tableId": "t76qm2NaPzg",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "f9WJ4KxA4nQ"
+            }
+          }
+        },
+        {
+          "id": "fxbmsxnv8Kn",
+          "sdkName": "course",
+          "definition": {
+            "name": "Course",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tnDrPqDLnz6",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fjp7vGv1DcB"
+            }
+          }
+        },
+        {
+          "id": "fuigw6EbjjM",
+          "sdkName": "academicTerm",
+          "definition": {
+            "name": "Academic Term",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tvVtoXFBWC3",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "f6dZpviEN9e"
+            }
+          }
+        },
+        {
+          "id": "fqXMXzCSA6R",
+          "sdkName": "department",
+          "definition": {
+            "name": "Department",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fvLf8z9LBiU",
+          "sdkName": "requestedBy",
+          "definition": {
+            "name": "Requested By",
+            "type": "user",
+            "template": {
+              "internalOnly": false,
+              "allowMultiple": false,
+              "deleteRowWhenUserDeleted": false
+            }
+          }
+        },
+        {
+          "id": "f4muYNweDXY",
+          "sdkName": "requestedCapacity",
+          "definition": {
+            "name": "Requested Capacity",
+            "type": "number",
+            "template": {
+              "numberFormat": "local",
+              "decimalPlaces": 0
+            }
+          }
+        },
+        {
+          "id": "fbHLks71mgH",
+          "sdkName": "meetingTimes",
+          "definition": {
+            "name": "Meeting Times",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "feARk2G6GPg",
+          "sdkName": "room",
+          "definition": {
+            "name": "Room",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fiQoLnQUCht",
+          "sdkName": "proposedInstructor",
+          "definition": {
+            "name": "Proposed Instructor",
+            "type": "user",
+            "template": {
+              "internalOnly": false,
+              "allowMultiple": false,
+              "deleteRowWhenUserDeleted": false
+            }
+          }
+        },
+        {
+          "id": "f7rJXk1SfQk",
+          "sdkName": "justification",
+          "definition": {
+            "name": "Justification",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f31a8M4Hbbg",
+          "sdkName": "stage",
+          "definition": {
+            "name": "Stage",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "3oJx",
+                  "label": "Chair Review",
+                  "color": "purple"
+                },
+                {
+                  "value": "7pfA",
+                  "label": "Scheduling Check",
+                  "color": "orange"
+                },
+                {
+                  "value": "aW4M",
+                  "label": "Registrar Authorization",
+                  "color": "blue"
+                },
+                {
+                  "value": "1UaY",
+                  "label": "Faculty Assignment",
+                  "color": "gray"
+                },
+                {
+                  "value": "xhEw",
+                  "label": "Reconciliation",
+                  "color": "red"
+                },
+                {
+                  "value": "2bnE",
+                  "label": "Completed",
+                  "color": "yellow"
+                },
+                {
+                  "value": "xoiC",
+                  "label": "Rejected",
+                  "color": "green"
+                },
+                {
+                  "value": "1Gdp",
+                  "label": "Withdrawn",
+                  "color": "pink"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "fwA9tSEyL8z",
+          "sdkName": "decisionNotes",
+          "definition": {
+            "name": "Decision Notes",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fdh6ZuNYUkv",
+          "sdkName": "resourceCheckResult",
+          "definition": {
+            "name": "Resource Check Result",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f32iYRMe65E",
+          "sdkName": "createdSection",
+          "definition": {
+            "name": "Created Section",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tkF8pLmJQ6U",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "f2fLswBC6UZ"
+            }
+          }
+        },
+        {
+          "id": "fvGQ8tYbS7S",
+          "sdkName": "requestKey",
+          "definition": {
+            "name": "Request Key",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fi1ofDhEo1C",
+          "sdkName": "recordVersion",
+          "definition": {
+            "name": "Record Version",
+            "type": "number",
+            "template": {
+              "numberFormat": "local",
+              "decimalPlaces": 0
+            }
+          }
+        },
+        {
+          "id": "fpuc5wzvzk4",
+          "sdkName": "receipt",
+          "definition": {
+            "name": "Receipt",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fqfeQKm6zMc",
+          "sdkName": "dueDate",
+          "definition": {
+            "name": "Due Date",
+            "type": "date",
+            "template": {
+              "dateFormat": "local"
+            }
+          }
+        },
+        {
+          "id": "fhKmXnjXSFF",
+          "sdkName": "submittedAt",
+          "definition": {
+            "name": "Submitted At",
             "type": "created_at",
             "template": {
               "timezone": "",

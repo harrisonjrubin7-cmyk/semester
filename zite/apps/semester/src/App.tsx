@@ -45,6 +45,7 @@ import Admissions from './pages/Admissions';
 import { Gradebook, TAQueue, RegistrarDesk, StudentAccounts, StudentAffairs } from './pages/Staff';
 import { Analytics, RegistrationHolds } from './pages/Institution';
 import RegradeQueue from './pages/RegradeQueue';
+import { InstitutionHome, SectionRequests } from './pages/InstitutionHome';
 import SharedWithMe from './pages/SharedWithMe';
 
 function Splash({ text = 'Loading Semester…' }: { text?: string }) {
@@ -114,6 +115,8 @@ export default function App() {
             <Route path="/you/aid" element={<FinancialAid />} />
             <Route path="/you/files" element={<Files />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
+            <Route path="/institution" element={<InstitutionHome />} />
+            <Route path="/institution/sections" element={<SectionRequests />} />
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
