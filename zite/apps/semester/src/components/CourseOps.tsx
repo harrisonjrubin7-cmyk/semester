@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { teaching } from 'zitejs/api';
+import { courseDiscussion } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
@@ -75,26 +76,51 @@ export function Attendance({ sectionId, isTeacher }: { sectionId: string; isTeac
 }
 
 export function Discussion({ sectionId }: { sectionId: string }) {
-  const state = useLoad(() => teaching({ action: 'discussion', sectionId }), [sectionId]);
+  const state = useLoad(() => courseDiscussion({ action: 'get', sectionId }), [sectionId]);
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
+  const send = async (text: string, parentId: string | null) => {
+    setBusy(true);
+    try { await courseDiscussion({ action: 'post', sectionId, body: text.trim(), parentId }); await state.reload(); return true; }
+    catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
+  };
   return (
     <Panel title="Course discussion">
-      <Loadable state={state}>{(d) => !d.posts.length ? <Empty>No posts yet. Start the conversation.</Empty> : (
-        <div className="space-y-3">{d.posts.map((p: { id: string; body: string; author: string; instructor: boolean; at: string | null }) => (
-          <div key={p.id} className="border-b border-border pb-2 text-sm last:border-0">
-            <p className="text-xs text-muted-foreground">{p.author}{p.instructor ? ' · Instructor' : ''} · {fmt(p.at)}</p>
-            <p className="whitespace-pre-wrap">{p.body}</p>
-          </div>))}</div>
+      <p className="mb-2 text-xs text-muted-foreground">Visible to everyone enrolled in and teaching this section. Course staff can remove posts, with a reason.</p>
+      <Loadable state={state}>{(d: any) => !d.posts.length ? <Empty>No posts yet. Start the conversation.</Empty> : (
+        <ul className="space-y-3">{d.posts.map((p: any) => <DiscussionPost key={p.id} p={p} staff={d.staff} sectionId={sectionId} onReply={(t) => send(t, p.id)} reload={state.reload} />)}</ul>
       )}</Loadable>
       <div className="mt-3 space-y-2">
-        <Textarea placeholder="Write a post visible to everyone in this section" value={body} onChange={(e) => setBody(e.target.value)} />
-        <Button size="sm" disabled={!body.trim() || busy} onClick={async () => {
-          setBusy(true);
-          try { await teaching({ action: 'post', sectionId, body: body.trim() }); setBody(''); await state.reload(); }
-          catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
-        }}>Post</Button>
+        <Textarea aria-label="New post" placeholder="Start a new thread" value={body} onChange={(e) => setBody(e.target.value)} />
+        <Button size="sm" disabled={!body.trim() || busy} onClick={async () => { if (await send(body, null)) setBody(''); }}>Post</Button>
       </div>
     </Panel>
+  );
+}
+
+function DiscussionPost({ p, staff, sectionId, onReply, reload, reply }: { p: any; staff: boolean; sectionId: string; onReply?: (t: string) => Promise<boolean>; reload: () => void; reply?: boolean }) {
+  const [text, setText] = useState('');
+  const [reason, setReason] = useState('');
+  const [open, setOpen] = useState(false);
+  const moderate = async (hide: boolean) => {
+    try { await courseDiscussion({ action: 'moderate', sectionId, messageId: p.id, hide, reason }); toast(hide ? 'Removed. The author was told why.' : 'Restored.'); setReason(''); reload(); }
+    catch (e) { toast.error(errMsg(e)); }
+  };
+  return (
+    <li className={reply ? 'border-l border-border pl-3 text-sm' : 'border-b border-border pb-2 text-sm last:border-0'}>
+      <p className="text-xs text-muted-foreground">{p.author}{p.instructor ? ' · Instructor' : ''} · {fmt(p.at)}</p>
+      {p.removed && <p className="text-xs">⊘ Removed by course staff: {p.removed.reason}{p.body != null ? ' (only you and course staff can still see the text)' : ''}</p>}
+      {p.body != null && <p className={p.removed ? 'whitespace-pre-wrap text-muted-foreground' : 'whitespace-pre-wrap'}>{p.body}</p>}
+      {staff && <div className="mt-1 flex flex-wrap gap-2">
+        {p.removed ? <Button size="sm" variant="ghost" onClick={() => moderate(false)}>Restore</Button> : <>
+          <Input aria-label="Reason for removing" className="h-8 max-w-xs" placeholder="Reason to remove" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Button size="sm" variant="ghost" disabled={reason.trim().length < 5} onClick={() => moderate(true)}>Remove</Button></>}
+      </div>}
+      {p.replies?.length > 0 && <ul className="mt-2 space-y-2">{p.replies.map((r: any) => <DiscussionPost key={r.id} p={r} staff={staff} sectionId={sectionId} reload={reload} reply />)}</ul>}
+      {onReply && (open ? <div className="mt-2 space-y-1">
+        <Textarea aria-label="Reply" value={text} onChange={(e) => setText(e.target.value)} />
+        <Button size="sm" disabled={!text.trim()} onClick={async () => { if (await onReply(text)) { setText(''); setOpen(false); } }}>Reply</Button>
+      </div> : <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>Reply</Button>)}
+    </li>
   );
 }

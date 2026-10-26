@@ -35,7 +35,8 @@ export default createEndpoint({
     const isMod = ((await sql.query(`SELECT mod_is_staff($1,$2) AS ok`, [T, uid])) as { ok: boolean }[])[0].ok;
     const notify = (to: string, body: string) => zite.messages.create({ record: { body, sender: uid, recipients: [to], isNotification: true } as never });
     const groups = (await zite.groups.findAll({ filters: { institution: a.institutionId }, limit: 500 })).records;
-    const mine = groups.filter((g) => ids(g.members).includes(uid));
+    // Course discussions are read only through api/courseDiscussion.ts, which applies course moderation; never through Community.
+    const mine = groups.filter((g) => g.kind !== 'Course Discussion' && ids(g.members).includes(uid));
     const mineIds = new Set(mine.map((g) => g.id));
     if (input.action === 'post') {
       if (!mineIds.has(input.groupId)) forbid('Join this group to post in it.');

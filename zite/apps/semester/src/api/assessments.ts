@@ -5,6 +5,7 @@ import { requireAccess, ids, forbid, audit, userNames, tenantScope } from '../li
 import { pg } from '../lib/pg';
 import { ASM_MIGRATION } from '../lib/asmMigration';
 import { courseRole } from '../lib/teamServer';
+import { checkQuestions } from '../lib/a11yContentRules';
 import { validateQuestions, totalPoints, studentView, scoreAttempt, cleanAnswers, Question, Answers } from '../lib/assessRules';
 
 let ready: Promise<void> | null = null;
@@ -68,6 +69,8 @@ export default createEndpoint({
       teacherOnly(); await own(input.id);
       const qs = input.questions as Question[];
       fail(validateQuestions(qs));
+      const blocking = checkQuestions(qs, 'This assessment').filter((i) => i.level === 'error');
+      if (blocking.length) forbid(`Fix before publishing: ${blocking[0].where}: ${blocking[0].message}`);
       fail(((await sql.query(`SELECT asm_publish($1,$2,$3,$4::jsonb,$5,$6) AS e`, [T, input.id, me, JSON.stringify(qs), totalPoints(qs), input.expectedVersion])) as { e: string | null }[])[0].e);
       await audit(a, 'Assessment published', `assessment:${input.id}`, `${qs.length} questions, ${totalPoints(qs)} points`, 'Instructor of record');
     }

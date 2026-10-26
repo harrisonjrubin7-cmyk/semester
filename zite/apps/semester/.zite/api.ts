@@ -14,6 +14,8 @@ import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
+import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
+import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _DevAppsEp } from '../src/api/devApps';
@@ -119,6 +121,16 @@ type _CommunityCfg = typeof _CommunityEp;
 export type CommunityInputType = NonNullable<_CommunityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CommunityCfg['execute']>[0]['input'];
 export type CommunityOutputType = Awaited<ReturnType<_CommunityCfg['execute']>>;
 export const community = createCaller<CommunityInputType, CommunityOutputType>('community');
+
+type _CourseAccessibilityCfg = typeof _CourseAccessibilityEp;
+export type CourseAccessibilityInputType = NonNullable<_CourseAccessibilityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseAccessibilityCfg['execute']>[0]['input'];
+export type CourseAccessibilityOutputType = Awaited<ReturnType<_CourseAccessibilityCfg['execute']>>;
+export const courseAccessibility = createCaller<CourseAccessibilityInputType, CourseAccessibilityOutputType>('courseAccessibility');
+
+type _CourseDiscussionCfg = typeof _CourseDiscussionEp;
+export type CourseDiscussionInputType = NonNullable<_CourseDiscussionCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseDiscussionCfg['execute']>[0]['input'];
+export type CourseDiscussionOutputType = Awaited<ReturnType<_CourseDiscussionCfg['execute']>>;
+export const courseDiscussion = createCaller<CourseDiscussionInputType, CourseDiscussionOutputType>('courseDiscussion');
 
 type _CourseGroupsCfg = typeof _CourseGroupsEp;
 export type CourseGroupsInputType = NonNullable<_CourseGroupsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseGroupsCfg['execute']>[0]['input'];
@@ -359,6 +371,8 @@ export const api = {
   campus,
   catalog,
   community,
+  courseAccessibility,
+  courseDiscussion,
   courseGroups,
   courseTeam,
   devApps,

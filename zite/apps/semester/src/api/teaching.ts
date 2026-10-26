@@ -6,15 +6,13 @@ import { requireAccess, ids, first, forbid, audit, userNames } from '../lib/serv
 const ATT = z.enum(['Present', 'Late', 'Absent', 'Excused']);
 
 export default createEndpoint({
-  description: 'Faculty course operations: roster, assignment creation, attendance and course discussions',
+  description: 'Faculty course operations: roster, assignment creation and attendance',
   authenticated: true,
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('roster'), sectionId: z.string() }),
     z.object({ action: z.literal('createAssignment'), sectionId: z.string(), title: z.string().min(2), dueAt: z.string(), points: z.number().min(0), rubric: z.string() }),
     z.object({ action: z.literal('attendance'), sectionId: z.string(), date: z.string() }),
     z.object({ action: z.literal('saveAttendance'), sectionId: z.string(), date: z.string(), marks: z.array(z.object({ studentId: z.string(), status: ATT })) }),
-    z.object({ action: z.literal('discussion'), sectionId: z.string() }),
-    z.object({ action: z.literal('post'), sectionId: z.string(), body: z.string().min(1).max(4000) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -70,23 +68,7 @@ export default createEndpoint({
       await audit(a, 'Attendance recorded', `section:${s!.id}`, `${input.date} · ${input.marks.length} marks`, 'Instructor of record');
       return { ok: true };
     }
-    // discussion / post
-    let g = (await zite.groups.findAll({ filters: { section: s!.id, kind: 'Course Discussion' }, limit: 1 })).records[0];
-    if (!g && input.action === 'post') {
-      const created = await zite.groups.create({ record: { name: `${s!.label} discussion`, kind: 'Course Discussion', section: s!.id, members: [...ids(s!.instructors), ...students] } as never });
-      g = created as typeof g;
-    }
-    if (input.action === 'post') {
-      await zite.messages.create({ record: { body: input.body, sender: uid, group: g!.id, recipients: [], isNotification: false, read: false } as never });
-      return { ok: true };
-    }
-    if (!g) return { posts: [] };
-    const { records: msgs } = await zite.messages.findAll({ filters: { group: g.id }, limit: 500 });
-    const names = await userNames(msgs.map((m) => first(m.sender) ?? ''));
-    const inst = ids(s!.instructors);
-    return {
-      posts: msgs.map((m) => ({ id: m.id, body: m.body ?? '', author: first(m.sender) === uid ? 'You' : names[first(m.sender) ?? ''] ?? 'Member', instructor: inst.includes(first(m.sender) ?? ''), at: (m as { sentAt?: string }).sentAt ?? null }))
-        .sort((x, y) => (x.at ?? '').localeCompare(y.at ?? '')),
-    };
+    // Course discussion moved to api/courseDiscussion.ts (threads and moderation, dis-001).
+    return { ok: true };
   },
 });

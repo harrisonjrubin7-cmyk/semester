@@ -18,6 +18,7 @@ import { rubricScore, Criterion } from '../lib/rubricRules';
 import { PageHeader, Panel, Empty, SourceTag, Status, fmt, useLoad, Loadable, errMsg } from '../components/kit';
 import { uploadPrivate, saveBytes } from '../lib/fileClient';
 import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
+import CourseAccessibility from '../components/CourseAccessibility';
 
 type Sub = { id: string; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
 type Asg = { id: string; title: string; dueAt: string | null; points: number | null; rubric: string; source: string };
@@ -101,7 +102,7 @@ export default function SectionPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs defaultValue="assignments">
-              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="groups">Groups</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}</TabsList>
+              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="groups">Groups</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}{d.grader && <TabsTrigger value="a11y">Accessibility</TabsTrigger>}</TabsList>
               <TabsContent value="discussion"><Discussion sectionId={sectionId} /></TabsContent>
               <TabsContent value="groups"><CourseGroups sectionId={sectionId} /></TabsContent>
               <TabsContent value="assessments"><Assessments sectionId={sectionId} /></TabsContent>
@@ -119,6 +120,7 @@ export default function SectionPage() {
               <TabsContent value="materials"><MaterialsTab d={d} sectionId={sectionId} reload={state.reload} /></TabsContent>
               {d.grader && <TabsContent value="grading"><GradingPanel d={d} sectionId={sectionId} act={act} /></TabsContent>}
               {d.grader && <TabsContent value="team"><CourseTeam sectionId={sectionId} /></TabsContent>}
+              {d.grader && <TabsContent value="a11y"><CourseAccessibility sectionId={sectionId} /></TabsContent>}
             </Tabs>
           </div>
           <div className="space-y-4">

@@ -117,3 +117,22 @@ Merge its evidence into `module-build-records.csv` after review and retire one o
 - Visible only to the three parties. Notifications carry no details. No grade changes automatically.
 - Evidence: 5 unit tests; 30 database checks rolled back; a mutation check showed that removing appeal independence lets the same officer decide the appeal. Browser NOT RUN.
 - Faculty modules still missing: course discussions; accessibility check before publishing.
+
+## 26 Oct: Course discussion upgraded; course accessibility review (Faculty list complete)
+- Correction: course discussion already existed as a flat list. faculty-modules.csv had it wrong as "missing".
+- Discussion, upgraded in place to api/courseDiscussion.ts + dis-001:
+  - Threaded replies, kept within the same section and tenant.
+  - Grading delegates may read, post and moderate.
+  - Course staff remove a post with a reason and can restore it. The author is told why. The moderation log is append-only.
+  - Hidden text stays visible only to its author and to staff.
+  - Community now never lists course discussion groups.
+- Accessibility: lib/a11yContentRules checks syllabus, materials, assignments and assessments.
+  - Errors (image without alt text) block publishing an assessment.
+  - Instructors record dated reviews (axr-001, append-only).
+- Evidence:
+  - Unit tests: 290 pass.
+  - Discussion: 13 database checks rolled back, with a mutation check (cross-section replies).
+  - Accessibility: mutation check (image-option alt); review log checked in a rolled-back batch.
+  - Browser NOT RUN.
+- Faculty modules: all 24 now implemented or partial. Official grade handoff stays disabled by design.
+- Next: Institution side (W07). Teaching-assignment changes after a section is created, and a demand view for chairs. Then a cross-tenant sweep (T01) across endpoints.
