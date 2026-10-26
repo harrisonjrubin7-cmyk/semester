@@ -3,6 +3,7 @@
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
 
 export type Violation = { file: string; reason: string };
@@ -16,6 +17,9 @@ export function verifyFlag(file: string, flag: Record<string, unknown>, standard
   }
   if (flag.safe_off_effect !== undefined && !standard.effects.includes(String(flag.safe_off_effect))) {
     out.push({ file, reason: `safe_off_effect not in standard: ${String(flag.safe_off_effect)}` });
+  }
+  if (!Array.isArray(flag.environment_scope) || flag.environment_scope.length === 0) {
+    out.push({ file, reason: "environment_scope must be a non-empty array" });
   }
   const envs = Array.isArray(flag.environment_scope) ? (flag.environment_scope as unknown[]).map(String) : [];
   for (const e of envs) {
@@ -53,10 +57,13 @@ export function verifyFeatureFlags(root: string): { checked: number; violations:
     const doc = parse(readFileSync(f, "utf8")) ?? {};
     violations.push(...verifyFlag(f, doc.flag ?? doc, standard));
   }
+  if (files.length === 0) {
+    violations.push({ file: "registry/flags", reason: "no flag records discovered" });
+  }
   return { checked: files.length, violations };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const result = verifyFeatureFlags(process.cwd());
   console.log(`feature flags checked: ${result.checked}; violations: ${result.violations.length}`);
   for (const v of result.violations) console.error(`${v.file}: ${v.reason}`);

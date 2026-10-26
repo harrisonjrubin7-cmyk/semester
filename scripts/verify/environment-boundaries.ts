@@ -4,6 +4,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { parse } from "yaml";
 
 export type Violation = { environment: string; reason: string };
@@ -27,6 +28,9 @@ export function verifyEnvironments(doc: { environments?: Record<string, { permit
     if (!local.prohibited_data?.includes(p)) out.push({ environment: "local", reason: `must prohibit ${p}` });
     if (local.permitted_data?.includes(p)) out.push({ environment: "local", reason: `permits ${p}` });
   }
+  for (const p of PROHIBITED_LOCAL) {
+    if (envs.preview?.permitted_data?.includes(p)) out.push({ environment: "preview", reason: `permits ${p}` });
+  }
   need("preview", envs.preview?.requirements, PREVIEW_REQUIRED);
   need("staging", envs.staging?.requirements, STAGING_REQUIRED);
   need("production", envs.production?.requirements, PRODUCTION_REQUIRED);
@@ -36,7 +40,7 @@ export function verifyEnvironments(doc: { environments?: Record<string, { permit
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const doc = parse(readFileSync(join(process.cwd(), "docs/architecture/environments.yaml"), "utf8"));
   const violations = verifyEnvironments(doc);
   console.log(`environment boundary violations: ${violations.length}`);

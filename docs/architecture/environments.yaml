@@ -36,9 +36,10 @@ environments:
       - monitoring
       - backup_and_recovery
       - controlled_break_glass_process
-# Safe environment workflow (command names from the continuation spec; the
-# repository currently exposes equivalent npm scripts, see package.json).
-safe_environment_workflow:
+# Planned safe environment workflow. These command names are NOT implemented:
+# package.json defines none of them. Run the scripts that exist instead:
+# npm run verify:environment-boundaries, npm run verify:feature-flags, npm run test:operations.
+planned_safe_environment_workflow:
   - pnpm env:check --environment local
   - pnpm db:seed:safe
   - pnpm test

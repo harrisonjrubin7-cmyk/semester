@@ -13,6 +13,7 @@ const load = (p: string) => parse(readFileSync(`${root}/${p}`, "utf8"));
 const base: TraceContext = {
   correlationId: "c-1",
   capabilityId: "student.action-center",
+  releaseId: "REL-READINESS-001",
   actorType: "student",
   environment: "staging",
   tenantId: "tenant-synthetic-a",
@@ -45,6 +46,20 @@ test("unknown actor types and environments are rejected", () => {
   const violations = validateTraceContext({ ...base, actorType: "root", environment: "dev" });
   assert.ok(violations.some((v) => v.field === "actorType"));
   assert.ok(violations.some((v) => v.field === "environment"));
+});
+
+test("a trace context without a release id is a violation", () => {
+  const { releaseId: _omitted, ...withoutRelease } = base;
+  assert.ok(validateTraceContext(withoutRelease).some((v) => v.field === "releaseId"));
+});
+
+test("request log fields refuse a raw identifier as actor scope", () => {
+  for (const actorScope of ["jane.doe@example.edu", "9f1c2a4e-7b3d-4c1a-9e2f-000000000001"]) {
+    assert.throws(() => toRequestLogFields(base, {
+      timestamp: "2026-10-15T00:00:00Z", actorScope, routeOrCommand: "GET /x",
+      policyDecisionId: "pd-1", resultCode: "allowed", latencyBucket: "<100ms",
+    }), /role:qualifier/);
+  }
 });
 
 test("request log fields carry actor scope, never a raw identity", () => {

@@ -9,7 +9,7 @@ export type TraceContext = {
   causationId?: string;
   tenantId?: string;
   capabilityId: string;
-  releaseId?: string;
+  releaseId: string;
   actorType: ActorType;
   environment: Environment;
 };
@@ -32,6 +32,9 @@ export function validateTraceContext(value: unknown): TraceViolation[] {
   }
   if (typeof ctx.capabilityId !== "string" || ctx.capabilityId.length === 0) {
     violations.push({ field: "capabilityId", reason: "required non-empty string" });
+  }
+  if (typeof ctx.releaseId !== "string" || ctx.releaseId.length === 0) {
+    violations.push({ field: "releaseId", reason: "required non-empty string on every request" });
   }
   if (typeof ctx.environment !== "string" || !ENVIRONMENTS.includes(ctx.environment)) {
     violations.push({ field: "environment", reason: "must be local, preview, staging, or production" });
@@ -63,10 +66,20 @@ export type RequestLogFields = {
   latency_bucket: string;
 };
 
+// An actor scope is a role and a non-identifying qualifier, such as "student:self".
+// Anything that reads as an identifier (an email, a UUID, a numeric id) is rejected before it reaches a log.
+const ACTOR_SCOPE = /^[a-z][a-z-]*:[a-z][a-z-]*$/;
+export function isNonIdentifyingActorScope(scope: string): boolean {
+  return ACTOR_SCOPE.test(scope);
+}
+
 export function toRequestLogFields(
   ctx: TraceContext,
   details: { timestamp: string; actorScope: string; routeOrCommand: string; policyDecisionId: string; resultCode: string; latencyBucket: string },
 ): RequestLogFields {
+  if (!isNonIdentifyingActorScope(details.actorScope)) {
+    throw new Error("actorScope must be a role:qualifier scope, not a raw identifier");
+  }
   return {
     timestamp: details.timestamp,
     environment: ctx.environment,

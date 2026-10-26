@@ -7,6 +7,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const REQUIRED_TARGET = "isolated-recovery-environment";
 const FIXTURE_PATTERN = /^tenant-synthetic-[a-z0-9-]+$/;
@@ -56,4 +57,4 @@ function main() {
   process.exit(2);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) main();

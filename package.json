@@ -9,7 +9,7 @@
     "operator"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.6"
   },
   "scripts": {
     "registry:validate": "npm run validate --workspace @semester/platform-control",
