@@ -112,12 +112,12 @@ export default function Assessments({ sectionId }: { sectionId: string }) {
         {!d.assessments.length ? <Empty>{d.teaching ? 'No assessments yet.' : 'No assessments are open in this course.'}</Empty> : d.assessments.map((x: any) => (
           <Panel key={x.id} title={x.title} action={<Status value={x.state} />}>
             <p className="text-xs text-muted-foreground">{fmt(x.opensAt)} – {fmt(x.closesAt)}{x.timeLimitMin ? ` · ${x.timeLimitMin} min` : ''} · {x.attemptsAllowed} attempt{x.attemptsAllowed > 1 ? 's' : ''}{x.total != null && ` · ${x.total} pts`}{d.teaching && ` · version ${x.version}`}</p>
-            {d.teaching ? (<div className="mt-2 space-y-3">
-              <details><summary className="cursor-pointer text-sm">Questions</summary>
-                <QuestionEditor initial={x.questions} onPublish={(qs) => call({ action: 'publish', sectionId, id: x.id, questions: qs, expectedVersion: x.version }, 'Published.')} /></details>
+            {d.grader ? (<div className="mt-2 space-y-3">
+              {d.teaching && <details><summary className="cursor-pointer text-sm">Questions</summary>
+                <QuestionEditor initial={x.questions} onPublish={(qs) => call({ action: 'publish', sectionId, id: x.id, questions: qs, expectedVersion: x.version }, 'Published.')} /></details>}
               <div>
                 <div className="flex items-center justify-between"><p className="text-sm font-medium">Attempts · {x.attempts.length}</p>
-                  <Button size="sm" variant="outline" onClick={() => call({ action: 'release', sectionId, id: x.id }, 'Graded scores released.')}>Release graded scores</Button></div>
+                  {d.teaching && <Button size="sm" variant="outline" onClick={() => call({ action: 'release', sectionId, id: x.id }, 'Graded scores released.')}>Release graded scores</Button>}</div>
                 {!x.attempts.length ? <Empty>No attempts yet.</Empty> : x.attempts.map((t: any) => <GradeAttempt key={t.id} t={t} total={x.total} onGrade={(manual, feedback) => call({ action: 'grade', sectionId, attemptId: t.id, manual, feedback }, 'Grade saved, not released.')} />)}
               </div>
             </div>) : (<div className="mt-2 space-y-2 text-sm">

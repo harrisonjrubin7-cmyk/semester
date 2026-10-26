@@ -29,10 +29,10 @@ MOD-027,Learning and Course Studio,Course Studio,S-53 §3,instructor-published,n
 MOD-028,Learning and Course Studio,Syllabus & Course Policies,S-53 §3,instructor-published,native,crs syllabus versions,yes,implemented,unit + rolled-back DB checks,no,no,no
 MOD-029,Learning and Course Studio,Learning Content & Resources,S-53 §3,instructor-published,native,learn materials,yes,partial,built parts only,no,no,no
 MOD-030,Learning and Course Studio,Assignments & Submissions,S-53 §3,instructor-published,native,"teaching; learn saveDraft/submit with private-store attachments (fil-002), locked at submit",yes,partial,built parts only,no,no,no
-MOD-031,Learning and Course Studio,Assessments & Rubrics,S-53 §3,instructor-published,native,"section Assessments tab, api/assessments asm-001 (frozen versions, attempts, auto + hand grading, release)",yes,partial,unit + rolled-back DB checks,no,no,no
+MOD-031,Learning and Course Studio,Assessments & Rubrics,S-53 §3,instructor-published,native,"section Assessments tab, api/assessments asm-001 (frozen versions, attempts, auto + hand grading, release); versioned rubrics scored from the frozen version (rbr_*)",yes,partial,unit + rolled-back DB checks,no,no,no
 MOD-032,Learning and Course Studio,Gradebook & Feedback,S-53 §3,institution-official,native,/staff/gradebook regrade,yes,partial,built parts only,no,no,no
 MOD-033,Learning and Course Studio,Discussions & Course Q&A,S-53 §3,instructor-published,native,/staff/queue,yes,partial,built parts only,no,no,no
-MOD-034,Learning and Course Studio,Course Groups & TA Management,S-53 §3,instructor-published,native,none,yes,missing,NOT RUN,no,no,no
+MOD-034,Learning and Course Studio,Course Groups & TA Management,S-53 §3,instructor-published,native,"section Teaching team tab, api/courseTeam team-001 (time-limited grading delegates; no release); groups not built",yes,partial,unit + rolled-back DB checks,no,no,no
 MOD-035,Learning and Course Studio,Study Packs & Practice,S-53 §3,derived,native,/learn/study /learn/decks,yes,partial,built parts only,no,no,no
 MOD-036,Learning and Course Studio,Research Workspace,S-53 §3,student-owned,native,none,yes,missing,NOT RUN,no,no,no
 MOD-037,Learning and Course Studio,Writing Workspace,S-53 §3,student-owned,native,/learn/write,yes,partial,built parts only,no,no,no

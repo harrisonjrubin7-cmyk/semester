@@ -25,6 +25,12 @@ export default function Courses() {
       <PageHeader eyebrow="Learn" title="Courses" sub="Syllabus, assignments, materials and grades for each of your sections." />
       <Loadable state={state}>{(d) => (
         <div className="space-y-6">
+          {d.grading?.length > 0 && (
+            <div>
+              <h2 className="mb-2 text-lg">Grading</h2>
+              <p className="mb-2 text-xs text-muted-foreground">Sections where an instructor asked you to grade. You can grade submitted work; the instructor releases grades.</p>
+              <div className="grid gap-3 md:grid-cols-2">{d.grading.map((s: Sec) => <SecCard key={s.id} s={s} />)}</div>
+            </div>)}
           {(role === 'Faculty' || d.teaching.length > 0) && (
             <div>
               <h2 className="mb-2 text-lg">Teaching</h2>

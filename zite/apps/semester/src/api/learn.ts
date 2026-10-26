@@ -5,6 +5,8 @@ import { requireAccess, ids, first, forbid, audit, userNames, tenantScope } from
 import { pg } from '../lib/pg';
 import { CRS_MIGRATION } from '../lib/crsMigration';
 import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
+import { courseRole, ensureTeam, delegatedSections } from '../lib/teamServer';
+import { rubricScore, Criterion } from '../lib/rubricRules';
 
 let crsReady: Promise<void> | null = null;
 const ensureCrs = () => {
@@ -22,7 +24,7 @@ export default createEndpoint({
     z.object({ action: z.literal('detachFile'), submissionId: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('openAttachment'), submissionId: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('submit'), submissionId: z.string() }),
-    z.object({ action: z.literal('grade'), submissionId: z.string(), score: z.number().min(0), feedback: z.string() }),
+    z.object({ action: z.literal('grade'), submissionId: z.string(), score: z.number().min(0), feedback: z.string().max(4000), rubric: z.object({ key: z.string().max(60), version: z.number().int(), selections: z.record(z.number().int()) }).optional() }),
     z.object({ action: z.literal('release'), sectionId: z.string() }),
     z.object({ action: z.literal('setPolicy'), sectionId: z.string(), policy: z.enum(['Allowed', 'Outlining Only', 'Not Allowed']) }),
     z.object({ action: z.literal('teach'), sectionId: z.string() }),
@@ -39,9 +41,11 @@ export default createEndpoint({
       const s = await zite.sections.findOne({ id });
       if (!s) forbid();
       const teaching = ids(s!.instructors).includes(uid);
-      const enrolled = !!(await zite.enrollments.findOne({ filters: { student: uid, section: id } }));
-      if (!teaching && !enrolled) forbid('You are not enrolled in or teaching this section.');
-      return { s: s!, teaching };
+      // Grading delegates (team-001) see and grade submitted work but cannot change the course or release grades.
+      const grader = teaching || (await courseRole(a.institutionId, id, uid)) === 'delegate';
+      const enrolled = !grader && !!(await zite.enrollments.findOne({ filters: { student: uid, section: id } }));
+      if (!grader && !enrolled) forbid('You are not enrolled in or teaching this section.');
+      return { s: s!, teaching, grader };
     };
 
     if (input.action === 'list') {
@@ -57,6 +61,7 @@ export default createEndpoint({
       return {
         learning: secs.records.filter((s) => enrolledIds.has(s.id)).map((s) => row(s, 'Student')),
         teaching: secs.records.filter((s) => ids(s.instructors).includes(uid)).map((s) => row(s, 'Faculty')),
+        grading: await (async () => { const d = new Set(await delegatedSections(a.institutionId, uid)); return secs.records.filter((s) => d.has(s.id) && !ids(s.instructors).includes(uid)).map((s) => row(s, 'Grading delegate')); })(),
         canTeach: isFaculty ? secs.records.filter((s) => tenant!.sections.has(s.id) && s.term === 'Fall 2026' && !ids(s.instructors).includes(uid)).map((s) => row(s, 'Faculty')) : [],
       };
     }
@@ -93,28 +98,29 @@ export default createEndpoint({
       return { ok: true };
     }
     if (input.action === 'section') {
-      const { s, teaching } = await loadSection(input.sectionId);
+      const { s, teaching, grader } = await loadSection(input.sectionId);
       await ensureCrs();
       const history = (await pg().query(`SELECT version, change_note, author_id, published_at FROM crs_syllabus_versions WHERE section_id = $1 ORDER BY version DESC LIMIT 20`, [s.id])) as Record<string, unknown>[];
       const course = await zite.courses.findOne({ id: first(s.course) ?? '' });
       const { records: tasks } = await zite.tasks.findAll({ filters: { section: s.id, type: 'Assignment' }, limit: 500 });
-      const visibleTasks = teaching ? tasks : tasks.filter((t) => ids(t.owner).includes(uid));
+      const visibleTasks = grader ? tasks : tasks.filter((t) => ids(t.owner).includes(uid));
       // Dedupe assignments by title for the faculty view (sample assignments are per-student)
-      const assignments = [...new Map(visibleTasks.map((t) => [teaching ? t.title : t.id, t])).values()];
+      const assignments = [...new Map(visibleTasks.map((t) => [grader ? t.title : t.id, t])).values()];
       const subs = (await zite.submissions.findAll({ limit: 2000 })).records.filter((x) => tasks.some((t) => t.id === first(x.task)));
-      const visibleSubs = subs.filter((x) => teaching ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
+      const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
       const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
-      const names = teaching ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
+      const names = grader ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
       const resources = (await zite.resources.findAll({ filters: { section: s.id }, limit: 300 })).records
         .filter((r) => r.visibility === 'Course' || ids(r.owner).includes(uid));
       return {
         section: { id: s.id, label: s.label ?? '', code: course?.code ?? '', title: course?.title ?? '', term: s.term ?? '', times: s.meetingTimes ?? '', syllabus: s.syllabus ?? '', policy: s.courseAiPolicy ?? 'Allowed' },
         teaching,
+        grader,
         assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
-          return { id: x.id, taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (teaching || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
-        }).map((x) => teaching ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
+          return { id: x.id, taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
+        }).map((x) => grader ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
         syllabusVersion: Number(history[0]?.version ?? 0),
@@ -152,7 +158,7 @@ export default createEndpoint({
       if (!own) {
         const t = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
         const s2 = t ? await zite.sections.findOne({ id: first(t.section) ?? '' }) : null;
-        if (!s2 || !ids(s2.instructors).includes(uid) || x!.state === 'Private Draft') forbid('You do not have access to this file.');
+        if (!s2 || !(await courseRole(a.institutionId, s2.id, uid)) || x!.state === 'Private Draft') forbid('You do not have access to this file.');
       }
       const f = await readAttached(a.institutionId, input.fileId, uid, 'submission', x!.id);
       if (!f) forbid('You do not have access to this file.');
@@ -173,11 +179,25 @@ export default createEndpoint({
       const x = await zite.submissions.findOne({ id: input.submissionId });
       const t = x ? await zite.tasks.findOne({ id: first(x.task) ?? '' }) : undefined;
       if (!x || !t) forbid();
-      const { teaching } = await loadSection(first(t!.section) ?? '');
-      if (!teaching || x!.state === 'Private Draft') forbid('Only the instructor can grade submitted work.');
+      const sectionId = first(t!.section) ?? '';
+      const { teaching, grader } = await loadSection(sectionId);
+      if (!grader || x!.state === 'Private Draft') forbid('Only the section instructor or a grading delegate can grade submitted work.');
+      if (x!.state === 'Released') forbid('This grade is already released. Changes go through a regrade request.');
       if (first(x!.student) === uid) forbid('You cannot grade your own submission.');
-      await zite.submissions.update({ id: x!.id, record: { score: input.score, feedback: input.feedback, state: 'Graded' } as never });
-      await audit(a, 'Submission graded', `submission:${x!.id}`, `Score ${input.score}`, 'Instructor of record');
+      let score = input.score;
+      if (input.rubric) {
+        // The score comes from the frozen rubric version, not from the client.
+        await ensureTeam();
+        const rv = ((await pg().query(`SELECT criteria FROM rbr_versions WHERE tenant_id = $1 AND section_id = $2 AND rubric_key = $3 AND version = $4`, [a.institutionId, sectionId, input.rubric.key, input.rubric.version])) as { criteria: Criterion[] }[])[0];
+        if (!rv) forbid('That rubric version does not exist for this section.');
+        const sc = rubricScore(rv!.criteria, input.rubric.selections);
+        if (sc == null) forbid('Choose one level for every criterion.');
+        score = sc!;
+        await pg().query(`INSERT INTO rbr_scores (tenant_id, submission_id, section_id, rubric_key, version, selections, score, grader_id) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8)`,
+          [a.institutionId, x!.id, sectionId, input.rubric.key, input.rubric.version, JSON.stringify(input.rubric.selections), score, uid]);
+      }
+      await zite.submissions.update({ id: x!.id, record: { score, feedback: input.feedback, state: 'Graded' } as never });
+      await audit(a, 'Submission graded', `submission:${x!.id}`, `Score ${score}${input.rubric ? ` (rubric ${input.rubric.key} v${input.rubric.version})` : ''}`, teaching ? 'Instructor of record' : 'Grading delegate');
       return { ok: true };
     }
     if (input.action === 'setPolicy') {

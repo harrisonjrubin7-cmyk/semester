@@ -14,6 +14,7 @@ import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
+import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
 import type { default as _FilesEp } from '../src/api/files';
@@ -114,6 +115,11 @@ type _CommunityCfg = typeof _CommunityEp;
 export type CommunityInputType = NonNullable<_CommunityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CommunityCfg['execute']>[0]['input'];
 export type CommunityOutputType = Awaited<ReturnType<_CommunityCfg['execute']>>;
 export const community = createCaller<CommunityInputType, CommunityOutputType>('community');
+
+type _CourseTeamCfg = typeof _CourseTeamEp;
+export type CourseTeamInputType = NonNullable<_CourseTeamCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseTeamCfg['execute']>[0]['input'];
+export type CourseTeamOutputType = Awaited<ReturnType<_CourseTeamCfg['execute']>>;
+export const courseTeam = createCaller<CourseTeamInputType, CourseTeamOutputType>('courseTeam');
 
 type _DevAppsCfg = typeof _DevAppsEp;
 export type DevAppsInputType = NonNullable<_DevAppsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DevAppsCfg['execute']>[0]['input'];
@@ -329,6 +335,7 @@ export const api = {
   campus,
   catalog,
   community,
+  courseTeam,
   devApps,
   eventDelivery,
   files,

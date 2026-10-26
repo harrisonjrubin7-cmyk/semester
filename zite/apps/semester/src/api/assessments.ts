@@ -4,6 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, ids, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { ASM_MIGRATION } from '../lib/asmMigration';
+import { courseRole } from '../lib/teamServer';
 import { validateQuestions, totalPoints, studentView, scoreAttempt, cleanAnswers, Question, Answers } from '../lib/assessRules';
 
 let ready: Promise<void> | null = null;
@@ -37,8 +38,11 @@ export default createEndpoint({
     if (!tenant.sections.has(input.sectionId)) forbid('That section is not in your institution.');
     const section = await zite.sections.findOne({ id: input.sectionId });
     const teaching = ids(section?.instructors).includes(me);
-    const enrolled = !teaching && (await zite.enrollments.findAll({ filters: { student: me, section: input.sectionId }, limit: 5 })).records.some((e) => e.status !== 'Dropped');
-    if (!teaching && !enrolled) forbid('You are not enrolled in or teaching this section.');
+    // Grading delegates may view attempts and grade; only instructors author, publish and release.
+    const delegate = !teaching && (await courseRole(T, input.sectionId, me)) === 'delegate';
+    const grader = teaching || delegate;
+    const enrolled = !grader && (await zite.enrollments.findAll({ filters: { student: me, section: input.sectionId }, limit: 5 })).records.some((e) => e.status !== 'Dropped');
+    if (!grader && !enrolled) forbid('You are not enrolled in or teaching this section.');
     const teacherOnly = () => { if (!teaching) forbid('Only the instructor of this section can do that.'); };
     const own = async (id: number) => {
       const r = ((await sql.query(`SELECT * FROM asm_assessments WHERE id = $1 AND tenant_id = $2 AND section_id = $3`, [id, T, input.sectionId])) as Row[])[0];
@@ -66,7 +70,7 @@ export default createEndpoint({
       await audit(a, 'Assessment published', `assessment:${input.id}`, `${qs.length} questions, ${totalPoints(qs)} points`, 'Instructor of record');
     }
     if (input.action === 'start') {
-      if (teaching) forbid('Instructors preview the questions in the editor instead of taking the assessment.');
+      if (grader) forbid('Instructors and grading delegates do not take assessments in their own section.');
       await own(input.id);
       const r = ((await sql.query(`SELECT asm_start($1,$2,$3) AS r`, [T, input.id, me])) as { r: Row }[])[0].r;
       if (r.error) forbid(String(r.error));
@@ -84,12 +88,12 @@ export default createEndpoint({
       return { ok: true };
     }
     if (input.action === 'grade') {
-      teacherOnly();
+      if (!grader) forbid('Only the instructor or a grading delegate can grade.');
       const t = ((await sql.query(`SELECT assessment_id FROM asm_attempts WHERE id = $1 AND tenant_id = $2`, [input.attemptId, T])) as Row[])[0];
       if (!t) forbid('Attempt not found.');
       await own(Number(t!.assessment_id));
       fail(((await sql.query(`SELECT asm_grade($1,$2,$3,$4,$5) AS e`, [T, input.attemptId, me, input.manual, input.feedback])) as { e: string | null }[])[0].e);
-      await audit(a, 'Assessment attempt graded', `assessmentAttempt:${input.attemptId}`, `manual ${input.manual}`, 'Instructor of record');
+      await audit(a, 'Assessment attempt graded', `assessmentAttempt:${input.attemptId}`, `manual ${input.manual}`, teaching ? 'Instructor of record' : 'Grading delegate');
     }
     if (input.action === 'release') {
       teacherOnly(); await own(input.id);
@@ -104,14 +108,15 @@ export default createEndpoint({
         (SELECT total_points FROM asm_versions v WHERE v.assessment_id = a.id ORDER BY version DESC LIMIT 1) AS total
       FROM asm_assessments a WHERE a.tenant_id = $1 AND a.section_id = $2 ORDER BY a.opens_at DESC`, [T, input.sectionId])) as Row[];
     const visible = teaching ? list : list.filter((x) => x.state !== 'draft');
-    const attempts = (await sql.query(`SELECT * FROM asm_attempts WHERE tenant_id = $1 AND assessment_id = ANY($2)${teaching ? '' : ' AND student_id = $3'} ORDER BY id`,
-      teaching ? [T, visible.map((x) => Number(x.id))] : [T, visible.map((x) => Number(x.id)), me])) as Row[];
-    const names = teaching ? await userNames(attempts.map((t) => String(t.student_id))) : {};
+    const seesAll = grader;
+    const attempts = (await sql.query(`SELECT * FROM asm_attempts WHERE tenant_id = $1 AND assessment_id = ANY($2)${seesAll ? '' : ' AND student_id = $3'} ORDER BY id`,
+      seesAll ? [T, visible.map((x) => Number(x.id))] : [T, visible.map((x) => Number(x.id)), me])) as Row[];
+    const names = seesAll ? await userNames(attempts.map((t) => String(t.student_id))) : {};
     const out = await Promise.all(visible.map(async (x) => {
       const mine = attempts.filter((t) => Number(t.assessment_id) === Number(x.id));
       const base = { id: Number(x.id), title: String(x.title), state: String(x.state), opensAt: iso(x.opens_at), closesAt: iso(x.closes_at), timeLimitMin: x.time_limit_min == null ? null : Number(x.time_limit_min), attemptsAllowed: Number(x.attempts_allowed), version: x.version == null ? 0 : Number(x.version), total: x.total == null ? null : Number(x.total) };
-      if (teaching) {
-        return { ...base, questions: base.version ? await frozen(base.id, base.version) : [],
+      if (seesAll) {
+        return { ...base, questions: !teaching ? [] : base.version ? await frozen(base.id, base.version) : [],
           attempts: mine.map((t) => ({ id: Number(t.id), student: names[String(t.student_id)] ?? 'Student', state: String(t.state), late: !!t.late, auto: t.auto_score == null ? null : Number(t.auto_score), manual: t.manual_score == null ? null : Number(t.manual_score), feedback: String(t.feedback), submittedAt: iso(t.submitted_at), answers: t.answers })) };
       }
       return { ...base, attempts: mine.map((t) => {
@@ -120,6 +125,6 @@ export default createEndpoint({
           score: rel ? Number(t.auto_score ?? 0) + Number(t.manual_score ?? 0) : null, feedback: rel ? String(t.feedback) : '' };
       }) };
     }));
-    return { teaching, assessments: out };
+    return { teaching, grader, assessments: out };
   },
 });
