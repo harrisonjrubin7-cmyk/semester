@@ -37,6 +37,7 @@ import type { default as _InstitutionReadinessEp } from '../src/api/institutionR
 import type { default as _IntegrationMappingsEp } from '../src/api/integrationMappings';
 import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _IntelligenceEp } from '../src/api/intelligence';
+import type { default as _ItServiceEp } from '../src/api/itService';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
@@ -245,6 +246,11 @@ export type IntelligenceInputType = NonNullable<_IntelligenceCfg['inputSchema']>
 export type IntelligenceOutputType = Awaited<ReturnType<_IntelligenceCfg['execute']>>;
 export const intelligence = createCaller<IntelligenceInputType, IntelligenceOutputType>('intelligence');
 
+type _ItServiceCfg = typeof _ItServiceEp;
+export type ItServiceInputType = NonNullable<_ItServiceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ItServiceCfg['execute']>[0]['input'];
+export type ItServiceOutputType = Awaited<ReturnType<_ItServiceCfg['execute']>>;
+export const itService = createCaller<ItServiceInputType, ItServiceOutputType>('itService');
+
 type _LearnCfg = typeof _LearnEp;
 export type LearnInputType = NonNullable<_LearnCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_LearnCfg['execute']>[0]['input'];
 export type LearnOutputType = Awaited<ReturnType<_LearnCfg['execute']>>;
@@ -442,6 +448,7 @@ export const api = {
   integrationMappings,
   integrity,
   intelligence,
+  itService,
   learn,
   manageTask,
   migrationApproval,

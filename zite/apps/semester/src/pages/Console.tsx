@@ -8,7 +8,7 @@ import { Input } from '@project/components/ui/input';
 import { Checkbox } from '@project/components/ui/checkbox';
 import PrivacyOffice from '../components/RecordsRights';
 import IntelligenceRegistry from '../components/Intelligence';
-import { RoleAppsGapMap } from './RoleApps';
+import { RoleAppsGapMap, ExpansionRegister } from './RoleApps';
 import EventDelivery from '../components/EventDelivery';
 import IntegrationMappings from '../components/IntegrationMappings';
 import Reconciliation from '../components/Reconciliation';
@@ -65,7 +65,7 @@ export default function Console() {
             <TabsContent value="supportaccess"><SupportAccess /></TabsContent>
             <TabsContent value="privacy"><PrivacyOffice /></TabsContent>
             <TabsContent value="intelligence"><IntelligenceRegistry /></TabsContent>
-            <TabsContent value="roleapps"><RoleAppsGapMap /></TabsContent>
+            <TabsContent value="roleapps"><div className="space-y-4"><RoleAppsGapMap /><ExpansionRegister /></div></TabsContent>
             <TabsContent value="events"><EventDelivery /></TabsContent>
             <TabsContent value="mappings"><IntegrationMappings /></TabsContent>
             <TabsContent value="recon"><Reconciliation /></TabsContent>

@@ -4,6 +4,7 @@ import { Button } from '@project/components/ui/button';
 import { roleApps } from 'zitejs/api';
 import { contextSession } from '../lib/contextSession';
 import { PageHeader, Panel, Empty, Status, useLoad, Loadable, errMsg } from '../components/kit';
+import { EXPANSION_APPS, expansionSummary } from '../lib/expansionApps';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const STATE_WORD: Record<string, string> = { existing: 'Ready', incomplete: 'Partly built', missing: 'Not built yet' };
@@ -76,5 +77,26 @@ export function RoleAppsGapMap() {
         </table></div>
       </Panel>)}
     </Loadable>
+  );
+}
+
+const CLS: Record<string, string> = { built: 'Built', extend: 'Partly covered', new: 'Not started', blocked: 'Blocked' };
+
+/** Console tab: the S-76 expansion register (32 enterprise and campus apps), kept apart from the 69-app baseline. */
+export function ExpansionRegister() {
+  const sum = expansionSummary();
+  return (
+    <Panel title={`Enterprise and campus apps · ${sum.total}`}>
+      <p className="text-sm text-muted-foreground">{sum.built} built · {sum.extend} partly covered by existing apps · {sum.new} not started · {sum.blocked} blocked until a named approval exists. Kept separate from the 69 role apps; Family and Developer are counted in both.</p>
+      <div className="mt-3 overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">ID</th><th>App</th><th>Stage</th><th>State</th><th>Reuses / needs</th></tr></thead>
+        <tbody>{EXPANSION_APPS.map((r) => (
+          <tr key={r.id} className="border-t border-border align-top">
+            <td className="py-2 tabular-nums">{r.id}</td><td className="py-2">{r.name}</td><td className="py-2 tabular-nums">{r.stage === 99 ? 'gate' : r.stage}</td>
+            <td className="py-2"><Status value={CLS[r.cls]} /></td>
+            <td className="py-2 text-xs text-muted-foreground">{r.blockedBy ? `Needs: ${r.blockedBy}` : r.reuse}</td>
+          </tr>))}</tbody>
+      </table></div>
+    </Panel>
   );
 }

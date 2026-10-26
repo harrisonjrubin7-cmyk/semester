@@ -159,3 +159,10 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - organization_verifications / opportunity_versions / publications → Employers app; version-bound publication approval to be re-checked.
 - institutions.timezone → NOT present (dining hardcodes America/Chicago) — queued.
 - UI states `stale` and `uncertain` → not yet in components/kit — queued.
+
+## S-76 — 32 enterprise and campus apps (26 Oct)
+- Stage 0 DONE: 32-row register `apps/semester/src/lib/expansionApps.ts` (tested), shown in Console → Role apps. Today: 1 built, 6 partly covered, 17 not started, 8 blocked.
+- E15 IT Service Management DONE (Campus → IT help, `/campus/it`, `its_*`): requests, incidents with problem review, security incidents visible only to security staff, owner-approved hash-pinned changes, emergency changes needing retrospective review. Not built: knowledge articles, configuration items, problem records as separate objects.
+- E21 Health Services: registry entry only. Do not design.
+- Blocked on owner decisions (money movement stays off): E07 Payroll, E10 Finance, E22 Advancement, E27 Authorized Payer; E19/E20 need specialist operational authorization; E03 needs placement boundaries.
+- Next buildable without new approvals (stage 6): E18 Library, E17 Transportation and Parking, E14 Assets and Inventory, E13 Facilities (extend hsg_maint).
