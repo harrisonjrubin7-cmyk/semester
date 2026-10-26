@@ -76,7 +76,7 @@ import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
 import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
-import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
+import { DEFAULT_ROLE, choosableRole, type Role } from '../lib/role';
 import { HELD_KEY, clearIngressDrops, droppedOnRead, heldInSaved, noteIngressDrops } from '../lib/deletions';
 import { forgetCarried } from '../lib/carried';
 import type { Balance } from '../lib/meals';
@@ -1977,7 +1977,7 @@ export function loadPersisted(): Persisted {
       // heard of would hide every screen it does not name, and an app that
       // opens on an empty directory looks broken rather than out of date.
       controls: readControls(saved.controls),
-      role: roleOf(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE).id,
+      role: choosableRole(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE),
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       ready: readStage(saved.ready),
