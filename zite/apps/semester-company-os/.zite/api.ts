@@ -3,6 +3,7 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _AppReviewEp } from '../src/api/appReview';
+import type { default as _AtlasEp } from '../src/api/atlas';
 import type { default as _BoardEp } from '../src/api/board';
 import type { default as _CompanyDataEp } from '../src/api/companyData';
 import type { default as _CompanyMutateEp } from '../src/api/companyMutate';
@@ -23,6 +24,11 @@ type _AppReviewCfg = typeof _AppReviewEp;
 export type AppReviewInputType = NonNullable<_AppReviewCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppReviewCfg['execute']>[0]['input'];
 export type AppReviewOutputType = Awaited<ReturnType<_AppReviewCfg['execute']>>;
 export const appReview = createCaller<AppReviewInputType, AppReviewOutputType>('appReview');
+
+type _AtlasCfg = typeof _AtlasEp;
+export type AtlasInputType = NonNullable<_AtlasCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AtlasCfg['execute']>[0]['input'];
+export type AtlasOutputType = Awaited<ReturnType<_AtlasCfg['execute']>>;
+export const atlas = createCaller<AtlasInputType, AtlasOutputType>('atlas');
 
 type _BoardCfg = typeof _BoardEp;
 export type BoardInputType = NonNullable<_BoardCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_BoardCfg['execute']>[0]['input'];
@@ -102,6 +108,7 @@ export const workspaces = createCaller<WorkspacesInputType, WorkspacesOutputType
 
 export const api = {
   appReview,
+  atlas,
   board,
   companyData,
   companyMutate,

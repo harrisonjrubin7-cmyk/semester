@@ -7,7 +7,7 @@ import { Input } from '@project/components/ui/input';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 
-const STAGES = ['Designed', 'Implemented', 'Tested', 'Deployed', 'Institution-authorized', 'Production-enabled'] as const;
+const STAGES = ['Designed', 'Implemented', 'Tested', 'Deployed', 'Institution-authorized', 'Production-enabled', 'Operationally accepted', 'Incumbent decommissioned'] as const;
 const ENVS = ['Synthetic', 'Preview', 'Staging', 'Production'] as const;
 type Entry = CapabilityEvidenceOutputType['entries'][0];
 

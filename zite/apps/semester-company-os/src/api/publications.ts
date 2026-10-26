@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { decide, slugify } from '../lib/pubRules';
+import { ensureAtlas } from '../lib/atlasServer';
+import { citedClaims } from '../lib/atlasRules';
+import { pg } from '../lib/fin';
 
 const first = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v) ?? '';
 const fail = (m: string): never => { const e = new ZiteError(m); e.userFacingMessage = m; throw e; };
@@ -53,6 +56,12 @@ export default createEndpoint({
         if (input.action === 'publish') {
           const { records } = await zite.sitePublications.findAll({ filters: { slug: c.slug ?? '', status: 'Published' }, limit: 5 });
           slugTakenByOther = records.some((r) => r.id !== c.id);
+        }
+        // Atlas claims gate (S-73): a post that makes a claim must cite approved, current claims (CLM-<n>) at submit, approval and publication.
+        if ((state.claimTypes ?? []).length && ['submit', 'approve', 'publish'].includes(input.action)) {
+          await ensureAtlas();
+          const why = ((await pg().query(`SELECT atl_claims_check($1::bigint[], $2::date) AS e`, [citedClaims(state.claimSources ?? ''), new Date().toISOString().slice(0, 10)])) as { e: string | null }[])[0].e;
+          if (why) fail(`${why} Add it to the claims registry in Atlas and cite it in the sources.`);
         }
         const d = decide(input.action, state, me, { note, slugTakenByOther });
         if (!d.ok) return fail(d.reason);

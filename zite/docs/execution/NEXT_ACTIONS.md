@@ -13,6 +13,20 @@ migration (CHECKs, append-only triggers, plpgsql returning NULL or error) -> rol
 endpoint (requireAction, audit, notification) -> UI with empty/error/permission states -> role-app state update ->
 check_app -> unit suites -> mutation check on pure modules -> commit -> re-import to GitHub on a new branch.
 
+## Queue added 26 Oct (owner: "add that to que")
+Built 26 Oct, in order: Faculty teaching tools (6a0a252), housing (aba30b6), study abroad (7013a25), scholarships (b6bbc1e),
+curriculum governance (9bc8d47), programs and pathways (a52825d), dining (b58d383). Each: rolled-back DB check + mutation check.
+7. Semester Atlas (S-71, also S-69's single reconciled register): one interactive artifact generated from the repository's own
+   registers (roleApps.ts, source-manifest.csv, conflicts-and-decisions.md, migrations), with independent status dimensions
+   (maturity / authorization / activation / evidence / delivery / health), source and conflict registers, missing-coverage view,
+   per-app build-prompt generator, JSON export. Statuses come from code evidence only; nothing is marked accepted or activated.
+8. Student Workspace grade tracker (S-72): transparent weighted and points-based calculations with the S-72 validation rules
+   (no negative scores, ungraded is not zero, excused leaves the denominator, weights must total 100% or no final grade, "Not
+   enough graded work"), GPA scenarios kept separate from the official record, syllabus-rule review proposing policy updates.
+9. Programs: outcome-to-assessment map (S-70), teach-out rules; institution time-zone field (dining reads America/Chicago).
+10. International Student Adviser and High School Counselor: need owner rules on immigration and minors' records first.
+11. S-69 enterprise apps (HR, payroll, procurement, finance, facilities, library, safety, advancement, research admin): not started.
+
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
    Fixed from them: tenant check on office-staff grants (SEC-034), withdrawn requests closed for the registrar (REG-039),

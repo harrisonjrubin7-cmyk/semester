@@ -35,3 +35,13 @@ Repository authority (Zite vs GitHub `semester` repo) · first launch cohort · 
 
 ## C24 — superseded (26 Oct)
 The owner reversed the merge: "no need to merge all three apps can keep seprate". Commit 6513093 is reverted; Company OS, Security Lab and Developers stay separate Zite apps with their own endpoints. Closed.
+
+## C25 — two role registries (26 Oct, open)
+`apps/semester-company-os/src/lib/roleRegistry.ts` (hand-written 24 Oct; statuses only partial/missing) duplicates the maintained
+register `apps/semester/src/lib/roleApps.ts` (built/partial/missing per capability, updated with every increment). S-73 asks for
+one Atlas, not a second disconnected one. Interim: the new Company OS Atlas (/atlas) reads `roleApps.ts`; the older
+/roles page still reads its own copy. Proposed resolution: point /roles at `roleApps.ts` and delete the copy. Owner: product. Open.
+
+## Gap noted for Atlas (26 Oct)
+Security Lab's capability-evidence endpoint records evidence for any stage without a reviewer-separation check (internal Zite app,
+so only workspace members reach it). Record it in Atlas's gap register as high severity, owner: platform.
