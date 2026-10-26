@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-26T14:11:20"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # RB-08 · Bad deploy, or a deploy that will not go
 
 Class C2 · role platform · alerts `deploy:ci-red-on-main`, `deploy:functions-failed`, `deploy:stale-release` · components `pipeline:ci`, `pipeline:pages`, `pipeline:functions`.

@@ -1,3 +1,98 @@
+---
+stale-refs:
+  - source: docs/PLATFORM-CONSTITUTION.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/01-TARGET-ARCHITECTURE.md
+    changed_at: "2026-10-26T14:11:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ARCHITECTURE.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UNIVERSITY-OS-ARCHITECTURE.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/03-TECHNOLOGY-DECISIONS.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/05-ENVIRONMENTS-AND-ROLLOUT.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/06-DELIVERY-AND-OPERATIONS.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/07-ENGINEERING-STANDARDS.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/08-ORGANIZATION-AND-MILESTONES.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/09-CONVERSION-PLAN.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester target architecture — CTO pack
 
 Status: **proposed**, written 2026-10-04 against `origin/main` `7287ddc`.

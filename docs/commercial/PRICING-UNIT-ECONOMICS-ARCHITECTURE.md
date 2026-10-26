@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/COMMERCIAL-GOVERNANCE.md
+    changed_at: "2026-10-26T14:11:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Pricing, packaging, entitlements and unit-economics architecture
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/finance/INSTITUTIONAL_BILLING.md
+    changed_at: "2026-10-26T14:11:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Payment plan engine
 
 | Control | Value |

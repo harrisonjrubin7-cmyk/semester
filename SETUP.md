@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: supabase/README.md
+    changed_at: "2026-10-26T14:11:38"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Running your own copy
 
 The app works with none of this. Clone it, `npm run dev`, and everything —

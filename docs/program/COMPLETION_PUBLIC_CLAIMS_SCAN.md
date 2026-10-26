@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-26T14:11:25"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. Working list, not legal advice. It approves no public claim.**
 
 # Semester — public claims scan of the live site (completion baseline)

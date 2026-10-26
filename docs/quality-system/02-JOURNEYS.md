@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: docs/quality-system/03-SUITES.md
+    changed_at: "2026-10-19T18:52:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/07-PRODUCTION-VERIFICATION.md
+    changed_at: "2026-10-19T18:52:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/README.md
+    changed_at: "2026-10-19T18:52:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/04-GATES-AND-CI.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/quality-system/08-REPOSITORY-AND-FIXTURES.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # 02 · Critical journey catalog: every role, every domain
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

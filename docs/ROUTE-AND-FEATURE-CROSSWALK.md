@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/AUDIT.md
+    changed_at: "2026-10-26T14:11:25"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Route and feature crosswalk — unified platform
 
 This extends

@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/SCIM-LIFECYCLE-MANAGEMENT.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SAML-IMPLEMENTATION-RUNBOOK.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Institutional SSO architecture
 
 Status: **SAML, SCIM and LTI 1.3 BUILT; OIDC and account linking NOT BUILT; nothing

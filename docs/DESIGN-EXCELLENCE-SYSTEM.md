@@ -1,3 +1,122 @@
+---
+stale-refs:
+  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
+    changed_at: "2026-10-18T16:51:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COMPONENT-RELEASE-CHECKLIST.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-MIGRATION-PLAN.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/MICRO-INTERACTION-SYSTEM.md
+    changed_at: "2026-10-18T17:35:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SEMESTER-PLATFORM-UNITY-PATTERNS.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ACCESSIBILITY-POLISH-CHECKLIST.md
+    changed_at: "2026-10-26T14:11:25"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-FEATURE-FLAG-PLAN.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-TOKEN-ARCHITECTURE.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-TOKENS.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/INFORMATION-HIERARCHY.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/COLOR-AND-DARK-MODE-SPEC.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ELEVATION-AND-GLASS-POLICY.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/TYPOGRAPHY-SYSTEM.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WORKSPACE-MODES.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Design excellence system
 
 The index for the design-excellence work: the semantic token layer, the shared

@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: REGRESSION-CHECKLIST.md
+    changed_at: "2026-10-26T14:11:18"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # CLAUDE.md
 
 Notes for an agent working in this repository. Everything here was learned by

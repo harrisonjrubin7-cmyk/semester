@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-26T14:11:25"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # FTC testimonial, review and claims policy — public marketing
 
 Status: **proposed operating policy; not legal advice and not counsel-approved.**

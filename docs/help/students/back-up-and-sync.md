@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/export-or-delete-your-data.md
+    changed_at: "2026-10-26T14:11:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/when-something-is-missing.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Back up, sync and what stays on your device
 
 > **Type:** help · **Audience:** students · **Owner:** `privacy` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

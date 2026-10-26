@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: CLAUDE.md
+    changed_at: "2026-10-19T18:52:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester — implementation plan
 
 What to build, in dependency order, for the requirements in

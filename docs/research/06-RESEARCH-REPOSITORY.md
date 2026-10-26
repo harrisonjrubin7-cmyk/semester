@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: docs/research/01-EVIDENCE-MODEL.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/research/05-AUDIT-VALIDATION.md
+    changed_at: "2026-10-19T18:52:43"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # 06 · The research repository
 
 Where evidence lives, how it becomes an insight, and how an insight reaches a

@@ -1,3 +1,54 @@
+---
+stale-refs:
+  - source: ROLLBACK.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/06-ACCEPTANCE-SIGNOFF-AND-EVIDENCE.md
+    changed_at: "2026-10-19T18:52:37"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/02-SOURCE-INVENTORY-AND-EXTRACTION.md
+    changed_at: "2026-10-26T14:11:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/03-MAPPING-CLEANSING-TRANSFORMATION.md
+    changed_at: "2026-10-26T14:11:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/04-VALIDATION-AND-RECONCILIATION.md
+    changed_at: "2026-10-26T14:11:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/migration/README.md
+    changed_at: "2026-10-26T14:11:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 01 Methodology
 
 ## 1. Principles

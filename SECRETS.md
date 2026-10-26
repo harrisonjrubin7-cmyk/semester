@@ -1,3 +1,36 @@
+---
+stale-refs:
+  - source: supabase/DEPLOY.md
+    changed_at: "2026-10-19T18:52:47"
+    sections_changed: []
+    summary: externally modified
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-EXPANSION-CROSSWALK.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Where every secret lives
 
 An inventory: what this project holds, which store each one is in, and who can

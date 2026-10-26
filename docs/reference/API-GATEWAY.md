@@ -1,3 +1,40 @@
+---
+stale-refs:
+  - source: docs/reference/AUTH-AND-LIMITS.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/ERRORS.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/SCIM-API.md
+    changed_at: "2026-10-19T18:52:43"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/reference/registration-readiness-workflow.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Institution gateway API
 
 > **Type:** reference · **Audience:** partner-developers, implementers · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/gateway-reference.test.ts`

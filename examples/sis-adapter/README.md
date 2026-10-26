@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/guides/integrations/sis-adapter.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+  - source: examples/gateway-client/README.md
+    changed_at: "2026-10-19T18:52:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Example: SIS adapter
 
 > **Type:** reference · **Audience:** implementers, institution-admins · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/examples.test.ts`

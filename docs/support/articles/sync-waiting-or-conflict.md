@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/support/README.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/cannot-sign-in.md
+    changed_at: "2026-10-26T14:11:36"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Sync says it's waiting, or two devices disagree
 
 > **Type:** help · **Audience:** students, support · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

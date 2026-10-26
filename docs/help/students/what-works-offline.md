@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/help/students/back-up-and-sync.md
+    changed_at: "2026-10-26T14:11:28"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/help/students/install-the-app.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # What works without a connection
 
 > **Type:** help · **Audience:** students · **Owner:** `product` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/help.test.ts`

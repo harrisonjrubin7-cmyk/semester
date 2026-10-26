@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/03-AI-TUTORING-AND-BOUNDARIES.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/05-ACCOMMODATIONS.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 04 · Academic-integrity controls, proctoring integrations and escalation
 
 Deliverables covered: **academic-integrity controls**, **proctoring/integrity

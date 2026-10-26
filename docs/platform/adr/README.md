@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: docs/architecture/README.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/decisions/README.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Platform ADRs
 
 Named for the decision, **not numbered**. The repository's own history is why:

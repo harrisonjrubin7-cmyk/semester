@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/operating-model/RISK-GOVERNANCE.md
+    changed_at: "2026-10-26T14:11:32"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 <!-- Rendered from app/src/lib/governance/pia.ts by pia.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
 # Privacy impact assessment

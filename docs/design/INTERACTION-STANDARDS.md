@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Interaction standards
 
 How Semester *behaves* the same way everywhere: which layout a screen uses,

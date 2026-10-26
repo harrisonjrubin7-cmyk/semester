@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: docs/design-system/HANDOFF-INTEGRATION-STATUS.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Phased roadmap
 
 Phases are evidence gates, not calendar promises.

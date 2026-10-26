@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/architecture/modularization/02-target-architecture.md
+    changed_at: "2026-10-19T18:52:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/03-refactoring-sequence.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # 5 · Legacy retirement plan
 
 Every production file has a proposed owning domain and disposition in

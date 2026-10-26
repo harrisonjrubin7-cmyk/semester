@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/DESIGN-TOKENS.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Typography
 
 What the app sets type in, at what sizes, and which of those the reader

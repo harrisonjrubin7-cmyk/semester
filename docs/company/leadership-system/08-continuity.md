@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: SECRETS.md
+    changed_at: "2026-10-26T14:11:24"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/02-decision-rights.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/04-organization-and-hiring.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/company/leadership-system/09-calendar.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-19T18:52:29"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 9 · Business continuity for leadership and key-person risk
 
 > **PROPOSED — NOT ADOPTED.** Extends [`BUSINESS-CONTINUITY-OPERATING-PLAN.md`](../BUSINESS-CONTINUITY-OPERATING-PLAN.md), which covers continuity in general and lists key-person loss as one scenario row. This page is the leadership-specific plan that row points to. **A tabletop is not proof of recovery.** Authority, incapacity and succession documents are `[COUNSEL]`. This page contains no credentials and the repository must never hold any.

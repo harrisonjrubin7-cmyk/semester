@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/trust/EVIDENCE-REGISTER.md
+    changed_at: "2026-10-19T18:52:46"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md
+    changed_at: "2026-10-19T18:52:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Audit Logging Evidence
 
 | Control | Value |

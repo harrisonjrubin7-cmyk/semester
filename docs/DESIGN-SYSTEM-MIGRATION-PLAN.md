@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/EMPTY-LOADING-ERROR-SUCCESS-STATES.md
+    changed_at: "2026-10-18T16:51:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/WCAG-UI-AUDIT-SCORECARD.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/TYPOGRAPHY-SYSTEM.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Design system migration plan
 
 How the design-excellence work landed, what is left, and the order in which

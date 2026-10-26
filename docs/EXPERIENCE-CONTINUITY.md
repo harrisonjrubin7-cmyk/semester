@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/DO-NOT-BUILD.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/UX-ENHANCEMENT-PLAN.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DESIGN-SYSTEM-IMPROVEMENTS.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Experience continuity: where each of the sixteen items stands
 
 **Baseline:** `origin/main` at `cbc6c5a`, 27 Sep 2026.

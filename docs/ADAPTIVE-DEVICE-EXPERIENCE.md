@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: docs/CROSS-DEVICE-CONTINUITY.md
+    changed_at: "2026-10-18T16:51:34"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESPONSIVE-COMPONENT-SPEC.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/CAPABILITY-PARITY-MATRIX.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Adaptive device experience
 
 **The rule:** a student can do the same things on a phone, a tablet or a

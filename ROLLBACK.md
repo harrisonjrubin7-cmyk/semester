@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: CHANGELOG.md
+    changed_at: "2026-10-26T14:11:10"
+    sections_changed: []
+    summary: externally modified
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-26T14:11:15"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/FEATURE-FLAG-REGISTRY.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Rolling back
 
 What to do when a deploy has made the live app worse, who does it, and how long

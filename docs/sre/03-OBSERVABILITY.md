@@ -1,3 +1,60 @@
+---
+stale-refs:
+  - source: docs/sre/README.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: MONITORING.md
+    changed_at: "2026-10-26T14:11:17"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/02-SLOS-SLIS-AND-ERROR-BUDGETS.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/04-CAPACITY-PLANNING.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/06-INCIDENTS-AND-ON-CALL.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/08-COST-AND-RESOURCE-GOVERNANCE.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/generated/SCORECARD.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 03 · Observability
 
 > Part of the [SRE pack](README.md). Status: **proposed**; what exists is stated exactly in §1. Existing prose: [OBSERVABILITY-PLAN.md](../engineering-operations/OBSERVABILITY-PLAN.md), [MONITORING.md](../../MONITORING.md), [ZERO-TRUST-EVENT-API-OBSERVABILITY-ROADMAP.md](../ZERO-TRUST-EVENT-API-OBSERVABILITY-ROADMAP.md), ADR 0010 (correlation ids and the error envelope). Alerts: [generated/ALERTS.md](generated/ALERTS.md).

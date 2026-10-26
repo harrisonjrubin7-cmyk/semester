@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/06-analytics-architecture.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/data-architecture/08-search-and-retrieval.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 10 · Migration, indexing, partitioning, performance and archival
 
 Nothing here has been run at volume. The migrated schema has no rows and no workload exists yet. Section 10.1 is

@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/CLAIM-WITHDRAWAL-RUNBOOK.md
+    changed_at: "2026-10-26T14:11:25"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Public claims: Phase 0 reconciliation view
 
 > **Not legal advice. Every item below is a question for qualified counsel (and, where marked, an accountant, accessibility assessor or the claim owner). Nothing here approves, withdraws or edits any public claim.**

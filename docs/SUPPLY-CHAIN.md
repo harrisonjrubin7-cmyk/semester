@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/STRATEGIC-EXPANSION-REGISTER.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Software supply chain
 
 <!-- Rendered from app/src/lib/supplychain.ts and the lockfiles by supplychain.test.ts. Edit the data, then run `npm run registers` from app/. -->

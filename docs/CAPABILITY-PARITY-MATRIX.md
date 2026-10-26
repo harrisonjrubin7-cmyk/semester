@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/RESPONSIVE-COMPONENT-SPEC.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Capability parity matrix
 
 The contract: every capability a student is permitted is reachable at every

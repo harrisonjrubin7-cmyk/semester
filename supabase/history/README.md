@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: MIGRATION-HISTORY.md
+    changed_at: "2026-10-26T14:11:16"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # The migrations that existed only in production
 
 Step 2 of [`MIGRATION-HISTORY.md`](../../MIGRATION-HISTORY.md). Ten migrations

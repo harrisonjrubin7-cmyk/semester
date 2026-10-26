@@ -1,3 +1,22 @@
+---
+stale-refs:
+  - source: RESTORE.md
+    changed_at: "2026-10-26T14:11:22"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md
+    changed_at: "2026-10-26T14:11:36"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Disaster Recovery Test Plan
 
 | Control | Value |

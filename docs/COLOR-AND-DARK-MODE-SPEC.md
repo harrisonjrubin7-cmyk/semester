@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/ELEVATION-AND-GLASS-POLICY.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Colour, light and dark
 
 Semester already had a complete, measured light and dark system before this

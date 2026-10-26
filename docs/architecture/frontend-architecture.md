@@ -1,3 +1,28 @@
+---
+stale-refs:
+  - source: docs/ROLE-LAUNCH-REGISTER.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/universal-state-model.md
+    changed_at: "2026-10-18T16:51:35"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/offline-sync-contract.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Frontend architecture
 
 Status: 4 October 2026. Written against the code on `origin/main`, not against a blank page. The existing UI is a

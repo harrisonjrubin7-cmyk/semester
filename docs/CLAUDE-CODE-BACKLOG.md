@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/MODERNIZATION-BLUEPRINT.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Claude Code backlog — unified platform
 
 Ordered, PR-sized items. Each one follows the rules in `/CLAUDE.md`: check

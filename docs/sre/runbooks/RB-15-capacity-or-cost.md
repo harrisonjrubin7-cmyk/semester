@@ -1,3 +1,30 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/05-DELIVERY-AND-CHANGE-MANAGEMENT.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/sre/04-CAPACITY-PLANNING.md
+    changed_at: "2026-10-26T14:11:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # RB-15 · Capacity peak or cost spike
 
 Class C0 to C1 · role platform · alerts `capacity:db-connections`, `cost:anomaly` · components `supabase-db`, `supabase-edge-runtime`. Planning model: `app/src/lib/sre/capacity.ts`.

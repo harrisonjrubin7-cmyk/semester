@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/DECISION-LOG.md
+    changed_at: "2026-10-19T18:52:31"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/TERMS-OF-SERVICE-DRAFT.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Semester Refund and Cancellation Policy — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** Urgent: Semester Plus can be

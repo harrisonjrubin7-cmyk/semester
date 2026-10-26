@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Semester Incident Response Summary — DRAFT
 
 > **Not in force. Not reviewed by a lawyer.** The public summary of

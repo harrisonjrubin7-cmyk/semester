@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-19T18:52:44"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0011-modular-monolith-before-services.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/modularization/05-legacy-retirement.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 3 · Refactoring sequence, repository restructuring, validation
 
 Principles: additive first; one screen at a time; the old path keeps working

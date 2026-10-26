@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/trust/DPA-CHECKLIST.md
+    changed_at: "2026-10-26T14:11:37"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/trust/VENDOR-RISK-REGISTER.md
+    changed_at: "2026-10-19T18:52:46"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # AI provider terms, as published
 
 <!-- Rendered from app/src/lib/trust/provider-terms.ts by provider-terms.test.ts. Edit the data, then run `npm run registers` from app/. -->

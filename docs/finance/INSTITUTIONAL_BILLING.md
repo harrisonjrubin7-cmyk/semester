@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/finance/REFUND_CREDIT_DISPUTE_POLICY.md
+    changed_at: "2026-10-19T18:52:32"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md
+    changed_at: "2026-10-26T14:11:27"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/finance/NATIVE_CHECKOUT_SPEC.md
+    changed_at: "2026-10-26T14:11:28"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # Institutional billing
 
 | Control | Value |

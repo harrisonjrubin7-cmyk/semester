@@ -1,3 +1,46 @@
+---
+stale-refs:
+  - source: docs/gtm/BRAND-AND-MARKETING-STRATEGY.md
+    changed_at: "2026-10-19T18:52:32"
+    sections_changed: []
+    summary: externally modified
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-26T14:11:11"
+    sections_changed: []
+    summary: externally modified
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/marketing/FTC_TESTIMONIAL_AND_CLAIMS_POLICY.md
+    changed_at: "2026-10-19T18:52:36"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/marketing/LEAD_INTAKE_AND_CONSENT_SPEC.md
+    changed_at: "2026-10-26T14:11:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Marketing compliance audit
 
 Date: 2026-10-05. Scope: public claims and content assets on `company-site/` and

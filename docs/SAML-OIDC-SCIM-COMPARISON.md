@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: docs/INSTITUTIONAL-SSO-ARCHITECTURE.md
+    changed_at: "2026-10-26T14:11:26"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # SAML, OIDC, SCIM and LTI compared
 
 Which protocol does which job, and which of them Semester speaks today. See

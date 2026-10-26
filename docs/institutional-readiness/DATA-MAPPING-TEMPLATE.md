@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/SIS-LMS-INTEGRATION-BOUNDARIES.md
+    changed_at: "2026-10-19T18:52:33"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Institutional Data-Mapping Template
 
 | Control | Value |

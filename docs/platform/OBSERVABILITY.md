@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: PUBLIC-CLAIMS-APPROVAL-REGISTER.md
+    changed_at: "2026-10-19T18:52:30"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Observability standards and operational metadata
 
 `packages/platform/src/observability/` · `observability/observability.test.ts`

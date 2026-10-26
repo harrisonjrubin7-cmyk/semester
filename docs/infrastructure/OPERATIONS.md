@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: MONITORING.md
+    changed_at: "2026-10-26T14:11:17"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Operations: monitoring, cost, access, recovery testing
 
 Application monitoring is [`MONITORING.md`](../../MONITORING.md) (one waking
