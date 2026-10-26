@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/documentation/STYLE-GUIDE.md
-    changed_at: "2026-10-19T01:41:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Documentation quality gates
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/docsystem.test.ts`

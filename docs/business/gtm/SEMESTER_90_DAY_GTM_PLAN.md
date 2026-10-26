@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/trust/DOCUMENT-MAP.md
-    changed_at: "2026-10-19T01:41:51"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Semester 90-Day Go-To-Market Plan
 
 | Control | Value |

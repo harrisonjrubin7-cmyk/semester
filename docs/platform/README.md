@@ -1,18 +1,3 @@
----
-stale-refs:
-  - source: docs/PLATFORM-CONSTITUTION.md
-    changed_at: "2026-10-19T01:41:42"
-    sections_changed: []
-    summary: externally modified
-  - source: docs/platform/OPERATIONS.md
-    changed_at: "2026-10-19T01:41:50"
-    sections_changed: []
-    summary: externally modified
----
-
-
-
-
 # Platform primitives
 
 The reusable core every Semester domain is built on: **multi-tenancy, identity,

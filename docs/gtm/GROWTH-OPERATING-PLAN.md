@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T01:41:42"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Growth, lifecycle and demand operating plan
 
 | Control | Value |

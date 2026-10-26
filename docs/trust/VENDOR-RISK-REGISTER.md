@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/SUBPROCESSORS.md
-    changed_at: "2026-10-19T01:41:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Vendor Risk Register
 
 **No vendor on this list has been risk-assessed yet.** Every row below is the

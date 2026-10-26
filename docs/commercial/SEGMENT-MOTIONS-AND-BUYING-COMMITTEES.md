@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/k12/K12-REQUIREMENTS.md
-    changed_at: "2026-10-19T01:41:43"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Segment Motions and Buying Committees
 
 | Control | Value |

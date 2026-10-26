@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: SECURITY.md
-    changed_at: "2026-10-18T21:26:22"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # Where every secret lives
 
 An inventory: what this project holds, which store each one is in, and who can

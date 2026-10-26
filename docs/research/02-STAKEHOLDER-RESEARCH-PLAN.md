@@ -1,12 +1,3 @@
----
-stale-refs:
-  - source: docs/research/08-ETHICS-CONSENT-DATA-HANDLING.md
-    changed_at: "2026-10-19T01:41:50"
-    sections_changed: []
-    summary: externally modified
----
-
-
 # 02 · Stakeholder research plan
 
 Twelve groups, one plan. Terms (`C0`–`C4`, source classes, `route`) are defined
