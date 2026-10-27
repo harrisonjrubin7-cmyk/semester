@@ -4,7 +4,7 @@ Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** th
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
-Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (98 checks; twelve guards were removed one at a time and each removal turned it red).
+Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks the authorization, isolation, state-transition, export, retention, and restoration refusals is `supabase/school-offboarding.check.sql`.
 
 ## The steps
 
@@ -29,7 +29,7 @@ Does not: touch a student's own session or account, delete or edit any record, o
 
 ## Restoring
 
-`restore_school(case, reason)` — from any of steps 5–7, by an operator **other than the one who disabled access**, with a reason. It gives back exactly the grants and connections in `school_offboarding_undo`, resumes the roll-out to where it stood, and closes the case as `restored`. It refuses after a purge has been authorized. Sessions that were ended stay ended; people sign in again.
+`restore_school(case, reason)` — from any of steps 5–7, by an operator **other than the one who disabled access**, with a reason. Before changing anything, it locks and validates every immutable undo target: the grant or connection must still exist, still belong to this school, and still be in the disabled state; a recorded roll-out must still be suspended. If any target is missing or changed, the call says restoration is paused, changes nothing, and leaves the case open for repair and retry. After that preflight it gives back exactly the grants and connections in `school_offboarding_undo`, resumes the roll-out to where it stood, records the successful restoration, and closes the case as `restored`. A completed restoration cannot be replayed. It refuses after a purge has been authorized. Sessions that were ended stay ended; people sign in again.
 
 ## Legal holds and retention
 

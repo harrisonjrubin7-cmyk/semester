@@ -269,7 +269,7 @@ The current register also includes 77 callable definers whose current definition
 | `resolve_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed`, `private.account_is_held` | `20261005124000_privacy_case_actions.sql` |
 | `resolve_privileged_access_review_investigation` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20261011213000_privileged_access_review_hardening.sql` |
 | `resolve_privileged_access_review_post_decision_change` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20261011213000_privileged_access_review_hardening.sql` |
-| `restore_school` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
+| `restore_school` | `private.offboarding_operator` | `20261026120000_offboarding_restore_integrity.sql` |
 | `retire_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
 | `review_break_glass` | `auth.uid()`, `private.holds_seat` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `revoke_school_membership` | `private.has_capability` | `20260930185000_school_membership_enforcement.sql` |
