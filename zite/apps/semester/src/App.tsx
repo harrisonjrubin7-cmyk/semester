@@ -59,6 +59,7 @@ import Audit from './pages/Audit';
 import Workspaces from './pages/Workspaces';
 import Continuing from './pages/Continuing';
 import Design from './pages/Design';
+import HumanResources from './pages/HumanResources';
 import Partners from './pages/Partners';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
@@ -154,6 +155,7 @@ export default function App() {
             <Route path="/you/workspaces" element={<Workspaces />} />
             <Route path="/learn/continuing" element={<Continuing />} />
             <Route path="/staff/design" element={<Design />} />
+            <Route path="/you/work" element={<HumanResources />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/faculty" element={<Faculty />} />
             <Route path="/you/integrity" element={<Integrity />} />
