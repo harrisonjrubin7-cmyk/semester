@@ -5,5 +5,39 @@
     "ZITE_POSTGRES_URL": {
       "description": "Neon connection string — starts with postgresql:// and contains your user, password and host (Neon → Connect → Connection string)"
     }
+  },
+  "seoSettings": {
+    "title": "Semester Faculty",
+    "description": "",
+    "thumbnailUrl": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/widgetid-default/nsLDrNfLWKBkV5WWinu66i/Screenshot-2026-10-22-at-2.43.12aPM.png",
+    "faviconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/widgetid-default/egVViGTrLDp9ZhPSZV6n7P/download-1.png"
+  },
+  "integrationSettings": {
+    "email-2": {
+      "fromName": "Semester"
+    }
+  },
+  "authentication": {
+    "signup": "open",
+    "authenticationMethods": {
+      "magicLink": true,
+      "googleSignIn": true,
+      "sso": false
+    },
+    "emailBrandKitId": "bk_6X6LJHEj26",
+    "emailSender": {
+      "integrationId": "email-2"
+    }
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "Semester Faculty",
+    "appIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/pwa/ebfd0c6f52bf8a48/source-779b5a093be166f377e3355c16d6a639",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/pwa/ebfd0c6f52bf8a48/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/pwa/ebfd0c6f52bf8a48/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/pwa/ebfd0c6f52bf8a48/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-wa43436gox/pwa/ebfd0c6f52bf8a48/favicon-32.png"
+    }
   }
 }

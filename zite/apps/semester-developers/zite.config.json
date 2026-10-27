@@ -23,5 +23,16 @@
       "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-sci91lofpm/pwa/3da120d1a36146a6/favicon-32.png"
     },
     "backgroundColor": "#ffffff"
+  },
+  "authentication": {
+    "signup": "open",
+    "authenticationMethods": {
+      "magicLink": true,
+      "googleSignIn": true,
+      "sso": false
+    },
+    "emailSender": {
+      "integrationId": "email-2"
+    }
   }
 }

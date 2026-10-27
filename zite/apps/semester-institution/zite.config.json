@@ -22,5 +22,25 @@
       "appleTouchIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-3nybmrumkp/pwa/7f7bfb785ef4367a/apple-touch-icon.png",
       "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-3nybmrumkp/pwa/7f7bfb785ef4367a/favicon-32.png"
     }
+  },
+  "authentication": {
+    "signup": "open",
+    "authenticationMethods": {
+      "magicLink": true,
+      "googleSignIn": true,
+      "sso": false
+    },
+    "emailSender": {
+      "integrationId": "email-2"
+    },
+    "authPage": {
+      "messages": {}
+    },
+    "emailBrandKitId": "bk_6X6LJHEj26"
+  },
+  "integrationSettings": {
+    "email-2": {
+      "fromName": "Semester"
+    }
   }
 }

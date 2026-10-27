@@ -21,7 +21,8 @@
     },
     "emailSender": {
       "integrationId": "email-2"
-    }
+    },
+    "emailBrandKitId": "bk_6X6LJHEj26"
   },
   "pwaSettings": {
     "enabled": true,

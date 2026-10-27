@@ -55,6 +55,7 @@ import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _ParkingEp } from '../src/api/parking';
 import type { default as _PartnersEp } from '../src/api/partners';
 import type { default as _PrivacyEp } from '../src/api/privacy';
+import type { default as _ProcurementEp } from '../src/api/procurement';
 import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
 import type { default as _ReconciliationEp } from '../src/api/reconciliation';
@@ -348,6 +349,11 @@ export type PrivacyInputType = NonNullable<_PrivacyCfg['inputSchema']> extends {
 export type PrivacyOutputType = Awaited<ReturnType<_PrivacyCfg['execute']>>;
 export const privacy = createCaller<PrivacyInputType, PrivacyOutputType>('privacy');
 
+type _ProcurementCfg = typeof _ProcurementEp;
+export type ProcurementInputType = NonNullable<_ProcurementCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProcurementCfg['execute']>[0]['input'];
+export type ProcurementOutputType = Awaited<ReturnType<_ProcurementCfg['execute']>>;
+export const procurement = createCaller<ProcurementInputType, ProcurementOutputType>('procurement');
+
 type _ProgramsCfg = typeof _ProgramsEp;
 export type ProgramsInputType = NonNullable<_ProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgramsCfg['execute']>[0]['input'];
 export type ProgramsOutputType = Awaited<ReturnType<_ProgramsCfg['execute']>>;
@@ -538,6 +544,7 @@ export const api = {
   parking,
   partners,
   privacy,
+  procurement,
   programs,
   progress,
   reconciliation,

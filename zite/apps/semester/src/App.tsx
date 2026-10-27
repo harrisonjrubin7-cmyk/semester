@@ -61,6 +61,7 @@ import Continuing from './pages/Continuing';
 import Design from './pages/Design';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
+import Procurement from './pages/Procurement';
 import Partners from './pages/Partners';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
@@ -158,6 +159,7 @@ export default function App() {
             <Route path="/staff/design" element={<Design />} />
             <Route path="/you/work" element={<HumanResources />} />
             <Route path="/you/recruiting" element={<Recruiting />} />
+            <Route path="/campus/procurement" element={<Procurement />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/faculty" element={<Faculty />} />
             <Route path="/you/integrity" element={<Integrity />} />
