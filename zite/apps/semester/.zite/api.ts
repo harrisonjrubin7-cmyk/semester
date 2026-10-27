@@ -29,6 +29,7 @@ import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DesignEp } from '../src/api/design';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
+import type { default as _DisabilityEp } from '../src/api/disability';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
 import type { default as _FacilitiesEp } from '../src/api/facilities';
 import type { default as _FilesEp } from '../src/api/files';
@@ -226,6 +227,11 @@ type _DiningCfg = typeof _DiningEp;
 export type DiningInputType = NonNullable<_DiningCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DiningCfg['execute']>[0]['input'];
 export type DiningOutputType = Awaited<ReturnType<_DiningCfg['execute']>>;
 export const dining = createCaller<DiningInputType, DiningOutputType>('dining');
+
+type _DisabilityCfg = typeof _DisabilityEp;
+export type DisabilityInputType = NonNullable<_DisabilityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DisabilityCfg['execute']>[0]['input'];
+export type DisabilityOutputType = Awaited<ReturnType<_DisabilityCfg['execute']>>;
+export const disability = createCaller<DisabilityInputType, DisabilityOutputType>('disability');
 
 type _EventDeliveryCfg = typeof _EventDeliveryEp;
 export type EventDeliveryInputType = NonNullable<_EventDeliveryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EventDeliveryCfg['execute']>[0]['input'];
@@ -566,6 +572,7 @@ export const api = {
   design,
   devApps,
   dining,
+  disability,
   eventDelivery,
   facilities,
   files,

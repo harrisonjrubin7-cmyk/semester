@@ -64,6 +64,7 @@ import Council from './pages/Council';
 import ResLife from './pages/ResLife';
 import CareerServices from './pages/CareerServices';
 import PeerSupport from './pages/PeerSupport';
+import DisabilityServices from './pages/DisabilityServices';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
 import Procurement from './pages/Procurement';
@@ -169,6 +170,7 @@ export default function App() {
             <Route path="/campus/reslife" element={<ResLife />} />
             <Route path="/plan/career-services" element={<CareerServices />} />
             <Route path="/help/peer-support" element={<PeerSupport />} />
+            <Route path="/campus/disability-services" element={<DisabilityServices />} />
             <Route path="/you/work" element={<HumanResources />} />
             <Route path="/you/recruiting" element={<Recruiting />} />
             <Route path="/campus/procurement" element={<Procurement />} />

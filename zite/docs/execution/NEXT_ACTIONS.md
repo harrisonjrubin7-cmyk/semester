@@ -47,8 +47,11 @@ check-in, self-reported outcomes verified by center staff, reports suppress grou
 Coach "portfolio review" stays incomplete (not built). Peer support (/help/peer-support): peer mentoring (supervisor-approved mentors, opted-in mentees, one active mentor, mentor
 check-ins, mentee-owned goals, escalation resolved by another supervisor); TA questions to instructors (live delegates only);
 tutoring ratings once per completed session, per-tutor averages at three or more, staff review notes. TAs with a live grading
-delegation can now hold office hours for that section. DB check 27/27; mutations red. Next: Academic Advisor, Disability
-Services, Department Chair.
+delegation can now hold office hours for that section. DB check 27/27; mutations red. Disability services (/campus/disability-services, Officer + Staff): coordinators (admin-granted) handle assigned intake, document
+status (no contents, no diagnosis) and implementation checks; officers verify documents, decide appeals they did not originally
+decide (modified/overturned needs arrangements and an end date), clear not-delivered flags; instructors acknowledge letters.
+The check also covers acc-001 for the first time (decide, letters, instructor view). DB check 38/38; mutations red.
+Next: Academic Advisor, Department Chair.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
