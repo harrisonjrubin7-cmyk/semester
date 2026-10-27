@@ -57,6 +57,7 @@ import Facilities from './pages/Facilities';
 import IdCard from './pages/IdCard';
 import Audit from './pages/Audit';
 import Workspaces from './pages/Workspaces';
+import Continuing from './pages/Continuing';
 import Partners from './pages/Partners';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
@@ -150,6 +151,7 @@ export default function App() {
             <Route path="/you/scholarships" element={<Scholarships />} />
             <Route path="/you/files" element={<Files />} />
             <Route path="/you/workspaces" element={<Workspaces />} />
+            <Route path="/learn/continuing" element={<Continuing />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/faculty" element={<Faculty />} />
             <Route path="/you/integrity" element={<Integrity />} />

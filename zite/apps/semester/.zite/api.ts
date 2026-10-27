@@ -17,6 +17,7 @@ import type { default as _AuditEp } from '../src/api/audit';
 import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
+import type { default as _ContinuingEp } from '../src/api/continuing';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
@@ -153,6 +154,11 @@ type _CommunityCfg = typeof _CommunityEp;
 export type CommunityInputType = NonNullable<_CommunityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CommunityCfg['execute']>[0]['input'];
 export type CommunityOutputType = Awaited<ReturnType<_CommunityCfg['execute']>>;
 export const community = createCaller<CommunityInputType, CommunityOutputType>('community');
+
+type _ContinuingCfg = typeof _ContinuingEp;
+export type ContinuingInputType = NonNullable<_ContinuingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ContinuingCfg['execute']>[0]['input'];
+export type ContinuingOutputType = Awaited<ReturnType<_ContinuingCfg['execute']>>;
+export const continuing = createCaller<ContinuingInputType, ContinuingOutputType>('continuing');
 
 type _CourseAccessibilityCfg = typeof _CourseAccessibilityEp;
 export type CourseAccessibilityInputType = NonNullable<_CourseAccessibilityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseAccessibilityCfg['execute']>[0]['input'];
@@ -476,6 +482,7 @@ export const api = {
   campus,
   catalog,
   community,
+  continuing,
   courseAccessibility,
   courseDiscussion,
   courseGroups,

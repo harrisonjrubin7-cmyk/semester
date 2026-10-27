@@ -8,7 +8,7 @@ export type ExpansionRow = { id: string; name: string; stage: number; cls: Expan
 
 export const EXPANSION_APPS: ExpansionRow[] = [
   { id: 'E01', name: 'Assessment and Accreditation', stage: 3, cls: 'extend', reuse: 'Programs (prg_*) and Curriculum (cur_*) hold outcomes; no assessment evidence or accreditation reports yet' },
-  { id: 'E02', name: 'Continuing Education', stage: 3, cls: 'new', reuse: 'Catalog and Registration patterns' },
+  { id: 'E02', name: 'Continuing Education', stage: 3, cls: 'built', reuse: 'Learn → Continuing education (cne_*): coordinators publish offerings with sessions, seats, prerequisites (met by credentials) and an attendance threshold; anyone signed in enrolls in public offerings (independent learners too); finance records payment, sponsorship and refunds with external references (no money moves), the authority waives fees, decides completion and issues or revokes credentials. Enrollment, payment, completion and refund are separate columns kept consistent by table CHECKs; schedule changes and cancellations notify learners in-app' },
   { id: 'E03', name: 'Professional and Clinical Education', stage: 3, cls: 'blocked', reuse: 'none', blockedBy: 'Educational-placement boundaries approved by the owner' },
   { id: 'E04', name: 'Instructional Design', stage: 3, cls: 'new', reuse: 'Faculty app course sections' },
   { id: 'E05', name: 'Human Resources', stage: 5, cls: 'new', reuse: 'Institution memberships' },
