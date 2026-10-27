@@ -272,7 +272,7 @@ export const HECVAT: readonly HecvatRow[] = [
     ['Reduced-motion support tested', 'accessibility', null, 'tested', [['app/src/a11y/motion.test.ts', 'jumps instead of gliding']], 'None.'],
     ['Captions and transcripts process exists', 'accessibility', null, 'designed', [['docs/VIDEO_PODCAST_ROADMAP.md', 'media']], 'No publishing checklist.'],
     ['Tables, charts, documents and exports accessible', 'accessibility', null, 'tested', [['app/src/lib/exportqa.test.ts', 'the exports']], 'Charts are not audited.'],
-    ['Accessibility issues have a support and remediation path', 'accessibility', null, 'designed', [['docs/operating-model/ACCESSIBILITY-GOVERNANCE.md', 'governance']], 'No ticket category or SLA for it.'],
+    ['Accessibility issues have a support and remediation path', 'accessibility', null, 'building', [['docs/operating-model/ACCESSIBILITY-GOVERNANCE.md', 'governance'], ['app/src/components/AccommodationRequestPanel.tsx', 'the authenticated student request, own-status, correction and withdrawal path'], ['supabase/accommodation-support-request.check.sql', 'the same-school human queue, SLA metadata and cross-tenant denials']], 'Source and synthetic checks only; no target tenant is activated, no reviewer UI or staffed SLA exists, and no manual assistive-technology UAT has passed.'],
   ]),
 ];
 
