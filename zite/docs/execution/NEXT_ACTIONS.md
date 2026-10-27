@@ -41,7 +41,10 @@ DB check 25/25; mutations on conflicts, validation rule and single appeal all we
 Residence life (/campus/reslife, RA + Residence Life Staff): RA check-ins only with moved-in residents of their building, referrals
 name a service; RA programs approved by other housing staff, building-only RSVPs with capacity, attendance by the running RA;
 bounded incident reports (no resident names), RA sees own, closed by staff other than the filer. DB check 23/23; mutations red.
-Next clusters: Career Center / Career Coach, then Learning Center, Peer Mentor.
+Career services (/plan/career-services, Career Coach + Career Center Staff): plan, per-coach expiring shares gate all coach access,
+versioned resumes with feedback, mock interviews with rubric (no double booking), follow-up actions, fairs with capacity and
+check-in, self-reported outcomes verified by center staff, reports suppress groups under five. DB check 29/29; mutations red.
+Coach "portfolio review" stays incomplete (not built). Next clusters: Learning Center, Peer Mentor, Teaching Assistant.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
@@ -64,6 +67,10 @@ DONE 26 Oct: private file store (D2) — You → Files. DONE 26 Oct: files attac
 DONE 26 Oct: Course Studio assessments (asm-001). Not yet: rubrics, question banks reused across assessments, accommodations (extended time), regrade requests for assessments. Next: separate DDL credential (SEC-051) and staging database (SEC-061) need owner action; DONE 26 Oct: rubrics and grading delegation (team-001). DONE 26 Oct: delegated sections in the TA queue; course groups (grp-001). Next: advising appointments and office hours (MOD-042).
 
 ## Blocked (owner)
+- Dependabot (4 alerts on GitHub main): all trace to better-auth 1.6.23 pinned inside zitejs (latest 0.9.148 too): GHSA-965c-763c-88jm
+  critical (OAuth state as magic link), GHSA-r4xp-prcw-77qf high, GHSA-q84f-53jg-9ppm high, GHSA-44jh-23m7-hpcf low; fixed in 1.7.7.
+  Hosted auth is Zite-run; reported to Zite 27 Oct at owner request. Blocked on Zite. Other lockfiles (pnpm, pipeline, video,
+  workflow-lab, root) audit clean.
 - Publish Semester / Company OS: founder presses Publish in Zite (publish_app was denied; do not work around).
 - SSO/SIS live connections, private file storage, money movement, transcript posting: need institution authority and C5 decision.
 - C14 repository authority (`app/` vs `zite/`); C13 role inventory; missing exports listed in `source-register.md`.

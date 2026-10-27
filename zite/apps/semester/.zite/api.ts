@@ -16,6 +16,7 @@ import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _AssetsEp } from '../src/api/assets';
 import type { default as _AuditEp } from '../src/api/audit';
 import type { default as _CampusEp } from '../src/api/campus';
+import type { default as _CareerServicesEp } from '../src/api/careerServices';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
 import type { default as _ContinuingEp } from '../src/api/continuing';
@@ -159,6 +160,11 @@ type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
 export type CampusOutputType = Awaited<ReturnType<_CampusCfg['execute']>>;
 export const campus = createCaller<CampusInputType, CampusOutputType>('campus');
+
+type _CareerServicesCfg = typeof _CareerServicesEp;
+export type CareerServicesInputType = NonNullable<_CareerServicesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CareerServicesCfg['execute']>[0]['input'];
+export type CareerServicesOutputType = Awaited<ReturnType<_CareerServicesCfg['execute']>>;
+export const careerServices = createCaller<CareerServicesInputType, CareerServicesOutputType>('careerServices');
 
 type _CatalogCfg = typeof _CatalogEp;
 export type CatalogInputType = NonNullable<_CatalogCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CatalogCfg['execute']>[0]['input'];
@@ -541,6 +547,7 @@ export const api = {
   assets,
   audit,
   campus,
+  careerServices,
   catalog,
   community,
   continuing,
