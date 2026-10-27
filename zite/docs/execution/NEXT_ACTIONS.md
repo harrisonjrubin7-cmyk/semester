@@ -27,6 +27,13 @@ curriculum governance (9bc8d47), programs and pathways (a52825d), dining (b58d38
 10. International Student Adviser and High School Counselor: need owner rules on immigration and minors' records first.
 11. S-69 enterprise apps (HR, payroll, procurement, finance, facilities, library, safety, advancement, research admin): not started.
 
+## Role-app gap pass (27 Oct)
+Built: student organizations (9f4a2d5), financial aid office (cce9b99), transition and orientation (/plan/transition: First Year
+Staff, Orientation Leader, Admitted Student; DB check 27/27, mutations on self-verification and session capacity both went red).
+Admitted Student now hosted in Semester (admission activates a Semester membership); decision acknowledgment stays incomplete
+because the decision itself is shown in Applicants. Deposit is a record with an external reference; no money moves.
+Next clusters: Data Steward / Portfolio Council, Residence Life / Resident Assistant, Career Center / Career Coach.
+
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
    Fixed from them: tenant check on office-staff grants (SEC-034), withdrawn requests closed for the registrar (REG-039),
