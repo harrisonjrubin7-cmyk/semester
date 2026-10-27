@@ -10,6 +10,7 @@ import CourseStudio from '../../semester/src/pages/SectionPage';
 import { Gradebook, TAQueue } from '../../semester/src/pages/Staff';
 import Integrity from '../../semester/src/pages/Integrity';
 import Curriculum from '../../semester/src/pages/Curriculum';
+import Guides from '../../semester/src/pages/Guides';
 import { SectionRequests } from '../../semester/src/pages/InstitutionHome';
 import { cn } from '@project/components/lib/utils';
 import Teaching from './pages/Teaching';
@@ -26,6 +27,7 @@ const NAV = [
   { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert },
   { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
   { to: '/curriculum', label: 'Curriculum', icon: BookMarked },
+  { to: '/guides', label: 'Study guides', icon: BookMarked },
 ];
 
 /** The shared pages link to the main app's paths; these send them to this app's equivalents. */
@@ -69,6 +71,8 @@ function Shell() {
             <Route path="/integrity" element={<Integrity />} />
             <Route path="/section-requests" element={<SectionRequests />} />
             <Route path="/curriculum" element={<Curriculum />} />
+            <Route path="/guides" element={<Guides />} />
+            <Route path="/learn/guides" element={<Navigate to="/guides" replace />} />
             <Route path="/institution/curriculum" element={<Navigate to="/curriculum" replace />} />
             <Route path="/staff/catalog" element={<Navigate to="/curriculum" replace />} />
             <Route path="/learn/*" element={<LearnRedirect />} />

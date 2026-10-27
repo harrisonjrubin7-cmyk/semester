@@ -4,7 +4,7 @@ brief,Reports,Semester,"The day, week or term read back from what the app record
 courses,Courses,Courses,"Courses, assignments, grades in three grains","Course list, detail, items, grades from own data","/learn (Courses, SectionPage)",built,,none
 degree,The degree,Courses,"What is left of a major or minor, hours",Degree audit against own courses,/progress/degree,built,,none
 calendar,Calendar,Semester,"Classes and deadlines by day, month or semester","Multi-view calendar, add/move events, ICS",/plan (CalendarPage),partial,single list view built on getToday; no month/semester grid or event move/add,none
-study,Study,Study,Pick a course and a way through it,Per-course study hub with 11 modes (see study-mode rows),/learn/study,partial,free-form notes/flashcards only; no course-derived study modes,none
+study,Study,Study,Pick a course and a way through it,Per-course study hub with 11 modes (see study-mode rows),"/learn/guides (Semester), /guides (Faculty)",built,,none
 meet,Where courses meet,Study,"Same term across two courses, definitions side by side",Cross-course concept comparison from guides,none,missing,,none
 ask,Ask Semester,Study,The conversation - your term in hand,Chat over own term data with threads,/learn/ask (api/ask.ts),built,,AI model (OpenAI in Zite)
 work,Work on it,Semester,"Paste an assignment, get rubric/plan/dates",Breaks pasted assignment into plan and dates,/today (manual break-into-steps),partial,"steps typed by hand; no paste-and-analyse, rubric or questions",AI model
@@ -63,14 +63,14 @@ settings,Settings,Data,"Navigation, alerts, courses loaded",Settings with look/n
 notifs,Alerts,Data,What the app would have poked you about,Alert list,/today/notifications,built,,none
 help,How this works,Data,Every screen and what it will not do,In-app guide,none,missing,"Zite /help is ""who can help"" advising",none
 community,Community,Beyond,"Course spaces, study groups, sessions","Posts, groups, reporting",/campus/community,built,,none
-mode:cards,Cards,study-mode,"Tap to flip, one question at a time, by unit","Per-course study mode driven by course guide (units, cards, lessons, figures)",/learn/study,partial,"flip cards only for hand-typed ""front :: back"" decks; none derived from courses",none
-mode:read,Read,study-mode,"Guide as prose, unit by unit, glossary","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:field,Field guide,study-mode,"Whole guide as published page with masthead, glossary, self-test","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:watch,Watch,study-mode,"Narrated lesson per unit, or read aloud by device","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,browser speech synthesis / recordings
-mode:slides,Slides,study-mode,"Unit as a deck, one point per slide","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:doc,Doc,study-mode,Whole guide as Word/PDF/print page,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:quiz,Quiz,study-mode,"Multiple choice, true/false, matching, marked as you go","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,Quiz is only a label on a text note; no quiz runner or marking,none
-mode:figures,Figures,study-mode,Diagrams with what each shows,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:cases,Cases,study-mode,Worked examples in full,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:cram,Cram,study-mode,Everything on one page for the night before,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
-mode:listen,Listen,study-mode,"Podcast editions with seeking chapters, or script","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,audio / speech synthesis
+mode:cards,Cards,study-mode,"Tap to flip, one question at a time, by unit","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:read,Read,study-mode,"Guide as prose, unit by unit, glossary","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:field,Field guide,study-mode,"Whole guide as published page with masthead, glossary, self-test","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:watch,Watch,study-mode,"Narrated lesson per unit, or read aloud by device","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,browser speech synthesis
+mode:slides,Slides,study-mode,"Unit as a deck, one point per slide","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:doc,Doc,study-mode,Whole guide as Word/PDF/print page,"Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:quiz,Quiz,study-mode,"Multiple choice, true/false, matching, marked as you go","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:figures,Figures,study-mode,Diagrams with what each shows,"Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:cases,Cases,study-mode,Worked examples in full,"Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:cram,Cram,study-mode,Everything on one page for the night before,"Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,none
+mode:listen,Listen,study-mode,"Podcast editions with seeking chapters, or script","Per-course study mode driven by course guide (units, cards, lessons, figures)","/learn/guides (Semester), /guides (Faculty)",built,,browser speech synthesis

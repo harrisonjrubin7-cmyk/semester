@@ -53,6 +53,20 @@ decide (modified/overturned needs arrangements and an end date), clear not-deliv
 The check also covers acc-001 for the first time (decide, letters, instructor view). DB check 38/38; mutations red.
 Next: Academic Advisor, Department Chair.
 
+## Original-app parity (owner, 27 Oct: "all these capabilities ... connected to each other")
+Inventory of all 75 original-app tools vs Zite: GitHub docs/zite/original-app-parity.csv (12 built, 30 partial, 33 missing).
+Order: (1) course study guide model (units, cards, lessons, figures, cases) and the 11 study modes on it (Cards, Read, Field guide,
+Slides, Doc, Quiz, Figures, Cases, Cram; Watch/Listen via browser speech); (2) own-data tools with no external dependency: Reports,
+Catching up, Exam runway, Where courses meet, Practice paper, Work the problem, Analyse data, Draw it, Sheet, Equations, Sources,
+Timers, Links, NIL deals, Athletics, Settings, How this works, Create hub; (3) the 30 partials; (4) cross-app switcher in all 10
+apps (needs each app's published URL from the owner); (5) gated on outside services/approval: Gmail, Connect accounts, Video call,
+maps, Drive/OneDrive, and AI-model tools (Draft it, Check the writing, A change to a date) - student records never go to a model.
+
+Parity step 1 done (27 Oct): study guides (/learn/guides in Semester, /guides in Faculty) with all 11 study modes
+(Cards with Leitner reviews, Read, Field guide, Watch and Listen via browser speech, Slides, Doc as Word/print, Quiz with
+choice/true-false/match marking and attempts, Figures, Cases, Cram). Instructors publish a guide to their section and enrolled
+students see it and can copy it. guideRules unit tests 8/8; DB check 16/16; mutations red. Next: step 2 own-data tools.
+
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
    Fixed from them: tenant check on office-staff grants (SEC-034), withdrawn requests closed for the registrar (REG-039),

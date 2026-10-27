@@ -10,6 +10,7 @@ import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _FilesEp } from '../src/api/files';
 import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
+import type { default as _GuidesEp } from '../src/api/guides';
 import type { default as _HelpEp } from '../src/api/help';
 import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _LearnEp } from '../src/api/learn';
@@ -63,6 +64,11 @@ type _GetWorkspaceCfg = typeof _GetWorkspaceEp;
 export type GetWorkspaceInputType = NonNullable<_GetWorkspaceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetWorkspaceCfg['execute']>[0]['input'];
 export type GetWorkspaceOutputType = Awaited<ReturnType<_GetWorkspaceCfg['execute']>>;
 export const getWorkspace = createCaller<GetWorkspaceInputType, GetWorkspaceOutputType>('getWorkspace');
+
+type _GuidesCfg = typeof _GuidesEp;
+export type GuidesInputType = NonNullable<_GuidesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GuidesCfg['execute']>[0]['input'];
+export type GuidesOutputType = Awaited<ReturnType<_GuidesCfg['execute']>>;
+export const guides = createCaller<GuidesInputType, GuidesOutputType>('guides');
 
 type _HelpCfg = typeof _HelpEp;
 export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpCfg['execute']>[0]['input'];
@@ -139,6 +145,7 @@ export const api = {
   curriculum,
   files,
   getWorkspace,
+  guides,
   help,
   integrity,
   learn,
