@@ -72,6 +72,22 @@ Site now shows the same Apps switcher (components/AppSwitcher.tsx + api/appDirec
 make sense for the person (lib/appDirectoryRules.ts, unit-tested). App addresses live in os_app_urls and are set by company staff
 from the switcher. Owner: after publishing, paste each app's address into the switcher (or send them to Claude).
 
+## Owner request 27 Oct 18:10: AI toolkit (subject workbench)
+Toolkit page with "All tools", 9 intents (Study for an exam, Complete an assignment, Analyze data, Write a paper, Build or code,
+Run a lab, Do research, Create a presentation, Prepare for office hours) and 32 subject workbenches plus tools every subject uses (STEM: maths, statistics,
+biology, chemistry, physics, CS, data science, engineering; humanities: English/writing, history, philosophy, languages, religious
+studies; social sciences/business: psychology, sociology, political science, economics, anthropology, business, finance/accounting,
+education, communication, public policy, legal studies, criminal justice; arts: art/design, music, theatre/film/media; health:
+nursing, public health, kinesiology/nutrition; field: environmental/earth science) mapping to tools. Toolkit tools: Case analysis
+template, Research Studio, Data Studio, Assignment workspace, Rubric self-check (checklist only, never a grade prediction); Semester
+tools: Spreadsheet, Diagram builder, Study guide from sources (quotations matched), Practice paper, Sources, Write a document,
+Check the writing, Make a deck, Group work. Deterministic first; any model use only on material the student selects, never records.
+DONE 27 Oct: /learn/toolkit hub (All tools, every-subject tools, 9 intents, 32 subjects) and the five toolkit tools at
+/learn/toolkit/:kind (tlk_docs, private to owner, expected version; DB check 13/13 with owner-check mutant failing). Data Studio
+describes CSV and charts counts with a table alternative; Rubric self-check is a checklist with no grade. Semester tools not built yet
+(Spreadsheet, Diagram builder, Practice paper, Sources, Write a document, Check the writing, Make a deck, Group work) show as
+"Not built yet" on the hub: next increments.
+
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
    Fixed from them: tenant check on office-staff grants (SEC-034), withdrawn requests closed for the registrar (REG-039),

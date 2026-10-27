@@ -66,6 +66,7 @@ import CareerServices from './pages/CareerServices';
 import PeerSupport from './pages/PeerSupport';
 import DisabilityServices from './pages/DisabilityServices';
 import Guides from './pages/Guides';
+import { ToolkitHub, ToolkitTool } from './pages/Toolkit';
 import { AppSwitcher } from './components/AppSwitcher';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
@@ -175,6 +176,8 @@ export default function App() {
             <Route path="/help/peer-support" element={<PeerSupport />} />
             <Route path="/campus/disability-services" element={<DisabilityServices />} />
             <Route path="/learn/guides" element={<Guides />} />
+            <Route path="/learn/toolkit" element={<ToolkitHub />} />
+            <Route path="/learn/toolkit/:kind" element={<ToolkitTool />} />
             <Route path="/you/work" element={<HumanResources />} />
             <Route path="/you/recruiting" element={<Recruiting />} />
             <Route path="/campus/procurement" element={<Procurement />} />
