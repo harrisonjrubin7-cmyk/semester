@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityReader } from '../lib/access';
 
 const s = z.string().optional();
 const n = z.number().optional();
@@ -18,7 +19,8 @@ export default createEndpoint({
     policies: z.array(z.object({ id: z.string(), name: s, scope: s, capacity: n, refillPerSecond: n, cost: n, version: s, status: s })),
     artifacts: z.array(z.object({ id: z.string(), item: s, screenOrComponent: s, sourceReference: s, intendedBehavior: s, implementationStatus: s, acceptanceTest: s })),
   }),
-  execute: async () => {
+  execute: async ({ context }) => {
+    await requireSecurityReader(context.user.id);
     const [runs, findings, isolation, gates, suites, policies, artifacts] = await Promise.all([
       zite.labRuns.findAll({ limit: 500, sort: [{ field: 'startedAt', direction: 'desc' }] }),
       zite.auditFindings.findAll({ limit: 500 }),

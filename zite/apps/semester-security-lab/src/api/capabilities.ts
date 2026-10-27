@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityReader } from '../lib/access';
 
 export default createEndpoint({
   description: 'Lists the Semester capability register',
@@ -12,7 +13,8 @@ export default createEndpoint({
       app: z.string(), routes: z.string(), sourceAuthority: z.string(), phase: z.string(), blockers: z.string(), evidence: z.string(),
     })),
   }),
-  execute: async () => {
+  execute: async ({ context }) => {
+    await requireSecurityReader(context.user.id);
     const { records } = await zite.capabilityRegister.findAll({ limit: 2000 });
     return {
       items: records.map((r) => ({

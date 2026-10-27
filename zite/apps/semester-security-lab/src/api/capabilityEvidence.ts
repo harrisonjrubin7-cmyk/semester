@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityReader } from '../lib/access';
 
 export default createEndpoint({
   description: 'Lists per-stage evidence entries for one capability',
@@ -12,7 +13,8 @@ export default createEndpoint({
       environment: z.string(), scope: z.string(), recordedAt: z.string(), reviewer: z.string(),
     })),
   }),
-  execute: async ({ input }) => {
+  execute: async ({ input, context }) => {
+    await requireSecurityReader(context.user.id);
     const { records } = await zite.capabilityEvidence.findAll({ filters: { capability: input.capabilityId }, limit: 500 });
     const ids = [...new Set(records.flatMap((r) => (Array.isArray(r.reviewer) ? r.reviewer : r.reviewer ? [r.reviewer] : [])))];
     const names = new Map<string, string>();

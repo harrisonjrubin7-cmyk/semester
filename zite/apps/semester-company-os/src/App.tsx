@@ -17,14 +17,13 @@ import MigrationsPage from './MigrationsPage';
 import SupportAccessPage from './SupportAccessPage';
 import BoardPage from './BoardPage';
 import DecisionsPage from './DecisionsPage';
-import RoleRegistryPage from './RoleRegistryPage';
 import AtlasPage from './AtlasPage';
 import WorkspacePage, { WORKSPACE_KEYS } from './WorkspacePage';
 import { Wordmark } from '@project/components/brand/Mark';
 
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
-  ['Operations', [['/overview', 'Overview'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/roles', 'Role app registry'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
+  ['Operations', [['/overview', 'Overview'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
   ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/support-access', 'Support access'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
 ];
 
@@ -52,7 +51,7 @@ export default function App() {
               <Route path="/atlas" element={<AtlasPage />} />
               <Route path="/requests" element={<RequestsPage />} />
               <Route path="/risks" element={<RisksPage />} />
-              <Route path="/roles" element={<RoleRegistryPage />} />
+              <Route path="/roles" element={<Navigate to="/atlas" replace />} />
               <Route path="/decisions" element={<DecisionsPage />} />
               <Route path="/evidence" element={<EvidencePage />} />
               <Route path="/w/:key" element={<WorkspacePage />} />
