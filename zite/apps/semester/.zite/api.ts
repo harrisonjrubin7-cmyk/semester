@@ -84,6 +84,7 @@ import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _StudyEp } from '../src/api/study';
 import type { default as _StudyAbroadEp } from '../src/api/studyAbroad';
+import type { default as _SupportEp } from '../src/api/support';
 import type { default as _SupportAccessApprovalEp } from '../src/api/supportAccessApproval';
 import type { default as _SyllabusHubEp } from '../src/api/syllabusHub';
 import type { default as _TeachingEp } from '../src/api/teaching';
@@ -501,6 +502,11 @@ export type StudyAbroadInputType = NonNullable<_StudyAbroadCfg['inputSchema']> e
 export type StudyAbroadOutputType = Awaited<ReturnType<_StudyAbroadCfg['execute']>>;
 export const studyAbroad = createCaller<StudyAbroadInputType, StudyAbroadOutputType>('studyAbroad');
 
+type _SupportCfg = typeof _SupportEp;
+export type SupportInputType = NonNullable<_SupportCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SupportCfg['execute']>[0]['input'];
+export type SupportOutputType = Awaited<ReturnType<_SupportCfg['execute']>>;
+export const support = createCaller<SupportInputType, SupportOutputType>('support');
+
 type _SupportAccessApprovalCfg = typeof _SupportAccessApprovalEp;
 export type SupportAccessApprovalInputType = NonNullable<_SupportAccessApprovalCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SupportAccessApprovalCfg['execute']>[0]['input'];
 export type SupportAccessApprovalOutputType = Awaited<ReturnType<_SupportAccessApprovalCfg['execute']>>;
@@ -615,6 +621,7 @@ export const api = {
   studentAccount,
   study,
   studyAbroad,
+  support,
   supportAccessApproval,
   syllabusHub,
   teaching,

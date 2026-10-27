@@ -5,7 +5,7 @@ import { requireAccess, forbid, audit, userNames, tenantScope, ids, first } from
 import { pg } from '../lib/pg';
 import { ensureApt } from '../lib/aptServer';
 import { validateSlots, expand, KIND_ROLES, SlotKind } from '../lib/aptRules';
-import { courseRole } from '../lib/teamServer';
+import { courseRole, delegatedSections } from '../lib/teamServer';
 
 type Row = Record<string, unknown>;
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
@@ -41,11 +41,11 @@ export default createEndpoint({
     const canHost = (k: SlotKind) => a.roles.some((r) => KIND_ROLES[k].includes(r));
 
     if (input.action === 'create') {
-      if (!canHost(input.kind)) forbid(`Your role cannot host ${input.kind.toLowerCase()}.`);
       if (input.kind === 'Office hours') {
+        // Instructors of the section, and teaching assistants with a live grading delegation for it, hold its office hours.
         if (!input.sectionId || !(await tenantScope(T)).sections.has(input.sectionId)) forbid('That section is not in your institution.');
-        if ((await courseRole(T, input.sectionId!, me)) !== 'instructor') forbid('Only an instructor of the section can hold its office hours.');
-      }
+        if (!(await courseRole(T, input.sectionId!, me))) forbid('Only an instructor or teaching assistant of the section can hold its office hours.');
+      } else if (!canHost(input.kind)) forbid(`Your role cannot host ${input.kind.toLowerCase()}.`);
       fail(validateSlots({ ...input, sectionId: input.sectionId ?? null }, Date.now()));
       const times = expand(input.startsAt, input.minutes, input.weeks);
       fail(((await sql.query(`SELECT apt_create($1,$2,$3,$4,$5::timestamptz[],$6::timestamptz[],$7,$8) AS e`,
@@ -95,13 +95,14 @@ export default createEndpoint({
     const tenant = await tenantScope(T);
     const secs = (await zite.sections.findAll({ limit: 2000, fields: ['label', 'instructors'] })).records.filter((s) => tenant.sections.has(s.id));
     const secLabel = Object.fromEntries(secs.map((s) => [s.id, s.label ?? '']));
-    const teaching = secs.filter((s) => ids(s.instructors).includes(me)).map((s) => ({ id: s.id, label: s.label ?? '' }));
+    const delegated = new Set(await delegatedSections(T, me));
+    const teaching = secs.filter((s) => ids(s.instructors).includes(me) || delegated.has(s.id)).map((s) => ({ id: s.id, label: s.label ?? '' }));
     const people = await userNames([...new Set([...open.map((s) => String(s.host_id)), ...mine.map((b) => String(b.host_id)),
       ...hosting.flatMap((s) => (s.bookings as Row[]).map((b) => String(b.student)))])]);
     const slotRow = (s: Row) => ({ id: Number(s.id), kind: String(s.kind), section: s.section_id ? secLabel[String(s.section_id)] ?? 'Section' : null,
       start: iso(s.starts_at), end: iso(s.ends_at), location: String(s.location), capacity: Number(s.capacity) });
     return {
-      hostKinds: KINDS.filter((k) => canHost(k)), teaching,
+      hostKinds: KINDS.filter((k) => (k === 'Office hours' ? teaching.length > 0 : canHost(k))), teaching,
       open: open.map((s) => ({ ...slotRow(s), host: people[String(s.host_id)] ?? 'Host', booked: Number(s.booked) })),
       mine: mine.map((b) => ({ id: Number(b.id), state: String(b.state), topic: String(b.topic), followUp: b.state === 'cancelled' ? '' : String(b.follow_up), kind: String(b.kind),
         section: b.section_id ? secLabel[String(b.section_id)] ?? 'Section' : null, start: iso(b.starts_at), end: iso(b.ends_at), location: String(b.location),

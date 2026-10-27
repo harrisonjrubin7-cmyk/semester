@@ -44,7 +44,11 @@ bounded incident reports (no resident names), RA sees own, closed by staff other
 Career services (/plan/career-services, Career Coach + Career Center Staff): plan, per-coach expiring shares gate all coach access,
 versioned resumes with feedback, mock interviews with rubric (no double booking), follow-up actions, fairs with capacity and
 check-in, self-reported outcomes verified by center staff, reports suppress groups under five. DB check 29/29; mutations red.
-Coach "portfolio review" stays incomplete (not built). Next clusters: Learning Center, Peer Mentor, Teaching Assistant.
+Coach "portfolio review" stays incomplete (not built). Peer support (/help/peer-support): peer mentoring (supervisor-approved mentors, opted-in mentees, one active mentor, mentor
+check-ins, mentee-owned goals, escalation resolved by another supervisor); TA questions to instructors (live delegates only);
+tutoring ratings once per completed session, per-tutor averages at three or more, staff review notes. TAs with a live grading
+delegation can now hold office hours for that section. DB check 27/27; mutations red. Next: Academic Advisor, Disability
+Services, Department Chair.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
