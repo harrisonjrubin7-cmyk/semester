@@ -61,7 +61,7 @@ export default createEndpoint({
     const rules = (await sql.query(`SELECT * FROM trf_rules WHERE tenant_id = $1 AND state IN ('approved','proposed') ORDER BY ext_institution, ext_course`, [T])) as Row[];
     const approved = rules.filter((r) => r.state === 'approved');
     const match = (inst: string, course: string) => approved.find((r) => norm(String(r.ext_institution)) === norm(inst) && String(r.ext_course) === norm(course));
-    const rv = (r: Row) => ({ id: Number(r.id), institution: String(r.ext_institution), course: String(r.ext_course), outcome: String(r.outcome), code: (r.internal_code as string) ?? null, credits: r.credits == null ? null : Number(r.credits), term: String(r.effective_term), state: String(r.state), mine: r.proposed_by === uid });
+    const rv = (r: Row) => ({ id: Number(r.id), institution: String(r.ext_institution), course: String(r.ext_course), outcome: String(r.outcome), code: (r.internal_code as string) ?? null, credits: r.credits == null ? null : Number(r.credits), term: String(r.effective_term), state: String(r.state), mine: r.proposed_by === uid, fromPartner: r.partner_org_id != null });
     const loadLines = async (ids: string[]) => ids.length ? (await sql.query(`SELECT * FROM trf_lines WHERE request_id = ANY($1) ORDER BY line`, [ids])) as Row[] : [];
     const view = (q: Row, lines: Row[]) => ({ id: String(q.id), number: Number(q.number), institution: String(q.ext_institution), state: String(q.state), version: Number(q.version), createdAt: iso(q.created_at),
       appealText: (q.appeal_text as string) ?? null, appealNote: (q.appeal_note as string) ?? null,

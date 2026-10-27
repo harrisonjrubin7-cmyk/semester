@@ -19,6 +19,27 @@ function ScopePicker({ value, onChange, all }: { value: string[]; onChange: (v: 
   return <div className="grid gap-1 sm:grid-cols-2">{all.map((s) => <label key={s} className="flex items-center gap-2 text-xs"><input type="checkbox" checked={value.includes(s)} onChange={(e) => onChange(e.target.checked ? [...value, s] : value.filter((x) => x !== s))} />{SCOPE[s]}</label>)}</div>;
 }
 
+const OUTCOME: Record<string, string> = { equivalent: 'Equivalent to', elective: 'Elective credit', no_credit: 'No credit' };
+function Articulate({ r, reload }: { r: any; reload: () => void }) {
+  const act = useAct(reload);
+  const [a, setA] = useState({ course: '', outcome: 'equivalent', code: '', credits: '3', term: '' });
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-border p-2">
+      <p className="text-xs font-medium">Course articulations with {r.institution}</p>
+      {r.articulations.length > 0 && <ul className="text-xs">{r.articulations.map((x: any) => <li key={x.id}>{x.course} → {OUTCOME[x.outcome]}{x.code ? ` ${x.code}` : ''} · <Status value={x.state} />{x.note ? ` — ${x.note}` : ''}</li>)}</ul>}
+      <div className="grid gap-2 sm:grid-cols-5">
+        <Input aria-label="Your course code" placeholder="Your course (e.g. BIO 101)" value={a.course} onChange={(e) => setA({ ...a, course: e.target.value })} />
+        <select aria-label="Proposed outcome" className={sel} value={a.outcome} onChange={(e) => setA({ ...a, outcome: e.target.value })}>{Object.entries(OUTCOME).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        <Input aria-label="Their course code" placeholder="Their course code" disabled={a.outcome !== 'equivalent'} value={a.code} onChange={(e) => setA({ ...a, code: e.target.value })} />
+        <Input aria-label="Credits" type="number" min={0.5} max={12} step={0.5} value={a.credits} onChange={(e) => setA({ ...a, credits: e.target.value })} />
+        <Input aria-label="Effective term" placeholder="Effective term (e.g. Fall 2027)" value={a.term} onChange={(e) => setA({ ...a, term: e.target.value })} />
+      </div>
+      <Button size="sm" disabled={a.course.trim().length < 3 || a.term.trim().length < 4 || (a.outcome === 'equivalent' && a.code.trim().length < 4)} onClick={async () => { if (await act(() => partners({ action: 'articulate', relId: r.id, course: a.course, outcome: a.outcome as never, code: a.code, credits: a.credits ? Number(a.credits) : null, term: a.term }), 'Proposed. A registrar at the institution decides.')) setA({ course: '', outcome: 'equivalent', code: '', credits: '3', term: '' }); }}>Propose</Button>
+      <p className="text-xs text-muted-foreground">You propose rules for your own courses only. Nothing applies to students until a registrar approves it.</p>
+    </div>
+  );
+}
+
 function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
   const act = useAct(reload);
   const [m, setM] = useState({ email: '', role: 'member' });
@@ -36,6 +57,7 @@ function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
               <p className="text-xs">Ends {r.validTo}. Grants: {r.scopes.map((s: string) => SCOPE[s]).join(', ')}.</p>
               {admin ? <Button size="sm" onClick={() => act(() => partners({ action: 'accept', relId: r.id, expectedVersion: r.version, hash: r.agreementHash }), 'Agreement accepted.')}>Accept these exact terms</Button> : <p className="text-xs text-muted-foreground">An administrator of your organization accepts it.</p>}
             </div>}
+            {r.live && r.scopes.includes('propose_articulation') && <Articulate r={r} reload={reload} />}
           </li>))}</ul> : <Empty>Not working with any institution yet.</Empty>}
         {admin && <div className="mt-2 space-y-2 rounded-md border border-border p-2">
           <p className="text-xs font-medium">Apply to an institution</p>

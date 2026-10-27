@@ -123,4 +123,6 @@ export const TRF_MIGRATION: string[] = [
      INSERT INTO trf_events (tenant_id, ref, actor_id, action) VALUES (p_tenant, p_id, p_actor, 'appeal_reviewed');
      RETURN NULL;
    END $$`,
+  // Partner-proposed rules (S-76 E30 wiring, 27 Oct): which partner organization proposed it. A registrar still decides.
+  `ALTER TABLE trf_rules ADD COLUMN IF NOT EXISTS partner_org_id bigint`,
 ];

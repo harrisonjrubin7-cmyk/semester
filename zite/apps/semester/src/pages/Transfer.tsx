@@ -108,7 +108,7 @@ export default function Transfer() {
             </Panel>
             <Panel title="Articulation rules waiting">
               {d.pendingRules.map((x: any) => <div key={x.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-border py-2 text-sm first:border-0">
-                <span>{x.institution} {x.course} → {OUT[x.outcome]}{x.code && ` ${x.code}`} · from {x.term}</span>
+                <span>{x.institution} {x.course} → {OUT[x.outcome]}{x.code && ` ${x.code}`} · from {x.term}{x.fromPartner && <span className="text-xs text-muted-foreground"> · proposed by the partner organization — check it against their catalog</span>}</span>
                 {x.mine ? <span className="text-xs text-muted-foreground">Another registrar approves</span> : <span className="flex gap-2"><Button size="sm" onClick={() => run({ action: 'decideRule', id: x.id, approve: true, note: '' }, 'Published.', s.reload)}>Approve</Button><Button size="sm" variant="outline" onClick={() => run({ action: 'decideRule', id: x.id, approve: false, note: 'Not equivalent on review' }, 'Rejected.', s.reload)}>Reject</Button></span>}
               </div>)}
               <div className="mt-3 grid gap-2 md:grid-cols-6">

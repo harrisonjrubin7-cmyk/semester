@@ -4,11 +4,12 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { PTA_MIGRATION } from '../lib/ptaMigration';
+import { TRF_MIGRATION } from '../lib/trfMigration';
 import { SCOPES, relStatus, accessLive, RelState } from '../lib/partnerRules';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
-const ensure = () => { if (!ready) ready = (async () => { for (const q of PTA_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
+const ensure = () => { if (!ready) ready = (async () => { for (const q of [...TRF_MIGRATION, ...PTA_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) : null);
@@ -27,6 +28,8 @@ export default createEndpoint({
     z.object({ action: z.literal('member'), orgId: z.number().int(), email: z.string().email().max(200), role: z.enum(['admin', 'member', 'remove']) }),
     z.object({ action: z.literal('apply'), orgId: z.number().int(), institutionId: z.string().min(1).max(100), scopes: SC, note: z.string().max(2000).default('') }),
     z.object({ action: z.literal('accept'), relId: z.number().int(), expectedVersion: z.number().int(), hash: z.string().min(10).max(100) }),
+    z.object({ action: z.literal('articulate'), relId: z.number().int(), course: z.string().min(3).max(30), outcome: z.enum(['equivalent', 'elective', 'no_credit']), code: z.string().max(20).default(''),
+      credits: z.number().positive().max(12).nullable(), term: z.string().min(4).max(20) }),
     z.object({ action: z.literal('setStaff'), email: z.string().email().max(200), on: z.boolean() }),
     z.object({ action: z.literal('manage'), relId: z.number().int(), step: z.enum(['verify', 'reject', 'propose', 'suspend', 'reinstate', 'offboard']), expectedVersion: z.number().int(), note: z.string().max(2000).default(''),
       text: z.string().max(10000).default(''), validTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null), scopes: z.array(z.enum(SCOPES)).default([]) }),
@@ -69,6 +72,11 @@ export default createEndpoint({
       result = { relId: Number(out!.slice(3)) };
     }
     if (input.action === 'accept') fail(await one(`SELECT pta_accept($1,$2,$3,$4) AS r`, [me, input.relId, input.expectedVersion, input.hash]));
+    if (input.action === 'articulate') {
+      const out = await one(`SELECT pta_propose_articulation($1,$2,$3,$4,$5,$6,$7) AS r`, [me, input.relId, input.course, input.outcome, input.code || null, input.credits, input.term]);
+      if (!out?.startsWith('ok:')) forbid(out ?? 'Failed.');
+      result = { ruleId: Number(out!.slice(3)) };
+    }
     if (input.action === 'setStaff') {
       if (!isAdmin || !T) forbid('Only administrators manage partner managers.');
       const uid = await userByEmail(input.email);
@@ -96,11 +104,14 @@ export default createEndpoint({
     const instName = Object.fromEntries(institutions.records.map((i) => [i.id, i.name ?? 'Institution']));
     const names = await userNames([...new Set([...members.map((m) => String(m.user_id)), ...staff.map((s) => String(s.user_id)), ...queue.flatMap((q) => [q.verified_by, q.proposed_by, q.accepted_by]).filter(Boolean).map(String)])]);
     const nm = (v: unknown) => (v ? names[String(v)] ?? 'Member' : null);
+    const arts = orgIds.length ? (await sql.query(`SELECT * FROM trf_rules WHERE partner_org_id = ANY($1::bigint[]) ORDER BY created_at DESC LIMIT 300`, [orgIds])) as Row[] : [];
     const rel = (r: Row) => {
       const st = String(r.state) as RelState, to = r.valid_to ? new Date(String(r.valid_to) + 'T23:59:59Z') : null;
       return { id: Number(r.id), institution: instName[String(r.tenant_id)] ?? 'Institution', state: st, status: relStatus(st, to, now), live: accessLive(st, to, now), version: Number(r.version),
         requestedScopes: (r.requested_scopes as string[]) ?? [], scopes: (r.scopes as string[]) ?? [], validTo: day(r.valid_to), agreementText: String(r.agreement_text), agreementHash: r.agreement_hash ? String(r.agreement_hash) : null,
-        statusNote: String(r.status_note), acceptedAt: iso(r.accepted_at) };
+        statusNote: String(r.status_note), acceptedAt: iso(r.accepted_at),
+        articulations: arts.filter((x) => String(x.tenant_id) === String(r.tenant_id) && String(x.partner_org_id) === String(r.org_id))
+          .map((x) => ({ id: Number(x.id), course: String(x.ext_course), outcome: String(x.outcome), code: (x.internal_code as string) ?? null, state: String(x.state), note: (x.decision_note as string) ?? '' })) };
     };
 
     return {

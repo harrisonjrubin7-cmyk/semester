@@ -146,4 +146,21 @@ export const PTA_MIGRATION: string[] = [
      INSERT INTO pta_events (tenant_id, org_id, subject, step, actor_id) VALUES (r.tenant_id, r.org_id, 'relationship', 'accept', p_actor);
      RETURN NULL;
    END $$`,
+  // Wiring (27 Oct): a transfer partner proposes articulation rules for its own courses only, while its relationship is live with
+  // the propose_articulation scope. The rule enters Transfer as 'proposed' and a registrar decides it (trf_decide_rule; the
+  // proposer is never the decider). Requires TRF_MIGRATION.
+  `CREATE OR REPLACE FUNCTION pta_propose_articulation(p_user text, p_rel bigint, p_course text, p_outcome text, p_code text, p_credits numeric, p_term text) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE r pta_relationships; v_name text; v_err text; v_id bigint;
+   BEGIN
+     SELECT * INTO r FROM pta_relationships WHERE id = p_rel;
+     IF r.id IS NULL OR pta_role(r.org_id, p_user) IS NULL THEN RETURN 'Relationship not found.'; END IF;
+     IF NOT pta_live(r.tenant_id, r.org_id, 'propose_articulation') THEN RETURN 'This institution has not given your organization live access to propose articulations.'; END IF;
+     SELECT name INTO v_name FROM pta_orgs WHERE id = r.org_id;
+     v_err := trf_propose_rule(p_user, r.tenant_id, v_name, p_course, p_outcome, p_code, p_credits, p_term);
+     IF v_err IS NOT NULL THEN RETURN v_err; END IF;
+     SELECT max(id) INTO v_id FROM trf_rules WHERE tenant_id = r.tenant_id AND proposed_by = p_user AND state = 'proposed';
+     UPDATE trf_rules SET partner_org_id = r.org_id WHERE id = v_id;
+     INSERT INTO pta_events (tenant_id, org_id, subject, step, actor_id, note) VALUES (r.tenant_id, r.org_id, 'articulation', 'propose', p_user, trf_norm(p_course));
+     RETURN 'ok:' || v_id;
+   END $$`,
 ];
