@@ -23,7 +23,7 @@
     {"id": "operations.source_health_monitoring_live", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No live source-health monitoring is recorded for a pilot tenant."},
     {"id": "operations.reconciliation_owner_named", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No reconciliation owner is named."},
     {"id": "operations.incident_runbook_exercised", "area": "operations", "status": "not_verified", "evidence": [], "gap": "Incident runbook has not been exercised for this capability."},
-    {"id": "operations.safe_off_path_tested", "area": "operations", "status": "not_verified", "evidence": [], "gap": "Safe-off path has not been tested against a pilot tenant."},
+    {"id": "operations.safe_off_path_tested", "area": "operations", "status": "not_verified", "evidence": ["app/server/institution/registration-readiness-activation.test.ts"], "gap": "Repository tests cover fail-closed disable and re-enable before queue/evaluator work; no safe-off exercise has been run against a pilot tenant."},
     {"id": "operations.hypercare_roster_confirmed", "area": "operations", "status": "not_verified", "evidence": [], "gap": "No hypercare roster is confirmed."},
     {"id": "trust.student_copy_approved", "area": "trust", "status": "not_verified", "evidence": [], "gap": "Student-facing copy has no recorded approval."},
     {"id": "trust.privacy_and_data_scope_reviewed", "area": "trust", "status": "not_verified", "evidence": [], "gap": "Privacy and data scope have no recorded review for a pilot (see docs/trust/DATA-INVENTORY.md)."},
