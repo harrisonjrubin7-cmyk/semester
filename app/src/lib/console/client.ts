@@ -1233,3 +1233,160 @@ export async function openSupportGrants(now = new Date()): Promise<SupportGrant[
       expiresAt: text(r.expires_at),
     }));
 }
+
+// ── synthetic offboarding purge preview ───────────────────────────────────
+
+export interface OffboardingCase {
+  caseId: string;
+  tenantId: string;
+  tenantName: string;
+  status: string;
+  retainUntil: string | null;
+  liveLegalHolds: number;
+  exportGenerationId: string | null;
+  manifestSha256: string | null;
+  packageSha256: string | null;
+  exportVerifiedAt: string | null;
+  archivedAt: string | null;
+  purgeAuthorizedAt: string | null;
+  latestPreviewAt: string | null;
+  accessBasis: string;
+}
+
+export interface PurgePreview {
+  caseId: string;
+  tenantId: string;
+  syntheticOnly: boolean;
+  status: string;
+  legalHold: { liveCount: number; status: string };
+  retention: { retainUntil: string | null; status: string };
+  exportManifest: {
+    generationId: string | null;
+    manifestSha256: string | null;
+    packageSha256: string | null;
+    verifiedAt: string | null;
+    integrity: string;
+    currentCountsMatch: boolean;
+  };
+  affectedRecords: { tables: Record<string, number>; tableCount: number; totalRecords: number };
+  approval: {
+    proposedAt: string | null;
+    approvedAt: string | null;
+    exportVerifiedAt: string | null;
+    archivedAt: string | null;
+    purgeAuthorizedAt: string | null;
+    separationRecorded: boolean;
+  };
+  conditionsSatisfiedForFutureReview: boolean;
+  blockers: string[];
+  destructiveAction: { available: boolean; enabled: boolean; executed: boolean; reason: string };
+  fallback: string;
+}
+
+export interface PurgePreviewEnvelope {
+  ok: boolean;
+  replayed: boolean;
+  receiptId: string;
+  generatedAt: string;
+  snapshotSha256: string;
+  preview: PurgePreview;
+}
+
+export function readOffboardingCase(r: Row): OffboardingCase {
+  return {
+    caseId: text(r.case_id),
+    tenantId: text(r.tenant_id),
+    tenantName: text(r.tenant_name),
+    status: text(r.status),
+    retainUntil: maybe(r.retain_until),
+    liveLegalHolds: num(r.live_legal_holds),
+    exportGenerationId: maybe(r.export_generation_id),
+    manifestSha256: maybe(r.manifest_sha256),
+    packageSha256: maybe(r.package_sha256),
+    exportVerifiedAt: maybe(r.export_verified_at),
+    archivedAt: maybe(r.archived_at),
+    purgeAuthorizedAt: maybe(r.purge_authorized_at),
+    latestPreviewAt: maybe(r.latest_preview_at),
+    accessBasis: text(r.access_basis),
+  };
+}
+
+/** The server returns only synthetic demo cases and rechecks both platform capabilities. */
+export async function loadOffboardingCases(): Promise<OffboardingCase[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_offboarding_cases');
+  if (error) throw new Error(message(error, 'Could not load synthetic offboarding cases.'));
+  return rows(data).map(readOffboardingCase);
+}
+
+const previewObject = (value: unknown): PurgePreview => {
+  const p = object(value);
+  const hold = object(p.legal_hold);
+  const retention = object(p.retention);
+  const manifest = object(p.export_manifest);
+  const affected = object(p.affected_records);
+  const approval = object(p.approval);
+  const destructive = object(p.destructive_action);
+  const tableRows = object(affected.tables);
+  return {
+    caseId: text(p.case_id),
+    tenantId: text(p.tenant_id),
+    syntheticOnly: p.synthetic_only === true,
+    status: text(p.status),
+    legalHold: { liveCount: num(hold.live_count), status: text(hold.status) },
+    retention: { retainUntil: maybe(retention.retain_until), status: text(retention.status) },
+    exportManifest: {
+      generationId: maybe(manifest.generation_id),
+      manifestSha256: maybe(manifest.manifest_sha256),
+      packageSha256: maybe(manifest.package_sha256),
+      verifiedAt: maybe(manifest.verified_at),
+      integrity: text(manifest.integrity),
+      currentCountsMatch: manifest.current_counts_match === true,
+    },
+    affectedRecords: {
+      tables: Object.fromEntries(Object.entries(tableRows).map(([name, count]) => [name, num(count)])),
+      tableCount: num(affected.table_count),
+      totalRecords: num(affected.total_records),
+    },
+    approval: {
+      proposedAt: maybe(approval.proposed_at),
+      approvedAt: maybe(approval.approved_at),
+      exportVerifiedAt: maybe(approval.export_verified_at),
+      archivedAt: maybe(approval.archived_at),
+      purgeAuthorizedAt: maybe(approval.purge_authorized_at),
+      separationRecorded: approval.separation_recorded === true,
+    },
+    conditionsSatisfiedForFutureReview: p.conditions_satisfied_for_future_review === true,
+    blockers: strings(p.blockers),
+    destructiveAction: {
+      available: destructive.available === true,
+      enabled: destructive.enabled === true,
+      executed: destructive.executed === true,
+      reason: text(destructive.reason),
+    },
+    fallback: text(p.fallback),
+  };
+};
+
+/** Creates an immutable dry-run receipt. It has no purge, authorize, or delete side effect. */
+export async function previewSchoolPurge(caseId: string, idempotencyKey: string): Promise<PurgePreviewEnvelope> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('preview_school_purge', {
+    want: caseId,
+    want_idempotency_key: idempotencyKey,
+  });
+  if (error) throw new Error(message(error, 'Could not create the purge preview.'));
+  const envelope = object(data);
+  if (envelope.ok !== true) {
+    const refusal = object(envelope.error);
+    throw new Error(text(refusal.message) || 'The purge preview was refused.');
+  }
+  return {
+    ok: true,
+    replayed: envelope.replayed === true,
+    receiptId: text(envelope.receipt_id),
+    generatedAt: text(envelope.generated_at),
+    snapshotSha256: text(envelope.snapshot_sha256),
+    preview: previewObject(envelope.preview),
+  };
+}

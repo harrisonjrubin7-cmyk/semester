@@ -174,6 +174,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_integration_health', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_offboarding_cases', 'admin', ['auth.uid()', 'private.has_capability', 'private.is_app_admin']],
   ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
   ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -290,6 +291,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
   ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['preview_school_purge', 'admin', ['private.offboarding_operator', 'private.has_capability']],
   ['privileged_access_review', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_access_review_evidence', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['privileged_mfa_required', 'read-helper', ['auth.uid()']],
@@ -515,6 +517,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * function still counts among those applied on production.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
+  {
+    file: '20261026180000_offboarding_purge_preview.sql',
+    functions: ['console_offboarding_cases', 'preview_school_purge'],
+  },
   {
     file: '20261026150000_offboarding_export_package.sql',
     functions: ['generate_offboarding_export', 'record_generated_offboarding_export'],

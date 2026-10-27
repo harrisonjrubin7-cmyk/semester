@@ -97,6 +97,8 @@ import {
   unverifiedMfaFactorIds,
   privilegedMfaRequired,
   watchMfaSession,
+  loadOffboardingCases,
+  previewSchoolPurge,
 } from './client';
 
 const HEALTH_ROW = {
@@ -721,5 +723,45 @@ describe('support access', () => {
       ],
     });
     expect(await openSupportGrants(now)).toEqual([{ grantId: 'g-1', student: 'A student (VU)', reason: 'Ticket SUP-4', expiresAt: '2026-09-29T12:00:00Z' }]);
+  });
+});
+
+describe('synthetic offboarding purge preview', () => {
+  it('maps the metadata-only case queue and calls the exact no-argument RPC', async () => {
+    replies.set('rpc:console_offboarding_cases', { data: [{
+      case_id: 'case-1', tenant_id: 'demo-u', tenant_name: 'Demo University', status: 'archived',
+      retain_until: '2026-10-01T00:00:00Z', live_legal_holds: 0, export_generation_id: 'generation-1',
+      manifest_sha256: 'a'.repeat(64), package_sha256: 'b'.repeat(64), export_verified_at: '2026-09-01T00:00:00Z',
+      archived_at: '2026-09-02T00:00:00Z', purge_authorized_at: null, latest_preview_at: null,
+      access_basis: 'synthetic tenant only',
+    }] });
+    const result = await loadOffboardingCases();
+    expect(last()).toMatchObject({ kind: 'rpc', name: 'console_offboarding_cases', args: undefined });
+    expect(result[0]).toMatchObject({ caseId: 'case-1', tenantId: 'demo-u', liveLegalHolds: 0, purgeAuthorizedAt: null });
+  });
+
+  it('maps an exact affected-record preview and preserves replay metadata', async () => {
+    replies.set('rpc:preview_school_purge', { data: {
+      ok: true, replayed: true, receipt_id: 'receipt-1', generated_at: '2026-10-26T18:00:00Z', snapshot_sha256: 'c'.repeat(64),
+      preview: {
+        case_id: 'case-1', tenant_id: 'demo-u', synthetic_only: true, status: 'archived',
+        legal_hold: { live_count: 0, status: 'clear' }, retention: { retain_until: '2026-10-01T00:00:00Z', status: 'complete' },
+        export_manifest: { generation_id: 'generation-1', manifest_sha256: 'a'.repeat(64), package_sha256: 'b'.repeat(64), verified_at: '2026-09-01T00:00:00Z', integrity: 'verified', current_counts_match: true },
+        affected_records: { tables: { profiles: 2 }, table_count: 1, total_records: 2 },
+        approval: { proposed_at: '2026-08-01T00:00:00Z', approved_at: '2026-08-02T00:00:00Z', export_verified_at: '2026-09-01T00:00:00Z', archived_at: '2026-09-02T00:00:00Z', purge_authorized_at: null, separation_recorded: true },
+        conditions_satisfied_for_future_review: false, blockers: ['purge_authorization_missing'],
+        destructive_action: { available: false, enabled: false, executed: false, reason: 'No purge exists.' }, fallback: 'No records changed.',
+      },
+    } });
+    const result = await previewSchoolPurge('case-1', 'review-001');
+    expect(last()).toMatchObject({ kind: 'rpc', name: 'preview_school_purge', args: { want: 'case-1', want_idempotency_key: 'review-001' } });
+    expect(result.replayed).toBe(true);
+    expect(result.preview.affectedRecords).toEqual({ tables: { profiles: 2 }, tableCount: 1, totalRecords: 2 });
+    expect(result.preview.destructiveAction).toEqual({ available: false, enabled: false, executed: false, reason: 'No purge exists.' });
+  });
+
+  it('throws the server refusal instead of rendering it as an empty preview', async () => {
+    replies.set('rpc:preview_school_purge', { data: { ok: false, error: { code: 'snapshot_changed', message: 'Preview paused: snapshot changed.' } } });
+    await expect(previewSchoolPurge('case-1', 'review-001')).rejects.toThrow('Preview paused: snapshot changed.');
   });
 });
