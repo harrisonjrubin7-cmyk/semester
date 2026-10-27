@@ -708,6 +708,17 @@ declare
     -- external-record or provider-message field.
     'console_integration_health(include_demo boolean)',
 
+    -- The pilot portfolio. It requires both the platform console shell and
+    -- platform account:manage, returns sponsor and champion as yes/no and
+    -- metrics as a count, excludes demo schools by default, and writes nothing.
+    'console_pilots(include_demo boolean)',
+
+    -- The delivery portfolio. It requires both the platform console shell and
+    -- platform success:manage, returns owners as assigned or not, withholds
+    -- plan goals, risks, QBR summaries and health signals, excludes demo
+    -- schools by default, and writes nothing.
+    'console_delivery(include_demo boolean)',
+
     -- Evidence-derived release and incident operations. It requires both the
     -- platform console shell and platform incident:communicate, excludes demo
     -- tenants without exact implementation scope, and performs no mutation.

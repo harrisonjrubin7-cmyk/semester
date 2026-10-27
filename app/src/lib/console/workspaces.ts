@@ -4,12 +4,15 @@ import type { Classification } from '../ops/console';
 
 export type ConsoleWorkspaceId =
   | 'command'
+  | 'work'
   | 'support'
   | 'approvals'
   | 'breakglass'
   | 'audit'
   | 'offboarding'
   | 'tenant-operations'
+  | 'pilots'
+  | 'delivery'
   | 'integration-health'
   | 'release-incidents'
   | 'privacy'
@@ -53,6 +56,7 @@ const shell = (
  */
 export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
   shell('command', 'Command center'),
+  shell('work', 'My work', 'restricted'),
   {
     id: 'support',
     label: 'Support',
@@ -78,6 +82,22 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
     capability: 'tenant:implement',
     scopeKind: 'school',
     scopeId: null,
+    classification: 'restricted',
+  },
+  {
+    id: 'pilots',
+    label: 'Pilots',
+    capability: 'account:manage',
+    scopeKind: 'platform',
+    scopeId: '',
+    classification: 'restricted',
+  },
+  {
+    id: 'delivery',
+    label: 'Delivery',
+    capability: 'success:manage',
+    scopeKind: 'platform',
+    scopeId: '',
     classification: 'restricted',
   },
   {

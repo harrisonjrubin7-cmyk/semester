@@ -825,6 +825,7 @@ const MOCKS_MODULES = [
   'src/screens/Agreements.test.tsx',
   'src/screens/Volunteers.test.tsx',
   'src/components/betapanel.test.tsx',
+  'src/components/console/MyWork.test.tsx',
   'src/components/institutional-preview-bar.test.tsx',
   'src/components/supportticketspanel.test.tsx',
   'src/components/console/supportqueue.test.tsx',
