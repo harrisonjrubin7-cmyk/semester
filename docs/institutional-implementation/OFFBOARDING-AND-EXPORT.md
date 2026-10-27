@@ -2,9 +2,9 @@
 
 | Control | Value |
 | --- | --- |
-| Status | **CONTROLLED PROCEDURE — THE DATABASE STEPS EXIST AND HAVE BEEN REHEARSED ONCE BY THEIR AUTHOR; THE EXPORT FILE, THE PURGE AND THE NOTICE ARE NOT BUILT** |
+| Status | **CONTROLLED PROCEDURE — DATABASE STEPS AND A JSON PACKAGE GENERATOR EXIST IN SOURCE; NO TARGET ACCEPTANCE, DELIVERY JOB, PURGE, SCREEN OR NOTICE SENDER** |
 | Owner | Implementation lead seat for the case; two named operators for the export; counsel for disposition |
-| Evidence date | 2026-10-04 at `origin/main` `7287ddc` |
+| Evidence date | 2026-10-26 repository branch; target-environment evidence absent |
 | Used in | the exit branch of [phase 10](METHODOLOGY.md#phase-10--optimize); rollout states `offboarding`, `archived` |
 | Authority | [`../SCHOOL-OFFBOARDING.md`](../SCHOOL-OFFBOARDING.md) (the eight-step case, full-beta gate G3, [D-1021](../DECISION-LOG.md)) — this document wraps it with the customer-facing process and does not restate or loosen it |
 | Also | [`../DATA-PORTABILITY-AND-OFFBOARDING.md`](../DATA-PORTABILITY-AND-OFFBOARDING.md), [`../trust/DATA-EXPORT-STANDARD.md`](../trust/DATA-EXPORT-STANDARD.md), [`../trust/DATA-RETENTION-AND-DELETION-STANDARD.md`](../trust/DATA-RETENTION-AND-DELETION-STANDARD.md), [`../market-readiness/PILOT-OFFBOARDING-PLAYBOOK.md`](../market-readiness/PILOT-OFFBOARDING-PLAYBOOK.md) |
@@ -84,7 +84,7 @@ The school receives what is theirs and what they need to continue or to audit.
 
 | # | Item | Contents | Generator today |
 | --- | --- | --- | --- |
-| 1 | Tenant records | every table's rows for the school; counts match the inventory | **None.** Step 6 *records and verifies* an export made elsewhere; nothing generates the file |
+| 1 | Tenant records | every catalog-derived tenant table's rows for the school; counts match the inventory; credential-like columns are explicitly withheld | `generate_offboarding_export` returns deterministic JSON in the calling transaction; not target-rehearsed or delivered |
 | 2 | Configuration | all published Configuration Studio versions with history | not generated; rows exist |
 | 3 | Audit evidence | tenant audit events for the term of the contract | an operator-run extract; no generator |
 | 4 | Integration inventory | each connection, scopes, approvals, dates, final state | not generated |
@@ -92,19 +92,23 @@ The school receives what is theirs and what they need to continue or to audit.
 | 6 | Support and incident summary | aggregate history, root causes, known issues (no sensitive content) | not generated |
 | 7 | Success and EBR records | plan, EBR summaries, decisions | not generated |
 | 8 | Contracts and billing | executed paper, invoices, credits | from the finance record |
-| 9 | Manifest | file list, row counts per table, SHA-256 of each file, format version, who produced it, when | written by hand today |
+| 9 | Manifest | file list, row counts per table, SHA-256 of each file, manifest/package SHA-256, format version, hashed producer, generation time, hold/retention effects and withheld categories | generated in source; no independent format/accessibility or customer acceptance review |
 
-**Interim procedure** until a generator exists: operator A produces the files
-from the database with a documented, reviewed query set; records
-`record_offboarding_export(case, sha256, counts, delivered_to)`; operator B —
-a different person — re-derives the counts and calls `verify_offboarding_export`.
+**Controlled generator path:** operator A calls
+`generate_offboarding_export(case, idempotency_key)`, writes the returned JSON
+to the approved encrypted channel outside the database, and records the exact
+generation with `record_generated_offboarding_export`. Operator B — a different
+person — re-derives the counts and calls `verify_offboarding_export`.
 Verification refuses an export whose counts differ from the school as it stands,
 or that omits any table the inventory found **or any table that holds rows now**
 (including one empty at preflight that gained a row). Delivery is over an
 encrypted channel the customer named, the customer's receipt is recorded, and
 the delivery location is deleted after the customer confirms. A build of the
-generator is a product escalation ([`FEEDBACK-AND-ESCALATION.md`](FEEDBACK-AND-ESCALATION.md)), and
-`DATA-EXPORT-STANDARD.md` is its specification.
+delivery job and accepted container format remains a product escalation
+([`FEEDBACK-AND-ESCALATION.md`](FEEDBACK-AND-ESCALATION.md)), and
+`DATA-EXPORT-STANDARD.md` remains its specification. The older
+`record_offboarding_export` path is retained only for a counsel-approved
+external generator and does not inherit the source generator's receipt proof.
 
 ## 6. The case, step by step (wrapper over the eight functions)
 
@@ -118,7 +122,7 @@ tell the customer.
 | 3 | `approve_offboarding(case)` | the **other side, a different person** | approval record | who approved and when |
 | 4 | `record_offboarding_notice(case, date)` | either side | notice date and the student notice text sent by the school | it records that students were told; it sends nothing |
 | 5 | `disable_school_access(case)` | operator | undo record | grants revoked (each remembered); connections disconnected and credential pointers cleared; sessions of grant-holders ended; rollout suspended; **secrets still need rotating at the provider** |
-| 6 | `record_offboarding_export` then `verify_offboarding_export` | two different operators | counts, sha256, delivered_to | the manifest and how to verify it |
+| 6 | `generate_offboarding_export`, `record_generated_offboarding_export`, then `verify_offboarding_export` | generator/recorder and verifier are different operators | immutable generation receipt, counts, manifest/package hashes, delivered_to | the manifest and how to verify it |
 | 7 | `archive_school(case, retain_days)` | operator | archive record | the retention window and who decides its end |
 | 8 | `authorize_school_purge(case, reason)` | a third operator, after counsel | authorization | "eligible"; it deletes nothing |
 
@@ -132,7 +136,7 @@ refuses after a purge is authorized. `school_purge_eligibility(case)` answers
 
 | Gap | Consequence | Interim |
 | --- | --- | --- |
-| The export generator | the school's file is produced by hand | the interim procedure above |
+| Delivery job and accepted archive/container | an operator must write and transmit the returned JSON package through an approved channel | controlled generator procedure above; remove the temporary copy after receipt |
 | **The purge**: category-by-category deletion with confirmation per category | `delete from schools` is refused for everyone, so school data is retained | counsel decides retention; no deletion claim is made |
 | Customer and student notification | nothing is sent | the school sends notice; step 4 records it |
 | Any offboarding screen | no self-serve for the customer | deliberate: it is a rare contractual event with two named people |
@@ -172,22 +176,22 @@ the steps tested.
 
 ## Evidence state
 
-**Repository evidence.** The eight functions, the never-delete trigger, the
-rehearsal record and the 98-check suite exist; student export and account
-deletion exist.
+**Repository evidence.** The case functions, deterministic JSON generator,
+immutable generation receipt, never-delete trigger, rehearsal record and
+synthetic SQL suite exist; student export and account deletion exist.
 
-**Operational evidence.** One author-run rehearsal on synthetic data. No real
-school has been offboarded; no second-person rehearsal; no export has been
-generated or delivered.
+**Operational evidence.** One author-run rehearsal on synthetic data predates
+the generator. No real school has been offboarded; no second-person rehearsal;
+no generated package has been accepted or delivered in a target environment.
 
-**Missing test/proof.** Second-person rehearsal; export generator with its
-manifest; the purge with per-category confirmation; deletion certificate; a
-first real closure.
+**Missing test/proof.** Second-person target rehearsal; scale and format review;
+secure delivery, expiry and customer receipt exercise; the purge with per-
+category confirmation; deletion certificate; a first real closure.
 
 ## Claim ceiling
 
-Semester may describe a stepwise, reversible offboarding case and student-side
-export.
+Semester may describe a stepwise, reversible offboarding case, a repository-
+tested JSON package generator, and student-side export.
 
 ## Prohibited claims
 

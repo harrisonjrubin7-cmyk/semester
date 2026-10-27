@@ -236,6 +236,8 @@ declare
     'cancel_offboarding(want uuid, why text)',
     'record_offboarding_notice(want uuid, given_on date)',
     'disable_school_access(want uuid)',
+    'generate_offboarding_export(want uuid, want_idempotency_key text)',
+    'record_generated_offboarding_export(want uuid, want_generation uuid, delivered_to text)',
     'record_offboarding_export(want uuid, manifest_sha256 text, counts jsonb, delivered_to text)',
     'verify_offboarding_export(want uuid)',
     'archive_school(want uuid, retain_days integer)',
