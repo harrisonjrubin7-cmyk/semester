@@ -1455,8 +1455,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <caption>Accessibility evidence by product area</caption>
       <thead><tr><th scope="col">Area</th><th scope="col">Scope</th><th scope="col">Status</th><th scope="col">Last tested</th><th scope="col">Known limitation</th></tr></thead>
       <tbody>
-        <tr><th scope="row">Public company site</th><td>Every page and form: axe-core (WCAG 2.0–2.2 A/AA and best practice) at desktop, plus overflow checks at phone width</td><td><span class="cs cs-av">Automated checks</span></td><td>Sept 28, 2026 (this build)</td><td>No manual screen-reader pass yet.</td></tr>
-        <tr><th scope="row">Student app</th><td>Six journeys (Home, Calendar, Courses, Assignments, Registration, Degree): skip link, landmarks, names, ARIA references, 320px reflow</td><td><span class="cs cs-av">Automated checks on every pull request</span></td><td>Each pull request to main (latest Sept 28, 2026)</td><td>Screen-reader review pending; see <a class="link" href="#a11y-known">known issues</a>.</td></tr>
+        <tr><th scope="row">Public company site</th><td>Static repository guards cover structure, source-backed copy, screenshot labels and form wiring</td><td><span class="cs cs-ip">Repository guards</span></td><td>Each candidate pull request</td><td>No axe-core or manual screen-reader result is filed for the public company site. HawkScan scans an isolated static copy for web-security findings, not accessibility.</td></tr>
+        <tr><th scope="row">Student app</th><td>Six journeys (Home, Calendar, Courses, Assignments, Registration, Degree): skip link, landmarks, names, ARIA references, 320px reflow</td><td><span class="cs cs-av">Automated candidate checks</span></td><td>Each candidate pull request</td><td>No manual assistive-technology result is filed; see <a class="link" href="#a11y-known">known issues</a>.</td></tr>
         <tr><th scope="row">Colour contrast</th><td>Student app screens, light and dark</td><td><span class="cs cs-av">Nightly automated sweep</span></td><td>Nightly</td><td>Covers text and marks the sweep can see; images excluded.</td></tr>
         <tr><th scope="row">Ask Semester</th><td>Chat, streaming responses, citations</td><td><span class="cs cs-ip">In preparation</span></td><td>Not yet tested separately</td><td>How streaming answers are announced needs review.</td></tr>
         <tr><th scope="row">Course Studio</th><td>Authoring</td><td><span class="cs cs-pl">Planned</span></td><td>N/A</td><td>Not yet released.</td></tr>
@@ -1491,8 +1491,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   <section class="blk rule" id="a11y-known"><div class="wrap grid-2" data-site-style="s41149aaf8734">
     <div><p class="eyebrow">Known issues</p><h2 data-site-style="s48958d1de88d">What we know is broken.</h2>
       <div class="legend" data-site-style="s2bdf8e45fdfc">
-        <div><b>Captions (high)</b><p>Some audio and video players have no captions yet. Workaround: transcripts where available. Status: fix in progress.</p></div>
-        <div><b>Form errors (moderate)</b><p>Some forms don't connect error messages to their fields for screen readers. Status: shared field pattern being built.</p></div>
+        <div><b>Captions (high)</b><p>Four audio recordings have no timed source and therefore no caption track; prerecorded video caption coverage is not complete. Workaround: transcripts where available. Status: open under TR-40.</p></div>
+        <div><b>Form errors (moderate)</b><p>Student-app source guards require announced errors and the shared field pattern. Public-site forms are outside that guard and have no filed axe or manual screen-reader result. Status: public-site coverage open.</p></div>
         <div><b>Focus at 320px (moderate)</b><p>In Focus mode on very narrow screens, the Focus bar and assistant button can cover the focused item. Workaround: zoom out or rotate. Status: fix planned.</p></div>
         <div><b>Assistant position (minor)</b><p>The assistant button can only be moved by dragging. Status: a menu option is planned.</p></div>
         <div><b>Long titles (minor)</b><p>Long screen titles are cut off at 320px. Status: fix planned.</p></div>
