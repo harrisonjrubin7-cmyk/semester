@@ -35,7 +35,10 @@ because the decision itself is shown in Applicants. Deposit is a record with an 
 Data governance (/staff/governance, Data Steward): definitions with second-steward approval, classification (lowering needs a
 second steward), lineage without cycles, quality rules and issues, retention with legal minimum (nothing deleted), source conflicts.
 DB check 26/26; mutations on cycles, lowering and conflict settlement all went red.
-Next clusters: Portfolio Council, Residence Life / Resident Assistant, Career Center / Career Coach.
+Portfolio council (/staff/council): rubrics adopted by a second member, reviewer pool, declared conflicts block assignment,
+validation needs two reviews all met, chair recommends to the registrar (no award), one appeal decided by a non-reviewing chair.
+DB check 25/25; mutations on conflicts, validation rule and single appeal all went red.
+Next clusters: Residence Life / Resident Assistant, Career Center / Career Coach.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
