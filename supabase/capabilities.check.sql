@@ -324,7 +324,7 @@ begin
   -- graduate_student and transfer_student (the roles carrying grades:receive),
   -- course_requests:decide and :view for faculty, and :view for
   -- teaching_assistant.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 207);
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 208);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

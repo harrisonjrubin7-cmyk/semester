@@ -103,6 +103,7 @@ export const CATEGORY_TITLE: Record<RoleCategory, string> = {
  */
 export const OPERATIONS_ONLY: readonly string[] = [
   'access_review:manage',
+  'ai:remedy-review',
   'console:operate',
   'approval:decide',
   'breakglass:request',
@@ -314,7 +315,7 @@ export const ROLES: readonly RoleRow[] = [
 
   // ── Semester commercial ──────────────────────────────────────────────────
   row({ role: 'account_executive', category: 'commercial', mayDo: 'Manage a prospect account and send its procurement room', mustNever: 'Any student data', training: [{ path: 'docs/gtm/EXECUTION-PLAN.md', shows: 'GTM execution plan' }] }),
-  row({ role: 'trust_officer', category: 'commercial', mayDo: 'Publish documents to the trust room', mustNever: 'Any student data', runbook: [{ path: 'docs/trust/README.md', shows: 'the trust package and how it is maintained' }] }),
+  row({ role: 'trust_officer', category: 'commercial', mayDo: 'Publish trust-room documents and review school-scoped AI answer remedy requests', mustNever: 'Unrelated student records, cross-school reports, retaliation or an automated adverse decision', runbook: [{ path: 'docs/trust/README.md', shows: 'the trust package and how it is maintained' }] }),
   row({ role: 'marketing_admin', category: 'commercial', mayDo: 'Manage and report on campaigns', mustNever: 'Any student data; sending a campaign nobody reviewed' }),
   row({ role: 'marketing_analyst', category: 'commercial', mayDo: 'Read campaign reports', mustNever: 'Editing or sending campaigns; any student data' }),
   row({ role: 'campaign_reviewer', category: 'commercial', mayDo: 'Review a campaign before it is sent', mustNever: 'Authoring the campaign they review' }),

@@ -749,6 +749,17 @@ declare
     'resolve_privacy_request(want_request uuid, want_outcome text, want_resolution text, want_evidence text, want_approval uuid)',
     'my_privacy_completion_certificates()',
 
+    -- The AI-answer remedy route in 20261027120000. Intake and the status
+    -- reader derive the reporter from auth.uid(); the three reviewer calls
+    -- independently require ai:remedy-review over the exact school. Direct
+    -- table access remains revoked and the focused suite attempts cross-tenant
+    -- queue and claim access.
+    'raise_ai_answer_remedy(want_key uuid, want_category text, want_summary text, want_answer_sha256 text, want_source_strength text, want_policy_state text, want_source_count integer)',
+    'my_ai_answer_remedies()',
+    'ai_answer_remedy_queue(want_tenant text)',
+    'claim_ai_answer_remedy(want_id uuid)',
+    'resolve_ai_answer_remedy(want_id uuid, want_resolution text, want_evidence text)',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and
