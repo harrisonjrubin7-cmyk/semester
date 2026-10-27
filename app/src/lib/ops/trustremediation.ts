@@ -83,11 +83,12 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-03', before: 'invitation', owner: 'success', effort: 'S',
     title: 'Bring public accessibility text back inside the evidence',
-    finding: 'The company site says axe-core was run on every page and form (no such run is in the tree), calls the nightly sweep a check of painted pixels while it was green with failures, and lists captions and form errors as known issues after both were fixed.',
+    finding: 'The company site says axe-core was run on every page and form although no such public-site result is in the tree, and its generic caption and form-error wording hides the exact remaining boundaries: four audio recordings have no timed source, prerecorded video coverage is incomplete, and public forms are outside the student-app error guards.',
     sources: ['PUBLIC-CLAIMS-APPROVAL-REGISTER.md', 'company-site/index.html', 'docs/accessibility/AT-PASS-PROTOCOL.md'],
-    fix: 'Change the text to what the tree can show, and add the new claims to the register with their evidence.',
+    fix: 'Limit the public text and CLM-007 to the six student-app journeys, scheduled Chromium sweep and exact caption/form boundaries the tree can show, and make a source test reject any return to universal public-site accessibility claims.',
     moves: ['TC-A11-01', 'TC-A11-06'],
     files: 'The claims-register diff.',
+    done: { proof: 'app/src/lib/publicaccessibilityclaims.test.ts', on: '2026-10-27' },
   },
   {
     id: 'TR-04', before: 'invitation', owner: 'trust', effort: 'M',
