@@ -15,7 +15,7 @@ export const TOOLS: Tool[] = [
   { key: 'diagram', name: 'Diagram builder', blurb: 'Flows, timelines and matrices from a description', where: 'semester', route: null },
   { key: 'guide', name: 'Study guide from sources', blurb: 'Guides built only from material you select', where: 'semester', route: '/learn/guides' },
   { key: 'paper', name: 'Practice paper', blurb: 'A timed paper marked against a key', where: 'semester', route: null },
-  { key: 'sources', name: 'Sources', blurb: 'Your readings with what each is for, out as BibTeX', where: 'semester', route: null },
+  { key: 'sources', name: 'Sources', blurb: 'Your readings with what each is for, out as BibTeX', where: 'semester', route: '/learn/sources' },
   { key: 'write', name: 'Write a document', blurb: 'Memo, report or handout out as a Word file', where: 'semester', route: null },
   { key: 'proof', name: 'Check the writing', blurb: 'Grammar read back, quotations checked against the reading', where: 'semester', route: null },
   { key: 'deck', name: 'Make a deck', blurb: 'A real PowerPoint file', where: 'semester', route: null },

@@ -83,6 +83,7 @@ import type { default as _ScholarshipsEp } from '../src/api/scholarships';
 import type { default as _SearchEp } from '../src/api/search';
 import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
 import type { default as _SecurityOpsEp } from '../src/api/securityOps';
+import type { default as _SourcesEp } from '../src/api/sources';
 import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _StudyEp } from '../src/api/study';
@@ -501,6 +502,11 @@ export type SecurityOpsInputType = NonNullable<_SecurityOpsCfg['inputSchema']> e
 export type SecurityOpsOutputType = Awaited<ReturnType<_SecurityOpsCfg['execute']>>;
 export const securityOps = createCaller<SecurityOpsInputType, SecurityOpsOutputType>('securityOps');
 
+type _SourcesCfg = typeof _SourcesEp;
+export type SourcesInputType = NonNullable<_SourcesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SourcesCfg['execute']>[0]['input'];
+export type SourcesOutputType = Awaited<ReturnType<_SourcesCfg['execute']>>;
+export const sources = createCaller<SourcesInputType, SourcesOutputType>('sources');
+
 type _StaffCfg = typeof _StaffEp;
 export type StaffInputType = NonNullable<_StaffCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StaffCfg['execute']>[0]['input'];
 export type StaffOutputType = Awaited<ReturnType<_StaffCfg['execute']>>;
@@ -644,6 +650,7 @@ export const api = {
   search,
   sectionRequests,
   securityOps,
+  sources,
   staff,
   studentAccount,
   study,

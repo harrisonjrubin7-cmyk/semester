@@ -22,6 +22,7 @@ import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
 import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _RegradeEp } from '../src/api/regrade';
 import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
+import type { default as _SourcesEp } from '../src/api/sources';
 import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _TeachingEp } from '../src/api/teaching';
@@ -126,6 +127,11 @@ export type SectionRequestsInputType = NonNullable<_SectionRequestsCfg['inputSch
 export type SectionRequestsOutputType = Awaited<ReturnType<_SectionRequestsCfg['execute']>>;
 export const sectionRequests = createCaller<SectionRequestsInputType, SectionRequestsOutputType>('sectionRequests');
 
+type _SourcesCfg = typeof _SourcesEp;
+export type SourcesInputType = NonNullable<_SourcesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SourcesCfg['execute']>[0]['input'];
+export type SourcesOutputType = Awaited<ReturnType<_SourcesCfg['execute']>>;
+export const sources = createCaller<SourcesInputType, SourcesOutputType>('sources');
+
 type _StaffCfg = typeof _StaffEp;
 export type StaffInputType = NonNullable<_StaffCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StaffCfg['execute']>[0]['input'];
 export type StaffOutputType = Awaited<ReturnType<_StaffCfg['execute']>>;
@@ -163,6 +169,7 @@ export const api = {
   registrationChanges,
   regrade,
   sectionRequests,
+  sources,
   staff,
   studentAccount,
   teaching,

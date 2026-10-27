@@ -87,6 +87,10 @@ DONE 27 Oct: /learn/toolkit hub (All tools, every-subject tools, 9 intents, 32 s
 describes CSV and charts counts with a table alternative; Rubric self-check is a checklist with no grade. Semester tools not built yet
 (Spreadsheet, Diagram builder, Practice paper, Sources, Write a document, Check the writing, Make a deck, Group work) show as
 "Not built yet" on the hub: next increments.
+DONE 27 Oct: Sources at /learn/sources (Faculty: /sources "Reading lists"). Private readings with "what it is for", APA 7 / MLA 9
+reference lines, BibTeX export and import (all or nothing, 500 max), instructor course reading lists that notify enrolled students
+and that students copy into their own list. rdg_* DB check 20/20; mutants (no instructor check, copy ignores enrolment) fail.
+Live teacher-to-student check BLOCKED: no sample section has an instructor assigned.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
