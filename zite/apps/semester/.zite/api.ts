@@ -72,6 +72,7 @@ import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
 import type { default as _RegistrationEp } from '../src/api/registration';
 import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _RegradeEp } from '../src/api/regrade';
+import type { default as _ReslifeEp } from '../src/api/reslife';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
 import type { default as _SandboxApiEp } from '../src/api/sandboxApi';
 import type { default as _ScholarshipsEp } from '../src/api/scholarships';
@@ -439,6 +440,11 @@ export type RegradeInputType = NonNullable<_RegradeCfg['inputSchema']> extends {
 export type RegradeOutputType = Awaited<ReturnType<_RegradeCfg['execute']>>;
 export const regrade = createCaller<RegradeInputType, RegradeOutputType>('regrade');
 
+type _ReslifeCfg = typeof _ReslifeEp;
+export type ReslifeInputType = NonNullable<_ReslifeCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReslifeCfg['execute']>[0]['input'];
+export type ReslifeOutputType = Awaited<ReturnType<_ReslifeCfg['execute']>>;
+export const reslife = createCaller<ReslifeInputType, ReslifeOutputType>('reslife');
+
 type _RoleAppsCfg = typeof _RoleAppsEp;
 export type RoleAppsInputType = NonNullable<_RoleAppsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RoleAppsCfg['execute']>[0]['input'];
 export type RoleAppsOutputType = Awaited<ReturnType<_RoleAppsCfg['execute']>>;
@@ -591,6 +597,7 @@ export const api = {
   registration,
   registrationChanges,
   regrade,
+  reslife,
   roleApps,
   sandboxApi,
   scholarships,

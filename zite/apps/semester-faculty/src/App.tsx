@@ -93,7 +93,7 @@ export default function App() {
   const [ws, setWs] = useState<GetWorkspaceOutputType | null>(null);
   const [role, setRole] = useState('Faculty');
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
-  const refresh = () => getWorkspace({}).then(setWs).catch(() => setWs({ memberships: [], firstName: '' }));
+  const refresh = () => getWorkspace({}).then(setWs).catch(() => setWs({ memberships: [], firstName: '', currentId: null }));
   useEffect(() => { if (user) refresh(); }, [user]);
   if (isLoading || !user || !ws) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading Semester Faculty…</div>;
   const membership = ws.memberships.find((m) => m.status === 'Active');

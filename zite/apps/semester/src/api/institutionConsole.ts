@@ -6,6 +6,13 @@ import { bumpEpoch } from '../lib/platform';
 
 const ROLE = z.enum(['Student', 'Faculty', 'Advisor', 'Tutor', 'Staff', 'Administrator', 'Alumni', 'Employer']);
 
+// The data API returns at most 2000 rows per call; page through with offset (stops at 100k rows).
+async function everyRow<T>(page: (o: { offset: number; limit: number }) => Promise<{ records: T[]; hasMore: boolean }>): Promise<{ records: T[] }> {
+  const records: T[] = [];
+  for (let offset = 0; offset < 100_000; offset += 2000) { const r = await page({ offset, limit: 2000 }); records.push(...r.records); if (!r.hasMore || r.records.length === 0) break; }
+  return { records };
+}
+
 export default createEndpoint({
   description: 'Institution Console: memberships, connectors, retention, feature status and the audit log (admins only)',
   authenticated: true,
@@ -131,7 +138,7 @@ export default createEndpoint({
       zite.featureStatus.findAll({ limit: 100 }),
       zite.sql({ query: `SELECT a."id",a."action",a."actor",a."recordRef",a."authority",a."viaAssistant",a."occurredAt" FROM "AuditEvents" a JOIN "AuditEventsInstitutions" ai ON ai."auditEventsId"=a."id" WHERE ai."institutionsId"=$1 ORDER BY a."occurredAt" DESC LIMIT 100`, params: [I] }),
       // Only consents of this institution's members (was a count across every tenant).
-      zite.consents.findAll({ limit: 5000, fields: ['member'] }),
+      everyRow((o) => zite.consents.findAll({ fields: ['member'], ...o })),
     ]);
     const clean = (v: unknown) => String(v ?? '').replace(/[[\]"{}]/g, '');
     const names = await userNames([...mems.records.map((m) => first(m.member) ?? ''), ...auditRows.rows.map((r) => clean(r.actor))]);

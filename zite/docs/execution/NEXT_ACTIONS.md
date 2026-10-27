@@ -38,7 +38,10 @@ DB check 26/26; mutations on cycles, lowering and conflict settlement all went r
 Portfolio council (/staff/council): rubrics adopted by a second member, reviewer pool, declared conflicts block assignment,
 validation needs two reviews all met, chair recommends to the registrar (no award), one appeal decided by a non-reviewing chair.
 DB check 25/25; mutations on conflicts, validation rule and single appeal all went red.
-Next clusters: Residence Life / Resident Assistant, Career Center / Career Coach.
+Residence life (/campus/reslife, RA + Residence Life Staff): RA check-ins only with moved-in residents of their building, referrals
+name a service; RA programs approved by other housing staff, building-only RSVPs with capacity, attendance by the running RA;
+bounded incident reports (no resident names), RA sees own, closed by staff other than the filer. DB check 23/23; mutations red.
+Next clusters: Career Center / Career Coach, then Learning Center, Peer Mentor.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

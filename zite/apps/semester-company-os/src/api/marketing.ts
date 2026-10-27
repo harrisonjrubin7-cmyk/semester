@@ -11,9 +11,16 @@ const ensureMkt = () => {
   return ready;
 };
 
+// The data API returns at most 2000 rows per call; page through with offset (stops at 100k rows).
+async function everyRow<T>(page: (o: { offset: number; limit: number }) => Promise<{ records: T[]; hasMore: boolean }>): Promise<{ records: T[] }> {
+  const records: T[] = [];
+  for (let offset = 0; offset < 100_000; offset += 2000) { const r = await page({ offset, limit: 2000 }); records.push(...r.records); if (!r.hasMore || r.records.length === 0) break; }
+  return { records };
+}
+
 /** The only audience: inbound contacts who consented to contact. Counted on the server; never student or education records. */
 async function consentedAudience() {
-  const { records } = await zite.inboundRequests.findAll({ filters: { consentToContact: true }, limit: 5000 });
+  const { records } = await everyRow((o) => zite.inboundRequests.findAll({ filters: { consentToContact: true }, fields: ['consentToContact'], ...o }));
   return records.length;
 }
 

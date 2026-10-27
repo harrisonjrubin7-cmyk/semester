@@ -86,7 +86,7 @@ export default createEndpoint({
     const secs = (await zite.sections.findAll({ limit: 2000, fields: ['label', 'instructors'] })).records.filter((s) => tenant.sections.has(s.id));
     const label = Object.fromEntries(secs.map((s) => [s.id, s.label ?? 'Section']));
     const teaching = secs.filter((s) => ids(s.instructors).includes(me));
-    const rosters = teaching.length ? (await zite.enrollments.findAll({ limit: 5000 })).records.filter((e) => (e.status === 'Enrolled' || e.status === 'Completed') && teaching.some((s) => ids(e.section).includes(s.id))) : [];
+    const rosters = teaching.length ? (await Promise.all(teaching.map((s) => zite.enrollments.findAll({ filters: { section: s.id }, limit: 2000 })))).flatMap((r) => r.records).filter((e) => e.status === 'Enrolled' || e.status === 'Completed') : [];
     const officers = isAdmin ? (await sql.query(`SELECT user_id FROM int_staff WHERE tenant_id = $1 AND revoked_at IS NULL`, [T])) as { user_id: string }[] : [];
     const names = await userNames([...new Set([...cases.flatMap((c) => [String(c.student_id), String(c.reporter_id)]), ...rosters.map((e) => first(e.student) ?? ''), ...officers.map((o) => o.user_id)].filter(Boolean))]);
     return {

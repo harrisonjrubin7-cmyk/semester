@@ -23,7 +23,7 @@ export default function Teaching() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Sections you teach" value={d.teaching.length} />
         <Stat label="Office hours today" value={todays.length} to="/office-hours" />
-        <Stat label="Regrades waiting" value={rg.data ? pending : '…'} to="/regrades" />
+        <Stat label="Regrades waiting" value={rg.data ? pending : rg.error ? '—' : '…'} to="/regrades" />
       </div>
       <Card>
         <CardHeader><CardTitle className="text-base">Your sections</CardTitle></CardHeader>

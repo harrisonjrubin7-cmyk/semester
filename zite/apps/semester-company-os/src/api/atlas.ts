@@ -10,6 +10,13 @@ import { ROLE_APP_ROWS } from '../../../semester/src/lib/roleApps';
 type Row = Record<string, unknown>;
 const fail = (m: string): never => { const e = new ZiteError(m); e.userFacingMessage = m; throw e; };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
+
+// The data API returns at most 2000 rows per call; page through with offset (stops at 100k rows).
+async function everyRow<T>(page: (o: { offset: number; limit: number }) => Promise<{ records: T[]; hasMore: boolean }>): Promise<{ records: T[] }> {
+  const records: T[] = [];
+  for (let offset = 0; offset < 100_000; offset += 2000) { const r = await page({ offset, limit: 2000 }); records.push(...r.records); if (!r.hasMore || r.records.length === 0) break; }
+  return { records };
+}
 const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) : null);
 
 // Semester Atlas (S-71, S-73), company side. Coverage reads the one maintained role register (apps/semester/src/lib/roleApps.ts);
@@ -58,7 +65,7 @@ export default createEndpoint({
     const rolesFull = ROLE_APP_ROWS.filter(([, , , c]) => c.every((x) => x[2] === 'existing')).length;
 
     // Capability register (Security Lab) with per-dimension evidence.
-    const [reg, ev] = await Promise.all([zite.capabilityRegister.findAll({ limit: 2000 }), zite.capabilityEvidence.findAll({ limit: 5000 })]);
+    const [reg, ev] = await Promise.all([zite.capabilityRegister.findAll({ limit: 2000 }), everyRow((o) => zite.capabilityEvidence.findAll(o))]);
     const capabilities = reg.records.map((r) => {
       const mine = ev.records.filter((e) => (Array.isArray(e.capability) ? e.capability : [e.capability]).includes(r.id));
       const s = satisfied(mine.map((e) => ({ stage: String(e.stage ?? ''), environment: String(e.environment ?? '') })));
