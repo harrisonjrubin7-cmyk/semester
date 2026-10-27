@@ -59,6 +59,7 @@ import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
 import type { default as _ReconciliationEp } from '../src/api/reconciliation';
 import type { default as _RecordsRightsEp } from '../src/api/recordsRights';
+import type { default as _RecruitingEp } from '../src/api/recruiting';
 import type { default as _ReferralsEp } from '../src/api/referrals';
 import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
 import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
@@ -367,6 +368,11 @@ export type RecordsRightsInputType = NonNullable<_RecordsRightsCfg['inputSchema'
 export type RecordsRightsOutputType = Awaited<ReturnType<_RecordsRightsCfg['execute']>>;
 export const recordsRights = createCaller<RecordsRightsInputType, RecordsRightsOutputType>('recordsRights');
 
+type _RecruitingCfg = typeof _RecruitingEp;
+export type RecruitingInputType = NonNullable<_RecruitingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RecruitingCfg['execute']>[0]['input'];
+export type RecruitingOutputType = Awaited<ReturnType<_RecruitingCfg['execute']>>;
+export const recruiting = createCaller<RecruitingInputType, RecruitingOutputType>('recruiting');
+
 type _ReferralsCfg = typeof _ReferralsEp;
 export type ReferralsInputType = NonNullable<_ReferralsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReferralsCfg['execute']>[0]['input'];
 export type ReferralsOutputType = Awaited<ReturnType<_ReferralsCfg['execute']>>;
@@ -536,6 +542,7 @@ export const api = {
   progress,
   reconciliation,
   recordsRights,
+  recruiting,
   referrals,
   registrarDecide,
   registrarLedger,
