@@ -213,14 +213,14 @@ begin
     'capability is off');
   set local role postgres;
   insert into public.role_capabilities (role, capability)
-  values ('data_steward', 'offboarding:purge-rehearse');
+  values ('platform_admin', 'offboarding:purge-rehearse');
   reset role;
 
   perform pg_temp.refused_with('an account without platform authority cannot queue',
     pg_temp.attempt(stranger, format(
       'select public.queue_school_purge_rehearsal(%L,%L,%L,%L)',
       offboarding_case_id, preview_receipt, approval_one, 'rehearsal-job-0001')),
-    'configuration authority');
+    'platform operator');
   perform pg_temp.refused_with('the rollout feature is off by default',
     pg_temp.attempt(operator_three, format(
       'select public.queue_school_purge_rehearsal(%L,%L,%L,%L)',
