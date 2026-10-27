@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-172 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+173 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -143,6 +143,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/module_mode.check.sql` | The per-school, per-module Connect / Core switch (20260930010000). |
 | `supabase/my-capabilities.check.sql` | Who the app is told holds which capability — 'public.my_capabilities()'. |
 | `supabase/my-sessions.check.sql` | Where a student is signed in (stream 02): 'my_sessions()' lists the caller's own live sessions and 'end_my_session()' ends one of them. |
+| `supabase/no-impersonation.check.sql` | No staff account gets a hidden "become this student" path. |
 | `supabase/notification-inbox.check.sql` | Durable notification inbox, preference, retry, and audit boundaries. |
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/offboarding-purge-preview.check.sql` | Synthetic-only purge preview. |

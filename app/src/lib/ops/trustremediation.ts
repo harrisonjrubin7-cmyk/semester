@@ -405,6 +405,7 @@ export const ITEMS: readonly Item[] = [
     fix: 'Add a database check that no function lets one account read as another outside the grant tables.',
     moves: ['TC-SUP-03'],
     files: 'The check.',
+    done: { proof: 'supabase/no-impersonation.check.sql', on: '2026-10-27' },
   },
   {
     id: 'TR-39', before: 'pilot', owner: 'trust', effort: 'M',
