@@ -12,6 +12,7 @@ The test that holds this page checks that every script, test file and CI step na
 | --- | --- | --- |
 | Types | `npx tsc -b`, `npm run check:university` | Node only. |
 | Lint and audits | `npm run lint` | Node only. oxlint, then the style, label and vocabulary audits. |
+| Dependency advisory gate | `node --test scripts/npm-audit-gate.test.mjs`, from the repository root | Node only. CI feeds the npm advisory report to `scripts/npm-audit-gate.mjs`; high and critical findings block unless security recorded an unexpired exception and npm reports no fix. |
 | Unit and component tests | `npm test` | Node only. Components run in jsdom. |
 | Same tests, other timezones | `npm run test:zones` | Node only. Runs the suite under `TZ=America/Chicago` and `TZ=Pacific/Kiritimati`. |
 | Same tests, a different order | `npm run test:shuffle` | Node only. Prints its seed. |
@@ -98,7 +99,7 @@ Workflows are in [`.github/workflows/`](../../.github/workflows/). On a pull req
 
 | Job | What it does, in order |
 | --- | --- |
-| `build` | an npm ci install, which is a step named only Install; the dependency audit (non-blocking); `Typecheck`; `Lint`; `Typecheck the university server`; the video package install and typecheck; `Test`; `Test in other timezones`; `Test in a different order`; `Build`; `Performance budgets`; installs Playwright; serves the build the way Pages serves it; `Open every address cold`; `Audit critical accessibility journeys`; `Walk the golden student path`; `Walk the seeded registration handoff`; `Walk the registration state matrix`; `Walk it again with human help on`; `Validate the course data`; installs the PostgreSQL major the live project runs; `Check the database policies`; always retains the pg17-policy-evidence-<sha> artifact with the exact-commit clean/reapply and per-suite result; `Load and concurrency scenarios`; `Rehearse the deploy against production's shape`; `Rehearse a backup and restore`. |
+| `build` | an npm ci install, which is a step named only Install; the blocking high/critical dependency audit and its planted-advisory control; `Typecheck`; `Lint`; `Typecheck the university server`; the video package install and typecheck; `Test`; `Test in other timezones`; `Test in a different order`; `Build`; `Performance budgets`; installs Playwright; serves the build the way Pages serves it; `Open every address cold`; `Audit critical accessibility journeys`; `Walk the golden student path`; `Walk the seeded registration handoff`; `Walk the registration state matrix`; `Walk it again with human help on`; `Validate the course data`; installs the PostgreSQL major the live project runs; `Check the database policies`; always retains the pg17-policy-evidence-<sha> artifact with the exact-commit clean/reapply and per-suite result; `Load and concurrency scenarios`; `Rehearse the deploy against production's shape`; `Rehearse a backup and restore`. |
 | `account-sync` | Starts a local Supabase from this repository, builds the app against it, and walks the real account lifecycle across two devices with `npm run smoke:sync`. |
 | `secrets` | gitleaks over what the branch changed, then over every file the branch carries. |
 | `notify` | On push only. Opens or comments on an issue titled "main is red" when a job failed. It is not a required check. |
