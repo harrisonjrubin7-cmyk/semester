@@ -1,10 +1,10 @@
 # When a school leaves
 
-Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** the base case migration is present in production; the export-generator migration is repository-only. No school has been offboarded and no offboarding case has been run in production.
+Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** the base case migration is present in production; the restore-integrity, export-generator, and purge-preview migrations are repository-only. No school has been offboarded and no offboarding case has been run in production.
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
-Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`, `20261026120000_offboarding_restore_integrity.sql`, and `20261026150000_offboarding_export_package.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks the authorization, isolation, state-transition, synthetic export, retention, restoration, retry, and replay refusals is `supabase/school-offboarding.check.sql`.
+The consequential workflow remains a set of functions called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`, `20261026120000_offboarding_restore_integrity.sql`, and `20261026150000_offboarding_export_package.sql`). There is no state-changing screen: an offboarding is a rare, contractual event with two named people, and such a screen would be a way to do it by accident. The Console has a separate synthetic-demo-only, read-only purge preview (`20261026180000_offboarding_purge_preview.sql`): it reports holds, retention, export integrity, and exact affected-record counts, but cannot authorize, enable, or execute deletion. The suites that walk the authorization, isolation, state-transition, synthetic export and preview, retention, restoration, retry, and replay refusals are `supabase/school-offboarding.check.sql` and `supabase/offboarding-purge-preview.check.sql`.
 
 ## The steps
 
@@ -41,10 +41,10 @@ Does not: touch a student's own session or account, delete or edit any record, o
 
 ## What is not built
 
-- **The purge itself.** Deleting a school's records category by category, with a confirmation per category, does not exist. The trigger on `schools` therefore refuses *every* delete, including after `authorize_school_purge`. Building the purge is a separate piece of work needing its own authorization.
+- **The purge itself.** Deleting a school's records category by category, with a confirmation per category, does not exist. The synthetic Console preview is an immutable dry-run receipt, not a purge control. The trigger on `schools` therefore refuses *every* delete, including after `authorize_school_purge`. Building the purge is a separate piece of work needing its own authorization.
 - A delivery job, archive/container format, operator screen, customer receipt workflow and target-environment acceptance. The database now returns a deterministic JSON package with per-table, manifest and package hashes and explicit credential/security/privileged-field exclusions, but does not write, retain, encrypt, transmit or deliver a file. The synchronous preview refuses packages above 100,000 tenant rows and points the operator to a separately reviewed chunked generator; that generator does not yet exist.
 - Notifying anyone. Step 4 records that it happened.
-- Any screen, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row).
+- Any screen that can change offboarding state or operate on a real tenant, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row). The existing screen is synthetic-only and read-only.
 - Department-, office- and course-scoped grants inside the school are not revoked; only `school`-scoped ones are. The grant that gives an administrator power over a whole school is school-scoped, so their authority ends; a course instructor's course-scoped grant does not, and reaches only that course's own records.
 
 **Done once, by the author:** a compact rehearsal on a hosted Supabase preview database with synthetic data (`docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md`). It does not replace the rehearsal below by a second person.
