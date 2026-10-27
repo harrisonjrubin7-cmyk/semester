@@ -162,6 +162,8 @@
    "access_saga_signals",
    "access_sagas",
    "ai_answer_remedy",
+   "accommodation_support_request",
+   "accommodation_support_request_revision",
    "app_admins",
    "beta_cohorts",
    "beta_exit_requests",

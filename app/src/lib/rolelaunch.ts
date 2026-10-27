@@ -261,7 +261,7 @@ export const ROLES: readonly RoleRow[] = [
   row({ role: 'orientation_leader', category: 'academic', mayDo: 'See onboarding-checklist progress of students who accepted them, within one cohort', mustNever: 'Academic or private records of the cohort' }),
 
   // ── campus offices ───────────────────────────────────────────────────────
-  row({ role: 'disability_services_officer', category: 'campus-office', mayDo: 'Issue/revoke functional accommodation passport', mustNever: 'Diagnoses in Semester; unrestricted academic records' }),
+  row({ role: 'disability_services_officer', category: 'campus-office', mayDo: 'Review one school’s access-support routing queue and issue/revoke functional accommodation passports', mustNever: 'Diagnoses in Semester; automated eligibility decisions; unrestricted academic records' }),
   row({ role: 'registrar', category: 'campus-office', mayDo: 'Publish catalog, requirements, windows, approved articulation decisions, institutional actions', mustNever: 'Individual private plans, AI memory, unrestricted student browsing' }),
   row({ role: 'department_chair', category: 'campus-office', mayDo: 'View allowed aggregate demand/outcomes for scope', mustNever: 'Individual records' }),
   row({ role: 'dean', category: 'campus-office', mayDo: 'View allowed school-level aggregates and decisions', mustNever: 'Individual records without explicit authorization' }),

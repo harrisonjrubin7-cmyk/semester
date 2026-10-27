@@ -116,6 +116,7 @@ export type Category = keyof typeof CATEGORIES;
 export const FUNCTIONS: readonly (readonly [name: string, category: Category, gates: readonly string[]])[] = [
   ['accept_connection', 'self-service', ['auth.uid()']],
   ['accept_family_grant', 'sharing', ['auth.uid()']],
+  ['accommodation_support_request_queue', 'admin', ['auth.uid()', 'private.has_capability']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
   ['ai_answer_remedy_queue', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -157,6 +158,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['career_evidence_withdraw', 'self-service', ['auth.uid()', 'private.workspace_replay', 'private.career_bump']],
   ['case_author_safety', 'moderation', ['private.has_capability']],
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
+  ['claim_accommodation_support_request', 'admin', ['auth.uid()', 'private.has_capability']],
   ['claim_ai_answer_remedy', 'admin', ['auth.uid()', 'private.has_capability']],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
   ['claim_family_invite', 'sharing', ['auth.uid()']],
@@ -183,6 +185,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
+  ['correct_accommodation_support_request', 'self-service', ['auth.uid()']],
   ['course_request_decide', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay', 'r.student_id = me']],
   ['course_request_file', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.gradebook_require', 'private.gradebook_replay']],
   ['course_request_respond', 'self-service', ['auth.uid()', 'private.gradebook_school', 'r.student_id is distinct from me', 'private.gradebook_replay']],
@@ -264,6 +267,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['moderate_opportunity', 'moderation', ['private.has_capability']],
   ['move_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['mutual_connections', 'read-helper', ['auth.uid()']],
+  ['my_accommodation_support_requests', 'read-helper', ['auth.uid()']],
   ['my_action_publish_scopes', 'read-helper', ['auth.uid()']],
   ['my_age_status', 'read-helper', ['auth.uid()']],
   ['my_ai_answer_remedies', 'read-helper', ['auth.uid()']],
@@ -305,6 +309,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['queue_school_purge_rehearsal', 'admin', ['private.offboarding_operator', 'private.has_capability']],
+  ['raise_accommodation_support_request', 'self-service', ['auth.uid()']],
   ['raise_ai_answer_remedy', 'self-service', ['auth.uid()']],
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
@@ -345,6 +350,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
+  ['resolve_accommodation_support_request', 'admin', ['auth.uid()', 'private.has_capability']],
   ['resolve_ai_answer_remedy', 'admin', ['auth.uid()', 'private.has_capability']],
   ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
@@ -396,6 +402,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_roster', 'moderation', ['private.has_capability']],
+  ['withdraw_accommodation_support_request', 'self-service', ['auth.uid()']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
   ['withdraw_school_request', 'self-service', ['auth.uid()']],
   ['workspace_object_create', 'self-service', ['auth.uid()', 'private.workspace_mine', 'private.workspace_replay']],
@@ -524,6 +531,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * function still counts among those applied on production.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
+  {
+    file: '20261027130000_accommodation_support_request.sql',
+    functions: ['accommodation_support_request_queue', 'claim_accommodation_support_request', 'correct_accommodation_support_request', 'my_accommodation_support_requests', 'raise_accommodation_support_request', 'resolve_accommodation_support_request', 'withdraw_accommodation_support_request'],
+  },
   {
     file: '20261027120000_ai_answer_remedy.sql',
     functions: ['ai_answer_remedy_queue', 'claim_ai_answer_remedy', 'my_ai_answer_remedies', 'raise_ai_answer_remedy', 'resolve_ai_answer_remedy'],

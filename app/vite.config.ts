@@ -713,6 +713,7 @@ function vercelUncovered(extra: string): string[] {
  */
 const MOCKS_MODULES = [
   'src/ai/aianswerremedy.test.tsx',
+  'src/components/accommodationrequestpanel.test.tsx',
   'src/components/AboutMe.test.tsx',
   'src/components/SchoolPicker.removal-labels.test.tsx',
   'src/components/ListingDesk.moderation-preview.test.tsx',

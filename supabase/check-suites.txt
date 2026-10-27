@@ -2,6 +2,7 @@ academic-record
 access
 access-saga-store
 access-saga-tick-auth
+accommodation-support-request
 activity
 admins
 advisor
