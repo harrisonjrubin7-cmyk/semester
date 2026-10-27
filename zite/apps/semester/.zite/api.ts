@@ -48,6 +48,7 @@ import type { default as _MigrationApprovalEp } from '../src/api/migrationApprov
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _ParkingEp } from '../src/api/parking';
+import type { default as _PartnersEp } from '../src/api/partners';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
@@ -306,6 +307,11 @@ export type ParkingInputType = NonNullable<_ParkingCfg['inputSchema']> extends {
 export type ParkingOutputType = Awaited<ReturnType<_ParkingCfg['execute']>>;
 export const parking = createCaller<ParkingInputType, ParkingOutputType>('parking');
 
+type _PartnersCfg = typeof _PartnersEp;
+export type PartnersInputType = NonNullable<_PartnersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PartnersCfg['execute']>[0]['input'];
+export type PartnersOutputType = Awaited<ReturnType<_PartnersCfg['execute']>>;
+export const partners = createCaller<PartnersInputType, PartnersOutputType>('partners');
+
 type _PrivacyCfg = typeof _PrivacyEp;
 export type PrivacyInputType = NonNullable<_PrivacyCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PrivacyCfg['execute']>[0]['input'];
 export type PrivacyOutputType = Awaited<ReturnType<_PrivacyCfg['execute']>>;
@@ -489,6 +495,7 @@ export const api = {
   officeHours,
   onboard,
   parking,
+  partners,
   privacy,
   programs,
   progress,

@@ -55,6 +55,7 @@ import Parking from './pages/Parking';
 import Inventory from './pages/Inventory';
 import Facilities from './pages/Facilities';
 import IdCard from './pages/IdCard';
+import Partners from './pages/Partners';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
 import Curriculum from './pages/Curriculum';
@@ -80,6 +81,8 @@ export default function App() {
 
   if (isLoading || !user || !ws) return <Splash />;
   const membership = ws.memberships.find((m) => m.status === 'Active');
+  // Outside partner organizations have no institution membership; their page stands alone (authorization is server-side).
+  if (!membership && window.location.pathname.startsWith('/partners')) return <div className="mx-auto max-w-4xl px-4 py-6"><Partners /><Toaster /></div>;
   if (!membership) {
     if (ws.memberships.length) {
       const m = ws.memberships[0];
@@ -167,6 +170,7 @@ export default function App() {
             <Route path="/campus" element={<Campus />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/you/account" element={<><Account /><MyAccountServices /></>} />
+            <Route path="/partners" element={<Partners />} />
             <Route path="/you" element={<You />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Route>
