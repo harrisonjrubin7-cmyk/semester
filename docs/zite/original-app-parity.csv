@@ -1,0 +1,76 @@
+id,label,shelf,blurb,behavior,zite_match,status,missing_part,external_dependency
+home,Today,Semester,"Today, this week, hours tonight, ahead",Student own-data dashboard with tabs for today/week/hours/ahead,/today,partial,no hours-tonight or week-in-hours views; task list + action center + break-into-steps only,none
+brief,Reports,Semester,"The day, week or term read back from what the app recorded",Generates day/week/term report from recorded activity,none,missing,no recorded-activity reports,none
+courses,Courses,Courses,"Courses, assignments, grades in three grains","Course list, detail, items, grades from own data","/learn (Courses, SectionPage)",built,,none
+degree,The degree,Courses,"What is left of a major or minor, hours",Degree audit against own courses,/progress/degree,built,,none
+calendar,Calendar,Semester,"Classes and deadlines by day, month or semester","Multi-view calendar, add/move events, ICS",/plan (CalendarPage),partial,single list view built on getToday; no month/semester grid or event move/add,none
+study,Study,Study,Pick a course and a way through it,Per-course study hub with 11 modes (see study-mode rows),/learn/study,partial,free-form notes/flashcards only; no course-derived study modes,none
+meet,Where courses meet,Study,"Same term across two courses, definitions side by side",Cross-course concept comparison from guides,none,missing,,none
+ask,Ask Semester,Study,The conversation - your term in hand,Chat over own term data with threads,/learn/ask (api/ask.ts),built,,AI model (OpenAI in Zite)
+work,Work on it,Semester,"Paste an assignment, get rubric/plan/dates",Breaks pasted assignment into plan and dates,/today (manual break-into-steps),partial,"steps typed by hand; no paste-and-analyse, rubric or questions",AI model
+update,Add a reading,Study,New material into a course; study modes pick it up,"Ingests reading into course guide, rebuilds cards/lessons",/learn/:sectionId addMaterial (URL link only),partial,only stores a link; no ingestion into study content,AI model
+analyse,Analyse data,Study,"CSV in, statistics out, explained",Computes stats on uploaded CSV locally then explains,none,missing,,none
+draw,Draw it,Make,"Graph, flow, timeline or matrix from a description",Draws diagrams from description,none,missing,,none
+solve,Work the problem,Study,Method worked on other numbers; your attempt checked,Worked-problem engine with attempt checking,none,missing,,none
+exam,Practice paper,Study,Timed paper sat and marked against a key,Timed practice exam with marking,none,missing,,none
+deck,Make a deck,Make,A real PowerPoint file,Builds and exports .pptx from a unit or brief,/learn/decks (flashcard decks),partial,Decks page is flashcard text; no slides or PowerPoint export,none
+write,Write a document,Make,Memo/report/handout out as a Word file,"Document editor with headings, tables, equations, .docx export",/learn/write (notes),partial,plain-text notes with visibility; no formatting or Word export,none
+sheet,Sheet or table,Make,Grid you can type into; out as Excel/CSV,"Spreadsheet editor with formulas, xlsx/csv export",none,missing,,none
+equations,"Equations, and the graph",Make,"Write formula, evaluate, draw curve",Equation editor with evaluation and plot,none,missing,,none
+sources,Sources,Courses,"Every reading kept, what each is for, BibTeX",Reading/source library with BibTeX export,none,missing,,none
+create,Create,Make,One door to everything that makes something,Hub linking make-tools plus form/design/video,none,missing,,none
+essay,Draft it,Make,"Draft for cover letter, statement, newsletter",Drafting assistant for non-coursework writing,none,missing,,AI model
+import,Add a course,Courses,"Upload a syllabus, get the course back checked","Syllabus parse into course, reviewed before keep",/learn/syllabi (SyllabusHub),built,,AI model
+edit,Edit the course,Courses,"Fix dates, weightings, rooms, AI policy",Edit parsed syllabus fields,/learn/syllabi review step; /learn/:sectionId policy (instructor),partial,student cannot freely edit dates/weights/rooms after import,none
+registrar,Term deadlines,Courses,"Add/drop, withdrawal, registration dates",Student view of registrar deadlines,/staff/calendar (staff only),partial,academic calendar exists only on staff route,none
+announce,A change to a date,Courses,"Email that moved a deadline vs calendar, one at a time",Parses pasted announcement and compares against calendar,none,missing,,AI model
+costs,Money,Life,"Tuition bill, aid, instalments, books and fees","Bill, aid, self-paid costs","/you/account, /you/aid",partial,no books/fees self-tracking or per-instalment breakdown verified,none
+call,Video call,Campus,"Call with course people, code and link",In-browser video call with lobby/stage/schedule,none,missing,,video provider / WebRTC
+groupwork,Group work,Campus,Shared list for a group project,Part-ownership list for group projects,CourseGroups component in /learn/:sectionId,partial,group sets/signup exist; no shared part-tracking list,none
+meals,Meal plan,Campus,"What is on your plan, per day, when it runs out",Plan balance and run-out date,/campus/dining,built,,none
+housing,Housing,Campus,Your room and move-out date from last exam,Room and move-out calculation,/campus/housing,partial,application/contract/maintenance built; no move-out date from last exam,none
+runway,Exam runway,Study,Weeks before exam counted backward,Backward planning from exam date,none,missing,,none
+behind,Catching up,Semester,"What has gone by, what still fits",Triage of overdue work,none,missing,,none
+hub,Notices,Semester,"All course/school/Semester messages, labelled by sender",Unified notices list,/today/notifications,built,,none
+launchpad,Launchpad,Semester,Offer letter to week five checklist,Ordered onboarding checklist,/plan/transition,built,,none
+maps,Getting there,Campus,"When to leave, searchable map, directions","Leaflet/OSM map, find place, leave-by time",/campus/places,partial,"list of event locations only; no map, search of place, directions or leave-by",maps tiles (OpenStreetMap/Leaflet)
+mail,Email,Life,"Inbox in Gmail shape, draft the email you put off",Gmail inbox view and drafting,/today/mail,partial,in-app messages only; no Gmail connection,Gmail OAuth
+yes,Registration,Courses,"Registration, class search, paste schedule back in",Class search and schedule builder,/plan/registration,partial,no paste-schedule-back import,none
+classmates,Classmates,Campus,A room per class for everyone at your school,Per-class room,/campus/community (groups),partial,interest groups not per-class rooms,none
+activities,Activities,Campus,"Clubs, job, research, team, weekly cost",Activity tracker with weekly hours,"/campus/organizations, /campus",partial,no activity/time-cost tracking,none
+people,People and letters,Life,"Professors, what you talked about, letters asked",Recommender relationship log,/help/advising (prep),partial,no recommender/letter tracking,none
+pathway,Pathway,Beyond,"Applying, arriving, thesis, graduating",Long-term project tracker,"/plan/transfer, /plan/abroad, /progress/graduate",partial,separate pages; no unified pathway projects,none
+opportunities,Opportunities,Beyond,"Jobs, research, abroad, certificates, scholarships list",Unified opportunity list with steps,"/plan/career, /you/scholarships, /plan/abroad",partial,split across pages; no single list,none
+career,Career,Beyond,"What is open, what you did, who you spoke to, letters",Career workspace with drafted letters,/plan/career,partial,"openings and apply only; no experience log, contacts or letter drafts",AI model
+family,Family,Beyond,"Decide what someone else sees, item by item",Delegated sharing with preview,FamilyShare component; apps/semester-family,built,,none
+athletics,Athletics,Beyond,"Practice, training, travel beside classes",Athletic schedule overlay,none,missing,,none
+nil,NIL deals,Beyond,Private record of payments and totals,NIL payment ledger,none,missing,,none
+applying,Applications,Beyond,Internship/job/research deadlines,Application tracker,/plan/career (apply),partial,apply action only; no tracker with deadlines,none
+proof,Check the writing,Make,"Spelling, grammar, quotes checked against reading",Proofreader with quotation check,none,missing,,none
+clocks,Timers and alarms,Life,Countdown and alarm,Timers/alarms,none,missing,,none
+mine,Personal,Life,"Your own actions, appointments, notes, places, files",Personal items hub,"/learn/study notes, /you/files, /today tasks",partial,no appointments or places,none
+me,Progress,Semester,"What is late, week holds, everything else",Progress report and directory,/progress,partial,released-grades degree path; no late/week summary or directory,none
+account,Account,Data,Whether this term leaves the device (sign in),Sign-in and sync decision,zitejs auth + /you/account (tuition),partial,auth is mandatory; page is tuition not account/sync choice,none
+profile,Profile,Life,"Name, account, everything app holds about you",Profile page,/you,partial,privacy/data page; no profile editing,none
+university,University,Campus,Every university service in one place,Service directory with honesty about connection,"/campus, /apps",partial,individual service pages exist; no single directory,none
+links,Links,Life,"Campus sites, bookstore, tickets, own addresses",Link list,none,missing,,none
+support,Support,Life,"Care, basic needs, accommodations, safety",Support routing,"/help, /campus/accommodations, /help/peer-support",built,,none
+connect,Connect accounts,Data,"Course site, Outlook, Google, Zoom in",Connectors for LMS/Outlook/Google/Zoom,none,missing,connectors intentionally off (OVERVIEW.md),"Gmail/Google/Outlook OAuth, LMS, Zoom"
+data,Your data and how it is running,Data,"Every record held, weight, room left",Storage usage view,/you (Your data),partial,no sizes or capacity,none
+privacy,Privacy and your rights,Data,"What leaves device, why, how to delete",Privacy and deletion rights,"/you (consents, access history)",built,,none
+export,Take it with you,Data,Download everything or push to Drive/OneDrive,Full export and cloud push,/you Export my data (JSON),partial,JSON download only; no Drive/OneDrive,Google Drive / OneDrive
+settings,Settings,Data,"Navigation, alerts, courses loaded",Settings with look/nav/alerts/grading/workload,none,missing,only role switch,none
+notifs,Alerts,Data,What the app would have poked you about,Alert list,/today/notifications,built,,none
+help,How this works,Data,Every screen and what it will not do,In-app guide,none,missing,"Zite /help is ""who can help"" advising",none
+community,Community,Beyond,"Course spaces, study groups, sessions","Posts, groups, reporting",/campus/community,built,,none
+mode:cards,Cards,study-mode,"Tap to flip, one question at a time, by unit","Per-course study mode driven by course guide (units, cards, lessons, figures)",/learn/study,partial,"flip cards only for hand-typed ""front :: back"" decks; none derived from courses",none
+mode:read,Read,study-mode,"Guide as prose, unit by unit, glossary","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:field,Field guide,study-mode,"Whole guide as published page with masthead, glossary, self-test","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:watch,Watch,study-mode,"Narrated lesson per unit, or read aloud by device","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,browser speech synthesis / recordings
+mode:slides,Slides,study-mode,"Unit as a deck, one point per slide","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:doc,Doc,study-mode,Whole guide as Word/PDF/print page,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:quiz,Quiz,study-mode,"Multiple choice, true/false, matching, marked as you go","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,Quiz is only a label on a text note; no quiz runner or marking,none
+mode:figures,Figures,study-mode,Diagrams with what each shows,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:cases,Cases,study-mode,Worked examples in full,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:cram,Cram,study-mode,Everything on one page for the night before,"Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,none
+mode:listen,Listen,study-mode,"Podcast editions with seeking chapters, or script","Per-course study mode driven by course guide (units, cards, lessons, figures)",none,missing,,audio / speech synthesis
