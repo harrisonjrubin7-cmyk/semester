@@ -23,6 +23,7 @@ import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
+import type { default as _DesignEp } from '../src/api/design';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
@@ -184,6 +185,11 @@ type _CurriculumCfg = typeof _CurriculumEp;
 export type CurriculumInputType = NonNullable<_CurriculumCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CurriculumCfg['execute']>[0]['input'];
 export type CurriculumOutputType = Awaited<ReturnType<_CurriculumCfg['execute']>>;
 export const curriculum = createCaller<CurriculumInputType, CurriculumOutputType>('curriculum');
+
+type _DesignCfg = typeof _DesignEp;
+export type DesignInputType = NonNullable<_DesignCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DesignCfg['execute']>[0]['input'];
+export type DesignOutputType = Awaited<ReturnType<_DesignCfg['execute']>>;
+export const design = createCaller<DesignInputType, DesignOutputType>('design');
 
 type _DevAppsCfg = typeof _DevAppsEp;
 export type DevAppsInputType = NonNullable<_DevAppsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DevAppsCfg['execute']>[0]['input'];
@@ -488,6 +494,7 @@ export const api = {
   courseGroups,
   courseTeam,
   curriculum,
+  design,
   devApps,
   dining,
   eventDelivery,
