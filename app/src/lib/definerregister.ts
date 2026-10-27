@@ -118,6 +118,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['ai_answer_remedy_queue', 'admin', ['auth.uid()', 'private.has_capability']],
   ['answer_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
@@ -156,6 +157,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['career_evidence_withdraw', 'self-service', ['auth.uid()', 'private.workspace_replay', 'private.career_bump']],
   ['case_author_safety', 'moderation', ['private.has_capability']],
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
+  ['claim_ai_answer_remedy', 'admin', ['auth.uid()', 'private.has_capability']],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
   ['claim_family_invite', 'sharing', ['auth.uid()']],
   ['claim_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
@@ -264,6 +266,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['mutual_connections', 'read-helper', ['auth.uid()']],
   ['my_action_publish_scopes', 'read-helper', ['auth.uid()']],
   ['my_age_status', 'read-helper', ['auth.uid()']],
+  ['my_ai_answer_remedies', 'read-helper', ['auth.uid()']],
   ['my_beta', 'read-helper', ['private.beta_my_membership']],
   ['my_capabilities', 'read-helper', ['auth.uid()']],
   ['my_community_notices', 'read-helper', ['auth.uid()']],
@@ -302,6 +305,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['queue_school_purge_rehearsal', 'admin', ['private.offboarding_operator', 'private.has_capability']],
+  ['raise_ai_answer_remedy', 'self-service', ['auth.uid()']],
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
@@ -341,6 +345,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
+  ['resolve_ai_answer_remedy', 'admin', ['auth.uid()', 'private.has_capability']],
   ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['resolve_privileged_access_review_investigation', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['resolve_privileged_access_review_post_decision_change', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
@@ -519,6 +524,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * function still counts among those applied on production.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
+  {
+    file: '20261027120000_ai_answer_remedy.sql',
+    functions: ['ai_answer_remedy_queue', 'claim_ai_answer_remedy', 'my_ai_answer_remedies', 'raise_ai_answer_remedy', 'resolve_ai_answer_remedy'],
+  },
   {
     file: '20261026200000_offboarding_purge_rehearsal.sql',
     functions: ['queue_school_purge_rehearsal', 'stop_school_purge_rehearsal'],
