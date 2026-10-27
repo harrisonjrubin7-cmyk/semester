@@ -177,7 +177,8 @@ begin
   return made.id;
 end $$;
 
-create or replace function public.my_accommodation_support_requests()
+drop function if exists public.my_accommodation_support_requests();
+create function public.my_accommodation_support_requests()
 returns table (
   id uuid, kind text, summary text, status text, owner_seat text,
   response_due_at timestamptz, escalation_at timestamptz, correction_count bigint,
@@ -257,7 +258,8 @@ begin
   return 'withdrawn';
 end $$;
 
-create or replace function public.accommodation_support_request_queue(want_tenant text)
+drop function if exists public.accommodation_support_request_queue(text);
+create function public.accommodation_support_request_queue(want_tenant text)
 returns table (
   id uuid, kind text, summary text, evidence_reference text, status text,
   response_due_at timestamptz, escalation_at timestamptz, assigned_to uuid, created_at timestamptz
