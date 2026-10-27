@@ -60,6 +60,7 @@ declare
   seen bigint;
   item public.accommodation_support_request%rowtype;
   latest text;
+  queue_reporter uuid;
 begin
   perform pg_temp.become('ac100000-0000-0000-0000-000000000001');
   made := public.raise_accommodation_support_request(
@@ -115,11 +116,27 @@ begin
     format('select public.claim_accommodation_support_request(%L)', made));
 
   perform pg_temp.become('ac200000-0000-0000-0000-000000000001');
-  select count(*), max(summary) into seen, latest from public.accommodation_support_request_queue('access-a');
-  perform pg_temp.check('an exact-school human sees the corrected queue entry',
-    seen = 1 and latest = 'The caption control is missing on the lecture player.');
+  select count(*), max(summary), max(reporter::text)::uuid into seen, latest, queue_reporter
+    from public.accommodation_support_request_queue('access-a');
+  perform pg_temp.check('an exact-school human sees the corrected queue entry and canonical requester identity',
+    seen = 1 and latest = 'The caption control is missing on the lecture player.'
+    and queue_reporter = 'ac100000-0000-0000-0000-000000000001');
   perform pg_temp.check('the exact-school human must claim before resolving',
     public.claim_accommodation_support_request(made) = 'in_review');
+  perform pg_temp.check('asking for more information keeps the request open',
+    public.resolve_accommodation_support_request(made, 'more_information_needed', 'case:SYNTHETIC-ACCESS-FOLLOW-UP') = 'needs_student');
+
+  perform pg_temp.become('ac100000-0000-0000-0000-000000000001');
+  select * into item from public.accommodation_support_request where id = made;
+  perform pg_temp.check('the student can see that human follow-up is waiting',
+    item.status = 'needs_student' and item.follow_up_requested_at is not null
+    and item.resolved_at is null and item.resolution_code is null);
+  perform public.correct_accommodation_support_request(
+    made, 'ac400000-0000-0000-0000-000000000003',
+    'The recorded lecture and live player both have no caption control.'
+  );
+
+  perform pg_temp.become('ac200000-0000-0000-0000-000000000001');
   perform pg_temp.check('the assigned human records only a routing outcome',
     public.resolve_accommodation_support_request(made, 'barrier_referred', 'case:SYNTHETIC-ACCESS-1') = 'resolved');
 
@@ -128,8 +145,8 @@ begin
   perform pg_temp.check('resolution records human ownership and evidence',
     item.status = 'resolved' and item.assigned_to = 'ac200000-0000-0000-0000-000000000001'
     and item.resolved_by = item.assigned_to and item.resolution_evidence = 'case:SYNTHETIC-ACCESS-1');
-  perform pg_temp.check('the audit trail contains submit correct claim and resolve events',
-    (select count(*) = 4 from public.audit_event a
+  perform pg_temp.check('the audit trail contains submit corrections claim follow-up and resolve events',
+    (select count(*) = 6 from public.audit_event a
       where a.tenant_id = 'access-a' and a.action like 'accommodation_request.%'));
   perform pg_temp.check('audit detail contains neither request wording nor student identity',
     not exists (select 1 from public.audit_event a where a.tenant_id = 'access-a'

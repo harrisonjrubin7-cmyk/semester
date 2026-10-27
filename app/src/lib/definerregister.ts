@@ -534,8 +534,12 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[]; redefines?: boolean }[] = [
   {
+    file: '20261027140000_accommodation_request_follow_up.sql',
+    functions: ['accommodation_support_request_queue', 'correct_accommodation_support_request', 'my_accommodation_support_requests', 'resolve_accommodation_support_request'],
+  },
+  {
     file: '20261027130000_accommodation_support_request.sql',
-    functions: ['accommodation_support_request_queue', 'claim_accommodation_support_request', 'correct_accommodation_support_request', 'my_accommodation_support_requests', 'raise_accommodation_support_request', 'resolve_accommodation_support_request', 'withdraw_accommodation_support_request'],
+    functions: ['claim_accommodation_support_request', 'raise_accommodation_support_request', 'withdraw_accommodation_support_request'],
   },
   {
     file: '20261027120000_ai_answer_remedy.sql',
