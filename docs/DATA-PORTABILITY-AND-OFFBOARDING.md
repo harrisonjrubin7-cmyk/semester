@@ -23,6 +23,17 @@ Part 13 of the expansion command. Phase 5. Much of the student half exists.
   cannot drift; `app/src/lib/erasure.test.ts` and `supabase/deletion.check.sql`
   hold them to it. Three kinds of row are withheld as another person's record
   about the account, and the file names them.
+- **Institution offboarding package, repository-only:**
+  `generate_offboarding_export(case, idempotency_key)` returns a deterministic
+  tenant-scoped JSON package after access is disabled. It locks the catalog-
+  derived tenant tables during capture, lists credential/security/privileged
+  exclusions, refuses more than 100,000 tenant rows pending a reviewed chunked
+  path,
+  hashes each table plus the manifest and package, records an immutable
+  metadata-only receipt, and refuses changed-snapshot or cross-operator replay.
+  `record_generated_offboarding_export` binds delivery metadata to that exact
+  receipt. No delivery job, customer acceptance, target-environment rehearsal
+  or purge exists.
 
 ## In flight
 
@@ -34,7 +45,7 @@ belong in the export.
 | Command entity | Decision | Why |
 |---|---|---|
 | `export_requests` | **Reuse** `data_requests` | |
-| `export_jobs`, `export_artifacts` | **Not tables** for the student export | It runs on the device. A server job only for institution offboarding |
+| `export_jobs`, `export_artifacts` | **Not tables** for the student export | It runs on the device. Institution offboarding keeps only an immutable generation receipt; the returned package is not stored |
 | `export_formats` | **Documented in this file** and versioned in the export's manifest | |
 | `retention_policies`, `retention_exceptions` | **`RETENTION.md`**, extended; a table only for per-school institutional records | |
 | `institution_offboarding_requests`, `offboarding_exports`, `data_deletion_confirmations` | **New** | Nothing like them exists |
@@ -61,6 +72,8 @@ and data projects, AI-use declarations and consent records.
 - Offboarding a school exports that school's institutional data to the school,
   gives each student their own export first, and ends with a deletion
   confirmation per data category.
+- Generating an offboarding package is non-destructive. A legal hold is stated
+  in its manifest and continues to preserve the source; it still blocks purge.
 
 ## Tests
 

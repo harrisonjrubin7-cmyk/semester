@@ -19,7 +19,7 @@ Record requester and authority, tenant/account/scope, data map/version, systems/
 | individual server export | catalog-derived mapping, export code and tests | target execution/delivery record absent | Product/Privacy | representative target export and restore |
 | portable formats | CSV/Markdown/calendar/JSON sources | accessibility/usability and current schema acceptance open | Product/Data | independent format review |
 | device-held content | local persistence/export designs | not included in one complete server package | Product/User | end-to-end combined export |
-| tenant/source export | offboarding designs | no complete customer export acceptance | Data/Operations | target tenant/source exercise |
+| tenant/source export | deterministic JSON package, per-table/manifest/package hashes, actor-bound idempotency receipt and synthetic negative tests | no complete customer export acceptance or delivery | Data/Operations | target tenant/source, scale, format and receipt exercise |
 | secure delivery | proposed request/audit controls | channel, expiry, receipt and incident exercise absent | Security/Privacy | target delivery test |
 
 The evidence source [Data retention, export and deletion](../DATA-RETENTION-EXPORT-DELETION.md) documents current implementation and explicit gaps.

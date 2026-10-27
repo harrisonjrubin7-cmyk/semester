@@ -89,7 +89,7 @@ SLO.
 | I10 | Governance and control plane | untested | preview | `governance_*`, `ControlPlane`, `ConfigurationStudio` | `university` tabs | needs verified grant no preview supplies | `tenancy.check.sql`, `governance.check.sql` | — · tested · — | none · none | — | A university's staff have no operations console. |
 | I11 | Integration framework | mock | flag-off | `app/server/integration/`, `lib/integration/` | worker, tick | `ADAPTERS = []` | 18 + 3 test files | — · — · — | none · none | — | **Zero real connectors; no live inbound webhook.** |
 | I12 | Migration center | untested | preview | `20260929200000_migration_center.sql`, `scripts/institution-migration.ts` | `MigrationCenter.tsx` | — | `migration-center.check.sql`, 15 tests | — · tested · — | none · none | `docs/migration/README.md` | Never run on a real institution. [Factory](SEMESTER_MIGRATION_FACTORY.md). |
-| I13 | School offboarding | untested | preview | `school_offboarding*`, `20261026120000_offboarding_restore_integrity.sql` | SQL case workflow | — | `school-offboarding.check.sql` (includes atomic restore refusal/retry/replay) | — · tested · tested | runbook · none | `docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md` | Restore integrity is source-guarded; target-environment rerun pending. No export job, purge, or screen. |
+| I13 | School offboarding | untested | preview | `school_offboarding*`, `20261026120000_offboarding_restore_integrity.sql`, `20261026150000_offboarding_export_package.sql` | SQL case workflow; JSON package returned to operator | operator-only, tenant derived from locked case; two-person verify | `school-offboarding.check.sql` (includes atomic restore refusal/retry/replay), `offboardingexport.test.ts` | — · tested · tested | runbook · none | `docs/evidence/offboarding/2026-09-30-hosted-preview-rehearsal.md` predates generator | Restore integrity is source-guarded and the export generator has synthetic coverage only; target acceptance, scale/format review, secure delivery job/receipt, purge, and screen remain absent. |
 
 ## D. Company and pilot spine
 
@@ -121,7 +121,7 @@ documents and are **not** capabilities.
 | --- | --- | --- |
 | Real Banner, Colleague, Workday, PeopleSoft, Ellucian, Blackboard connector | mocks, docs, site | Not found as code. |
 | OneRoster, QTI export, Common Cartridge export | docs | Not found as code. |
-| Tenant bulk export | offboarding docs | Not found. |
+| Tenant bulk export | deterministic SQL JSON package and offboarding docs | Source and synthetic checks only; no target-environment package acceptance or delivery. |
 | Incumbent feature-parity matrix | `docs/CAPABILITY-PARITY-MATRIX.md` | That file is screen-width parity only. |
 | Prompt registry | AI docs | Not found; ~28 `*_SYSTEM` constants. |
 | SOC 2, penetration test, ACR/VPAT | site, trust docs | None held (the site says so). |
