@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AFTER_SECOND_READING, BRIEF, CATEGORIES, FUNCTIONS, NOT_YET_APPLIED, OPEN, PROJECT, READ_COUNT, READ_ON, READ_TABLES, SECOND_READING, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
+import { AFTER_SECOND_READING, BRIEF, CATEGORIES, FUNCTIONS, NOT_YET_APPLIED, OPEN, PROJECT, READ_COUNT, READ_ON, READ_TABLES, SECOND_READING, SINCE_READING, SOURCES, TABLES, WINNING_REDEFINITIONS, type Category } from './definerregister';
 
 /**
  * Holds the Security Definer and RLS remediation register to the migrations:
@@ -107,7 +107,11 @@ describe('the Security Definer and RLS remediation register', () => {
     const unapplied = SINCE_READING.filter((s) => NOT_YET_APPLIED.includes(s.file)).flatMap((s) => s.functions);
     expect(NOT_YET_APPLIED.every((f) => SINCE_READING.some((s) => s.file === f)), 'every unapplied file is a since-reading file').toBe(true);
     expect(FUNCTIONS.length - unapplied.length - afterSecondNew.length).toBe(SECOND_READING.functions);
+    const replacement = new Map(WINNING_REDEFINITIONS.flatMap((s) => s.functions.map((name) => [name, s.file] as const)));
     for (const s of [...SINCE_READING, ...AFTER_SECOND_READING]) {
+      for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(replacement.get(name) ?? s.file);
+    }
+    for (const s of WINNING_REDEFINITIONS) {
       for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(s.file);
     }
   });
