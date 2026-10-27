@@ -780,6 +780,7 @@ describe('examples/event-consumer', () => {
       'app/server/institution/gateway.ts',
       'app/server/institution/journal.ts',
       'app/server/institution/membership.ts',
+      'app/server/institution/registration-readiness-activation.ts',
       'app/server/institution/registration-readiness-commands.ts',
       'app/server/institution/readiness-repository.ts',
       'app/server/course-sources/contract.ts',
