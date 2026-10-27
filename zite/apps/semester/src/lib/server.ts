@@ -4,6 +4,8 @@ import { authorize, Action } from './authz';
 import { pg } from './pg';
 import { roleForApp } from './roleApps';
 import { DEC_MIGRATION } from './decMigration';
+import { AFF_MIGRATION } from './affMigration';
+import { pickMembership } from './affiliationRules';
 
 export const ids = (v: string | string[] | undefined | null): string[] =>
   !v ? [] : Array.isArray(v) ? v : [v];
@@ -21,10 +23,32 @@ export type Access = {
   correlationId?: string;
 };
 
+let affReady: Promise<void> | null = null;
+export function ensureAff() {
+  if (!affReady) affReady = (async () => { for (const q of AFF_MIGRATION) await pg().query(q); })().catch((e) => { affReady = null; throw e; });
+  return affReady;
+}
+
+/** The one membership this request acts under (S-76 E28). With several active memberships (a personal workspace and an
+ *  institution, say) the member's stored choice wins if still active, else an institution over a personal or sample
+ *  workspace. Never taken from the client. */
+export async function currentMembership(userId: string) {
+  const { records } = await zite.memberships.findAll({ filters: { member: userId }, limit: 20 });
+  const active = records.filter((r) => r.status === 'Active' && first(r.institution));
+  if (active.length <= 1) return active[0];
+  await ensureAff();
+  const pref = ((await pg().query(`SELECT membership_id FROM aff_current WHERE user_id = $1`, [userId])) as { membership_id: string }[])[0]?.membership_id ?? null;
+  const shaped = await Promise.all(active.map(async (r) => {
+    const inst = await zite.institutions.findOne({ id: first(r.institution)! });
+    return { id: r.id, personal: (inst?.tenantType ?? '') === 'Personal', sample: !!inst?.isSample };
+  }));
+  const pick = pickMembership(shaped, pref);
+  return active.find((r) => r.id === pick?.id);
+}
+
 /** Deny by default: caller must hold an active membership in a tenant. */
 export async function requireAccess(userId: string, needRoles?: string[]): Promise<Access> {
-  const { records } = await zite.memberships.findAll({ filters: { member: userId }, limit: 20 });
-  const m = records.find((r) => r.status === 'Active' && first(r.institution));
+  const m = await currentMembership(userId);
   if (!m) throw new ZiteError({ code: 'FORBIDDEN', message: 'No active membership', userFacingMessage: 'You need an active workspace to do this.' });
   const roles = m.roles ?? [];
   if (needRoles && !needRoles.some((r) => roles.includes(r))) {
@@ -40,8 +64,7 @@ export async function requireAccess(userId: string, needRoles?: string[]): Promi
  * The resource is the caller's own tenant here; record-level checks (ownership, tenantScope) still run in each endpoint.
  */
 export async function requireAction(userId: string, action: Action, extra: { policyBlocks?: string[]; authorityGranted?: boolean } = {}): Promise<Access> {
-  const { records } = await zite.memberships.findAll({ filters: { member: userId }, limit: 20 });
-  const m = records.find((r) => r.status === 'Active' && first(r.institution));
+  const m = await currentMembership(userId);
   const tenantId = m ? first(m.institution)! : '';
   const activeRole = m ? await activeRoleOf(tenantId, userId, m.roles ?? []) : undefined;
   const d = authorize({ actorId: userId, membership: m ? { status: m.status ?? '', tenantId, roles: m.roles ?? [], templates: m.roleTemplates ?? [], activeRole } : null, action,

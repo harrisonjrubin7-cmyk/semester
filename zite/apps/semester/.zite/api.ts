@@ -7,6 +7,7 @@ import type { default as _AccommodationsEp } from '../src/api/accommodations';
 import type { default as _AccountServicesEp } from '../src/api/accountServices';
 import type { default as _AdmissionsEp } from '../src/api/admissions';
 import type { default as _AdvisorShareEp } from '../src/api/advisorShare';
+import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AlumniEp } from '../src/api/alumni';
 import type { default as _ApprovalsEp } from '../src/api/approvals';
 import type { default as _AskEp } from '../src/api/ask';
@@ -102,6 +103,11 @@ type _AdvisorShareCfg = typeof _AdvisorShareEp;
 export type AdvisorShareInputType = NonNullable<_AdvisorShareCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdvisorShareCfg['execute']>[0]['input'];
 export type AdvisorShareOutputType = Awaited<ReturnType<_AdvisorShareCfg['execute']>>;
 export const advisorShare = createCaller<AdvisorShareInputType, AdvisorShareOutputType>('advisorShare');
+
+type _AffiliationCfg = typeof _AffiliationEp;
+export type AffiliationInputType = NonNullable<_AffiliationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AffiliationCfg['execute']>[0]['input'];
+export type AffiliationOutputType = Awaited<ReturnType<_AffiliationCfg['execute']>>;
+export const affiliation = createCaller<AffiliationInputType, AffiliationOutputType>('affiliation');
 
 type _AlumniCfg = typeof _AlumniEp;
 export type AlumniInputType = NonNullable<_AlumniCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AlumniCfg['execute']>[0]['input'];
@@ -460,6 +466,7 @@ export const api = {
   accountServices,
   admissions,
   advisorShare,
+  affiliation,
   alumni,
   approvals,
   ask,

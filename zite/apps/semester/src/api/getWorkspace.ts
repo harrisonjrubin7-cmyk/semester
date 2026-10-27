@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { first } from '../lib/server';
+import { first, currentMembership } from '../lib/server';
 import { templatePermissions, ROLE_PERMISSIONS } from '../lib/authz';
 
 const KNOWN = new Set<string>(Object.values(ROLE_PERMISSIONS).flat());
@@ -30,6 +30,7 @@ export default createEndpoint({
         tenantType: string; isSample: boolean; aiPolicy: string; templates: string[]; templateActions: string[];
       }[],
       firstName: context.user.firstName ?? '',
+      currentId: (await currentMembership(context.user.id))?.id ?? null,
     };
   },
 });

@@ -56,6 +56,7 @@ import Inventory from './pages/Inventory';
 import Facilities from './pages/Facilities';
 import IdCard from './pages/IdCard';
 import Audit from './pages/Audit';
+import Workspaces from './pages/Workspaces';
 import Partners from './pages/Partners';
 import StudyAbroad from './pages/StudyAbroad';
 import Scholarships from './pages/Scholarships';
@@ -77,11 +78,12 @@ export default function App() {
   const [role, setRole] = useState(() => localStorage.getItem('semester.role') ?? '');
 
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
-  const refresh = () => getWorkspace({}).then(setWs).catch(() => setWs({ memberships: [], firstName: '' }));
+  const refresh = () => getWorkspace({}).then(setWs).catch(() => setWs({ memberships: [], firstName: '', currentId: null }));
   useEffect(() => { if (user) refresh(); }, [user]);
 
   if (isLoading || !user || !ws) return <Splash />;
-  const membership = ws.memberships.find((m) => m.status === 'Active');
+  // The server picks the current membership (lib/server.ts currentMembership); the client only mirrors it.
+  const membership = ws.memberships.find((m) => m.id === ws.currentId && m.status === 'Active') ?? ws.memberships.find((m) => m.status === 'Active');
   // Outside partner organizations have no institution membership; their page stands alone (authorization is server-side).
   if (!membership && window.location.pathname.startsWith('/partners')) return <div className="mx-auto max-w-4xl px-4 py-6"><Partners /><Toaster /></div>;
   if (!membership) {
@@ -147,6 +149,7 @@ export default function App() {
             <Route path="/you/aid" element={<FinancialAid />} />
             <Route path="/you/scholarships" element={<Scholarships />} />
             <Route path="/you/files" element={<Files />} />
+            <Route path="/you/workspaces" element={<Workspaces />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
             <Route path="/faculty" element={<Faculty />} />
             <Route path="/you/integrity" element={<Integrity />} />
