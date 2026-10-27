@@ -59,6 +59,7 @@ import Audit from './pages/Audit';
 import Workspaces from './pages/Workspaces';
 import Continuing from './pages/Continuing';
 import Design from './pages/Design';
+import Governance from './pages/Governance';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
 import Procurement from './pages/Procurement';
@@ -159,6 +160,7 @@ export default function App() {
             <Route path="/you/workspaces" element={<Workspaces />} />
             <Route path="/learn/continuing" element={<Continuing />} />
             <Route path="/staff/design" element={<Design />} />
+            <Route path="/staff/governance" element={<Governance />} />
             <Route path="/you/work" element={<HumanResources />} />
             <Route path="/you/recruiting" element={<Recruiting />} />
             <Route path="/campus/procurement" element={<Procurement />} />

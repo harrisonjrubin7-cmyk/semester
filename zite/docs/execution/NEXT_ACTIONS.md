@@ -32,7 +32,10 @@ Built: student organizations (9f4a2d5), financial aid office (cce9b99), transiti
 Staff, Orientation Leader, Admitted Student; DB check 27/27, mutations on self-verification and session capacity both went red).
 Admitted Student now hosted in Semester (admission activates a Semester membership); decision acknowledgment stays incomplete
 because the decision itself is shown in Applicants. Deposit is a record with an external reference; no money moves.
-Next clusters: Data Steward / Portfolio Council, Residence Life / Resident Assistant, Career Center / Career Coach.
+Data governance (/staff/governance, Data Steward): definitions with second-steward approval, classification (lowering needs a
+second steward), lineage without cycles, quality rules and issues, retention with legal minimum (nothing deleted), source conflicts.
+DB check 26/26; mutations on cycles, lowering and conflict settlement all went red.
+Next clusters: Portfolio Council, Residence Life / Resident Assistant, Career Center / Career Coach.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

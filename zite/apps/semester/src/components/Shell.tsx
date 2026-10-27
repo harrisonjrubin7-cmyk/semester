@@ -37,6 +37,7 @@ const STAFF_NAV: { to: string; label: string; icon: typeof Sun; roles: string[];
   { to: '/staff/mentoring', label: 'Mentoring', icon: MessageSquare, roles: ['Alumni'], action: 'mentoring.offer' },
   { to: '/staff/admissions', label: 'Admissions', icon: HeartHandshake, roles: ['Staff', 'Administrator'], action: 'admission.decide' },
   { to: '/staff/design', label: 'Instructional design', icon: Layers, roles: ['Faculty', 'Staff', 'Administrator'], action: 'catalog.manage' },
+  { to: '/staff/governance', label: 'Data governance', icon: ShieldCheck, roles: ['Staff', 'Administrator'], action: 'readiness.read' },
 ];
 const TABS = [{ to: '/today', label: 'Today', icon: Sun }, { to: '/progress', label: 'My path', icon: TrendingUp }, { to: '#search', label: 'Search', icon: Search }, { to: '/plan', label: 'Plan', icon: CalendarDays }, { to: '/you', label: 'Me', icon: Shield }];
 const AREA: Record<string, string> = { today: 'Today', plan: 'Plan', learn: 'Learn', help: 'Help', campus: 'Campus', progress: 'Progress', you: 'You', staff: 'Workspace' };

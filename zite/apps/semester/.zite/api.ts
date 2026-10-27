@@ -33,6 +33,7 @@ import type { default as _FilesEp } from '../src/api/files';
 import type { default as _FinancialAidEp } from '../src/api/financialAid';
 import type { default as _GetTodayEp } from '../src/api/getToday';
 import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
+import type { default as _GovernanceEp } from '../src/api/governance';
 import type { default as _GradeTrackerEp } from '../src/api/gradeTracker';
 import type { default as _GraduateEp } from '../src/api/graduate';
 import type { default as _HelpEp } from '../src/api/help';
@@ -241,6 +242,11 @@ type _GetWorkspaceCfg = typeof _GetWorkspaceEp;
 export type GetWorkspaceInputType = NonNullable<_GetWorkspaceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetWorkspaceCfg['execute']>[0]['input'];
 export type GetWorkspaceOutputType = Awaited<ReturnType<_GetWorkspaceCfg['execute']>>;
 export const getWorkspace = createCaller<GetWorkspaceInputType, GetWorkspaceOutputType>('getWorkspace');
+
+type _GovernanceCfg = typeof _GovernanceEp;
+export type GovernanceInputType = NonNullable<_GovernanceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GovernanceCfg['execute']>[0]['input'];
+export type GovernanceOutputType = Awaited<ReturnType<_GovernanceCfg['execute']>>;
+export const governance = createCaller<GovernanceInputType, GovernanceOutputType>('governance');
 
 type _GradeTrackerCfg = typeof _GradeTrackerEp;
 export type GradeTrackerInputType = NonNullable<_GradeTrackerCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GradeTrackerCfg['execute']>[0]['input'];
@@ -540,6 +546,7 @@ export const api = {
   financialAid,
   getToday,
   getWorkspace,
+  governance,
   gradeTracker,
   graduate,
   help,
