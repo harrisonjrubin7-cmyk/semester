@@ -10,7 +10,8 @@ import { Panel, Empty, Status, fmt, fmtDay, useLoad, Loadable, errMsg } from './
 const KIND: Record<string, string> = { inspect: 'See my education record', amend: 'Correct my record', directory_optout: 'Withhold my directory information', restrict_disclosure: 'Restrict disclosure to others' };
 const run = async (fn: () => Promise<unknown>, ok: string, reload: () => void) => { try { await fn(); toast(ok); reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
 
-/** Student side: ask, track the 45-day clock, read the answer. Rendered on You → Privacy & data. */
+/** Student side: ask, track the 45-day clock, open the approved response (14 days), request a hearing; record owners
+ *  also see records they need to collect. Rendered on You → Privacy & data. */
 export function MyRecordsRights() {
   const s = useLoad(() => recordsRights({ action: 'get' }));
   const [kind, setKind] = useState('inspect');
@@ -29,10 +30,127 @@ export function MyRecordsRights() {
             <p className="flex flex-wrap items-center gap-2"><Status value={r.overdue ? 'overdue' : r.state} /> {KIND[r.kind]} · sent {fmtDay(r.createdAt)} · answer due {fmtDay(r.dueAt)}</p>
             <p className="mt-1 text-muted-foreground">{r.detail}</p>
             {r.outcome && <p className="mt-1">Answer: {r.outcome}</p>}
+            {r.response?.open && <Package id={r.id} />}
+            {r.response?.expired && <p className="mt-1 text-xs text-muted-foreground">Your records were available to open for 14 days. Ask the records office to send them again.</p>}
+            {r.hearing && <p className="mt-1 text-xs">Hearing requested {fmtDay(r.hearing.requestedAt)}{r.hearing.outcome ? ` · decided: ${r.hearing.outcome === 'amended' ? 'your record will be corrected' : 'the record stands'} — ${r.hearing.note}` : ' · waiting for a decision'}</p>}
+            {r.canRequestHearing && <HearingRequest id={r.id} reload={s.reload} />}
             {['submitted', 'acknowledged'].includes(r.state) && <Button size="sm" variant="ghost" onClick={() => run(() => recordsRights({ action: 'withdraw', id: r.id }), 'Withdrawn.', s.reload)}>Withdraw</Button>}
           </div>))}</div>)}
       </Loadable>
+      <Loadable state={s}>{(d: any) => d.ownerTasks?.length > 0 && <OwnerTasks tasks={d.ownerTasks} reload={s.reload} />}
+      </Loadable>
     </Panel>
+  );
+}
+
+function Package({ id }: { id: string }) {
+  const [pkg, setPkg] = useState<any>(null);
+  if (!pkg) return <Button size="sm" className="mt-2" onClick={async () => { try { const r: any = await recordsRights({ action: 'view', id }); setPkg(r.result); } catch (e) { toast(`! ${errMsg(e)}`); } }}>Open my records</Button>;
+  return (
+    <div className="mt-2 space-y-1 rounded-[3px] bg-muted p-2 text-xs">
+      {pkg.records.map((x: any, i: number) => <p key={i}><b>{x.source}{x.redacted ? ' (parts removed to protect others)' : ''}:</b> {x.content}</p>)}
+      {pkg.withheld.map((x: any, i: number) => <p key={`w${i}`}><b>{x.source}:</b> not released — {x.reason}</p>)}
+    </div>
+  );
+}
+
+function HearingRequest({ id, reload }: { id: string; reload: () => void }) {
+  const [reason, setReason] = useState('');
+  return (
+    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+      <Input aria-label="Why the record is wrong" placeholder="Why the record is inaccurate or misleading" value={reason} onChange={(e) => setReason(e.target.value)} />
+      <Button size="sm" variant="outline" disabled={reason.trim().length < 20} onClick={() => run(() => recordsRights({ action: 'hearingRequest', id, reason }), 'Hearing requested.', reload)}>Request a hearing</Button>
+    </div>
+  );
+}
+
+function OwnerTasks({ tasks, reload }: { tasks: any[]; reload: () => void }) {
+  const [v, setV] = useState<Record<number, { note: string; third: boolean }>>({});
+  const get = (id: number) => v[id] ?? { note: '', third: false };
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <p className="text-sm font-medium">Records you keep that a request needs · {tasks.length}</p>
+      {tasks.map((t) => (
+        <div key={t.itemId} className="mt-2 space-y-2 text-sm">
+          <p>Request #{t.number} from {t.student}: {t.source} — {t.description}</p>
+          <Input aria-label="What you found" placeholder="What you found and where it is kept" value={get(t.itemId).note} onChange={(e) => setV({ ...v, [t.itemId]: { ...get(t.itemId), note: e.target.value } })} />
+          <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={get(t.itemId).third} onChange={(e) => setV({ ...v, [t.itemId]: { ...get(t.itemId), third: e.target.checked } })} /> It also mentions other people</label>
+          <Button size="sm" disabled={get(t.itemId).note.trim().length < 5} onClick={() => run(() => recordsRights({ action: 'collect', itemId: t.itemId, note: get(t.itemId).note, thirdParty: get(t.itemId).third }), 'Recorded.', reload)}>Mark collected</Button>
+        </div>))}
+    </div>
+  );
+}
+
+const DEC: Record<string, string> = { release: 'Release', redact: 'Release with redactions', withhold: 'Withhold' };
+
+function Item({ i, reload }: { i: any; reload: () => void }) {
+  const [dec, setDec] = useState(i.decision ?? '');
+  const [reason, setReason] = useState(i.reason);
+  const [red, setRed] = useState(i.redaction);
+  return (
+    <li className="border-t border-border py-2 text-xs first:border-0">
+      <p><b>{i.source}</b> — {i.description} · {i.owner} · {i.collected ? `collected: ${i.collectedNote}` : 'waiting for the owner'}{i.thirdParty ? ' · mentions others' : ''}</p>
+      {i.decision && <p>Decision: {DEC[i.decision]}{i.reason ? ` — ${i.reason}` : ''}{i.redaction ? ` · student sees: ${i.redaction}` : ''}</p>}
+      {i.collected && <div className="mt-1 flex flex-wrap items-end gap-2">
+        <select aria-label="Decision" className="rounded-[3px] border border-input bg-background p-1 text-xs" value={dec} onChange={(e) => setDec(e.target.value)}><option value="">Decide…</option>{Object.entries(DEC).filter(([k]) => k !== 'release' || !i.thirdParty).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        {dec === 'withhold' && <Input aria-label="Reason" className="h-8 max-w-xs" placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />}
+        {dec === 'redact' && <Input aria-label="What the student sees" className="h-8 max-w-sm" placeholder="What the student will see" value={red} onChange={(e) => setRed(e.target.value)} />}
+        <Button size="sm" variant="outline" disabled={!dec} onClick={() => run(() => recordsRights({ action: 'decideItem', itemId: i.id, decision: dec as never, reason, redaction: red }), 'Saved. Any prepared response must be prepared and approved again.', reload)}>Save</Button>
+      </div>}
+    </li>
+  );
+}
+
+function Inspect({ r, people, reload }: { r: any; people: any[]; reload: () => void }) {
+  const [f, setF] = useState({ source: '', description: '', ownerId: '' });
+  const resp = r.response;
+  return (
+    <div className="mt-2 space-y-2">
+      {r.items.length > 0 && <ul>{r.items.map((i: any) => <Item key={i.id} i={i} reload={reload} />)}</ul>}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input aria-label="Where the record is kept" className="h-8" placeholder="Where (e.g. Advising)" value={f.source} onChange={(e) => setF({ ...f, source: e.target.value })} />
+        <Input aria-label="Which record" className="h-8" placeholder="Which record" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        <select aria-label="Record owner" className="rounded-[3px] border border-input bg-background p-1 text-sm" value={f.ownerId} onChange={(e) => setF({ ...f, ownerId: e.target.value })}><option value="">Owner…</option>{people.map((m: any) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <Button size="sm" variant="outline" disabled={f.source.trim().length < 2 || f.description.trim().length < 5 || !f.ownerId} onClick={() => run(() => recordsRights({ action: 'route', id: r.id, ...f }), 'Routed to the owner.', () => { setF({ source: '', description: '', ownerId: '' }); reload(); })}>Route record</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">{!resp ? 'Not prepared yet.' : resp.approved ? 'Approved — you can now mark it fulfilled; the student can open it for 14 days.' : resp.preparedByMe ? 'Prepared by you — another office member approves it.' : 'Prepared — waiting for approval.'}</p>
+      <div className="flex gap-2">
+        {r.items.length > 0 && (!resp || !resp.approved) && <Button size="sm" variant="outline" onClick={() => run(() => recordsRights({ action: 'prepare', id: r.id }), 'Prepared for approval.', reload)}>Prepare response</Button>}
+        {resp && !resp.approved && !resp.preparedByMe && <Button size="sm" onClick={() => run(() => recordsRights({ action: 'approve', id: r.id }), 'Approved.', reload)}>Approve response</Button>}
+      </div>
+    </div>
+  );
+}
+
+function Hearing({ r, reload }: { r: any; reload: () => void }) {
+  const [note, setNote] = useState('');
+  if (!r.hearing || r.hearing.outcome) return r.hearing ? <p className="mt-1 text-xs">Hearing decided: {r.hearing.outcome} — {r.hearing.note}</p> : null;
+  if (r.hearing.deniedByMe) return <p className="mt-1 text-xs text-muted-foreground">Hearing requested. You denied the amendment, so another office member decides it.</p>;
+  return (
+    <div className="mt-2 space-y-2">
+      <p className="text-xs">Hearing requested: {r.hearing.reason}</p>
+      <Textarea aria-label="Hearing outcome" rows={2} placeholder="Outcome and reasons" value={note} onChange={(e) => setNote(e.target.value)} />
+      <div className="flex gap-2"><Button size="sm" disabled={note.trim().length < 10} onClick={() => run(() => recordsRights({ action: 'hearingDecide', id: r.id, outcome: 'amended', note }), 'Recorded: amend the record through the registrar workflow.', reload)}>Amend the record</Button>
+        <Button size="sm" variant="outline" disabled={note.trim().length < 10} onClick={() => run(() => recordsRights({ action: 'hearingDecide', id: r.id, outcome: 'upheld', note }), 'Recorded: the record stands.', reload)}>Record stands</Button></div>
+    </div>
+  );
+}
+
+function Holds({ d, reload }: { d: any; reload: () => void }) {
+  const [h, setH] = useState({ subjectId: '', reason: '' });
+  const [rel, setRel] = useState<Record<number, string>>({});
+  return (
+    <div className="space-y-2 text-sm">
+      <p className="text-xs text-muted-foreground">A hold keeps a student's records exactly as they are (for example during a grievance). While it is active, amendments cannot be fulfilled. Another office member releases it.</p>
+      {d.holds.map((x: any) => <div key={x.id} className="flex flex-wrap items-center gap-2 border-t border-border py-1 text-xs">{x.student}: {x.reason} · by {x.placedBy} {fmtDay(x.placedAt)}
+        {!x.placedByMe && <><Input aria-label="Release reason" className="h-7 w-48" placeholder="Release reason" value={rel[x.id] ?? ''} onChange={(e) => setRel({ ...rel, [x.id]: e.target.value })} />
+          <Button size="sm" variant="ghost" disabled={(rel[x.id] ?? '').trim().length < 10} onClick={() => run(() => recordsRights({ action: 'release', holdId: x.id, reason: rel[x.id] }), 'Released.', reload)}>Release</Button></>}</div>)}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <select aria-label="Student" className="rounded-[3px] border border-input bg-background p-2 text-sm" value={h.subjectId} onChange={(e) => setH({ ...h, subjectId: e.target.value })}><option value="">Student…</option>{d.people.map((m: any) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <Input aria-label="Hold reason" placeholder="Reason for the hold" value={h.reason} onChange={(e) => setH({ ...h, reason: e.target.value })} />
+        <Button size="sm" disabled={!h.subjectId || h.reason.trim().length < 10} onClick={() => run(() => recordsRights({ action: 'hold', ...h }), 'Hold placed.', () => { setH({ subjectId: '', reason: '' }); reload(); })}>Place hold</Button>
+      </div>
+    </div>
   );
 }
 
@@ -100,9 +218,13 @@ export default function PrivacyOffice() {
               <p className="flex flex-wrap items-center gap-2"><Status value={r.overdue ? 'overdue' : r.state} /> #{r.number} · {r.requester} · {KIND[r.kind]} · due {fmtDay(r.dueAt)}</p>
               <p className="mt-1">{r.detail}</p>
               {r.outcome && <p className="mt-1 text-muted-foreground">Answer ({fmt(r.handledAt)}): {r.outcome}</p>}
+              {r.held && <p className="mt-1 text-xs">Records hold active for this student.</p>}
+              {r.kind === 'inspect' && !r.own && ['submitted', 'acknowledged'].includes(r.state) && <Inspect r={r} people={d.people} reload={s.reload} />}
               {['submitted', 'acknowledged'].includes(r.state) && <Handle r={r} reload={s.reload} />}
+              {!r.own && <Hearing r={r} reload={s.reload} />}
             </div>))}
         </Panel> : <Panel title="Records-rights requests"><Empty>Only members of the records-privacy office see this queue.</Empty></Panel>}
+        {d.office && <Panel title={`Records holds · ${d.holds.length}`}><Holds d={d} reload={s.reload} /></Panel>}
         {d.isAdmin && <Panel title="Access review"><Review d={d} reload={s.reload} /></Panel>}
         {d.isAdmin && <Panel title="Records-privacy office">
           <ul className="text-sm">{d.officeStaff.map((m: any) => <li key={m.id} className="flex items-center justify-between py-1">{m.name}<Button size="sm" variant="ghost" onClick={() => run(() => recordsRights({ action: 'setOffice', userId: m.id, on: false }), 'Removed.', s.reload)}>Remove</Button></li>)}</ul>

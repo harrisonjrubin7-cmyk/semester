@@ -12,5 +12,5 @@ Two rules for writing a check:
 - Include the returned text in the label (`'F19b ... ' || coalesce(x,'')`) so a failure says why.
 
 Current results (26 Oct, all re-run with this counting): IT help 38/38, Library 33/33, Parking 34/34,
-Inventory 37/37, Facilities 27/27, ID card 29/29. Run them:
+Inventory 37/37, Facilities 27/27, ID card 29/29, Records rights 30/30. Run them:
 `import { run as a } from './dbchecks/it'; ...` — one import per file; the runner cannot import this README.
