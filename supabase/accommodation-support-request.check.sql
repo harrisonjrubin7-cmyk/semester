@@ -61,6 +61,9 @@ declare
   item public.accommodation_support_request%rowtype;
   latest text;
   queue_reporter uuid;
+  follow_up_at timestamptz;
+  closed_at timestamptz;
+  resolution text;
 begin
   perform pg_temp.become('ac100000-0000-0000-0000-000000000001');
   made := public.raise_accommodation_support_request(
@@ -127,10 +130,12 @@ begin
     public.resolve_accommodation_support_request(made, 'more_information_needed', 'case:SYNTHETIC-ACCESS-FOLLOW-UP') = 'needs_student');
 
   perform pg_temp.become('ac100000-0000-0000-0000-000000000001');
-  select * into item from public.accommodation_support_request where id = made;
+  select status, follow_up_requested_at, resolved_at, resolution_code
+    into latest, follow_up_at, closed_at, resolution
+    from public.my_accommodation_support_requests() where id = made;
   perform pg_temp.check('the student can see that human follow-up is waiting',
-    item.status = 'needs_student' and item.follow_up_requested_at is not null
-    and item.resolved_at is null and item.resolution_code is null);
+    latest = 'needs_student' and follow_up_at is not null
+    and closed_at is null and resolution is null);
   perform public.correct_accommodation_support_request(
     made, 'ac400000-0000-0000-0000-000000000003',
     'The recorded lecture and live player both have no caption control.'

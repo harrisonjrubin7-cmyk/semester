@@ -7,6 +7,10 @@ alter table public.accommodation_support_request
   add column if not exists follow_up_evidence text
     check (follow_up_evidence is null or follow_up_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$');
 
+create index if not exists accommodation_support_request_by_follow_up_requester
+  on public.accommodation_support_request (follow_up_requested_by)
+  where follow_up_requested_by is not null;
+
 do $$
 declare
   constraint_name text;
@@ -27,7 +31,7 @@ alter table public.accommodation_support_request
     (status = 'submitted' and assigned_to is null and resolution_code is null and resolved_at is null and withdrawn_at is null)
     or (status = 'in_review' and assigned_at is not null and resolution_code is null and resolved_at is null and withdrawn_at is null)
     or (status = 'needs_student' and assigned_at is not null and resolution_code is null and resolved_at is null
-        and withdrawn_at is null and follow_up_requested_at is not null and follow_up_requested_by is not null)
+        and withdrawn_at is null and follow_up_requested_at is not null)
     or (status = 'resolved' and assigned_at is not null and resolution_code is not null and resolved_at is not null and withdrawn_at is null)
     or (status = 'withdrawn' and resolution_code is null and resolved_at is null and withdrawn_at is not null)
   );
