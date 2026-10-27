@@ -106,6 +106,7 @@ export const ITEMS: readonly Item[] = [
     fix: 'Remove continue-on-error; keep a dated allowlist for an advisory with no fix.',
     moves: ['TC-SEC-05'],
     files: 'The CI run that fails on a planted advisory, then passes.',
+    done: { proof: '.github/workflows/ci.yml', on: '2026-10-27' },
   },
   {
     id: 'TR-06', before: 'invitation', owner: 'founder', effort: 'S', person: true,
