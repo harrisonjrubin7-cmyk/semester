@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 const STAGES = ['Designed', 'Implemented', 'Tested', 'Deployed', 'Institution-authorized', 'Production-enabled', 'Operationally accepted', 'Incumbent decommissioned'] as const;
 const ENVS = ['Synthetic', 'Preview', 'Staging', 'Production'] as const;
@@ -14,6 +15,7 @@ export default createEndpoint({
   }),
   outputSchema: z.object({ ok: z.boolean() }),
   execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     if (input.reference.trim().length < 10) throw new ZiteError('Evidence needs a concrete reference (run ID, test output, approval record).');
     if (!input.scope.trim()) throw new ZiteError('Say what scope this evidence covers.');
     if (['Deployed', 'Production-enabled', 'Operationally accepted', 'Incumbent decommissioned'].includes(input.stage) && input.environment === 'Synthetic')

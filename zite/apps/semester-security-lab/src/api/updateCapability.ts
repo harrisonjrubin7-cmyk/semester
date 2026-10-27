@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 const STATUSES = ['Designed', 'Implemented-unverified', 'Tested', 'Institution-approved', 'Production-enabled'] as const;
 
@@ -9,7 +10,8 @@ export default createEndpoint({
   authenticated: true,
   inputSchema: z.object({ id: z.string(), status: z.enum(STATUSES), blockers: z.string(), evidence: z.string() }),
   outputSchema: z.object({ ok: z.boolean() }),
-  execute: async ({ input }) => {
+  execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     // Anything beyond "Implemented-unverified" must cite evidence; a page existing is not proof.
     if (STATUSES.indexOf(input.status) >= 2 && input.evidence.trim().length < 10)
       throw new ZiteError('Tested, approved or production status needs evidence (a run ID, test report or approval record).');

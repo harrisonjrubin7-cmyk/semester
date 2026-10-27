@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 export default createEndpoint({
   authenticated: true,
@@ -16,7 +17,8 @@ export default createEndpoint({
     status: z.enum(['draft', 'approved']),
   }),
   outputSchema: z.object({ id: z.string() }),
-  execute: async ({ input }) => {
+  execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     const { id, ...rec } = input;
     const ok = (v: number, max: number) => Number.isFinite(v) && v > 0 && v <= max;
     if (!ok(rec.capacity, 100000) || !ok(rec.refillPerSecond, 10000) || !ok(rec.cost, rec.capacity)) {

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 export default createEndpoint({
   authenticated: true,
@@ -14,6 +15,7 @@ export default createEndpoint({
   }),
   outputSchema: z.object({ id: z.string() }),
   execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     const now = new Date().toISOString();
     // Mode is forced server-side: simulators can never produce sandbox/staging evidence.
     const r = await zite.labRuns.create({

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 const deny = (m: string) => new ZiteError(m);
 
@@ -10,6 +11,7 @@ export default createEndpoint({
   inputSchema: z.object({ gateId: z.string(), runId: z.string().optional(), decision: z.enum(['satisfied', 'rejected', 'pending']) }),
   outputSchema: z.object({ ok: z.boolean() }),
   execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     const gate = await zite.releaseGates.findOne({ id: input.gateId });
     if (!gate) throw deny('Gate not found.');
     if (input.decision === 'satisfied') {

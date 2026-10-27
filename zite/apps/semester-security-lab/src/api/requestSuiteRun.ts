@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { requireSecurityLead } from '../lib/access';
 
 const typeFor: Record<string, string> = {
   'Go Redis Token Bucket': 'Go Tests',
@@ -15,6 +16,7 @@ export default createEndpoint({
   inputSchema: z.object({ suiteId: z.string() }),
   outputSchema: z.object({ id: z.string(), status: z.string() }),
   execute: async ({ input, context }) => {
+    await requireSecurityLead(context.user.id);
     const suite = await zite.testSuites.findOne({ id: input.suiteId });
     if (!suite) throw new ZiteError('That suite is not in the allowlist.');
     const now = new Date().toISOString();
