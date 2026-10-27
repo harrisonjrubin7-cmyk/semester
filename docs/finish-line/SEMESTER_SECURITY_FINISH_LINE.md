@@ -50,7 +50,7 @@ block every merge. That is a decision, not a technicality
 | 5 | Function-grant audit | `verified` in CI (`grants.check.sql`: anon callable none) |
 | 6 | GraphQL / PostgREST exposure audit | `partial`: GraphQL not disabled; TRUNCATE-class privileges revoked 2026-10-05 (D-1251); `anon` DML on 32 tables and the `authenticated` allowlist still need decisions |
 | 7 | Secrets audit | `verified` (static + CI); browser-held tokens are a finding |
-| 8 | Dependency audit | `partial`: `npm audit --audit-level=high` is non-blocking in `ci.yml`; `supply-chain.yml` blocks on critical but is not a required check |
+| 8 | Dependency audit | `partial`: candidate `ci.yml` blocks high/critical findings with dated no-fix exceptions; required-check status remains unverified |
 | 9 | SAST / DAST | `partial`: CodeQL conditional, HawkScan needs a key; EXT-007 blocked |
 | 10 | Penetration-test readiness | `documented`: no test commissioned (EXT-006 open) |
 | 11 | Vulnerability management | `partial`: severity clocks in `SECURITY.md`, held by test; no ticketed register in use beyond `docs/security/FINDINGS-REGISTER.md` |
@@ -107,7 +107,7 @@ block every merge. That is a decision, not a technicality
 | SEC-08 | P1 | SAML has no IdP round trip, no cert-expiry alert, no single logout; no OIDC | `INSTITUTIONAL-SSO-LAUNCH-READINESS.md` | one real-IdP acceptance run | n/a (acceptance) |
 | SEC-09 | P1 | Device-key AI routes bypass kill switch and AI-off policy | F-04, `claude.ts` | refuse when policy says off | route must refuse under `aiOff` |
 | SEC-10 | P2 | GraphQL not disabled; `anon` DML on 32 tables and the `authenticated` allowlist undecided. The TRUNCATE, TRIGGER, REFERENCES and MAINTAIN part is **closed** (D-1251, applied to production 2026-10-05, `supabase/client-privileges.check.sql`, seen red on the unmigrated schema per the decision) | F09; `database/GRANT_ALLOWLIST.md` | disable GraphQL; decide and apply the DML reduction | extend `client-privileges.check.sql` to the chosen DML allowlist |
-| SEC-11 | P2 | `npm audit` non-blocking; `supply-chain`, HawkScan, CodeQL not required | `ci.yml`, `supply-chain.yml` | make blocking and required where run history exists | CI fails on a seeded high advisory |
+| SEC-11 | P2 | candidate `npm audit` blocks high/critical; `supply-chain`, HawkScan, CodeQL required status unverified | `ci.yml`, `supply-chain.yml` | verify and enforce required checks where run history exists | CI fails on a seeded high advisory |
 | SEC-12 | P2 | Hand-applied pg_cron jobs (retention, verifiers) | `supabase/scheduler.sql`, `DEPLOY.md` | apply by migration or prove they run | job-existence check |
 | SEC-13 | P2 | No penetration test; no independent accessibility review | EXT-006/008 | commission | n/a |
 | SEC-14 | P2 | Consent/decision records lack purpose and legal basis; `decide()` unused | `SECURITY-GAP-AUDIT-2026-09-30.md` | add columns; wire or delete `decide()` | consent row without a basis refused |

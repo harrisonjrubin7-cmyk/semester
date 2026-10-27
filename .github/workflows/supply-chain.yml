@@ -26,10 +26,10 @@
 #
 # ## Vulnerabilities
 #
-# `ci.yml` already runs `npm audit --audit-level=high` without blocking (its
-# header says why). This workflow adds the one thing that must block: a
-# *critical* advisory in a *production* dependency on main. High and below are
-# tracked against the SLA in docs/infrastructure/VULNERABILITY-MANAGEMENT.md.
+# `ci.yml` blocks high and critical advisories across the application tree,
+# subject only to a dated security exception when npm reports that no fix
+# exists. This workflow independently blocks a critical advisory in a
+# *production* dependency on main and retains the release-facing evidence.
 
 name: Supply chain
 
