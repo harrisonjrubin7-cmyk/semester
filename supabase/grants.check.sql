@@ -246,6 +246,8 @@ declare
     'school_purge_eligibility(want uuid)',
     'authorize_school_purge(want uuid, why text)',
     'preview_school_purge(want uuid, want_idempotency_key text)',
+    'queue_school_purge_rehearsal(want_case uuid, want_preview_receipt uuid, want_approval_request uuid, want_idempotency_key text)',
+    'stop_school_purge_rehearsal(want_job uuid, why text)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write
