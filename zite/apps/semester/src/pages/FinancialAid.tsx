@@ -4,6 +4,7 @@ import { financialAid } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
+import AidOffice from '../components/AidOffice';
 import { PageHeader, Panel, Empty, Status, fmtDay, useLoad, Loadable, errMsg } from '../components/kit';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -81,6 +82,7 @@ export default function FinancialAid() {
           </Panel>}
         </div>)}
       </Loadable>
+      <div className="mt-4"><AidOffice /></div>
     </>
   );
 }

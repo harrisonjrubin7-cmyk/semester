@@ -28,3 +28,9 @@ must never hold real data. Status: closed.
 Reading Security Lab (findings, gates, policies, capability evidence) now needs `security_reader` or `security_lead` (co_roles,
 granted in Company OS). Reason: RLS findings describe exploitable weaknesses; "any signed-in user of the app" is too wide.
 Also closed the Atlas gap from 26 Oct: whoever recorded a capability's previous stage cannot record the next one.
+
+## Financial aid documents and awards (role pack said "no protected aid documents without separately authorized design")
+Authorized design: aid documents are tracked by reference only (kind, aid-system reference, review outcome); Semester never
+stores or receives the file, and rows are visible only to the student and aid staff. The aid system remains the system of
+record: eligibility and packaged awards carry its reference, two different officers propose and approve awards, and nothing
+is disbursed from Semester. Implemented in lib/faOfficeMigration.ts.

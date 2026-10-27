@@ -22,7 +22,7 @@ export const ROLE_APP_SPECS: Record<string, [string, string, string]> = {
   "department-chair": ["campus", "Scoped aggregate demand/outcomes, course planning and curricular proposals", "No individual records by title"],
   "dean": ["campus", "School aggregates, policy options, resource decisions and governance", "No default individual student drill-through"],
   "institutional-researcher": ["campus", "Governed aggregates, definitions, suppression and reproducible analysis", "No student-row access or reidentification"],
-  "financial-aid-officer": ["campus", "Official requirements, checklists, permitted hold resolution and human handoffs", "No private cost plans or protected aid documents without separately authorized design"],
+  "financial-aid-officer": ["campus", "Official requirements, checklists, permitted hold resolution and human handoffs", "Aid documents by aid-system reference only (authorized design 27 Oct); no private cost plans; nothing disbursed from Semester"],
   "student-accounts-officer": ["campus", "Billing actions, permitted holds, support and reviewed finance-workflow proposals", "Publishing actions does not establish payment-detail or transaction authority"],
   "international-student-advisor": ["campus", "Approved specialist deadlines, actions, appointments and permitted hold resolution", "No private-segment inference or AI immigration determination"],
   "veterans-certifying-official": ["campus", "Official-source certification checklist, status, human certification and reconciliation", "No inferred veteran status, private plans or unauthorized external certification"],

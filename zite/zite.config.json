@@ -73,6 +73,14 @@
     "jira": {
       "type": "jira",
       "connectionId": "svc_570588"
+    },
+    "calendly": {
+      "type": "calendly",
+      "connectionId": "svc_571513"
+    },
+    "hubspot": {
+      "type": "hubspot",
+      "connectionId": "svc_571515"
     }
   },
   "envVars": {

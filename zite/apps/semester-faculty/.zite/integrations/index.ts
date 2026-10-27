@@ -17,14 +17,16 @@ import type { Connected, NeedsConnect } from 'zitejs/runtime';
 
 export type { Connected, NeedsConnect };
 
-export type IntegrationName = 'anthropic' | 'github' | 'gmail' | 'googleDocs' | 'googleDrive' | 'jira' | 'linear' | 'linkedin' | 'notion' | 'onedrive' | 'openai' | 'outlook' | 'slack' | 'stripe';
+export type IntegrationName = 'anthropic' | 'calendly' | 'github' | 'gmail' | 'googleDocs' | 'googleDrive' | 'hubspot' | 'jira' | 'linear' | 'linkedin' | 'notion' | 'onedrive' | 'openai' | 'outlook' | 'slack' | 'stripe';
 
 export type IntegrationByName = {
   'anthropic': Connected;
+  'calendly': Connected;
   'github': Connected;
   'gmail': Connected;
   'googleDocs': Connected;
   'googleDrive': Connected;
+  'hubspot': Connected;
   'jira': Connected<{ cloudId: string; siteUrl?: string }>;
   'linear': Connected;
   'linkedin': Connected<{ personUrn: string }>;
