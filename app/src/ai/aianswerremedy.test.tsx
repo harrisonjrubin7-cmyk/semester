@@ -67,6 +67,20 @@ describe('AI answer human remedy', () => {
     expect(host.textContent).toContain('trust officer');
   });
 
+  it('treats a saved pre-count quality snapshot as zero sources', async () => {
+    const submitter = vi.fn().mockResolvedValue({ id: 'legacy-receipt', status: 'submitted', ownerSeat: 'trust_officer' });
+    const legacy = { ...q, source: { level: q.source.level, says: q.source.says } } as typeof q;
+    draw({ quality: legacy, submitter });
+    const textarea = host.querySelector('textarea')!;
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
+      setter.call(textarea, 'Saved before source counts were recorded.');
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await act(async () => host.querySelector('form')!.requestSubmit());
+    expect(submitter).toHaveBeenCalledWith(expect.objectContaining({ sourceCount: 0 }));
+  });
+
   it('fails closed to an explicit private-data-safe fallback', () => {
     draw({ available: false });
     expect(host.querySelector('form')).toBeNull();

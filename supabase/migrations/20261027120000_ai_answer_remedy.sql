@@ -40,11 +40,14 @@ create table if not exists public.ai_answer_remedy (
   created_at timestamptz not null default now(),
   unique (reporter, idempotency_key),
   check (response_due_at > created_at and escalation_at >= response_due_at),
-  check ((assigned_to is null) = (assigned_at is null)),
+  -- A deleted reviewer clears the direct identity but preserves the timestamp
+  -- and controlled outcome. An in-review row can then be claimed by another
+  -- authorized human without making account erasure fail.
+  check (assigned_to is null or assigned_at is not null),
   check (
     (status = 'submitted' and assigned_to is null and resolution_code is null and resolved_at is null and resolved_by is null)
-    or (status = 'in_review' and assigned_to is not null and resolution_code is null and resolved_at is null and resolved_by is null)
-    or (status = 'resolved' and assigned_to is not null and resolution_code is not null and resolved_at is not null and resolved_by is not null)
+    or (status = 'in_review' and assigned_at is not null and resolution_code is null and resolved_at is null and resolved_by is null)
+    or (status = 'resolved' and assigned_at is not null and resolution_code is not null and resolved_at is not null)
   )
 );
 

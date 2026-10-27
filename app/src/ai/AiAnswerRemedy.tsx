@@ -72,7 +72,10 @@ export function AiAnswerRemedy({
         answer,
         sourceStrength: quality.source.level,
         policyState: quality.policy.level,
-        sourceCount: quality.source.count,
+        // Saved conversations created before the count joined the quality
+        // snapshot have no value here. Zero is the fail-closed truth: no
+        // source is claimed merely because an older client omitted the count.
+        sourceCount: quality.source.count ?? 0,
       }));
     } catch (error) {
       setProblem(error instanceof Error ? error.message : 'The review request could not be sent.');

@@ -1,3 +1,6 @@
+-- A student AI-answer remedy stays in their tenant, reaches only an exact-school
+-- human reviewer, binds immutable evidence and creates content-free audit events.
+
 begin;
 
 create or replace function pg_temp.become(who uuid)
@@ -104,6 +107,12 @@ begin
   perform pg_temp.check('resolution records human ownership and evidence',
     item.status = 'resolved' and item.assigned_to = 'a2000000-0000-0000-0000-000000000001'
     and item.resolved_by = item.assigned_to and item.resolution_evidence = 'case:SYNTHETIC-001');
+  delete from auth.users where id = 'a2000000-0000-0000-0000-000000000001';
+  select * into item from public.ai_answer_remedy where id = made;
+  perform pg_temp.check('reviewer account erasure clears direct identities without deleting the outcome',
+    item.status = 'resolved' and item.assigned_to is null and item.resolved_by is null
+    and item.assigned_at is not null and item.resolved_at is not null
+    and item.resolution_code = 'referred_to_owner');
   perform pg_temp.check('the audit trail contains submit claim and resolve events',
     (select count(*) = 3 from public.audit_event a
       where a.tenant_id = 'remedy-a' and a.action like 'ai_remedy.%'));
