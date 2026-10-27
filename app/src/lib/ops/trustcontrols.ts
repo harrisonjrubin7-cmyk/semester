@@ -170,7 +170,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'ci',
     state: 'partial',
     proof: ['.github/workflows/ci.yml'],
-    gap: 'The dependency audit step is continue-on-error, so a high-severity advisory does not fail the build.',
+    gap: 'Candidate CI blocks high and critical advisories with dated no-fix exceptions; required-check enforcement on main is not verified.',
     owner: 'security',
   },
   {
