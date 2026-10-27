@@ -239,6 +239,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'Run by the author on an empty disposable preview, not by a second person and not on production; the compact script omits some of the 98 local checks. The purge is not built and the export file is generated elsewhere.',
   },
   {
+    id: 'offboarding-local-synthetic-purge-rehearsal-2026-10-26',
+    artifact: 'Synthetic purge-and-restore behavior passed on isolated local PostgreSQL 17.11: every migration, clean reapplication across 425 tables, and 23 rollback-only policy checks',
+    path: 'docs/evidence/offboarding/2026-10-26-local-synthetic-purge-rehearsal.md',
+    produced: '2026-10-26',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['LEG-004'],
+    note: 'Run by the author in a temporary Unix-socket-only cluster with generated fixtures. This is not a target-environment or independent rehearsal, no live adapter exists, and no tenant record was deleted. I13 remains untested/preview.',
+  },
+  {
     id: 'hecvat-draft',
     artifact: 'HECVAT draft response, not sent',
     path: 'docs/market-readiness/HECVAT_DRAFT_RESPONSE.md',
