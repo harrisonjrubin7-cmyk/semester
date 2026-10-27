@@ -165,7 +165,7 @@ export const PROPOSALS: readonly Proposal[] = [
   p('B3-08', 'An SBOM per release', 'landed', ['.github/workflows/pages.yml', 'app/src/lib/supplychain.test.ts'], 'Not signed and not published.'),
   p('B3-09', 'Build provenance and signed artifacts', 'absent', [], 'No attestation; below SLSA build level 2.'),
   p('B3-10', 'Static application security testing', 'absent', [], 'No CodeQL or Semgrep workflow.'),
-  p('B3-11', 'A dependency vulnerability scan', 'partial', ['.github/workflows/ci.yml', '.github/dependabot.yml'], 'npm audit runs and is non-blocking by design.'),
+  p('B3-11', 'A dependency vulnerability scan', 'partial', ['.github/workflows/ci.yml', '.github/dependabot.yml'], 'The candidate CI gate blocks high and critical npm advisories; required-check enforcement on main is not verified.'),
   p('B3-12', 'A licence scan', 'landed', ['app/src/lib/supplychain.test.ts', 'app/src/lib/supplychain.ts'], 'None.'),
   p('B3-13', 'Infrastructure and container scanning', 'absent', [], 'Nothing scans IaC or containers.'),
   p('B3-14', 'Typecheck, lint and unit tests in CI', 'landed', ['.github/workflows/ci.yml', 'app/src/lib/supplychain.test.ts'], 'None.'),
