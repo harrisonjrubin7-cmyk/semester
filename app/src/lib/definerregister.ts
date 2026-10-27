@@ -174,9 +174,11 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_delivery', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_integration_health', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_offboarding_cases', 'admin', ['auth.uid()', 'private.has_capability', 'private.is_app_admin']],
+  ['console_pilots', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
   ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -539,6 +541,14 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261026150000_offboarding_export_package.sql',
     functions: ['generate_offboarding_export', 'record_generated_offboarding_export'],
+  },
+  {
+    file: '20261026170000_console_pilots.sql',
+    functions: ['console_pilots'],
+  },
+  {
+    file: '20261026190000_console_delivery.sql',
+    functions: ['console_delivery'],
   },
   {
     file: '20261011000000_incident_evidence_custody.sql',

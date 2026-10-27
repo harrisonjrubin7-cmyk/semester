@@ -1,0 +1,513 @@
+<title>Semester Command Center</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: fixed operator rail + scrolling workspace; queue and detail side by side above 1100px, stacked below. Tokens mirror app/design-tokens/semester.tokens.json (dark is Semester's default ground). */
+:root {
+  --bg: #f3f4f6; --panel: #ffffff; --raise: #e9ebef; --fg: #14161c; --dim: rgba(20,22,28,.66); --faint: rgba(20,22,28,.46);
+  --line: rgba(20,22,28,.13); --line-soft: rgba(20,22,28,.07); --accent: #343b4a; --accent-wash: rgba(52,59,74,.08);
+  --warn: #93452c; --warn-wash: rgba(147,69,44,.09); --error: #ad1f39; --error-wash: rgba(173,31,57,.08); --ok: #2f5d4a;
+  --demo: #6b4f00; --demo-wash: rgba(176,130,0,.12);
+  --font-body: "Barlow", system-ui, sans-serif; --font-head: "Barlow Condensed", "Barlow", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #090a0e; --panel: #12141a; --raise: #22262f; --fg: #eceef2; --dim: rgba(236,238,242,.64); --faint: rgba(236,238,242,.42);
+  --line: rgba(236,238,242,.11); --line-soft: rgba(236,238,242,.06); --accent: #d4d9e2; --accent-wash: rgba(212,217,226,.12);
+  --warn: #cb7b62; --warn-wash: rgba(203,123,98,.09); --error: #fc7e93; --error-wash: rgba(252,126,147,.1); --ok: #8fc2a8;
+  --demo: #e6c25a; --demo-wash: rgba(230,194,90,.1); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #090a0e; --panel: #12141a; --raise: #22262f; --fg: #eceef2; --dim: rgba(236,238,242,.64); --faint: rgba(236,238,242,.42);
+  --line: rgba(236,238,242,.11); --line-soft: rgba(236,238,242,.06); --accent: #d4d9e2; --accent-wash: rgba(212,217,226,.12);
+  --warn: #cb7b62; --warn-wash: rgba(203,123,98,.09); --error: #fc7e93; --error-wash: rgba(252,126,147,.1); --ok: #8fc2a8;
+  --demo: #e6c25a; --demo-wash: rgba(230,194,90,.1); color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--font-body); }
+h1,h2,h3 { font-family: var(--font-head); font-weight: 600; letter-spacing: .01em; margin: 0; text-wrap: balance }
+h2 { font-size: 1.35rem } h3 { font-size: 1.05rem }
+button, select, input, textarea { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.mono { font-family: var(--font-mono); font-size: .82em }
+.dim { color: var(--dim) } .faint { color: var(--faint) }
+.eyebrow { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 600 }
+
+.demo-band { background: var(--demo-wash); color: var(--demo); border-bottom: 1px solid var(--line); padding-block: var(--sp-2); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); font-size: .85rem }
+.demo-band strong { font-weight: 600 }
+
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; padding-block: var(--sp-3); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel) }
+.brand { display: flex; align-items: baseline; gap: var(--sp-2); margin-right: var(--sp-2) }
+.brand b { font-family: var(--font-head); font-size: 1.3rem; letter-spacing: .14em; text-transform: uppercase }
+.top .grow { flex: 1 1 220px; min-width: 0 }
+.field { display: grid; gap: 2px; font-size: .78rem; color: var(--dim) }
+.input, select { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 10px; min-height: 36px; width: 100% }
+.env { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--demo); color: var(--demo); border-radius: var(--r); padding: 4px 10px; font-weight: 600; font-size: .85rem; white-space: nowrap }
+.env::before { content: ""; width: 9px; height: 9px; border: 2px solid currentColor; transform: rotate(45deg) }
+.fresh { font-size: .8rem; color: var(--dim); white-space: nowrap }
+.btn { background: var(--accent); color: var(--bg); border: 1px solid var(--accent); border-radius: var(--r); padding: 7px 14px; min-height: 36px; cursor: pointer; font-weight: 600 }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line) }
+.btn:disabled { opacity: .45; cursor: not-allowed }
+
+.shell { display: grid; grid-template-columns: 250px minmax(0,1fr); min-height: calc(100vh - 120px) }
+nav.rail { border-right: 1px solid var(--line); padding: var(--sp-4) var(--sp-3); background: var(--panel); overflow-y: auto }
+nav.rail .group { margin-bottom: var(--sp-4) }
+nav.rail .group > .eyebrow { padding: 0 var(--sp-2) var(--sp-1) }
+nav.rail button { display: flex; justify-content: space-between; gap: var(--sp-2); width: 100%; text-align: left; background: none; border: 0; border-radius: var(--r); padding: 6px var(--sp-2); cursor: pointer; align-items: center }
+nav.rail button[aria-current="page"] { background: var(--accent-wash); font-weight: 600 }
+nav.rail button:hover { background: var(--accent-wash) }
+.state { font-size: .68rem; letter-spacing: .04em; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; white-space: nowrap; color: var(--dim) }
+.state.built { color: var(--ok); border-color: currentColor }
+.state.slice { color: var(--accent); border-color: currentColor; font-weight: 600 }
+.state.schema { color: var(--warn); border-style: dashed }
+.state.none { color: var(--faint); border-style: dotted }
+.navtoggle { display: none }
+
+main { padding-block: var(--sp-5); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: var(--sp-5); align-content: start; min-width: 0 }
+section.block { display: grid; gap: var(--sp-3); min-width: 0 }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--sp-2) }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-4); min-width: 0 }
+
+.questions { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-2) }
+.q { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-3); display: grid; gap: 2px; text-align: left; cursor: pointer }
+.q .n { font-family: var(--font-head); font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums }
+.q .n.floor::before { content: "≥ "; font-size: .6em; color: var(--dim) }
+.q[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent) }
+
+.sources { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none }
+.sources li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2); border-bottom: 1px solid var(--line-soft); padding-bottom: 6px }
+.sig { font-weight: 600 } .sig.bad { color: var(--error) } .sig.ok { color: var(--ok) } .sig.off { color: var(--faint) }
+
+.work { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: var(--sp-4); align-items: start }
+.queue { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px }
+.item { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-3); cursor: pointer; display: grid; gap: 4px; position: relative; padding-left: calc(var(--sp-3) + 6px) }
+.item::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--r) 0 0 var(--r); background: var(--line) }
+.item[data-p="critical"]::before { background: var(--error) } .item[data-p="high"]::before { background: var(--warn) } .item[data-p="medium"]::before { background: var(--accent) }
+.item[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash) }
+.item .t { font-weight: 600 } .item .m { font-size: .84rem; color: var(--dim) }
+.pri { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em }
+.controls { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: end }
+.controls .field { min-width: 140px; flex: 1 1 140px }
+
+dl.fields { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 6px var(--sp-4); margin: 0 }
+dl.fields dt { color: var(--dim); font-size: .86rem } dl.fields dd { margin: 0; overflow-wrap: anywhere }
+.actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) }
+
+.metrics { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); overflow: hidden }
+.metric { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) auto; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line-soft); align-items: center }
+.metric:first-child { border-top: 0 }
+.metric .v { font-family: var(--font-head); font-size: 1.25rem; font-variant-numeric: tabular-nums }
+.metric .v.unknown { font-family: var(--font-body); font-size: .9rem; color: var(--warn); font-weight: 600 }
+.metric details { grid-column: 1 / -1; font-size: .85rem }
+.metric summary { cursor: pointer; color: var(--dim) }
+
+.flow { display: grid; gap: var(--sp-3) }
+.steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; font-size: .78rem }
+.steps li { border: 1px solid var(--line); border-radius: 3px; padding: 2px 8px; color: var(--faint) }
+.steps li.done { color: var(--ok); border-color: currentColor } .steps li.done::before { content: "✓ " }
+.steps li.now { color: var(--fg); border-color: var(--accent); font-weight: 600 }
+.steps li.fail { color: var(--error); border-color: currentColor } .steps li.fail::before { content: "✕ " }
+.receipt { font-family: var(--font-mono); font-size: .8rem; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-3); white-space: pre-wrap; overflow-wrap: anywhere }
+.alert { border: 1px solid var(--error); background: var(--error-wash); border-radius: var(--r); padding: var(--sp-3) }
+.note { border: 1px solid var(--line); background: var(--accent-wash); border-radius: var(--r); padding: var(--sp-3) }
+
+.scroll { overflow-x: auto }
+table.reg { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .88rem }
+table.reg th, table.reg td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top }
+table.reg th { font-weight: 600; color: var(--dim); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em }
+.y { color: var(--ok); font-weight: 600 } .n { color: var(--faint) }
+
+@media (max-width: 1100px) { .work { grid-template-columns: minmax(0,1fr) } }
+@media (max-width: 840px) {
+  .shell { grid-template-columns: minmax(0,1fr) }
+  nav.rail { border-right: 0; border-bottom: 1px solid var(--line) }
+  nav.rail[data-open="false"] .groups { display: none }
+  .navtoggle { display: inline-flex }
+  .metric { grid-template-columns: minmax(0,1fr) auto }
+  .metric .src { grid-column: 1 / -1 }
+}
+@media (prefers-reduced-motion: no-preference) { .item, .q, nav.rail button { transition: background-color .12s, border-color .12s } }
+</style>
+
+<div class="demo-band" role="note"><strong>Demo with synthetic records.</strong> Every person, institution, ticket and number below is invented to show behaviour. Nothing here is read from Semester's databases, and actions change only this page. The real workspace is <span class="mono">#/console</span> in the app, behind a <span class="mono">console:operate</span> grant.</div>
+
+<header class="top">
+  <div class="brand"><b>Semester</b><span class="dim">Command Center</span></div>
+  <label class="field" style="min-width:210px">Scope
+    <select id="scope">
+      <option value="company">Semester company operations</option>
+      <option value="northgate">Institution · Northgate University (synthetic)</option>
+      <option value="mine">My role workspace</option>
+    </select>
+  </label>
+  <span class="env" title="Environment shown as a word and a shape">Demo</span>
+  <label class="field grow">Search this workspace
+    <input id="search" class="input" type="search" placeholder="Title, owner, tenant, status">
+  </label>
+  <span class="fresh" id="fresh">Sources read 2 min ago · 1 unavailable</span>
+  <button class="btn" id="create" type="button">Create task</button>
+</header>
+
+<div class="shell">
+  <nav class="rail" id="rail" data-open="false" aria-label="Command Center navigation">
+    <button class="navtoggle btn ghost" type="button" id="navtoggle" aria-expanded="false" aria-controls="groups">Menu</button>
+    <div class="groups" id="groups"></div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const NAV = [
+  ['Home', [['command','Command Center','built'],['work','My Work','slice'],['approvals','Approvals','built'],['action','Action Center','none'],['calendar','Calendar','none'],['search','Search','none']]],
+  ['Build', [['roadmap','Product and Roadmap','none'],['research','Research and Design','none'],['eng','Engineering','none'],['qa','Quality and Testing','none'],['releases','Releases and Rollouts','built'],['docs','Documentation and Decisions','none']]],
+  ['Customers', [['tenants','Institutions and Tenants','built'],['sales','Sales and Pipeline','schema'],['pilots','Pilots','schema'],['impl','Implementations and Migrations','schema'],['success','Customer Success','schema'],['support','Support','built']]],
+  ['Operate', [['platform','Platform and Reliability','none'],['incidents','Incidents','built'],['integrations','Integrations and Syncs','built'],['dq','Data Quality and Reconciliation','none'],['ai','AI Operations','none'],['partners','Developer and Partner Operations','none']]],
+  ['Business', [['revenue','Revenue and Billing','schema'],['finance','Finance','built'],['growth','Growth and Marketing','none'],['people','People and Access','none'],['vendors','Vendors, Contracts, and Legal','none'],['strategy','Strategy, Risks, and Board Reporting','none']]],
+  ['Govern', [['security','Security','none'],['privacy','Privacy','built'],['a11y','Accessibility','none'],['policies','Policies and Approvals','none'],['audit','Audit and Evidence','built'],['settings','System Settings','none']]],
+];
+const STATE_LABEL = { built: 'Built', slice: 'This slice', schema: 'Schema only', none: 'Not built' };
+const STATE_SAYS = {
+  built: 'A workspace exists in the repository console, with its own capability and tests. Not verified as deployed from this session.',
+  slice: 'Added in the current draft pull request. Implemented and unit-tested; not deployed.',
+  schema: 'Database tables and policy checks exist in supabase/migrations, but there is no console workspace yet. Planned for a later slice.',
+  none: 'Not built. Kept in the backlog; nothing here pretends otherwise.',
+};
+
+const now = Date.now();
+const H = 3600e3;
+const iso = (h) => new Date(now + h * H).toISOString();
+const fmt = (s) => s ? esc(new Date(s).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) : 'not recorded';
+
+const SOURCES = [
+  { id: 'command', label: 'Operational exceptions', reader: 'console_command_center', state: 'read' },
+  { id: 'approvals', label: 'Approvals', reader: 'console_approvals', state: 'read' },
+  { id: 'integrations', label: 'Integration health', reader: 'console_integration_health', state: 'unavailable', error: 'permission denied for this scope (synthetic failure)' },
+  { id: 'incidents', label: 'Release and incidents', reader: 'console_release_incidents', state: 'not-granted' },
+];
+
+let ITEMS = [
+  { id: 'w1', src: 'command', p: 'critical', title: 'Restore drill evidence is missing for the release gate', status: 'Blocked', owner: 'Platform (synthetic)', tenant: null, due: iso(6), next: 'Run the restore drill and attach the result before any release.', evidence: 'release_gate row rg-14 (synthetic)', limitation: 'The gate reads stored evidence only; it does not run the drill.', kind: 'blocked', when: iso(-5) },
+  { id: 'w2', src: 'approvals', p: 'high', title: 'role.grant — implementation_lead for A. Okafor', status: 'Awaiting your decision', owner: 'approver', tenant: 'northgate', due: iso(20), next: 'Check the target and evidence, then approve or reject. Requires a fresh second factor.', evidence: 'Ticket OPS-2291. Signed access request (synthetic).', limitation: '0 approvals, 0 rejections. The request cannot be edited after it is made.', kind: 'approval', approval: 'ap1', when: iso(-2) },
+  { id: 'w3', src: 'command', p: 'high', title: 'Support ticket past first-response target', status: 'Open', owner: 'Support (synthetic)', tenant: 'northgate', due: iso(-3), next: 'Reply with the known workaround; escalate if the sync is the cause.', evidence: 'support_ticket st-882 (synthetic)', limitation: 'Ticket metadata only. Student content stays behind support-access consent.', kind: 'overdue', when: iso(-1) },
+  { id: 'w4', src: 'approvals', p: 'medium', title: 'feature_flag.enable — degree audit preview for Northgate', status: 'Waiting on approvers', owner: 'you (requester)', tenant: 'northgate', due: iso(70), next: 'Follow up with an approver before it expires.', evidence: 'Ticket OPS-2302. Readiness review notes (synthetic).', limitation: '1 approval, 0 rejections recorded. Two-person duty.', kind: 'approval', approval: 'ap2', when: iso(-26) },
+  { id: 'w5', src: 'command', p: 'medium', title: 'Pilot kickoff commitment has no owner', status: 'Open', owner: '', tenant: 'northgate', due: iso(96), next: 'Assign an owner on the customer record.', evidence: 'customer_commitment cc-7 (synthetic)', limitation: 'Commitment text is copied from the signed record; not a contract term.', kind: 'commitment', when: iso(-30) },
+  { id: 'w6', src: 'command', p: 'low', title: 'Accessibility finding: focus lost after closing the export dialog', status: 'Open', owner: 'Design (synthetic)', tenant: null, due: null, next: 'Return focus to the trigger; add a regression test.', evidence: 'a11y finding AF-31 (synthetic)', limitation: 'Found by manual review; no automated check covers it yet.', kind: 'finding', when: iso(-50) },
+];
+
+// Approval records with an immutable payload; the approval binds to its hash.
+const APPROVALS = {
+  ap1: { id: 'ap1', duty: 'role.grant', requester: 'M. Reyes', target: 'user:a.okafor@northgate.example', payload: { role: 'implementation_lead', scope: 'school:northgate', expires_at: iso(24*30) }, expires: iso(20), twoPerson: false, approvals: [], status: 'pending', ticket: 'OPS-2291' },
+  ap2: { id: 'ap2', duty: 'feature_flag.enable', requester: 'you', target: 'flag:degree-audit-preview', payload: { tenant: 'northgate', state: 'pilot' }, expires: iso(70), twoPerson: true, approvals: ['J. Lin'], status: 'pending', ticket: 'OPS-2302' },
+  ap3: { id: 'ap3', duty: 'export.tenant_metadata', requester: 'you', target: 'tenant:northgate', payload: { fields: ['rollout','integrations'] }, expires: iso(-4), twoPerson: false, approvals: [], status: 'expired', ticket: 'OPS-2240' },
+};
+
+const METRICS = [
+  { name: 'Open operational exceptions', value: () => String(ITEMS.filter(i => i.src === 'command').length), def: 'Rows returned by the live exception reader for this scope.', src: 'console_command_center (synthetic rows here)', window: 'Current state', scope: 'Selected scope', updated: '2 min ago', coverage: 'Complete for the reader; does not include work tracked outside Semester.' },
+  { name: 'Release readiness', value: () => 'Not go', def: 'Go only when every release gate has current evidence.', src: 'release_gate + evidence register', window: 'Current release candidate', scope: 'Platform', updated: '2 min ago', coverage: '1 gate missing evidence (restore drill).' },
+  { name: 'Recognized revenue', value: null, def: 'Revenue recognized under signed contracts.', src: 'No billing provider connected', window: '—', scope: 'Company', updated: 'never', coverage: 'Billing is not live. Pipeline forecasts are kept separately and never shown as revenue.' },
+  { name: 'Platform uptime', value: null, def: 'Share of minutes the production app answered health checks.', src: 'No telemetry source connected', window: '—', scope: 'Platform', updated: 'never', coverage: 'No monitor feeds this workspace yet.' },
+  { name: 'Active institutions', value: null, def: 'Institutions with an activated, authorized tenant.', src: 'schools + tenant rollout (not read in demo)', window: '—', scope: 'Company', updated: '—', coverage: 'Unknown here. A demo must not suggest a customer count.' },
+  { name: 'AI gateway spend', value: null, def: 'Provider cost billed through the policy-controlled AI gateway.', src: 'No cost export connected', window: '—', scope: 'Company', updated: 'never', coverage: 'Usage events exist in design only for this demo.' },
+];
+
+const st = { view: 'command', sel: null, sort: 'priority', q: '', focus: null, scope: 'company', role: 'approver', mfaAt: null, flow: null, receipts: {} };
+const PORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+function navHTML() {
+  return NAV.map(([g, items]) => `<div class="group"><div class="eyebrow">${g}</div>${items.map(([id, label, s]) =>
+    `<button type="button" data-nav="${id}" ${st.view === id ? 'aria-current="page"' : ''}><span>${label}</span><span class="state ${s}">${STATE_LABEL[s]}</span></button>`).join('')}</div>`).join('');
+}
+
+function scoped() {
+  return ITEMS.filter(i => st.scope === 'company' ? true : st.scope === 'northgate' ? i.tenant === 'northgate' : (i.owner === 'you (requester)' || i.owner === 'approver'));
+}
+function filtered() {
+  const q = st.q.trim().toLowerCase();
+  let list = scoped().filter(i => !q || [i.title, i.owner, i.status, i.tenant].some(w => (w || '').toLowerCase().includes(q)));
+  if (st.focus) list = list.filter(st.focus.fn);
+  const due = (i) => i.due ? Date.parse(i.due) : Infinity;
+  return list.sort((a, b) => (st.sort === 'due' ? due(a) - due(b) : PORDER[a.p] - PORDER[b.p]) || PORDER[a.p] - PORDER[b.p] || due(a) - due(b));
+}
+
+const QUESTIONS = [
+  { id: 'attention', label: 'Needs my attention', fn: i => i.p === 'critical' || i.p === 'high' },
+  { id: 'blocked', label: 'Overdue or blocked', fn: i => i.kind === 'blocked' || (i.due && Date.parse(i.due) < now) },
+  { id: 'approvals', label: 'Decisions awaiting me', fn: i => i.kind === 'approval' && i.status === 'Awaiting your decision' },
+  { id: 'incidents', label: 'Active incidents', fn: () => false, unread: true },
+  { id: 'commitments', label: 'Upcoming commitments', fn: i => i.kind === 'commitment' || (i.due && Date.parse(i.due) > now && Date.parse(i.due) < now + 7*24*H) },
+];
+
+function sourcesHTML() {
+  return `<ul class="sources">${SOURCES.map(s => {
+    const n = scoped().filter(i => i.src === s.id).length;
+    const say = s.state === 'read' ? `<span class="sig ok">${n} open</span> · read 2 min ago` : s.state === 'unavailable' ? `<span class="sig bad">Unavailable</span> — ${esc(s.error)}` : `<span class="sig off">Not in your grants — not read</span>`;
+    return `<li><span>${s.label} <span class="mono faint">${s.reader}</span></span><span>${say}</span></li>`;
+  }).join('')}</ul>`;
+}
+
+function homeHTML() {
+  const list = scoped();
+  const granted = SOURCES.filter(s => s.state !== 'not-granted');
+  const read = granted.filter(s => s.state === 'read');
+  const complete = read.length === granted.length;
+  const qs = QUESTIONS.map(q => {
+    const n = list.filter(q.fn).length;
+    const val = q.unread ? '<span class="n" style="font-size:1rem;color:var(--warn)">Not read</span>' : `<span class="n ${complete ? '' : 'floor'}">${n}</span>`;
+    return `<button type="button" class="q" data-q="${q.id}" aria-pressed="${st.focus?.id === q.id}" ${q.unread ? 'title="The incident reader is not in this operator\'s grants, so the count is unknown, not zero."' : ''}><span class="eyebrow">${q.label}</span>${val}</button>`;
+  }).join('');
+  return `
+  <section class="block" aria-labelledby="h-attn">
+    <div class="head"><h2 id="h-attn">What needs you</h2><span class="dim">${complete ? 'All granted sources read' : `${read.length} of ${granted.length} granted sources read — counts are floors, not totals`}</span></div>
+    <div class="questions">${qs}</div>
+  </section>
+  ${workHTML(true)}
+  <section class="block" aria-labelledby="h-ops">
+    <div class="head"><h2 id="h-ops">Operating overview</h2><span class="dim">Unknown stays unknown. Open a row for its definition and source.</span></div>
+    <div class="metrics">${METRICS.map(m => {
+      const v = m.value ? m.value() : null;
+      return `<div class="metric"><span>${m.name}</span><span class="src dim" style="font-size:.84rem">${esc(m.src)}</span><span class="v ${v === null ? 'unknown' : ''}">${v === null ? 'Unknown — no source' : esc(v)}</span>
+      <details><summary>Definition, window, scope, freshness, coverage</summary><dl class="fields" style="margin-top:6px"><dt>Definition</dt><dd>${esc(m.def)}</dd><dt>Source</dt><dd>${esc(m.src)}</dd><dt>Time window</dt><dd>${esc(m.window)}</dd><dt>Scope</dt><dd>${esc(m.scope)}</dd><dt>Last updated</dt><dd>${esc(m.updated)}</dd><dt>Coverage</dt><dd>${esc(m.coverage)}</dd></dl></details></div>`;
+    }).join('')}</div>
+  </section>
+  <section class="block" aria-labelledby="h-ready">
+    <div class="head"><h2 id="h-ready">What is actually ready</h2><span class="dim">Each stage recorded separately. A screen existing is not "done".</span></div>
+    <div class="scroll panel" style="padding:0"><table class="reg"><thead><tr><th>Capability</th><th>Designed</th><th>Implemented</th><th>Tested</th><th>Deployed</th><th>Production-enabled</th></tr></thead><tbody>
+    ${[['Console gate and capability registry',1,1,1,0,0],['Live exception queue',1,1,1,0,0],['Controlled approvals (bound, expiring, two-person)',1,1,1,0,0],['My Work queue and record details',1,1,1,0,0],['Pilots and implementations workspace',1,0,0,0,0],['Revenue and billing workspace',1,0,0,0,0],['Operator-wide search',0,0,0,0,0]]
+      .map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(x => x ? '<td class="y">Yes</td>' : '<td class="n">No</td>').join('')}</tr>`).join('')}
+    </tbody></table></div>
+    <p class="dim" style="margin:0">"Tested" means unit, component or SQL policy tests in the repository. Deployment was not checked from this session, so it is recorded as no.</p>
+  </section>`;
+}
+
+function workHTML(embedded) {
+  const list = filtered();
+  const sel = list.find(i => i.id === st.sel) || null;
+  return `
+  <section class="block" aria-labelledby="h-queue">
+    <div class="head"><h2 id="h-queue">${embedded ? 'Unified work queue' : 'My Work'}</h2><span class="dim">${list.length} shown${st.focus ? ` · filtered to “${st.focus.label}” <button type="button" class="btn ghost" data-clearfocus style="min-height:28px;padding:2px 8px">Clear</button>` : ''}</span></div>
+    ${embedded ? '' : `<div class="panel">${sourcesHTML()}</div>`}
+    <div class="controls">
+      <label class="field">Sort by<select id="sort"><option value="priority" ${st.sort === 'priority' ? 'selected' : ''}>Priority</option><option value="due" ${st.sort === 'due' ? 'selected' : ''}>Due date</option></select></label>
+    </div>
+    <div class="work">
+      <div>${list.length ? `<ul class="queue" aria-label="Work queue">${list.map(i => `<li><button type="button" class="item" data-item="${i.id}" data-p="${esc(i.p)}" aria-pressed="${i.id === st.sel}">
+        <span class="pri">${esc(i.p)}</span><span class="t">${esc(i.title)}</span>
+        <span class="m">${SOURCES.find(s => s.id === i.src).label} · ${esc(i.status)} · owner ${esc(i.owner || 'unassigned')} · due ${fmt(i.due)}</span></button></li>`).join('')}</ul>`
+        : `<p class="panel" role="status" style="margin:0">No matching work in this scope. ${st.q || st.focus ? 'Clear the search or filter to see everything open.' : 'Sources that could not be read may still hold work.'}</p>`}</div>
+      <div>${sel ? detailHTML(sel) : `<div class="panel dim">Select a record to see why it is yours, its evidence and its next safe step.</div>`}</div>
+    </div>
+  </section>`;
+}
+
+function detailHTML(i) {
+  const src = SOURCES.find(s => s.id === i.src);
+  return `<aside class="panel" aria-label="Record details: ${esc(i.title)}" style="display:grid;gap:var(--sp-3)">
+    <div class="head"><h3>${esc(i.title)}</h3><span class="pri">${esc(i.p)}</span></div>
+    <dl class="fields">
+      <dt>Status</dt><dd>${esc(i.status)}</dd><dt>Owner</dt><dd>${esc(i.owner || 'unassigned')}</dd>
+      <dt>Scope</dt><dd>${i.tenant ? 'Northgate University (synthetic)' : 'Semester company'}</dd><dt>Due</dt><dd>${fmt(i.due)}</dd>
+      <dt>Next safe step</dt><dd>${esc(i.next)}</dd><dt>Evidence</dt><dd>${esc(i.evidence)}</dd>
+      <dt>Known limitation</dt><dd>${esc(i.limitation)}</dd><dt>Source</dt><dd class="mono">${src.reader}</dd><dt>Observed</dt><dd>${fmt(i.when)}</dd>
+    </dl>
+    <div class="actions">
+      ${i.approval ? `<button type="button" class="btn" data-openapproval="${i.approval}">Open in Approvals</button>` : `<button type="button" class="btn" data-assign="${i.id}" ${i.owner ? 'disabled title="Already owned"' : ''}>${i.owner ? 'Owned' : 'Assign to me'}</button>`}
+      <button type="button" class="btn ghost" data-close>Close details</button>
+    </div>
+    ${i.approval ? '' : '<p class="dim" style="margin:0;font-size:.85rem">In the app, assignment is a server write recorded in the audit chain. Here it changes only this page.</p>'}
+  </aside>`;
+}
+
+// ---- controlled approvals ----
+const STEPS = ['Request', 'Authenticate', 'Resolve scope and capability', 'Evaluate policy', 'Read authoritative state', 'Preview target and impact', 'Approval and step-up', 'Revalidate at execution', 'Execute once', 'Audit and receipt'];
+async function hash(obj) {
+  const data = new TextEncoder().encode(JSON.stringify(obj));
+  try { const d = await crypto.subtle.digest('SHA-256', data); return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+  catch { let h = 0; for (const b of data) h = (h * 31 + b) >>> 0; return h.toString(16).padStart(8, '0'); }
+}
+
+function approvalsHTML() {
+  const rows = Object.values(APPROVALS).map(a => {
+    const expired = Date.parse(a.expires) <= now || a.status === 'expired';
+    const said = expired ? '<span class="sig bad">Expired</span>' : a.status === 'executed' ? '<span class="sig ok">Executed</span>' : a.status === 'approved' ? '<span class="sig ok">Approved — ready to act</span>' : 'Pending';
+    return `<li><button type="button" class="item" data-openapproval="${a.id}" data-p="${expired ? 'low' : 'high'}" aria-pressed="${st.flow?.id === a.id}"><span class="t">${a.duty} → <span class="mono">${esc(a.target)}</span></span><span class="m">${said} · requested by ${esc(a.requester)} · expires ${fmt(a.expires)} · ${a.twoPerson ? 'two-person' : 'one approver'} · ${a.approvals.length} approval(s)</span></button></li>`;
+  }).join('');
+  return `<section class="block" aria-labelledby="h-appr">
+    <div class="head"><h2 id="h-appr">Approvals</h2>
+      <label class="field" style="min-width:220px">Acting as (demo role switch)
+        <select id="role"><option value="approver" ${st.role === 'approver' ? 'selected' : ''}>S. Patel — approver</option><option value="requester" ${st.role === 'requester' ? 'selected' : ''}>M. Reyes — requester of role.grant</option></select>
+      </label></div>
+    <p class="note" style="margin:0">In the app these rules are enforced by the database, not this screen: the request is pinned after creation, a requester cannot approve their own request, two-person duties need two different approvers, expired requests are refused at decision and at execution, and privileged writes need a second factor verified in the last few minutes.</p>
+    <div class="work"><div><ul class="queue">${rows}</ul></div><div id="flow">${st.flow ? flowHTML() : '<div class="panel dim">Open a request to walk the controlled action.</div>'}</div></div>
+  </section>`;
+}
+
+function flowHTML() {
+  const f = st.flow, a = APPROVALS[f.id];
+  const steps = STEPS.map((s, k) => `<li class="${k < f.step ? 'done' : k === f.step ? (f.fail ? 'fail' : 'now') : ''}">${s}</li>`).join('');
+  const expired = Date.parse(a.expires) <= now || a.status === 'expired';
+  const actor = st.role === 'approver' ? 'S. Patel' : 'M. Reyes';
+  const mfaFresh = st.mfaAt && now - st.mfaAt < 10 * 60e3 || (st.mfaAt && Date.now() - st.mfaAt < 10 * 60e3);
+  const bound = f.boundHash && f.boundHash === f.currentHash;
+  let body = '';
+  if (expired) {
+    body = `<div class="alert" role="alert"><strong>Refused.</strong> This request expired on ${fmt(a.expires)}. It cannot be decided or executed. Raise a new request with current evidence.</div>`;
+  } else if (a.status === 'executed') {
+    body = `<div class="receipt" aria-label="Receipt">${esc(st.receipts[a.id])}</div>
+      <button type="button" class="btn ghost" data-execute>Run it again (retry)</button>
+      <p class="dim" style="margin:0">A retry with the same idempotency key returns this same receipt. Nothing runs twice.</p>`;
+  } else {
+    body = `
+    <dl class="fields">
+      <dt>Duty</dt><dd>${a.duty}${a.twoPerson ? ' (two-person)' : ''}</dd><dt>Exact target</dt><dd class="mono">${esc(a.target)}</dd>
+      <dt>Payload</dt><dd class="mono">${esc(JSON.stringify(a.payload))}</dd><dt>Payload hash</dt><dd class="mono">${(f.currentHash || '').slice(0, 16)}…</dd>
+      <dt>What changes</dt><dd>${a.duty === 'role.grant' ? 'A. Okafor gains implementation_lead at Northgate only, for 30 days.' : 'The degree audit preview flag turns on for Northgate pilot users.'}</dd>
+      <dt>What stays the same</dt><dd>${a.duty === 'role.grant' ? 'No student records, grades or support content become readable. Other institutions are untouched.' : 'Other tenants and official records are untouched.'}</dd>
+      <dt>Reversible</dt><dd>${a.duty === 'role.grant' ? 'Yes — revoke the grant; the audit entry stays.' : 'Yes — a kill-switch request turns it off.'}</dd>
+      <dt>Ticket</dt><dd>${a.ticket}</dd><dt>Approvals</dt><dd>${a.approvals.length ? esc(a.approvals.join(', ')) : 'none yet'}${a.twoPerson ? ' of 2 needed' : ' of 1 needed'}</dd>
+      <dt>Second factor</dt><dd>${mfaFresh ? '<span class="sig ok">Fresh</span>' : '<span class="sig bad">Not fresh</span> — required before a decision'}</dd>
+    </dl>
+    ${f.msg ? `<div class="${f.fail ? 'alert' : 'note'}" role="${f.fail ? 'alert' : 'status'}">${f.msg}</div>` : ''}
+    ${!mfaFresh ? `<form id="mfa" class="actions" style="align-items:end"><label class="field">Authenticator code (demo: any 6 digits)<input id="code" class="input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code"></label><button class="btn" type="submit">Verify</button></form>` : ''}
+    <div class="actions">
+      ${a.status === 'pending' ? `<button type="button" class="btn" data-decide="approve" ${mfaFresh ? '' : 'disabled'}>Approve as ${actor}</button><button type="button" class="btn ghost" data-decide="reject" ${mfaFresh ? '' : 'disabled'}>Reject</button>` : ''}
+      ${a.status === 'approved' ? `<button type="button" class="btn" data-execute ${mfaFresh ? '' : 'disabled'}>Execute</button>` : ''}
+      <button type="button" class="btn ghost" data-tamper>Change the payload</button>
+    </div>
+    ${f.boundHash ? `<p class="dim" style="margin:0;font-size:.85rem">Approval bound to hash <span class="mono">${f.boundHash.slice(0, 16)}…</span> ${bound ? '— matches the current payload.' : '— <strong style="color:var(--error)">no longer matches</strong>.'}</p>` : ''}`;
+  }
+  return `<div class="panel flow" aria-label="Controlled action for ${a.duty}"><h3>${a.duty} → <span class="mono">${esc(a.target)}</span></h3><ol class="steps" aria-label="Control steps">${steps}</ol>${body}</div>`;
+}
+
+async function openApproval(id) {
+  const a = APPROVALS[id];
+  const h = await hash({ target: a.target, payload: a.payload });
+  st.view = 'approvals';
+  const expired = Date.parse(a.expires) <= now || a.status === 'expired';
+  st.flow = { id, step: expired ? 4 : a.status === 'executed' ? 10 : a.status === 'approved' ? 7 : 5, currentHash: h, boundHash: a.boundHash || null, fail: expired, msg: '' };
+  render();
+}
+
+async function decide(kind) {
+  const f = st.flow, a = APPROVALS[f.id];
+  const actor = st.role === 'approver' ? 'S. Patel' : 'M. Reyes';
+  if (actor === a.requester) { f.fail = true; f.msg = '<strong>Refused.</strong> The requester cannot decide their own request. Ask a different approver.'; return render(); }
+  if (a.approvals.includes(actor)) { f.fail = true; f.msg = `<strong>Refused.</strong> ${actor} has already decided this request. One decision per person.`; return render(); }
+  if (kind === 'reject') { a.status = 'rejected'; f.msg = 'Rejected. The requester is told; nothing runs.'; f.fail = false; f.step = 9; return render(); }
+  a.approvals.push(actor);
+  const need = a.twoPerson ? 2 : 1;
+  f.boundHash = a.boundHash = f.currentHash;
+  if (a.approvals.length >= need) { a.status = 'approved'; f.step = 7; f.msg = `Approved by ${a.approvals.join(' and ')}. Bound to the exact target and payload shown.`; }
+  else { f.step = 6; f.msg = `Recorded ${actor}'s approval. This duty needs a second, different approver.`; }
+  f.fail = false;
+  const item = ITEMS.find(i => i.approval === a.id);
+  if (item) { item.status = a.status === 'approved' ? 'Approved — ready to act' : 'Waiting on approvers'; }
+  render();
+}
+
+async function execute() {
+  const f = st.flow, a = APPROVALS[f.id];
+  if (st.receipts[a.id]) { f.msg = ''; return render(); }
+  const nowHash = await hash({ target: a.target, payload: a.payload });
+  if (nowHash !== a.boundHash) { f.fail = true; f.step = 7; f.msg = '<strong>Refused at execution.</strong> The payload changed after approval, so the approval no longer applies. Raise a new request.'; return render(); }
+  if (Date.parse(a.expires) <= Date.now()) { f.fail = true; f.step = 7; f.msg = '<strong>Refused at execution.</strong> The approval expired.'; return render(); }
+  a.status = 'executed';
+  const key = `idem-${a.id}-${nowHash.slice(0, 8)}`;
+  st.receipts[a.id] = `RECEIPT (synthetic)\nduty            ${a.duty}\ntarget          ${a.target}\npayload sha256  ${nowHash}\napproved by     ${a.approvals.join(', ')}\nidempotency key ${key}\naudit event     ae-${nowHash.slice(8, 16)} (demo; not written anywhere)\nexecuted at     ${new Date().toISOString()}\nrecovery        ${a.duty === 'role.grant' ? 'revoke grant via role.revoke request' : 'kill switch via feature_flag.disable request'}`;
+  f.step = 10; f.fail = false; f.msg = '';
+  ITEMS = ITEMS.filter(i => i.approval !== a.id);
+  render();
+}
+
+async function tamper() {
+  const f = st.flow, a = APPROVALS[f.id];
+  if (a.payload.expires_at) a.payload.expires_at = iso(24 * 365); else a.payload.state = 'all-users';
+  f.currentHash = await hash({ target: a.target, payload: a.payload });
+  if (f.boundHash) { f.fail = true; f.msg = '<strong>Binding broken.</strong> The payload is no longer the one that was approved. Execution will be refused.'; }
+  else { f.fail = false; f.msg = 'Payload changed before any decision. In the app the request row is pinned, so this would be a new request.'; }
+  render();
+}
+
+function placeholderHTML(id) {
+  const entry = NAV.flatMap(([g, items]) => items.map(x => [g, ...x])).find(x => x[1] === id);
+  const [group, , label, s] = entry;
+  const plan = {
+    pilots: 'Slice B reads gtm_foundation pilots and commercial_core implementation records as systems of record, behind its own capability and a cross-tenant denial test.',
+    impl: 'Slice B: discovery → identity setup → data mapping → dry run → reconciliation → readiness review → launch approval → hypercare, each with owner and evidence.',
+    sales: 'Slice D. Pipeline forecasts stay separate from recognized revenue.',
+    success: 'Slice B/D: success plans, QBRs, renewals and account health from commercial_core.',
+    revenue: 'Slice D. No autonomous refunds, transfers or write-offs; financial actions are request-only approvals.',
+    search: 'Needs a product and privacy decision first: operator search must be domain-specific and classification-aware so it cannot bridge student-private and institutional data.',
+  }[id] || 'Kept in the backlog with its slice. Each new workspace needs its own capability, a scoped server reader, a negative cross-tenant test and an evidence record.';
+  return `<section class="block"><div class="head"><h2>${label}</h2><span class="state ${s}">${STATE_LABEL[s]}</span></div>
+    <div class="panel" style="display:grid;gap:var(--sp-3)"><p style="margin:0">${STATE_SAYS[s]}</p><p class="dim" style="margin:0"><strong>${group} › ${label}.</strong> ${plan}</p>
+    ${s === 'built' ? '<p class="dim" style="margin:0">This demo shows Command Center, My Work and Approvals. Other built workspaces are in the app console.</p>' : ''}
+    <div class="actions"><button type="button" class="btn ghost" data-nav="command">Back to Command Center</button></div></div></section>`;
+}
+
+function createHTML() {
+  return `<section class="block" aria-labelledby="h-new"><div class="head"><h2 id="h-new">Create task</h2></div>
+  <form id="newtask" class="panel" style="display:grid;gap:var(--sp-3);max-width:640px" novalidate>
+    <label class="field">Title<input id="nt-title" class="input" required maxlength="140" aria-describedby="nt-err"></label>
+    <div class="controls"><label class="field">Priority<select id="nt-p"><option>high</option><option selected>medium</option><option>low</option></select></label>
+    <label class="field">Due<input id="nt-due" class="input" type="date"></label>
+    <label class="field">Scope<select id="nt-scope"><option value="">Semester company</option><option value="northgate">Northgate University (synthetic)</option></select></label></div>
+    <label class="field">Next step<input id="nt-next" class="input" maxlength="200"></label>
+    <p id="nt-err" class="sig bad" role="alert" hidden>Give the task a title.</p>
+    <div class="actions"><button class="btn" type="submit">Add to my queue</button><button class="btn ghost" type="button" data-nav="command">Cancel</button></div>
+    <p class="dim" style="margin:0;font-size:.85rem">Adds a synthetic task to this page only. The app has no company task store yet; it is planned with slice A's follow-up.</p>
+  </form></section>`;
+}
+
+function render() {
+  $('#groups').innerHTML = navHTML();
+  const main = $('#main');
+  if (st.view === 'command') main.innerHTML = homeHTML();
+  else if (st.view === 'work') main.innerHTML = workHTML(false);
+  else if (st.view === 'approvals') main.innerHTML = approvalsHTML();
+  else if (st.view === 'create') main.innerHTML = createHTML();
+  else main.innerHTML = placeholderHTML(st.view);
+  const missing = SOURCES.filter(s => s.state === 'unavailable').length;
+  $('#fresh').textContent = `Sources read 2 min ago · ${missing} unavailable`;
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, [data-nav]'); if (!t) return;
+  if (t.dataset.nav) { st.view = t.dataset.nav; st.sel = null; st.focus = null; if (st.view !== 'approvals') st.flow = null; $('#rail').dataset.open = 'false'; $('#navtoggle').setAttribute('aria-expanded', 'false'); render(); $('#main').focus?.(); return; }
+  if (t.id === 'navtoggle') { const open = $('#rail').dataset.open !== 'true'; $('#rail').dataset.open = String(open); t.setAttribute('aria-expanded', String(open)); return; }
+  if (t.id === 'create') { st.view = 'create'; render(); $('#nt-title')?.focus(); return; }
+  if (t.dataset.q) { const q = QUESTIONS.find(x => x.id === t.dataset.q); if (q.unread) return; st.focus = st.focus?.id === q.id ? null : q; render(); return; }
+  if ('clearfocus' in t.dataset) { st.focus = null; render(); return; }
+  if (t.dataset.item) { st.sel = st.sel === t.dataset.item ? null : t.dataset.item; render(); return; }
+  if ('close' in t.dataset) { st.sel = null; render(); return; }
+  if (t.dataset.assign) { const i = ITEMS.find(x => x.id === t.dataset.assign); i.owner = 'you'; i.status = 'Assigned to you'; render(); return; }
+  if (t.dataset.openapproval) { openApproval(t.dataset.openapproval); return; }
+  if (t.dataset.decide) { decide(t.dataset.decide); return; }
+  if ('execute' in t.dataset) { execute(); return; }
+  if ('tamper' in t.dataset) { tamper(); return; }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'sort') { st.sort = e.target.value; render(); }
+  if (e.target.id === 'scope') { st.scope = e.target.value; st.sel = null; render(); }
+  if (e.target.id === 'role') { st.role = e.target.value; if (st.flow) { st.flow.msg = ''; st.flow.fail = false; } render(); }
+});
+document.addEventListener('input', (e) => { if (e.target.id === 'search') { st.q = e.target.value; if (st.view !== 'work' && st.view !== 'command') st.view = 'work'; render(); $('#search').focus(); } });
+document.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (e.target.id === 'mfa') { if (/^[0-9]{6}$/.test($('#code').value)) { st.mfaAt = Date.now(); st.flow.msg = 'Second factor verified for the next 10 minutes (demo).'; st.flow.fail = false; } else { st.flow.fail = true; st.flow.msg = 'Enter the 6-digit code.'; } render(); }
+  if (e.target.id === 'newtask') {
+    const title = $('#nt-title').value.trim();
+    if (!title) { $('#nt-err').hidden = false; $('#nt-title').setAttribute('aria-invalid', 'true'); $('#nt-title').focus(); return; }
+    const d = $('#nt-due').value;
+    ITEMS.push({ id: 'n' + Date.now(), src: 'command', p: ['high', 'medium', 'low'].includes($('#nt-p').value) ? $('#nt-p').value : 'medium', title, status: 'Open', owner: 'you', tenant: $('#nt-scope').value || null, due: d ? new Date(d + 'T17:00:00').toISOString() : null, next: $('#nt-next').value || 'None recorded', evidence: 'Created on this demo page', limitation: 'Synthetic. Not stored anywhere.', kind: 'task', when: new Date().toISOString() });
+    st.view = 'work'; render();
+  }
+});
+$('#main').tabIndex = -1;
+render();
+})();
+</script>
