@@ -20,6 +20,7 @@ import DecisionsPage from './DecisionsPage';
 import AtlasPage from './AtlasPage';
 import WorkspacePage, { WORKSPACE_KEYS } from './WorkspacePage';
 import { Wordmark } from '@project/components/brand/Mark';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
@@ -76,7 +77,7 @@ export default function App() {
             </Routes>
           </main>
         </div>
-        <Toaster position="bottom-right" />
+        <AppSwitcher current="company" /><Toaster position="bottom-right" />
       </DataProvider>
     </BrowserRouter>
   );

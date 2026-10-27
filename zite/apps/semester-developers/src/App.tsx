@@ -9,6 +9,7 @@ import { useLoad } from './hooks';
 import { ReviewQueue, AppsTable, KeysTable, AuditLog } from './components/Console';
 import { Sandbox, Docs } from './components/Sandbox';
 import { Wordmark } from '@project/components/brand/Mark';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const TABS = [
   { id: 'review', label: 'Review queue', group: 'Platform' }, { id: 'apps', label: 'Apps', group: 'Platform' },
@@ -61,7 +62,7 @@ export default function App() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         {isPlatform ? <PlatformArea key="p" tab={tab} /> : <BuildArea key="b" tab={tab} />}
       </main>
-      <Toaster />
+      <AppSwitcher current="developers" /><Toaster />
     </div>
   );
 }

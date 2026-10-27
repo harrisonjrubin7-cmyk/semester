@@ -11,6 +11,7 @@ import Holds from './pages/Holds';
 import Console from './pages/Console';
 import Audit from './pages/Audit';
 import Structure from './pages/Structure';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const NAV = [
   { to: '/', label: 'Overview', icon: LayoutDashboard },
@@ -57,7 +58,7 @@ function Shell() {
           </Routes>
         </div>
       </main>
-      <Toaster />
+      <AppSwitcher current="institution" /><Toaster />
     </div>
   );
 }

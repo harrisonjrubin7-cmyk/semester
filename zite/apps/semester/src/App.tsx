@@ -66,6 +66,7 @@ import CareerServices from './pages/CareerServices';
 import PeerSupport from './pages/PeerSupport';
 import DisabilityServices from './pages/DisabilityServices';
 import Guides from './pages/Guides';
+import { AppSwitcher } from './components/AppSwitcher';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
 import Procurement from './pages/Procurement';
@@ -122,6 +123,7 @@ export default function App() {
   return (
     <WorkspaceContext.Provider value={{ membership, role: current, setRole: changeRole, refresh }}>
       <BrowserRouter>
+        <AppSwitcher current="semester" />
         <Routes>
           <Route path="/console" element={current === 'Administrator' ? <Console /> : <Navigate to="/today" replace />} />
           <Route element={<Shell />}>

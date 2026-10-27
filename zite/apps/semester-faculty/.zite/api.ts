@@ -2,6 +2,7 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
@@ -24,6 +25,11 @@ import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
 import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _TeachingEp } from '../src/api/teaching';
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _AssessmentsCfg = typeof _AssessmentsEp;
 export type AssessmentsInputType = NonNullable<_AssessmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssessmentsCfg['execute']>[0]['input'];
@@ -137,6 +143,7 @@ export const teaching = createCaller<TeachingInputType, TeachingOutputType>('tea
 
 
 export const api = {
+  appDirectory,
   assessments,
   courseAccessibility,
   courseDiscussion,

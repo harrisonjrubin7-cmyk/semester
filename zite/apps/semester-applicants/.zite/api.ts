@@ -2,7 +2,13 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _ApplicationsEp } from '../src/api/applications';
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _ApplicationsCfg = typeof _ApplicationsEp;
 export type ApplicationsInputType = NonNullable<_ApplicationsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ApplicationsCfg['execute']>[0]['input'];
@@ -11,5 +17,6 @@ export const applications = createCaller<ApplicationsInputType, ApplicationsOutp
 
 
 export const api = {
+  appDirectory,
   applications,
 };

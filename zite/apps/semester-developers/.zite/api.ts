@@ -2,8 +2,14 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _PlatformEp } from '../src/api/platform';
 import type { default as _SandboxEp } from '../src/api/sandbox';
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _PlatformCfg = typeof _PlatformEp;
 export type PlatformInputType = NonNullable<_PlatformCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PlatformCfg['execute']>[0]['input'];
@@ -17,6 +23,7 @@ export const sandbox = createCaller<SandboxInputType, SandboxOutputType>('sandbo
 
 
 export const api = {
+  appDirectory,
   platform,
   sandbox,
 };

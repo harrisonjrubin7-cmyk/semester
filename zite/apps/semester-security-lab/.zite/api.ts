@@ -3,6 +3,7 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _AddCapabilityEvidenceEp } from '../src/api/addCapabilityEvidence';
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _CapabilitiesEp } from '../src/api/capabilities';
 import type { default as _CapabilityEvidenceEp } from '../src/api/capabilityEvidence';
 import type { default as _DecideGateEp } from '../src/api/decideGate';
@@ -17,6 +18,11 @@ type _AddCapabilityEvidenceCfg = typeof _AddCapabilityEvidenceEp;
 export type AddCapabilityEvidenceInputType = NonNullable<_AddCapabilityEvidenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AddCapabilityEvidenceCfg['execute']>[0]['input'];
 export type AddCapabilityEvidenceOutputType = Awaited<ReturnType<_AddCapabilityEvidenceCfg['execute']>>;
 export const addCapabilityEvidence = createCaller<AddCapabilityEvidenceInputType, AddCapabilityEvidenceOutputType>('addCapabilityEvidence');
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _CapabilitiesCfg = typeof _CapabilitiesEp;
 export type CapabilitiesInputType = NonNullable<_CapabilitiesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CapabilitiesCfg['execute']>[0]['input'];
@@ -66,6 +72,7 @@ export const updateFinding = createCaller<UpdateFindingInputType, UpdateFindingO
 
 export const api = {
   addCapabilityEvidence,
+  appDirectory,
   capabilities,
   capabilityEvidence,
   decideGate,

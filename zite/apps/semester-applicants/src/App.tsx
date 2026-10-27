@@ -12,6 +12,7 @@ import { Toaster } from '@project/components/ui/sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@project/components/ui/alert-dialog';
 import { Wordmark } from '@project/components/brand/Mark';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 type D = NonNullable<ApplicationsOutputType>;
 type App = NonNullable<D['applications']>[number];
@@ -93,7 +94,7 @@ export default function App() {
   if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
   return (
     <div className="min-h-screen bg-background">
-      <Toaster />
+      <AppSwitcher current="applicants" /><Toaster />
       <header className="flex items-center justify-between bg-sidebar px-4 py-3 text-sm text-sidebar-foreground md:px-8">
         <span className="font-display tracking-[0.3em]">SEMESTER <span className="ml-2 text-xs tracking-normal opacity-60">Applicants</span></span>
         <span className="flex items-center gap-3 text-xs"><span className="hidden sm:inline">{user.email}</span><button onClick={() => logout()} className="underline">Sign out</button></span>

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@project/components/ui/alert-dialog';
 import { Wordmark } from '@project/components/brand/Mark';
 import Scholarships from './Scholarships';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 type Opp = NonNullable<EmployerOutputType['opportunities']>[number];
 type Draft = { id?: string; version?: number; title: string; kind: 'Internship' | 'Job' | 'Research' | 'Mentorship'; employerName: string; description: string; location: string; closesOn: string | null };
@@ -121,7 +122,7 @@ export default function App() {
         </div>
         </>}
       </main>
-      <Toaster />
+      <AppSwitcher current="employers" /><Toaster />
     </div>
   );
 }

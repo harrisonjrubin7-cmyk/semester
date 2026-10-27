@@ -2,9 +2,15 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
 import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _InstitutionConsoleCfg = typeof _InstitutionConsoleEp;
 export type InstitutionConsoleInputType = NonNullable<_InstitutionConsoleCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionConsoleCfg['execute']>[0]['input'];
@@ -23,6 +29,7 @@ export const sectionRequests = createCaller<SectionRequestsInputType, SectionReq
 
 
 export const api = {
+  appDirectory,
   institutionConsole,
   institutionOps,
   sectionRequests,

@@ -17,6 +17,7 @@ import Teaching from './pages/Teaching';
 import SectionPage from './pages/Section';
 import Regrades from './pages/Regrades';
 import OfficeHours from './pages/OfficeHours';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const NAV = [
   { to: '/', label: 'Teaching', icon: Home },
@@ -87,7 +88,7 @@ function Shell() {
           </Routes>
         </div>
       </main>
-      <Toaster />
+      <AppSwitcher current="faculty" /><Toaster />
     </div>
   );
 }

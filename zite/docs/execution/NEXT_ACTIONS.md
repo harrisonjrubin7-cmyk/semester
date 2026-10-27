@@ -67,6 +67,11 @@ Parity step 1 done (27 Oct): study guides (/learn/guides in Semester, /guides in
 choice/true-false/match marking and attempts, Figures, Cases, Cram). Instructors publish a guide to their section and enrolled
 students see it and can copy it. guideRules unit tests 8/8; DB check 16/16; mutations red. Next: step 2 own-data tools.
 
+Connected OS (27 Oct): one account across all ten apps (ziteUsers is workspace-wide) and one database; every app except the public
+Site now shows the same Apps switcher (components/AppSwitcher.tsx + api/appDirectory.ts front doors), listing only the apps that
+make sense for the person (lib/appDirectoryRules.ts, unit-tested). App addresses live in os_app_urls and are set by company staff
+from the switcher. Owner: after publishing, paste each app's address into the switcher (or send them to Claude).
+
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
    Fixed from them: tenant check on office-staff grants (SEC-034), withdrawn requests closed for the registrar (REG-039),

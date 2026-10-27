@@ -13,13 +13,14 @@ import GatesPage from './pages/GatesPage';
 import ArtifactsPage from './pages/ArtifactsPage';
 import CapabilitiesPage from './pages/CapabilitiesPage';
 import PortfolioPage from './pages/PortfolioPage';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 export default function App() {
   const { isLoading, user } = useAuth();
   if (isLoading || !user) return null;
   return (
     <BrowserRouter>
-      <Toaster />
+      <AppSwitcher current="security" /><Toaster />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Overview />} />

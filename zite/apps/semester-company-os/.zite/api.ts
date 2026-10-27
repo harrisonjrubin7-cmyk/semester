@@ -2,6 +2,7 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AppReviewEp } from '../src/api/appReview';
 import type { default as _AtlasEp } from '../src/api/atlas';
 import type { default as _BoardEp } from '../src/api/board';
@@ -19,6 +20,11 @@ import type { default as _ScenariosEp } from '../src/api/scenarios';
 import type { default as _SupportAccessEp } from '../src/api/supportAccess';
 import type { default as _TrustCenterEp } from '../src/api/trustCenter';
 import type { default as _WorkspacesEp } from '../src/api/workspaces';
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _AppReviewCfg = typeof _AppReviewEp;
 export type AppReviewInputType = NonNullable<_AppReviewCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppReviewCfg['execute']>[0]['input'];
@@ -107,6 +113,7 @@ export const workspaces = createCaller<WorkspacesInputType, WorkspacesOutputType
 
 
 export const api = {
+  appDirectory,
   appReview,
   atlas,
   board,

@@ -10,6 +10,7 @@ import type { default as _AdvisorShareEp } from '../src/api/advisorShare';
 import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AidOfficeEp } from '../src/api/aidOffice';
 import type { default as _AlumniEp } from '../src/api/alumni';
+import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _ApprovalsEp } from '../src/api/approvals';
 import type { default as _AskEp } from '../src/api/ask';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
@@ -133,6 +134,11 @@ type _AlumniCfg = typeof _AlumniEp;
 export type AlumniInputType = NonNullable<_AlumniCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AlumniCfg['execute']>[0]['input'];
 export type AlumniOutputType = Awaited<ReturnType<_AlumniCfg['execute']>>;
 export const alumni = createCaller<AlumniInputType, AlumniOutputType>('alumni');
+
+type _AppDirectoryCfg = typeof _AppDirectoryEp;
+export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
+export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
+export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
 
 type _ApprovalsCfg = typeof _ApprovalsEp;
 export type ApprovalsInputType = NonNullable<_ApprovalsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ApprovalsCfg['execute']>[0]['input'];
@@ -559,6 +565,7 @@ export const api = {
   affiliation,
   aidOffice,
   alumni,
+  appDirectory,
   approvals,
   ask,
   assessments,

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { cn } from '@project/components/lib/utils';
 import { Wordmark } from '@project/components/brand/Mark';
+import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const G: Record<string, string> = { Official: '◆', Connected: '⇄', 'Made Here': '◇', Yours: '○', Sample: '◌', 'AI Assisted': '✦' };
 const Tag = ({ s }: { s: string }) => <span className={cn('inline-flex gap-1 rounded-[3px] border border-border px-1.5 text-[11px] text-muted-foreground', s === 'Sample' && 'border-dashed')}>{G[s] ?? '○'} {s}</span>;
@@ -62,7 +63,7 @@ export default function App() {
           </>
         )}
       </main>
-      <Toaster />
+      <AppSwitcher current="family" /><Toaster />
     </div>
   );
 }
