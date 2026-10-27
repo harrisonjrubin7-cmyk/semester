@@ -105,6 +105,7 @@ moderation-audit
 module_mode
 my-capabilities
 my-sessions
+no-impersonation
 notification-inbox
 offboarding-grants
 officeactions
