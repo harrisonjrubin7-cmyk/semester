@@ -17,7 +17,7 @@ re-read in source by hand after the first pass.
   and grant changes are audited by trigger.
 - **Tenant pinning.** `profiles.school_id` is not client-writable
   (`20260921211500_pin_profile_school.sql`).
-- **Policies are tested as a second account.** `supabase/check.sh` runs 36
+- **Policies are tested as a second account.** `supabase/check.sh` runs 167
   `*.check.sql` suites against a disposable, socket-only Postgres, in CI.
 - **Aggregates refuse n < 10** by check constraint (#762).
 - **Secrets hygiene.**

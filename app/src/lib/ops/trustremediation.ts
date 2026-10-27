@@ -93,11 +93,12 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-04', before: 'invitation', owner: 'trust', effort: 'M',
     title: 'Reconcile the registers that contradict each other',
-    finding: 'The database suites are counted as 36, 78 and 106 in three documents; RET-001 says no legal hold can be placed while legal_holds and four checks exist; MFA is "absent" in two registers and implemented for the console; SOC2-READINESS says no risk register and no tabletop; the threat model says thirteen functions where sixteen exist.',
+    finding: 'The two source documents count 36 and 78 database suites while the branch has 167; RET-001 says no legal hold can be placed although legal_holds and its hold suites exist; SOC2-READINESS says no risk register and no tabletop although both have repository evidence; the threat model says thirteen function directories where 18 exist. MFA repository enforcement is already distinguished from missing production-provider exports and must stay that way.',
     sources: ['docs/SECURITY-GAP-ANALYSIS.md', 'docs/SECURITY-THREAT-MODEL.md', 'docs/trust/EVIDENCE-REGISTER.md', 'docs/trust/SOC2-READINESS.md', 'app/src/lib/masterregister.ts'],
-    fix: 'Correct each to what the tree shows, citing the file, and add a count to the test that holds the document.',
+    fix: 'Count suites and deployed function directories from the tree; cite the legal-hold, risk-register and repository-tabletop sources; preserve the missing target-operation and provider-export boundaries; add one fail-closed reconciliation test for every statement.',
     moves: ['TC-PRV-02', 'TC-SEC-10'],
     files: 'The corrected documents.',
+    done: { proof: 'app/src/lib/trustreconciliation.test.ts', on: '2026-10-27' },
   },
   {
     id: 'TR-05', before: 'invitation', owner: 'security', effort: 'S',

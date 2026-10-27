@@ -976,8 +976,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Tabletop exercise',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'Generic SEV1-SEV4 process (detect > contain > postmortem); not AI-specific' }, { path: 'app/src/lib/governance/incident-comms.ts', shows: 'ai_quality audience requires outputs-to-distrust and feature-paused fields' }, { path: 'app/src/lib/governance/incident-comms.test.ts', shows: 'Tests message composition and required sections' }],
-    gap: 'No AI-specific P0-P3 taxonomy, investigation runbook or corrective-action tracking. Disablement is wired and was drilled against production on 29 September (AI-012). A tabletop exercise can\'t be met by code and has not been held.',
+    evidence: [{ path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'Generic SEV1-SEV4 process (detect > contain > postmortem); not AI-specific' }, { path: 'app/src/lib/governance/incident-comms.ts', shows: 'ai_quality audience requires outputs-to-distrust and feature-paused fields' }, { path: 'app/src/lib/governance/incident-comms.test.ts', shows: 'Tests message composition and required sections' }, { path: 'docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md', shows: 'Repository walkthrough of a cross-tenant AI allegation; target containment and staffed response remain open' }],
+    gap: 'No complete AI-specific P0-P3 taxonomy, investigation runbook or corrective-action tracking. Disablement is wired and was drilled against production on 29 September (AI-012). A document/repository tabletop was held, but no authorized target incident exercise or staffed recovery approval is filed.',
   },
   {
     id: 'UOS-001',
@@ -1226,8 +1226,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Policy/evidence index',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/HECVAT_READINESS.md', shows: 'GOV-1 named security owner IN_PROGRESS (no owner); GOV-2 risk register NOT_STARTED' }, { path: 'docs/market-readiness/SECURITY_READINESS.md', shows: 'security posture and policy set written as a readiness document' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'council seats incl. Security/vCISO defined as data, every holder null (vacant)' }, { path: 'docs/trust/HECVAT-VPAT-PLAN.md', shows: '90-day plan to write missing policies, assign owners, set quarterly evidence review' }],
-    gap: 'No accepted security owner, no risk register, no security training record, no reviewed policy set with review dates, no governance cadence operating, and no evidence index under docs/evidence/.',
+    evidence: [{ path: 'docs/market-readiness/HECVAT_READINESS.md', shows: 'GOV-1 named security owner IN_PROGRESS; its older GOV-2 assessment is superseded by the repository risk register cited here' }, { path: 'docs/market-readiness/SECURITY_READINESS.md', shows: 'security posture and policy set written as a readiness document' }, { path: 'app/src/lib/launchreadiness.ts', shows: 'council seats incl. Security/vCISO defined as data, every holder null (vacant)' }, { path: 'app/src/lib/governance/risk.ts', shows: 'the machine-readable risk register, tolerances, controls, owners and escalation rules' }, { path: 'app/src/lib/governance/risk.test.ts', shows: 'holds every risk and exception to the repository evidence it claims' }, { path: 'docs/operating-model/RISK-GOVERNANCE.md', shows: 'the rendered risk register and governance procedure' }, { path: 'docs/trust/HECVAT-VPAT-PLAN.md', shows: '90-day plan to assign owners and set quarterly evidence review' }],
+    gap: 'A source-tested repository risk register exists, but no accepted security owner, first minuted quarterly risk review, security training record, reviewed policy set with review dates, or operating governance cadence is filed.',
   },
   {
     id: 'SEC-002',
@@ -1286,8 +1286,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'IR tabletop',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'written severity model and incident process, never exercised' }, { path: 'SECURITY.md', shows: 'data-exposure runbook; single owner, no one else to page' }, { path: 'app/src/lib/governance/incident-comms.ts', shows: 'composes audience-specific incident notices, refuses incomplete ones' }, { path: 'app/src/lib/security.test.ts', shows: 'holds SECURITY.md secret-rotation list to what Edge Functions read' }],
-    gap: 'No tabletop or live exercise recorded, no named incident commander or backup, no postmortem/corrective-action record, no evidence-handling procedure tested.',
+    evidence: [{ path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'written severity model and incident process' }, { path: 'SECURITY.md', shows: 'data-exposure runbook; single owner, no one else to page' }, { path: 'app/src/lib/governance/incident-comms.ts', shows: 'composes audience-specific incident notices, refuses incomplete ones' }, { path: 'app/src/lib/security.test.ts', shows: 'holds SECURITY.md secret-rotation list to what Edge Functions read' }, { path: 'docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md', shows: 'completed document/repository tabletop; explicitly leaves the target exercise and staffed escalation open' }],
+    gap: 'A repository/document tabletop is filed, but no authorized target or live exercise, named backup, staffed escalation, delivery acknowledgement, customer communication, postmortem/corrective-action sample, or tested target evidence-handling procedure is recorded.',
   },
   {
     id: 'SEC-008',
