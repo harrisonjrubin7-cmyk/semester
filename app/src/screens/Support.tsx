@@ -6,6 +6,7 @@ import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyK
 import { RoomsNow } from '../components/RoomsNow';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ActionPreview } from '../components/unity/ActionPreview';
+import { AccommodationRequestPanel } from '../components/AccommodationRequestPanel';
 import { useDeviceLibrary } from '../lib/device-library';
 import { hasMode } from '../lib/accessmode';
 import { clock } from '../lib/date';
@@ -197,6 +198,8 @@ function Routines({ lib, set }: { lib: SupportLibrary; set: (p: Partial<SupportL
 function AccessNotes({ lib, set }: { lib: SupportLibrary; set: (p: Partial<SupportLibrary>) => void }) {
   return (
     <>
+      <SectionLabel>Private access-office request</SectionLabel>
+      <AccommodationRequestPanel />
       <SectionLabel>Your planning notes</SectionLabel>
       <label className="jx-field">
         <span>Questions for the access office, what works for you, what to ask each instructor. Private to this device and never an official record.</span>
