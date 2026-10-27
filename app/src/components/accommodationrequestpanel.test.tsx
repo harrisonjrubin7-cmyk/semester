@@ -22,6 +22,7 @@ const openRequest: AccommodationRequestStatus = {
   escalationAt: '2026-10-27T22:00:00Z',
   correctionCount: 0,
   resolutionCode: null,
+  followUpRequestedAt: null,
   createdAt: '2026-10-27T14:00:00Z',
   resolvedAt: null,
   withdrawnAt: null,
@@ -110,6 +111,19 @@ describe('student accommodation request path', () => {
     await act(async () => button('Confirm withdrawal').click());
     expect(withdrawer).toHaveBeenCalledWith('access-request-1');
     expect(host.textContent).toContain('request was withdrawn');
+  });
+
+  it('announces a human follow-up request without closing the correction path', async () => {
+    const statusLoader = vi.fn().mockResolvedValue([{
+      ...openRequest,
+      status: 'needs_student',
+      followUpRequestedAt: '2026-10-27T16:00:00Z',
+    }]);
+    act(() => root.render(<AccommodationRequestPanel available statusLoader={statusLoader} />));
+    await act(async () => button('Check my request status').click());
+    expect(host.textContent).toContain('Status: needs student');
+    expect(host.textContent).toContain('requested more information');
+    expect(button('Correct this request')).not.toBeNull();
   });
 
   it('fails closed to a private-data-safe official fallback when the authenticated route is unavailable', () => {

@@ -33,6 +33,7 @@ export interface AccommodationRequestStatus {
   escalationAt: string;
   correctionCount: number;
   resolutionCode: string | null;
+  followUpRequestedAt: string | null;
   createdAt: string;
   resolvedAt: string | null;
   withdrawnAt: string | null;
@@ -76,6 +77,7 @@ export async function myAccommodationRequests(): Promise<AccommodationRequestSta
     escalationAt: String(row.escalation_at),
     correctionCount: Number(row.correction_count),
     resolutionCode: typeof row.resolution_code === 'string' ? row.resolution_code : null,
+    followUpRequestedAt: typeof row.follow_up_requested_at === 'string' ? row.follow_up_requested_at : null,
     createdAt: String(row.created_at),
     resolvedAt: typeof row.resolved_at === 'string' ? row.resolved_at : null,
     withdrawnAt: typeof row.withdrawn_at === 'string' ? row.withdrawn_at : null,

@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 265 |
+| Migration files | 266 |
 | Tables created in `public` and not later dropped | 362 |
 | … of which enable row-level security in a migration | 362 |
 | Tables created in `private` and not later dropped | 59 |
@@ -308,19 +308,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 279 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 279 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 286 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 286 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 79 |
+| Register rows in category `self-service` | 82 |
 | Register rows in category `sharing` | 30 |
-| Register rows in category `admin` | 107 |
+| Register rows in category `admin` | 110 |
 | Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 37 |
+| Register rows in category `read-helper` | 38 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

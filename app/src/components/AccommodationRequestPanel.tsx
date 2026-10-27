@@ -129,6 +129,9 @@ export function AccommodationRequestPanel({
           <article key={item.id} className="jx-entry" aria-label={`Access request ${item.id}`}>
             <strong>{words(item.kind)}</strong>
             <p>Status: {words(item.status)} · Owner: your school’s access office · Response due {item.responseDueAt}</p>
+            {item.status === 'needs_student' ? (
+              <p role="status">Your access office requested more information. Add a correction below; the request remains open.</p>
+            ) : null}
             <p>{item.summary}</p>
             {open && correcting !== item.id ? (
               <button type="button" className="bare link-quiet" onClick={() => { setCorrecting(item.id); setCorrection(item.summary); }}>Correct this request</button>
