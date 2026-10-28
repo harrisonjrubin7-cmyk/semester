@@ -27,5 +27,9 @@ what would change it. Neither makes anything institution-authorized or productio
   `highest` and `all` are supported for institutions whose policy differs.
 - One scale for the product: the grade tracker's copy (no A+, D+, D-) now re-exports this one.
 - Every transcript states it uses the sample policy. A real institution's policy replaces it only through its registrar,
-  and is refused if `policyProblems()` reports anything. Storing an institution's approved policy is the next increment.
+  and is refused if `policyProblems()` reports anything.
+- Built the same day: `gpl_policies` (versions, one approved and one pending per institution, CHECK proposer <> decider,
+  append-only `gpl_events`). Registrar → Final grades → Grading policy. Transcripts use the approved version, or the sample
+  policy when none is approved. `dbchecks/gradingPolicy.ts` 18/18; 6 concurrent proposals → 1 pending (control without the
+  lock, pending index and version key → 6).
 - Evidence: `tests/transcript.test.ts` 12/12; with the repeat rule removed, 3 repeat tests fail.

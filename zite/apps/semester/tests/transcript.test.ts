@@ -1,5 +1,5 @@
 import { test, eq } from './harness';
-import { buildTranscript, termOrder, gpaOf, policyProblems, DEFAULT_POLICY, type Entry } from '../src/lib/transcriptRules';
+import { buildTranscript, termOrder, gpaOf, policyProblems, DEFAULT_POLICY, scaleFromText, scaleToText, gradeList, type Entry } from '../src/lib/transcriptRules';
 import { DEFAULT_SCALE as TRACKER_SCALE } from '../src/lib/gradeCalc';
 
 const e = (o: Partial<Entry>): Entry => ({ enrollmentId: 'e1', revision: 1, grade: 'A', authority: 'design', term: 'Fall 2026', termOrder: termOrder('Fall 2026'), course: 'ECON 101', title: 'Micro', credits: 3, ...o });
@@ -58,4 +58,9 @@ test('policy check refuses a grade listed twice, an out-of-range value and a sca
   eq(policyProblems(DEFAULT_POLICY), []);
   eq(policyProblems({ ...DEFAULT_POLICY, passing: ['P', 'A'] }), ['A is listed twice.']);
   eq(policyProblems({ ...DEFAULT_POLICY, scale: { A: 9, B: 3 } }), ['A must be worth 0 to 5 points.', 'The scale needs a failing grade worth 0.']);
+});
+test('registrar scale editor round-trips the sample scale and reports bad lines', () => {
+  eq(scaleFromText(scaleToText(DEFAULT_POLICY.scale)), { scale: DEFAULT_POLICY.scale, problems: [] });
+  eq(scaleFromText('a = 4\nB+ : 3.3\nB = three\na = 3').problems, ['Line 3: write it as "B+ = 3.3".', 'A is listed twice.']);
+  eq(gradeList(' p, s ,,cr '), ['P', 'S', 'CR']);
 });

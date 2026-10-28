@@ -35,7 +35,7 @@ export const CAPABILITIES: Capability[] = [
     gaps: ['Institution approval routing beyond registrar posting not configurable'] },
   { id: 'rec.transcript', area: 'SIS', name: 'Transcript and GPA from official revisions only', spec: '§3.7', route: '/records/final-grades',
     evidence: [D('Replacement spec §3.7'), I('lib/transcriptRules.ts buildTranscript; ogrServer transcriptEntries; Word download; registrar view is audited'), T('tests/transcript.test.ts 12/12 incl. repeat rules and policy check; repeat-rule mutant fails 3 (28 Oct)')],
-    gaps: ['Sample grading policy (D-2026-10-28-grading) until an institution approves and stores its own', 'Academic standing and honors not applied', 'No stored, signed transcript snapshot or verification code yet'] },
+    gaps: ['Institution grading policy is stored and two-registrar approved (gpl_*, dbchecks/gradingPolicy.ts 18/18); not yet exercised signed in by two registrars', 'Academic standing and honors not applied', 'Student grade tracker still estimates with the sample scale', 'No stored, signed transcript snapshot or verification code yet'] },
   // Broader inventory (coarse; detail lives in roleApps and the parity CSV)
   { id: 'sis.admissions', area: 'SIS', name: 'Admissions and onboarding', spec: '§3.3', route: '/plan/transition', evidence: [D('Master Build Book'), I('applications, transition (trn_*)'), T('dbchecks/transition.ts')], gaps: ['Committee review and rubric scoring partial'] },
   { id: 'sis.degree', area: 'SIS', name: 'Degree audit and graduation', spec: '§3.8', route: '/progress/degree', evidence: [D('Master Build Book'), I('degree audit page')], gaps: ['Versioned requirement rules, allocation and conferral not built'] },

@@ -86,3 +86,17 @@ export function termOrder(term: string): number {
   if (!m) return 99999;
   return Number(m[2]) * 10 + ({ spring: 1, summer: 2, fall: 3, autumn: 3, winter: 4 } as Record<string, number>)[m[1].toLowerCase()];
 }
+
+/** Registrar editor format for a scale: one `GRADE = points` per line. */
+export const scaleToText = (s: Record<string, number>) => Object.entries(s).map(([g, v]) => `${g} = ${v.toFixed(1)}`).join('\n');
+export function scaleFromText(text: string): { scale: Record<string, number>; problems: string[] } {
+  const scale: Record<string, number> = {}; const problems: string[] = [];
+  text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).forEach((l, i) => {
+    const m = l.match(/^([A-Za-z][A-Za-z+-]{0,3})\s*[=:]\s*(\d+(?:\.\d+)?)$/);
+    if (!m) { problems.push(`Line ${i + 1}: write it as "B+ = 3.3".`); return; }
+    const g = m[1].toUpperCase();
+    if (g in scale) problems.push(`${g} is listed twice.`); else scale[g] = Number(m[2]);
+  });
+  return { scale, problems };
+}
+export const gradeList = (s: string) => s.split(',').map((g) => g.trim().toUpperCase()).filter(Boolean);

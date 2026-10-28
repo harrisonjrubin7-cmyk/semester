@@ -5,7 +5,21 @@ import { requireAccess, requireAction, forbid, userNames, tenantScope, ids, firs
 import { pg } from '../lib/pg';
 import { OGR_GRADES } from '../lib/ogrMigration';
 import { ensureOgr, one, propose, isInstructorOfRecord, project, gradebookBasis, transcriptEntries } from '../lib/ogrServer';
-import { buildTranscript, termOrder } from '../lib/transcriptRules';
+import { buildTranscript, termOrder, policyProblems, DEFAULT_POLICY, type GradingPolicy } from '../lib/transcriptRules';
+import { GPL_MIGRATION } from '../lib/gplMigration';
+
+let gplReady: Promise<void> | null = null;
+const ensureGpl = () => { if (!gplReady) gplReady = (async () => { for (const q of GPL_MIGRATION) await pg().query(q); })().catch((e) => { gplReady = null; throw e; }); return gplReady; };
+const GRADE_KEY = z.string().trim().min(1).max(4).regex(/^[A-Z][A-Z+-]{0,3}$/, 'Grades are capital letters, + or -');
+const POLICY = z.object({ scale: z.record(GRADE_KEY, z.number().min(0).max(5)), passing: z.array(GRADE_KEY).max(10), noCredit: z.array(GRADE_KEY).max(10),
+  notAttempted: z.array(GRADE_KEY).max(10), incomplete: z.array(GRADE_KEY).max(10), repeat: z.enum(['latest', 'highest', 'all']) })
+  .refine((p) => Object.keys(p.scale).length >= 2 && Object.keys(p.scale).length <= 30, 'The scale needs 2 to 30 grades');
+/** The institution's approved policy, or the sample policy when none is approved. */
+async function policyFor(T: string, institution: string): Promise<GradingPolicy & { version: number }> {
+  await ensureGpl();
+  const r = ((await pg().query(`SELECT version, policy FROM gpl_policies WHERE tenant_id = $1 AND status = 'Approved'`, [T])) as { version: number; policy: Omit<GradingPolicy, 'label' | 'source'> }[])[0];
+  return r ? { ...r.policy, label: `${institution} grading policy, version ${r.version}`, source: 'institution', version: Number(r.version) } : { ...DEFAULT_POLICY, version: 0 };
+}
 
 // Course grade → released to the student → certified by the instructor of record → posted by the registrar as an
 // append-only official revision (spec §16 first executable increment). Official projection is held in design mode.
@@ -28,6 +42,9 @@ export default createEndpoint({
     z.object({ action: z.literal('mine') }),
     z.object({ action: z.literal('transcript') }),
     z.object({ action: z.literal('transcriptFor'), studentId: z.string() }),
+    z.object({ action: z.literal('policy') }),
+    z.object({ action: z.literal('proposePolicy'), policy: POLICY, note: z.string().max(1000), expectedVersion: z.number().int().min(0) }),
+    z.object({ action: z.literal('decidePolicy'), id: z.number().int(), approve: z.boolean(), note: z.string().max(1000) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -80,7 +97,37 @@ export default createEndpoint({
       }
       const entries = (await transcriptEntries(T, student)).map((e) => ({ ...e, termOrder: termOrder(e.term) }));
       const name = (await userNames([student]))[student] ?? 'Student';
-      return { student: name, institution: a.institutionName, mode, generatedAt: new Date().toISOString(), transcript: buildTranscript(entries) };
+      return { student: name, institution: a.institutionName, mode, generatedAt: new Date().toISOString(), transcript: buildTranscript(entries, await policyFor(T, a.institutionName)) };
+    }
+
+    // ---------------- grading policy (registrar proposes, a different registrar approves) ----------------
+    if (input.action === 'policy' || input.action === 'proposePolicy' || input.action === 'decidePolicy') {
+      await requireAction(me, 'registrar.read'); await requireAction(me, 'registration.request.decide');
+      await ensureGpl();
+      if (input.action === 'proposePolicy') {
+        const p = { ...input.policy, label: '', source: 'institution' as const };
+        const problems = policyProblems(p);
+        if (problems.length) forbid(problems.join(' '));
+        const r = String(await one(`SELECT gpl_propose($1,$2,$3,$4::jsonb,$5,$6,$7) AS r`, [me, T, true, JSON.stringify(input.policy), true, input.note, input.expectedVersion]) ?? '');
+        if (!r.startsWith('ok:')) forbid(r);
+        await audit(a, 'Grading policy proposed', `grading-policy:${r.split(':')[1]}`, `version ${r.split(':')[2]}`, 'Registrar');
+        return { ok: true, version: Number(r.split(':')[2]) };
+      }
+      if (input.action === 'decidePolicy') {
+        const r = String(await one(`SELECT gpl_decide($1,$2,$3,$4,$5,$6) AS r`, [me, T, input.id, true, input.approve, input.note]) ?? '');
+        if (r !== 'ok') forbid(r);
+        await audit(a, input.approve ? 'Grading policy approved' : 'Grading policy rejected', `grading-policy:${input.id}`, input.note, 'Registrar');
+        return { ok: true };
+      }
+      const rows = (await sql.query(`SELECT id, version, policy, note, status, proposed_by, proposed_at, decided_by, decided_at, decision_note FROM gpl_policies WHERE tenant_id = $1 ORDER BY version DESC LIMIT 20`, [T])) as Row[];
+      const names = await userNames(rows.flatMap((r) => [String(r.proposed_by), r.decided_by ? String(r.decided_by) : '']).filter(Boolean));
+      const cur = await policyFor(T, a.institutionName);
+      return {
+        current: { ...cur, problems: policyProblems(cur) }, sample: DEFAULT_POLICY, me,
+        history: rows.map((r) => ({ id: Number(r.id), version: Number(r.version), policy: r.policy, note: String(r.note), status: String(r.status),
+          proposedBy: names[String(r.proposed_by)] ?? 'Registrar', mine: r.proposed_by === me, proposedAt: new Date(String(r.proposed_at)).toISOString(),
+          decidedBy: r.decided_by ? names[String(r.decided_by)] ?? 'Registrar' : null, decidedAt: r.decided_at ? new Date(String(r.decided_at)).toISOString() : null, decisionNote: String(r.decision_note ?? '') })),
+      };
     }
 
     // ---------------- registrar ----------------
