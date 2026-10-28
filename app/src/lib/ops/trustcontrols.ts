@@ -463,7 +463,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/webvtt.test.ts'],
-    gap: 'All fifty-two shipped prerecorded audio files have hash-pinned tracks, but four recovered tracks are machine-generated and unreviewed; no prerecorded video file ships, while external-video availability and live-call captions remain untested.',
+    gap: 'All fifty-two shipped prerecorded audio files have current tracks. The four recovered legacy tracks are pinned to exact MP3 hashes and remain machine-generated and unreviewed; no prerecorded video file ships, while external-video availability and live-call captions remain untested.',
     owner: 'accessibility',
   },
 

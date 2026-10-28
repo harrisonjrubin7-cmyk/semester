@@ -22,8 +22,9 @@ describe('public accessibility claims', () => {
   });
 
   it('states the exact caption boundary the source inventory enforces', () => {
-    expect(site).toContain(`All ${planned().size} shipped prerecorded audio files have hash-pinned caption tracks in this candidate.`);
-    expect(site).toContain('Four tracks are machine-generated and unreviewed');
+    expect(site).toContain(`All ${planned().size} shipped prerecorded audio files have current caption tracks in this candidate.`);
+    expect(site).toContain('The four recovered legacy tracks are pinned to exact MP3 hashes and remain machine-generated and unreviewed');
+    expect(site).not.toContain(`All ${planned().size} shipped prerecorded audio files have hash-pinned caption tracks`);
     expect(site).toContain('live-call captions and external video caption availability are not validated by this repository');
   });
 
