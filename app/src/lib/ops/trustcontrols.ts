@@ -180,9 +180,9 @@ export const CONTROLS: readonly Control[] = [
     domains: ALL,
     mechanism: 'ci',
     state: 'partial',
-    proof: ['.github/workflows/codeql.yml', 'app/src/lib/securityprogram.test.ts', 'app/src/lib/denodependencies.test.ts', 'app/src/lib/dependencyupdates.test.ts'],
+    proof: ['.github/workflows/codeql.yml', '.github/workflows/zite-rls-verifier.yml', 'app/src/lib/securityprogram.test.ts', 'app/src/lib/denodependencies.test.ts', 'app/src/lib/dependencyupdates.test.ts', 'app/src/lib/ziterlsworkflow.test.ts'],
     described: ['.github/dependabot.yml', 'docs/trust/SECURITY-TESTING-PLAN.md'],
-    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available, and Dependabot covers the root npm workspace, Course Engine web and Python API manifests, Workflow Lab, Starter, Video, Pipeline, the root Zite workspace lock and every function-local Deno manifest and integrity lock. The Course Engine Python API has no committed resolver lock, the standalone Zite RLS verifier has no recurring updater or committed lock, Zite executable compatibility is not a blocking repository check, and authenticated runtime coverage and independent review remain open.',
+    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available, and Dependabot covers the root npm workspace, Course Engine web and Python API manifests, Workflow Lab, Starter, Video, Pipeline, the root Zite workspace lock and every function-local Deno manifest and integrity lock. The standalone Zite RLS verifier has a path-triggered synthetic PostgreSQL 17 and Redis compatibility workflow that fails closed once invoked, but required-check enforcement needs confirmation and it has no recurring updater or committed lock; its transitive graph resolves afresh. The Course Engine Python API also has no committed resolver lock, and authenticated runtime coverage and independent review remain open.',
     owner: 'security',
   },
   {

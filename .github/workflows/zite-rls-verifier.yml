@@ -1,0 +1,85 @@
+name: Zite RLS verifier
+
+on:
+  push:
+    paths:
+      - 'zite/docs/execution/rls/**'
+      - '.github/workflows/zite-rls-verifier.yml'
+  pull_request:
+    paths:
+      - 'zite/docs/execution/rls/**'
+      - '.github/workflows/zite-rls-verifier.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: zite-rls-verifier-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Synthetic PostgreSQL and Redis verification
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      TEST_PG_SOCKET: 127.0.0.1
+      TEST_PG_PORT: '5432'
+      TEST_REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Install exact direct verifier dependencies without creating a lock
+        working-directory: zite/docs/execution/rls/api
+        run: |
+          npm install --ignore-scripts --package-lock=false
+          test ! -e package-lock.json
+      - name: Build the synthetic verification database
+        working-directory: zite/docs/execution/rls
+        run: |
+          createdb semester_rls_test
+          psql -d semester_rls_test -f migrations.sql
+          psql -d semester_rls_test -f seed.sql
+          psql -d semester_rls_test -f migration_006.sql
+          psql -d semester_rls_test -f migration_007_registrar.sql
+          psql -d semester_rls_test -f seed_007.sql
+          psql -d semester_rls_test -f migration_008_registrar_doc.sql
+          psql -d semester_rls_test -f migration_009_tuition.sql
+          psql -d semester_rls_test -f migration_010_audit_outbox.sql
+          psql -d semester_rls_test -f migration_011_files.sql
+          psql -d semester_rls_test -f audit.sql
+      - name: Run SQL tenant-isolation checks
+        working-directory: zite/docs/execution/rls
+        run: bash test.sh 127.0.0.1 5432
+      - name: Typecheck verifier
+        working-directory: zite/docs/execution/rls/api
+        run: npm run typecheck
+      - name: Run API, database, authorization and limiter tests
+        working-directory: zite/docs/execution/rls/api
+        run: npm test -- --no-file-parallelism
