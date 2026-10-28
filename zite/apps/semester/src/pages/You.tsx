@@ -56,6 +56,10 @@ export default function You() {
           </Panel>
           <FamilyShare onDone={state.reload} />
           <MyRecordsRights />
+          <Panel title="When family looked" className="lg:col-span-2">
+            {(d.familyAccess ?? []).length === 0 ? <Empty>No family views yet. When someone you share with opens Semester Family, it shows here.</Empty> : d.familyAccess.map((v: { id: number; recipient: string; categories: string[]; at: string }) => (
+              <div key={v.id} className="flex justify-between gap-3 border-b border-border py-2 text-sm last:border-0"><span>{v.recipient} <span className="text-muted-foreground">viewed {v.categories.join(', ')}</span></span><span className="whitespace-nowrap text-xs text-muted-foreground">{fmt(v.at)}</span></div>))}
+          </Panel>
           <Panel title="Access history" className="lg:col-span-2">
             {d.history.length === 0 ? <Empty>No access recorded yet.</Empty> : d.history.map((h: { id: string; action: string; actor: string; authority: string; at: string }) => (
               <div key={h.id} className="flex justify-between gap-3 border-b border-border py-2 text-sm last:border-0"><span>{h.action} · <span className="text-muted-foreground">{h.actor}{h.authority && ` (${h.authority})`}</span></span><span className="whitespace-nowrap text-xs text-muted-foreground">{fmt(h.at)}</span></div>))}

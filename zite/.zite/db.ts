@@ -161,6 +161,7 @@ export type InstitutionsRecordType = {
   paymentPlanRequests?: string | string[];
   /** Links to tfZMC5wd1px. "Section Requests" */
   sectionRequests?: string | string[];
+  timeZone?: string;
 };
 
 /** What you may write when creating or updating a record in the "Institutions" table. */
@@ -184,6 +185,7 @@ export type InstitutionsRecordInput = {
   accountLedgerEntries: string | string[] | null;
   paymentPlanRequests: string | string[] | null;
   sectionRequests: string | string[] | null;
+  timeZone: string | null;
 };
 
 /** A record in the "Memberships" table, as it is read back. */

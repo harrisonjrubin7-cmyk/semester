@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useLoad, errMsg } from '../lib/useLoad';
 import { LoadingBlock, DeniedOrError, Empty, PageHeader } from '../components/States';
 
-type Hold = { id: string; student: string; office: string; status: string; message: string; blocks: boolean; mine: boolean };
+type Hold = { id: string; student: string; office: string; status: string; message: string; blocks: boolean; mine: boolean; responses: { body: string; at: string | null }[] };
 type Data = { students: { id: string; name: string }[]; holds: Hold[] };
 const OFFICES = ['Registrar', 'Bursar', 'Advising', 'Student Affairs'] as const;
 const placeSchema = z.object({ studentId: z.string().min(1), office: z.enum(OFFICES), message: z.string().trim().min(10).max(400) });
@@ -43,10 +43,14 @@ export default function Holds() {
           {rows.length === 0 ? <Empty title="No holds" /> : (
             <div className="divide-y divide-border rounded-xl border border-border bg-card">
               {rows.map((h) => (
-                <div key={h.id} className="flex flex-wrap items-center gap-4 px-5 py-4">
-                  <div className="min-w-0 flex-1"><p className="font-semibold">{h.student} <span className="font-normal text-muted-foreground">· {h.office}</span></p><p className="text-sm text-muted-foreground">{h.message}</p></div>
-                  <Badge variant={h.status === 'Active' ? 'default' : 'outline'}>{h.status}</Badge>
-                  {h.status === 'Active' && <Button size="sm" variant="outline" disabled={h.mine} title={h.mine ? 'You placed this hold' : undefined} onClick={() => setRelease(h)}>Lift</Button>}
+                <div key={h.id} className="px-5 py-4">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="min-w-0 flex-1"><p className="font-semibold">{h.student} <span className="font-normal text-muted-foreground">· {h.office}</span></p><p className="text-sm text-muted-foreground">{h.message}</p></div>
+                    <Badge variant={h.status === 'Active' ? 'default' : 'outline'}>{h.status}</Badge>
+                    {h.status === 'Active' && <Button size="sm" variant="outline" disabled={h.mine} title={h.mine ? 'You placed this hold' : undefined} onClick={() => setRelease(h)}>Lift</Button>}
+                  </div>
+                  {h.responses.length > 0 && <div className="mt-3 border-l-2 border-border pl-3"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Student responses</p>
+                    <ul className="mt-1 space-y-2">{h.responses.map((r, i) => <li key={i} className="text-sm"><p>{r.body}</p><p className="text-xs text-muted-foreground">{r.at ? new Date(r.at).toLocaleString() : ''}</p></li>)}</ul></div>}
                 </div>
               ))}
             </div>

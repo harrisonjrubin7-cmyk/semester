@@ -1,5 +1,5 @@
 import { test, eq } from './harness';
-import { next, unacknowledged, orderBlocker, isOpen, closeBlocker } from '../src/lib/diningRules';
+import { next, unacknowledged, orderBlocker, isOpen, closeBlocker, isValidZone, zoneOrFallback, localNowIn, FALLBACK_ZONE } from '../src/lib/diningRules';
 
 const L = [{ priceCents: 650, qty: 2, stock: 5, available: true }];
 const B = { swipes: 3, dollarsCents: 2000 };
@@ -40,4 +40,22 @@ test('day close needs a note only when counts differ', () => {
   eq(closeBlocker({ swipes: 10, dollarsCents: 500 }, { swipes: 10, dollarsCents: 500 }, ''), null);
   eq(closeBlocker({ swipes: 10, dollarsCents: 500 }, { swipes: 9, dollarsCents: 500 }, '') !== null, true);
   eq(closeBlocker({ swipes: 10, dollarsCents: 500 }, { swipes: 9, dollarsCents: 500 }, 'One comp meal for a guest'), null);
+});
+test('institution time zone: valid zones kept, anything else falls back', () => {
+  eq(isValidZone('America/New_York'), true);
+  eq(isValidZone('Asia/Tokyo'), true);
+  eq(isValidZone('Not/AZone'), false);
+  eq(isValidZone(''), false);
+  eq(isValidZone(undefined), false);
+  eq(isValidZone(42), false);
+  eq(zoneOrFallback('Europe/London'), 'Europe/London');
+  eq(zoneOrFallback(undefined), FALLBACK_ZONE);
+  eq(zoneOrFallback('garbage'), FALLBACK_ZONE);
+  eq(FALLBACK_ZONE, 'America/Chicago');
+});
+test('local now is read in the given zone', () => {
+  const noonUtc = new Date('2026-10-28T12:00:00Z'); // a Wednesday
+  eq(localNowIn('America/Chicago', noonUtc), { weekday: 3, hhmm: '07:00', date: '2026-10-28' });
+  eq(localNowIn('Asia/Tokyo', noonUtc), { weekday: 3, hhmm: '21:00', date: '2026-10-28' });
+  eq(localNowIn('Asia/Tokyo', new Date('2026-10-28T16:30:00Z')).date, '2026-10-29');
 });

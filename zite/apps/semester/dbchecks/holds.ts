@@ -29,6 +29,17 @@ BEGIN
   got := false;
   BEGIN INSERT INTO hld_releases (hold_id, tenant_id, student_id, actor_id, office, reason) VALUES ('h2','t1','stu1','stu1','Registrar','self release'); EXCEPTION WHEN OTHERS THEN got := true; END;
   INSERT INTO rr VALUES (got, 'H13 the table itself refuses a self-release');
+  r := hld_respond('t1','h8','stu1','Released','I have paid the deposit in full.');
+  INSERT INTO rr VALUES (r = 'This hold is no longer active.', 'H14 a lifted hold cannot be answered ' || coalesce(r,''));
+  r := hld_respond('t1','h9','stu1','Active','paid');
+  INSERT INTO rr VALUES (r LIKE 'Say a little more%', 'H15 a stub response is refused ' || coalesce(r,''));
+  r := hld_respond('t1','h9','stu1','Active','I have paid the deposit in full.');
+  INSERT INTO rr VALUES (r = 'ok', 'H16 a substantive response on an active hold is accepted ' || coalesce(r,''));
+  INSERT INTO rr VALUES ((SELECT count(*) FROM hld_responses WHERE hold_id = 'h9' AND student_id = 'stu1' AND tenant_id = 't1') = 1, 'H17 the response is on file');
+  INSERT INTO rr VALUES ((SELECT count(*) FROM hld_events WHERE hold_id = 'h9' AND action = 'student responded') = 1, 'H18 the response is in the hold log');
+  got := false;
+  BEGIN UPDATE hld_responses SET body = 'edited afterwards' WHERE hold_id = 'h9'; EXCEPTION WHEN OTHERS THEN got := true; END;
+  INSERT INTO rr VALUES (got, 'H19 a response cannot be edited after it is sent');
   RAISE EXCEPTION 'RESULT pass=% fails=% [%]', (SELECT count(*) FROM rr WHERE ok IS TRUE), (SELECT count(*) FROM rr WHERE ok IS NOT TRUE),
     coalesce((SELECT string_agg(lbl, ' | ') FROM rr WHERE ok IS NOT TRUE), '');
 END $$`;
@@ -46,5 +57,8 @@ export async function run() {
   const m3 = HLD_MIGRATION.map((q) => q.replace(`IF p_actor = p_student THEN RETURN 'This hold is on your own record, so someone else has to lift it.'; END IF;`, () => ''));
   console.log('self mutant applied:', m3.join('') !== HLD_MIGRATION.join(''));
   await go('mutant self-release (H1):', m3);
+  const m4 = HLD_MIGRATION.map((q) => q.replace(`IF p_status <> 'Active' THEN RETURN 'This hold is no longer active.'; END IF;`, () => ''));
+  console.log('status mutant applied:', m4.join('') !== HLD_MIGRATION.join(''));
+  await go('mutant released-hold-answer (H14):', m4);
   console.log('left behind:', JSON.stringify(await sql.query(`SELECT to_regclass('hld_releases') AS t`)));
 }

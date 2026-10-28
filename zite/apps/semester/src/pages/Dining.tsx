@@ -89,6 +89,7 @@ function Manage({ d, reload }: { d: any; reload: () => void }) {
   const [it, setIt] = useState({ locationId: d.locations[0]?.id ?? 0, name: '', price: 5, allergens: [] as string[], dietary: '', ingredients: '', stock: '' });
   const [plan, setPlan] = useState({ email: '', term: '', planName: '', swipes: 100, dollars: 200 });
   const [close, setClose] = useState({ locationId: d.locations[0]?.id ?? 0, date: d.today, swipes: 0, dollars: 0, note: '' });
+  const [zone, setZone] = useState(d.timeZone as string);
   const run = async (body: any, done: string) => { try { await dining(body); toast(done); reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
   return (
     <>
@@ -99,6 +100,9 @@ function Manage({ d, reload }: { d: any; reload: () => void }) {
             <label key={dn} className="flex flex-col items-center"><span>{dn}</span><input type="checkbox" aria-label={`Open on ${dn}`} checked={!!loc.hours[String(i)]} onChange={(e) => setLoc({ ...loc, hours: { ...loc.hours, [String(i)]: e.target.checked ? ['07:00', '20:00'] : null } })} /></label>))}</div>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">New locations open 07:00–20:00 on the ticked days ({d.timeZone}); edit a location to change times.</p>
+        {d.isAdmin && <div className="mt-2 flex flex-wrap items-center gap-2"><Input aria-label="Institution time zone" className="max-w-xs" placeholder="America/New_York" value={zone} onChange={(e) => setZone(e.target.value)} />
+          <Button size="sm" variant="outline" disabled={!zone.trim() || zone.trim() === d.timeZone} onClick={() => run({ action: 'setTimeZone', timeZone: zone.trim() }, 'Time zone saved.')}>Set time zone</Button>
+          <span className="text-xs text-muted-foreground">Opening hours and order dates use this zone.</span></div>}
         <Button size="sm" className="mt-2" disabled={loc.name.trim().length < 2} onClick={() => run({ action: 'location', id: null, name: loc.name, hours: loc.hours, active: true }, 'Location saved.')}>Add location</Button>
         <ul className="mt-2 space-y-1 text-xs">{d.locations.map((l: any) => <li key={l.id} className="flex flex-wrap items-center gap-2">{l.name} · {l.active ? (l.open ? 'open now' : 'closed now') : 'inactive'}
           <Button size="sm" variant="ghost" onClick={() => run({ action: 'location', id: l.id, name: l.name, hours: l.hours, active: !l.active }, 'Saved.')}>{l.active ? 'Deactivate' : 'Activate'}</Button></li>)}</ul>

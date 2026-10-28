@@ -8,6 +8,7 @@ import { ensureFil, attachmentsFor, readAttached, ensureScanned } from '../lib/f
 import { courseRole, ensureTeam, delegatedSections } from '../lib/teamServer';
 import { rubricScore, Criterion } from '../lib/rubricRules';
 import { SBM_MIGRATION } from '../lib/sbmMigration';
+import { canOpenSubmission, gradingFor } from '../lib/submissionAccess';
 import { ACC_MIGRATION } from '../lib/accMigration';
 
 let sbmReady: Promise<void> | null = null;
@@ -151,8 +152,8 @@ export default createEndpoint({
           const gw = groups.find((g) => g.submission_id === x.id);
           // A teammate's group submission is shown on the viewer's own copy of the assignment.
           const myTask = !grader && gw && !ids(x.student).includes(uid) ? sectionReceipts.find((r) => r.submission_id === x.id)?.my_task ?? null : null;
-          return { id: x.id, group: gw ? { name: gw.group_name, members: gw.members.length, byYou: gw.submitted_by === uid, mine: !ids(x.student).includes(uid) } : null, receipt: receiptOf(x.id), taskId: myTask ?? first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
-        }).map((x) => grader ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
+          return { id: x.id, group: gw ? { name: gw.group_name, members: gw.members.length, byYou: gw.submitted_by === uid, mine: !ids(x.student).includes(uid) } : null, receipt: receiptOf(x.id), taskId: myTask ?? first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: x.feedback ?? '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
+        }).map((x) => gradingFor(x, grader)),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
         syllabusVersion: Number(history[0]?.version ?? 0),
@@ -195,12 +196,15 @@ export default createEndpoint({
       const x = await zite.submissions.findOne({ id: input.submissionId });
       if (!x) forbid('You do not have access to this file.');
       await ensureSbm();
-      const own = ids(x!.student).includes(uid) || (x!.state !== 'Private Draft' && (await groupOf(a.institutionId, [x!.id])).some((g) => g.members.includes(uid)));
-      if (!own) {
+      // One decision (lib/submissionAccess.ts): owner; frozen group member or staff of the submission's own section once submitted.
+      const owner = first(x!.student) ?? '';
+      const gm = owner === uid ? null : (await groupOf(a.institutionId, [x!.id]))[0]?.members ?? null;
+      let role: 'instructor' | 'delegate' | null = null;
+      if (owner !== uid && !gm?.includes(uid)) {
         const t = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
-        const s2 = t ? await zite.sections.findOne({ id: first(t.section) ?? '' }) : null;
-        if (!s2 || !(await courseRole(a.institutionId, s2.id, uid)) || x!.state === 'Private Draft') forbid('You do not have access to this file.');
+        role = t && first(t.section) ? await courseRole(a.institutionId, first(t.section)!, uid) : null;
       }
+      if (!canOpenSubmission(uid, { owner, state: x!.state ?? 'Private Draft', groupMembers: gm }, role)) forbid('You do not have access to this file.');
       await ensureScanned(a.institutionId, [input.fileId]);
       const f = await readAttached(a.institutionId, input.fileId, uid, 'submission', x!.id);
       if (!f) forbid('You do not have access to this file.');

@@ -4,7 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { DNG_MIGRATION } from '../lib/dngMigration';
-import { ALLERGENS } from '../lib/diningRules';
+import { ALLERGENS, isValidZone, localNowIn, zoneOrFallback } from '../lib/diningRules';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
@@ -12,13 +12,9 @@ const ensure = () => { if (!ready) ready = (async () => { for (const q of DNG_MI
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) : null);
-// Institutions do not yet record a time zone; until they do, opening hours are read in this zone (gap recorded in the register).
-const TZ = 'America/Chicago';
-function localNow() {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-    .formatToParts(new Date()).map((p) => [p.type, p.value]));
-  return { weekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday), hhmm: `${parts.hour}:${parts.minute}`, date: `${parts.year}-${parts.month}-${parts.day}` };
-}
+// Opening hours and service dates are read in the institution's recorded time zone (Institutions "Time Zone");
+// zoneOrFallback applies FALLBACK_ZONE until the institution sets one. The zone always comes from the caller's
+// own institution record, never from the client.
 const Hours = z.record(z.enum(['0', '1', '2', '3', '4', '5', '6']), z.tuple([z.string().regex(/^\d{2}:\d{2}$/), z.string().regex(/^\d{2}:\d{2}$/)]).nullable());
 
 // Dining (role register: Dining Staff). Students see open locations and menus with allergens, keep their own allergen list,
@@ -40,6 +36,7 @@ export default createEndpoint({
     z.object({ action: z.literal('entitle'), email: z.string().email().max(200), term: z.string().min(2).max(40), planName: z.string().min(2).max(80), swipes: z.number().int().min(0).max(1000), dollarsCents: z.number().int().min(0).max(1000000) }),
     z.object({ action: z.literal('close'), locationId: z.number().int(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), swipes: z.number().int().min(0), dollarsCents: z.number().int().min(0), note: z.string().max(1000).default('') }),
     z.object({ action: z.literal('setStaff'), email: z.string().email().max(200), on: z.boolean() }),
+    z.object({ action: z.literal('setTimeZone'), timeZone: z.string().min(1).max(60) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -58,13 +55,20 @@ export default createEndpoint({
     };
     const one = async (q: string, p: unknown[]) => fail(((await sql.query(q, p)) as { e: string | null }[])[0].e);
     let result: unknown = null;
-    const now = localNow();
+    const zone = zoneOrFallback(a.timeZone);
+    const now = localNowIn(zone);
 
     if (input.action === 'setStaff') {
       if (!isAdmin) forbid('Only administrators manage dining access.');
       const uid = await member(input.email);
       await one(`SELECT dng_set_staff($1,$2,$3,$4) AS e`, [me, T, uid, input.on]);
       await audit(a, input.on ? 'Dining staff access granted' : 'Dining staff access revoked', `user:${uid}`, '', 'Administrator');
+    }
+    if (input.action === 'setTimeZone') {
+      if (!isAdmin) forbid('Only administrators set the institution time zone.');
+      if (!isValidZone(input.timeZone)) forbid('That is not a recognized time zone.');
+      await zite.institutions.update({ id: T, record: { timeZone: input.timeZone } as never });
+      await audit(a, 'Institution time zone set', `institution:${T}`, input.timeZone, 'Administrator');
     }
     if (input.action === 'declare') await one(`SELECT dng_declare($1,$2,$3::text[]) AS e`, [T, me, input.allergens]);
     if (input.action === 'location') {
@@ -113,7 +117,7 @@ export default createEndpoint({
       lines: o.lines as { name: string; qty: number; allergens: string[] }[], allergenAck: !!o.allergen_ack, state: String(o.state), version: Number(o.version), note: String(o.note), date: day(o.service_date), createdAt: iso(o.created_at) });
 
     return {
-      result, isStaff, isAdmin, today: now.date, timeZone: TZ, allergensList: ALLERGENS, myAllergens: (allergy?.allergens as string[]) ?? [],
+      result, isStaff, isAdmin, today: now.date, timeZone: zone, allergensList: ALLERGENS, myAllergens: (allergy?.allergens as string[]) ?? [],
       plans: plans.map((p) => ({ term: String(p.term), plan: String(p.plan_name), swipes: Number(p.swipes), dollarsCents: Number(p.dollars_cents) })),
       locations: locs.map((l) => ({ id: Number(l.id), name: String(l.name), hours: l.hours as Record<string, [string, string] | null>, active: !!l.active, open: !!l.active && isOpenNow(l.hours as never), version: Number(l.version),
         items: items.filter((i) => Number(i.location_id) === Number(l.id)).map((i) => ({ id: Number(i.id), name: String(i.name), priceCents: Number(i.price_cents), allergens: i.allergens as string[], dietary: i.dietary as string[],

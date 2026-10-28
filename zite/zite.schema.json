@@ -258,6 +258,15 @@
               "inverseFieldId": "fkD1diuP4yP"
             }
           }
+        },
+        {
+          "id": "fpwN2DGG6Pm",
+          "sdkName": "timeZone",
+          "definition": {
+            "name": "Time Zone",
+            "type": "single_line_text",
+            "template": {}
+          }
         }
       ]
     },

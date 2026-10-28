@@ -1,7 +1,9 @@
 // Family delegation (owner sources S-89 Family, S-86 C10). A student invites an email to see chosen categories until a
 // date. Nothing is visible until the account holding that email accepts; acceptance binds the invitation to that account.
 // The student can revoke at any time; the family member can stop seeing it. Expiry is checked on every read. Each step is
-// written to an append-only log. p_actor_email is the signed-in account's email, read by the server.
+// written to an append-only log. Every view the family member actually makes is written to fam_access_events, tied to the
+// invitation that allowed it, so the student can see who looked at what, and when. p_actor_email is the signed-in
+// account's email, read by the server.
 export const FAM_CATEGORIES = ['Grades', 'Holds', 'Calendar', 'Billing'] as const;
 export const FAM_MIGRATION: string[] = [
   `CREATE TABLE IF NOT EXISTS fam_invites (id bigserial PRIMARY KEY, student_id text NOT NULL, recipient_email text NOT NULL
@@ -66,4 +68,24 @@ export const FAM_MIGRATION: string[] = [
      LANGUAGE sql STABLE AS $$
      SELECT id, student_id, categories, expires_on FROM fam_invites WHERE recipient_id = p_recipient AND state = 'Accepted' AND expires_on >= p_today
    $$`,
+  // Delegation access events (S-75 mapping): one row per view, naming the grant (invite), the student, the viewer and
+  // the categories that were visible. Append-only, like the lifecycle log.
+  `CREATE TABLE IF NOT EXISTS fam_access_events (id bigserial PRIMARY KEY, invite_id bigint NOT NULL, student_id text NOT NULL,
+     recipient_id text NOT NULL, categories text[] NOT NULL, at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE INDEX IF NOT EXISTS fam_access_invite ON fam_access_events (invite_id, at)`,
+  `CREATE INDEX IF NOT EXISTS fam_access_student ON fam_access_events (student_id, at)`,
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'fam_access_append_only') THEN
+     CREATE TRIGGER fam_access_append_only BEFORE UPDATE OR DELETE ON fam_access_events FOR EACH ROW EXECUTE FUNCTION fam_refuse_change(); END IF; END $$`,
+  // Logging is not access: an event is written only against an invitation that is accepted, bound to exactly this
+  // student and recipient, and unexpired today. Anything else returns 'not live' and writes nothing.
+  `CREATE OR REPLACE FUNCTION fam_log_access(p_invite bigint, p_student text, p_recipient text, p_categories text[])
+     RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     INSERT INTO fam_access_events (invite_id, student_id, recipient_id, categories)
+       SELECT p_invite, p_student, p_recipient, (SELECT array_agg(DISTINCT c ORDER BY c) FROM unnest(p_categories) c)
+       FROM fam_invites WHERE id = p_invite AND student_id = p_student AND recipient_id = p_recipient
+         AND state = 'Accepted' AND expires_on >= current_date;
+     IF NOT FOUND THEN RETURN 'not live'; END IF;
+     RETURN 'ok';
+   END $$`,
 ];

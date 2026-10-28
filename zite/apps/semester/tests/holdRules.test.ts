@@ -1,5 +1,5 @@
 import { test, eq } from './harness';
-import { releaseRefusal, holdView, activeViews, releaseNotice } from '../src/lib/holdRules';
+import { releaseRefusal, holdView, activeViews, releaseNotice, responseBlocker, responseNotice } from '../src/lib/holdRules';
 
 test('registrar staff may lift a registrar hold (control)', () => { eq(releaseRefusal(['Staff'], ['Registrar staff'], 'Registrar'), null); });
 test('an administrator may lift any office hold', () => { eq(releaseRefusal(['Administrator'], [], 'Bursar'), null); });
@@ -22,4 +22,15 @@ test('the student view carries only student-facing fields and only active holds'
 test('the notice reports the outcome, never promises registration while another hold blocks it', () => {
   eq(releaseNotice('Bursar hold', 'Bursar', 1), 'Your Bursar hold was lifted by the Bursar office. 1 other hold still blocks registration.');
   eq(releaseNotice('Bursar hold', 'Bursar', 0), 'Your Bursar hold was lifted by the Bursar office. No hold blocks registration now. Registration still checks your requirements when you submit.');
+});
+test('a student may answer an active hold with something substantive (control)', () => {
+  eq(responseBlocker('Active', 'I have paid the deposit; the receipt is on my account.'), null);
+});
+test('a lifted hold cannot be answered, and a stub cannot be sent', () => {
+  eq(responseBlocker('Released', 'I have paid the deposit in full.'), 'This hold is no longer active.');
+  eq(responseBlocker('Active', 'paid'), 'Say a little more (at least 10 characters) so the office can act on it.');
+  eq(responseBlocker('Active', 'x'.repeat(2001)), 'Keep your response under 2,000 characters.');
+});
+test('the staff notice names the hold and keeps the response itself in the desk', () => {
+  eq(responseNotice('Bursar hold', 'Bursar'), 'A student responded to the Bursar hold from the Bursar office. Read it in the holds desk before you decide about the hold.');
 });

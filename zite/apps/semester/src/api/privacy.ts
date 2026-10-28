@@ -82,10 +82,12 @@ export default createEndpoint({
     ]);
     await ensureFam();
     const fam = (await pg().query(`SELECT consent_id, state, recipient_email FROM fam_invites WHERE student_id = $1`, [uid])) as { consent_id: string | null; state: string; recipient_email: string }[];
-    const names = await userNames([...cons.records.map((c) => first(c.recipient) ?? ''), ...history.rows.map((r) => String(r.actor ?? '').replace(/[[\]"{}]/g, ''))]);
+    const famAccess = (await pg().query(`SELECT id, recipient_id, categories, at FROM fam_access_events WHERE student_id = $1 ORDER BY at DESC LIMIT 50`, [uid])) as { id: number; recipient_id: string; categories: string[]; at: unknown }[];
+    const names = await userNames([...cons.records.map((c) => first(c.recipient) ?? ''), ...history.rows.map((r) => String(r.actor ?? '').replace(/[[\]"{}]/g, '')), ...famAccess.map((e) => e.recipient_id)]);
     return {
       consents: cons.records.map((c) => ({ id: c.id, label: c.label ?? '', type: c.consentType ?? '', granted: !!c.granted && !c.revoked, recipient: names[first(c.recipient) ?? ''] ?? fam.find((f) => f.consent_id === c.id)?.recipient_email ?? '', family: fam.find((f) => f.consent_id === c.id)?.state ?? null, expiresOn: c.expiresOn ?? null, recordedAt: c.recordedAt ?? null })),
       history: history.rows.map((r) => { const actor = String(r.actor ?? '').replace(/[[\]"{}]/g, ''); return { id: String(r.id), action: String(r.action ?? ''), actor: actor === uid ? 'You' : names[actor] ?? 'Staff', authority: String(r.authority ?? ''), at: String(r.occurredAt ?? '') }; }),
+      familyAccess: famAccess.map((e) => ({ id: Number(e.id), recipient: names[e.recipient_id] ?? 'Family member', categories: e.categories, at: e.at ? new Date(String(e.at)).toISOString() : '' })),
     };
   },
 });

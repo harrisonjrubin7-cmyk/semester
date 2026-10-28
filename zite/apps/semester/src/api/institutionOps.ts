@@ -122,12 +122,15 @@ export default createEndpoint({
     const studentIds = studentMs.map((m) => first(m.member) ?? '').filter(Boolean);
     const names = await userNames([...studentIds, ...all.map((h) => first(h.student) ?? '')]);
     const placers = await Promise.all(all.map((h) => zite.auditEvents.findAll({ filters: { recordRef: `studentHold:${h.id}` }, limit: 1 })));
+    await ensureHld();
+    const respRows = all.length ? ((await pg().query(`SELECT hold_id, body, at FROM hld_responses WHERE tenant_id = $1 AND hold_id = ANY($2::text[]) ORDER BY at`, [a.institutionId, all.map((h) => h.id)])) as { hold_id: string; body: string; at: unknown }[]) : [];
     return {
       students: studentIds.map((id) => ({ id, name: names[id] ?? 'Student' })).sort((x, y) => x.name.localeCompare(y.name)),
       holds: all.map((h, i) => ({
         id: h.id, student: names[first(h.student) ?? ''] ?? 'Student', office: h.originatingOffice ?? '', status: h.status ?? '',
         message: h.studentFacingMessage ?? '', blocks: !!h.blocksRegistration, isSample: !!h.isSample,
         mine: inSet(placers[i].records[0]?.actor, new Set([uid])),
+        responses: respRows.filter((r) => r.hold_id === h.id).map((r) => ({ body: r.body, at: r.at ? new Date(String(r.at)).toISOString() : null })),
       })).sort((x, y) => (x.status === 'Active' ? 0 : 1) - (y.status === 'Active' ? 0 : 1)),
     };
   },

@@ -38,7 +38,7 @@ export default function Study() {
 
   return (
     <>
-      <PageHeader eyebrow="Learn" title="Study" sub="Notes, flashcards, quizzes and study plans. Private unless you choose otherwise."
+      <PageHeader eyebrow="Learn" title="Study workspace" sub="Notes, flashcards, quizzes and study plans. Private unless you choose otherwise."
         actions={<Button size="sm" onClick={() => setEdit({ title: '', kind: 'Note', visibility: 'Only Me', body: '' })}><Plus className="mr-1 h-4 w-4" />New</Button>} />
       <Loadable state={state}>{(d) => d.items.length === 0 ? <Empty>No study items yet.</Empty> : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

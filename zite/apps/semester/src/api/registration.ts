@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { holdsFor } from '../lib/holdServer';
+import { responseBlocker, responseNotice } from '../lib/holdRules';
 import { requireAccess, ids, first, forbid, audit, tenantScope } from '../lib/server';
 import { computeReadiness, firstBlocker } from '../lib/readiness';
 import { submitOutcome } from '../lib/registrarRules';
@@ -10,6 +11,9 @@ import { SUB_MIGRATION } from '../lib/subMigration';
 
 let subReady: Promise<void> | null = null;
 const ensureSub = () => { if (!subReady) subReady = (async () => { for (const q of SUB_MIGRATION) await pg().query(q); })().catch((e) => { subReady = null; throw e; }); return subReady; };
+import { HLD_MIGRATION } from '../lib/hldMigration';
+let hldReady: Promise<void> | null = null;
+const ensureHld = () => { if (!hldReady) hldReady = (async () => { for (const q of HLD_MIGRATION) await pg().query(q); })().catch((e) => { hldReady = null; throw e; }); return hldReady; };
 type Reservation = { forbidden?: boolean; created?: boolean; sections: string[]; state: 'reserved' | 'done'; term: string };
 import { registrationWindow, maxCredits } from '../lib/calendarServer';
 
@@ -32,6 +36,7 @@ export default createEndpoint({
     z.object({ action: z.literal('add'), sectionId: z.string() }),
     z.object({ action: z.literal('remove'), enrollmentId: z.string() }),
     z.object({ action: z.literal('requestOverride'), sectionId: z.string(), reason: z.string().min(5) }),
+    z.object({ action: z.literal('respondToHold'), holdId: z.string(), body: z.string().min(1).max(2000) }),
     z.object({ action: z.literal('submit'), term: z.string(), requestKey: z.string().min(8).max(100) }),
     z.object({ action: z.literal('withdrawRequest'), enrollmentId: z.string() }),
   ]),
@@ -71,6 +76,22 @@ export default createEndpoint({
         record: { title: `Prerequisite override · ${(s!.label ?? '').split(' · ')[0]}`, owner: uid, requestedBy: uid, type: 'Approval Request', source: 'Made Here', status: 'Pending Approval', section: s!.id, rubric: input.reason, owningOffice: 'Academic Advising' } as never,
       });
       await audit(a, 'Override requested', `task:${t.id}`, input.reason, 'Student self-service');
+      return { ok: true };
+    }
+
+    if (input.action === 'respondToHold') {
+      const h = await zite.studentHolds.findOne({ id: input.holdId });
+      if (!h || first(h.student) !== uid || first(h.institution) !== a.institutionId) forbid('That hold is not on your record.');
+      const blocked = responseBlocker(h!.status, input.body);
+      if (blocked) forbid(blocked);
+      await ensureHld();
+      const out = String(((await pg().query(`SELECT hld_respond($1,$2,$3,$4,$5) AS r`, [a.institutionId, h!.id, uid, h!.status, input.body])) as { r: string }[])[0].r);
+      if (out !== 'ok') forbid(out);
+      await audit(a, 'Hold response sent', `studentHold:${h!.id}`, '', 'Student self-service');
+      // Tell the person who placed the hold. The notice names the hold only; the response is read in the holds desk.
+      const placed = (await zite.auditEvents.findAll({ filters: { recordRef: `studentHold:${h!.id}`, action: 'Registration hold placed' }, limit: 5 })).records;
+      const placer = first(placed[0]?.actor);
+      if (placer && placer !== uid) await zite.messages.create({ record: { body: responseNotice(h!.label ?? '', h!.originatingOffice ?? ''), sender: uid, recipients: [placer], isNotification: true, read: false } as never }).catch(() => undefined);
       return { ok: true };
     }
 
@@ -160,10 +181,13 @@ export default createEndpoint({
       return { ok: true, submitted: reserved.length, resumed: outcome === 'resume' };
     }
 
+    await ensureHld();
+    const respRows = holdsRes.length ? ((await pg().query(`SELECT hold_id, body, at FROM hld_responses WHERE tenant_id = $1 AND student_id = $2 AND hold_id = ANY($3::text[]) ORDER BY at`, [a.institutionId, uid, holdsRes.map((h) => h.id)])) as { hold_id: string; body: string; at: unknown }[]) : [];
+    const holdViews = holdsRes.map((v) => ({ ...v, responses: respRows.filter((r) => r.hold_id === v.id).map((r) => ({ body: r.body, at: r.at ? new Date(String(r.at)).toISOString() : null })) }));
     const plannedIds = new Set(planned.map((p) => first(p.section)));
     const takenIds = new Set(mine.records.filter((e) => e.status !== 'Dropped' && inTerm(e)).map((e) => first(e.section)));
     const catalog = Object.values(secById).filter((s) => s.term === term && !plannedIds.has(s.id) && !takenIds.has(s.id)).map((s) => describe(s.id));
     const status = mine.records.filter((e) => inTerm(e) && ['Requested', 'Enrolled', 'Waitlisted', 'Dropped'].includes(e.status ?? '')).map((e) => ({ enrollmentId: e.id, ...describe(first(e.section)!), status: e.status ?? '', source: e.source ?? '' }));
-    return { draft, catalog, holds, readiness, status, window: await registrationWindow(a.institutionId, term) };
+    return { draft, catalog, holds, holdViews, readiness, status, window: await registrationWindow(a.institutionId, term) };
   },
 });

@@ -36,6 +36,30 @@ function ReadinessPanel({ checks, ready, count, onSubmit }: { checks: Check[]; r
   );
 }
 
+type HoldViewT = { id: string; title: string; office: string; message: string; blocksRegistration: boolean; responses: { body: string; at: string | null }[] };
+
+function HoldsPanel({ views, onRespond }: { views: HoldViewT[]; onRespond: (holdId: string, body: string) => Promise<void> }) {
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  if (!views.length) return null;
+  return (
+    <Panel title="Your holds">
+      <ul className="space-y-4">
+        {views.map((h) => (
+          <li key={h.id} className="text-sm">
+            <p className="font-medium">{h.title} <span className="font-normal text-muted-foreground">· {h.office}</span></p>
+            {h.message && <p className="mt-0.5 text-muted-foreground">{h.message}</p>}
+            {h.responses.length > 0 && <ul className="mt-2 space-y-1 border-l-2 border-border pl-3">{h.responses.map((r, i) => <li key={i}><p>{r.body}</p><p className="text-xs text-muted-foreground">Your response{r.at ? ` · ${new Date(r.at).toLocaleString()}` : ''}</p></li>)}</ul>}
+            <div className="mt-2 flex items-start gap-2">
+              <Textarea aria-label={`Respond to ${h.title}`} placeholder="Tell the office what you have done, or what you need…" value={drafts[h.id] ?? ''} onChange={(e) => setDrafts({ ...drafts, [h.id]: e.target.value })} />
+              <Button size="sm" disabled={(drafts[h.id] ?? '').trim().length < 10} onClick={async () => { await onRespond(h.id, drafts[h.id]); setDrafts({ ...drafts, [h.id]: '' }); }}>Send</Button>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">The office reads your response in their holds desk. Sending a response does not lift the hold.</p>
+          </li>))}
+      </ul>
+    </Panel>
+  );
+}
+
 const TERM = 'Spring 2027';
 type Row = { sectionId: string; code: string; title: string; missing: string[]; approved: boolean; pending: boolean };
 
@@ -61,6 +85,7 @@ export default function Registration() {
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="space-y-4 lg:col-span-2">
               {d.holds.length > 0 && <div className="rounded-md border border-destructive/40 bg-card p-3 text-sm">! {d.holds[0]} — you can still plan, but registration needs it cleared.</div>}
+              <HoldsPanel views={d.holdViews ?? []} onRespond={(holdId, body) => act(() => registration({ action: 'respondToHold', holdId, body }), 'Response sent. The office can see it now.')} />
               <Panel title={`Your draft · ${credits} credits`}>
                 {d.draft.length === 0 ? <Empty>Add sections from the catalog to start a draft.</Empty> : (
                   <div className="overflow-x-auto"><table className="w-full text-sm">

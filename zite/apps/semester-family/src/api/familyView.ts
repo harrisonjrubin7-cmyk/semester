@@ -86,6 +86,9 @@ export default createEndpoint({
     const sById = Object.fromEntries((secs?.records ?? []).map((s) => [s.id, s]));
     const cById = Object.fromEntries((courses?.records ?? []).map((c) => [c.id, c]));
     await zite.auditEvents.create({ record: { action: 'Family view', actor: uid, recordRef: `user:${sel.id}`, authority: 'Student share', details: sel.categories.join(', '), viaAssistant: false, institution: null } as never });
+    // The delegation's own access log: one event per live invitation behind this view, so the student sees exactly
+    // which grant was used and what it covered. fam_log_access refuses anything but a live accepted binding.
+    for (const c of live.filter((x) => x.student_id === sel.id)) await pg().query(`SELECT fam_log_access($1,$2,$3,$4::text[])`, [Number(c.invite_id), sel.id, uid, c.categories]);
     const now = new Date().toISOString();
     return {
       students,

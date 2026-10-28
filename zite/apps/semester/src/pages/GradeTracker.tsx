@@ -148,7 +148,7 @@ export default function GradeTracker() {
   const add = async () => { try { const r: any = await gradeTracker({ action: 'saveCourse', id: null, name, doc: newCourse(name) as any }); setOpen(r.result?.id ?? null); setName(''); s.reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
   return (
     <>
-      <PageHeader eyebrow="Progress" title="Grade tracker" sub="Track your scores, try what-if scores and plan your GPA. Private to you; it never changes an official grade." />
+      <PageHeader eyebrow="Progress" title="What-if grade tracker" sub="Track your scores, try what-if scores and plan your GPA. Private to you; it never changes an official grade." />
       <Loadable state={s}>{(d: any) => {
         const courses = d.plans.filter((p: any) => p.kind === 'course');
         return (

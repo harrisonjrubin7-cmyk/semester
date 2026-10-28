@@ -1,5 +1,6 @@
 import { zite } from 'zitejs/db';
 import { ids, first, Tenant } from './server';
+import { noteHits, taskHits } from './searchHits';
 
 export type Hit = { id: string; kind: string; title: string; detail: string; source: string; path: string };
 
@@ -25,7 +26,8 @@ export async function scopedSearch(uid: string, q: string, tenant: Tenant, catal
   events.records = events.records.filter((e) => ids(e.group).some((g) => okGroups.has(g)));
   const cById = Object.fromEntries(courses.records.map((c) => [c.id, c]));
   const hits: Hit[] = [];
-  tasks.records.filter((t) => match(t.title, t.rubric)).forEach((t) => hits.push({ id: t.id, kind: t.type ?? 'Task', title: t.title ?? '', detail: t.dueAt ? `Due ${t.dueAt}` : t.status ?? '', source: t.source ?? 'Yours', path: t.type === 'Hold' ? '/help' : '/today' }));
+  // Own tasks only, re-checked here even though the query already filters by owner (S-92 §7 P04).
+  hits.push(...taskHits(uid, q, tasks.records.map((t) => ({ id: t.id, owner: ids(t.owner), title: t.title ?? '', rubric: t.rubric ?? '', type: t.type ?? '', dueAt: t.dueAt ?? '', status: t.status ?? '', source: t.source ?? '' }))));
   const mySecs = new Set(enr.records.map((e) => first(e.section)));
   secs.records.filter((s) => tenant.sections.has(s.id) && (mySecs.has(s.id) || ids(s.instructors).includes(uid))).forEach((s) => {
     const c = cById[first(s.course) ?? ''];
@@ -34,7 +36,8 @@ export async function scopedSearch(uid: string, q: string, tenant: Tenant, catal
   // Public catalog is visible to every member
   courses.records.filter((c) => needle && match(c.code, c.title)).forEach((c) => hits.push({ id: c.id, kind: 'Catalog', title: `${c.code} · ${c.title}`, detail: `${c.credits} credits`, source: catalogSource, path: '/plan/registration' }));
   reqs.records.filter((r) => match(r.name, r.program)).forEach((r) => hits.push({ id: r.id, kind: 'Requirement', title: r.name ?? '', detail: `${r.creditsRequired} credits · ${r.program}`, source: catalogSource, path: '/progress' }));
-  res.records.filter((r) => match(r.title, r.body)).forEach((r) => hits.push({ id: r.id, kind: r.kind ?? 'Note', title: r.title ?? '', detail: `Visibility: ${r.visibility}`, source: r.source ?? 'Yours', path: '/learn/study' }));
+  // Private notes: own only, so another person's note gives no hit, title, snippet or count.
+  hits.push(...noteHits(uid, q, res.records.map((r) => ({ id: r.id, owner: ids(r.owner), title: r.title ?? '', body: r.body ?? '', kind: r.kind ?? '', visibility: r.visibility ?? '', source: r.source ?? '' }))));
   groups.records.filter((g) => needle && match(g.name)).forEach((g) => hits.push({ id: g.id, kind: g.kind ?? 'Group', title: g.name ?? '', detail: `${ids(g.members).length} members`, source: catalogSource, path: '/campus' }));
   events.records.filter((e) => needle && match(e.title, e.location)).forEach((e) => hits.push({ id: e.id, kind: 'Event', title: e.title ?? '', detail: `${e.startsAt ?? ''} · ${e.location ?? ''}`, source: catalogSource, path: '/campus' }));
   return hits;

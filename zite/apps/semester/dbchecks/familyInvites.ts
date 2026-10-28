@@ -3,7 +3,7 @@ import { FAM_MIGRATION } from '../src/lib/famMigration';
 
 const TODAY = `'2026-10-28'::date`;
 export const CHECKS = `DO $$
-DECLARE r text; v bigint; v2 bigint; got boolean; n int;
+DECLARE r text; v bigint; v2 bigint; v3 bigint; got boolean; n int;
 BEGIN
   CREATE TEMP TABLE rr (ok boolean, lbl text) ON COMMIT DROP;
   INSERT INTO rr VALUES (fam_invite('stu','stu@x.edu','STU@x.edu',ARRAY['Grades'],'2027-01-01',${TODAY},NULL) = 'You can’t share with yourself.', 'F1 no sharing with yourself');
@@ -36,6 +36,16 @@ BEGIN
   INSERT INTO rr VALUES (got, 'F22 the log is append-only');
   got := false; BEGIN UPDATE fam_invites SET recipient_id = NULL WHERE id = v2; EXCEPTION WHEN check_violation THEN got := true; END;
   INSERT INTO rr VALUES (got, 'F23 an accepted or left share always names its account (constraint)');
+  v3 := split_part(fam_invite('stu','stu@x.edu','mom@x.edu',ARRAY['Billing','Grades'],'2027-01-01',${TODAY},NULL),':',2)::bigint;
+  PERFORM fam_respond('mom','mom@x.edu',v3,true,${TODAY});
+  INSERT INTO rr VALUES (fam_log_access(v,'stu','mom',ARRAY['Grades']) = 'not live', 'F24 a revoked share logs no access');
+  INSERT INTO rr VALUES (fam_log_access(v2,'stu','mom',ARRAY['Calendar']) = 'not live', 'F25 a share the family member left logs no access');
+  INSERT INTO rr VALUES (fam_log_access(v3,'stu','stranger',ARRAY['Grades']) = 'not live', 'F26 only the bound recipient can be logged');
+  INSERT INTO rr VALUES (fam_log_access(v3,'stu','mom',ARRAY['Grades','Billing','Grades']) = 'ok', 'F27 a view under a live share is logged');
+  INSERT INTO rr VALUES ((SELECT categories = ARRAY['Billing','Grades'] FROM fam_access_events WHERE invite_id = v3), 'F28 the event names the grant and the categories seen, deduplicated');
+  INSERT INTO rr VALUES ((SELECT count(*) FROM fam_access_events WHERE student_id = 'stu') = 1, 'F29 exactly the one live view is on the student record');
+  got := false; BEGIN DELETE FROM fam_access_events WHERE invite_id = v3; EXCEPTION WHEN OTHERS THEN got := true; END;
+  INSERT INTO rr VALUES (got, 'F30 the access log is append-only');
   RAISE EXCEPTION 'RESULT pass=% fails=% [%]', (SELECT count(*) FROM rr WHERE ok IS TRUE), (SELECT count(*) FROM rr WHERE ok IS NOT TRUE),
     coalesce((SELECT string_agg(lbl, ' | ') FROM rr WHERE ok IS NOT TRUE), '');
 END $$`;
@@ -50,5 +60,8 @@ export async function run() {
   const m2 = FAM_MIGRATION.map((q) => q.replace(`WHERE recipient_id = p_recipient AND state = 'Accepted' AND expires_on >= p_today`, () => `WHERE recipient_id = p_recipient AND state = 'Accepted'`));
   console.log('expiry mutant applied:', m2.join('') !== FAM_MIGRATION.join(''));
   await go('mutant expiry-ignored (F14):', m2);
+  const m3 = FAM_MIGRATION.map((q) => q.replace(`AND state = 'Accepted' AND expires_on >= current_date`, () => ``));
+  console.log('access-state mutant applied:', m3.join('') !== FAM_MIGRATION.join(''));
+  await go('mutant ended-share-logs-access (F24, F25):', m3);
   console.log('left behind:', JSON.stringify(await sql.query(`SELECT to_regclass('fam_invites') AS t`)));
 }

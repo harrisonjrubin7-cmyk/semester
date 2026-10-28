@@ -1,4 +1,4 @@
-// Hold releases (register C05). One release per hold, whoever asks and however often: the first claim wins, the same
+// Hold releases and student responses (register C05). One release per hold, whoever asks and however often: the first claim wins, the same
 // person retrying resumes it, anyone else is told it is already lifted. The release row also records whether the
 // student's notice went out, so a failed notice never undoes or hides a release that happened.
 export const HLD_MIGRATION: string[] = [
@@ -43,6 +43,24 @@ export const HLD_MIGRATION: string[] = [
      INSERT INTO hld_events (tenant_id, hold_id, actor_id, action, detail)
        SELECT p_tenant, p_hold, actor_id, CASE WHEN p_ok THEN 'notice sent' ELSE 'notice failed' END, left(coalesce(p_error,''), 300)
        FROM hld_releases WHERE hold_id = p_hold AND tenant_id = p_tenant;
+     RETURN 'ok';
+   END $$`,
+  `CREATE TABLE IF NOT EXISTS hld_responses (id bigserial PRIMARY KEY, tenant_id text NOT NULL, hold_id text NOT NULL,
+     student_id text NOT NULL, body text NOT NULL CHECK (length(trim(body)) BETWEEN 10 AND 2000),
+     at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE INDEX IF NOT EXISTS hld_responses_hold ON hld_responses (tenant_id, hold_id, at)`,
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'hld_responses_append_only') THEN
+     CREATE TRIGGER hld_responses_append_only BEFORE UPDATE OR DELETE ON hld_responses FOR EACH ROW EXECUTE FUNCTION hld_refuse_change(); END IF; END $$`,
+  // The student's side of the journey (place -> respond -> authorized release). Ownership (this student, this
+  // institution) is checked by the endpoint against the Student Holds record; the status it read is passed in.
+  `CREATE OR REPLACE FUNCTION hld_respond(p_tenant text, p_hold text, p_student text, p_status text, p_body text)
+     RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     IF p_status <> 'Active' THEN RETURN 'This hold is no longer active.'; END IF;
+     IF length(trim(coalesce(p_body,''))) < 10 THEN RETURN 'Say a little more (at least 10 characters) so the office can act on it.'; END IF;
+     IF length(p_body) > 2000 THEN RETURN 'Keep your response under 2,000 characters.'; END IF;
+     INSERT INTO hld_responses (tenant_id, hold_id, student_id, body) VALUES (p_tenant, p_hold, p_student, trim(p_body));
+     INSERT INTO hld_events (tenant_id, hold_id, actor_id, action) VALUES (p_tenant, p_hold, p_student, 'student responded');
      RETURN 'ok';
    END $$`,
 ];

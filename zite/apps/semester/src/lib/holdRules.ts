@@ -44,3 +44,19 @@ export function releaseNotice(label: string, office: string, remainingBlocking: 
     : 'No hold blocks registration now. Registration still checks your requirements when you submit.';
   return `Your ${label || 'hold'} was lifted by the ${office || 'institution'} office. ${rest}`;
 }
+
+/** Why a student response cannot be accepted, or null when it can. Mirrors hld_respond in lib/hldMigration.ts:
+ *  only an active hold can be answered, and the answer must be substantive enough for the office to act on.
+ *  A response never lifts a hold; it informs the office's decision. */
+export function responseBlocker(status: string | null | undefined, body: string): string | null {
+  if (status !== 'Active') return 'This hold is no longer active.';
+  if (body.trim().length < 10) return 'Say a little more (at least 10 characters) so the office can act on it.';
+  if (body.length > 2000) return 'Keep your response under 2,000 characters.';
+  return null;
+}
+
+/** The in-app notice sent to the person who placed a hold when the student answers it. It names the hold only;
+ *  the response itself is read in the holds desk, never copied into a notification. */
+export function responseNotice(label: string, office: string): string {
+  return `A student responded to the ${label || 'hold'} from the ${office || 'institution'} office. Read it in the holds desk before you decide about the hold.`;
+}

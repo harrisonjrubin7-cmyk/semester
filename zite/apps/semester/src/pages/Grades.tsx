@@ -9,7 +9,7 @@ export default function Grades() {
   const s = useLoad(() => Promise.all([progress({ action: 'get' }), regrade({ action: 'mine' })]).then(([p, r]) => ({ ...p, regrades: r.items as MyRegrade[] })));
   return (
     <>
-      <PageHeader eyebrow="Progress" title="Grades" sub="Final grades your instructors have released. Unreleased grades never show here." />
+      <PageHeader eyebrow="Progress" title="Released course grades" sub="Final grades your instructors have released. Unreleased grades never show here." />
       <Loadable state={s}>{(d) => {
         const byTerm = (d.grades as G[]).reduce<Record<string, G[]>>((acc, g) => { (acc[g.term || 'Other'] ||= []).push(g); return acc; }, {});
         return (

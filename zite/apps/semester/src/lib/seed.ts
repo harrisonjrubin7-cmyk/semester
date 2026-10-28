@@ -17,7 +17,7 @@ export async function ensureSampleInstitution(): Promise<string> {
 
   const inst = await zite.institutions.create({
     record: {
-      name: SAMPLE, tenantType: 'Institution Managed', isSample: true, retentionDays: 365,
+      name: SAMPLE, tenantType: 'Institution Managed', isSample: true, retentionDays: 365, timeZone: 'America/Chicago',
       aiPolicy: 'Northgate AI use 1.0 — assistants may read only records the member can already see. Consequential decisions go to a person.',
     } as never,
   });

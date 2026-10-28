@@ -19,6 +19,8 @@ export type Access = {
   roles: string[];
   /** the tenant is a demo/sample institution: its catalog records are labelled Sample */
   isSample: boolean;
+  /** the institution's recorded IANA time zone; undefined until the institution sets one */
+  timeZone?: string;
   /** ties this request's authorization decision (authz_decisions) to the audit events it writes */
   correlationId?: string;
 };
@@ -46,6 +48,12 @@ export async function currentMembership(userId: string) {
   return active.find((r) => r.id === pick?.id);
 }
 
+/** The institution's recorded time zone, read defensively: the generated record type may lag a newly added field. */
+const recordedZone = (inst: unknown): string | undefined => {
+  const tz = (inst as { timeZone?: unknown } | null | undefined)?.timeZone;
+  return typeof tz === 'string' && tz.trim() ? tz : undefined;
+};
+
 /** Deny by default: caller must hold an active membership in a tenant. */
 export async function requireAccess(userId: string, needRoles?: string[]): Promise<Access> {
   const m = await currentMembership(userId);
@@ -56,7 +64,7 @@ export async function requireAccess(userId: string, needRoles?: string[]): Promi
   }
   const institutionId = first(m.institution)!;
   const inst = await zite.institutions.findOne({ id: institutionId });
-  return { userId, membershipId: m.id, institutionId, institutionName: inst?.name ?? '', roles, isSample: !!inst?.isSample };
+  return { userId, membershipId: m.id, institutionId, institutionName: inst?.name ?? '', roles, isSample: !!inst?.isSample, timeZone: recordedZone(inst) };
 }
 
 /**
@@ -73,7 +81,7 @@ export async function requireAction(userId: string, action: Action, extra: { pol
   await logDecision({ correlationId, actorId: userId, tenantId, action, allow: d.allow, failedRule: d.allow ? null : String(d.failed ?? '') });
   if (!d.allow) throw new ZiteError({ code: 'FORBIDDEN', message: `authz:${d.failed}:${action}:${correlationId}`, userFacingMessage: `${d.reason} (Reference ${correlationId.slice(0, 8)})` });
   const inst = await zite.institutions.findOne({ id: tenantId });
-  return { userId, membershipId: m!.id, institutionId: tenantId, institutionName: inst?.name ?? '', roles: m!.roles ?? [], isSample: !!inst?.isSample, correlationId };
+  return { userId, membershipId: m!.id, institutionId: tenantId, institutionName: inst?.name ?? '', roles: m!.roles ?? [], isSample: !!inst?.isSample, correlationId, timeZone: recordedZone(inst) };
 }
 
 /** Which of these actions the caller may take in their current context. Used to decide what a screen asks for, so a page

@@ -60,3 +60,28 @@ A one-off live observation is recorded as a gap, not as evidence. S-92 notes: "A
 - Zite `defaultPolicy` is still unverified (S-92 §6). It is not changed blindly.
 
 S-94 (public website) is a separate track, not started.
+
+## Update, 28 Oct evening: the untested rows now have repeatable checks
+
+The access decisions that P01–P04 depend on were inline in the endpoints. Each is now one pure function that the endpoint calls:
+- `lib/submissionAccess.ts`:
+  - `canOpenSubmission` is used by `learn.ts openAttachment`. The owner can always open their work; frozen group members and staff of the submission's own section can open it once it is submitted.
+  - `gradingFor` is applied to every student-facing submission in the course view. A student sees no score or feedback before release.
+- `lib/searchHits.ts`: `noteHits` and `taskHits`, used by `lib/search.ts`. They re-check ownership even if a fetch returned more than it should, so another person's note contributes no hit, title, snippet or count.
+
+Evidence:
+- `tests/submissionAccess.test.ts` (5) and `tests/searchHits.test.ts` (3), each with a control.
+- Proved by breaking each rule: allowing any non-owner fails P01, P02 and the group test; showing grading early fails P03; dropping the note re-check fails all three search tests. Restoring the code returns them to green.
+- **Live regression**, faculty and student accounts, 7 steps:
+  - the student sees a released score (88), and nothing before release;
+  - the owner and the section's instructor both open the attachment;
+  - the instructor still sees grades, and search still works.
+  - The search step only shows that no foreign note appeared, which is weak evidence; the unit test is the proof.
+
+| Status | Tests |
+|---|---|
+| Evidenced | P01, P02, P03, P04, P05, P06, P07, P12 |
+| Partial | P10 expired delegate (no family file/search links exist yet), P11 cross-institution webhook (no inbound webhooks yet), P13 AI retrieval boundary |
+| Not built | P08, P09 (LTI Advantage) |
+
+"Evidenced" here means a repeatable rule-level check that the endpoint uses. Live runs with a second student and a second instructor are NOT RUN, because only one account of each exists.
