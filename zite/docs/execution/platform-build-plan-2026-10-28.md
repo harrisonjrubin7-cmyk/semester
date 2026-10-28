@@ -140,7 +140,7 @@ includes it. Present today:
 | B04 | Institution error diagnosis and operational states | Done: 403 traced and fixed; safe errors; no false zeros; per-widget states on Institution overview and Faculty Today |
 | B05 | Term, catalog, section, instructor assignment | Section requests → created section → instructor notified (tested); catalog publication and terms not built |
 | B06 | Registration and roster | Tested in the database (capacity race, holds, overrides, roster reconciliation); Institution front door added 28 Oct |
-| B07 | Course Studio and publication | Syllabus versions, materials, assignments exist; versioned publication of assignments not built |
+| B07 | Course Studio and publication | Syllabus versions and materials exist; assignments now draft → preview → versioned publish (asg_*), tested with two real accounts 11/11 and dbchecks 16/16 |
 | B08 | Assignment, submission, grading, release | Tested with two real accounts (receipts, extensions, file screen, grading, release) |
 | B09 | Final-grade handoff and records | Propose → release → certify in Faculty (front door 28 Oct); posting in Institution → Academic records; needs a registrar account to run |
 | B10 | Support, appointments, accommodation notices | Office hours, accommodation letters and acknowledgements exist; Faculty Today shows unacknowledged notices (minimum necessary) |
@@ -167,3 +167,7 @@ reconciliation, withdrawn student access, course copy without prior work, keyboa
 3. Assignment versioning: publish an exact version; revising never changes what was assigned or submitted.
 4. Multiple attempts and group submissions.
 5. A third account with a sample Staff role to run registrar posting, two-registrar policy approval and standing appeals.
+
+## 9. Ten-app connections (S-83 to S-88)
+
+Audited 28 Oct in `docs/execution/connection-audit-2026-10-28.md`. The machine-checked version is `apps/semester/src/lib/connectionRegister.ts`. Result: 3 observed, 8 partial, 5 built but not exercised, 7 missing, 0 failing. The hold-release journey was broken because student views read a different hold store; it was fixed the same day.

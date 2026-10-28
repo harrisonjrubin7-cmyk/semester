@@ -2,9 +2,15 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAction, first, forbid, audit, userNames, inSet, capabilities } from '../lib/server';
+import { pg } from '../lib/pg';
+import { HLD_MIGRATION } from '../lib/hldMigration';
+import { releaseRefusal, releaseNotice, HOLD_OFFICES } from '../lib/holdRules';
+
+let hldReady: Promise<void> | null = null;
+const ensureHld = () => { if (!hldReady) hldReady = (async () => { for (const q of HLD_MIGRATION) await pg().query(q); })().catch((e) => { hldReady = null; throw e; }); return hldReady; };
 import { suppress, toCsv, METRICS, MIN_CELL } from '../lib/analytics';
 
-const OFFICES = ['Registrar', 'Bursar', 'Advising', 'Student Affairs'] as const;
+const OFFICES = HOLD_OFFICES;
 
 export default createEndpoint({
   description: 'Institution workspace: analytics, and placing or lifting registration holds',
@@ -77,13 +83,38 @@ export default createEndpoint({
 
     if (input.action === 'releaseHold') {
       const h = all.find((x) => x.id === input.holdId);
-      if (!h || h.status !== 'Active') forbid('This hold is no longer active.');
-      if (first(h!.student) === uid) forbid('This hold is on your own record, so someone else has to lift it.');
+      if (!h) forbid('This hold is no longer active.');
+      const student = first(h!.student)!;
+      const office = h!.originatingOffice ?? '';
+      if (student === uid) forbid('This hold is on your own record, so someone else has to lift it.');
       const placed = (await zite.auditEvents.findAll({ filters: { recordRef: `studentHold:${h!.id}`, action: 'Registration hold placed' }, limit: 5 })).records;
       if (placed.some((e) => inSet(e.actor, new Set([uid])))) forbid('You placed this hold, so someone else has to lift it.');
-      await zite.studentHolds.update({ id: h!.id, record: { status: 'Released' } as never });
-      await audit(a, 'Registration hold released', `studentHold:${h!.id}`, input.reason, a.roles.join(', '));
-      return { ok: true };
+      const m = await zite.memberships.findOne({ id: a.membershipId });
+      const refusal = releaseRefusal(a.roles, m?.roleTemplates ?? [], office);
+      if (refusal) forbid(refusal);
+      await ensureHld();
+      // A hold that is already lifted only continues if this person's own earlier attempt did not finish.
+      if (h!.status !== 'Active' && !(await pg().query(`SELECT 1 FROM hld_releases WHERE hold_id = $1 AND tenant_id = $2 AND actor_id = $3 AND NOT applied`, [h!.id, a.institutionId, uid])).length) forbid('This hold is no longer active.');
+      const claim = String((await pg().query(`SELECT hld_claim($1,$2,$3,$4,$5,$6) AS r`, [uid, a.institutionId, h!.id, student, office, input.reason]))[0].r);
+      if (!claim.startsWith('ok')) forbid(claim);
+      if (claim !== 'ok:done') {
+        await zite.studentHolds.update({ id: h!.id, record: { status: 'Released' } as never });
+        await pg().query(`SELECT hld_applied($1,$2,$3)`, [a.institutionId, h!.id, uid]);
+        await audit(a, 'Registration hold released', `studentHold:${h!.id}`, input.reason, a.roles.join(', '));
+      }
+      // Registration rechecks every hold on each submit; this count is what the student is told now.
+      const remaining = (await zite.studentHolds.findAll({ filters: { student, status: 'Active', blocksRegistration: true }, limit: 50 })).records.filter((x) => x.id !== h!.id).length;
+      let notified = (await pg().query(`SELECT notified FROM hld_releases WHERE hold_id = $1`, [h!.id]))[0]?.notified === true;
+      if (!notified) {
+        try {
+          await zite.messages.create({ record: { body: releaseNotice(h!.label ?? '', office, remaining), sender: uid, recipients: [student], isNotification: true, read: false } as never });
+          notified = true;
+          await pg().query(`SELECT hld_noticed($1,$2,true,'')`, [a.institutionId, h!.id]);
+        } catch (e) {
+          await pg().query(`SELECT hld_noticed($1,$2,false,$3)`, [a.institutionId, h!.id, String((e as Error).message ?? e)]);
+        }
+      }
+      return { ok: true, remainingBlocking: remaining, notified };
     }
 
     const studentMs = (await zite.memberships.findAll({ filters: { institution: a.institutionId }, limit: 2000 })).records

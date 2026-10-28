@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { holdsFor } from '../../../semester/src/lib/holdServer';
 
 const ids = (v: string | string[] | undefined | null): string[] => (!v ? [] : Array.isArray(v) ? v : [v]);
 const first = (v: string | string[] | undefined | null) => ids(v)[0];
@@ -36,7 +37,7 @@ export default createEndpoint({
     const can = (c: string) => sel.categories.includes(c);
     const [enr, holds, tasks, secs, courses] = await Promise.all([
       can('Grades') ? zite.enrollments.findAll({ filters: { student: sel.id }, limit: 300 }) : null,
-      can('Holds') ? zite.tasks.findAll({ filters: { owner: sel.id, type: 'Hold' }, limit: 50 }) : null,
+      can('Holds') ? holdsFor(sel.id) : null,
       can('Calendar') ? zite.tasks.findAll({ filters: { owner: sel.id, type: 'Assignment' }, limit: 300 }) : null,
       can('Grades') ? zite.sections.findAll({ limit: 1000, fields: ['label', 'course', 'term'] }) : null,
       can('Grades') ? zite.courses.findAll({ limit: 1000, fields: ['code', 'title'] }) : null,
@@ -50,7 +51,7 @@ export default createEndpoint({
       view: {
         ...sel,
         grades: enr ? enr.records.filter((e) => e.gradeReleased).map((e) => { const s = sById[first(e.section) ?? '']; const c = cById[first(s?.course) ?? '']; return { id: e.id, code: c?.code ?? '', title: c?.title ?? '', term: s?.term ?? '', grade: e.finalGrade ?? '', source: e.source ?? 'Official' }; }) : null,
-        holds: holds ? holds.records.filter((h) => h.status === 'Open').map((h) => ({ id: h.id, title: h.title ?? '', office: h.owningOffice ?? '', source: h.source ?? 'Official' })) : null,
+        holds: holds ? holds.map((h) => ({ id: h.id, title: h.title, office: h.office, source: 'Official' })) : null,
         upcoming: tasks ? tasks.records.filter((t) => (t.dueAt ?? '') >= now).sort((x, y) => (x.dueAt ?? '').localeCompare(y.dueAt ?? '')).slice(0, 15).map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, done: t.status === 'Done', source: t.source ?? 'Official' })) : null,
       },
     };

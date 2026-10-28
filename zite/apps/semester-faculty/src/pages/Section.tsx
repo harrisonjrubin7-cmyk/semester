@@ -8,7 +8,7 @@ import { useLoad } from '../lib/useLoad';
 import { loadOh } from '../lib/oh';
 import { LoadingBlock, DeniedOrError, Empty, PageHeader } from '../components/States';
 import Attendance from '../components/Attendance';
-import NewAssignment from '../components/NewAssignment';
+import AssignmentStudio from '../../../semester/src/components/AssignmentStudio';
 
 export default function SectionPage() {
   const { id = '' } = useParams();
@@ -24,7 +24,7 @@ export default function SectionPage() {
       <p className="mb-4 text-sm"><Link className="font-medium underline" to={`/course/${id}`}>Open the full course studio</Link><span className="text-muted-foreground"> — assessments, moderation, team, groups, discussion and accessibility review</span></p>
       {roster.loading && !roster.data ? <LoadingBlock /> : roster.error ? <DeniedOrError message={roster.error} onRetry={roster.reload} /> : (
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList><TabsTrigger value="roster">Roster ({roster.data!.students.length})</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assign">New assignment</TabsTrigger></TabsList>
+          <TabsList><TabsTrigger value="roster">Roster ({roster.data!.students.length})</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger><TabsTrigger value="assign">Assignments</TabsTrigger></TabsList>
           <TabsContent value="roster">
             {roster.data!.students.length === 0 ? <Empty title="No enrolled students yet" /> : (
               <Card><CardContent className="divide-y divide-border p-0">
@@ -33,7 +33,7 @@ export default function SectionPage() {
             )}
           </TabsContent>
           <TabsContent value="attendance"><Attendance sectionId={id} /></TabsContent>
-          <TabsContent value="assign"><NewAssignment sectionId={id} students={roster.data!.students.length} onDone={() => setTab('roster')} /></TabsContent>
+          <TabsContent value="assign"><AssignmentStudio sectionId={id} /></TabsContent>
         </Tabs>
       )}
     </div>

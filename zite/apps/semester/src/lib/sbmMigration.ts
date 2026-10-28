@@ -3,7 +3,11 @@
 // records each file's name, size and SHA-256 in a manifest, locks the attachments, and stamps the time against the due
 // date — all in one transaction. The same request key replays the same receipt; a reused key with a different manifest
 // is refused. Receipts are append-only. p_is_owner is computed by the server (the student owns this draft).
+import { ASG_MIGRATION } from './asgMigration';
+
 export const SBM_MIGRATION: string[] = [
+  // Assignment versions first: a receipt records the version it was submitted against (28 Oct).
+  ...ASG_MIGRATION,
   `CREATE TABLE IF NOT EXISTS sbm_receipts (id bigserial PRIMARY KEY, tenant_id text NOT NULL, submission_id text NOT NULL, task_id text NOT NULL,
      section_id text NOT NULL, student_id text NOT NULL, files jsonb NOT NULL CHECK (jsonb_typeof(files) = 'array'), manifest_sha256 text NOT NULL,
      due_at timestamptz, submitted_at timestamptz NOT NULL DEFAULT now(), late boolean NOT NULL, late_seconds int NOT NULL DEFAULT 0 CHECK (late_seconds >= 0),
@@ -58,9 +62,12 @@ export const SBM_MIGRATION: string[] = [
      INSERT INTO dln_events (tenant_id, extension_id, actor, what) VALUES (p_tenant, cur.id, p_actor, 'revoked');
      RETURN NULL;
    END $$`,
+  `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS asg_id bigint`,
+  `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS asg_version int`,
+  `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS asg_sha256 text`,
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS due_source text NOT NULL DEFAULT 'assignment'`,
   `CREATE OR REPLACE FUNCTION sbm_submit(p_actor text, p_tenant text, p_submission text, p_task text, p_section text, p_is_owner boolean, p_due timestamptz, p_idem text) RETURNS text LANGUAGE plpgsql AS $$
-   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text;
+   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text; v_asg bigint; v_ver int; v_sha text;
    BEGIN
      IF NOT coalesce(p_is_owner, false) THEN RETURN 'You can only submit your own draft.'; END IF;
      IF length(coalesce(p_idem,'')) < 8 THEN RETURN 'Missing request key.'; END IF;
@@ -83,8 +90,11 @@ export const SBM_MIGRATION: string[] = [
      late_s := CASE WHEN v_due IS NOT NULL AND now() > v_due THEN greatest(1, ceil(extract(epoch FROM now() - v_due))::int) ELSE 0 END;
      code := upper(substr(encode(sha256(convert_to(p_tenant || p_submission || h || clock_timestamp()::text, 'UTF8')), 'hex'), 1, 10));
      UPDATE fil_attachments SET locked = true WHERE tenant_id = p_tenant AND kind = 'submission' AND ref_id = p_submission AND NOT locked;
-     INSERT INTO sbm_receipts (tenant_id, submission_id, task_id, section_id, student_id, files, manifest_sha256, due_at, late, late_seconds, receipt_code, idem_key, due_source)
-       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src);
+     SELECT l.assignment_id, a.current_version, v.content_sha256 INTO v_asg, v_ver, v_sha
+       FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
+       WHERE l.task_id = p_task;
+     INSERT INTO sbm_receipts (tenant_id, submission_id, task_id, section_id, student_id, files, manifest_sha256, due_at, late, late_seconds, receipt_code, idem_key, due_source, asg_id, asg_version, asg_sha256)
+       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha);
      RETURN 'ok:' || code;
    END $$`,
 ];

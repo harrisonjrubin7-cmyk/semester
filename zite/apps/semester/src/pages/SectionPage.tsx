@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@project/components/ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { Markdown } from '@project/components/markdown';
 import { ArrowLeft } from 'lucide-react';
-import { NewAssignment, Attendance, Discussion } from '../components/CourseOps';
+import { Attendance, Discussion } from '../components/CourseOps';
+import AssignmentStudio from '../components/AssignmentStudio';
 import Assessments from '../components/Assessments';
 import CourseTeam from '../components/CourseTeam';
 import CourseGroups from '../components/CourseGroups';
@@ -122,7 +123,7 @@ export default function SectionPage() {
               <TabsContent value="assessments"><Assessments sectionId={sectionId} /></TabsContent>
               <TabsContent value="attendance"><Attendance sectionId={sectionId} isTeacher={d.teaching} /></TabsContent>
               <TabsContent value="assignments" className="space-y-3">
-                {d.teaching && <NewAssignment sectionId={sectionId} onDone={() => state.reload()} />}
+                {d.teaching && <AssignmentStudio sectionId={sectionId} onPublished={() => state.reload()} />}
                 {d.assignments.length === 0 ? <Empty>No assignments posted.</Empty> : d.assignments.map((a: Asg) => (
                   <Assignment key={a.id} a={a} busy={false} sub={d.grader ? undefined : d.submissions.find((s: Sub) => s.taskId === a.id)}
                     onUpload={() => act(() => learn({ action: 'saveDraft', taskId: a.id }), 'Draft started')}

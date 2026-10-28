@@ -5,6 +5,7 @@ import { createCaller } from 'zitejs/caller';
 import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
+import type { default as _AssignmentsEp } from '../src/api/assignments';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
@@ -44,6 +45,11 @@ type _AssessmentsCfg = typeof _AssessmentsEp;
 export type AssessmentsInputType = NonNullable<_AssessmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssessmentsCfg['execute']>[0]['input'];
 export type AssessmentsOutputType = Awaited<ReturnType<_AssessmentsCfg['execute']>>;
 export const assessments = createCaller<AssessmentsInputType, AssessmentsOutputType>('assessments');
+
+type _AssignmentsCfg = typeof _AssignmentsEp;
+export type AssignmentsInputType = NonNullable<_AssignmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssignmentsCfg['execute']>[0]['input'];
+export type AssignmentsOutputType = Awaited<ReturnType<_AssignmentsCfg['execute']>>;
+export const assignments = createCaller<AssignmentsInputType, AssignmentsOutputType>('assignments');
 
 type _CourseAccessibilityCfg = typeof _CourseAccessibilityEp;
 export type CourseAccessibilityInputType = NonNullable<_CourseAccessibilityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseAccessibilityCfg['execute']>[0]['input'];
@@ -170,6 +176,7 @@ export const api = {
   academicStanding,
   appDirectory,
   assessments,
+  assignments,
   courseAccessibility,
   courseDiscussion,
   courseGroups,

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { holdsFor } from '../lib/holdServer';
 import { requireAccess, first, ids, tenantScope, inSet } from '../lib/server';
 
 export default createEndpoint({
@@ -19,10 +20,12 @@ export default createEndpoint({
       zite.appointments.findAll({ filters: { attendee: uid, status: 'Booked' }, limit: 50 }),
     ]);
     const tenant = await tenantScope(a.institutionId);
+    // Holds come from the Student Holds record (what registration enforces), never from tasks.
+    const holdViews = await holdsFor(uid);
     approvals.records = approvals.records.filter((t) => inSet(t.requestedBy, tenant.members));
     const secLabel = Object.fromEntries(sections.records.map((s) => [s.id, (s.label ?? '').split(' · ').slice(0, 1).join('')]));
     const tasks = mine.records
-      .filter((t) => t.type !== 'Approval Request')
+      .filter((t) => t.type !== 'Approval Request' && t.type !== 'Hold')
       .map((t) => ({
         id: t.id, title: t.title ?? '', type: t.type ?? 'Personal', source: t.source ?? 'Yours', status: t.status ?? 'Open',
         dueAt: t.dueAt ?? null, course: secLabel[first(t.section) ?? ''] ?? '', parentId: first(t.parentTask) ?? null,
@@ -38,10 +41,10 @@ export default createEndpoint({
     const asOf = new Date(now).toISOString();
     const open = tasks.filter((t) => t.status === 'Open' && !t.parentId);
     const actions = [
-      ...open.filter((t) => t.type === 'Hold').map((t) => ({
-        id: t.id, priority: 1, title: t.title, state: 'Blocked',
-        reason: 'A hold can stop registration and official requests.',
-        source: t.owningOffice.split(' · ')[0] || 'Institution office', handoff: true,
+      ...holdViews.map((h) => ({
+        id: h.id, priority: 1, title: h.title, state: 'Blocked',
+        reason: h.message || (h.blocksRegistration ? 'This hold blocks registration.' : 'A hold can stop official requests.'),
+        source: h.office, handoff: true,
         permittedAction: 'Contact the owning office', link: '/help',
         recovery: 'Only the owning office can clear a hold. Semester shows it cleared once the office confirms.',
       })),

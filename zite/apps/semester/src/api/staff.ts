@@ -101,17 +101,18 @@ export default createEndpoint({
       const a = await requireAction(uid, 'accounts.read');
       const tenant = await tenantScope(a.institutionId);
       if (input.action === 'requestHoldRelease') {
-        const h = await zite.tasks.findOne({ id: input.holdId });
-        if (!h || h.type !== 'Hold' || h.status === 'Done' || !inSet(h.owner, tenant.members)) forbid('This hold is no longer active.');
-        await audit(a, 'Hold release requested', `task:${h!.id}`, input.reason, a.roles.join(', '));
-        await zite.tasks.create({ record: { title: `Release hold: ${h!.title}`, type: 'Approval Request', status: 'Pending Approval', requestedBy: uid, owningOffice: h!.owningOffice ?? 'Student Accounts', rubric: `hold:${h!.id} ${input.reason}`, source: 'Made Here' } as never });
+        // Student accounts staff ask; the owning office lifts the hold in Institution → Holds (institutionOps releaseHold).
+        const h = await zite.studentHolds.findOne({ id: input.holdId });
+        if (!h || h.status !== 'Active' || first(h.institution) !== a.institutionId) forbid('This hold is no longer active.');
+        await audit(a, 'Hold release requested', `studentHold:${h!.id}`, input.reason, a.roles.join(', '));
+        await zite.tasks.create({ record: { title: `Release hold: ${h!.label ?? 'Hold'}`, type: 'Approval Request', status: 'Pending Approval', requestedBy: uid, owningOffice: h!.originatingOffice ?? 'Student Accounts', rubric: `hold:${h!.id} ${input.reason}`, source: 'Made Here' } as never });
         return { ok: true };
       }
-      const records = (await zite.tasks.findAll({ filters: { type: 'Hold' }, limit: 2000 })).records.filter((h) => inSet(h.owner, tenant.members));
+      const records = (await zite.studentHolds.findAll({ filters: { institution: a.institutionId }, limit: 2000 })).records;
       const pend = (await zite.tasks.findAll({ filters: { type: 'Approval Request', status: 'Pending Approval' }, limit: 300 })).records;
-      const names = await userNames(records.map((t) => first(t.owner) ?? ''));
+      const names = await userNames(records.map((t) => first(t.student) ?? ''));
       return {
-        holds: records.map((h) => ({ id: h.id, title: h.title ?? '', student: names[first(h.owner) ?? ''] ?? 'Student', office: h.owningOffice ?? '', status: h.status ?? 'Open', source: h.source ?? '', releasePending: pend.some((p) => (p.rubric ?? '').includes(`hold:${h.id}`)) })),
+        holds: records.map((h) => ({ id: h.id, title: h.label ?? 'Hold', student: names[first(h.student) ?? ''] ?? 'Student', office: h.originatingOffice ?? '', status: h.status === 'Active' ? 'Open' : 'Done', source: 'Official', releasePending: pend.some((p) => (p.rubric ?? '').includes(`hold:${h.id}`)) })),
       };
     }
 

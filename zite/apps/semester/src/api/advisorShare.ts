@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { holdsFor } from '../lib/holdServer';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
 import { ADVISOR_CATEGORIES, liveShares, shareBlocker, shareLabel, ConsentRow } from '../lib/shares';
 
@@ -61,7 +62,7 @@ export default createEndpoint({
     const sid = share!.studentId;
     const [enr, holds, agenda, secs, courses] = await Promise.all([
       can('Degree progress') || can('Registration plan') ? zite.enrollments.findAll({ filters: { student: sid }, limit: 500 }) : null,
-      can('Holds') ? zite.tasks.findAll({ filters: { owner: sid, type: 'Hold' }, limit: 50 }) : null,
+      can('Holds') ? holdsFor(sid) : null,
       can('Advising agenda') ? zite.resources.findOne({ filters: { owner: sid, title: 'Advising agenda' } }) : null,
       zite.sections.findAll({ limit: 2000, fields: ['label', 'course', 'term'] }),
       zite.courses.findAll({ limit: 2000, fields: ['code', 'title', 'credits'] }),
@@ -81,7 +82,7 @@ export default createEndpoint({
         completed: done.map((e) => ({ id: e.id, code: course(e)?.code ?? '', title: course(e)?.title ?? '', grade: e.finalGrade ?? '', term: sById[first(e.section) ?? '']?.term ?? '', source: e.source ?? '' })),
       } : null,
       plan: can('Registration plan') ? mine.filter((e) => ['Planned', 'Requested', 'Enrolled', 'Waitlisted'].includes(e.status ?? '')).map((e) => ({ id: e.id, code: course(e)?.code ?? '', title: course(e)?.title ?? '', term: sById[first(e.section) ?? '']?.term ?? '', status: e.status ?? '' })) : null,
-      holds: holds ? holds.records.filter((h) => h.status === 'Open').map((h) => ({ id: h.id, title: h.title ?? '', office: h.owningOffice ?? '', source: h.source ?? '' })) : null,
+      holds: holds ? holds.map((h) => ({ id: h.id, title: h.title, office: h.office, source: 'Official' })) : null,
       agenda: can('Advising agenda') ? (agenda && agenda.visibility !== 'Only Me' ? { body: agenda.body ?? '', updated: null } : { body: null, updated: null }) : null,
     };
   },

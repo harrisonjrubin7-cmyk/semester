@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { holdsFor } from '../lib/holdServer';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
 import { pg } from '../lib/pg';
 import { ensureApt } from '../lib/aptServer';
@@ -122,7 +123,7 @@ export default createEndpoint({
       zite.appointments.findAll({ filters: { status: 'Open Slot' }, limit: 100 }),
       zite.appointments.findAll({ filters: { attendee: uid }, limit: 100 }),
       zite.cases.findAll({ filters: { student: uid }, limit: 100 }),
-      zite.tasks.findAll({ filters: { owner: uid, type: 'Hold' }, limit: 20 }),
+      holdsFor(uid),
     ]);
     const now = new Date().toISOString();
     const tenant = await tenantScope(a.institutionId);
@@ -142,7 +143,7 @@ export default createEndpoint({
         .sort((x, y) => (x.startsAt ?? '').localeCompare(y.startsAt ?? '')),
       booked: mine.records.filter((s) => s.status === 'Booked').map((s) => ({ id: s.id, label: s.label ?? '', startsAt: s.startsAt ?? null })),
       cases: myCases.records.map(caseRow),
-      holds: holds.records.filter((h) => h.status === 'Open').map((h) => ({ id: h.id, title: h.title ?? '', office: h.owningOffice ?? '' })),
+      holds: holds.map((h) => ({ id: h.id, title: h.title, office: h.office })),
       isStaff, roles: a.roles, caseload, team,
     };
   },

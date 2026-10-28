@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { holdsFor } from '../lib/holdServer';
 import { requireAccess, ids, first, forbid, audit, tenantScope } from '../lib/server';
 import { computeReadiness, firstBlocker } from '../lib/readiness';
 import { submitOutcome } from '../lib/registrarRules';
@@ -80,7 +81,7 @@ export default createEndpoint({
       zite.courses.findAll({ limit: 2000 }),
       zite.enrollments.findAll({ filters: { student: uid }, limit: 500 }),
       zite.tasks.findAll({ filters: { requestedBy: uid, type: 'Approval Request' }, limit: 200 }),
-      zite.tasks.findAll({ filters: { owner: uid, type: 'Hold', status: 'Open' }, limit: 20 }),
+      holdsFor(uid),
     ]);
     const courseById = Object.fromEntries(courses.records.filter((c) => tenant.courses.has(c.id)).map((c) => [c.id, c]));
     const secById = Object.fromEntries(secs.records.filter((s) => tenant.sections.has(s.id)).map((s) => [s.id, s]));
@@ -101,7 +102,7 @@ export default createEndpoint({
       const conflicts = planned.filter((o) => o.id !== e.id && overlaps(d.times, secById[first(o.section)!]?.meetingTimes ?? '')).map((o) => describe(first(o.section)!).code);
       return { enrollmentId: e.id, ...d, conflicts };
     });
-    const holds = holdsRes.records.map((h) => h.title ?? 'Hold');
+    const holds = holdsRes.filter((h) => h.blocksRegistration).map((h) => h.title);
     const readiness = computeReadiness(draft, holds);
 
     if (input.action === 'submit') {
