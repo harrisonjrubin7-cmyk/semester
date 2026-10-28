@@ -4,7 +4,7 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
 
-57 controls across 8 families, each mapped to the product domains it covers. 11 are enforced, 34 partial, 4 documented and 8 absent.
+57 controls across 8 families, each mapped to the product domains it covers. 11 are enforced, 35 partial, 4 documented and 7 absent.
 
 **What the states mean.** They describe the repository and nothing else. *Enforced* means a test, a database check or a workflow fails when the control is removed. *Partial* means that is true for part of the surface, or true in the tree and not switched on where it matters; the gap says which. *Documented* means it is written down and nothing fails if it is ignored. *Absent* means neither. There is no state for "operating in production": the master register lets no row past `tested` without a file under `docs/evidence/`, and this register follows it. An enforced control is not evidence that the thing was done, only that a build would notice if it were undone.
 
@@ -14,19 +14,19 @@ Every control that is not enforced has an item in the [remediation sequence](REM
 
 | Domain | Enforced | Partial | Documented | Absent |
 | --- | ---: | ---: | ---: | ---: |
-| Identity and tenancy | 7 | 21 | 2 | 6 |
-| Academic core and records | 10 | 17 | 2 | 6 |
-| Learning and assessment | 7 | 16 | 2 | 6 |
-| Productivity and documents | 7 | 18 | 2 | 6 |
-| AI assistant, tutor and advisor | 7 | 17 | 3 | 6 |
-| Campus life and community | 6 | 20 | 2 | 8 |
-| Family and guardian | 6 | 16 | 2 | 6 |
-| Finance and payments | 8 | 16 | 2 | 6 |
-| Career and alumni | 7 | 16 | 2 | 6 |
-| Marketplace and partners | 6 | 15 | 2 | 7 |
-| Institution console and support | 7 | 19 | 3 | 6 |
-| Trust, safety and support | 8 | 21 | 3 | 6 |
-| Mobile and offline | 6 | 14 | 2 | 6 |
+| Identity and tenancy | 7 | 22 | 2 | 5 |
+| Academic core and records | 10 | 18 | 2 | 5 |
+| Learning and assessment | 7 | 17 | 2 | 5 |
+| Productivity and documents | 7 | 19 | 2 | 5 |
+| AI assistant, tutor and advisor | 7 | 18 | 3 | 5 |
+| Campus life and community | 6 | 21 | 2 | 7 |
+| Family and guardian | 6 | 17 | 2 | 5 |
+| Finance and payments | 8 | 17 | 2 | 5 |
+| Career and alumni | 7 | 17 | 2 | 5 |
+| Marketplace and partners | 6 | 16 | 2 | 6 |
+| Institution console and support | 7 | 20 | 3 | 5 |
+| Trust, safety and support | 8 | 22 | 3 | 5 |
+| Mobile and offline | 6 | 15 | 2 | 5 |
 
 Controls that apply to all domains count in every row. No domain reads as fully enforced; the next page, [domain requirements](DOMAIN-REQUIREMENTS.md), says what each domain still needs.
 
@@ -37,9 +37,9 @@ Controls that apply to all domains count in every row. No domain reads as fully 
 | TC-SEC-01 | Every table has row-level security, every client-callable definer function pins its search path, and no anonymous role can execute one. | all | database-check | enforced | [rls-coverage.check.sql](../../supabase/rls-coverage.check.sql)<br>[definer-sweep.check.sql](../../supabase/definer-sweep.check.sql)<br>[grants.check.sql](../../supabase/grants.check.sql) | No FORCE ROW LEVEL SECURITY declaration exists in the migrations; the suites run in CI on PostgreSQL 17 but could not be run on the last local validation host. | security |
 | TC-SEC-02 | A profile cannot move itself between tenants, and the integration tables are read through a four-account matrix. | Identity and tenancy, Institution console and support | database-check | partial | [tenancy.check.sql](../../supabase/tenancy.check.sql)<br>[integration-rls-matrix.check.sql](../../supabase/integration-rls-matrix.check.sql) | Tenant scoping of classmates, rooms and groups is open (G-03 in SECURITY-THREAT-MODEL.md) and legacy-table coverage is incomplete; no cross-tenant test spans cache, search, queue and storage together. | security |
 | TC-SEC-03 | The institutional gateway checks origin, bearer token, membership on every request, body size and a per-user rate limit before it acts. | Identity and tenancy, Academic core and records, Finance and payments, Institution console and support | code-test | partial | [gateway.test.ts](../../app/server/institution/gateway.test.ts)<br>[auth.test.ts](../../app/server/institution/auth.test.ts)<br>[membership.test.ts](../../app/server/institution/membership.test.ts)<br>[rate-limit.test.ts](../../app/server/institution/rate-limit.test.ts) | The gateway is not deployed and the hourly production probe for it is unconfigured, so nothing shows it operating. | engineering |
-| TC-SEC-04 | Every Edge Function is registered with a guard kind and the source must carry evidence for it. | all | code-test | partial | [edgeguards.test.ts](../../app/src/lib/edgeguards.test.ts) | Proves a guard is present, not that it is correct; all sixteen functions set verify_jwt = false and rely on their own checks. | security |
+| TC-SEC-04 | Every Edge Function is registered with a guard kind, source evidence and an executed behavior-proof test. | all | code-test | partial | [edgeguards.test.ts](../../app/src/lib/edgeguards.test.ts)<br>[edgeentryauth.test.ts](../../app/src/lib/edgeentryauth.test.ts) | All eighteen functions set verify_jwt = false and rely on their own checks. Twelve use direct handler behavior tests; six inline Deno entrypoints use ordered source mutation controls, not an authenticated deployed-function exercise. | security |
 | TC-SEC-05 | Secrets are scanned on the diff and the whole tree, and dependencies are audited, on every change. | all | ci | partial | [ci.yml](../../.github/workflows/ci.yml) | Candidate CI blocks high and critical advisories with dated no-fix exceptions; required-check enforcement on main is not verified. | security |
-| TC-SEC-06 | Static analysis of first-party code for injection, authorization and cryptography defects. | all | process | absent | see [SECURITY-TESTING-PLAN.md](../trust/SECURITY-TESTING-PLAN.md) | No CodeQL, Semgrep or equivalent runs in any workflow; Dependabot does not cover Deno imports. | security |
+| TC-SEC-06 | Static analysis of first-party code for injection, authorization and cryptography defects. | all | ci | partial | [codeql.yml](../../.github/workflows/codeql.yml)<br>[securityprogram.test.ts](../../app/src/lib/securityprogram.test.ts)<br>see [SECURITY-TESTING-PLAN.md](../trust/SECURITY-TESTING-PLAN.md) | CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available. It does not establish Deno dependency freshness, authenticated runtime coverage or independent review. | security |
 | TC-SEC-07 | Authenticated dynamic scanning of the application, the database API, the Edge Functions and the gateway. | all | ci | partial | [hawkscan.yml](../../.github/workflows/hawkscan.yml) | The scan covers a static preview of the built app and a company-site fixture only; it is unauthenticated and does not touch Supabase, the functions or the gateway. | security |
 | TC-SEC-08 | High-impact console actions need two different approvers, and the audit row is written before the action and never swallowed. | Institution console and support, Trust, safety and support | database-check | enforced | [console-approvals.check.sql](../../supabase/console-approvals.check.sql)<br>[console-control-plane.check.sql](../../supabase/console-control-plane.check.sql) | — | security |
 | TC-SEC-09 | Break-glass access is opened only from an approved two-person request, expires within four hours and must be reviewed by someone else. | Institution console and support, Trust, safety and support | database-check | partial | [console-control-plane.check.sql](../../supabase/console-control-plane.check.sql) | private.break_glass_active is defined and consumed by nothing, so a grant is an authorization record and review gate that widens no access; the security seat that must co-approve is vacant. | security |

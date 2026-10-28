@@ -196,9 +196,9 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-15', before: 'pilot', owner: 'security', effort: 'M',
     title: 'Static analysis, Deno dependency updates and function behaviour tests',
-    finding: 'No CodeQL or Semgrep runs, Dependabot does not cover Deno imports, video, pipeline or packages, and the Edge Function registry proves a guard is present rather than that it works.',
-    sources: ['.github/dependabot.yml', 'docs/trust/SECURITY-TESTING-PLAN.md'],
-    fix: 'Add a code-scanning workflow on pull requests; extend the update configuration; give each of the sixteen functions a test of its own verification, not only the registry entry.',
+    finding: 'CodeQL now runs on pull requests and weekly where GitHub code scanning is available, and every one of the eighteen Edge Functions names an executed behavior proof; six inline Deno entrypoints also have ordered mutation controls that require rejection before protected work. Dependabot still does not cover Deno imports, video, pipeline or workflow-lab, and the inline controls are source contracts rather than an authenticated deployed-function exercise.',
+    sources: ['.github/workflows/codeql.yml', '.github/dependabot.yml', 'app/src/lib/edgeguards.ts', 'app/src/lib/edgeentryauth.test.ts', 'docs/trust/SECURITY-TESTING-PLAN.md'],
+    fix: 'Keep the CodeQL and per-function behavior-proof contracts blocking; add a maintained update path for Deno and the omitted package trees; replace the six inline source contracts with executable handler tests when their entrypoints are made importable; retain authenticated target testing under TR-16.',
     moves: ['TC-SEC-06', 'TC-SEC-04'],
     files: 'The first scan result.',
   },

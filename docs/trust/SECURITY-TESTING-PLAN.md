@@ -9,9 +9,9 @@
 
 | Layer | Required coverage | Code/config evidence | Operational evidence | Status | Missing test/proof |
 | --- | --- | --- | --- | --- | --- |
-| static/source/supply chain | secrets, dependencies, licenses, workflow provenance, secure patterns | CI and supply-chain tests | current release evidence exists for selected scans | `PARTIAL` | full SAST/IaC and signed provenance |
+| static/source/supply chain | secrets, dependencies, licenses, workflow provenance, secure patterns | CI and supply-chain tests; CodeQL `security-extended`; one declared behavior proof for every Edge Function guard | current release evidence exists for selected scans | `PARTIAL` | Deno and omitted package-tree update automation, IaC coverage and signed provenance |
 | database/authorization | RLS, tenant/account/resource isolation, privilege, definer functions, deletion/hold | database policy suites | no named-tenant target acceptance | `VERIFIED — REPOSITORY` | target negative matrix |
-| API/edge/integrations | auth, IDOR, replay, webhook/signature, SSRF, rate limit, scope, error handling | unit/integration/policy tests | no complete deployed target exercise | `PARTIAL` | authenticated target suite |
+| API/edge/integrations | auth, IDOR, replay, webhook/signature, SSRF, rate limit, scope, error handling | unit/integration/policy tests; direct handler tests for twelve Edge Functions and ordered source mutation controls for six inline Deno entrypoints | no complete deployed target exercise | `PARTIAL` | executable handler coverage for the six inline entrypoints and an authenticated target suite |
 | web/client | XSS, CSP, redirects, token handling, clickjacking, unsafe content/import | application/browser tests and headers | target configuration validation incomplete | `PARTIAL` | target DAST/manual testing |
 | identity/session/MFA | enumeration, fixation, refresh reuse, revoke, recovery, SSO/SCIM, step-up | identity/auth tests | console and named-IdP evidence absent | `PARTIAL` | target lifecycle/adversarial test |
 | AI/tooling | injection, data leakage, permission/tool escalation, kill switch, cost abuse | selected injection/model/policy tests | full approved-provider evaluation absent | `PARTIAL` | release-gating evaluation/red-team |

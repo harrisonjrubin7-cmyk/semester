@@ -164,11 +164,11 @@ Read at 2026-10-04. Each is opened with no answers: the seats that must give the
 
 | Capability | Touches | Questions | Blocking unresolved | Known gaps | Owed | Not yet reviewed | Verdict |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| CAP-041 Family | Holds personal data; Reachable by a minor or a guardian; Shares data with another person or party; Reads or writes an official record; Lets staff see or act on a student's data | 27 | 21 | 4 | 19 | 4 | **no-go** |
-| CAP-046 Money | Holds personal data; Moves or displays money; Reads or writes an official record; Depends on an external system | 27 | 21 | 4 | 18 | 5 | **no-go** |
-| CAP-047 Meal Plan | Holds personal data; Moves or displays money; Depends on an external system | 25 | 19 | 4 | 17 | 4 | **no-go** |
-| CAP-048 Housing | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 4 | 17 | 5 | **no-go** |
-| CAP-050 Registration | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 4 | 17 | 5 | **no-go** |
+| CAP-041 Family | Holds personal data; Reachable by a minor or a guardian; Shares data with another person or party; Reads or writes an official record; Lets staff see or act on a student's data | 27 | 21 | 3 | 20 | 4 | **no-go** |
+| CAP-046 Money | Holds personal data; Moves or displays money; Reads or writes an official record; Depends on an external system | 27 | 21 | 3 | 19 | 5 | **no-go** |
+| CAP-047 Meal Plan | Holds personal data; Moves or displays money; Depends on an external system | 25 | 19 | 3 | 18 | 4 | **no-go** |
+| CAP-048 Housing | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 3 | 18 | 5 | **no-go** |
+| CAP-050 Registration | Holds personal data; Reads or writes an official record; Depends on an external system | 26 | 20 | 3 | 18 | 5 | **no-go** |
 
 ### CAP-041 Family
 
