@@ -182,7 +182,7 @@ export const CONTROLS: readonly Control[] = [
     state: 'partial',
     proof: ['.github/workflows/codeql.yml', 'app/src/lib/securityprogram.test.ts', 'app/src/lib/denodependencies.test.ts', 'app/src/lib/dependencyupdates.test.ts'],
     described: ['.github/dependabot.yml', 'docs/trust/SECURITY-TESTING-PLAN.md'],
-    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available, and Dependabot covers the root npm workspace, Workflow Lab, Starter, Video, Pipeline and every function-local Deno manifest and integrity lock. The broader Zite snapshot remains outside this updater; authenticated runtime coverage and independent review also remain open.',
+    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available, and Dependabot covers the root npm workspace, Workflow Lab, Starter, Video, Pipeline, the root Zite workspace lock and every function-local Deno manifest and integrity lock. The standalone Zite RLS verifier has no recurring updater, Zite executable compatibility is not a blocking repository check, and authenticated runtime coverage and independent review remain open.',
     owner: 'security',
   },
   {
