@@ -42,34 +42,41 @@ export interface EdgeGuard {
   guards: readonly Guard[];
   /** Source patterns that must all appear in `supabase/functions/<fn>/index.ts`. */
   evidence: readonly RegExp[];
+  /** Executed test that exercises, or mutation-checks, the declared credential boundary. */
+  behaviorProof: {
+    path: `app/src/${string}.test.ts`;
+    evidence: readonly RegExp[];
+  };
   /** Required when the guard is `public`. */
   why?: string;
 }
 
 const USER = [/\.auth\.getUser\(/] as const;
+const proof = (path: `app/src/${string}.test.ts`, ...evidence: RegExp[]): EdgeGuard['behaviorProof'] => ({ path, evidence });
 
 export const EDGE_GUARDS: readonly EdgeGuard[] = [
-  { fn: 'billing-cancel', guards: ['user-token'], evidence: USER },
-  { fn: 'billing-checkout', guards: ['user-token'], evidence: USER },
-  { fn: 'billing-portal', guards: ['user-token'], evidence: USER },
-  { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/] },
-  { fn: 'calendar', guards: ['link-token'], evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/] },
-  { fn: 'canvas', guards: ['user-token'], evidence: USER },
-  { fn: 'claude', guards: ['user-token'], evidence: USER },
-  { fn: 'delete-account', guards: ['user-token'], evidence: USER },
-  { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER },
-  { fn: 'fetchcal', guards: ['user-token'], evidence: USER },
-  { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/] },
-  { fn: 'access-saga-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/, /access_saga_tick_authorized/] },
-  { fn: 'ops-projector', guards: ['shared-secret'], evidence: [/OPS_PROJECTOR_SECRET/, /serveOpsProjector\(/] },
+  { fn: 'billing-cancel', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/billing/cancel.test.ts', /handleBillingCancel/, /status\)\.toBe\(401\)/) },
+  { fn: 'billing-checkout', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/billing/checkout.test.ts', /handleBillingCheckout/, /status\)\.toBe\(401\)/) },
+  { fn: 'billing-portal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/billing/portal.test.ts', /handleBillingPortal/, /status\)\.toBe\(401\)/) },
+  { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/], behaviorProof: proof('app/src/lib/billing/webhook.test.ts', /handleBillingWebhook/, /Stripe-Signature/) },
+  { fn: 'calendar', guards: ['link-token'], evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/], behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /calendar/, /read_feed/) },
+  { fn: 'canvas', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /canvas/, /getUser/) },
+  { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
+  { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },
+  { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /productivity-sourcecheck/, /getUser/) },
+  { fn: 'fetchcal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /fetchcal/, /getUser/) },
+  { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
+  { fn: 'access-saga-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/, /access_saga_tick_authorized/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
+  { fn: 'ops-projector', guards: ['shared-secret'], evidence: [/OPS_PROJECTOR_SECRET/, /serveOpsProjector\(/], behaviorProof: proof('app/src/lib/opsprojector.test.ts', /serveOpsProjector/, /status\)\.toBe\(401\)/) },
   {
     fn: 'lead-intake',
     guards: ['public'],
     evidence: [/rpc\('submit_site_lead'/],
+    behaviorProof: proof('app/src/lib/billing/leadintake.test.ts', /handleLeadIntake/, /fails closed on CORS/),
     why: 'A visitor to the public site has no account. The only write is submit_site_lead, which rate-limits and validates in the database (private.site_lead_hits).',
   },
-  { fn: 'lti', guards: ['flow-state'], evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/] },
-  { fn: 'push', guards: ['shared-secret'], evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/] },
-  { fn: 'support-reply-notify', guards: ['user-token', 'shared-secret'], evidence: [...USER, /CRON_SECRET/, /handleSupportNotice\(/] },
-  { fn: 'trust-room', guards: ['link-token'], evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/] },
+  { fn: 'lti', guards: ['flow-state'], evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/], behaviorProof: proof('app/src/lib/ltiverify.test.ts', /checkHeader/, /jwtVerify/) },
+  { fn: 'push', guards: ['shared-secret'], evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/], behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /push/, /CRON_SECRET/) },
+  { fn: 'support-reply-notify', guards: ['user-token', 'shared-secret'], evidence: [...USER, /CRON_SECRET/, /handleSupportNotice\(/], behaviorProof: proof('app/src/lib/supportnotify.test.ts', /handleSupportNotice/, /status\)\.toBe\(403\)/) },
+  { fn: 'trust-room', guards: ['link-token'], evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/], behaviorProof: proof('app/src/lib/trust/room-server.test.ts', /handleTrustRoom/, /not-a-token/) },
 ];

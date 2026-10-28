@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { EDGE_GUARDS } from './edgeguards';
@@ -43,6 +43,22 @@ describe('each function carries the evidence for its guard', () => {
     it(`${g.fn} (${g.guards.join(' or ')})`, () => {
       const src = source(g.fn);
       for (const e of g.evidence) expect(src, `${g.fn} should match ${e}`).toMatch(e);
+    });
+  }
+});
+
+describe('each function has an executed behavior proof for its credential boundary', () => {
+  for (const g of EDGE_GUARDS) {
+    it(`${g.fn} points to a specific runnable proof`, () => {
+      expect(g.behaviorProof.path).toMatch(/^app\/src\/.+\.test\.ts$/);
+      expect(g.behaviorProof.path).not.toBe('app/src/lib/edgeguards.test.ts');
+      const path = join(__dirname, '../../..', g.behaviorProof.path);
+      expect(existsSync(path), `${g.fn} proof ${g.behaviorProof.path} must exist`).toBe(true);
+      const test = readFileSync(path, 'utf8');
+      expect(g.behaviorProof.evidence.length, `${g.fn} proof needs an identifying assertion`).toBeGreaterThan(0);
+      for (const evidence of g.behaviorProof.evidence) {
+        expect(test, `${g.fn} proof should match ${evidence}`).toMatch(evidence);
+      }
     });
   }
 });
