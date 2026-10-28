@@ -97,6 +97,52 @@ export function courseEngineUpdateProblems(source: string): string[] {
   return problems;
 }
 
+export function courseEngineApiUpdateProblems(source: string): string[] {
+  const problems: string[] = [];
+  const block = updateBlocks(source).find((candidate) => /^\s*directory:\s*\/course-engine\/apps\/api\s*$/m.test(candidate));
+
+  if (!block) return ['Course Engine API has no dedicated dependency updater'];
+  if (!/^- package-ecosystem:\s*pip\s*$/m.test(block)) problems.push('Course Engine API updater does not use the pip ecosystem');
+  if (!/^\s*interval:\s*weekly\s*$/m.test(block)) problems.push('Course Engine API updater is not weekly');
+  if (!/^\s*open-pull-requests-limit:\s*[1-9]\d*\s*$/m.test(block)) problems.push('Course Engine API updater has no positive pull-request limit');
+  if (!/^\s*course-engine-api-minor-and-patch:\s*$/m.test(block)) problems.push('Course Engine API minor and patch updates are not grouped');
+  if (!/^\s*- '\*'\s*$/m.test(block)) problems.push('Course Engine API update group does not cover every dependency');
+  if (!/^\s*- minor\s*$/m.test(block) || !/^\s*- patch\s*$/m.test(block)) problems.push('Course Engine API update group does not cover both minor and patch updates');
+
+  return problems;
+}
+
+describe('Course Engine API dependency updates', () => {
+  it('holds a weekly, bounded updater beside the Python manifest', () => {
+    expect(existsSync(join(root, 'course-engine/apps/api/pyproject.toml'))).toBe(true);
+    expect(courseEngineApiUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
+  });
+
+  it('fails closed when the directory or pip ecosystem is removed', () => {
+    const source = read('.github/dependabot.yml');
+    expect(courseEngineApiUpdateProblems(source.replace('directory: /course-engine/apps/api', 'directory: /course-engine/apps/api-disabled'))).toContain(
+      'Course Engine API has no dedicated dependency updater',
+    );
+    expect(courseEngineApiUpdateProblems(source.replace(/(- package-ecosystem: )pip(\n\s+directory: \/course-engine\/apps\/api)/, '$1disabled$2'))).toContain(
+      'Course Engine API updater does not use the pip ecosystem',
+    );
+  });
+
+  it('fails closed when cadence, queue bounds or grouped update types drift', () => {
+    const source = read('.github/dependabot.yml');
+    const courseEngineApi = updateBlocks(source).find((block) => block.includes('directory: /course-engine/apps/api'))!;
+    expect(courseEngineApiUpdateProblems(source.replace(courseEngineApi, courseEngineApi.replace('interval: weekly', 'interval: monthly')))).toContain(
+      'Course Engine API updater is not weekly',
+    );
+    expect(courseEngineApiUpdateProblems(source.replace(courseEngineApi, courseEngineApi.replace('open-pull-requests-limit: 5', 'open-pull-requests-limit: 0')))).toContain(
+      'Course Engine API updater has no positive pull-request limit',
+    );
+    expect(courseEngineApiUpdateProblems(source.replace(courseEngineApi, courseEngineApi.replace('          - patch\n', '')))).toContain(
+      'Course Engine API update group does not cover both minor and patch updates',
+    );
+  });
+});
+
 describe('Course Engine dependency updates', () => {
   it('holds a weekly, bounded updater beside the standalone pnpm lockfile', () => {
     expect(existsSync(join(root, 'course-engine/apps/web/package.json'))).toBe(true);

@@ -33,8 +33,8 @@
 # deployed Edge Function. Other standalone package trees remain deliberately
 # out for now rather than forgotten:
 #
-#   · `course-engine/apps/api/` declares Python ranges in `pyproject.toml`
-#     but has no committed resolver lock or recurring updater.
+#   · `course-engine/apps/api/` declares Python ranges in `pyproject.toml` and
+#     now has a recurring updater, but still has no committed resolver lock.
 #   · `zite/docs/execution/rls/api/` is a standalone verification package
 #     outside the Zite workspace and has no committed lockfile.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
@@ -42,7 +42,9 @@
 #
 # The root app, Course Engine and standalone Workflow Lab have documented service boundaries;
 # Starter has its own policy, data-access and worker packages with dedicated CI.
-# Course Engine's web app has its own pnpm lockfile and dedicated CI. Video has
+# Course Engine's web app has its own pnpm lockfile and dedicated CI. Its
+# Python API is also checked by that CI, but its declared ranges are resolved
+# afresh because the API has no committed resolver lock. Video has
 # a separate npm lockfile and is installed and typechecked in the main CI
 # workflow. Pipeline has a separate npm lockfile for its course-production
 # scripts. Zite has one root workspace lockfile for its eight apps and shared
@@ -105,6 +107,34 @@ updates:
     open-pull-requests-limit: 5
     groups:
       course-engine-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone Course Engine Python API tree ───────────────────────
+  #
+  # The API declares PEP 621 dependency ranges in pyproject.toml. Dependabot
+  # can propose range changes, while the dedicated Course Engine CI installs
+  # those ranges on Python 3.12 and runs lint plus the SQLite/Postgres test
+  # matrix. There is no committed resolver lock, so this updater improves
+  # maintenance coverage without claiming reproducible transitive resolution.
+  # A proposal remains a repository candidate; it does not deploy the API,
+  # publish a course or activate a tenant.
+  - package-ecosystem: pip
+    directory: /course-engine/apps/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      course-engine-api-minor-and-patch:
         patterns:
           - '*'
         update-types:
