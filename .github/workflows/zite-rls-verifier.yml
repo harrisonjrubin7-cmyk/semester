@@ -2,7 +2,6 @@ name: Zite RLS verifier
 
 on:
   push:
-    branches: ['main']
     paths:
       - 'zite/docs/execution/rls/**'
       - '.github/workflows/zite-rls-verifier.yml'

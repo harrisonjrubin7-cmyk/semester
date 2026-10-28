@@ -9,6 +9,7 @@ const readWorkflow = () => readFileSync(workflowPath, 'utf8');
 function failures(workflow: string): string[] {
   const required = [
     ['manual exact-head dispatch', /^\s{2}workflow_dispatch:/m],
+    ['relevant pushes on stacked branches', /^\s{2}push:\n\s{4}paths:/m],
     ['verifier path filter', /'zite\/docs\/execution\/rls\/\*\*'/],
     ['self path filter', /'\.github\/workflows\/zite-rls-verifier\.yml'/],
     ['read-only token', /^permissions:\n\s+contents: read/m],
@@ -35,6 +36,7 @@ describe('the standalone Zite RLS verifier workflow', () => {
     ['SQL isolation suite', 'bash test.sh 127.0.0.1 5432', 'true'],
     ['typecheck', 'npm run typecheck', 'true'],
     ['tests', 'run: npm test', 'run: echo skipped'],
+    ['stacked-branch push coverage', 'push:\n    paths:', "push:\n    branches: ['main']\n    paths:"],
   ])('rejects removal of the %s', (_name, held, replacement) => {
     expect(failures(readWorkflow().replace(held, replacement))).not.toEqual([]);
   });
