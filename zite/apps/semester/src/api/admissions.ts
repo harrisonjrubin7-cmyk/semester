@@ -4,10 +4,12 @@ import { zite } from 'zitejs/db';
 import { requireAction, first, forbid, audit, userNames } from '../lib/server';
 import { pg } from '../lib/pg';
 import { ADM_MIGRATION, ADM_DECISIONS } from '../lib/admMigration';
+import { APK_MIGRATION } from '../lib/apkMigration';
+import { ensureFil } from '../lib/filServer';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
-const ensure = () => { if (!ready) ready = (async () => { for (const q of ADM_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
+const ensure = () => { if (!ready) ready = (async () => { for (const q of [...ADM_MIGRATION, ...APK_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const call = async (q: string, p: unknown[]) => { const r = String(((await pg().query(q, p)) as Row[])[0].r); if (!r.startsWith('ok')) forbid(r); return r; };
 
 export default createEndpoint({
@@ -18,6 +20,7 @@ export default createEndpoint({
     z.object({ action: z.literal('assign'), id: z.string(), reviewerId: z.string() }),
     z.object({ action: z.literal('draft'), id: z.string(), decision: z.enum(ADM_DECISIONS), internalNote: z.string().max(4000), message: z.string().max(2000), expectedVersion: z.number().int() }),
     z.object({ action: z.literal('release'), id: z.string(), expectedVersion: z.number().int() }),
+    z.object({ action: z.literal('openDocument'), id: z.string(), fileId: z.string().uuid() }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -33,6 +36,20 @@ export default createEndpoint({
     };
     const review = async (id: string) => ((await pg().query(`SELECT * FROM adm_reviews WHERE application_id = $1 AND tenant_id = $2`, [id, T])) as Row[])[0];
 
+    if (input.action === 'openDocument') {
+      // Same visibility as the queue: an administrator, or the reviewer assigned to this submitted application.
+      const r = await app(input.id);
+      const rv = await review(r.id);
+      if (!isAdmin && rv?.reviewer_id !== a.userId) forbid('Only the assigned reviewer or an administrator can open this document.');
+      const d = ((await pg().query(`SELECT owner_id FROM apk_documents WHERE application_id = $1 AND file_id = $2 AND tenant_id = $3`, [r.id, input.fileId, T])) as Row[])[0];
+      if (!d) forbid('That document isn’t on this application.');
+      await ensureFil();
+      // The file store authorises its owner; the check above is what lets staff read it, and the read is logged.
+      const f = ((await pg().query(`SELECT name, mime, encode(bytes, 'base64') AS b64 FROM fil_read($1,$2,$3)`, [T, input.fileId, String(d.owner_id)])) as Row[])[0];
+      if (!f) forbid('This file is not available.');
+      await audit(a, 'Application document opened', `application:${r.id}`, String(f.name), a.roles.join(', '));
+      return { name: String(f.name), mime: String(f.mime), base64: String(f.b64).replace(/\n/g, '') };
+    }
     if (input.action === 'assign') {
       const r = await app(input.id);
       const reviewer = (await zite.memberships.findAll({ filters: { member: input.reviewerId }, limit: 20 })).records
@@ -76,6 +93,7 @@ export default createEndpoint({
     const { records } = await zite.applications.findAll({ filters: { institution: T }, limit: 500 });
     const reviews = (await pg().query(`SELECT * FROM adm_reviews WHERE tenant_id = $1`, [T])) as Row[];
     const rv = (id: string) => reviews.find((x) => x.application_id === id);
+    const pdocs = (await pg().query(`SELECT application_id, file_id, filename FROM apk_documents WHERE tenant_id = $1`, [T])) as Row[];
     const live = records.filter((r) => !['Draft'].includes(r.status ?? '')).filter((r) => isAdmin || rv(r.id)?.reviewer_id === a.userId);
     const staff = isAdmin ? (await zite.memberships.findAll({ filters: { institution: T }, limit: 500 })).records
       .filter((m) => m.status === 'Active' && (m.roles ?? []).some((x) => x === 'Staff' || x === 'Administrator')).map((m) => first(m.member)!).filter(Boolean) : [];
@@ -87,7 +105,7 @@ export default createEndpoint({
         const x = rv(r.id);
         return {
           id: r.id, applicant: names[first(r.applicant) ?? ''] ?? 'Applicant', applicantId: first(r.applicant) ?? '', program: r.program ?? '', entryTerm: r.entryTerm ?? '', status: r.status ?? '',
-          statement: r.statement ?? '', documents: ((r.documents as { url: string; filename: string }[] | undefined) ?? []).map((d) => ({ url: d.url, filename: d.filename })), submittedAt: r.submittedAt ?? null,
+          statement: r.statement ?? '', documents: pdocs.filter((d) => d.application_id === r.id).map((d) => ({ fileId: String(d.file_id), filename: String(d.filename) })), submittedAt: r.submittedAt ?? null,
           review: x ? { reviewer: names[String(x.reviewer_id)] ?? 'Staff', mine: x.reviewer_id === a.userId, state: String(x.state), version: Number(x.version),
             decision: x.decision ? String(x.decision) : null, internalNote: String(x.internal_note ?? ''), message: String(x.applicant_message ?? '') } : null,
         };

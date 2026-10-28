@@ -273,3 +273,70 @@ Evidence:
 - Employers: interviews, offers, talent network, events, projects, mentoring, team roles (recruiter, interviewer and so
   on), and per-posting re-review.
 - Family: shared tasks and documents, and the invitation-acceptance step (sharing is currently by email match).
+
+## Ninth increment, 28 Oct: Applicants on the shared shell, with versioned submission packages (owner source S-90)
+
+S-90 asks for Applicants to be the admissions and enrollment-entry experience inside Semester. Its first milestone is a
+real journey: start, complete the requirements, preview the exact package, submit, get an authoritative receipt, and
+see the checklist update.
+
+Now:
+- **Shell.** Applicants uses the shared AppShell, with Today, Explore → Programs and Apply → Applications.
+- **Today.** It names the next action and why (for example, "Still missing: transcript"), shows draft and received
+  counts, and lists recent decisions.
+- **Programs.** It lists only programs that institutions published, and "Start an application" prefills the choice.
+- **Operating modes (S-90 §2).**
+  - An institution with a published, accepting program takes applications through Semester ("native").
+  - Any other institution is "planning": the copy says to submit through its own channel, and submit is refused.
+- **Submit.**
+  - "Review & submit" shows exactly what the institution receives and requires an attestation.
+  - `apk_submit` accepts only a package whose hash matches the preview, once per request key, and once per
+    application.
+  - The package is append-only. In native mode the package row is the institution's receipt, so the receipt is recorded
+    in the same transaction.
+- **Status.** Each application shows four separate dimensions: preparation, delivery, processing and decision.
+  "Received" appears only with a receipt.
+
+Evidence:
+- `apps/semester/dbchecks/applicationPackages.ts`: 11/11. Two mutants are caught: submitting an unpreviewed package,
+  and a planning-mode institution receiving a submission.
+- `apps/semester/tests/applicationRules.test.ts`: 4/4.
+- Real accounts, 6/6. The test application was deleted afterwards. In that run, the forged-preview submit was refused
+  for the missing transcript first, so the preview match is proven by the database check.
+
+**NOT RUN:** a real native submission end to end, which needs a catalog manager to publish a program at Northgate, and
+browser screenshots.
+
+**Fixed the same day (it was against a standing rule):** application documents no longer upload to public-by-link
+storage.
+- They are screened and stored in the private file store (`fil_*`), linked to the application in `apk_documents`.
+- The package references file ids, not links.
+- The applicant opens their own documents. Staff open them through admissions only as an administrator or the assigned
+  reviewer, and each read is logged.
+- Earlier public-link uploads are listed as legacy and never sent.
+
+Real accounts, 10/10:
+
+| # | Step | Result |
+|---|---|---|
+| P1 | A PDF with JavaScript is refused and never stored | PASS |
+| P2 | A clean transcript is stored in the private file store | PASS |
+| P3 | It is screened and marked clean | PASS |
+| P4 | The applicant opens their own document | PASS |
+| P5 | Another person cannot open it | PASS |
+| P6 | An instructor cannot open it through admissions | PASS |
+| P7 | The application lists the document (no link) and the checklist is complete | PASS |
+| P8 | The package references the private file id | PASS |
+| P9 | With a valid preview, a planning-mode institution still cannot receive it | PASS |
+| P10 | A forged preview hash is refused | PASS |
+
+In P10 the planning-mode refusal came first, so the forged-hash rule rests on the database check (K4). The test file
+and application were deleted afterwards.
+
+**Not built from S-90 yet:**
+- recommendations;
+- the writing workspace with version history;
+- costs and fees;
+- offer response and enrollment conditions;
+- applicant-scoped family sharing;
+- connected-admissions connectors.
