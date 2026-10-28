@@ -114,6 +114,10 @@ DONE 27 Oct: Group work at /campus/groupwork. A shared part list per course grou
 past-due and unowned counts. Membership is read from grp_members inside each function; owners must be in the group; only the
 creator removes a part; every change goes to an append-only log. Instructors of the section read the list and log, never edit.
 DB check 15/15; tenant and owner mutants fail. Remaining Semester tool not built: Diagram builder.
+DONE 27 Oct (owner SIS/LMS replacement spec, §16 first increment): course grade → released → certified → official
+revision (ogr_*, aum_* authority modes; DB check 32/32 + 3 mutants), gradebook setFinal now proposes only, last-seat race run
+against reg_decide (20-way → 1 seat; unlocked control → 6), six-status replacement register. See SIS_LMS_REPLACEMENT.md.
+OPEN: zite.permissions.json has no defaultPolicy (direct table access unverified) — owner decision; live 2-person run blocked.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

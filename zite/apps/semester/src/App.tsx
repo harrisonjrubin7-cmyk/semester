@@ -73,6 +73,7 @@ import Deck from './pages/Deck';
 import Proof from './pages/Proof';
 import Paper from './pages/Paper';
 import GroupWork from './pages/GroupWork';
+import FinalGrades from './pages/FinalGrades';
 import { AppSwitcher } from './components/AppSwitcher';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
@@ -142,6 +143,7 @@ export default function App() {
             <Route path="/help/advising" element={<Advising />} />
             <Route path="/campus/community" element={<Community />} />
             <Route path="/campus/groupwork" element={<GroupWork />} />
+            <Route path="/records/final-grades" element={<FinalGrades />} />
             <Route path="/campus/places" element={<Maps />} />
             <Route path="/campus/accommodations" element={<Accommodations />} />
             <Route path="/campus/housing" element={<Housing />} />

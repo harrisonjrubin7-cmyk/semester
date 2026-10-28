@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { delegatedSections } from '../lib/teamServer';
+import { ensureOgr, one, propose } from '../lib/ogrServer';
 import { requireAction, requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
 
 const GRADES = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F', 'W', 'I'];
@@ -36,9 +37,14 @@ export default createEndpoint({
         if (!e || !secIds.has(first(e.section) ?? '')) forbid('You can only grade students in sections you teach.');
         if (!a.roles.includes('Faculty')) forbid('Only faculty set final grades.');
         if (e!.gradeReleased) forbid('This grade is already released. Changing it needs a regrade request to the Registrar.');
-        await audit(a, 'Final grade set', `enrollment:${e!.id}`, input.grade, 'Faculty');
-        await zite.enrollments.update({ id: e!.id, record: { finalGrade: input.grade } as never });
-        return { ok: true };
+        // Spec §4.4/§16: the gradebook proposes a course grade; it never writes the official grade. Release, certification
+        // and the registrar's official posting happen in api/officialGrades.ts.
+        await ensureOgr();
+        const cur = await one(`SELECT version::text AS r FROM ogr_proposals WHERE tenant_id = $1 AND enrollment_id = $2`, [a.institutionId, e!.id]);
+        const r = await propose(a.institutionId, uid, a.roles, e!.id, input.grade, cur ? Number(cur) : 0);
+        if (r && !r.startsWith('ok:')) forbid(r);
+        await audit(a, 'Course grade proposed', `enrollment:${e!.id}`, input.grade, 'Faculty');
+        return { ok: true, proposed: true };
       }
       const [enr, tasks] = await Promise.all([
         Promise.all(secs.map((s) => zite.enrollments.findAll({ filters: { section: s.id }, limit: 500 }))).then((r) => r.flatMap((x) => x.records)),

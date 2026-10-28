@@ -59,6 +59,7 @@ import type { default as _LibraryEp } from '../src/api/library';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
+import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _OrganizationsEp } from '../src/api/organizations';
 import type { default as _PapersEp } from '../src/api/papers';
@@ -384,6 +385,11 @@ export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> e
 export type OfficeHoursOutputType = Awaited<ReturnType<_OfficeHoursCfg['execute']>>;
 export const officeHours = createCaller<OfficeHoursInputType, OfficeHoursOutputType>('officeHours');
 
+type _OfficialGradesCfg = typeof _OfficialGradesEp;
+export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
+export type OfficialGradesOutputType = Awaited<ReturnType<_OfficialGradesCfg['execute']>>;
+export const officialGrades = createCaller<OfficialGradesInputType, OfficialGradesOutputType>('officialGrades');
+
 type _OnboardCfg = typeof _OnboardEp;
 export type OnboardInputType = NonNullable<_OnboardCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OnboardCfg['execute']>[0]['input'];
 export type OnboardOutputType = Awaited<ReturnType<_OnboardCfg['execute']>>;
@@ -638,6 +644,7 @@ export const api = {
   manageTask,
   migrationApproval,
   officeHours,
+  officialGrades,
   onboard,
   organizations,
   papers,
