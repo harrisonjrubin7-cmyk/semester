@@ -28,20 +28,26 @@
 #
 # ## Which directories
 #
-# `app/`, the workflows and every deployed Edge Function. The three other lockfiles here are deliberately
-# out for now rather than forgotten:
+# The root app workspace, Workflow Lab, the workflows and every deployed Edge
+# Function. Other standalone package trees remain deliberately out for now
+# rather than forgotten:
 #
 #   · `video/` installs in CI to be typechecked and renders nothing a student
 #     loads. Remotion pulls a large tree and a weekly sweep of it would be most
 #     of the noise for none of the exposure.
 #   · `pipeline/` runs at the repository root to validate course data, never in
 #     a browser and never against input from outside.
+#   · `starter/` is an independent pnpm/Turborepo reference backbone with its
+#     own CI. It is not part of the root npm lockfile.
+#   · `zite/` is a source snapshot of a separately owned builder workspace;
+#     repository updates do not activate the running Zite apps.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
 #     TypeScript in this repository, so they have no dependencies of their own.
 #
-# Only `app/` ships to a student's browser, so `app/` is where a vulnerable
-# transitive dependency is worth a weekly pull request. Adding the others is a
-# one-line change each if that judgement turns out to be wrong.
+# The root app and standalone Workflow Lab have documented service boundaries,
+# so both receive weekly update pull requests. The remaining local/reference
+# trees stay visible as accepted gaps until their ownership and exposure justify
+# separate update queues.
 version: 2
 
 updates:
@@ -72,6 +78,30 @@ updates:
       # with `update-types` is what scopes it: the group takes any package, but
       # only its minor and patch bumps.
       app-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone Workflow Lab tree ───────────────────────────────────
+  #
+  # Workflow Lab has its own package manifest, lockfile, CI workflow and
+  # documented service boundary. It is intentionally not a member of the root
+  # npm workspace, so the updater above cannot see its resolved tree.
+  - package-ecosystem: npm
+    directory: /workflow-lab
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      workflow-lab-minor-and-patch:
         patterns:
           - '*'
         update-types:

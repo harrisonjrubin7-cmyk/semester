@@ -154,11 +154,12 @@ describe('the workflows', () => {
     }
   });
 
-  it('keeps Actions and Edge Function dependencies updated alongside npm', () => {
+  it('keeps Actions, Workflow Lab and Edge Function dependencies updated alongside the root npm workspace', () => {
     const dependabot = read('.github/dependabot.yml');
     expect(dependabot).toMatch(/package-ecosystem: github-actions/);
     expect(dependabot).toMatch(/package-ecosystem: npm/);
     expect(dependabot).toMatch(/package-ecosystem: deno/);
+    expect(dependabot).toMatch(/directory: \/workflow-lab/);
     expect(dependabot).toMatch(/- \/supabase\/functions\/\*/);
   });
 
