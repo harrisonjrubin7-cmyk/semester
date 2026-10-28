@@ -1,3 +1,4 @@
+import { friendlyError } from '../lib/clientError';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { contextSession } from '../lib/contextSession';
 import { format } from 'date-fns';
@@ -153,4 +154,5 @@ export function Metric({ label, value, unit, source, updated }: { label: string;
   );
 }
 
-export function errMsg(e: unknown) { return e instanceof Error ? e.message : 'Something went wrong'; }
+/** Safe text for any endpoint failure (lib/clientError.ts): never internal authz strings, SQL or stack traces. */
+export function errMsg(e: unknown) { return friendlyError(e); }

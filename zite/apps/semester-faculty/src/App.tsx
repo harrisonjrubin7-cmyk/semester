@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { Home, Scale, CalendarClock, LogOut, GraduationCap, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked } from 'lucide-react';
+import { Home, Scale, CalendarClock, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked } from 'lucide-react';
 import { getWorkspace, GetWorkspaceOutputType } from 'zitejs/api';
-import { WorkspaceContext } from '../../semester/src/lib/workspace';
+import { WorkspaceContext, useWorkspace } from '../../semester/src/lib/workspace';
+import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import CourseStudio from '../../semester/src/pages/SectionPage';
 import { Gradebook, TAQueue } from '../../semester/src/pages/Staff';
 import Integrity from '../../semester/src/pages/Integrity';
@@ -13,24 +14,19 @@ import Curriculum from '../../semester/src/pages/Curriculum';
 import Guides from '../../semester/src/pages/Guides';
 import Sources from '../../semester/src/pages/Sources';
 import { SectionRequests } from '../../semester/src/pages/InstitutionHome';
-import { cn } from '@project/components/lib/utils';
 import Teaching from './pages/Teaching';
 import SectionPage from './pages/Section';
 import Regrades from './pages/Regrades';
 import OfficeHours from './pages/OfficeHours';
-import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
-const NAV = [
-  { to: '/', label: 'Teaching', icon: Home },
-  { to: '/regrades', label: 'Regrade requests', icon: Scale },
-  { to: '/office-hours', label: 'Office hours', icon: CalendarClock },
-  { to: '/queue', label: 'Grading queue', icon: Inbox },
-  { to: '/gradebook', label: 'Gradebook', icon: Table2 },
-  { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert },
-  { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
-  { to: '/curriculum', label: 'Curriculum', icon: BookMarked },
-  { to: '/guides', label: 'Study guides', icon: BookMarked },
-  { to: '/sources', label: 'Reading lists', icon: BookMarked },
+// Faculty navigation manifest (owner PDFs 28 Oct, Faculty IA). Only destinations that exist are listed; planned workspaces
+// (content & modules, announcements, teaching portfolio, research, workload…) are tracked in docs/execution/platform-build-plan-2026-10-28.md.
+const GROUPS: NavGroup[] = [
+  { group: null, items: [{ to: '/', label: 'Today', icon: Home, end: true }, { to: '/office-hours', label: 'Office hours', icon: CalendarClock }] },
+  { group: 'Teach', items: [{ to: '/queue', label: 'Grading queue', icon: Inbox }, { to: '/gradebook', label: 'Gradebook', icon: Table2 }] },
+  { group: 'Support', items: [{ to: '/regrades', label: 'Extensions & regrades', icon: Scale, hint: 'regrade requests' }, { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert }] },
+  { group: 'Develop', items: [{ to: '/curriculum', label: 'Curriculum proposals', icon: BookMarked }, { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
+    { to: '/guides', label: 'Study guides', icon: BookMarked }, { to: '/sources', label: 'Reading lists', icon: BookMarked, hint: 'sources bibliography' }] },
 ];
 
 /** The shared pages link to the main app's paths; these send them to this app's equivalents. */
@@ -40,30 +36,11 @@ function LearnRedirect() {
 }
 
 function Shell() {
-  const { user } = useAuth();
+  const { membership, role, setRole } = useWorkspace();
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground md:flex">
-      <aside className="border-b border-border bg-card md:sticky md:top-0 md:flex md:h-screen md:w-60 md:flex-col md:border-b-0 md:border-r">
-        <div className="flex items-center gap-2 px-5 py-5">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><GraduationCap className="h-5 w-5" /></div>
-          <div><p className="text-sm font-extrabold leading-none">Semester</p><p className="text-xs text-muted-foreground">Faculty</p></div>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => cn('flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
-              <Icon className="h-4 w-4" />{label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="hidden px-5 py-4 md:block">
-          <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
-          <Button variant="ghost" size="sm" className="-ml-2 mt-1" onClick={() => logout()}><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
-        </div>
-      </aside>
-      <main className="flex-1 px-4 py-8 md:px-10">
-        <div className="mx-auto max-w-5xl">
-          <Routes>
+    <AppShell app="Faculty" appKey="faculty" institutionName={membership.institutionName} role={role} roles={membership.roles} onRole={setRole}
+      isSample={!!membership.isSample} groups={GROUPS}>
+      <Routes>
             <Route path="/" element={<Teaching />} />
             <Route path="/sections/:id" element={<SectionPage />} />
             <Route path="/regrades" element={<Regrades />} />
@@ -90,10 +67,8 @@ function Shell() {
             <Route path="/institution/sections" element={<Navigate to="/section-requests" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
-      </main>
-      <AppSwitcher current="faculty" /><Toaster />
-    </div>
+      <Toaster />
+    </AppShell>
   );
 }
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
-import { requireAction, first, forbid, audit, userNames, inSet } from '../lib/server';
+import { requireAction, first, forbid, audit, userNames, inSet, capabilities } from '../lib/server';
 import { suppress, toCsv, METRICS, MIN_CELL } from '../lib/analytics';
 
 const OFFICES = ['Registrar', 'Bursar', 'Advising', 'Student Affairs'] as const;
@@ -12,6 +12,7 @@ export default createEndpoint({
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('analytics') }),
     z.object({ action: z.literal('export') }),
+    z.object({ action: z.literal('access') }),
     z.object({ action: z.literal('holds') }),
     z.object({ action: z.literal('placeHold'), studentId: z.string(), office: z.enum(OFFICES), message: z.string().min(10).max(400) }),
     z.object({ action: z.literal('releaseHold'), holdId: z.string(), reason: z.string().min(5) }),
@@ -19,6 +20,12 @@ export default createEndpoint({
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
     const uid = context.user.id;
+    if (input.action === 'access') {
+      // What this screen may ask for (Institution overview). Each widget then calls its own authorized action.
+      const c = await capabilities(uid, ['readiness.read', 'registration.request.decide', 'registrar.read', 'audit.read', 'member.manage', 'catalog.manage']);
+      const inst = c.institutionId ? await zite.institutions.findOne({ id: c.institutionId }) : undefined;
+      return { roles: c.roles, member: !!c.institutionId, institutionName: inst?.name ?? '', isSample: !!inst?.isSample, can: c.can };
+    }
 
     if (input.action === 'analytics' || input.action === 'export') {
       const a = await requireAction(uid, 'readiness.read');

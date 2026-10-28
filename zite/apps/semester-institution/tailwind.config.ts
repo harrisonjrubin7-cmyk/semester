@@ -5,6 +5,7 @@ const tailwindConfig: Config = {
   darkMode: ['class'],
   content: [
     'src/**/*.{ts,tsx,css}',
+    '../semester/src/**/*.{ts,tsx}',
     '../../packages/ui/**/*.{ts,tsx}',
     '../../packages/components/**/*.{ts,tsx}',
   ],

@@ -208,7 +208,7 @@ export default createEndpoint({
         id: Number(r.id), ref: `SR-${r.id}`, state: String(r.state), version: Number(r.version),
         label: sectionLabel(String(r.course_code), String(r.section_code), String(r.term_code)), capacity: Number(r.capacity), meetingTimes: String(r.meeting_times),
         room: roomName[Number(r.room_id)] ?? '—', department: deptName[Number(r.department_id)] ?? '—', departmentId: Number(r.department_id),
-        instructor: names[String(r.instructor_id)] ?? 'Member', requester: names[String(r.requester_id)] ?? 'Member', mine: r.requester_id === me,
+        instructor: names[String(r.instructor_id)] ?? 'Member', requester: names[String(r.requester_id)] ?? 'Member', mine: r.requester_id === me, forMe: r.instructor_id === me,
         reason: String(r.reason ?? ''), lastNote: String(r.last_note ?? ''), sectionId: r.section_id ? String(r.section_id) : null,
         events: events.filter((e) => Number(e.request_id) === Number(r.id)).map((e) => ({ step: String(e.step), state: String(e.to_state), who: names[String(e.actor_id)] ?? 'Member', note: String(e.note ?? ''), at: new Date(String(e.at)).toISOString() })),
       })),

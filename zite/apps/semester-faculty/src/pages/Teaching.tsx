@@ -1,19 +1,30 @@
 import { Link } from 'react-router-dom';
-import { regrade } from 'zitejs/api';
+import { useState } from 'react';
+import { regrade, sectionRequests } from 'zitejs/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@project/components/ui/card';
 import { ChevronRight } from 'lucide-react';
-import { useLoad, fmtDate } from '../lib/useLoad';
+import { useLoad, fmtDate, readError } from '../lib/useLoad';
 import { loadOh } from '../lib/oh';
 import { LoadingBlock, DeniedOrError, Empty, PageHeader } from '../components/States';
 
 export default function Teaching() {
   const oh = useLoad(loadOh);
   const rg = useLoad(() => regrade({ action: 'queue' }) as Promise<{ items: { status: string }[] }>);
+  const sr = useLoad(() => sectionRequests({ action: 'get' }) as Promise<{ requests: { ref: string; label: string; state: string; forMe?: boolean }[] }>);
   const pending = rg.data?.items.filter((i) => i.status === 'Pending').length ?? 0;
+  const [term, setTerm] = useState<string>('all');
 
   if (oh.loading && !oh.data) return <LoadingBlock />;
-  if (oh.error) return <DeniedOrError message={oh.error} onRetry={oh.reload} />;
+  // Distinguish "you may not see this" from "it could not load"; neither may look like "you have no sections".
+  if (oh.error) {
+    const denied = /access|role|allow|not allowed|Reference/i.test(oh.error);
+    return <DeniedOrError message={denied ? `You don’t have access to teaching information in this workspace. ${oh.error}` : `Your sections could not load, so this page cannot say whether you teach anything this term. ${oh.error}`} onRetry={oh.reload} />;
+  }
   const d = oh.data!;
+  const termOf = (label: string) => label.split('·').pop()!.trim();
+  const terms = [...new Set(d.teaching.map((t) => termOf(t.label)))];
+  const shown = term === 'all' ? d.teaching : d.teaching.filter((t) => termOf(t.label) === term);
+  const settingUp = (sr.data?.requests ?? []).filter((r) => r.forMe && !['created', 'reconciled', 'rejected', 'withdrawn', 'cancelled'].includes(r.state));
   const today = new Date().toDateString();
   const todays = d.hosting.filter((s) => !s.cancelled && new Date(s.start).toDateString() === today);
 
@@ -26,11 +37,21 @@ export default function Teaching() {
         <Stat label="Regrades waiting" value={rg.data ? pending : rg.error ? '—' : '…'} to="/regrades" />
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Your sections</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="text-base">Your sections</CardTitle>
+          {terms.length > 1 && <select aria-label="Term" className="rounded-md border border-input bg-background p-1.5 text-sm" value={term} onChange={(e) => setTerm(e.target.value)}>
+            <option value="all">All terms</option>{terms.map((t) => <option key={t} value={t}>{t}</option>)}</select>}
+        </CardHeader>
         <CardContent>
-          {d.teaching.length === 0 ? <Empty title="No sections yet" hint="The registrar assigns you when a section is created." /> : (
+          {settingUp.length > 0 && <div className="mb-3 rounded-md border border-dashed border-border p-3 text-sm">
+            <p className="font-medium">Being set up for you</p>
+            {settingUp.map((r) => <p key={r.ref} className="text-muted-foreground">{r.label} · {r.ref} · {r.state.replace(/_/g, ' ')} — it appears here once the registrar creates the section.</p>)}
+          </div>}
+          {sr.error && <p className="mb-3 text-xs text-muted-foreground">! Pending section requests could not load, so sections still being set up may not be listed.</p>}
+          {d.teaching.length === 0 ? <Empty title="No assigned sections" hint={settingUp.length ? 'Your proposed sections are listed above; they move here when created.' : 'You are not the instructor of any section in this institution. The registrar assigns instructors when a section is created; ask your department if you expected one.'} />
+          : shown.length === 0 ? <Empty title={`No sections in ${term}`} hint="Choose another term or All terms." /> : (
             <div className="divide-y divide-border">
-              {d.teaching.map((t) => (
+              {shown.map((t) => (
                 <Link key={t.id} to={`/sections/${t.id}`} className="flex items-center justify-between py-3 font-medium hover:text-primary">
                   {t.label}<ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </Link>

@@ -1,7 +1,10 @@
+import { friendlyError, readError } from '../../../semester/src/lib/clientError';
 import { useCallback, useEffect, useState } from 'react';
 
-export const errMsg = (e: unknown) =>
-  (e as { userFacingMessage?: string })?.userFacingMessage || (e instanceof Error ? e.message : 'Something went wrong.');
+
+/** Safe text for any endpoint failure: the server's user-facing message, never internal authz strings (lib/clientError.ts). */
+export const errMsg = (e: unknown) => friendlyError(e);
+export { readError };
 
 /** Loads data once and on demand; keeps the last good value while refreshing. */
 export function useLoad<T>(fn: () => Promise<T>) {

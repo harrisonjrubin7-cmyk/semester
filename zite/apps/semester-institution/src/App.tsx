@@ -1,65 +1,60 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, LogOut, Landmark, Building2 } from 'lucide-react';
-import { cn } from '@project/components/lib/utils';
+import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2 } from 'lucide-react';
+import { institutionOps } from 'zitejs/api';
+import { useLoad } from './lib/useLoad';
+import { DeniedOrError } from './components/States';
+import { AppShell, type NavGroup, type NavItem } from '../../semester/src/components/AppShell';
 import Overview from './pages/Overview';
 import Requests from './pages/Requests';
 import Holds from './pages/Holds';
 import Console from './pages/Console';
 import Audit from './pages/Audit';
 import Structure from './pages/Structure';
-import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
-const NAV = [
-  { to: '/', label: 'Overview', icon: LayoutDashboard },
-  { to: '/requests', label: 'Section requests', icon: GitPullRequestArrow },
-  { to: '/structure', label: 'Departments & rooms', icon: Building2 },
-  { to: '/holds', label: 'Holds', icon: Ban },
-  { to: '/console', label: 'Members & connections', icon: PlugZap },
-  { to: '/audit', label: 'Audit log', icon: ScrollText },
-];
+type Access = { roles: string[]; member: boolean; institutionName: string; isSample: boolean; can: Record<string, boolean> };
+
+// Institution navigation manifest (owner PDFs 28 Oct, Institution IA). A destination appears when the person's current role
+// includes the capability its page needs; the server still authorizes every request. Planned workspaces (catalog, scheduling,
+// records, admissions, aid, workforce, finance, campus, research, governance…) are tracked in the platform build plan.
+function groupsFor(can: Record<string, boolean>): NavGroup[] {
+  const items = (xs: (NavItem & { need?: string })[]) => xs.filter((x) => !x.need || can[x.need]);
+  return [
+    { group: null, items: items([{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }]) },
+    { group: 'Academics', items: items([{ to: '/requests', label: 'Sections & teaching assignments', icon: GitPullRequestArrow, hint: 'section requests' },
+      { to: '/structure', label: 'Academic structure', icon: Building2, hint: 'departments rooms' }]) },
+    { group: 'Student lifecycle', items: items([{ to: '/holds', label: 'Holds', icon: Ban, need: 'registration.request.decide' }]) },
+    { group: 'Governance', items: items([{ to: '/console', label: 'Access & connections', icon: PlugZap, need: 'member.manage', hint: 'members' },
+      { to: '/audit', label: 'Audit & assurance', icon: ScrollText, need: 'audit.read', hint: 'audit log' }]) },
+  ];
+}
 
 function Shell() {
-  const { user } = useAuth();
+  const access = useLoad(() => institutionOps({ action: 'access' }) as Promise<Access>);
+  if (access.loading && !access.data) return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading Semester Institution…</div>;
+  if (access.error || !access.data) return <div className="grid min-h-screen place-items-center px-6"><DeniedOrError message={access.error ?? 'Your access could not be checked.'} onRetry={access.reload} /></div>;
+  const a = access.data;
+  if (!a.member) return (
+    <div className="grid min-h-screen place-items-center px-6"><div className="max-w-md rounded-md border border-border bg-card p-6">
+      <h1 className="text-2xl">No active institution membership</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Semester Institution is for people who work for an institution. Ask your administrator to approve your membership.</p>
+      <Button className="mt-6" variant="outline" onClick={() => logout()}>Sign out</Button></div></div>);
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground md:flex">
-      <aside className="border-b border-border bg-card md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r">
-        <div className="flex items-center gap-2 px-5 py-5">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Landmark className="h-5 w-5" /></div>
-          <div><p className="text-sm font-extrabold leading-none">Semester</p><p className="text-xs text-muted-foreground">Institution</p></div>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:pb-0">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => cn(
-              'flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-              isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
-              <Icon className="h-4 w-4" />{label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="hidden px-5 py-4 md:absolute md:bottom-0 md:block md:w-64">
-          <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
-          <Button variant="ghost" size="sm" className="mt-1 -ml-2" onClick={() => logout()}><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
-        </div>
-      </aside>
-      <main className="flex-1 px-4 py-8 md:px-10">
-        <div className="mx-auto max-w-6xl">
-          <Routes>
-            <Route path="/" element={<Overview />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="/structure" element={<Structure />} />
-            <Route path="/holds" element={<Holds />} />
-            <Route path="/console" element={<Console />} />
-            <Route path="/audit" element={<Audit />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </main>
-      <AppSwitcher current="institution" /><Toaster />
-    </div>
+    <AppShell app="Institution" appKey="institution" institutionName={a.institutionName} role={a.roles.join(', ') || 'Member'} roles={[]} isSample={a.isSample} groups={groupsFor(a.can)}>
+      <Routes>
+        <Route path="/" element={<Overview />} />
+        <Route path="/requests" element={<Requests />} />
+        <Route path="/structure" element={<Structure />} />
+        <Route path="/holds" element={<Holds />} />
+        <Route path="/console" element={<Console />} />
+        <Route path="/audit" element={<Audit />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Toaster />
+    </AppShell>
   );
 }
 

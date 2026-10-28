@@ -12,7 +12,15 @@ type Metric = { id: string; label: string; caveat: string; source: string; total
 type Req = { state: string; departmentId: number; mine: boolean };
 
 export default function Overview() {
-  const analytics = useLoad(() => institutionOps({ action: 'analytics' }) as Promise<{ institution: string; isSample: boolean; minCell: number; metrics: Metric[] }>);
+  // Ask only for what this viewer may see (institutionOps 'access'); a viewer without the analytics permission gets a
+  // scoped explanation instead of a failed request. Each widget keeps its own loading / unavailable / denied state.
+  const access = useLoad(() => institutionOps({ action: 'access' }) as Promise<{ roles: string[]; member: boolean; can: Record<string, boolean> }>);
+  const canStats = !!access.data?.can['readiness.read'];
+  const analytics = useLoad(async () => {
+    const acc = await institutionOps({ action: 'access' }) as { can: Record<string, boolean> };
+    if (!acc.can['readiness.read']) return null;
+    return institutionOps({ action: 'analytics' }) as Promise<{ institution: string; isSample: boolean; minCell: number; metrics: Metric[] }>;
+  });
   const reqs = useLoad(() => sectionRequests({ action: 'get' }) as Promise<{ me: { chairOf: number[]; isRegistrar: boolean }; requests: Req[] }>);
 
   const waiting = reqs.data ? reqs.data.requests.filter((r) =>
@@ -37,13 +45,19 @@ export default function Overview() {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
           <div>
             <p className="text-sm opacity-80">Action Center</p>
-            <p className="text-3xl font-extrabold">{reqs.loading && !reqs.data ? '…' : waiting} <span className="text-base font-semibold opacity-80">section requests waiting on you</span></p>
+            {reqs.error ? <p className="text-base font-semibold">Section requests could not load. <span className="opacity-80">{reqs.error}</span></p>
+              : <p className="text-3xl font-extrabold">{reqs.loading && !reqs.data ? '…' : waiting} <span className="text-base font-semibold opacity-80">section requests waiting on you</span></p>}
           </div>
           <Button asChild variant="secondary"><Link to="/requests">Open queue</Link></Button>
         </CardContent>
       </Card>
       {analytics.data?.isSample && <p className="mb-4 rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground">This institution contains sample data.</p>}
-      {analytics.loading && !analytics.data ? <LoadingBlock /> : analytics.error ? <DeniedOrError message={analytics.error} onRetry={analytics.reload} /> : (
+      {access.data && !canStats ? (
+        <div className="rounded-xl border border-dashed border-border bg-card p-6 text-sm">
+          <p className="font-medium">Institution statistics</p>
+          <p className="mt-1 text-muted-foreground">Enrollment, holds and registration counts are shown to registrar and institutional-research staff. Your current role ({access.data.roles.join(', ') || 'none'}) does not include them, so they were not requested. The work you can do is in the menu.</p>
+        </div>
+      ) : analytics.loading && !analytics.data ? <LoadingBlock /> : analytics.error ? <DeniedOrError message={analytics.error} onRetry={analytics.reload} /> : !analytics.data ? null : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {analytics.data!.metrics.map((m) => (
             <Card key={m.id}>

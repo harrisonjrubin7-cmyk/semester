@@ -76,6 +76,19 @@ export async function requireAction(userId: string, action: Action, extra: { pol
   return { userId, membershipId: m!.id, institutionId: tenantId, institutionName: inst?.name ?? '', roles: m!.roles ?? [], isSample: !!inst?.isSample, correlationId };
 }
 
+/** Which of these actions the caller may take in their current context. Used to decide what a screen asks for, so a page
+ *  never requests data the viewer cannot have. It reveals only the caller's own permissions and is not an access attempt,
+ *  so it is not written to the decision log; every real read or write still goes through requireAction. */
+export async function capabilities(userId: string, actions: Action[]): Promise<{ institutionId: string | null; roles: string[]; can: Partial<Record<Action, boolean>> }> {
+  const m = await currentMembership(userId);
+  const tenantId = m ? first(m.institution)! : '';
+  const activeRole = m ? await activeRoleOf(tenantId, userId, m.roles ?? []) : undefined;
+  const can: Partial<Record<Action, boolean>> = {};
+  for (const action of actions) can[action] = authorize({ actorId: userId, membership: m ? { status: m.status ?? '', tenantId, roles: m.roles ?? [], templates: m.roleTemplates ?? [], activeRole } : null, action,
+    resource: { tenantId, classification: 'directory' } }).allow;
+  return { institutionId: m ? tenantId : null, roles: m?.roles ?? [], can };
+}
+
 let decReady: Promise<void> | null = null;
 /** SEC-039: every requireAction decision, allow or deny, goes to the append-only authz_decisions log. A deny is logged before it
  *  throws; if the log write itself fails the request is refused rather than proceeding unlogged. */
