@@ -96,6 +96,9 @@ comparisons, &, %, ^; errors #DIV/0! #REF! #NAME? #VALUE! #CYCLE!), keyboard gri
 (formula-injection guard), real .xlsx out with formulas kept (opened by openpyxl and recalculated by LibreOffice). Stored as
 tlk_docs kind sheet; the kind check is widened in place for tables created earlier (upgrade path checked).
 Owner approved assigning a sample instructor (27 Oct); BLOCKED until a second sign-in account exists (Northgate has one, a student).
+DONE 27 Oct: Write a document. Learn → Write (existing Markdown editor) now downloads a real Word .docx (title, headings,
+bold/italic/code, safe links only, bullet and numbered lists with nesting, quotes, tables, code, rules; verified with python-docx
+and LibreOffice), prints to PDF, and shows a word count. Shared stored-zip writer moved to lib/zip.ts (xlsx and docx).
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

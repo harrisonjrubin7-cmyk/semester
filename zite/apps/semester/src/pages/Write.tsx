@@ -9,6 +9,10 @@ import { Label } from '@project/components/ui/label';
 import { cn } from '@project/components/lib/utils';
 import { PageHeader, Panel, Empty, Loadable, useLoad, SourceTag, errMsg } from '../components/kit';
 import { undoToast } from '../components/overlays';
+import { toDocx, words } from '../lib/docxRules';
+
+const download = (name: string, blob: Blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); };
+const fileName = (t: string) => (t.trim() || 'document').replace(/[^\w\- ]+/g, '').slice(0, 80);
 
 type Item = { id: string; title: string; kind: string; visibility: string; source: string; body: string };
 const VIS: [string, string][] = [['Only Me', 'Nobody else can see it.'], ['Course', 'People enrolled in the course it is attached to.'], ['Selected Collaborators', 'Only the people you add by name.'], ['Public Portfolio', 'Anyone with the link to your portfolio.']];
@@ -49,7 +53,7 @@ export default function Write() {
             <RadioGroup className="mt-2 grid gap-2 sm:grid-cols-2" value={cur.visibility ?? 'Only Me'} onValueChange={(v) => { setCur({ ...cur, visibility: v }); setSaving('idle'); }}>
               {VIS.map(([v, about]) => <Label key={v} className="flex items-start gap-2 rounded-[3px] border border-border p-2 font-normal"><RadioGroupItem value={v} className="mt-0.5" /><span><span className="block text-sm">{v}</span><span className="text-xs text-muted-foreground">{about}</span></span></Label>)}
             </RadioGroup>
-            <div className="mt-4 flex items-center gap-3"><Button onClick={save} disabled={saving === 'saving'}>Save</Button><span className="text-xs text-muted-foreground" aria-live="polite">{saving === 'saving' ? '… Saving' : saving === 'saved' ? '✓ Saved' : ''}</span></div>
+            <div className="mt-4 flex flex-wrap items-center gap-3"><Button onClick={save} disabled={saving === 'saving'}>Save</Button><Button variant="outline" onClick={() => download(`${fileName(cur.title ?? '')}.docx`, new Blob([toDocx(cur.title ?? '', cur.body ?? '')], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }))}>Download Word</Button><Button variant="ghost" onClick={() => window.print()}>Print or save as PDF</Button><span className="text-xs text-muted-foreground">{words(cur.body ?? '')} words · about {Math.max(1, Math.round(words(cur.body ?? '') / 230))} min read</span><span className="text-xs text-muted-foreground" aria-live="polite">{saving === 'saving' ? '… Saving' : saving === 'saved' ? '✓ Saved' : ''}</span></div>
           </Panel>
         ) : <Empty>Pick a document or start a new one.</Empty>}
       </div>
