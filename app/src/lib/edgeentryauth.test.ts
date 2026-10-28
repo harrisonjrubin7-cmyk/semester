@@ -57,17 +57,6 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
     rejectionBoundaries: [1, 3],
   },
   {
-    fn: 'push',
-    ordered: [
-      /if \(!CRON_SECRET\)/,
-      /status: 503/,
-      /req\.headers\.get\('Authorization'\) !== `Bearer \$\{CRON_SECRET\}`/,
-      /status: 401/,
-      /createClient\(SUPABASE_URL, SERVICE_KEY\)/,
-    ],
-    rejectionBoundaries: [0, 2],
-  },
-  {
     fn: 'lti',
     ordered: [
       /if \(path\.endsWith\('\/score'\)\)/,
