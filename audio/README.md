@@ -41,6 +41,13 @@ never edited by hand: change a script, re-render the audio, and run this, or
 the page goes on showing the words of a recording that no longer exists.
 `app/src/lib/transcript.test.ts` compares the two and fails when they part.
 
+The four older single-narrator recordings have no committed renderer script.
+Their caption cues were recovered from the shipped MP3s with
+`mlx-community/whisper-large-v3-turbo` and stored under `audio/transcripts/`
+with the exact source SHA-256. They remain labeled
+`machine-generated-unreviewed`; the hash and full-length guards prevent stale
+tracks, but do not claim a human accuracy review.
+
 ## Rendering
 
 ```bash

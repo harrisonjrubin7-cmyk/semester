@@ -463,7 +463,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/webvtt.test.ts'],
-    gap: 'Forty-eight caption files against fifty-two audio files; video has no captions or description; live call captions are untested.',
+    gap: 'All fifty-two shipped prerecorded audio files have current tracks. The four recovered legacy tracks are pinned to exact MP3 hashes and remain machine-generated and unreviewed; no prerecorded video file ships, while external-video availability and live-call captions remain untested.',
     owner: 'accessibility',
   },
 

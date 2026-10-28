@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { UNCAPTIONED } from './webvtt';
+import { planned } from '../../scripts/captions';
 
 /**
  * Public accessibility wording must never outrun the source evidence. These
@@ -22,9 +22,10 @@ describe('public accessibility claims', () => {
   });
 
   it('states the exact caption boundary the source inventory enforces', () => {
-    expect(UNCAPTIONED.size).toBe(4);
-    expect(site).toContain('Four audio recordings have no timed source and therefore no caption track');
-    expect(site).toContain('prerecorded video caption coverage is not complete');
+    expect(site).toContain(`All ${planned().size} shipped prerecorded audio files have current caption tracks in this candidate.`);
+    expect(site).toContain('The four recovered legacy tracks are pinned to exact MP3 hashes and remain machine-generated and unreviewed');
+    expect(site).not.toContain(`All ${planned().size} shipped prerecorded audio files have hash-pinned caption tracks`);
+    expect(site).toContain('live-call captions and external video caption availability are not validated by this repository');
   });
 
   it('separates student-app form guards from uncovered public forms', () => {
