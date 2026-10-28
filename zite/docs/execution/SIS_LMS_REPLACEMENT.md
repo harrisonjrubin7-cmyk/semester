@@ -8,7 +8,7 @@ production_enabled. Nothing is institution-authorized or production-enabled; tho
 ## §16 first executable increment (27 Oct)
 | Link | Built by | Status | Evidence |
 |---|---|---|---|
-| Approved section | Institution section requests → Sections | implemented | no database check yet |
+| Approved section | sreq_* department → chair → registrar → create → reconcile | tested | dbchecks/sectionRequests.ts 21/21; concurrent clashing authorizations → 1, unlocked control → 2 |
 | Concurrency-safe enrollment | reg_decide / reg_seats / locks, sub, ser, wl modules | tested | dbchecks/registrationRace.ts: 20 concurrent last-seat claims → 1 seat; control without lock → 6 |
 | Course roster | Enrollments → section pages | implemented | — |
 | Assignment submission | Tasks + Submissions + sbm_submit receipts (28 Oct) | tested | dbchecks/submissions.ts 14/14 + 2 mutants: manifest of name/size/SHA-256, files locked in the same transaction, on-time/late stamp, replay |

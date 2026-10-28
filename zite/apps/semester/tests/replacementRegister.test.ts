@@ -8,7 +8,7 @@ test('nothing is marked institution-authorized or production-enabled without an 
 test('the §16 first path is fully listed and every link names its open gaps or evidence', () => {
   const ids = new Set(CAPABILITIES.map((c) => c.id));
   eq(FIRST_PATH.every((id) => ids.has(id)), true);
-  eq(FIRST_PATH.map((id) => stageOf(CAPABILITIES.find((c) => c.id === id)!)), ['implemented', 'tested', 'implemented', 'tested', 'tested', 'tested']);
+  eq(FIRST_PATH.map((id) => stageOf(CAPABILITIES.find((c) => c.id === id)!)), ['tested', 'tested', 'implemented', 'tested', 'tested', 'tested']);
 });
 test('stages cannot be skipped and evidence cannot be blank (control)', () => {
   const bad: Capability = { id: 'x', area: 'SIS', name: 'x', spec: '', route: null, evidence: [{ stage: 'designed', ref: 'd' }, { stage: 'deployed', ref: 'build 1' }, { stage: 'production_enabled', ref: 'yes' }], gaps: [] };

@@ -16,8 +16,8 @@ export const FIRST_PATH = ['sec.approved', 'reg.enroll', 'lms.roster', 'lms.subm
 
 export const CAPABILITIES: Capability[] = [
   { id: 'sec.approved', area: 'SIS', name: 'Approved section (catalog course → section with capacity)', spec: '§3.4–3.5', route: '/institution/sections',
-    evidence: [D('Master Build Book; section requests'), I('apps/semester-institution section requests → Zite Sections')],
-    gaps: ['No database check run against section creation', 'Linked components (lab/lecture) and cross-listed capacity pools not modelled', 'Room/instructor conflict detection not built'] },
+    evidence: [D('Master Build Book; sreq-001'), I('lib/sreqMigration.ts sreq_submit/sreq_step: department → chair → registrar → create → reconcile; room/instructor clash re-check under a per-term lock'), T('dbchecks/sectionRequests.ts 28 Oct: 21/21; concurrent clashing authorizations → 1 authorized, control without the term lock → 2')],
+    gaps: ['Linked components (lab/lecture) and cross-listed capacity pools not modelled', 'Section changes after students enroll (room, time, cancellation) not governed by this workflow'] },
   { id: 'reg.enroll', area: 'SIS', name: 'Concurrency-safe enrollment (last seat, idempotent submit, receipts)', spec: '§3.6, §7 Workflow A', route: '/plan/registration',
     evidence: [D('migrations/001_registrar_backend.sql'), I('lib/pgMigration.ts reg_decide/reg_seats/reg_section_locks; subMigration submit keys; serMigration per-student serialization; wlMigration waitlists and all-or-nothing swap'), T('dbchecks/registrationRace.ts 27 Oct: 20 concurrent last-seat claims → 1 seat (also with a 0.3 s window); replay and reused-key conflict; control without the row lock double-booked 6')],
     gaps: ['Race test covers reg_decide only; swap and waitlist promotion races not yet run', 'Registration opening-burst load not measured'] },
