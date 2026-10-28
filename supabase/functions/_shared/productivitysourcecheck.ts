@@ -89,12 +89,16 @@ function withoutTags(value: string) {
   return result;
 }
 
+const decodedEntities: Record<string, string> = {
+  nbsp: ' ',
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+};
+
 const normalizePlainText = (value: string) => value
-  .replace(/&nbsp;/gi, ' ')
-  .replace(/&amp;/gi, '&')
-  .replace(/&lt;/gi, '<')
-  .replace(/&gt;/gi, '>')
-  .replace(/&quot;/gi, '"')
+  .replace(/&(nbsp|amp|lt|gt|quot);/gi, (_entity, name: string) => decodedEntities[name.toLowerCase()])
   .replace(/\s+/g, ' ')
   .trim();
 

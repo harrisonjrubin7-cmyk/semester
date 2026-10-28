@@ -106,4 +106,19 @@ describe('the productivity source-check function', () => {
     expect(response.status).toBe(200);
     expect((await read(response)).excerptFound).toBe(true);
   });
+
+  it('decodes each entity only once', async () => {
+    const deps = dependencies({
+      fetch: vi.fn(async () => new Response(
+        'The source contains &amp;lt;tag&amp;gt; literally.',
+        { headers: { 'Content-Type': 'text/plain' } },
+      )),
+    });
+    const response = await handleProductivitySourceCheck(
+      post('Bearer good-token', { url: URL, excerpt: '<tag>' }),
+      deps,
+    );
+    expect(response.status).toBe(200);
+    expect((await read(response)).excerptFound).toBe(false);
+  });
 });
