@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ensureDevSchema } from '../../../semester/src/lib/pg';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { pg, fail, isReviewer, schemaReady, COMPANY } from '../lib/db';
@@ -28,6 +29,8 @@ export default createEndpoint({
     const me = context.user.id;
     const sql = pg();
     const reviewer = await isReviewer(me);
+    // The Developers app creates its own tables; it no longer waits for an institution admin to open Developer apps.
+    await ensureDevSchema();
     const ready = await schemaReady();
     const empty = { me, reviewer, ready, apps: [], installs: [], audit: [] };
     if (!reviewer) return { ...empty, message: 'Ask the founder for the app reviewer role to see developer apps.' };

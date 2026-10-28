@@ -195,3 +195,36 @@ Evidence:
 
 **NOT RUN:** a real readiness share (needs an institution administrator), and a real assurance release. A release
 publishes evidence to institutions, so it waits for your approval.
+
+## Sixth increment, 28 Oct: developer platform and company support access (C17, C18, C20)
+
+**Found and fixed:** the Developers app showed "the developer platform update hasn't reached the database yet" for
+every developer. Its tables were created only when an institution administrator opened Developer apps in Semester. Its
+`sandbox` and `platform` endpoints now create the tables themselves (the same idempotent migration).
+
+Real accounts, 17/17. The faculty account acted as the developer, and the founder account as company reviewer and
+support agent. All data was synthetic, in the sandbox tenant. The test app was left suspended with its token revoked,
+and the support request was revoked.
+
+| # | Step | Result |
+|---|---|---|
+| D0 | The Developers app sets up its own tables | PASS |
+| D1 | A developer registers a sandbox app | PASS |
+| D2 | A forbidden scope (grades:read) cannot be requested | PASS |
+| D3 | A sandbox token is minted; only its hash is stored | PASS |
+| D4 | Nobody else can mint tokens for the app | PASS |
+| D5 | A call with the granted scope returns synthetic data | PASS |
+| D6 | A scope that was not granted is refused (403) | PASS |
+| D7 | A forged token is refused (401) | PASS |
+| D8 | A developer without the reviewer role sees no other apps | PASS |
+| D9 | When company review suspends the app, its next call fails | PASS |
+| D10 | A revoked token fails on its next call | PASS |
+| D11 | An instructor cannot install an app for the institution | PASS |
+| D12 | A student-role member cannot install an app for the institution | PASS |
+| S1 | A support agent requests time-limited, scoped access | PASS |
+| S2 | Before an administrator approves, the agent sees nothing, and the attempt is logged | PASS |
+| S3 | An instructor cannot approve support access | PASS |
+| S4 | The requesting agent, who has no administrator role, cannot approve | PASS |
+
+**NOT RUN:** an institution install by an administrator, and approval of support access followed by the time-limited
+view. Both need an administrator account.

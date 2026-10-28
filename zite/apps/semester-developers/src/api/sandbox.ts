@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ensureDevSchema } from '../../../semester/src/lib/pg';
 import { createEndpoint } from 'zitejs/backend';
 import { pg, fail, sha256, schemaReady, SCOPES, FORBIDDEN_SCOPES, SANDBOX_TENANT } from '../lib/db';
 
@@ -29,6 +30,8 @@ export default createEndpoint({
   execute: async ({ input, context }) => {
     const me = context.user.id;
     const sql = pg();
+    // The Developers app creates its own tables; it no longer waits for an institution admin to open Developer apps.
+    await ensureDevSchema();
     const ready = await schemaReady();
     const base = { ready, token: null as string | null, message: '', response: null as null | { status: number; body: unknown; ms: number },
       scopes: Object.entries(SCOPES).map(([key, label]) => ({ key, label })), forbidden: FORBIDDEN_SCOPES };
