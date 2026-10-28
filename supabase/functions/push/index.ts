@@ -32,6 +32,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
+import { handlePushRequest } from '../_shared/pushauth.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -71,15 +72,7 @@ interface Device {
   gone_at: string | null;
 }
 
-Deno.serve(async (req) => {
-  // No secret configured means no sender. A function that is open because
-  // somebody forgot to set an environment variable is the worst kind of open.
-  if (!CRON_SECRET) {
-    return new Response('not configured', { status: 503 });
-  }
-  if (req.headers.get('Authorization') !== `Bearer ${CRON_SECRET}`) {
-    return new Response('no', { status: 401 });
-  }
+async function sendDuePush(): Promise<Response> {
   if (!VAPID_PUBLIC || !VAPID_PRIVATE || !VAPID_SUBJECT) {
     return new Response('no vapid keys', { status: 503 });
   }
@@ -251,4 +244,6 @@ Deno.serve(async (req) => {
     dropped: retire.length,
     marked: mark.length,
   });
-});
+}
+
+Deno.serve((req: Request) => handlePushRequest(req, CRON_SECRET, sendDuePush));

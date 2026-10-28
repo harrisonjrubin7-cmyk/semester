@@ -76,7 +76,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
     why: 'A visitor to the public site has no account. The only write is submit_site_lead, which rate-limits and validates in the database (private.site_lead_hits).',
   },
   { fn: 'lti', guards: ['flow-state'], evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/], behaviorProof: proof('app/src/lib/ltiverify.test.ts', /checkHeader/, /jwtVerify/) },
-  { fn: 'push', guards: ['shared-secret'], evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/], behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /push/, /CRON_SECRET/) },
+  { fn: 'push', guards: ['shared-secret'], evidence: [/CRON_SECRET/, /handlePushRequest\(/], behaviorProof: proof('app/src/lib/pushauth.test.ts', /handlePushRequest/, /before protected work/) },
   { fn: 'support-reply-notify', guards: ['user-token', 'shared-secret'], evidence: [...USER, /CRON_SECRET/, /handleSupportNotice\(/], behaviorProof: proof('app/src/lib/supportnotify.test.ts', /handleSupportNotice/, /status\)\.toBe\(403\)/) },
   { fn: 'trust-room', guards: ['link-token'], evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/], behaviorProof: proof('app/src/lib/trust/room-server.test.ts', /handleTrustRoom/, /not-a-token/) },
 ];
