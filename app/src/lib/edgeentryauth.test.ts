@@ -18,6 +18,8 @@ const entry = (fn: string) => readFileSync(join(ROOT, 'supabase/functions', fn, 
 interface Contract {
   fn: string;
   ordered: readonly RegExp[];
+  /** Ordered-pattern indexes whose removal must make the proof fail. */
+  rejectionBoundaries: readonly number[];
 }
 
 export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
@@ -29,6 +31,7 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /rpc\('read_feed'/,
       /if \(error \|\| !data/,
     ],
+    rejectionBoundaries: [0],
   },
   {
     fn: 'canvas',
@@ -39,6 +42,18 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /if \(authError \|\| !user\?\.user\)/,
       /upstream = await fetch/,
     ],
+    rejectionBoundaries: [1, 3],
+  },
+  {
+    fn: 'claude',
+    ordered: [
+      /const token = req\.headers\.get\('Authorization'\)/,
+      /if \(!token\).*401/,
+      /admin\.auth\.getUser\(token\)/,
+      /if \(authError \|\| !user\?\.user\)/,
+      /aiGenerationKilled\(admin, null\)/,
+    ],
+    rejectionBoundaries: [1, 3],
   },
   {
     fn: 'fetchcal',
@@ -49,6 +64,7 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /if \(authError \|\| !user\?\.user\)/,
       /followSafely\(/,
     ],
+    rejectionBoundaries: [1, 3],
   },
   {
     fn: 'productivity-sourcecheck',
@@ -59,6 +75,7 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /approvedUrl\(input\.url\)/,
       /page=await fetch\(/,
     ],
+    rejectionBoundaries: [2],
   },
   {
     fn: 'push',
@@ -69,6 +86,7 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /status: 401/,
       /createClient\(SUPABASE_URL, SERVICE_KEY\)/,
     ],
+    rejectionBoundaries: [0, 2],
   },
   {
     fn: 'lti',
@@ -80,6 +98,7 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
       /if \(authError \|\| !session\?\.user\).*401/,
       /\.from\('lti_identity'\)/,
     ],
+    rejectionBoundaries: [2, 4],
   },
 ];
 
@@ -101,11 +120,14 @@ describe('inline Edge Function authentication', () => {
       expect(problems(contract, entry(contract.fn))).toEqual([]);
     });
 
-    it(`${contract.fn} control detects a removed credential check`, () => {
+    it(`${contract.fn} controls detect every removed credential rejection`, () => {
       const source = entry(contract.fn);
-      const guard = contract.ordered[0];
-      expect(source).toMatch(guard);
-      expect(problems(contract, source.replace(guard, ''))).not.toEqual([]);
+      for (const index of contract.rejectionBoundaries) {
+        const guard = contract.ordered[index];
+        expect(guard, `invalid rejection boundary ${index}`).toBeDefined();
+        expect(source).toMatch(guard);
+        expect(problems(contract, source.replace(guard, '')), `${contract.fn} boundary ${index}`).not.toEqual([]);
+      }
     });
   }
 });

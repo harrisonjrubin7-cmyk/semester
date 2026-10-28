@@ -61,7 +61,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/], behaviorProof: proof('app/src/lib/billing/webhook.test.ts', /handleBillingWebhook/, /Stripe-Signature/) },
   { fn: 'calendar', guards: ['link-token'], evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/], behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /calendar/, /read_feed/) },
   { fn: 'canvas', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /canvas/, /getUser/) },
-  { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/claude.test.ts', /Missing authorization header/, /reply\(401/) },
+  { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
   { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },
   { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /productivity-sourcecheck/, /getUser/) },
   { fn: 'fetchcal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /fetchcal/, /getUser/) },
