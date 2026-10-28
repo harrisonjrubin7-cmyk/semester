@@ -6,6 +6,7 @@ import { Input } from '@project/components/ui/input';
 import { PageHeader, Panel, Empty, useLoad, Status, errMsg } from '../components/kit';
 import { toDocx } from '../lib/docxRules';
 import GradingPolicyPanel from '../components/GradingPolicyPanel';
+import { RegistrarStanding, MyStanding } from '../components/AcademicStanding';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const MODE: Record<string, string> = {
@@ -137,7 +138,7 @@ export default function FinalGrades() {
   return (
     <div className="space-y-4">
       <PageHeader eyebrow="Records" title="Final grades" sub="The course gradebook, the course grade you release, and the official academic grade are three separate records. Only a certified grade can be posted, by someone other than the person who certified it." />
-      <Teaching /><Registrar /><GradingPolicyPanel /><Mine />
+      <Teaching /><Registrar /><RegistrarStanding /><GradingPolicyPanel /><MyStanding /><Mine />
       <p className="text-xs text-muted-foreground">If nothing shows here, you have no sections to grade, no registrar role and no released grades yet.</p>
     </div>
   );

@@ -3,6 +3,7 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _AcademicCalendarEp } from '../src/api/academicCalendar';
+import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
 import type { default as _AccommodationsEp } from '../src/api/accommodations';
 import type { default as _AccountServicesEp } from '../src/api/accountServices';
 import type { default as _AdmissionsEp } from '../src/api/admissions';
@@ -104,6 +105,11 @@ type _AcademicCalendarCfg = typeof _AcademicCalendarEp;
 export type AcademicCalendarInputType = NonNullable<_AcademicCalendarCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicCalendarCfg['execute']>[0]['input'];
 export type AcademicCalendarOutputType = Awaited<ReturnType<_AcademicCalendarCfg['execute']>>;
 export const academicCalendar = createCaller<AcademicCalendarInputType, AcademicCalendarOutputType>('academicCalendar');
+
+type _AcademicStandingCfg = typeof _AcademicStandingEp;
+export type AcademicStandingInputType = NonNullable<_AcademicStandingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicStandingCfg['execute']>[0]['input'];
+export type AcademicStandingOutputType = Awaited<ReturnType<_AcademicStandingCfg['execute']>>;
+export const academicStanding = createCaller<AcademicStandingInputType, AcademicStandingOutputType>('academicStanding');
 
 type _AccommodationsCfg = typeof _AccommodationsEp;
 export type AccommodationsInputType = NonNullable<_AccommodationsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AccommodationsCfg['execute']>[0]['input'];
@@ -588,6 +594,7 @@ export const tutoring = createCaller<TutoringInputType, TutoringOutputType>('tut
 
 export const api = {
   academicCalendar,
+  academicStanding,
   accommodations,
   accountServices,
   admissions,
