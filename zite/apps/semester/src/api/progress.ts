@@ -3,7 +3,7 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope, inSet } from '../lib/server';
 import { pg } from '../lib/pg';
-import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
+import { ensureFil, attachmentsFor, readAttached, ensureScanned } from '../lib/filServer';
 
 const POINTS: Record<string, number> = { 'A': 4, 'A-': 3.7, 'B+': 3.3, 'B': 3, 'B-': 2.7, 'C+': 2.3, 'C': 2, 'C-': 1.7, 'D': 1, 'F': 0 };
 
@@ -36,6 +36,7 @@ export default createEndpoint({
       if (!ach) forbid('You do not have access to this file.');
       const own = ids(ach!.owner).includes(uid);
       if (!own && !(isStaff && inSet(ach!.owner, (await tenantScope(a.institutionId)).members))) forbid('You do not have access to this file.');
+      await ensureScanned(a.institutionId, [input.fileId]);
       const f = await readAttached(a.institutionId, input.fileId, uid, 'achievement', ach!.id);
       if (!f) forbid('You do not have access to this file.');
       return f!;

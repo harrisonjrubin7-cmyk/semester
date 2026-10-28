@@ -10,6 +10,9 @@ BEGIN
   f2 := fil_put('t1','stu1','data.csv','text/csv','submission','\\x612c620a'::bytea);
   INSERT INTO rr VALUES (sbm_submit('stu1','t1','sub1','task1','sec1',true,now() + interval '1 day','key-00001') = 'Attach your work before submitting.', 'S1 an empty draft cannot be submitted');
   PERFORM fil_attach('t1','stu1',f1,'submission','sub1'); PERFORM fil_attach('t1','stu1',f2,'submission','sub1');
+  -- 28 Oct: files must pass the safety screen before they can be submitted.
+  INSERT INTO rr VALUES (sbm_submit('stu1','t1','sub1','task1','sec1',true,now() + interval '1 day','key-00001') LIKE 'The file "%" has not passed the safety check%', 'S0 an unscreened file blocks submission');
+  PERFORM fil_record_scan('t1',f1,'clean','','semester-screen-1'); PERFORM fil_record_scan('t1',f2,'clean','','semester-screen-1');
   INSERT INTO rr VALUES (sbm_submit('stu2','t1','sub1','task1','sec1',false,NULL,'key-00002') LIKE 'You can only submit your own%', 'S2 only the owner submits');
   r := sbm_submit('stu1','t1','sub1','task1','sec1',true,now() + interval '1 day','key-00001'); code := split_part(r,':',2);
   INSERT INTO rr VALUES (r LIKE 'ok:%' AND length(code) = 10, 'S3 submit issues a receipt code');
@@ -35,7 +38,7 @@ BEGIN
   INSERT INTO rr VALUES (dln_grant('in1','t1','task4','sec1','stu1',true,true,now() - interval '2 hours',now() - interval '1 hour','instructor',NULL,false,'') LIKE 'The new due date must be after%', 'E4 the new date must be later than the assignment date');
   r := dln_grant('in1','t1','task4','sec1','stu1',true,true,now() + interval '2 days',now() - interval '1 hour','accommodation','acc-req-7',true,'per letter'); ex := split_part(r,':',2)::bigint;
   INSERT INTO rr VALUES (r LIKE 'ok:%', 'E5 accommodation extension granted against a letter');
-  f3 := fil_put('t1','stu1','late.pdf','application/pdf','submission','\\x2550'::bytea); PERFORM fil_attach('t1','stu1',f3,'submission','sub4');
+  f3 := fil_put('t1','stu1','late.pdf','application/pdf','submission','\\x2550'::bytea); PERFORM fil_record_scan('t1',f3,'clean','','semester-screen-1'); PERFORM fil_attach('t1','stu1',f3,'submission','sub4');
   r := sbm_submit('stu1','t1','sub4','task4','sec1',true,now() - interval '1 hour','key-00006');
   INSERT INTO rr VALUES ((SELECT NOT late AND due_source = 'extension:accommodation' AND due_at > now() FROM sbm_receipts WHERE submission_id = 'sub4'), 'E6 work after the assignment date but before the extension is on time');
   INSERT INTO rr VALUES (dln_revoke('in1','t1',ex,true) LIKE 'This work is already submitted%', 'E7 an extension cannot be revoked after submitting against it');

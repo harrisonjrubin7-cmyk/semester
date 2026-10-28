@@ -60,7 +60,7 @@ export const SBM_MIGRATION: string[] = [
    END $$`,
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS due_source text NOT NULL DEFAULT 'assignment'`,
   `CREATE OR REPLACE FUNCTION sbm_submit(p_actor text, p_tenant text, p_submission text, p_task text, p_section text, p_is_owner boolean, p_due timestamptz, p_idem text) RETURNS text LANGUAGE plpgsql AS $$
-   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text;
+   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text;
    BEGIN
      IF NOT coalesce(p_is_owner, false) THEN RETURN 'You can only submit your own draft.'; END IF;
      IF length(coalesce(p_idem,'')) < 8 THEN RETURN 'Missing request key.'; END IF;
@@ -76,6 +76,8 @@ export const SBM_MIGRATION: string[] = [
      END IF;
      IF EXISTS (SELECT 1 FROM sbm_receipts WHERE tenant_id = p_tenant AND submission_id = p_submission) THEN RETURN 'This work was already submitted.'; END IF;
      IF jsonb_array_length(f) = 0 THEN RETURN 'Attach your work before submitting.'; END IF;
+     SELECT x.name INTO bad FROM fil_attachments a JOIN fil_files x ON x.id = a.file_id WHERE a.tenant_id = p_tenant AND a.kind = 'submission' AND a.ref_id = p_submission AND x.scan_status <> 'clean' LIMIT 1;
+     IF bad IS NOT NULL THEN RETURN 'The file "' || bad || '" has not passed the safety check, so the work cannot be submitted. Remove it or upload a clean copy.'; END IF;
      SELECT new_due, 'extension:' || kind INTO v_due, v_src FROM dln_extensions WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_actor AND revoked_at IS NULL;
      IF v_due IS NULL THEN v_due := p_due; v_src := 'assignment'; END IF;
      late_s := CASE WHEN v_due IS NOT NULL AND now() > v_due THEN greatest(1, ceil(extract(epoch FROM now() - v_due))::int) ELSE 0 END;

@@ -22,12 +22,13 @@ import CourseAccessibility from '../components/CourseAccessibility';
 import CourseExtensions from '../components/CourseExtensions';
 
 type Receipt = { code: string; submittedAt: string; dueAt?: string | null; dueSource?: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
-type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
+type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number; scan?: string; scanReason?: string }[] };
 type Asg = { id: string; title: string; dueAt: string | null; extendedTo?: { dueAt: string; kind: string } | null; points: number | null; rubric: string; source: string };
 
 const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
 const AttList = ({ s, onDetach }: { s: Sub; onDetach?: (fileId: string) => void }) => (<>{(s.attachments ?? []).map((f) => (
   <span key={f.fileId} className="flex items-center gap-2 text-xs"><button className="text-primary underline" onClick={() => openAtt(s.id, f.fileId)}>{f.name}</button>
+    {f.scan === 'blocked' ? <span className="text-destructive">! Not accepted by the safety check{f.scanReason ? `: ${f.scanReason}` : ''}</span> : f.scan === 'pending' ? <span className="text-muted-foreground">Safety check runs when you submit</span> : f.scan === 'clean' ? <span className="text-muted-foreground">✓ Checked</span> : null}
     {onDetach && <button className="text-muted-foreground underline" onClick={() => onDetach(f.fileId)}>Remove</button>}</span>))}</>);
 
 type Rubric = { key: string; version: number; title: string; criteria: Criterion[]; max: number };

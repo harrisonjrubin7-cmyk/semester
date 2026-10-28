@@ -4,7 +4,7 @@ import { zite } from 'zitejs/db';
 import { requireAccess, ids, first, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { CRS_MIGRATION } from '../lib/crsMigration';
-import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
+import { ensureFil, attachmentsFor, readAttached, ensureScanned } from '../lib/filServer';
 import { courseRole, ensureTeam, delegatedSections } from '../lib/teamServer';
 import { rubricScore, Criterion } from '../lib/rubricRules';
 import { SBM_MIGRATION } from '../lib/sbmMigration';
@@ -133,7 +133,7 @@ export default createEndpoint({
         assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, extendedTo: (() => { const e = myExt.find((x) => x.task_id === t.id); return e ? { dueAt: new Date(String(e.new_due)).toISOString(), kind: String(e.kind) } : null; })(), points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
-          return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
+          return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
         }).map((x) => grader ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
@@ -174,6 +174,7 @@ export default createEndpoint({
         const s2 = t ? await zite.sections.findOne({ id: first(t.section) ?? '' }) : null;
         if (!s2 || !(await courseRole(a.institutionId, s2.id, uid)) || x!.state === 'Private Draft') forbid('You do not have access to this file.');
       }
+      await ensureScanned(a.institutionId, [input.fileId]);
       const f = await readAttached(a.institutionId, input.fileId, uid, 'submission', x!.id);
       if (!f) forbid('You do not have access to this file.');
       return f!;
@@ -229,6 +230,8 @@ export default createEndpoint({
       if (!x || !ids(x.student).includes(uid)) forbid('You can only submit your own work.');
       const task = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
       await ensureFil(); await ensureSbm();
+      // Screen any attachment stored before screening existed; sbm_submit refuses anything not clean.
+      await ensureScanned(a.institutionId, ((await attachmentsFor(a.institutionId, 'submission', [x!.id]))[x!.id] ?? []).map((f) => f.fileId));
       const r = String(((await pg().query(`SELECT sbm_submit($1,$2,$3,$4,$5,$6,$7::timestamptz,$8) AS r`,
         [uid, a.institutionId, x!.id, task?.id ?? '', first(task?.section) ?? '', true, task?.dueAt ?? null, input.requestKey ?? `sub:${x!.id}`])) as { r: string | null }[])[0].r ?? '');
       if (!r.startsWith('ok:')) forbid(r);

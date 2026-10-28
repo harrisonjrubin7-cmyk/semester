@@ -3,7 +3,7 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, forbid, audit, userNames } from '../lib/server';
 import { pg } from '../lib/pg';
-import { ensureFil } from '../lib/filServer';
+import { ensureFil, putScanned, ensureScanned } from '../lib/filServer';
 import { checkUpload, decodeBase64, PURPOSES } from '../lib/fileRules';
 
 type Row = Record<string, unknown>;
@@ -34,11 +34,15 @@ export default createEndpoint({
       const bytes = decodeBase64(input.base64);
       if (!bytes) forbid('The file could not be read. Try again.');
       fail(checkUpload(input.name, input.mime, bytes!.length));
-      const id = ((await sql.query(`SELECT fil_put($1,$2,$3,$4,$5,$6) AS id`, [T, me, input.name, input.mime, input.purpose, Buffer.from(bytes!)])) as { id: string }[])[0].id;
+      // Safety screen before anything is stored (lib/fileScan.ts). A refused file is not kept.
+      const put = await putScanned(T, me, input.name, input.mime, input.purpose, bytes!);
+      if ('blocked' in put) { await audit(a, 'File refused by safety screen', 'file:refused', `${input.mime} · ${put.blocked.join(' ')}`, 'Owner'); forbid(`This file was not accepted: ${put.blocked.join(' ')}`); }
+      const id = (put as { id: string }).id;
       await audit(a, 'Private file uploaded', `file:${id}`, `${input.mime} · ${bytes!.length} bytes`, 'Owner');
       return { id };
     }
     if (input.action === 'download') {
+      await ensureScanned(T, [input.id]);
       const r = ((await sql.query(`SELECT name, mime, encode(bytes, 'base64') AS b64 FROM fil_read($1,$2,$3)`, [T, input.id, me])) as Row[])[0];
       // Same answer whether the file does not exist, belongs to someone else, or the share ended.
       if (!r) forbid('You do not have access to this file.');

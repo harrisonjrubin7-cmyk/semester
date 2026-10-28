@@ -7,6 +7,13 @@ export const FIL_MIGRATION: string[] = [
      sha256 text NOT NULL CHECK (sha256 ~ '^[0-9a-f]{64}$'), purpose text NOT NULL CHECK (purpose IN ('personal','submission','evidence','shared')),
      created_at timestamptz NOT NULL DEFAULT now(), deleted_at timestamptz)`,
   `CREATE INDEX IF NOT EXISTS fil_files_owner ON fil_files (tenant_id, owner_id) WHERE deleted_at IS NULL`,
+  // 28 Oct: file safety screening (lib/fileScan.ts). Files stored before then start 'pending' and are screened on next use.
+  `ALTER TABLE fil_files ADD COLUMN IF NOT EXISTS scan_status text NOT NULL DEFAULT 'pending' CHECK (scan_status IN ('pending','clean','blocked'))`,
+  `ALTER TABLE fil_files ADD COLUMN IF NOT EXISTS scan_reason text NOT NULL DEFAULT ''`,
+  `ALTER TABLE fil_files ADD COLUMN IF NOT EXISTS scan_engine text`,
+  `ALTER TABLE fil_files ADD COLUMN IF NOT EXISTS scanned_at timestamptz`,
+  `CREATE TABLE IF NOT EXISTS fil_scans (id bigserial PRIMARY KEY, tenant_id text NOT NULL, file_id uuid NOT NULL REFERENCES fil_files(id),
+     status text NOT NULL CHECK (status IN ('clean','blocked')), reason text NOT NULL DEFAULT '', engine text NOT NULL, at timestamptz NOT NULL DEFAULT clock_timestamp())`,
   `CREATE TABLE IF NOT EXISTS fil_blobs (file_id uuid PRIMARY KEY REFERENCES fil_files(id), bytes bytea NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS fil_grants (id bigserial PRIMARY KEY, tenant_id text NOT NULL, file_id uuid NOT NULL REFERENCES fil_files(id),
      grantee_id text NOT NULL, granted_by text NOT NULL, expires_at timestamptz NOT NULL, revoked_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(),
@@ -54,7 +61,8 @@ export const FIL_MIGRATION: string[] = [
   `CREATE OR REPLACE FUNCTION fil_read_attached(p_tenant text, p_file uuid, p_actor text, p_kind text, p_ref text) RETURNS TABLE (name text, mime text, bytes bytea) LANGUAGE plpgsql AS $$
    BEGIN
      IF NOT EXISTS (SELECT 1 FROM fil_attachments a JOIN fil_files f ON f.id = a.file_id
-                    WHERE a.tenant_id = p_tenant AND a.file_id = p_file AND a.kind = p_kind AND a.ref_id = p_ref AND f.deleted_at IS NULL) THEN
+                    WHERE a.tenant_id = p_tenant AND a.file_id = p_file AND a.kind = p_kind AND a.ref_id = p_ref AND f.deleted_at IS NULL
+                      AND (f.scan_status = 'clean' OR f.owner_id = p_actor)) THEN
        INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action, detail) VALUES (p_tenant, p_file, p_actor, 'denied', p_kind || ':' || p_ref);
        RETURN;
      END IF;
@@ -77,7 +85,8 @@ export const FIL_MIGRATION: string[] = [
   // Returns the file only when authorized; every call, allowed or not, leaves a log row.
   `CREATE OR REPLACE FUNCTION fil_read(p_tenant text, p_file uuid, p_actor text) RETURNS TABLE (name text, mime text, bytes bytea) LANGUAGE plpgsql AS $$
    BEGIN
-     IF NOT fil_can_read(p_tenant, p_file, p_actor) THEN
+     IF NOT fil_can_read(p_tenant, p_file, p_actor)
+        OR NOT EXISTS (SELECT 1 FROM fil_files f WHERE f.id = p_file AND (f.scan_status = 'clean' OR f.owner_id = p_actor)) THEN
        INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action) VALUES (p_tenant, p_file, p_actor, 'denied');
        RETURN;
      END IF;
@@ -113,4 +122,17 @@ export const FIL_MIGRATION: string[] = [
      INSERT INTO fil_access_log (tenant_id, file_id, actor_id, action) VALUES (p_tenant, p_file, p_owner, 'delete');
      RETURN NULL;
    END $$`,
+  `CREATE OR REPLACE FUNCTION fil_record_scan(p_tenant text, p_file uuid, p_status text, p_reason text, p_engine text) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE f fil_files%ROWTYPE;
+   BEGIN
+     IF p_status NOT IN ('clean','blocked') THEN RETURN 'Unknown scan result.'; END IF;
+     SELECT * INTO f FROM fil_files WHERE id = p_file AND tenant_id = p_tenant FOR UPDATE;
+     IF NOT FOUND THEN RETURN 'File not found.'; END IF;
+     IF f.scan_status = 'blocked' AND p_status = 'clean' AND f.scan_engine = p_engine THEN RETURN 'This file was blocked by this screen; it cannot be cleared by it.'; END IF;
+     UPDATE fil_files SET scan_status = p_status, scan_reason = coalesce(p_reason, ''), scan_engine = p_engine, scanned_at = now() WHERE id = p_file;
+     INSERT INTO fil_scans (tenant_id, file_id, status, reason, engine) VALUES (p_tenant, p_file, p_status, coalesce(p_reason, ''), p_engine);
+     RETURN 'ok';
+   END $$`,
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'fil_scans_append_only') THEN
+     CREATE TRIGGER fil_scans_append_only BEFORE UPDATE OR DELETE OR TRUNCATE ON fil_scans FOR EACH STATEMENT EXECUTE FUNCTION fil_refuse_change(); END IF; END $$`,
 ];
