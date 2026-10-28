@@ -20,6 +20,14 @@ const MIGRATION = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS site_inbound_requests_email_created ON site_inbound_requests (lower(email), created_at DESC)`,
+  // S-94 §6 (28 Oct): a request key makes retries safe; a reference is returned only after the row is saved; routing records
+  // whether the Company OS inbox copy succeeded ('routed') or is still owed ('pending'). The saved request is never lost.
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS request_key text`,
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS reference text`,
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS payload_sha text`,
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS routing text NOT NULL DEFAULT 'pending'`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS site_inbound_requests_key ON site_inbound_requests (request_key) WHERE request_key IS NOT NULL`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS site_inbound_requests_ref ON site_inbound_requests (reference) WHERE reference IS NOT NULL`,
 ];
 
 let ready: Promise<void> | null = null;

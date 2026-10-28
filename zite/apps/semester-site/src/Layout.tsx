@@ -36,7 +36,13 @@ export function Section({ eyebrow, title, intro, children, id }: { eyebrow?: str
   );
 }
 
+/** Per-route browser title (S-94 §7 per-route metadata). Pages with a PageTitle get it automatically. */
+export function useDocTitle(title: string | null) {
+  useEffect(() => { document.title = title ? `${title} · Semester` : 'Semester · One clear next step for every student'; }, [title]);
+}
+
 export function PageTitle({ eyebrow, title, intro }: { eyebrow: string; title: string; intro?: ReactNode }) {
+  useDocTitle(title);
   return (
     <header className="mx-auto max-w-5xl px-4 pb-10 pt-14 sm:px-6">
       <Eyebrow>{eyebrow}</Eyebrow>
@@ -83,7 +89,7 @@ export default function Layout() {
         <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 text-sm sm:grid-cols-4 sm:px-6">
           <div className="sm:col-span-2">
             <Mark className="text-base" />
-            <p className="mt-2 max-w-sm text-muted-foreground">One clear next step for every student. Your official systems stay official.</p>
+            <p className="mt-2 max-w-sm text-muted-foreground">One clear next step for every student. Current systems stay authoritative until each move is verified and authorized.</p>
           </div>
           <div><p className="eyebrow">Product</p><ul className="mt-2 space-y-1.5"><li><Link to="/pilot" className="hover:underline">Registration Readiness Pilot</Link></li><li><Link to="/pricing" className="hover:underline">Pricing</Link></li><li><Link to="/pricing#compare" className="hover:underline">Feature comparison</Link></li></ul></div>
           <div><p className="eyebrow">Company</p><ul className="mt-2 space-y-1.5"><li><Link to="/trust" className="hover:underline">Trust</Link></li><li><Link to="/mission" className="hover:underline">Mission</Link></li><li><Link to="/contact" className="hover:underline">Contact</Link></li></ul></div>

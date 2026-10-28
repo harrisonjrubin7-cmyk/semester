@@ -4,7 +4,7 @@ import { trustCenter } from 'zitejs/api';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
-import { Eyebrow, PageTitle, Section, StatusWord } from './Layout';
+import { Eyebrow, PageTitle, Section, StatusWord, useDocTitle } from './Layout';
 import RequestForm from './RequestForm';
 
 // Copy follows the Semester books (GTM copy, objections, personas) and two rules from them:
@@ -14,12 +14,13 @@ import RequestForm from './RequestForm';
 const Check = ({ children }: { children: React.ReactNode }) => <li className="flex gap-2"><span aria-hidden className="text-primary">✓</span><span>{children}</span></li>;
 
 export function Home() {
+  useDocTitle(null);
   return (
     <>
       <header className="mx-auto max-w-5xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24">
         <Eyebrow>For universities and their students</Eyebrow>
         <h1 className="font-editorial mt-3 max-w-3xl text-balance text-4xl leading-[1.1] sm:text-6xl">One clear next step for every student.</h1>
-        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">Semester turns the semester into the next thing to do, and shows where each fact came from. Your official systems stay official.</p>
+        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">Semester turns the semester into the next thing to do, and shows where each fact came from. Your current systems stay authoritative until each area is verified, reconciled and authorized to move.</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild size="lg"><Link to="/pilot/request">Request a pilot design session</Link></Button>
           <Button asChild size="lg" variant="outline"><Link to="/pilot">How the pilot works</Link></Button>
