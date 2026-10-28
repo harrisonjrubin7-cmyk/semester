@@ -91,4 +91,19 @@ describe('the productivity source-check function', () => {
     expect(response.status).toBe(200);
     expect((await read(response)).excerptFound).toBe(false);
   });
+
+  it('preserves literal less-than characters in plain-text sources and excerpts', async () => {
+    const deps = dependencies({
+      fetch: vi.fn(async () => new Response(
+        'The threshold value < 5 is exact source text.',
+        { headers: { 'Content-Type': 'text/plain' } },
+      )),
+    });
+    const response = await handleProductivitySourceCheck(
+      post('Bearer good-token', { url: URL, excerpt: 'value < 5' }),
+      deps,
+    );
+    expect(response.status).toBe(200);
+    expect((await read(response)).excerptFound).toBe(true);
+  });
 });

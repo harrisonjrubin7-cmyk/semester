@@ -89,11 +89,16 @@ function withoutTags(value: string) {
   return result;
 }
 
-const normalize = (value: string) => withoutTags(withoutRawTextElements(value))
+const normalizePlainText = (value: string) => value
   .replace(/&nbsp;/gi, ' ')
   .replace(/&amp;/gi, '&')
+  .replace(/&lt;/gi, '<')
+  .replace(/&gt;/gi, '>')
+  .replace(/&quot;/gi, '"')
   .replace(/\s+/g, ' ')
   .trim();
+
+const normalizeHtml = (value: string) => normalizePlainText(withoutTags(withoutRawTextElements(value)));
 
 export async function handleProductivitySourceCheck(
   req: Request,
@@ -142,7 +147,8 @@ export async function handleProductivitySourceCheck(
       await page.body?.cancel();
       return response(200, { state: 'unavailable', status: page.status, url: url.href, checkedAt: deps.now() });
     }
-    if (!/text\/(html|plain)/i.test(page.headers.get('content-type') ?? '')) {
+    const contentType = page.headers.get('content-type') ?? '';
+    if (!/text\/(html|plain)/i.test(contentType)) {
       await page.body?.cancel();
       throw new Error('Use a public HTML or plain-text source.');
     }
@@ -163,10 +169,11 @@ export async function handleProductivitySourceCheck(
     } finally {
       await reader.cancel();
     }
-    const excerpt = normalize(input.excerpt);
+    const excerpt = normalizePlainText(input.excerpt);
+    const sourceText = /text\/html/i.test(contentType) ? normalizeHtml(text) : normalizePlainText(text);
     return response(200, {
       state: 'available',
-      excerptFound: Boolean(excerpt) && normalize(text).includes(excerpt),
+      excerptFound: Boolean(excerpt) && sourceText.includes(excerpt),
       url: url.href,
       checkedAt: deps.now(),
     });
