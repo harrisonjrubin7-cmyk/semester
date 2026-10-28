@@ -295,9 +295,9 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-26', before: 'pilot', owner: 'accessibility', effort: 'M',
     title: 'Widen automated accessibility coverage',
-    finding: 'Real-browser axe now covers the default synthetic state of all sixty-three registered destinations at 375 pixels and found the Calendar and equation label-in-name defects fixed in that slice. Signed-in, error, modal, tablet and real-device states remain outside it; the target-size sweep is not nightly and text spacing is not checked.',
+    finding: 'Real-browser axe now covers the default synthetic state of all sixty-three registered destinations at 375 pixels and found the Calendar and equation label-in-name defects fixed in that slice. The nightly workflow also runs the fail-closed target-size sweep across every registered destination, phone and desktop widths, and all three density settings. Signed-in, error, modal, tablet and real-device states remain outside the axe slice; text spacing is not checked.',
     sources: ['app/src/a11y/axe.test.tsx', 'app/scripts/accessibility-smoke.mjs', 'app/scripts/targets-sweep.mjs'],
-    fix: 'Extend the real-browser axe sweep from the complete default destination inventory into signed-in, error and modal states; move the target sweep into the nightly workflow; add a text-spacing check.',
+    fix: 'Extend the real-browser axe sweep from the complete default destination inventory into signed-in, error and modal states; add a text-spacing check.',
     moves: ['TC-A11-01', 'TC-A11-04'],
     files: 'The expanded smoke output.',
   },

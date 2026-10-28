@@ -123,6 +123,7 @@
  *    what makes an overlay legible: `81×20 → 81×44` is a control doing what
  *    this app's tap classes are for, and `81×20 → 81×20` is one that lost it.
  */
+import { existsSync } from 'node:fs';
 import { arrived, destinations } from './destinations.mjs';
 
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
@@ -334,7 +335,14 @@ const HITTEST = `
      * scrolling does not cure, which is the second pass below rather than
      * nothing.
      */
-    el.scrollIntoView({ block: 'center', inline: 'center' });
+    /*
+     * The viewport's author-facing scroll is smooth. A measurement cannot be:
+     * scrollIntoView otherwise returns before a horizontally clipped card has
+     * moved, and the immediate hit test calls that off-screen card blocked.
+     * Chromium's instant behaviour makes the position and the measurement one
+     * operation without changing what readers experience in the app.
+     */
+    el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
     const r = el.getBoundingClientRect();
     const hit = hitting(el);
     let cx = r.left + r.width / 2;
@@ -722,6 +730,14 @@ async function sweep(browser, tier, width, height, density) {
    * found nothing there, and only one of them is good news.
    */
   const missed = [];
+  /*
+   * A destination can be reached successfully and still fail while the
+   * in-page instrument is reading it. Keep that separate from navigation
+   * misses so the log points at the right fault, but make it just as fatal:
+   * silently dropping that destination would turn incomplete coverage into a
+   * green run.
+   */
+  const measurementErrors = [];
 
   for (const { screen, label: title } of screens()) {
     await page.evaluate((s) => {
@@ -747,7 +763,11 @@ async function sweep(browser, tier, width, height, density) {
     let found;
     try {
       found = await page.evaluate(MEASURE);
-    } catch {
+    } catch (error) {
+      measurementErrors.push({
+        screen,
+        error: error instanceof Error ? error.message : String(error),
+      });
       continue;
     }
     controls += found.total;
@@ -785,6 +805,7 @@ async function sweep(browser, tier, width, height, density) {
   console.log(`  ${blocked} answer nowhere inside their own box, scrolled to the middle`);
   console.log(`  ${atRest} are painted over where the screen opens — a different question, and not a failure`);
   console.log(`  ${tinies} of ${texts} texts under ${TYPE}px`);
+  console.log(`  ${measurementErrors.length} destinations failed during measurement`);
 
   if (underCauses.size) {
     console.log(`\n  under ${AA}px — the AA minimum, and the only list that is a failure`);
@@ -827,12 +848,31 @@ async function sweep(browser, tier, width, height, density) {
     console.log(`  ${String(w.small).padStart(4)} of ${String(w.of).padEnd(4)} ${w.screen}`);
   }
   if (broke.length) console.log(`\n  pageerrors: ${broke.slice(0, 3).join(' | ')}`);
+  if (measurementErrors.length) {
+    console.log(
+      `\n  measurement errors: ${measurementErrors
+        .slice(0, 3)
+        .map(({ screen, error }) => `${screen}: ${error}`)
+        .join(' | ')}`,
+    );
+  }
   await ctx.close();
-  return { tier, density, smalls, controls, tinies, aa, blocked };
+  return {
+    tier,
+    density,
+    smalls,
+    controls,
+    tinies,
+    aa,
+    blocked,
+    missed: missed.length,
+    pageErrors: broke.length,
+    measurementErrors: measurementErrors.length,
+  };
 }
 
 const browser = await chromium.launch({
-  ...(CHROME ? { executablePath: CHROME } : {}),
+  ...(existsSync(CHROME) ? { executablePath: CHROME } : {}),
   args: ['--no-sandbox'],
 });
 const TIERS = [
@@ -887,5 +927,25 @@ if (got.length === runs.length && got.length) {
             `  and it is invisible at Comfortable — which is the only density this sweep used to run.`
         : `\nthe setting costs no targets: the AA count is the same at every density measured.`,
     );
+  }
+
+  const failures = got.filter(
+    (run) =>
+      run.aa > 0 ||
+      run.blocked > 0 ||
+      run.missed > 0 ||
+      run.pageErrors > 0 ||
+      run.measurementErrors > 0,
+  );
+  if (failures.length) {
+    console.error('\ntarget-size sweep failed:');
+    for (const run of failures) {
+      console.error(
+        `  ${run.tier} ${run.density.label}: ${run.aa} under ${AA}px, ` +
+          `${run.blocked} answering nowhere, ${run.missed} destinations missed, ` +
+          `${run.pageErrors} page errors, ${run.measurementErrors} measurement errors`,
+      );
+    }
+    process.exitCode = 1;
   }
 }
