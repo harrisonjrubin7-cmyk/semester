@@ -59,135 +59,15 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { calendarFeedDeps, handleCalendarFeed } from '../_shared/calendarfeed.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-/** 24 random bytes as hex — the same shape `app/src/lib/subscribe.ts` generates. */
-const TOKEN = /^[0-9a-f]{48}$/;
+const db = SUPABASE_URL && SERVICE_KEY
+  ? createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+  : null;
 
-/**
- * Which kind of client is asking, out of a fixed list, and never the string.
- *
- * A copy of `app/src/lib/clientfamily.ts`, which is the one with the tests —
- * an Edge Function is deployed alone to Deno by the Supabase CLI and cannot
- * import from the app, the same reason `lib/publichost.ts` duplicates
- * `fetchcal`'s host rule. `clientfamily.test.ts` reads this block and the
- * migration's check constraint and fails when the three stop agreeing.
- *
- * The ordering is the correctness argument and it is not obvious: Safari on a
- * Mac says `Intel Mac OS X 10_15_7` and macOS Calendar says
- * `Mac OS X/10.15.7`, so a rule that asks about the operating system files a
- * person opening a leaked link as the student's own calendar. The agent
- * tokens below name the *program* and appear in no browser's user agent.
- */
-const FAMILY: [RegExp, string][] = [
-  [/CalendarAgent|dataaccessd|ICSAgent|CoreDAV|accountsd/i, 'apple'],
-  [/Google-Calendar|Googlebot|Google Calendar/i, 'google'],
-  [/Outlook|Microsoft|MSOffice|Office\//i, 'outlook'],
-  [/Gecko|WebKit|Chrome|Safari|Firefox|Edg\//i, 'browser'],
-];
-
-function familyOf(userAgent: string | null): string {
-  const ua = (userAgent ?? '').trim();
-  // Nothing sent is `unknown`; something sent and not recognised is `other`.
-  // Collapsing the two would hide the second, and the second is the one worth
-  // looking at.
-  if (!ua) return 'unknown';
-  for (const [pattern, family] of FAMILY) if (pattern.test(ua)) return family;
-  return 'other';
-}
-
-/** What every response carries, whatever happened. */
-const HEADERS: Record<string, string> = {
-  'Content-Type': 'text/calendar; charset=utf-8',
-  // A calendar app should ask again in a few hours, and nothing in between
-  // should be cached by anything else. `private` because the body is one
-  // student's timetable and must never sit in a shared cache.
-  'Cache-Control': 'private, max-age=3600',
-  // The link is a bearer credential. If a student ever opens it in a browser
-  // and clicks away, the token must not travel to wherever they go next.
-  'Referrer-Policy': 'no-referrer',
-  'X-Content-Type-Options': 'nosniff',
-  // No browser page needs to read this cross-origin, and a calendar client
-  // does not use CORS at all, so there is no Access-Control-Allow-Origin here
-  // on purpose: a script on another site cannot fetch a feed it guesses.
-};
-
-/**
- * An empty but valid calendar.
- *
- * Returned with a 404 so a client that follows the status stops, and as a real
- * `VCALENDAR` so one that ignores the status shows an empty calendar rather
- * than an error dialog every four hours forever.
- */
-function empty(name = 'Semester'): string {
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Semester//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    `X-WR-CALNAME:${name}`,
-    'END:VCALENDAR',
-    '',
-  ].join('\r\n');
-}
-
-/** A filename for the client that decides to download rather than subscribe. */
-function attachment(name: string): string {
-  const clean = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `inline; filename="${clean || 'semester'}.ics"`;
-}
-
-Deno.serve(async (req: Request) => {
-  // A calendar client sends GET, and HEAD to check freshness. Nothing else is
-  // meaningful against a feed.
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return new Response('', { status: 405, headers: { Allow: 'GET, HEAD' } });
-  }
-
-  if (!SUPABASE_URL || !SERVICE_KEY) {
-    // A misconfigured deploy refuses rather than serving something wrong.
-    return new Response(empty(), { status: 503, headers: HEADERS });
-  }
-
-  const token = new URL(req.url).pathname.split('/').filter(Boolean).pop() ?? '';
-  if (!TOKEN.test(token)) {
-    return new Response(empty(), { status: 404, headers: HEADERS });
-  }
-
-  const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  /*
-   * One statement, and still only three columns.
-   *
-   * `read_feed` looks the row up by token, notes the fetch against whoever
-   * owns it, and returns `body`, `name` and `updated_at` — not `user_id`. That
-   * is the same promise the `select` it replaced made, kept the same way: the
-   * account is known inside the database, where the access log is written, and
-   * never travels out here. A select that fetched the owner so this could
-   * write the log would have undone exactly what that promise was for.
-   */
-  const { data: rows, error } = await db.rpc('read_feed', {
-    feed_token: token,
-    family: familyOf(req.headers.get('user-agent')),
-  });
-  const data = Array.isArray(rows) ? rows[0] : rows;
-
-  // A missing row and a database error get the same answer, because telling
-  // an unauthenticated caller which one it was is telling them something.
-  if (error || !data || typeof data.body !== 'string' || data.body === '') {
-    return new Response(empty(), { status: 404, headers: HEADERS });
-  }
-
-  const name = typeof data.name === 'string' && data.name ? data.name : 'Semester';
-  const headers = {
-    ...HEADERS,
-    'Content-Disposition': attachment(name),
-    ...(data.updated_at ? { 'Last-Modified': new Date(data.updated_at).toUTCString() } : {}),
-  };
-
-  // HEAD gets the headers and no body, which is what a client polling for a
-  // change actually wants.
-  return new Response(req.method === 'HEAD' ? null : data.body, { status: 200, headers });
-});
+Deno.serve((req: Request) => handleCalendarFeed(req, db
+  ? calendarFeedDeps((token, family) => db.rpc('read_feed', { feed_token: token, family }))
+  : null));

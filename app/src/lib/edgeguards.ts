@@ -59,7 +59,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'billing-checkout', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/billing/checkout.test.ts', /handleBillingCheckout/, /status\)\.toBe\(401\)/) },
   { fn: 'billing-portal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/billing/portal.test.ts', /handleBillingPortal/, /status\)\.toBe\(401\)/) },
   { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/], behaviorProof: proof('app/src/lib/billing/webhook.test.ts', /handleBillingWebhook/, /Stripe-Signature/) },
-  { fn: 'calendar', guards: ['link-token'], evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/], behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /calendar/, /read_feed/) },
+  { fn: 'calendar', guards: ['link-token'], evidence: [/handleCalendarFeed\(/], behaviorProof: proof('app/src/lib/calendarfeed.test.ts', /handleCalendarFeed/, /rejects malformed link tokens before database work/) },
   { fn: 'canvas', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /canvas/, /getUser/) },
   { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
   { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },

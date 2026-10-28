@@ -24,16 +24,6 @@ interface Contract {
 
 export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
   {
-    fn: 'calendar',
-    ordered: [
-      /if \(!TOKEN\.test\(token\)\)/,
-      /status: 404/,
-      /rpc\('read_feed'/,
-      /if \(error \|\| !data/,
-    ],
-    rejectionBoundaries: [0],
-  },
-  {
     fn: 'canvas',
     ordered: [
       /const session = req\.headers\.get\('Authorization'\)/,

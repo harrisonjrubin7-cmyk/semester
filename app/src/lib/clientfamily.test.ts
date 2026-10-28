@@ -141,7 +141,7 @@ describe('the same list in three places, which is three places to drift', () => 
      * reason `lib/publichost.ts` duplicates `fetchcal`'s rule — so the pin is
      * a test rather than a type.
      */
-    const fn = read('supabase/functions/calendar/index.ts');
+    const fn = read('supabase/functions/_shared/calendarfeed.ts');
     const list = /const FAMILY[\s\S]*?\n\}/.exec(fn);
     expect(list, 'the calendar function no longer classifies its caller').toBeTruthy();
     const named = [...new Set([...list![0].matchAll(/'([a-z]+)'/g)].map((m) => m[1]))];
