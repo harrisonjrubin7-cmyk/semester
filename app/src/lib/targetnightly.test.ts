@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 
 const workflow = readFileSync(join(process.cwd(), '..', '.github', 'workflows', 'contrast.yml'), 'utf8');
 const sweep = readFileSync(join(process.cwd(), 'scripts', 'targets-sweep.mjs'), 'utf8');
+const appCss = readFileSync(join(process.cwd(), 'src', 'styles', 'app.css'), 'utf8');
+const featuresCss = readFileSync(join(process.cwd(), 'src', 'styles', 'features.css'), 'utf8');
 
 describe('the scheduled target-size sweep', () => {
   it('runs nightly with pipe failures preserved and keeps its output', () => {
@@ -24,5 +26,10 @@ describe('the scheduled target-size sweep', () => {
   it('keeps the 44-pixel measure as an aim rather than an AA failure', () => {
     expect(sweep).toContain('under ${TARGET}px (AAA) — an aim');
     expect(sweep).not.toContain('run.smalls > 0');
+  });
+
+  it('keeps the compact hub titles and directory filters at the AA minimum', () => {
+    expect(appCss).toContain('button.jx-entry-title { min-height: 24px; }');
+    expect(featuresCss).toContain('.portal-filter-row>button{min-height:24px}');
   });
 });

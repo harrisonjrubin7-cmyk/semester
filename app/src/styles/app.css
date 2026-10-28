@@ -11217,6 +11217,7 @@ button.adband-bar {
 .jx-entry-read { opacity: 0.72; }
 .jx-entry-head { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .jx-entry-title { font-size: var(--type-base-plus); font-weight: 600; line-height: 1.4; }
+button.jx-entry-title { min-height: 24px; }
 .jx-entry-what { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; }
 .jx-privacy { font-size: var(--type-xs-plus); line-height: 1.4; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm); background: var(--app-raise); align-self: flex-start; }
 .jx-tag { font-size: var(--type-xs); padding: var(--sp-1) var(--sp-3); border-radius: 999px; border: 1px solid var(--app-line); color: var(--app-dim); white-space: nowrap; }
