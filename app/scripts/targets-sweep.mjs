@@ -334,7 +334,14 @@ const HITTEST = `
      * scrolling does not cure, which is the second pass below rather than
      * nothing.
      */
-    el.scrollIntoView({ block: 'center', inline: 'center' });
+    /*
+     * The viewport's author-facing scroll is smooth. A measurement cannot be:
+     * scrollIntoView otherwise returns before a horizontally clipped card has
+     * moved, and the immediate hit test calls that off-screen card blocked.
+     * Chromium's instant behaviour makes the position and the measurement one
+     * operation without changing what readers experience in the app.
+     */
+    el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
     const r = el.getBoundingClientRect();
     const hit = hitting(el);
     let cx = r.left + r.width / 2;
@@ -828,7 +835,17 @@ async function sweep(browser, tier, width, height, density) {
   }
   if (broke.length) console.log(`\n  pageerrors: ${broke.slice(0, 3).join(' | ')}`);
   await ctx.close();
-  return { tier, density, smalls, controls, tinies, aa, blocked };
+  return {
+    tier,
+    density,
+    smalls,
+    controls,
+    tinies,
+    aa,
+    blocked,
+    missed: missed.length,
+    pageErrors: broke.length,
+  };
 }
 
 const browser = await chromium.launch({
@@ -887,5 +904,20 @@ if (got.length === runs.length && got.length) {
             `  and it is invisible at Comfortable — which is the only density this sweep used to run.`
         : `\nthe setting costs no targets: the AA count is the same at every density measured.`,
     );
+  }
+
+  const failures = got.filter(
+    (run) => run.aa > 0 || run.blocked > 0 || run.missed > 0 || run.pageErrors > 0,
+  );
+  if (failures.length) {
+    console.error('\ntarget-size sweep failed:');
+    for (const run of failures) {
+      console.error(
+        `  ${run.tier} ${run.density.label}: ${run.aa} under ${AA}px, ` +
+          `${run.blocked} answering nowhere, ${run.missed} destinations missed, ` +
+          `${run.pageErrors} page errors`,
+      );
+    }
+    process.exitCode = 1;
   }
 }

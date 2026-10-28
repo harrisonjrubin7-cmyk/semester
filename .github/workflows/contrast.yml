@@ -1,4 +1,4 @@
-# The contrast sweep, on a schedule.
+# The painted-contrast and target-size sweeps, on a schedule.
 #
 # Not part of `ci.yml`, and the reasons are worth stating because "why is this
 # not a required check" is the first question anyone will have:
@@ -121,15 +121,30 @@ jobs:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
         run: npm run sweep:walls 2>&1 | tee /tmp/walls.txt
 
+      # Target size is layout evidence too, so it belongs beside the other
+      # real-browser sweeps rather than in a source-only unit test. It runs at
+      # every registered destination, at phone and desktop widths, and at all
+      # three density settings. The script refuses an incomplete instrument,
+      # an unreachable destination, a page error, a control that answers
+      # nowhere, or a non-exempt target below the WCAG 2.2 AA minimum.
+      - name: Targets
+        if: always()
+        shell: bash
+        working-directory: app
+        env:
+          SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
+        run: npm run sweep:targets 2>&1 | tee /tmp/targets.txt
+
       # Kept whether the step passed or failed: a green run's coverage numbers
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: contrast-sweep
+          name: accessibility-sweeps
           path: |
             /tmp/contrast.txt
             /tmp/walls.txt
+            /tmp/targets.txt
             /tmp/vite.log
           retention-days: 30
