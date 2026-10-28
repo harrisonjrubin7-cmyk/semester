@@ -730,6 +730,14 @@ async function sweep(browser, tier, width, height, density) {
    * found nothing there, and only one of them is good news.
    */
   const missed = [];
+  /*
+   * A destination can be reached successfully and still fail while the
+   * in-page instrument is reading it. Keep that separate from navigation
+   * misses so the log points at the right fault, but make it just as fatal:
+   * silently dropping that destination would turn incomplete coverage into a
+   * green run.
+   */
+  const measurementErrors = [];
 
   for (const { screen, label: title } of screens()) {
     await page.evaluate((s) => {
@@ -755,7 +763,11 @@ async function sweep(browser, tier, width, height, density) {
     let found;
     try {
       found = await page.evaluate(MEASURE);
-    } catch {
+    } catch (error) {
+      measurementErrors.push({
+        screen,
+        error: error instanceof Error ? error.message : String(error),
+      });
       continue;
     }
     controls += found.total;
@@ -793,6 +805,7 @@ async function sweep(browser, tier, width, height, density) {
   console.log(`  ${blocked} answer nowhere inside their own box, scrolled to the middle`);
   console.log(`  ${atRest} are painted over where the screen opens — a different question, and not a failure`);
   console.log(`  ${tinies} of ${texts} texts under ${TYPE}px`);
+  console.log(`  ${measurementErrors.length} destinations failed during measurement`);
 
   if (underCauses.size) {
     console.log(`\n  under ${AA}px — the AA minimum, and the only list that is a failure`);
@@ -835,6 +848,14 @@ async function sweep(browser, tier, width, height, density) {
     console.log(`  ${String(w.small).padStart(4)} of ${String(w.of).padEnd(4)} ${w.screen}`);
   }
   if (broke.length) console.log(`\n  pageerrors: ${broke.slice(0, 3).join(' | ')}`);
+  if (measurementErrors.length) {
+    console.log(
+      `\n  measurement errors: ${measurementErrors
+        .slice(0, 3)
+        .map(({ screen, error }) => `${screen}: ${error}`)
+        .join(' | ')}`,
+    );
+  }
   await ctx.close();
   return {
     tier,
@@ -846,6 +867,7 @@ async function sweep(browser, tier, width, height, density) {
     blocked,
     missed: missed.length,
     pageErrors: broke.length,
+    measurementErrors: measurementErrors.length,
   };
 }
 
@@ -908,7 +930,12 @@ if (got.length === runs.length && got.length) {
   }
 
   const failures = got.filter(
-    (run) => run.aa > 0 || run.blocked > 0 || run.missed > 0 || run.pageErrors > 0,
+    (run) =>
+      run.aa > 0 ||
+      run.blocked > 0 ||
+      run.missed > 0 ||
+      run.pageErrors > 0 ||
+      run.measurementErrors > 0,
   );
   if (failures.length) {
     console.error('\ntarget-size sweep failed:');
@@ -916,7 +943,7 @@ if (got.length === runs.length && got.length) {
       console.error(
         `  ${run.tier} ${run.density.label}: ${run.aa} under ${AA}px, ` +
           `${run.blocked} answering nowhere, ${run.missed} destinations missed, ` +
-          `${run.pageErrors} page errors`,
+          `${run.pageErrors} page errors, ${run.measurementErrors} measurement errors`,
       );
     }
     process.exitCode = 1;
