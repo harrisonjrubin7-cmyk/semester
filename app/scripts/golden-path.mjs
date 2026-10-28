@@ -506,10 +506,15 @@ async function journey(label, viewport) {
     // ── 6 · Plan: the course's deadline is on its day, and a day takes more ─
     at(STEPS[5]);
     await go(page, '#/calendar', 'Calendar');
-    const day = page.getByRole('gridcell', {
-      name: new RegExp(`^\\w+ ${course.first} ${MONTHS[course.month]}\\..*\\b\\d+ deadlines?\\b`),
-    });
+    // Calendar cells now keep the painted numeral/count in their accessible
+    // name and put the full date and mark breakdown in the description. Read
+    // that same contract here rather than depending on the former overriding
+    // aria-label that failed WCAG's label-in-name check.
+    const date = `${course.first} ${MONTHS[course.month]}`;
+    const day = page.locator(`[role="gridcell"][aria-description^="${date}"]`);
     expect(await visible(day), `the calendar does not show a deadline on ${MONTHS[course.month]} ${course.first}`);
+    const description = await day.first().getAttribute('aria-description');
+    expect(/\b\d+ deadlines?\b/.test(description || ''), `the calendar day for ${date} does not describe its deadline`);
     await day.first().click();
     await day.first().waitFor({ state: 'visible', timeout: WAIT });
     expect(await day.first().getAttribute('aria-selected') === 'true', 'the deadline day did not become selected');
