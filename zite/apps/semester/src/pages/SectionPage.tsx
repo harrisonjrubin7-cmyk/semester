@@ -19,10 +19,11 @@ import { PageHeader, Panel, Empty, SourceTag, Status, fmt, useLoad, Loadable, er
 import { uploadPrivate, saveBytes } from '../lib/fileClient';
 import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
 import CourseAccessibility from '../components/CourseAccessibility';
+import CourseExtensions from '../components/CourseExtensions';
 
-type Receipt = { code: string; submittedAt: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
+type Receipt = { code: string; submittedAt: string; dueAt?: string | null; dueSource?: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
 type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
-type Asg = { id: string; title: string; dueAt: string | null; points: number | null; rubric: string; source: string };
+type Asg = { id: string; title: string; dueAt: string | null; extendedTo?: { dueAt: string; kind: string } | null; points: number | null; rubric: string; source: string };
 
 const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
 const AttList = ({ s, onDetach }: { s: Sub; onDetach?: (fileId: string) => void }) => (<>{(s.attachments ?? []).map((f) => (
@@ -61,7 +62,7 @@ function GradeRow({ s, rubrics, onSave }: { s: Sub; rubrics: Rubric[]; onSave: (
 function ReceiptLine({ r }: { r: Receipt }) {
   return (
     <div className="mt-2 rounded-md border border-border p-2 text-xs">
-      <p><span className="font-medium">Receipt {r.code}</span> · submitted {new Date(r.submittedAt).toLocaleString()} · {r.late ? <span className="text-destructive">! late by {r.lateMinutes >= 60 ? `${Math.floor(r.lateMinutes / 60)} h ${r.lateMinutes % 60} min` : `${r.lateMinutes} min`}</span> : '✓ on time'}</p>
+      <p><span className="font-medium">Receipt {r.code}</span> · submitted {new Date(r.submittedAt).toLocaleString()}{r.dueAt && <> · judged against {new Date(r.dueAt).toLocaleString()}{r.dueSource && r.dueSource !== 'assignment' ? ` (${r.dueSource === 'extension:accommodation' ? 'accommodation extension' : 'extension'})` : ''}</>} · {r.late ? <span className="text-destructive">! late by {r.lateMinutes >= 60 ? `${Math.floor(r.lateMinutes / 60)} h ${r.lateMinutes % 60} min` : `${r.lateMinutes} min`}</span> : '✓ on time'}</p>
       <ul className="mt-1 text-muted-foreground">{r.files.map((f) => <li key={f.sha256 + f.name}>{f.name} · {Math.max(1, Math.round(f.size / 1024))} KB · SHA-256 {f.sha256.slice(0, 12)}…</li>)}</ul>
     </div>
   );
@@ -72,7 +73,7 @@ function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { 
     <Panel>
       <div className="flex justify-between gap-2"><p className="eyebrow">Assignment</p><SourceTag source={a.source} /></div>
       <p className="font-display text-xl">{a.title}</p>
-      <p className="text-sm text-muted-foreground">{fmt(a.dueAt)}{a.points ? ` · ${a.points} pts` : ''}</p>
+      <p className="text-sm text-muted-foreground">{a.extendedTo ? <><s>{fmt(a.dueAt)}</s> · extended to <span className="font-medium text-foreground">{fmt(a.extendedTo.dueAt)}</span></> : fmt(a.dueAt)}{a.points ? ` · ${a.points} pts` : ''}</p>
       {a.rubric && <div className="mt-2 text-xs text-muted-foreground"><p className="font-medium text-foreground">Rubric</p>{a.rubric.split('\n').map((l) => <p key={l}>{l}</p>)}</div>}
       {sub && sub.state !== 'Private Draft' ? (
         <div className="mt-3 text-sm"><Status value={sub.state} />{sub.receipt && <ReceiptLine r={sub.receipt} />}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
@@ -113,7 +114,8 @@ export default function SectionPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs defaultValue="assignments">
-              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="groups">Groups</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}{d.grader && <TabsTrigger value="a11y">Accessibility</TabsTrigger>}</TabsList>
+              <TabsList><TabsTrigger value="assignments">Assignments</TabsTrigger><TabsTrigger value="assessments">Assessments</TabsTrigger><TabsTrigger value="syllabus">Syllabus</TabsTrigger><TabsTrigger value="materials">Materials</TabsTrigger><TabsTrigger value="discussion">Discussion</TabsTrigger><TabsTrigger value="groups">Groups</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{d.grader && <TabsTrigger value="grading">Grading</TabsTrigger>}{d.grader && <TabsTrigger value="team">Teaching team</TabsTrigger>}{d.grader && <TabsTrigger value="a11y">Accessibility</TabsTrigger>}{d.teaching && <TabsTrigger value="deadlines">Deadlines</TabsTrigger>}</TabsList>
+              {d.teaching && <TabsContent value="deadlines"><CourseExtensions sectionId={sectionId} /></TabsContent>}
               <TabsContent value="discussion"><Discussion sectionId={sectionId} /></TabsContent>
               <TabsContent value="groups"><CourseGroups sectionId={sectionId} /></TabsContent>
               <TabsContent value="assessments"><Assessments sectionId={sectionId} /></TabsContent>

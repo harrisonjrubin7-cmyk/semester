@@ -8,8 +8,11 @@ import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
 import { courseRole, ensureTeam, delegatedSections } from '../lib/teamServer';
 import { rubricScore, Criterion } from '../lib/rubricRules';
 import { SBM_MIGRATION } from '../lib/sbmMigration';
+import { ACC_MIGRATION } from '../lib/accMigration';
 
 let sbmReady: Promise<void> | null = null;
+let accReady: Promise<void> | null = null;
+const ensureAcc = () => { if (!accReady) accReady = (async () => { for (const q of ACC_MIGRATION) await pg().query(q); })().catch((e) => { accReady = null; throw e; }); return accReady; };
 const ensureSbm = () => { if (!sbmReady) sbmReady = (async () => { for (const q of SBM_MIGRATION) await pg().query(q); })().catch((e) => { sbmReady = null; throw e; }); return sbmReady; };
 
 let crsReady: Promise<void> | null = null;
@@ -35,6 +38,9 @@ export default createEndpoint({
     z.object({ action: z.literal('publishSyllabus'), sectionId: z.string(), body: z.string().min(20).max(40000), note: z.string().max(300), expectedVersion: z.number().int().min(0) }),
     z.object({ action: z.literal('addMaterial'), sectionId: z.string(), title: z.string().min(2).max(160), url: z.string().url().max(800).refine((u) => u.startsWith('https://'), 'Use an https link'), note: z.string().max(500) }),
     z.object({ action: z.literal('hideMaterial'), sectionId: z.string(), id: z.string() }),
+    z.object({ action: z.literal('extensions'), sectionId: z.string() }),
+    z.object({ action: z.literal('grantExtension'), sectionId: z.string(), taskId: z.string(), studentId: z.string(), newDue: z.string().datetime(), kind: z.enum(['instructor', 'accommodation']), accRequestId: z.string().max(80).optional(), note: z.string().max(500) }),
+    z.object({ action: z.literal('revokeExtension'), sectionId: z.string(), id: z.number().int() }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -114,16 +120,17 @@ export default createEndpoint({
       const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
       const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
       await ensureSbm();
-      const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
-      const receiptOf = (id: string) => { const r = receipts.find((x) => x.submission_id === id); return r ? { code: String(r.receipt_code), submittedAt: new Date(String(r.submitted_at)).toISOString(), late: !!r.late, lateMinutes: Math.ceil(Number(r.late_seconds) / 60), files: (r.files as { name: string; size: number; sha256: string }[]).map((f) => ({ name: f.name, size: f.size, sha256: f.sha256 })) } : null; };
+      const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, due_at, due_source, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
+      const receiptOf = (id: string) => { const r = receipts.find((x) => x.submission_id === id); return r ? { code: String(r.receipt_code), submittedAt: new Date(String(r.submitted_at)).toISOString(), dueAt: r.due_at ? new Date(String(r.due_at)).toISOString() : null, dueSource: String(r.due_source ?? 'assignment'), late: !!r.late, lateMinutes: Math.ceil(Number(r.late_seconds) / 60), files: (r.files as { name: string; size: number; sha256: string }[]).map((f) => ({ name: f.name, size: f.size, sha256: f.sha256 })) } : null; };
       const names = grader ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
+      const myExt = grader ? [] : (await pg().query(`SELECT task_id, new_due, kind FROM dln_extensions WHERE tenant_id = $1 AND section_id = $2 AND student_id = $3 AND revoked_at IS NULL`, [a.institutionId, s.id, uid])) as Record<string, unknown>[];
       const resources = (await zite.resources.findAll({ filters: { section: s.id }, limit: 300 })).records
         .filter((r) => r.visibility === 'Course' || ids(r.owner).includes(uid));
       return {
         section: { id: s.id, label: s.label ?? '', code: course?.code ?? '', title: course?.title ?? '', term: s.term ?? '', times: s.meetingTimes ?? '', syllabus: s.syllabus ?? '', policy: s.courseAiPolicy ?? 'Allowed' },
         teaching,
         grader,
-        assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
+        assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, extendedTo: (() => { const e = myExt.find((x) => x.task_id === t.id); return e ? { dueAt: new Date(String(e.new_due)).toISOString(), kind: String(e.kind) } : null; })(), points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
           return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
@@ -171,6 +178,50 @@ export default createEndpoint({
       if (!f) forbid('You do not have access to this file.');
       return f!;
     }
+    if (input.action === 'extensions' || input.action === 'grantExtension' || input.action === 'revokeExtension') {
+      // Deadline extensions (spec §7 Workflow B): only the instructor of record, never a delegate, and never from client-sent roles.
+      const { s, teaching } = await loadSection(input.sectionId);
+      const isInstructor = teaching && isFaculty;
+      if (!isInstructor) forbid('Only the instructor of record manages extensions.');
+      await ensureFil(); await ensureSbm(); await ensureAcc();
+      const T = a.institutionId;
+      if (input.action === 'grantExtension') {
+        const task = await zite.tasks.findOne({ id: input.taskId });
+        if (!task || first(task.section) !== s.id || task.type !== 'Assignment') forbid('That assignment is not in this section.');
+        if (!ids(task!.owner).includes(input.studentId)) forbid('That assignment does not belong to this student.');
+        if (!task!.dueAt) forbid('This assignment has no due date to extend.');
+        const enrolled = !!(await zite.enrollments.findOne({ filters: { student: input.studentId, section: s.id } }));
+        const letters = input.accRequestId ? (await pg().query(`SELECT 1 FROM acc_instructor_letters($1, $2) WHERE request_id = $3 AND student_id = $4`, [T, [s.id], input.accRequestId, input.studentId])) as unknown[] : [];
+        const r = String(((await pg().query(`SELECT dln_grant($1,$2,$3,$4,$5,$6,$7,$8::timestamptz,$9::timestamptz,$10,$11,$12,$13) AS r`,
+          [uid, T, task!.id, s.id, input.studentId, true, enrolled, input.newDue, task!.dueAt, input.kind, input.accRequestId ?? null, letters.length > 0, input.note])) as { r: string | null }[])[0].r ?? '');
+        if (!r.startsWith('ok:')) forbid(r);
+        await audit(a, 'Extension granted', `task:${task!.id}`, `${input.kind} to ${input.newDue}`, 'Faculty');
+        return { ok: true, id: Number(r.slice(3)) };
+      }
+      if (input.action === 'revokeExtension') {
+        const own = (await pg().query(`SELECT task_id FROM dln_extensions WHERE tenant_id = $1 AND id = $2 AND section_id = $3`, [T, input.id, s.id])) as unknown[];
+        if (!own.length) forbid('Extension not found in this section.');
+        const r = String(((await pg().query(`SELECT dln_revoke($1,$2,$3,$4) AS r`, [uid, T, input.id, true])) as { r: string | null }[])[0].r ?? '');
+        if (!r.startsWith('ok')) forbid(r);
+        await audit(a, 'Extension revoked', `extension:${input.id}`, '', 'Faculty');
+        return { ok: true };
+      }
+      const { records: tasks } = await zite.tasks.findAll({ filters: { section: s.id, type: 'Assignment' }, limit: 500 });
+      const studentIds = [...new Set(tasks.flatMap((t) => ids(t.owner)))];
+      const names = await userNames(studentIds);
+      const ext = (await pg().query(`SELECT id, task_id, student_id, new_due, original_due, kind, acc_request_id, note, granted_at FROM dln_extensions WHERE tenant_id = $1 AND section_id = $2 AND revoked_at IS NULL`, [T, s.id])) as Record<string, unknown>[];
+      const subd = (await pg().query(`SELECT task_id, student_id FROM sbm_receipts WHERE tenant_id = $1 AND section_id = $2`, [T, s.id])) as Record<string, unknown>[];
+      const letters = (await pg().query(`SELECT request_id, student_id, arrangements, valid_until FROM acc_instructor_letters($1, $2)`, [T, [s.id]])) as Record<string, unknown>[];
+      const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
+      return {
+        rows: tasks.flatMap((t) => ids(t.owner).map((sid) => {
+          const e = ext.find((x) => x.task_id === t.id && x.student_id === sid);
+          return { taskId: t.id, title: t.title ?? '', studentId: sid, student: names[sid] ?? 'Student', dueAt: t.dueAt ?? null, submitted: subd.some((x) => x.task_id === t.id && x.student_id === sid),
+            extension: e ? { id: Number(e.id), newDue: iso(e.new_due), kind: String(e.kind), note: String(e.note ?? ''), grantedAt: iso(e.granted_at) } : null };
+        })),
+        letters: letters.map((l) => ({ requestId: String(l.request_id), studentId: String(l.student_id), student: names[String(l.student_id)] ?? 'Student', arrangements: (l.arrangements as string[]) ?? [], validUntil: l.valid_until ? String(l.valid_until).slice(0, 10) : null })),
+      };
+    }
     if (input.action === 'submit') {
       // Spec §4.2/§7 Workflow B: the receipt is the submission. sbm_submit builds the file manifest (name, size, SHA-256)
       // from the database, locks the files and stamps on-time/late in one transaction; a retry replays the same receipt.
@@ -186,8 +237,8 @@ export default createEndpoint({
       if (x!.state === 'Private Draft') await zite.submissions.update({ id: x!.id, record: { state: 'Submitted' } as never });
       if (task && task.status !== 'Done') await zite.tasks.update({ id: task.id, record: { status: 'Done' } as never });
       if (!replay) await audit(a, 'Work submitted', `submission:${x!.id}`, `receipt ${code}`, 'Student');
-      const rc = ((await pg().query(`SELECT receipt_code, submitted_at, due_at, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = $2`, [a.institutionId, x!.id])) as Record<string, unknown>[])[0];
-      return { ok: true, replay: !!replay, receipt: { code: String(rc.receipt_code), submittedAt: new Date(String(rc.submitted_at)).toISOString(), dueAt: rc.due_at ? new Date(String(rc.due_at)).toISOString() : null, late: !!rc.late, lateMinutes: Math.ceil(Number(rc.late_seconds) / 60), files: rc.files } };
+      const rc = ((await pg().query(`SELECT receipt_code, submitted_at, due_at, due_source, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = $2`, [a.institutionId, x!.id])) as Record<string, unknown>[])[0];
+      return { ok: true, replay: !!replay, receipt: { code: String(rc.receipt_code), submittedAt: new Date(String(rc.submitted_at)).toISOString(), dueAt: rc.due_at ? new Date(String(rc.due_at)).toISOString() : null, dueSource: String(rc.due_source ?? 'assignment'), late: !!rc.late, lateMinutes: Math.ceil(Number(rc.late_seconds) / 60), files: rc.files } };
     }
     if (input.action === 'grade') {
       const x = await zite.submissions.findOne({ id: input.submissionId });

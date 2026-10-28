@@ -3,7 +3,7 @@ import { FIL_MIGRATION } from '../src/lib/filMigration';
 import { SBM_MIGRATION } from '../src/lib/sbmMigration';
 
 export const CHECKS = `DO $$
-DECLARE r text; x text; f1 uuid; f2 uuid; code text; got boolean;
+DECLARE r text; x text; f1 uuid; f2 uuid; f3 uuid; code text; got boolean; ex bigint;
 BEGIN
   CREATE TEMP TABLE rr (ok boolean, lbl text) ON COMMIT DROP;
   f1 := fil_put('t1','stu1','essay.pdf','application/pdf','submission','\\x255044462d'::bytea);
@@ -28,6 +28,27 @@ BEGIN
   got := false; BEGIN DELETE FROM sbm_receipts WHERE receipt_code = code; EXCEPTION WHEN others THEN got := true; END;
   INSERT INTO rr VALUES (got, 'S13 receipts cannot be deleted');
   INSERT INTO rr VALUES (sbm_submit('stu1','t2','sub3','task3','sec9',true,NULL,'key-00005') = 'Attach your work before submitting.', 'S14 files from another tenant never appear in a manifest');
+  -- deadline extensions
+  INSERT INTO rr VALUES (dln_grant('ta1','t1','task4','sec1','stu1',false,true,now() + interval '2 days',now() - interval '1 hour','instructor',NULL,false,'') LIKE 'Only the instructor of record%', 'E1 only the instructor of record grants');
+  INSERT INTO rr VALUES (dln_grant('in1','t1','task4','sec1','stuX',true,false,now() + interval '2 days',now() - interval '1 hour','instructor',NULL,false,'') LIKE 'That student is not enrolled%', 'E2 only for enrolled students');
+  INSERT INTO rr VALUES (dln_grant('in1','t1','task4','sec1','stu1',true,true,now() + interval '2 days',now() - interval '1 hour','accommodation',NULL,false,'') LIKE 'An accommodation extension needs%', 'E3 accommodation kind needs an active letter');
+  INSERT INTO rr VALUES (dln_grant('in1','t1','task4','sec1','stu1',true,true,now() - interval '2 hours',now() - interval '1 hour','instructor',NULL,false,'') LIKE 'The new due date must be after%', 'E4 the new date must be later than the assignment date');
+  r := dln_grant('in1','t1','task4','sec1','stu1',true,true,now() + interval '2 days',now() - interval '1 hour','accommodation','acc-req-7',true,'per letter'); ex := split_part(r,':',2)::bigint;
+  INSERT INTO rr VALUES (r LIKE 'ok:%', 'E5 accommodation extension granted against a letter');
+  f3 := fil_put('t1','stu1','late.pdf','application/pdf','submission','\\x2550'::bytea); PERFORM fil_attach('t1','stu1',f3,'submission','sub4');
+  r := sbm_submit('stu1','t1','sub4','task4','sec1',true,now() - interval '1 hour','key-00006');
+  INSERT INTO rr VALUES ((SELECT NOT late AND due_source = 'extension:accommodation' AND due_at > now() FROM sbm_receipts WHERE submission_id = 'sub4'), 'E6 work after the assignment date but before the extension is on time');
+  INSERT INTO rr VALUES (dln_revoke('in1','t1',ex,true) LIKE 'This work is already submitted%', 'E7 an extension cannot be revoked after submitting against it');
+  INSERT INTO rr VALUES (dln_grant('in1','t1','task4','sec1','stu1',true,true,now() + interval '5 days',now() - interval '1 hour','instructor',NULL,false,'') LIKE 'This work is already submitted%', 'E8 no new extension once submitted');
+  r := dln_grant('in1','t1','task5','sec1','stu2',true,true,now() + interval '1 day',now() - interval '1 day','instructor',NULL,false,'');
+  r := dln_grant('in1','t1','task5','sec1','stu2',true,true,now() + interval '3 days',now() - interval '1 day','instructor',NULL,false,'');
+  INSERT INTO rr VALUES ((SELECT count(*) = 1 FROM dln_extensions WHERE task_id = 'task5' AND student_id = 'stu2' AND revoked_at IS NULL) AND (SELECT count(*) = 2 FROM dln_extensions WHERE task_id = 'task5'), 'E9 a new grant replaces the old one, which is kept');
+  got := false; BEGIN UPDATE dln_events SET what = 'x'; EXCEPTION WHEN others THEN got := true; END;
+  INSERT INTO rr VALUES (got, 'E10 the extension log cannot be rewritten');
+  got := false; BEGIN INSERT INTO dln_extensions (tenant_id, task_id, section_id, student_id, new_due, kind, granted_by) VALUES ('t1','task6','sec1','stu3',now(),'accommodation','in1'); EXCEPTION WHEN others THEN got := true; END;
+  INSERT INTO rr VALUES (got, 'E11 the table refuses an accommodation extension without a letter');
+  r := sbm_submit('stu2','t1','sub9','task9','sec1',true,now() - interval '30 minutes','key-00007');
+  INSERT INTO rr VALUES (r = 'Attach your work before submitting.', 'E12 control: unrelated work still follows its own rules');
   SELECT string_agg(lbl, '; ') INTO x FROM rr WHERE ok IS NOT TRUE;
   RAISE EXCEPTION 'RESULT pass=% fails=% [%]', (SELECT count(*) FROM rr WHERE ok IS TRUE), (SELECT count(*) FROM rr WHERE ok IS NOT TRUE), coalesce(x,'');
 END $$`;
@@ -40,6 +61,7 @@ export async function run() {
   };
   await go('real:', SBM_MIGRATION);
   await go('mutant no-lock (S6):', SBM_MIGRATION.map((q) => q.replace(`UPDATE fil_attachments SET locked = true WHERE tenant_id = p_tenant AND kind = 'submission' AND ref_id = p_submission AND NOT locked;`, () => '')));
+  await go('mutant extension-ignored (E6):', SBM_MIGRATION.map((q) => q.replace(`IF v_due IS NULL THEN v_due := p_due; v_src := 'assignment'; END IF;`, () => `v_due := p_due; v_src := 'assignment';`)));
   await go('mutant replay-ignores-manifest (S9):', SBM_MIGRATION.map((q) => q.replace(`IF prior.submission_id = p_submission AND prior.manifest_sha256 = h THEN`, () => `IF true THEN`)));
   console.log('left behind:', JSON.stringify(await sql.query(`SELECT to_regclass('sbm_receipts') AS t`)));
 }

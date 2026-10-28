@@ -24,6 +24,11 @@ the enrollment's official Final Grade directly. Official grades are written only
 into the institution's records in pilot/authoritative mode (two administrators + evidence) or for sample institutions.
 Records mode for every tenant is `design` today.
 
+## Deadline extensions (28 Oct)
+- `dln_extensions` + append-only `dln_events`; `dln_grant` / `dln_revoke` (instructor of record only, enrolled student only, accommodation kind needs an active letter, new date later than the assignment's, no change once work is submitted). `sbm_submit` judges lateness against the student's active extension and records `due_source` on the receipt.
+- Endpoint `learn` actions `extensions`, `grantExtension`, `revokeExtension`; flags (instructor, enrolled, letter) are computed on the server. UI: Section → Deadlines (instructor), extended date on the student's assignment, deadline basis on the receipt.
+- Evidence: `dbchecks/submissions.ts` 26/26; mutant that ignores the extension fails E6. Signed-in run NOT RUN (no instructor account in the sample institution).
+
 ## Open items
 - SECURITY (not verified): `zite.permissions.json` has no `defaultPolicy` and no roles. The spec notes Zite rules are
   inert unless `defaultPolicy` is "deny". No app page imports `zitejs/db` (all access goes through endpoints), but whether a
