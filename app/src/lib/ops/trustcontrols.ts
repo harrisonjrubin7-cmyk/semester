@@ -392,12 +392,12 @@ export const CONTROLS: readonly Control[] = [
   {
     id: 'TC-A11-01',
     family: 'accessibility',
-    does: 'axe-core runs over the rendered app at desktop and phone width and fails on serious or critical violations.',
+    does: 'axe-core runs in real Chromium over every registered destination at 375 pixels and in jsdom over focused desktop and phone cases, failing on serious or critical violations.',
     domains: ['learning', 'productivity', 'campus', 'identity'],
-    mechanism: 'code-test',
+    mechanism: 'ci',
     state: 'partial',
-    proof: ['app/src/a11y/axe.test.tsx'],
-    gap: 'Fifteen render cases in jsdom: no layout, so colour contrast and target size are never judged; search, directory, mail, ask, help, calls, the console and every signed-in or error state are outside it.',
+    proof: ['.github/workflows/ci.yml', 'app/src/lib/accessibilitysmoke.test.ts', 'app/src/a11y/axe.test.tsx'],
+    gap: 'The 375-pixel browser sweep covers the default synthetic state of all sixty-three registered destinations; signed-in, error, modal, tablet and real-device states remain outside it, and automated axe results are not a manual assistive-technology pass.',
     owner: 'accessibility',
   },
   {
@@ -408,7 +408,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'ci',
     state: 'enforced',
     proof: ['.github/workflows/ci.yml'],
-    gap: 'Hand-rolled checks, not axe; 375 pixels, tablet and real devices are not covered.',
+    gap: 'The seven journey checks remain hand-rolled at 1280 and 320 pixels. Every registered destination also receives axe at 375 pixels, but tablet and real-device checks remain open.',
     owner: 'accessibility',
   },
   {

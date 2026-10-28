@@ -12,7 +12,8 @@ The program's job is to turn "built toward WCAG 2.2 AA" into a record a procurem
 | --- | --- | --- | --- | --- |
 | Component guards | Labels, landmarks, focus ring, modal focus trap, reduced motion, drag alternatives, field errors, titles, type scale | `app/src/a11y/*.test.*` (13 files) in `npm test` | Yes | Anything layout-dependent: jsdom has no layout |
 | axe-core | Real `<App/>` at 1280 and 390 pixels, serious and critical only | `app/src/a11y/axe.test.tsx` | Yes | Contrast and target size (reported as incomplete in jsdom); 15 render cases only |
-| Journey smoke | Seven journeys at 1280 and 320 pixels in Chromium: one `main`, one h1, named controls, valid references, no overflow, skip link | `app/scripts/accessibility-smoke.mjs` via `ci.yml` | Yes | Hand-rolled, not axe; no 375 pixels, no tablet, no real device |
+| Browser destination axe | All 63 registered destinations in their default synthetic state at 375 pixels in Chromium; serious and critical only; planted violations prove the instrument | `app/scripts/accessibility-smoke.mjs` via `ci.yml` | Yes | No signed-in, error, modal, tablet or real-device states; automated, not a manual pass |
+| Journey smoke | Seven journeys at 1280 and 320 pixels in Chromium: one `main`, one h1, named controls, valid references, no overflow, skip link | `app/scripts/accessibility-smoke.mjs` via `ci.yml` | Yes | Hand-rolled rather than axe; no tablet or real device |
 | Token contrast | 11 accents × 13 grounds, both faded strengths, every surface | `app/src/lib/contrast.test.ts` | Yes | What a browser composites |
 | Painted contrast | Thirteen grounds, two widths, hover and focus | `.github/workflows/contrast.yml` nightly | **Yes since 4 October** (it could not before; see TR-01) | 58 of 63 destinations by default; 14,025 gradient-painted elements |
 | Target size | Three densities, ten routes | `npm run sweep:targets`, local only | No | Not in any workflow |
@@ -26,7 +27,7 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 ### On every change (automated, blocks the merge)
 
 1. The existing guards in section 1, unchanged.
-2. **TR-26:** run axe in the real-browser smoke over every destination and signed-in state, add 375 pixels, and add a text-spacing check (WCAG 1.4.12) and an autocomplete check (1.3.5). Today these 19 criteria have no automated evidence at all: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
+2. **TR-26:** the complete default destination inventory now receives real-browser axe at 375 pixels. Extend it into signed-in, error and modal states, and add a text-spacing check (WCAG 1.4.12) and an autocomplete check (1.3.5). Automated evidence still cannot answer these criteria by itself: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
 3. A pull request that adds a component states how it was checked with the keyboard alone (the template already asks).
 
 ### Nightly (automated, now able to fail)
@@ -54,7 +55,7 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 
 8. **Cognitive accessibility review**, by the accessibility seat with one user who did not build the screen, against a fixed list: one primary action per view; plain wording with no retired word; no time limit that cannot be extended (the undo toast lasts eight seconds and is the only timed element found); every error says what happened, what to do and who can help, and keeps the input; no required memory across screens; consistent placement; a way to stop motion and sound; instructions that do not rely on colour, shape or position alone. The access modes (plain language, one step at a time, predictable layout, sensory-friendly) are read by one to three screens each, although the panel says "changes apply everywhere"; the review checks that claim screen by screen and either extends the modes or corrects the sentence.
 9. **Mobile review.** Semester is a web app and an installable app. The review runs the journeys on one real iPhone and one real Android phone at the largest system text size, in portrait and landscape, with the on-screen keyboard open, and records touch-target failures against both the 24-pixel WCAG measure and the 44-pixel design floor. A native app, if one is ever built, adds Dynamic Type, TalkBack and VoiceOver gesture tests before its first release (see T4 in the [threat models](THREAT-MODELS.md) for the matching security prerequisite).
-10. **Content and media.** Every audio file has a caption file and a transcript (48 of 52 today, TR-40); video has captions and, where it carries information that sound does not, a description; charts have a data-table alternative; live call captions are tested with two people.
+10. **Content and media.** All 52 shipped prerecorded audio files have current caption tracks; four recovered legacy tracks remain machine-generated and unreviewed (TR-40). Video has captions and, where it carries information that sound does not, a description; charts have a data-table alternative; live-call captions are tested with two people.
 
 ### Once, then each year
 

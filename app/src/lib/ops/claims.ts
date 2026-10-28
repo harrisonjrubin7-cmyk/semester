@@ -300,13 +300,13 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'a11y-app',
     capabilityIds: ['CAP-001', 'CAP-017', 'CAP-020', 'CAP-021', 'CAP-025', 'CAP-031'],
-    claim: 'The main student screens are scanned for serious and critical accessibility violations on every change.',
-    scope: 'axe-core in a simulated browser over twelve screens at desktop width and three at phone width, in CI. It cannot check colour contrast or layout, and automated checks find a minority of barriers; the rest need a person.',
+    claim: 'The registered student-app destinations are scanned for serious and critical accessibility violations on every change.',
+    scope: 'axe-core in real Chromium over the default synthetic state of all sixty-three registered destinations at 375 pixels, plus focused simulated-browser cases at desktop and phone width. Signed-in, error, modal, tablet and real-device states are outside this result; automated checks find a minority of barriers and the rest need a person.',
     status: 'in-preparation',
     owner: 'accessibility',
     pages: ['/accessibility/'],
     audiences: ['students', 'departments', 'reviewers'],
-    evidence: [{ path: 'app/src/a11y/axe.test.tsx', shows: 'No serious or critical violation on the twelve desktop and three phone screens it lists, and the probe is shown a planted one first' }],
+    evidence: [{ path: 'app/scripts/accessibility-smoke.mjs', shows: 'Every registered destination at 375 pixels in Chromium, with planted button-name and image-alt controls before a clean result' }, { path: 'app/src/a11y/axe.test.tsx', shows: 'Focused desktop and phone render cases in jsdom' }],
     rows: ['A11Y-001', 'A11Y-002', 'A11Y-003', 'A11Y-004', 'A11Y-005'],
   },
   {

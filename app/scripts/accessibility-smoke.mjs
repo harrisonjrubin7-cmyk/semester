@@ -1,9 +1,10 @@
 /*
  * Journey-level accessibility smoke against the production bundle.
  *
- * This is intentionally not called a WCAG audit or an ACR. It checks the six
- * workflows named in docs/market-readiness/ACCESSIBILITY_READINESS.md using a
- * real browser, including the deployed base path. Static source guards remain
+ * This is intentionally not called a WCAG audit or an ACR. It checks the seven
+ * workflows named in docs/market-readiness/ACCESSIBILITY_READINESS.md and runs
+ * axe-core over every registered destination at 375 CSS pixels using a real
+ * browser, including the deployed base path. Static source guards remain
  * valuable; this catches the integration failures they cannot: a skip link
  * that does not move focus or overwrites the current hash route, a route with
  * two mains, a broken ARIA reference, an unnamed visible control, or a page
@@ -17,11 +18,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { arrived, destinations, proofSelector } from './destinations.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const BASE = process.env.SMOKE_URL || 'http://localhost:4173/';
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
 const SETTLE = Number(process.env.SMOKE_SETTLE || 1200);
+const AXE_VIEWPORT = { width: 375, height: 900 };
 const JOURNEYS = [
   ['Home', '#/home'],
   ['Calendar', '#/calendar'],
@@ -31,6 +34,7 @@ const JOURNEYS = [
   ['Registration', '#/yes'],
   ['Degree', '#/degree'],
 ];
+const DESTINATIONS = destinations();
 
 function schema() {
   const source = readFileSync(join(here, '..', 'src', 'lib', 'migrate.ts'), 'utf8');
@@ -39,13 +43,16 @@ function schema() {
   return Number(match[1]);
 }
 
+const require = createRequire(import.meta.url);
 let chromium;
+let axePath;
 try {
   const from = process.env.SMOKE_PLAYWRIGHT;
-  if (from) ({ chromium } = createRequire(import.meta.url)(from));
+  if (from) ({ chromium } = require(from));
   else ({ chromium } = await import('playwright'));
+  axePath = require.resolve('axe-core/axe.min.js');
 } catch (error) {
-  console.error('Playwright is required. Set SMOKE_PLAYWRIGHT to its installed package.\n' + String(error));
+  console.error('Playwright and axe-core are required. Set SMOKE_PLAYWRIGHT to the installed Playwright package.\n' + String(error));
   process.exit(2);
 }
 
@@ -63,6 +70,9 @@ const browser = await chromium.launch({
 });
 const findings = [];
 let measured = 0;
+let axeMeasured = 0;
+let axeControlPassed = false;
+const instrumentFailures = [];
 
 function record(journey, viewport, messages) {
   for (const message of messages) findings.push(`${journey} · ${viewport}: ${message}`);
@@ -73,6 +83,10 @@ async function contextFor(viewport) {
     viewport,
     reducedMotion: 'reduce',
     colorScheme: 'dark',
+    // The production CSP correctly refuses Playwright's inline addScriptTag.
+    // Bypass it only inside this disposable audit context so axe can inspect
+    // the served page; the response headers and shipped policy are unchanged.
+    bypassCSP: true,
   });
   await context.addInitScript(([key, state]) => {
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* measured by the page */ }
@@ -199,21 +213,95 @@ async function inspect(journey, hash, viewport, label) {
   }
 }
 
+async function inspectDestination({ screen, label }) {
+  const context = await contextFor(AXE_VIEWPORT);
+  try {
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error).split('\n')[0]));
+    await page.goto(`${BASE.replace(/\/$/, '/')}#/${screen}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.waitForTimeout(SETTLE);
+
+    const selector = proofSelector(screen);
+    const seen = await page.evaluate((proof) => ({
+      h1: document.querySelector('h1')?.textContent?.trim() || '',
+      css: proof ? Boolean(document.querySelector(proof)) : false,
+      error: document.body.textContent?.includes('Something on this screen went wrong.') ?? false,
+    }), selector);
+    if (seen.error) instrumentFailures.push(`${screen}: rendered the screen error boundary`);
+    if (!arrived(screen, label, seen)) {
+      instrumentFailures.push(`${screen}: did not reach destination (saw "${seen.h1}")`);
+    }
+    for (const error of pageErrors) instrumentFailures.push(`${screen}: page error: ${error}`);
+
+    await page.addScriptTag({ path: axePath });
+    if (!axeControlPassed) {
+      const detected = await page.evaluate(async () => {
+        const planted = document.createElement('div');
+        planted.id = 'semester-axe-control';
+        planted.innerHTML = '<button type="button"><svg aria-hidden="true"></svg></button><img src="data:,control">';
+        document.body.append(planted);
+        const result = await globalThis.axe.run(planted, { resultTypes: ['violations'] });
+        planted.remove();
+        return result.violations.map((violation) => violation.id);
+      });
+      axeControlPassed = ['button-name', 'image-alt'].every((rule) => detected.includes(rule));
+      if (!axeControlPassed) {
+        instrumentFailures.push(`axe control missed planted button-name/image-alt violations (saw ${detected.join(', ') || 'none'})`);
+      }
+    }
+
+    const violations = await page.evaluate(async () => {
+      const result = await globalThis.axe.run(document, { resultTypes: ['violations'] });
+      return result.violations
+        .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
+        .map((violation) => ({
+          id: violation.id,
+          impact: violation.impact,
+          nodes: violation.nodes.map((node) => ({
+            target: node.target.join(' '),
+            summary: (node.failureSummary || '').split('\n').slice(1, 2).join('').trim(),
+          })),
+        }));
+    });
+    for (const violation of violations) {
+      for (const node of violation.nodes) {
+        findings.push(`${label} · 375px axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
+      }
+    }
+    axeMeasured += 1;
+  } catch (error) {
+    instrumentFailures.push(`${screen}: inspection failed: ${String(error).split('\n')[0]}`);
+  } finally {
+    await context.close();
+  }
+}
+
 try {
   for (const [journey, hash] of JOURNEYS) {
     await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
     await inspect(journey, hash, { width: 320, height: 900 }, '400% reflow');
   }
+  for (const destination of DESTINATIONS) await inspectDestination(destination);
 } finally {
   await browser.close();
 }
 
-if (measured !== JOURNEYS.length * 2) {
-  console.error(`accessibility smoke measured ${measured}/${JOURNEYS.length * 2} cases`);
+if (measured !== JOURNEYS.length * 2 || axeMeasured !== DESTINATIONS.length || !axeControlPassed || instrumentFailures.length) {
+  console.error(
+    `accessibility smoke instrument incomplete: journeys ${measured}/${JOURNEYS.length * 2}; ` +
+    `375px axe destinations ${axeMeasured}/${DESTINATIONS.length}; control ${axeControlPassed ? 'passed' : 'failed'}` +
+    `${instrumentFailures.length ? `\n${instrumentFailures.map((item) => `- ${item}`).join('\n')}` : ''}`,
+  );
   process.exit(2);
 }
 if (findings.length) {
   console.error(`accessibility smoke found ${findings.length} issue(s):\n${findings.map((item) => `- ${item}`).join('\n')}`);
   process.exit(1);
 }
-console.log(`accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop and 400% reflow; skip focus, landmarks, titles, names and ARIA references verified`);
+console.log(
+  `accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop and 400% reflow; ` +
+  `${DESTINATIONS.length} registered destinations axe-scanned at 375px; ` +
+  'skip focus, landmarks, titles, names and ARIA references verified',
+);

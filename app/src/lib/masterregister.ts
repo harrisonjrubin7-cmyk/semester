@@ -1096,8 +1096,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Device matrix evidence',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/widthgate.test.ts', shows: 'Every width-reading file may change how, never whether, something is reached' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Six journeys measured for overflow at 1280px and 320px' }, { path: 'docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md', shows: 'Responsive test plan' }],
-    gap: 'Only 320 and 1280 are measured, over six journeys. 375, tablet and laptop aren\'t covered and there are no real-device runs. No device-matrix evidence has been captured.',
+    evidence: [{ path: 'app/src/widthgate.test.ts', shows: 'Every width-reading file may change how, never whether, something is reached' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Seven journeys measured for overflow at 1280px and 320px; all sixty-three registered destinations axe-scanned at 375px' }, { path: 'docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md', shows: 'Responsive test plan' }],
+    gap: 'Seven journeys have 320 and 1280 layout checks and every registered destination has a 375-pixel axe pass. Tablet and laptop layout coverage, non-default states and real-device runs remain open. No device-matrix evidence has been captured.',
   },
   {
     id: 'A11Y-001',
@@ -1106,7 +1106,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Manual/e2e test',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/scripts/accessibility-smoke.mjs', shows: 'Real-browser Tab/Enter checks on six journeys, incl. skip link moving focus' }, { path: 'app/src/a11y/modal.test.ts', shows: 'Dialog focus ring wraps and stays inside the dialog' }, { path: 'app/src/a11y/dragging.test.ts', shows: 'Reorderable lists can be rearranged without dragging' }],
+    evidence: [{ path: 'app/scripts/accessibility-smoke.mjs', shows: 'Real-browser Tab/Enter checks on seven journeys, incl. skip link moving focus' }, { path: 'app/src/a11y/modal.test.ts', shows: 'Dialog focus ring wraps and stays inside the dialog' }, { path: 'app/src/a11y/dragging.test.ts', shows: 'Reorderable lists can be rearranged without dragging' }],
     gap: 'No manual keyboard-only pass of every critical workflow is recorded, and the e2e smoke doesn\'t complete a workflow end to end. Focus order is not asserted.',
   },
   {

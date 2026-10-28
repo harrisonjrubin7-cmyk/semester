@@ -128,9 +128,17 @@ export interface DayStanding {
  * able to disagree with it.
  */
 export function dayLabel(date: Date, marks: Mark[], standing: DayStanding = {}): string {
-  const head = appLocale()
-    ? formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' })
-    : `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
+  // Lead with the numeral painted in the cell. The button's accessible name
+  // comes from its visible contents; this description then adds the month,
+  // weekday, standing and the detail carried by its dots.
+  const numeral = date.getDate();
+  const month = appLocale()
+    ? formatDate(date, { month: 'long' })
+    : MONTH_NAMES[date.getMonth()];
+  const weekday = appLocale()
+    ? formatDate(date, { weekday: 'long' })
+    : DAY_NAMES[date.getDay()];
+  const head = `${numeral} ${month}${marks.length > 1 ? `, ${marks.length} items` : ''} — ${weekday}`;
   const bits = [head];
   // Today and selected are both true on most visits, and saying both is not
   // repetitive — one is where the calendar is, the other is where you are.

@@ -82,7 +82,7 @@ const grid = () => host.querySelector('[role="grid"]')?.getAttribute('aria-label
 const selected = () =>
   host
     .querySelector<HTMLButtonElement>('[role="gridcell"][aria-selected="true"]')
-    ?.getAttribute('aria-label') ?? '';
+    ?.getAttribute('aria-description') ?? '';
 
 beforeAll(() => loadSeed());
 beforeEach(async () => {
