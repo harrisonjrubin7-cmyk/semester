@@ -28,12 +28,10 @@
 #
 # ## Which directories
 #
-# The root app workspace, Workflow Lab, Starter, Video, the workflows and every
+# The root app workspace, Workflow Lab, Starter, Video, Pipeline, the workflows and every
 # deployed Edge Function. Other standalone package trees remain deliberately
 # out for now rather than forgotten:
 #
-#   · `pipeline/` runs at the repository root to validate course data, never in
-#     a browser and never against input from outside.
 #   · `zite/` is a source snapshot of a separately owned builder workspace;
 #     repository updates do not activate the running Zite apps.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
@@ -42,7 +40,8 @@
 # The root app and standalone Workflow Lab have documented service boundaries;
 # Starter has its own policy, data-access and worker packages with dedicated CI.
 # Video has a separate npm lockfile and is installed and typechecked in the main
-# CI workflow. Those four trees receive weekly update pull requests. The
+# CI workflow. Pipeline has a separate npm lockfile for its course-production
+# scripts. Those five trees receive weekly update pull requests. The
 # remaining local or separately owned trees stay visible as accepted gaps.
 version: 2
 
@@ -146,6 +145,31 @@ updates:
     open-pull-requests-limit: 5
     groups:
       video-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone course-production Pipeline tree ─────────────────────
+  #
+  # Pipeline is not part of the root npm workspace. It has a committed npm
+  # lockfile for the SDK used by its course-production scripts. Updates opened
+  # here still require repository review and do not run a pipeline, publish a
+  # course or imply that generated material is approved.
+  - package-ecosystem: npm
+    directory: /pipeline
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      pipeline-minor-and-patch:
         patterns:
           - '*'
         update-types:
