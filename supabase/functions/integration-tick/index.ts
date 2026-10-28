@@ -18,7 +18,7 @@
  * dead-lettered as `authentication`) rather than calling its provider
  * anonymously; see `provider-client.ts`.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { ADAPTERS } from '../_shared/integration/registry.ts';
 import { providerRuntime } from '../_shared/integration/provider-client.ts';
 import { tick } from '../_shared/integration/tick.ts';

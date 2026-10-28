@@ -10,7 +10,7 @@
  * token; the `Stripe-Signature` over the raw body is the credential. Off
  * (503) until `STRIPE_WEBHOOK_SECRET` is set. See `docs/COMMERCIAL-CORE.md`.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleBillingWebhook } from '../_shared/billingwebhook.ts';
 
 const db = createClient(

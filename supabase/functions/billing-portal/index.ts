@@ -1,5 +1,5 @@
 /** Stripe-hosted receipts, invoices and payment-method management. */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleBillingPortal } from '../_shared/billingportal.ts';
 
 const URL = Deno.env.get('SUPABASE_URL') ?? '';

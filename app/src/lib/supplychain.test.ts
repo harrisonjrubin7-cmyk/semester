@@ -154,10 +154,12 @@ describe('the workflows', () => {
     }
   });
 
-  it('keeps Actions updated by Dependabot alongside npm', () => {
+  it('keeps Actions and Edge Function dependencies updated alongside npm', () => {
     const dependabot = read('.github/dependabot.yml');
     expect(dependabot).toMatch(/package-ecosystem: github-actions/);
     expect(dependabot).toMatch(/package-ecosystem: npm/);
+    expect(dependabot).toMatch(/package-ecosystem: deno/);
+    expect(dependabot).toMatch(/- \/supabase\/functions\/\*/);
   });
 
   it('writes an SBOM of what the deploy ships, and keeps it with the run', () => {

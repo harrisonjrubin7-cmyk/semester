@@ -28,7 +28,7 @@
 #
 # ## Which directories
 #
-# `app/` and the workflows. The three other lockfiles here are deliberately
+# `app/`, the workflows and every deployed Edge Function. The three other lockfiles here are deliberately
 # out for now rather than forgotten:
 #
 #   · `video/` installs in CI to be typechecked and renders nothing a student
@@ -107,6 +107,34 @@ updates:
         update-types:
           - minor
           - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── Deno dependencies shipped by the Edge Functions ───────────────────
+  #
+  # Supabase deploys each function with the deno.json in that function's
+  # directory. Keeping the manifests function-local preserves that isolation;
+  # `directories` lets one updater cover the complete deployed set. Grouping
+  # by dependency name means a Supabase client release updates all functions
+  # together rather than opening eighteen nearly identical pull requests.
+  - package-ecosystem: deno
+    directories:
+      - /supabase/functions/*
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      edge-function-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+        group-by: dependency-name
     commit-message:
       prefix: deps
       include: scope

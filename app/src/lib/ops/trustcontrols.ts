@@ -159,7 +159,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/edgeguards.test.ts', 'app/src/lib/edgeentryauth.test.ts'],
-    gap: 'All eighteen functions set verify_jwt = false and rely on their own checks. Twelve use direct handler behavior tests; six inline Deno entrypoints use ordered source mutation controls, not an authenticated deployed-function exercise.',
+    gap: 'All eighteen functions set verify_jwt = false and rely on their own checks. Eleven use direct handler behavior tests; seven inline Deno entrypoints use ordered source mutation controls, not an authenticated deployed-function exercise.',
     owner: 'security',
   },
   {
@@ -180,9 +180,9 @@ export const CONTROLS: readonly Control[] = [
     domains: ALL,
     mechanism: 'ci',
     state: 'partial',
-    proof: ['.github/workflows/codeql.yml', 'app/src/lib/securityprogram.test.ts'],
-    described: ['docs/trust/SECURITY-TESTING-PLAN.md'],
-    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available. It does not establish Deno dependency freshness, authenticated runtime coverage or independent review.',
+    proof: ['.github/workflows/codeql.yml', 'app/src/lib/securityprogram.test.ts', 'app/src/lib/denodependencies.test.ts'],
+    described: ['.github/dependabot.yml', 'docs/trust/SECURITY-TESTING-PLAN.md'],
+    gap: 'CodeQL security-extended runs on pull requests and weekly where GitHub code scanning is available, and Dependabot covers every function-local Deno manifest and integrity lock. Video, pipeline and workflow-lab update automation, authenticated runtime coverage and independent review remain open.',
     owner: 'security',
   },
   {

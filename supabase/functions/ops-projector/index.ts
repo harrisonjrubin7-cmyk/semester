@@ -3,7 +3,7 @@
  * scheduler entry: deployment alone cannot make this worker run. It also
  * fails closed until OPS_PROJECTOR_SECRET is explicitly provisioned.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { serveOpsProjector } from '../_shared/opsprojector.ts';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';

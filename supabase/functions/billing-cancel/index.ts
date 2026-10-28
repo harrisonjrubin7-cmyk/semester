@@ -13,7 +13,7 @@
  * answered; the handler requires the caller's token itself. Off (503) until
  * `STRIPE_SECRET_KEY` is set. See `docs/COMMERCIAL-CORE.md`.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleBillingCancel, type OwnSubscription } from '../_shared/billingcancel.ts';
 
 const URL = Deno.env.get('SUPABASE_URL') ?? '';

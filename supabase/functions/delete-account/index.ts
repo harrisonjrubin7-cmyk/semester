@@ -15,7 +15,7 @@
  * Reads `ALLOWED_ORIGIN` (see `_shared/cors.ts`) and the service credentials
  * the platform injects. Without the latter it answers 503 and deletes nothing.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '../_shared/cors.ts';
 import { AccountHeldError, serveDeleteAccount } from '../_shared/deleteaccount.ts';
 

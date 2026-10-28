@@ -59,8 +59,8 @@
  * later writes one.
  */
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
+import { createClient } from '@supabase/supabase-js';
+import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'jose';
 import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
 import { JWKS_OPTIONS, checkHeader, decodeHeader, safeError, subjectDigest, verifyOptions } from '../_shared/ltiverify.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';

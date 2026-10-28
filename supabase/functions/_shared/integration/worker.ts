@@ -28,7 +28,7 @@
  * replays an operator requested; a webhook endpoint would call it the same way.
  * See `docs/INTEGRATION-OPERATOR-RUNBOOK.md` §4.
  */
-import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateDeclaration, type AdapterDeclaration } from './adapter.ts';
 import { ingest, type ConnectionState, type IngestResult, type IngestStore, type ProviderBatch } from './pipeline.ts';
 import { hasGovernanceEnvelope } from './governance-envelope.ts';

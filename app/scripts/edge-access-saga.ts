@@ -11,9 +11,9 @@
  * What changes on the way: the two `server/institution/` files import the
  * saga library through `packages/institution/src/index.ts`, which becomes
  * `./access-saga.ts` — every name they use is that module's own, so nothing
- * else from the index is carried; and the `@supabase/supabase-js` import
- * becomes the `jsr:` specifier the other functions use. Any other bare import
- * is refused, because Deno would have nothing to resolve it to.
+ * else from the index is carried. The `@supabase/supabase-js` import remains
+ * an alias resolved by each function's checked-in `deno.json`. Any other bare
+ * import is refused, because Deno would have nothing to resolve it to.
  *
  *     cd app && node scripts/edge-access-saga.ts
  */
@@ -39,7 +39,7 @@ const SPECIFIER = /(\bfrom\s+|\bimport\s*\(\s*)(['"])([^'"]+)\2/g;
 function rewrite(source: string, from: string): string {
   return source.replace(SPECIFIER, (_whole, lead: string, quote: string, spec: string) => {
     let out: string;
-    if (spec === '@supabase/supabase-js') out = 'jsr:@supabase/supabase-js@2';
+    if (spec === '@supabase/supabase-js') out = spec;
     else if (spec === '../../../packages/institution/src/index.ts') out = './access-saga.ts';
     else if (/^\.\/[a-z-]+\.ts$/.test(spec)) out = spec;
     else throw new Error(`${from}: cannot carry the import ${JSON.stringify(spec)} into an Edge Function`);
