@@ -40,6 +40,7 @@ import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
 import type { default as _GovernanceEp } from '../src/api/governance';
 import type { default as _GradeTrackerEp } from '../src/api/gradeTracker';
 import type { default as _GraduateEp } from '../src/api/graduate';
+import type { default as _GroupWorkEp } from '../src/api/groupWork';
 import type { default as _GuidesEp } from '../src/api/guides';
 import type { default as _HelpEp } from '../src/api/help';
 import type { default as _HousingEp } from '../src/api/housing';
@@ -287,6 +288,11 @@ type _GraduateCfg = typeof _GraduateEp;
 export type GraduateInputType = NonNullable<_GraduateCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GraduateCfg['execute']>[0]['input'];
 export type GraduateOutputType = Awaited<ReturnType<_GraduateCfg['execute']>>;
 export const graduate = createCaller<GraduateInputType, GraduateOutputType>('graduate');
+
+type _GroupWorkCfg = typeof _GroupWorkEp;
+export type GroupWorkInputType = NonNullable<_GroupWorkCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GroupWorkCfg['execute']>[0]['input'];
+export type GroupWorkOutputType = Awaited<ReturnType<_GroupWorkCfg['execute']>>;
+export const groupWork = createCaller<GroupWorkInputType, GroupWorkOutputType>('groupWork');
 
 type _GuidesCfg = typeof _GuidesEp;
 export type GuidesInputType = NonNullable<_GuidesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GuidesCfg['execute']>[0]['input'];
@@ -613,6 +619,7 @@ export const api = {
   governance,
   gradeTracker,
   graduate,
+  groupWork,
   guides,
   help,
   housing,

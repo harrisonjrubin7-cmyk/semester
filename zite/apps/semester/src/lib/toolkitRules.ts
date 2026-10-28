@@ -19,7 +19,7 @@ export const TOOLS: Tool[] = [
   { key: 'write', name: 'Write a document', blurb: 'Memo, report or handout out as a Word file', where: 'semester', route: '/learn/write' },
   { key: 'proof', name: 'Check the writing', blurb: 'Grammar read back, quotations checked against the reading', where: 'semester', route: '/learn/proof' },
   { key: 'deck', name: 'Make a deck', blurb: 'A real PowerPoint file', where: 'semester', route: '/learn/deck' },
-  { key: 'group', name: 'Group work', blurb: 'Who has which part, and whether it lands', where: 'semester', route: null },
+  { key: 'group', name: 'Group work', blurb: 'Who has which part, and whether it lands', where: 'semester', route: '/campus/groupwork' },
 ];
 
 export const INTENTS: { name: string; tools: ToolKey[] }[] = [

@@ -110,6 +110,10 @@ Gap: no full dictionary or grammar parser (no dependency allowed); quotation che
 DONE 27 Oct: Practice paper at /learn/paper. A timed paper from a study guide you can read (seeded, reproducible): Section A
 objective questions marked against the key, Section B written answers self-marked against the model answer with a key-word hint.
 Countdown hands in automatically at zero. Attempts are private and append-only (ppr_attempts; DB check 9/9, mutants fail).
+DONE 27 Oct: Group work at /campus/groupwork. A shared part list per course group (grp_groups): owner, status, due date, note,
+past-due and unowned counts. Membership is read from grp_members inside each function; owners must be in the group; only the
+creator removes a part; every change goes to an append-only log. Instructors of the section read the list and log, never edit.
+DB check 15/15; tenant and owner mutants fail. Remaining Semester tool not built: Diagram builder.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
