@@ -67,6 +67,21 @@ export function pipelineUpdateProblems(source: string): string[] {
   return problems;
 }
 
+export function ziteUpdateProblems(source: string): string[] {
+  const problems: string[] = [];
+  const block = updateBlocks(source).find((candidate) => /^\s*directory:\s*\/zite\s*$/m.test(candidate));
+
+  if (!block) return ['Zite workspace has no dedicated dependency updater'];
+  if (!/^- package-ecosystem:\s*npm\s*$/m.test(block)) problems.push('Zite updater does not use the npm ecosystem');
+  if (!/^\s*interval:\s*weekly\s*$/m.test(block)) problems.push('Zite updater is not weekly');
+  if (!/^\s*open-pull-requests-limit:\s*[1-9]\d*\s*$/m.test(block)) problems.push('Zite updater has no positive pull-request limit');
+  if (!/^\s*zite-minor-and-patch:\s*$/m.test(block)) problems.push('Zite minor and patch updates are not grouped');
+  if (!/^\s*- '\*'\s*$/m.test(block)) problems.push('Zite update group does not cover every dependency');
+  if (!/^\s*- minor\s*$/m.test(block) || !/^\s*- patch\s*$/m.test(block)) problems.push('Zite update group does not cover both minor and patch updates');
+
+  return problems;
+}
+
 describe('Workflow Lab dependency updates', () => {
   it('holds a weekly, bounded updater beside the standalone lockfile', () => {
     expect(existsSync(join(root, 'workflow-lab/package.json'))).toBe(true);
@@ -188,6 +203,38 @@ describe('Pipeline dependency updates', () => {
     );
     expect(pipelineUpdateProblems(source.replace(pipeline, pipeline.replace('          - patch\n', '')))).toContain(
       'Pipeline update group does not cover both minor and patch updates',
+    );
+  });
+});
+
+describe('Zite workspace dependency updates', () => {
+  it('holds a weekly, bounded updater beside the root workspace lockfile', () => {
+    expect(existsSync(join(root, 'zite/package.json'))).toBe(true);
+    expect(existsSync(join(root, 'zite/package-lock.json'))).toBe(true);
+    expect(ziteUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
+  });
+
+  it('fails closed when the directory or npm ecosystem is removed', () => {
+    const source = read('.github/dependabot.yml');
+    expect(ziteUpdateProblems(source.replace('directory: /zite', 'directory: /zite-disabled'))).toContain(
+      'Zite workspace has no dedicated dependency updater',
+    );
+    expect(ziteUpdateProblems(source.replace(/(- package-ecosystem: )npm(\n\s+directory: \/zite)/, '$1disabled$2'))).toContain(
+      'Zite updater does not use the npm ecosystem',
+    );
+  });
+
+  it('fails closed when cadence, queue bounds or grouped update types drift', () => {
+    const source = read('.github/dependabot.yml');
+    const zite = updateBlocks(source).find((block) => block.includes('directory: /zite'))!;
+    expect(ziteUpdateProblems(source.replace(zite, zite.replace('interval: weekly', 'interval: monthly')))).toContain(
+      'Zite updater is not weekly',
+    );
+    expect(ziteUpdateProblems(source.replace(zite, zite.replace('open-pull-requests-limit: 5', 'open-pull-requests-limit: 0')))).toContain(
+      'Zite updater has no positive pull-request limit',
+    );
+    expect(ziteUpdateProblems(source.replace(zite, zite.replace('          - patch\n', '')))).toContain(
+      'Zite update group does not cover both minor and patch updates',
     );
   });
 });

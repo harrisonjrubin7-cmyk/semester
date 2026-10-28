@@ -28,12 +28,13 @@
 #
 # ## Which directories
 #
-# The root app workspace, Workflow Lab, Starter, Video, Pipeline, the workflows and every
+# The root app workspace, Workflow Lab, Starter, Video, Pipeline, the Zite
+# workspace, the workflows and every
 # deployed Edge Function. Other standalone package trees remain deliberately
 # out for now rather than forgotten:
 #
-#   · `zite/` is a source snapshot of a separately owned builder workspace;
-#     repository updates do not activate the running Zite apps.
+#   · `zite/docs/execution/rls/api/` is a standalone verification package
+#     outside the Zite workspace and has no committed lockfile.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
 #     TypeScript in this repository, so they have no dependencies of their own.
 #
@@ -41,7 +42,9 @@
 # Starter has its own policy, data-access and worker packages with dedicated CI.
 # Video has a separate npm lockfile and is installed and typechecked in the main
 # CI workflow. Pipeline has a separate npm lockfile for its course-production
-# scripts. Those five trees receive weekly update pull requests. The
+# scripts. Zite has one root workspace lockfile for its eight apps and shared
+# packages; repository updates do not activate its separately owned running
+# apps. Those six trees receive weekly update pull requests. The
 # remaining local or separately owned trees stay visible as accepted gaps.
 version: 2
 
@@ -170,6 +173,31 @@ updates:
     open-pull-requests-limit: 5
     groups:
       pipeline-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The separately owned Zite workspace snapshot ───────────────────────
+  #
+  # The root Zite package-lock resolves its apps/* and packages/* workspaces.
+  # Updating this repository snapshot does not publish or activate any Zite
+  # app; Zite remains the source of truth and every proposed lockfile change
+  # still requires review against that ownership boundary.
+  - package-ecosystem: npm
+    directory: /zite
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      zite-minor-and-patch:
         patterns:
           - '*'
         update-types:

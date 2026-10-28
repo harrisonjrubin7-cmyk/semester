@@ -163,6 +163,7 @@ describe('the workflows', () => {
     expect(dependabot).toMatch(/directory: \/starter/);
     expect(dependabot).toMatch(/directory: \/video/);
     expect(dependabot).toMatch(/directory: \/pipeline/);
+    expect(dependabot).toMatch(/directory: \/zite/);
     expect(dependabot).toMatch(/- \/supabase\/functions\/\*/);
   });
 
