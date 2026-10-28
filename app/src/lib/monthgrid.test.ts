@@ -32,29 +32,29 @@ describe('the sentence a screen reader gets', () => {
   // Tuesday 8 September 2026.
   const tue = new Date(2026, 8, 8);
 
-  it('leads with the weekday and the date', () => {
-    expect(dayLabel(tue, [])).toBe('Tuesday 8 September. Nothing on.');
+  it('leads with the numeral painted in the cell, then the month and weekday', () => {
+    expect(dayLabel(tue, [])).toBe('8 September — Tuesday. Nothing on.');
   });
 
   it('names what is on the day', () => {
     expect(dayLabel(tue, [mark('due'), mark('due'), mark('event')])).toBe(
-      'Tuesday 8 September. 2 deadlines, 1 campus event.',
+      '8 September, 3 items — Tuesday. 2 deadlines, 1 campus event.',
     );
   });
 
   it('says today, which a sighted user gets from a border', () => {
-    expect(dayLabel(tue, [], { today: true })).toBe('Tuesday 8 September. Today. Nothing on.');
+    expect(dayLabel(tue, [], { today: true })).toBe('8 September — Tuesday. Today. Nothing on.');
   });
 
   it('says selected, which a sighted user gets from a background', () => {
     expect(dayLabel(tue, [], { selected: true })).toBe(
-      'Tuesday 8 September. Selected. Nothing on.',
+      '8 September — Tuesday. Selected. Nothing on.',
     );
   });
 
   it('says both when both are true — they are different facts', () => {
     expect(dayLabel(tue, [mark('due')], { today: true, selected: true })).toBe(
-      'Tuesday 8 September. Today. Selected. 1 deadline.',
+      '8 September — Tuesday. Today. Selected. 1 deadline.',
     );
   });
 

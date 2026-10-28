@@ -122,6 +122,10 @@ const PIECES: { insert: string; label: string; says: string }[] = [
   { insert: '\\text{name}', label: 'abc', says: 'Words' },
 ];
 
+/** Keep the symbol somebody sees inside the name assistive technology reads. */
+export const pieceName = (piece: Pick<(typeof PIECES)[number], 'label' | 'says'>): string =>
+  `${piece.label}: ${piece.says}`;
+
 function Writer() {
   const { state, dispatch, say } = useStore();
   const [latex, setLatex] = useState('');
@@ -156,7 +160,7 @@ function Writer() {
             key={piece.insert}
             type="button"
             className="bare tappable"
-            aria-label={piece.says}
+            aria-label={pieceName(piece)}
             title={piece.says}
             onClick={() => setLatex((was) => `${was}${was && !was.endsWith(' ') ? ' ' : ''}${piece.insert}`)}
             style={{

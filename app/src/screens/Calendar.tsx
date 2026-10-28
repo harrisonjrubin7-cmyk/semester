@@ -1458,9 +1458,11 @@ function MonthView() {
               key={i}
               type="button"
               role="gridcell"
-              // The whole sentence, so the weekday, the standing and what is on
-              // the day all survive without the colour.
-              aria-label={dayLabel(new Date(shownYear, shownMonth, d), marks[d] ?? [], {
+              // Name the cell from the numerals painted in it, then describe
+              // the weekday, standing and item breakdown. Keeping the visible
+              // day/count sequence in the name satisfies label-in-name while
+              // the description preserves every fact the dots carry.
+              aria-description={dayLabel(new Date(shownYear, shownMonth, d), marks[d] ?? [], {
                 today: isToday,
                 selected: isSelected,
               })}
@@ -1532,15 +1534,15 @@ function MonthView() {
               {/*
                 The dots and, past one thing, how many things.
 
-                `aria-hidden` on the whole strip because `dayLabel` above
-                already says all of it in a sentence — the numeral is the
-                sighted half of what the screen reader has always been told,
-                and announcing it again would read the count twice.
+                The dots are decorative and hidden one by one. The count is
+                visible text, so it stays in the button name; the hidden
+                description below explains which kinds make up that total.
               */}
-              <span aria-hidden="true" className="mcell-dots">
+              <span className="mcell-dots">
                 {dots.map((m, k) => (
                   <span
                     key={k}
+                    aria-hidden="true"
                     className="mcell-dot"
                     style={{
                       background:
@@ -1561,11 +1563,11 @@ function MonthView() {
                 alternative — a width read in JavaScript — is a second source
                 of truth about the same breakpoint.
 
-                `aria-hidden`, because the cell's own label already reads the
-                whole day out and a screen reader saying it twice is worse
-                than a dot.
+                The text stays in the button name because it is visible at
+                desktop width; the count-and-kind description remains useful
+                on the narrow layout where CSS hides these titles.
               */}
-              <span aria-hidden="true" className="mcell-names">
+              <span className="mcell-names">
                 {(marks[d] ?? [])
                   .filter((m) => m.title)
                   .slice(0, 3)

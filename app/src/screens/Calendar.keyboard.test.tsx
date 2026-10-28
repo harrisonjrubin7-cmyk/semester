@@ -20,16 +20,16 @@ afterEach(()=>{act(()=>root.unmount());host.remove();localStorage.clear();vi.use
 function selected(){return host.querySelector<HTMLButtonElement>('[role="gridcell"][aria-selected="true"]')!;}
 function page(key:string){act(()=>{selected().focus();selected().dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));});}
 it('keeps keyboard focus and the selected date together when paging into a shorter month',()=>{
-  expect(selected()?.getAttribute('aria-label')).toContain('31 January');
-  page('PageDown');expect(selected().getAttribute('aria-label')).toContain('28 February');expect(document.activeElement).toBe(selected());
-  page('PageDown');expect(selected().getAttribute('aria-label')).toContain('28 March');expect(document.activeElement).toBe(selected());
-  page('ArrowRight');expect(selected().getAttribute('aria-label')).toContain('29 March');expect(document.activeElement).toBe(selected());
+  expect(selected()?.getAttribute('aria-description')).toContain('31 January');
+  page('PageDown');expect(selected().getAttribute('aria-description')).toContain('28 February');expect(document.activeElement).toBe(selected());
+  page('PageDown');expect(selected().getAttribute('aria-description')).toContain('28 March');expect(document.activeElement).toBe(selected());
+  page('ArrowRight');expect(selected().getAttribute('aria-description')).toContain('29 March');expect(document.activeElement).toBe(selected());
 });
 it('preserves the selected day across a year boundary and returns to today',()=>{
-  page('PageUp');expect(selected().getAttribute('aria-label')).toContain('31 December');
+  page('PageUp');expect(selected().getAttribute('aria-description')).toContain('31 December');
   expect(host.querySelector('[role="grid"]')?.getAttribute('aria-label')).toContain('December 2025');
   expect(document.activeElement).toBe(selected());
   const today=[...host.querySelectorAll<HTMLButtonElement>('button')].find(b=>b.textContent?.trim()==='Back to today')!;
-  act(()=>today.click());expect(selected().getAttribute('aria-label')).toContain('31 January');
+  act(()=>today.click());expect(selected().getAttribute('aria-description')).toContain('31 January');
   expect(selected().getAttribute('aria-current')).toBe('date');
 });

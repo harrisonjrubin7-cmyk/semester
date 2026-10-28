@@ -289,7 +289,7 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     evidence: 'Automated and manual test results, known issues, the remediation decision.', frequency: 'Per release', owner: 'accessibility', visibility: 'summary', status: 'defined',
     holds: [
       { path: 'app/src/a11y/axe.test.tsx', shows: 'axe-core over the rendered app' },
-      { path: 'app/scripts/accessibility-smoke.mjs', shows: 'critical journeys in a real browser at desktop and 320px' },
+      { path: 'app/scripts/accessibility-smoke.mjs', shows: 'critical journeys in a real browser at desktop and 320px, plus axe over all registered destinations at 375px' },
       { path: 'docs/WCAG-UI-AUDIT-SCORECARD.md', shows: 'a per-component WCAG 2.2 scorecard, every score citing its test' },
     ],
     produce: 'The manual assistive-technology pass per docs/accessibility/AT-PASS-PROTOCOL.md, by a person, filed; then an ACR (A11Y-2). The automated pass is regression evidence, not conformance.',
