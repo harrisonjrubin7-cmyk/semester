@@ -1,4 +1,4 @@
-# Semester platform build plan (owner PDFs S-79, S-80, S-81 — 28 Oct 2026)
+# Semester platform build plan (owner PDFs S-79, S-80, S-81, S-82 — 28 Oct 2026)
 
 Three owner documents, one plan. They ask for: (1) Semester Institution and Semester Faculty rebuilt as the institutional
 and teaching sides of the same product, on the Student app's shell; (2) all ten Zite apps completed as one education
@@ -130,7 +130,35 @@ includes it. Present today:
 | 5 | Student services and campus operations | Accepted referrals, bookings, entitlements, work orders | Partial |
 | 6–8 | Enterprise, research, migration and native operation | Per-domain replacement register gates | Not started |
 
-## 8. Next increments
+## 8. Build packages B01–B12 (S-82 §12) and the academic-loop permission matrix
+
+| Package | Scope | Status (28 Oct) |
+|---|---|---|
+| B01 | Inventory and existing-component crosswalk | Done: §2 above; reuse is by front-door endpoints over Semester's implementations |
+| B02 | Shared Student-based shell | Implemented: `AppShell` in Faculty and Institution; browser check not run |
+| B03 | Trusted context and authorization | Implemented: server-resolved membership on every call; `capabilities()`; sign-in guard on all endpoints; role switch is display-only and re-checked server-side |
+| B04 | Institution error diagnosis and operational states | Done: 403 traced and fixed; safe errors; no false zeros; per-widget states on Institution overview and Faculty Today |
+| B05 | Term, catalog, section, instructor assignment | Section requests → created section → instructor notified (tested); catalog publication and terms not built |
+| B06 | Registration and roster | Tested in the database (capacity race, holds, overrides, roster reconciliation); Institution front door added 28 Oct |
+| B07 | Course Studio and publication | Syllabus versions, materials, assignments exist; versioned publication of assignments not built |
+| B08 | Assignment, submission, grading, release | Tested with two real accounts (receipts, extensions, file screen, grading, release) |
+| B09 | Final-grade handoff and records | Propose → release → certify in Faculty (front door 28 Oct); posting in Institution → Academic records; needs a registrar account to run |
+| B10 | Support, appointments, accommodation notices | Office hours, accommodation letters and acknowledgements exist; Faculty Today shows unacknowledged notices (minimum necessary) |
+| B11 | Enterprise workspaces | Not started in Institution |
+| B12 | Migration and activation | Not started; records mode is `design` for every tenant |
+
+Permission matrix (S-82 §10) against today's enforcement: publish section and apply enrollment need the registrar
+grants (`registration.request.decide`), instructors and students are refused (tested); roster is limited to the
+instructor's own sections (tested); only the student submits their own work, the instructor is refused (tested 28 Oct);
+grading is instructor-of-record or a bounded delegate (tested); official grades are posted only by a registrar who did not
+certify (database check); diagnostic accommodation evidence is never sent to instructors (letters carry arrangements
+only); private study notes have no staff read path.
+
+Acceptance tests (S-82 §11) still to add as a fixture run: second synthetic institution B, a student who is also a TA,
+an expired instructor assignment, a revoked delegate, interrupted upload, stale attempt grading, final-grade timeout
+reconciliation, withdrawn student access, course copy without prior work, keyboard-only grading.
+
+## 9. Next increments
 
 1. Institution front doors for registrar work already built in the Student app (official grades queue, grading policy,
    academic standing, registration decisions), shown by capability.

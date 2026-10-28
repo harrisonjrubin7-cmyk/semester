@@ -34,6 +34,7 @@ import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _DisabilityEp } from '../src/api/disability';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
 import type { default as _FacilitiesEp } from '../src/api/facilities';
+import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
 import type { default as _FilesEp } from '../src/api/files';
 import type { default as _FinancialAidEp } from '../src/api/financialAid';
 import type { default as _GetTodayEp } from '../src/api/getToday';
@@ -260,6 +261,11 @@ type _FacilitiesCfg = typeof _FacilitiesEp;
 export type FacilitiesInputType = NonNullable<_FacilitiesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FacilitiesCfg['execute']>[0]['input'];
 export type FacilitiesOutputType = Awaited<ReturnType<_FacilitiesCfg['execute']>>;
 export const facilities = createCaller<FacilitiesInputType, FacilitiesOutputType>('facilities');
+
+type _FacultyTodayCfg = typeof _FacultyTodayEp;
+export type FacultyTodayInputType = NonNullable<_FacultyTodayCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FacultyTodayCfg['execute']>[0]['input'];
+export type FacultyTodayOutputType = Awaited<ReturnType<_FacultyTodayCfg['execute']>>;
+export const facultyToday = createCaller<FacultyTodayInputType, FacultyTodayOutputType>('facultyToday');
 
 type _FilesCfg = typeof _FilesEp;
 export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FilesCfg['execute']>[0]['input'];
@@ -625,6 +631,7 @@ export const api = {
   disability,
   eventDelivery,
   facilities,
+  facultyToday,
   files,
   financialAid,
   getToday,

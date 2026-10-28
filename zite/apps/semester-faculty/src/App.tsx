@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { Home, Scale, CalendarClock, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked } from 'lucide-react';
+import { Home, Scale, CalendarClock, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked, Award } from 'lucide-react';
 import { getWorkspace, GetWorkspaceOutputType } from 'zitejs/api';
 import { WorkspaceContext, useWorkspace } from '../../semester/src/lib/workspace';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
@@ -15,6 +15,7 @@ import Guides from '../../semester/src/pages/Guides';
 import Sources from '../../semester/src/pages/Sources';
 import { SectionRequests } from '../../semester/src/pages/InstitutionHome';
 import Teaching from './pages/Teaching';
+import FinalGrades from './pages/FinalGrades';
 import SectionPage from './pages/Section';
 import Regrades from './pages/Regrades';
 import OfficeHours from './pages/OfficeHours';
@@ -23,7 +24,7 @@ import OfficeHours from './pages/OfficeHours';
 // (content & modules, announcements, teaching portfolio, research, workload…) are tracked in docs/execution/platform-build-plan-2026-10-28.md.
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: Home, end: true }, { to: '/office-hours', label: 'Office hours', icon: CalendarClock }] },
-  { group: 'Teach', items: [{ to: '/queue', label: 'Grading queue', icon: Inbox }, { to: '/gradebook', label: 'Gradebook', icon: Table2 }] },
+  { group: 'Teach', items: [{ to: '/queue', label: 'Grading queue', icon: Inbox }, { to: '/gradebook', label: 'Gradebook', icon: Table2 }, { to: '/final-grades', label: 'Final grades', icon: Award, hint: 'course grade certify registrar' }] },
   { group: 'Support', items: [{ to: '/regrades', label: 'Extensions & regrades', icon: Scale, hint: 'regrade requests' }, { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert }] },
   { group: 'Develop', items: [{ to: '/curriculum', label: 'Curriculum proposals', icon: BookMarked }, { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
     { to: '/guides', label: 'Study guides', icon: BookMarked }, { to: '/sources', label: 'Reading lists', icon: BookMarked, hint: 'sources bibliography' }] },
@@ -48,6 +49,8 @@ function Shell() {
             <Route path="/course/:sectionId" element={<CourseStudio />} />
             <Route path="/queue" element={<TAQueue />} />
             <Route path="/gradebook" element={<Gradebook />} />
+            <Route path="/final-grades" element={<FinalGrades />} />
+            <Route path="/records/final-grades" element={<Navigate to="/final-grades" replace />} />
             <Route path="/integrity" element={<Integrity />} />
             <Route path="/section-requests" element={<SectionRequests />} />
             <Route path="/curriculum" element={<Curriculum />} />

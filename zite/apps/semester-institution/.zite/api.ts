@@ -2,15 +2,34 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
+import type { default as _HelpEp } from '../src/api/help';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
+import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
+import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
+import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
+import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
+import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _SectionRequestsEp } from '../src/api/sectionRequests';
+import type { default as _StaffEp } from '../src/api/staff';
+import type { default as _StudentAccountEp } from '../src/api/studentAccount';
+
+type _AcademicStandingCfg = typeof _AcademicStandingEp;
+export type AcademicStandingInputType = NonNullable<_AcademicStandingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicStandingCfg['execute']>[0]['input'];
+export type AcademicStandingOutputType = Awaited<ReturnType<_AcademicStandingCfg['execute']>>;
+export const academicStanding = createCaller<AcademicStandingInputType, AcademicStandingOutputType>('academicStanding');
 
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
 export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
 export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
+
+type _HelpCfg = typeof _HelpEp;
+export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpCfg['execute']>[0]['input'];
+export type HelpOutputType = Awaited<ReturnType<_HelpCfg['execute']>>;
+export const help = createCaller<HelpInputType, HelpOutputType>('help');
 
 type _InstitutionConsoleCfg = typeof _InstitutionConsoleEp;
 export type InstitutionConsoleInputType = NonNullable<_InstitutionConsoleCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionConsoleCfg['execute']>[0]['input'];
@@ -22,15 +41,59 @@ export type InstitutionOpsInputType = NonNullable<_InstitutionOpsCfg['inputSchem
 export type InstitutionOpsOutputType = Awaited<ReturnType<_InstitutionOpsCfg['execute']>>;
 export const institutionOps = createCaller<InstitutionOpsInputType, InstitutionOpsOutputType>('institutionOps');
 
+type _OfficialGradesCfg = typeof _OfficialGradesEp;
+export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
+export type OfficialGradesOutputType = Awaited<ReturnType<_OfficialGradesCfg['execute']>>;
+export const officialGrades = createCaller<OfficialGradesInputType, OfficialGradesOutputType>('officialGrades');
+
+type _RegistrarDecideCfg = typeof _RegistrarDecideEp;
+export type RegistrarDecideInputType = NonNullable<_RegistrarDecideCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarDecideCfg['execute']>[0]['input'];
+export type RegistrarDecideOutputType = Awaited<ReturnType<_RegistrarDecideCfg['execute']>>;
+export const registrarDecide = createCaller<RegistrarDecideInputType, RegistrarDecideOutputType>('registrarDecide');
+
+type _RegistrarLedgerCfg = typeof _RegistrarLedgerEp;
+export type RegistrarLedgerInputType = NonNullable<_RegistrarLedgerCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarLedgerCfg['execute']>[0]['input'];
+export type RegistrarLedgerOutputType = Awaited<ReturnType<_RegistrarLedgerCfg['execute']>>;
+export const registrarLedger = createCaller<RegistrarLedgerInputType, RegistrarLedgerOutputType>('registrarLedger');
+
+type _RegistrarQueueCfg = typeof _RegistrarQueueEp;
+export type RegistrarQueueInputType = NonNullable<_RegistrarQueueCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarQueueCfg['execute']>[0]['input'];
+export type RegistrarQueueOutputType = Awaited<ReturnType<_RegistrarQueueCfg['execute']>>;
+export const registrarQueue = createCaller<RegistrarQueueInputType, RegistrarQueueOutputType>('registrarQueue');
+
+type _RegistrationChangesCfg = typeof _RegistrationChangesEp;
+export type RegistrationChangesInputType = NonNullable<_RegistrationChangesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrationChangesCfg['execute']>[0]['input'];
+export type RegistrationChangesOutputType = Awaited<ReturnType<_RegistrationChangesCfg['execute']>>;
+export const registrationChanges = createCaller<RegistrationChangesInputType, RegistrationChangesOutputType>('registrationChanges');
+
 type _SectionRequestsCfg = typeof _SectionRequestsEp;
 export type SectionRequestsInputType = NonNullable<_SectionRequestsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SectionRequestsCfg['execute']>[0]['input'];
 export type SectionRequestsOutputType = Awaited<ReturnType<_SectionRequestsCfg['execute']>>;
 export const sectionRequests = createCaller<SectionRequestsInputType, SectionRequestsOutputType>('sectionRequests');
 
+type _StaffCfg = typeof _StaffEp;
+export type StaffInputType = NonNullable<_StaffCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StaffCfg['execute']>[0]['input'];
+export type StaffOutputType = Awaited<ReturnType<_StaffCfg['execute']>>;
+export const staff = createCaller<StaffInputType, StaffOutputType>('staff');
+
+type _StudentAccountCfg = typeof _StudentAccountEp;
+export type StudentAccountInputType = NonNullable<_StudentAccountCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_StudentAccountCfg['execute']>[0]['input'];
+export type StudentAccountOutputType = Awaited<ReturnType<_StudentAccountCfg['execute']>>;
+export const studentAccount = createCaller<StudentAccountInputType, StudentAccountOutputType>('studentAccount');
+
 
 export const api = {
+  academicStanding,
   appDirectory,
+  help,
   institutionConsole,
   institutionOps,
+  officialGrades,
+  registrarDecide,
+  registrarLedger,
+  registrarQueue,
+  registrationChanges,
   sectionRequests,
+  staff,
+  studentAccount,
 };

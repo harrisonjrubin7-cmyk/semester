@@ -2,6 +2,7 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
@@ -9,6 +10,7 @@ import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
+import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
 import type { default as _FilesEp } from '../src/api/files';
 import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
 import type { default as _GuidesEp } from '../src/api/guides';
@@ -16,6 +18,7 @@ import type { default as _HelpEp } from '../src/api/help';
 import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
+import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
 import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
 import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
@@ -26,6 +29,11 @@ import type { default as _SourcesEp } from '../src/api/sources';
 import type { default as _StaffEp } from '../src/api/staff';
 import type { default as _StudentAccountEp } from '../src/api/studentAccount';
 import type { default as _TeachingEp } from '../src/api/teaching';
+
+type _AcademicStandingCfg = typeof _AcademicStandingEp;
+export type AcademicStandingInputType = NonNullable<_AcademicStandingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicStandingCfg['execute']>[0]['input'];
+export type AcademicStandingOutputType = Awaited<ReturnType<_AcademicStandingCfg['execute']>>;
+export const academicStanding = createCaller<AcademicStandingInputType, AcademicStandingOutputType>('academicStanding');
 
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
@@ -62,6 +70,11 @@ export type CurriculumInputType = NonNullable<_CurriculumCfg['inputSchema']> ext
 export type CurriculumOutputType = Awaited<ReturnType<_CurriculumCfg['execute']>>;
 export const curriculum = createCaller<CurriculumInputType, CurriculumOutputType>('curriculum');
 
+type _FacultyTodayCfg = typeof _FacultyTodayEp;
+export type FacultyTodayInputType = NonNullable<_FacultyTodayCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FacultyTodayCfg['execute']>[0]['input'];
+export type FacultyTodayOutputType = Awaited<ReturnType<_FacultyTodayCfg['execute']>>;
+export const facultyToday = createCaller<FacultyTodayInputType, FacultyTodayOutputType>('facultyToday');
+
 type _FilesCfg = typeof _FilesEp;
 export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FilesCfg['execute']>[0]['input'];
 export type FilesOutputType = Awaited<ReturnType<_FilesCfg['execute']>>;
@@ -96,6 +109,11 @@ type _OfficeHoursCfg = typeof _OfficeHoursEp;
 export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeHoursCfg['execute']>[0]['input'];
 export type OfficeHoursOutputType = Awaited<ReturnType<_OfficeHoursCfg['execute']>>;
 export const officeHours = createCaller<OfficeHoursInputType, OfficeHoursOutputType>('officeHours');
+
+type _OfficialGradesCfg = typeof _OfficialGradesEp;
+export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
+export type OfficialGradesOutputType = Awaited<ReturnType<_OfficialGradesCfg['execute']>>;
+export const officialGrades = createCaller<OfficialGradesInputType, OfficialGradesOutputType>('officialGrades');
 
 type _RegistrarDecideCfg = typeof _RegistrarDecideEp;
 export type RegistrarDecideInputType = NonNullable<_RegistrarDecideCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarDecideCfg['execute']>[0]['input'];
@@ -149,6 +167,7 @@ export const teaching = createCaller<TeachingInputType, TeachingOutputType>('tea
 
 
 export const api = {
+  academicStanding,
   appDirectory,
   assessments,
   courseAccessibility,
@@ -156,6 +175,7 @@ export const api = {
   courseGroups,
   courseTeam,
   curriculum,
+  facultyToday,
   files,
   getWorkspace,
   guides,
@@ -163,6 +183,7 @@ export const api = {
   integrity,
   learn,
   officeHours,
+  officialGrades,
   registrarDecide,
   registrarLedger,
   registrarQueue,

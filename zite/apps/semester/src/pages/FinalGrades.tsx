@@ -47,7 +47,7 @@ function TranscriptView({ studentId, onClose }: { studentId?: string; onClose?: 
   );
 }
 
-function Teaching() {
+export function Teaching() {
   const s = useLoad(() => api({ action: 'teaching' } as never) as Promise<any>, []);
   const [pick, setPick] = useState<Record<string, string>>({});
   const call = async (body: object, ok: string) => { try { await api(body as never); toast(ok); s.reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
@@ -82,7 +82,7 @@ function Teaching() {
   );
 }
 
-function Registrar() {
+export function Registrar() {
   const s = useLoad(() => api({ action: 'queue' } as never) as Promise<any>, []);
   const [fix, setFix] = useState<{ enrollmentId: string; grade: string; reason: string; key: string } | null>(null);
   const [tx, setTx] = useState<string | null>(null);
