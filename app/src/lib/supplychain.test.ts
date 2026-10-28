@@ -159,6 +159,7 @@ describe('the workflows', () => {
     expect(dependabot).toMatch(/package-ecosystem: github-actions/);
     expect(dependabot).toMatch(/package-ecosystem: npm/);
     expect(dependabot).toMatch(/package-ecosystem: deno/);
+    expect(dependabot).toMatch(/directory: \/course-engine\/apps\/web/);
     expect(dependabot).toMatch(/directory: \/workflow-lab/);
     expect(dependabot).toMatch(/directory: \/starter/);
     expect(dependabot).toMatch(/directory: \/video/);
