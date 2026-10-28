@@ -123,6 +123,7 @@
  *    what makes an overlay legible: `81×20 → 81×44` is a control doing what
  *    this app's tap classes are for, and `81×20 → 81×20` is one that lost it.
  */
+import { existsSync } from 'node:fs';
 import { arrived, destinations } from './destinations.mjs';
 
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
@@ -849,7 +850,7 @@ async function sweep(browser, tier, width, height, density) {
 }
 
 const browser = await chromium.launch({
-  ...(CHROME ? { executablePath: CHROME } : {}),
+  ...(existsSync(CHROME) ? { executablePath: CHROME } : {}),
   args: ['--no-sandbox'],
 });
 const TIERS = [

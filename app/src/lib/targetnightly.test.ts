@@ -14,6 +14,7 @@ describe('the scheduled target-size sweep', () => {
   });
 
   it('fails closed on a real finding or incomplete browser walk', () => {
+    expect(sweep).toContain('existsSync(CHROME) ? { executablePath: CHROME } : {}');
     expect(sweep).toContain("behavior: 'instant'");
     expect(sweep).toContain('run.aa > 0 || run.blocked > 0 || run.missed > 0 || run.pageErrors > 0');
     expect(sweep).toContain("console.error('\\ntarget-size sweep failed:')");
