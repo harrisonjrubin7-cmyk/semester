@@ -19,7 +19,7 @@ function failures(workflow: string): string[] {
     ['all SQL migrations', /migration_006\.sql[\s\S]*migration_007_registrar\.sql[\s\S]*migration_008_registrar_doc\.sql[\s\S]*migration_009_tuition\.sql[\s\S]*migration_010_audit_outbox\.sql[\s\S]*migration_011_files\.sql/],
     ['SQL isolation checks', /bash test\.sh 127\.0\.0\.1 5432/],
     ['TypeScript check', /npm run typecheck/],
-    ['executable test suite', /run: npm test/],
+    ['serial executable test suite', /run: npm test -- --no-file-parallelism/],
   ] as const;
   return required.filter(([, pattern]) => !pattern.test(workflow)).map(([name]) => name);
 }
@@ -35,7 +35,7 @@ describe('the standalone Zite RLS verifier workflow', () => {
     ['lock boundary', 'npm install --ignore-scripts --package-lock=false', 'npm install'],
     ['SQL isolation suite', 'bash test.sh 127.0.0.1 5432', 'true'],
     ['typecheck', 'npm run typecheck', 'true'],
-    ['tests', 'run: npm test', 'run: echo skipped'],
+    ['tests', 'run: npm test -- --no-file-parallelism', 'run: npm test'],
     ['stacked-branch push coverage', 'push:\n    paths:', "push:\n    branches: ['main']\n    paths:"],
   ])('rejects removal of the %s', (_name, held, replacement) => {
     expect(failures(readWorkflow().replace(held, replacement))).not.toEqual([]);

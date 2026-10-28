@@ -82,4 +82,4 @@ jobs:
         run: npm run typecheck
       - name: Run API, database, authorization and limiter tests
         working-directory: zite/docs/execution/rls/api
-        run: npm test
+        run: npm test -- --no-file-parallelism
