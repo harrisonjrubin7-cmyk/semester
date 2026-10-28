@@ -161,6 +161,7 @@ describe('the workflows', () => {
     expect(dependabot).toMatch(/package-ecosystem: deno/);
     expect(dependabot).toMatch(/directory: \/workflow-lab/);
     expect(dependabot).toMatch(/directory: \/starter/);
+    expect(dependabot).toMatch(/directory: \/video/);
     expect(dependabot).toMatch(/- \/supabase\/functions\/\*/);
   });
 

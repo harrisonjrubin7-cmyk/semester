@@ -37,6 +37,21 @@ export function starterUpdateProblems(source: string): string[] {
   return problems;
 }
 
+export function videoUpdateProblems(source: string): string[] {
+  const problems: string[] = [];
+  const block = updateBlocks(source).find((candidate) => /^\s*directory:\s*\/video\s*$/m.test(candidate));
+
+  if (!block) return ['Video has no dedicated dependency updater'];
+  if (!/^- package-ecosystem:\s*npm\s*$/m.test(block)) problems.push('Video updater does not use the npm ecosystem');
+  if (!/^\s*interval:\s*weekly\s*$/m.test(block)) problems.push('Video updater is not weekly');
+  if (!/^\s*open-pull-requests-limit:\s*[1-9]\d*\s*$/m.test(block)) problems.push('Video updater has no positive pull-request limit');
+  if (!/^\s*video-minor-and-patch:\s*$/m.test(block)) problems.push('Video minor and patch updates are not grouped');
+  if (!/^\s*- '\*'\s*$/m.test(block)) problems.push('Video update group does not cover every dependency');
+  if (!/^\s*- minor\s*$/m.test(block) || !/^\s*- patch\s*$/m.test(block)) problems.push('Video update group does not cover both minor and patch updates');
+
+  return problems;
+}
+
 describe('Workflow Lab dependency updates', () => {
   it('holds a weekly, bounded updater beside the standalone lockfile', () => {
     expect(existsSync(join(root, 'workflow-lab/package.json'))).toBe(true);
@@ -94,6 +109,38 @@ describe('Starter dependency updates', () => {
     );
     expect(starterUpdateProblems(source.replace(starter, starter.replace('          - patch\n', '')))).toContain(
       'Starter update group does not cover both minor and patch updates',
+    );
+  });
+});
+
+describe('Video dependency updates', () => {
+  it('holds a weekly, bounded updater beside the standalone npm lockfile', () => {
+    expect(existsSync(join(root, 'video/package.json'))).toBe(true);
+    expect(existsSync(join(root, 'video/package-lock.json'))).toBe(true);
+    expect(videoUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
+  });
+
+  it('fails closed when the directory or npm ecosystem is removed', () => {
+    const source = read('.github/dependabot.yml');
+    expect(videoUpdateProblems(source.replace('directory: /video', 'directory: /video-disabled'))).toContain(
+      'Video has no dedicated dependency updater',
+    );
+    expect(videoUpdateProblems(source.replace(/(- package-ecosystem: )npm(\n\s+directory: \/video)/, '$1disabled$2'))).toContain(
+      'Video updater does not use the npm ecosystem',
+    );
+  });
+
+  it('fails closed when cadence, queue bounds or grouped update types drift', () => {
+    const source = read('.github/dependabot.yml');
+    const video = updateBlocks(source).find((block) => block.includes('directory: /video'))!;
+    expect(videoUpdateProblems(source.replace(video, video.replace('interval: weekly', 'interval: monthly')))).toContain(
+      'Video updater is not weekly',
+    );
+    expect(videoUpdateProblems(source.replace(video, video.replace('open-pull-requests-limit: 5', 'open-pull-requests-limit: 0')))).toContain(
+      'Video updater has no positive pull-request limit',
+    );
+    expect(videoUpdateProblems(source.replace(video, video.replace('          - patch\n', '')))).toContain(
+      'Video update group does not cover both minor and patch updates',
     );
   });
 });
