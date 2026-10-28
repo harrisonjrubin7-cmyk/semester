@@ -6,11 +6,11 @@ import { Textarea } from '@project/components/ui/textarea';
 import { PageHeader, Panel, Empty, Loadable, useLoad, fmt, Status, errMsg } from '../components/kit';
 
 type Review = { reviewer: string; mine: boolean; state: string; version: number; decision: string | null; internalNote: string; message: string };
-type Item = { id: string; applicant: string; applicantId: string; program: string; entryTerm: string; status: string; statement: string; documents: { fileId: string; filename: string }[]; submittedAt: string | null; review: Review | null };
+type Item = { id: string; applicant: string; applicantId: string; program: string; entryTerm: string; status: string; statement: string; documents: { fileId: string; filename: string }[]; recommendations: { id: number; name: string; state: string; waived: boolean }[]; submittedAt: string | null; review: Review | null };
 const DECISIONS = ['Admitted', 'Waitlisted', 'Declined'] as const;
-async function openDoc(id: string, fileId: string) {
+async function openDoc(id: string, fileId: string, requestId?: number) {
   try {
-    const r = await admissions({ action: 'openDocument', id, fileId }) as { mime: string; base64: string };
+    const r = await (requestId ? admissions({ action: 'openLetter', id, requestId }) : admissions({ action: 'openDocument', id, fileId })) as { mime: string; base64: string };
     const bin = atob(r.base64); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
     window.open(URL.createObjectURL(new Blob([u8], { type: r.mime })), '_blank', 'noopener');
   } catch (e) { toast(`! ${errMsg(e)}`); }
@@ -68,6 +68,7 @@ export default function Admissions() {
               <p className="text-xs text-muted-foreground">{cur.program} · {cur.entryTerm} · Submitted {fmt(cur.submittedAt)}</p>
               <p className="mt-3 whitespace-pre-wrap text-sm">{cur.statement}</p>
               <div className="mt-3 text-sm">{cur.documents.map((f) => <button key={f.fileId} className="block underline" onClick={() => openDoc(cur.id, f.fileId)}>{f.filename}</button>)}</div>
+              {cur.recommendations.length > 0 && <div className="mt-3 text-sm"><p className="font-medium">Recommendations</p>{cur.recommendations.map((r) => <p key={r.id}>{r.name} · {r.state}{r.waived ? ' · applicant waived access' : ''}{r.state === 'Submitted' && <button className="ml-2 underline" onClick={() => openDoc(cur.id, '', r.id)}>Open letter</button>}</p>)}</div>}
               <Decide key={`${cur.id}-${cur.review?.version ?? 0}`} item={cur} isAdmin={d.isAdmin} reviewers={d.reviewers} done={s.reload} />
             </Panel>}
           </div>

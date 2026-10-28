@@ -3,8 +3,9 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAuth, loginWithRedirect } from 'zitejs/auth';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { LayoutDashboard, FileText, Compass } from 'lucide-react';
+import { LayoutDashboard, FileText, Compass, PenLine } from 'lucide-react';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
+import RecommendationsToWrite, { ApplicantRecommendations } from './Recommendations';
 import { applications, ApplicationsOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
@@ -107,6 +108,7 @@ function Card({ a, onEdit, reload }: { a: App; onEdit: () => void; reload: () =>
       {dims && <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">{([['Preparation', dims.preparation], ['Delivery', dims.delivery], ['Processing', dims.processing], ['Decision', dims.decision]] as const).map(([k, v]) => <div key={k}><dt className="text-muted-foreground">{k}</dt><dd>{v}</dd></div>)}</dl>}
       {a.receipt && <p className="mt-2 text-xs">◆ Receipt {a.receipt.code} · package version {a.receipt.version} · received {format(new Date(a.receipt.receivedAt), 'EEE d MMM · HH:mm')}</p>}
       {a.status === 'Draft' && <ul className="mt-3 space-y-1 text-sm">{a.checklist.map((c) => <li key={c.label}>{c.done ? '✓' : '○'} {c.label}</li>)}</ul>}
+      <ApplicantRecommendations applicationId={a.id} open={!['Withdrawn', 'Admitted', 'Declined'].includes(a.status)} />
       {a.decisionNote && <p className="mt-3 border-l-2 border-border pl-3 text-sm">{a.decisionNote}<span className="block text-xs text-muted-foreground">◆ From admissions</span></p>}
       {a.status === 'Admitted' && <p className="mt-3 rounded-sm border border-border p-3 text-sm">✓ Your student membership is active. Sign in to Semester with this same account to open your student workspace.</p>}
       <div className="mt-4 flex flex-wrap gap-2">
@@ -139,7 +141,8 @@ function Card({ a, onEdit, reload }: { a: App; onEdit: () => void; reload: () =>
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
   { group: 'Explore', items: [{ to: '/programs', label: 'Programs', icon: Compass, hint: 'institutions published programs' }] },
-  { group: 'Apply', items: [{ to: '/applications', label: 'Applications', icon: FileText, hint: 'drafts submitted decisions' }] },
+  { group: 'Apply', items: [{ to: '/applications', label: 'Applications', icon: FileText, hint: 'drafts submitted decisions' },
+    { to: '/recommendations', label: 'Recommendations to write', icon: PenLine, hint: 'recommender letters' }] },
 ];
 
 function useApps() {
@@ -234,6 +237,7 @@ export default function App() {
           <Route path="/" element={landing === '/' ? <Today /> : <Navigate to="/applications" replace />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/programs" element={<Programs />} />
+          <Route path="/recommendations" element={<RecommendationsToWrite />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster />

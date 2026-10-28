@@ -340,3 +340,11 @@ and application were deleted afterwards.
 - offer response and enrollment conditions;
 - applicant-scoped family sharing;
 - connected-admissions connectors.
+
+## Tenth increment, 28 Oct: recommendations (C07, owner source S-90 §5F)
+
+The applicant names a recommender and an email. Only the signed-in account holding that email can accept, which binds the request to that account; it then uploads one PDF letter into the private, screened file store under its own ownership. The applicant sees verified status only (requested, accepted, declined, submitted, withdrawn) and never the letter. Semester sends no outside email: a recommender without an account is told to sign in to Semester Applicants. Admissions opens a letter only as an administrator or the reviewer assigned to that submitted application, and every read is logged. Every step is written to an append-only log.
+
+- Database check `dbchecks/recommendations.ts`: 22/22. Mutant "any account accepts" fails 8 checks (R7 among them); mutant "letter owned by someone else" fails R13 and R14. Nothing left behind.
+- Live, through the real endpoints (faculty account as applicant, the second account as recommender): 13/13. Another account cannot ask on the application or accept the request; the inbox shows it only to the invited email; accept → submit works; a second letter is refused; the applicant's view carries no letter; both accounts are refused by admissions `openLetter` because neither holds an admissions role. The test draft was withdrawn afterwards; its request and letter record remain because the log is append-only.
+- NOT RUN: a reviewer or administrator opening a letter (needs the third account); browser screenshots.

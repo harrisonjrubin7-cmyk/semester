@@ -4,6 +4,7 @@ import { createCaller } from 'zitejs/caller';
 
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _ApplicationsEp } from '../src/api/applications';
+import type { default as _RecommendationsEp } from '../src/api/recommendations';
 
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
@@ -15,8 +16,14 @@ export type ApplicationsInputType = NonNullable<_ApplicationsCfg['inputSchema']>
 export type ApplicationsOutputType = Awaited<ReturnType<_ApplicationsCfg['execute']>>;
 export const applications = createCaller<ApplicationsInputType, ApplicationsOutputType>('applications');
 
+type _RecommendationsCfg = typeof _RecommendationsEp;
+export type RecommendationsInputType = NonNullable<_RecommendationsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RecommendationsCfg['execute']>[0]['input'];
+export type RecommendationsOutputType = Awaited<ReturnType<_RecommendationsCfg['execute']>>;
+export const recommendations = createCaller<RecommendationsInputType, RecommendationsOutputType>('recommendations');
+
 
 export const api = {
   appDirectory,
   applications,
+  recommendations,
 };
