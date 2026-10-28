@@ -22,6 +22,8 @@ BEGIN
   INSERT INTO rr VALUES (r IS NULL AND NOT EXISTS (SELECT 1 FROM tlk_docs WHERE id = d), 'K12 owner deletes');
   got := false; BEGIN INSERT INTO tlk_docs (tenant_id, owner_id, kind, title) VALUES ('t1','s1','grade','x'); EXCEPTION WHEN others THEN got := true; END;
   INSERT INTO rr VALUES (got, 'K13 table refuses an unknown kind');
+  r := tlk_save('s1','t1',NULL,'sheet','Budget','{"grid":[["Item","Cost"],["Books","120"],["Total","=SUM(B2:B2)"]]}'::jsonb,0);
+  INSERT INTO rr VALUES (r LIKE 'ok:%:1', 'K14 a spreadsheet saves as a toolkit document');
   SELECT string_agg(lbl, '; ') INTO x FROM rr WHERE ok IS NOT TRUE;
   RAISE EXCEPTION 'RESULT pass=% fails=% [%]', (SELECT count(*) FROM rr WHERE ok IS TRUE), (SELECT count(*) FROM rr WHERE ok IS NOT TRUE), coalesce(x,'');
 END $$`;
@@ -34,5 +36,12 @@ export async function run() {
   const mutated = TLK_MIGRATION.map((q) => q.replace('AND owner_id = p_owner FOR UPDATE', () => 'FOR UPDATE'));
   try { await sql.transaction([...mutated.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('mutant: no RESULT raised'); }
   catch (e) { console.log('mutant:', String((e as any).message).slice(0, 300)); }
+  // Upgrade path: a table created before 27 Oct (no 'sheet' in its check) must be widened by the migration.
+  const old = [TLK_MIGRATION[0].replace("'rubric','sheet')", () => "'rubric')"), ...TLK_MIGRATION.slice(1)];
+  try { await sql.transaction([...old.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('upgrade: no RESULT raised'); }
+  catch (e) { console.log('upgrade:', String((e as any).message).slice(0, 300)); }
+  const noWiden = old.filter((q) => !q.includes('tlk_docs_kind_check'));
+  try { await sql.transaction([...noWiden.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('upgrade-without-widen: no RESULT raised'); }
+  catch (e) { console.log('upgrade-without-widen (control, K14 must fail):', String((e as any).message).slice(0, 300)); }
   console.log('left behind:', JSON.stringify(await sql.query(`SELECT to_regclass('tlk_docs') AS t`)));
 }

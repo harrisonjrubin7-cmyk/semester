@@ -11,7 +11,7 @@ export const TOOLS: Tool[] = [
   { key: 'data', name: 'Data Studio', blurb: 'Dictionary, cleaning log, describe, chart with a table alternative, bounded conclusions', where: 'toolkit', route: '/learn/toolkit/data' },
   { key: 'assignment', name: 'Assignment workspace', blurb: 'Stages, deliverables, rubric self-check and submission checklist', where: 'toolkit', route: '/learn/toolkit/assignment' },
   { key: 'rubric', name: 'Rubric self-check', blurb: 'A rubric criterion turned into a checklist — never a grade prediction', where: 'toolkit', route: '/learn/toolkit/rubric' },
-  { key: 'sheet', name: 'Spreadsheet', blurb: 'A grid out as Excel or CSV', where: 'semester', route: null },
+  { key: 'sheet', name: 'Spreadsheet', blurb: 'A grid out as Excel or CSV', where: 'semester', route: '/learn/sheet' },
   { key: 'diagram', name: 'Diagram builder', blurb: 'Flows, timelines and matrices from a description', where: 'semester', route: null },
   { key: 'guide', name: 'Study guide from sources', blurb: 'Guides built only from material you select', where: 'semester', route: '/learn/guides' },
   { key: 'paper', name: 'Practice paper', blurb: 'A timed paper marked against a key', where: 'semester', route: null },

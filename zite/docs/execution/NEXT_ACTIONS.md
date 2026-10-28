@@ -91,6 +91,11 @@ DONE 27 Oct: Sources at /learn/sources (Faculty: /sources "Reading lists"). Priv
 reference lines, BibTeX export and import (all or nothing, 500 max), instructor course reading lists that notify enrolled students
 and that students copy into their own list. rdg_* DB check 20/20; mutants (no instructor check, copy ignores enrolment) fail.
 Live teacher-to-student check BLOCKED: no sample section has an instructor assigned.
+DONE 27 Oct: Spreadsheet at /learn/sheet. Safe formula engine (no eval; SUM AVERAGE MIN MAX COUNT MEDIAN STDEV ROUND ABS SQRT IF,
+comparisons, &, %, ^; errors #DIV/0! #REF! #NAME? #VALUE! #CYCLE!), keyboard grid, CSV in (formulas never run on import) and out
+(formula-injection guard), real .xlsx out with formulas kept (opened by openpyxl and recalculated by LibreOffice). Stored as
+tlk_docs kind sheet; the kind check is widened in place for tables created earlier (upgrade path checked).
+Owner approved assigning a sample instructor (27 Oct); BLOCKED until a second sign-in account exists (Northgate has one, a student).
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

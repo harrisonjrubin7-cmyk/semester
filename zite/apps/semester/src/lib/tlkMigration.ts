@@ -1,15 +1,22 @@
 // Toolkit documents: private to their owner, one call = one statement, expected version on every save. Nothing goes to a model.
 export const TLK_MIGRATION: string[] = [
   `CREATE TABLE IF NOT EXISTS tlk_docs (id bigserial PRIMARY KEY, tenant_id text NOT NULL, owner_id text NOT NULL,
-     kind text NOT NULL CHECK (kind IN ('case','research','data','assignment','rubric')),
+     kind text NOT NULL CHECK (kind IN ('case','research','data','assignment','rubric','sheet')),
      title text NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 120),
      data jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(data) = 'object' AND octet_length(data::text) <= 200000),
      version int NOT NULL DEFAULT 1 CHECK (version >= 1), updated_at timestamptz NOT NULL DEFAULT now())`,
+  // 27 Oct: spreadsheets join the toolkit. Widen the kind check on tables created before then (no-op once widened).
+  `DO $$ BEGIN
+     IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tlk_docs_kind_check' AND pg_get_constraintdef(oid) NOT LIKE '%sheet%') THEN
+       ALTER TABLE tlk_docs DROP CONSTRAINT tlk_docs_kind_check;
+       ALTER TABLE tlk_docs ADD CONSTRAINT tlk_docs_kind_check CHECK (kind IN ('case','research','data','assignment','rubric','sheet'));
+     END IF;
+   END $$`,
   `CREATE INDEX IF NOT EXISTS tlk_docs_owner ON tlk_docs (tenant_id, owner_id, kind)`,
   `CREATE OR REPLACE FUNCTION tlk_save(p_owner text, p_tenant text, p_id bigint, p_kind text, p_title text, p_data jsonb, p_expected int) RETURNS text LANGUAGE plpgsql AS $$
    DECLARE d tlk_docs%ROWTYPE; nid bigint;
    BEGIN
-     IF p_kind NOT IN ('case','research','data','assignment','rubric') THEN RETURN 'Unknown tool.'; END IF;
+     IF p_kind NOT IN ('case','research','data','assignment','rubric','sheet') THEN RETURN 'Unknown tool.'; END IF;
      IF p_title IS NULL OR length(trim(p_title)) = 0 OR length(trim(p_title)) > 120 THEN RETURN 'Give it a title of up to 120 characters.'; END IF;
      IF p_data IS NULL OR jsonb_typeof(p_data) <> 'object' THEN RETURN 'This document is not in the right shape.'; END IF;
      IF octet_length(p_data::text) > 200000 THEN RETURN 'This document is too large to save.'; END IF;

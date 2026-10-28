@@ -8,10 +8,10 @@ import { TLK_MIGRATION } from '../lib/tlkMigration';
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
 const ensure = () => { if (!ready) ready = (async () => { for (const q of TLK_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
-const KIND = z.enum(['case', 'research', 'data', 'assignment', 'rubric']);
+const KIND = z.enum(['case', 'research', 'data', 'assignment', 'rubric', 'sheet']);
 
 export default createEndpoint({
-  description: 'Toolkit documents: case analysis, research studio, data studio, assignment workspace and rubric self-check (private to you)',
+  description: 'Toolkit documents: case analysis, research studio, data studio, assignment workspace, rubric self-check and spreadsheets (private to you)',
   authenticated: true,
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('list'), kind: KIND.nullable().default(null) }),
