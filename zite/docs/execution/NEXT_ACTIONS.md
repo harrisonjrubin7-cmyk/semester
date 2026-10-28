@@ -102,6 +102,11 @@ and LibreOffice), prints to PDF, and shows a word count. Shared stored-zip write
 DONE 27 Oct: Make a deck at /learn/deck. Outline (# slide, - bullet, > speaker note) or a study guide becomes slides
 (6 bullets per slide, continued slides, 80 max), live preview, keyboard Present mode, and a real 16:9 .pptx with title slide and
 speaker notes (verified with python-pptx and a LibreOffice PDF render: text stays inside the slide). Stored as tlk_docs kind deck.
+DONE 27 Oct: Check the writing at /learn/proof. In-page, no model, nothing saved: common misspellings (list) plus the browser
+spellcheck, repeated words, could-of/a-an/capital I, wordy phrases, possible passive voice, long sentences, spacing and unmatched
+brackets, Flesch-Kincaid grade. Quotations (4+ words) are checked word for word against pasted source text (ellipsis allowed,
+"close" at 80% word overlap) and their (Author, Year) citations against the student's saved Sources. Loads text from Write.
+Gap: no full dictionary or grammar parser (no dependency allowed); quotation check needs the source text pasted in.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
