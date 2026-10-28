@@ -71,6 +71,7 @@ import Sources from './pages/Sources';
 import Sheet from './pages/Sheet';
 import Deck from './pages/Deck';
 import Proof from './pages/Proof';
+import Paper from './pages/Paper';
 import { AppSwitcher } from './components/AppSwitcher';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
@@ -184,6 +185,7 @@ export default function App() {
             <Route path="/learn/sheet" element={<Sheet />} />
             <Route path="/learn/deck" element={<Deck />} />
             <Route path="/learn/proof" element={<Proof />} />
+            <Route path="/learn/paper" element={<Paper />} />
             <Route path="/learn/toolkit" element={<ToolkitHub />} />
             <Route path="/learn/toolkit/:kind" element={<ToolkitTool />} />
             <Route path="/you/work" element={<HumanResources />} />

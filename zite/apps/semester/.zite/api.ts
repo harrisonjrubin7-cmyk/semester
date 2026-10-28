@@ -60,6 +60,7 @@ import type { default as _MigrationApprovalEp } from '../src/api/migrationApprov
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _OrganizationsEp } from '../src/api/organizations';
+import type { default as _PapersEp } from '../src/api/papers';
 import type { default as _ParkingEp } from '../src/api/parking';
 import type { default as _PartnersEp } from '../src/api/partners';
 import type { default as _PrivacyEp } from '../src/api/privacy';
@@ -387,6 +388,11 @@ export type OrganizationsInputType = NonNullable<_OrganizationsCfg['inputSchema'
 export type OrganizationsOutputType = Awaited<ReturnType<_OrganizationsCfg['execute']>>;
 export const organizations = createCaller<OrganizationsInputType, OrganizationsOutputType>('organizations');
 
+type _PapersCfg = typeof _PapersEp;
+export type PapersInputType = NonNullable<_PapersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PapersCfg['execute']>[0]['input'];
+export type PapersOutputType = Awaited<ReturnType<_PapersCfg['execute']>>;
+export const papers = createCaller<PapersInputType, PapersOutputType>('papers');
+
 type _ParkingCfg = typeof _ParkingEp;
 export type ParkingInputType = NonNullable<_ParkingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ParkingCfg['execute']>[0]['input'];
 export type ParkingOutputType = Awaited<ReturnType<_ParkingCfg['execute']>>;
@@ -627,6 +633,7 @@ export const api = {
   officeHours,
   onboard,
   organizations,
+  papers,
   parking,
   partners,
   privacy,

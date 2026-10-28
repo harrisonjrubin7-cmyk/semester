@@ -107,6 +107,9 @@ spellcheck, repeated words, could-of/a-an/capital I, wordy phrases, possible pas
 brackets, Flesch-Kincaid grade. Quotations (4+ words) are checked word for word against pasted source text (ellipsis allowed,
 "close" at 80% word overlap) and their (Author, Year) citations against the student's saved Sources. Loads text from Write.
 Gap: no full dictionary or grammar parser (no dependency allowed); quotation check needs the source text pasted in.
+DONE 27 Oct: Practice paper at /learn/paper. A timed paper from a study guide you can read (seeded, reproducible): Section A
+objective questions marked against the key, Section B written answers self-marked against the model answer with a key-word hint.
+Countdown hands in automatically at zero. Attempts are private and append-only (ppr_attempts; DB check 9/9, mutants fail).
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.
