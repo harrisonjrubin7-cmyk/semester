@@ -7,6 +7,10 @@ import { CRS_MIGRATION } from '../lib/crsMigration';
 import { ensureFil, attachmentsFor, readAttached } from '../lib/filServer';
 import { courseRole, ensureTeam, delegatedSections } from '../lib/teamServer';
 import { rubricScore, Criterion } from '../lib/rubricRules';
+import { SBM_MIGRATION } from '../lib/sbmMigration';
+
+let sbmReady: Promise<void> | null = null;
+const ensureSbm = () => { if (!sbmReady) sbmReady = (async () => { for (const q of SBM_MIGRATION) await pg().query(q); })().catch((e) => { sbmReady = null; throw e; }); return sbmReady; };
 
 let crsReady: Promise<void> | null = null;
 const ensureCrs = () => {
@@ -23,7 +27,7 @@ export default createEndpoint({
     z.object({ action: z.literal('saveDraft'), taskId: z.string(), fileId: z.string().uuid().optional() }),
     z.object({ action: z.literal('detachFile'), submissionId: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('openAttachment'), submissionId: z.string(), fileId: z.string().uuid() }),
-    z.object({ action: z.literal('submit'), submissionId: z.string() }),
+    z.object({ action: z.literal('submit'), submissionId: z.string(), requestKey: z.string().min(8).max(80).optional() }),
     z.object({ action: z.literal('grade'), submissionId: z.string(), score: z.number().min(0), feedback: z.string().max(4000), rubric: z.object({ key: z.string().max(60), version: z.number().int(), selections: z.record(z.number().int()) }).optional() }),
     z.object({ action: z.literal('release'), sectionId: z.string() }),
     z.object({ action: z.literal('setPolicy'), sectionId: z.string(), policy: z.enum(['Allowed', 'Outlining Only', 'Not Allowed']) }),
@@ -109,6 +113,9 @@ export default createEndpoint({
       const subs = (await zite.submissions.findAll({ limit: 2000 })).records.filter((x) => tasks.some((t) => t.id === first(x.task)));
       const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
       const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
+      await ensureSbm();
+      const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
+      const receiptOf = (id: string) => { const r = receipts.find((x) => x.submission_id === id); return r ? { code: String(r.receipt_code), submittedAt: new Date(String(r.submitted_at)).toISOString(), late: !!r.late, lateMinutes: Math.ceil(Number(r.late_seconds) / 60), files: (r.files as { name: string; size: number; sha256: string }[]).map((f) => ({ name: f.name, size: f.size, sha256: f.sha256 })) } : null; };
       const names = grader ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
       const resources = (await zite.resources.findAll({ filters: { section: s.id }, limit: 300 })).records
         .filter((r) => r.visibility === 'Course' || ids(r.owner).includes(uid));
@@ -119,7 +126,7 @@ export default createEndpoint({
         assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
-          return { id: x.id, taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
+          return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size })) };
         }).map((x) => grader ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
@@ -165,15 +172,22 @@ export default createEndpoint({
       return f!;
     }
     if (input.action === 'submit') {
+      // Spec §4.2/§7 Workflow B: the receipt is the submission. sbm_submit builds the file manifest (name, size, SHA-256)
+      // from the database, locks the files and stamps on-time/late in one transaction; a retry replays the same receipt.
       const x = await zite.submissions.findOne({ id: input.submissionId });
-      if (!x || !ids(x.student).includes(uid) || x.state !== 'Private Draft') forbid();
-      await zite.submissions.update({ id: x!.id, record: { state: 'Submitted' } as never });
-      await ensureFil();
-      await pg().query(`SELECT fil_lock($1,'submission',$2)`, [a.institutionId, x!.id]);
-      const tid = first(x!.task);
-      if (tid) await zite.tasks.update({ id: tid, record: { status: 'Done' } as never });
-      await audit(a, 'Work submitted', `submission:${x!.id}`, '', 'Student');
-      return { ok: true };
+      if (!x || !ids(x.student).includes(uid)) forbid('You can only submit your own work.');
+      const task = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
+      await ensureFil(); await ensureSbm();
+      const r = String(((await pg().query(`SELECT sbm_submit($1,$2,$3,$4,$5,$6,$7::timestamptz,$8) AS r`,
+        [uid, a.institutionId, x!.id, task?.id ?? '', first(task?.section) ?? '', true, task?.dueAt ?? null, input.requestKey ?? `sub:${x!.id}`])) as { r: string | null }[])[0].r ?? '');
+      if (!r.startsWith('ok:')) forbid(r);
+      const [, code, replay] = r.split(':');
+      // Project into Zite (idempotent; a replay repairs a projection that failed after the receipt was issued).
+      if (x!.state === 'Private Draft') await zite.submissions.update({ id: x!.id, record: { state: 'Submitted' } as never });
+      if (task && task.status !== 'Done') await zite.tasks.update({ id: task.id, record: { status: 'Done' } as never });
+      if (!replay) await audit(a, 'Work submitted', `submission:${x!.id}`, `receipt ${code}`, 'Student');
+      const rc = ((await pg().query(`SELECT receipt_code, submitted_at, due_at, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = $2`, [a.institutionId, x!.id])) as Record<string, unknown>[])[0];
+      return { ok: true, replay: !!replay, receipt: { code: String(rc.receipt_code), submittedAt: new Date(String(rc.submitted_at)).toISOString(), dueAt: rc.due_at ? new Date(String(rc.due_at)).toISOString() : null, late: !!rc.late, lateMinutes: Math.ceil(Number(rc.late_seconds) / 60), files: rc.files } };
     }
     if (input.action === 'grade') {
       const x = await zite.submissions.findOne({ id: input.submissionId });

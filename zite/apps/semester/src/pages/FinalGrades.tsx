@@ -4,6 +4,7 @@ import { officialGrades as api } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { PageHeader, Panel, Empty, useLoad, Status, errMsg } from '../components/kit';
+import { toDocx } from '../lib/docxRules';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const MODE: Record<string, string> = {
@@ -13,6 +14,36 @@ const MODE: Record<string, string> = {
 };
 const key = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const denied = (e: string | null) => !!e && /access|role|allow|registrar|Only/i.test(e);
+
+function transcriptMd(d: any): string {
+  const t = d.transcript;
+  const head = `${t.official ? 'Official transcript' : 'UNOFFICIAL transcript — sandbox records, not an official academic record'}\n\n**${d.student}** · ${d.institution} · generated ${new Date(d.generatedAt).toLocaleString()}\n\nGPA uses ${t.scale === 'default' ? 'a default 4.0 scale until the institution\'s approved policy is configured' : 'the institution\'s approved scale'}.`;
+  const terms = t.terms.map((x: any) => `## ${x.term}\n\n| Course | Title | Credits | Grade | Points |\n|---|---|---|---|---|\n${x.rows.map((r: any) => `| ${r.course} | ${r.title} | ${r.credits} | ${r.grade}${r.corrected ? ' (corrected)' : ''} | ${r.points ?? '—'} |`).join('\n')}\n\nTerm: attempted ${x.attempted} · earned ${x.earned} · GPA ${x.gpa ?? '—'}`).join('\n\n');
+  return `${head}\n\n${terms}\n\n## Cumulative\n\nAttempted ${t.attempted} · earned ${t.earned} · GPA credits ${t.gpaCredits} · quality points ${t.qualityPoints} · **GPA ${t.gpa ?? '—'}**`;
+}
+
+function TranscriptView({ studentId, onClose }: { studentId?: string; onClose?: () => void }) {
+  const s = useLoad(() => api((studentId ? { action: 'transcriptFor', studentId } : { action: 'transcript' }) as never) as Promise<any>, [studentId]);
+  if (s.error) return <p className="text-sm">! {s.error}</p>;
+  if (!s.data) return <p className="text-sm text-muted-foreground">… Loading transcript</p>;
+  const d: any = s.data; const t = d.transcript;
+  const download = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([toDocx(`Transcript — ${d.student}`, transcriptMd(d))], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); a.download = `transcript-${d.student.replace(/[^\w-]+/g, '-')}.docx`; a.click(); URL.revokeObjectURL(a.href); };
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-border p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{t.official ? 'Official transcript' : 'Unofficial transcript (sandbox records)'} — {d.student}</p>
+        <div className="flex gap-2"><Button size="sm" variant="outline" disabled={!t.terms.length} onClick={download}>Download Word</Button>{onClose && <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>}</div></div>
+      {!t.official && <p className="text-xs">! Built from records in {d.mode} mode. It is not an official academic record.</p>}
+      {!t.terms.length ? <Empty>No official grades yet. Course grades your instructor released are not on a transcript until the registrar posts them.</Empty> : <>
+        {t.terms.map((x: any) => (
+          <div key={x.term}><p className="text-xs font-medium">{x.term}</p>
+            <table className="w-full text-xs"><caption className="sr-only">{x.term}</caption><thead><tr className="text-left text-muted-foreground"><th className="p-1">Course</th><th className="p-1">Title</th><th className="p-1">Credits</th><th className="p-1">Grade</th><th className="p-1">Points</th></tr></thead>
+              <tbody>{x.rows.map((r: any) => <tr key={r.course + r.revision} className="border-t border-border"><td className="p-1">{r.course}</td><td className="p-1">{r.title}</td><td className="p-1">{r.credits}</td><td className="p-1">{r.grade}{r.corrected && <span className="text-muted-foreground"> (corrected)</span>}</td><td className="p-1">{r.points ?? '—'}</td></tr>)}</tbody></table>
+            <p className="text-xs text-muted-foreground">Term: attempted {x.attempted} · earned {x.earned} · GPA {x.gpa ?? '—'}</p></div>))}
+        <p className="text-sm">Cumulative: attempted {t.attempted} · earned {t.earned} · <strong>GPA {t.gpa ?? '—'}</strong></p>
+        <p className="text-xs text-muted-foreground">GPA uses {t.scale === 'default' ? 'a default 4.0 scale (truncated to two decimals) until the institution’s approved policy is configured; repeat rules are not applied yet' : 'the institution’s approved scale'}. P earns credit outside GPA; W and I earn no credit.</p></>}
+    </div>
+  );
+}
 
 function Teaching() {
   const s = useLoad(() => api({ action: 'teaching' } as never) as Promise<any>, []);
@@ -52,6 +83,7 @@ function Teaching() {
 function Registrar() {
   const s = useLoad(() => api({ action: 'queue' } as never) as Promise<any>, []);
   const [fix, setFix] = useState<{ enrollmentId: string; grade: string; reason: string; key: string } | null>(null);
+  const [tx, setTx] = useState<string | null>(null);
   const call = async (body: object) => { try { const r: any = await api(body as never); const rc = r.receipt; toast(rc?.revision ? `Revision ${rc.revision} recorded${rc.replay ? ' (same request, no duplicate)' : ''} · ${rc.projected === 'held' ? 'held in sandbox' : rc.projected}` : 'Done.'); setFix(null); s.reload(); } catch (e) { toast(`! ${errMsg(e)}`); } };
   if (s.error) return denied(s.error) ? null : <Panel title="Registrar"><p className="text-sm">! {s.error}</p></Panel>;
   if (!s.data) return null;
@@ -71,7 +103,8 @@ function Registrar() {
       {!d.entries.length ? <Empty>No official grades yet.</Empty> : <div className="overflow-x-auto"><table className="w-full text-sm"><caption className="sr-only">Official grade revisions</caption>
         <thead><tr className="text-left text-xs text-muted-foreground"><th className="p-1">Student</th><th className="p-1">Section</th><th className="p-1">Rev</th><th className="p-1">Grade</th><th className="p-1">Authority</th><th className="p-1">In records</th><th className="p-1"><span className="sr-only">Correct</span></th></tr></thead>
         <tbody>{d.entries.map((e: any) => <tr key={e.id} className="border-t border-border align-top"><td className="p-1">{e.student}</td><td className="p-1">{e.section}</td><td className="p-1">{e.revision} {e.kind === 'Correction' && <span className="text-xs">({e.previous} → {e.grade}: {e.reason})</span>}</td><td className="p-1">{e.grade}</td><td className="p-1 text-xs">{e.authority}</td><td className="p-1 text-xs">{e.projected ? '✓ yes' : '· held'}</td>
-          <td className="p-1"><Button size="sm" variant="ghost" onClick={() => setFix({ enrollmentId: e.enrollmentId, grade: e.grade, reason: '', key: key() })}>Correct</Button></td></tr>)}</tbody></table></div>}
+          <td className="p-1"><Button size="sm" variant="ghost" onClick={() => setFix({ enrollmentId: e.enrollmentId, grade: e.grade, reason: '', key: key() })}>Correct</Button><Button size="sm" variant="ghost" onClick={() => setTx(e.studentId)}>Transcript</Button></td></tr>)}</tbody></table></div>}
+      {tx && <TranscriptView studentId={tx} onClose={() => setTx(null)} />}
       {fix && <div className="mt-3 grid gap-2 rounded-md border border-border p-3 sm:grid-cols-3">
         <div><label className="text-xs" htmlFor="og-g">Corrected grade</label><Input id="og-g" value={fix.grade} onChange={(e) => setFix({ ...fix, grade: e.target.value.toUpperCase() })} /></div>
         <div className="sm:col-span-2"><label className="text-xs" htmlFor="og-r">Reason (kept with the record)</label><Input id="og-r" value={fix.reason} onChange={(e) => setFix({ ...fix, reason: e.target.value })} /></div>
@@ -83,6 +116,7 @@ function Registrar() {
 
 function Mine() {
   const s = useLoad(() => api({ action: 'mine' } as never) as Promise<any>, []);
+  const [show, setShow] = useState(false);
   if (s.error || !s.data) return null;
   const d: any = s.data;
   if (!d.grades.length) return null;
@@ -92,6 +126,8 @@ function Mine() {
         <li key={g.enrollmentId} className="rounded-md border border-border p-2"><span className="font-medium">{g.section}</span>
           <span className="block text-xs">{g.courseGrade && <>Course grade from your instructor: <strong>{g.courseGrade}</strong>{!g.official && ' — not official yet'}</>}
             {g.official && <>{g.courseGrade ? ' · ' : ''}Official grade: <strong>{g.official.grade}</strong> (revision {g.official.revision}{g.official.authority !== 'pilot' && g.official.authority !== 'authoritative' ? ', sandbox record' : ''})</>}</span></li>))}</ul>
+      <Button size="sm" variant="outline" className="mt-2" onClick={() => setShow(!show)}>{show ? 'Hide transcript' : 'View transcript'}</Button>
+      {show && <TranscriptView />}
     </Panel>
   );
 }

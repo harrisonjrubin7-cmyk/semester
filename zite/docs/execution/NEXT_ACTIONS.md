@@ -118,6 +118,8 @@ DONE 27 Oct (owner SIS/LMS replacement spec, §16 first increment): course grade
 revision (ogr_*, aum_* authority modes; DB check 32/32 + 3 mutants), gradebook setFinal now proposes only, last-seat race run
 against reg_decide (20-way → 1 seat; unlocked control → 6), six-status replacement register. See SIS_LMS_REPLACEMENT.md.
 OPEN: zite.permissions.json has no defaultPolicy (direct table access unverified) — owner decision; live 2-person run blocked.
+DONE 28 Oct: submission receipts (sbm_*): the receipt is the submission — file manifest with SHA-256, locked atomically, on-time/late stamp, request-key replay; shown to student and instructor. DB check 14/14, 2 mutants fail.
+DONE 28 Oct: transcript and GPA from official revisions only (transcriptRules 6/6), student and registrar views, Word download; UNOFFICIAL label outside pilot/authoritative.
 
 ## Queue (dependency order, unblocked first)
 1. DONE 25 Oct: registrar (97 rows) and security (70 rows) registers; module register (135 apps, S-53). Remaining unreconciled: 15 sources.

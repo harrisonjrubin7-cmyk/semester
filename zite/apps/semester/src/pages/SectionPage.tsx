@@ -20,7 +20,8 @@ import { uploadPrivate, saveBytes } from '../lib/fileClient';
 import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
 import CourseAccessibility from '../components/CourseAccessibility';
 
-type Sub = { id: string; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
+type Receipt = { code: string; submittedAt: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
+type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number }[] };
 type Asg = { id: string; title: string; dueAt: string | null; points: number | null; rubric: string; source: string };
 
 const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
@@ -41,6 +42,7 @@ function GradeRow({ s, rubrics, onSave }: { s: Sub; rubrics: Rubric[]; onSave: (
   return (
     <div className="border-b border-border py-3 text-sm last:border-0">
       <div className="flex justify-between"><span className="font-medium">{s.student} · {s.taskTitle}</span><Status value={s.state} /></div>
+      {s.receipt && <ReceiptLine r={s.receipt} />}
       {s.files.map((f) => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">{f.name}</a>)}
       <AttList s={s} />
       {rubrics.length > 0 && <label className="mt-2 block text-xs">Rubric <select className="ml-1 rounded border border-border bg-background p-1" value={rk} onChange={(e) => { setRk(e.target.value); setSel({}); }}>
@@ -56,6 +58,15 @@ function GradeRow({ s, rubrics, onSave }: { s: Sub; rubrics: Rubric[]; onSave: (
   );
 }
 
+function ReceiptLine({ r }: { r: Receipt }) {
+  return (
+    <div className="mt-2 rounded-md border border-border p-2 text-xs">
+      <p><span className="font-medium">Receipt {r.code}</span> · submitted {new Date(r.submittedAt).toLocaleString()} · {r.late ? <span className="text-destructive">! late by {r.lateMinutes >= 60 ? `${Math.floor(r.lateMinutes / 60)} h ${r.lateMinutes % 60} min` : `${r.lateMinutes} min`}</span> : '✓ on time'}</p>
+      <ul className="mt-1 text-muted-foreground">{r.files.map((f) => <li key={f.sha256 + f.name}>{f.name} · {Math.max(1, Math.round(f.size / 1024))} KB · SHA-256 {f.sha256.slice(0, 12)}…</li>)}</ul>
+    </div>
+  );
+}
+
 function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { a: Asg; sub?: Sub; onUpload: () => void; onSubmit: (id: string) => void; onAttach: (f: File) => void; onDetach: (fileId: string) => void; busy: boolean }) {
   return (
     <Panel>
@@ -64,7 +75,7 @@ function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { 
       <p className="text-sm text-muted-foreground">{fmt(a.dueAt)}{a.points ? ` · ${a.points} pts` : ''}</p>
       {a.rubric && <div className="mt-2 text-xs text-muted-foreground"><p className="font-medium text-foreground">Rubric</p>{a.rubric.split('\n').map((l) => <p key={l}>{l}</p>)}</div>}
       {sub && sub.state !== 'Private Draft' ? (
-        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
+        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.receipt && <ReceiptLine r={sub.receipt} />}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
       ) : (
         <div className="mt-3 space-y-2">
           {!sub && <Button size="sm" variant="outline" disabled={busy} onClick={onUpload}>Start a private draft</Button>}
@@ -114,7 +125,7 @@ export default function SectionPage() {
                     onUpload={() => act(() => learn({ action: 'saveDraft', taskId: a.id }), 'Draft started')}
                     onAttach={(f) => act(async () => { const fileId = await uploadPrivate(f, 'submission'); await learn({ action: 'saveDraft', taskId: a.id, fileId }); }, 'Attached to your draft')}
                     onDetach={(fileId) => { const sub = d.submissions.find((s: Sub) => s.taskId === a.id); if (sub) act(() => learn({ action: 'detachFile', submissionId: sub.id, fileId }), 'Removed from your draft'); }}
-                    onSubmit={(id) => act(() => learn({ action: 'submit', submissionId: id }), 'Submitted')} />))}
+                    onSubmit={(id) => act(async () => { const r: any = await learn({ action: 'submit', submissionId: id }); toast.success(`Submitted. Receipt ${r.receipt.code}${r.receipt.late ? ' (late)' : ''}`); })} />))}
               </TabsContent>
               <TabsContent value="syllabus"><SyllabusTab d={d} sectionId={sectionId} reload={state.reload} /></TabsContent>
               <TabsContent value="materials"><MaterialsTab d={d} sectionId={sectionId} reload={state.reload} /></TabsContent>

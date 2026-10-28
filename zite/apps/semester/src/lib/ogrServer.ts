@@ -57,3 +57,19 @@ export async function project(tenant: string, isSample: boolean, entryId: number
     return 'projected';
   } catch { return 'failed'; }
 }
+
+/** Transcript rows from official revisions only, joined to course code, title, credits and term. */
+export async function transcriptEntries(tenant: string, studentId: string) {
+  await ensureOgr();
+  const rows = (await pg().query(`SELECT enrollment_id, revision, grade, authority, section_id FROM ogr_entries WHERE tenant_id = $1 AND student_id = $2`, [tenant, studentId])) as Row[];
+  const secIds = [...new Set(rows.map((r) => String(r.section_id)))];
+  const secs = (await Promise.all(secIds.map((id) => zite.sections.findOne({ id })))).filter(Boolean) as NonNullable<Awaited<ReturnType<typeof zite.sections.findOne>>>[];
+  const courseIds = [...new Set(secs.map((s) => first(s.course) ?? '').filter(Boolean))];
+  const courses = (await Promise.all(courseIds.map((id) => zite.courses.findOne({ id })))).filter(Boolean) as NonNullable<Awaited<ReturnType<typeof zite.courses.findOne>>>[];
+  return rows.map((r) => {
+    const s = secs.find((x) => x.id === String(r.section_id)); const c = courses.find((x) => x.id === first(s?.course));
+    const term = String(s?.term ?? 'Unknown term');
+    return { enrollmentId: String(r.enrollment_id), revision: Number(r.revision), grade: String(r.grade), authority: String(r.authority), term,
+      course: String(c?.code ?? s?.label ?? 'Course'), title: String(c?.title ?? ''), credits: Number(c?.credits ?? 0) };
+  });
+}

@@ -4,7 +4,8 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, forbid, userNames, tenantScope, ids, first, audit } from '../lib/server';
 import { pg } from '../lib/pg';
 import { OGR_GRADES } from '../lib/ogrMigration';
-import { ensureOgr, one, propose, isInstructorOfRecord, project, gradebookBasis } from '../lib/ogrServer';
+import { ensureOgr, one, propose, isInstructorOfRecord, project, gradebookBasis, transcriptEntries } from '../lib/ogrServer';
+import { buildTranscript, termOrder } from '../lib/transcriptRules';
 
 // Course grade → released to the student → certified by the instructor of record → posted by the registrar as an
 // append-only official revision (spec §16 first executable increment). Official projection is held in design mode.
@@ -25,6 +26,8 @@ export default createEndpoint({
     z.object({ action: z.literal('correct'), enrollmentId: z.string(), grade: GRADE, reason: z.string().max(1000), requestKey: z.string().min(8).max(80) }),
     z.object({ action: z.literal('reconcile') }),
     z.object({ action: z.literal('mine') }),
+    z.object({ action: z.literal('transcript') }),
+    z.object({ action: z.literal('transcriptFor'), studentId: z.string() }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -65,6 +68,21 @@ export default createEndpoint({
       };
     }
 
+    // ---------------- transcripts (official revisions only) ----------------
+    if (input.action === 'transcript' || input.action === 'transcriptFor') {
+      let student = me;
+      if (input.action === 'transcriptFor') {
+        await requireAction(me, 'registrar.read');
+        const has = ((await sql.query(`SELECT 1 FROM ogr_entries WHERE tenant_id = $1 AND student_id = $2 LIMIT 1`, [T, input.studentId])) as Row[]).length;
+        if (!has) forbid('No official grades for that student in your institution.');
+        student = input.studentId;
+        await audit(a, 'Transcript viewed', `student:${student}`, '', 'Registrar');
+      }
+      const entries = (await transcriptEntries(T, student)).map((e) => ({ ...e, termOrder: termOrder(e.term) }));
+      const name = (await userNames([student]))[student] ?? 'Student';
+      return { student: name, institution: a.institutionName, mode, generatedAt: new Date().toISOString(), transcript: buildTranscript(entries) };
+    }
+
     // ---------------- registrar ----------------
     // Registrar gate: both registrar actions, through the unified deny-by-default authorizer (each decision is logged).
     if (['queue', 'post', 'correct', 'reconcile'].includes(input.action)) { await requireAction(me, 'registrar.read'); await requireAction(me, 'registration.request.decide'); }
@@ -101,7 +119,7 @@ export default createEndpoint({
       return {
         mode, isSample: a.isSample, receipt,
         ready: ready.map((r) => ({ enrollmentId: String(r.enrollment_id), student: nm[String(r.student_id)] ?? 'Student', section: label(r.section_id), grade: String(r.grade), version: Number(r.version), certifiedBy: nm[String(r.certified_by)] ?? 'Instructor', certifiedAt: iso(r.certified_at), mineToPost: r.certified_by !== me })),
-        entries: entries.map((e) => ({ id: Number(e.id), enrollmentId: String(e.enrollment_id), student: nm[String(e.student_id)] ?? 'Student', section: label(e.section_id), revision: Number(e.revision), grade: String(e.grade), previous: e.previous_grade ? String(e.previous_grade) : null,
+        entries: entries.map((e) => ({ id: Number(e.id), studentId: String(e.student_id), enrollmentId: String(e.enrollment_id), student: nm[String(e.student_id)] ?? 'Student', section: label(e.section_id), revision: Number(e.revision), grade: String(e.grade), previous: e.previous_grade ? String(e.previous_grade) : null,
           kind: String(e.kind), reason: String(e.reason ?? ''), postedBy: nm[String(e.posted_by)] ?? 'Registrar', authority: String(e.authority), projected: !!e.projected, at: iso(e.at) })),
       };
     }
