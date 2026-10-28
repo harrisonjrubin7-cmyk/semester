@@ -67,17 +67,6 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
     rejectionBoundaries: [1, 3],
   },
   {
-    fn: 'productivity-sourcecheck',
-    ordered: [
-      /const auth=req\.headers\.get\('authorization'\)/,
-      /client\.auth\.getUser\(\)/,
-      /if\(error\|\|!data\.user\)return response\(401/,
-      /approvedUrl\(input\.url\)/,
-      /page=await fetch\(/,
-    ],
-    rejectionBoundaries: [2],
-  },
-  {
     fn: 'push',
     ordered: [
       /if \(!CRON_SECRET\)/,

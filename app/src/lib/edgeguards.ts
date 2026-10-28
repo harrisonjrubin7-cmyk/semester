@@ -63,7 +63,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'canvas', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /canvas/, /getUser/) },
   { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
   { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },
-  { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /productivity-sourcecheck/, /getUser/) },
+  { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: [/handleProductivitySourceCheck\(/], behaviorProof: proof('app/src/lib/productivitysourcecheck.test.ts', /handleProductivitySourceCheck/, /rejects a missing, invalid or unreadable session/) },
   { fn: 'fetchcal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /fetchcal/, /getUser/) },
   { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
   { fn: 'access-saga-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/, /access_saga_tick_authorized/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
