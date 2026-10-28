@@ -28,13 +28,10 @@
 #
 # ## Which directories
 #
-# The root app workspace, Workflow Lab, Starter, the workflows and every
+# The root app workspace, Workflow Lab, Starter, Video, the workflows and every
 # deployed Edge Function. Other standalone package trees remain deliberately
 # out for now rather than forgotten:
 #
-#   · `video/` installs in CI to be typechecked and renders nothing a student
-#     loads. Remotion pulls a large tree and a weekly sweep of it would be most
-#     of the noise for none of the exposure.
 #   · `pipeline/` runs at the repository root to validate course data, never in
 #     a browser and never against input from outside.
 #   · `zite/` is a source snapshot of a separately owned builder workspace;
@@ -44,8 +41,9 @@
 #
 # The root app and standalone Workflow Lab have documented service boundaries;
 # Starter has its own policy, data-access and worker packages with dedicated CI.
-# Those three trees receive weekly update pull requests. The remaining local or
-# separately owned trees stay visible as accepted gaps.
+# Video has a separate npm lockfile and is installed and typechecked in the main
+# CI workflow. Those four trees receive weekly update pull requests. The
+# remaining local or separately owned trees stay visible as accepted gaps.
 version: 2
 
 updates:
@@ -124,6 +122,30 @@ updates:
     open-pull-requests-limit: 5
     groups:
       starter-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone Video/Remotion tree ─────────────────────────────────
+  #
+  # Video is not part of the root npm workspace. CI installs its own lockfile
+  # and typechecks the package, so updates opened here receive an executable
+  # compatibility check without implying that any rendered media is deployed.
+  - package-ecosystem: npm
+    directory: /video
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      video-minor-and-patch:
         patterns:
           - '*'
         update-types:
