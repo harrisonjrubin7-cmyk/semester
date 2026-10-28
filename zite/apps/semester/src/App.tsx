@@ -70,6 +70,7 @@ import { ToolkitHub, ToolkitTool } from './pages/Toolkit';
 import Sources from './pages/Sources';
 import Sheet from './pages/Sheet';
 import Deck from './pages/Deck';
+import Diagram from './pages/Diagram';
 import Proof from './pages/Proof';
 import Paper from './pages/Paper';
 import GroupWork from './pages/GroupWork';
@@ -188,6 +189,7 @@ export default function App() {
             <Route path="/learn/sources" element={<Sources />} />
             <Route path="/learn/sheet" element={<Sheet />} />
             <Route path="/learn/deck" element={<Deck />} />
+            <Route path="/learn/diagram" element={<Diagram />} />
             <Route path="/learn/proof" element={<Proof />} />
             <Route path="/learn/paper" element={<Paper />} />
             <Route path="/learn/toolkit" element={<ToolkitHub />} />

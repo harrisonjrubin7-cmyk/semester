@@ -10,6 +10,7 @@ const app = z.object({
 });
 
 export default createEndpoint({
+  authenticated: true,
   description: 'Platform console for developer apps: list apps, installs and audit; review, suspend, reinstate and revoke',
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('list') }),

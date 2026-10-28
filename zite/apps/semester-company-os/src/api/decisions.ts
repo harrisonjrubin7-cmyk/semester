@@ -27,6 +27,7 @@ const fail = (m: string): never => { const e = new ZiteError(m); e.userFacingMes
 const item = z.object({ key: z.string(), input: z.string(), controls: z.string(), status: z.string(), answer: z.string(), evidence: z.string(), proposedBy: z.string(), decidedBy: z.string(), mine: z.boolean(), updatedAt: z.string() });
 
 export default createEndpoint({
+  authenticated: true,
   description: 'Decision register: propose answers with evidence; a different person confirms before a decision counts',
   inputSchema: z.object({
     action: z.enum(['list', 'propose', 'confirm', 'reopen']), key: z.string().optional(),

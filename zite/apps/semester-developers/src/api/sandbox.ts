@@ -12,6 +12,7 @@ const DATA: Record<string, unknown[]> = {
 const rid = (p: string) => `${p}_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
 
 export default createEndpoint({
+  authenticated: true,
   description: 'Developer sandbox: test apps and tokens in an isolated tenant, plus a request tester for the app API',
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('list') }),

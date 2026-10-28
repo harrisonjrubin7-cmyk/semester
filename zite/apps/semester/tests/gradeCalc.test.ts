@@ -72,7 +72,7 @@ test('GPA: exact prior, pass/fail excluded, approximate flagged', () => {
   eq(computeGpa([{ name: 'A', credits: 3, grade: 'A', basis: 'graded' }], { mode: 'approx', gpa: 3.5, credits: 30 }, DEFAULT_SCALE).approximate, true);
 });
 test('GPA: unknown letters block a falsely precise answer; zero denominators return null', () => {
-  const g = computeGpa([{ name: 'A', credits: 3, grade: 'A+', basis: 'graded' }], null, DEFAULT_SCALE);
+  const g = computeGpa([{ name: 'A', credits: 3, grade: 'Z', basis: 'graded' }], null, DEFAULT_SCALE);
   eq(g.term, null); eq(g.errors.length, 1);
   eq(computeGpa([], null, DEFAULT_SCALE).term, null);
 });

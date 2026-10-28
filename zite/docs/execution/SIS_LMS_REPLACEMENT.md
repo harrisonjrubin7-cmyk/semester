@@ -30,8 +30,8 @@ Records mode for every tenant is `design` today.
 - Evidence: `dbchecks/submissions.ts` 26/26; mutant that ignores the extension fails E6. Signed-in run NOT RUN (no instructor account in the sample institution).
 
 ## Open items
-- SECURITY (not verified): `zite.permissions.json` has no `defaultPolicy` and no roles. The spec notes Zite rules are
-  inert unless `defaultPolicy` is "deny". No app page imports `zitejs/db` (all access goes through endpoints), but whether a
-  signed-in user can read or write tables directly has not been tested. Needs Zite documentation or a second account.
+- RESOLVED 28 Oct (D-2026-10-28-permissions): Zite has no `defaultPolicy`; the permissions file enforces nothing. Access is
+  deny-by-default in endpoint code, and `tests/endpointAuth.test.ts` now fails any endpoint that does not require sign-in
+  unless it is on the reviewed public list. Grading scale and repeat rules: sample policy decided (D-2026-10-28-grading).
 - Live two-person run of the §16 path: needs a second (teacher) sign-in account in the sample institution.
 - Gaps per link are listed in the register (`gaps`).

@@ -90,7 +90,8 @@ export function computeCourse(c: CoursePlan, scenario = false): CourseResult {
 export type GpaCourse = { name: string; credits: number; grade: string; basis: 'graded' | 'pass_fail' | 'excluded' };
 export type Prior = { mode: 'exact'; qualityPoints: number; credits: number } | { mode: 'approx'; gpa: number; credits: number } | null;
 // Same points as the Progress page's GPA (api/progress.ts), so planning and the record agree on the scale.
-export const DEFAULT_SCALE: Record<string, number> = { A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, D: 1, F: 0 };
+// One scale for the whole product: the transcript's sample policy (decided 28 Oct). Previously this copy lacked A+, D+ and D-.
+export { DEFAULT_SCALE } from './transcriptRules';
 export function computeGpa(courses: GpaCourse[], prior: Prior, scale: Record<string, number>) {
   const included: string[] = [], excluded: string[] = [], errors: string[] = [];
   let qp = 0, cr = 0;

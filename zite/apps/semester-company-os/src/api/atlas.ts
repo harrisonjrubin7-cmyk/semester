@@ -24,6 +24,7 @@ const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) 
 // registry are enforced in lib/atlMigration.ts. Atlas explains and tracks; it never executes institutional transactions and
 // holds no student records. Internal Zite app: only workspace members reach it; decisions use company roles (co_roles).
 export default createEndpoint({
+  authenticated: true,
   description: 'Atlas: coverage with explicit denominators, eight-dimension capability status from evidence, gap register, claims registry',
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('get') }),
