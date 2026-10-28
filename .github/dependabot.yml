@@ -28,26 +28,24 @@
 #
 # ## Which directories
 #
-# The root app workspace, Workflow Lab, the workflows and every deployed Edge
-# Function. Other standalone package trees remain deliberately out for now
-# rather than forgotten:
+# The root app workspace, Workflow Lab, Starter, the workflows and every
+# deployed Edge Function. Other standalone package trees remain deliberately
+# out for now rather than forgotten:
 #
 #   · `video/` installs in CI to be typechecked and renders nothing a student
 #     loads. Remotion pulls a large tree and a weekly sweep of it would be most
 #     of the noise for none of the exposure.
 #   · `pipeline/` runs at the repository root to validate course data, never in
 #     a browser and never against input from outside.
-#   · `starter/` is an independent pnpm/Turborepo reference backbone with its
-#     own CI. It is not part of the root npm lockfile.
 #   · `zite/` is a source snapshot of a separately owned builder workspace;
 #     repository updates do not activate the running Zite apps.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
 #     TypeScript in this repository, so they have no dependencies of their own.
 #
-# The root app and standalone Workflow Lab have documented service boundaries,
-# so both receive weekly update pull requests. The remaining local/reference
-# trees stay visible as accepted gaps until their ownership and exposure justify
-# separate update queues.
+# The root app and standalone Workflow Lab have documented service boundaries;
+# Starter has its own policy, data-access and worker packages with dedicated CI.
+# Those three trees receive weekly update pull requests. The remaining local or
+# separately owned trees stay visible as accepted gaps.
 version: 2
 
 updates:
@@ -102,6 +100,30 @@ updates:
     open-pull-requests-limit: 5
     groups:
       workflow-lab-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone Starter pnpm tree ───────────────────────────────────
+  #
+  # Starter is an independent pnpm/Turborepo backbone with policy, data-access,
+  # worker and application packages. Its lockfile and CI are separate from the
+  # root npm workspace, while Dependabot's npm ecosystem supports pnpm locks.
+  - package-ecosystem: npm
+    directory: /starter
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      starter-minor-and-patch:
         patterns:
           - '*'
         update-types:
