@@ -24,6 +24,8 @@ BEGIN
   INSERT INTO rr VALUES (got, 'K13 table refuses an unknown kind');
   r := tlk_save('s1','t1',NULL,'sheet','Budget','{"grid":[["Item","Cost"],["Books","120"],["Total","=SUM(B2:B2)"]]}'::jsonb,0);
   INSERT INTO rr VALUES (r LIKE 'ok:%:1', 'K14 a spreadsheet saves as a toolkit document');
+  r := tlk_save('s1','t1',NULL,'deck','Week 6','{"outline":"# Why markets fail\\n- Information"}'::jsonb,0);
+  INSERT INTO rr VALUES (r LIKE 'ok:%:1', 'K15 a deck saves as a toolkit document');
   SELECT string_agg(lbl, '; ') INTO x FROM rr WHERE ok IS NOT TRUE;
   RAISE EXCEPTION 'RESULT pass=% fails=% [%]', (SELECT count(*) FROM rr WHERE ok IS TRUE), (SELECT count(*) FROM rr WHERE ok IS NOT TRUE), coalesce(x,'');
 END $$`;
@@ -37,11 +39,11 @@ export async function run() {
   try { await sql.transaction([...mutated.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('mutant: no RESULT raised'); }
   catch (e) { console.log('mutant:', String((e as any).message).slice(0, 300)); }
   // Upgrade path: a table created before 27 Oct (no 'sheet' in its check) must be widened by the migration.
-  const old = [TLK_MIGRATION[0].replace("'rubric','sheet')", () => "'rubric')"), ...TLK_MIGRATION.slice(1)];
+  const old = [TLK_MIGRATION[0].replace("'rubric','sheet','deck')", () => "'rubric','sheet')"), ...TLK_MIGRATION.slice(1)];
   try { await sql.transaction([...old.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('upgrade: no RESULT raised'); }
   catch (e) { console.log('upgrade:', String((e as any).message).slice(0, 300)); }
   const noWiden = old.filter((q) => !q.includes('tlk_docs_kind_check'));
   try { await sql.transaction([...noWiden.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log('upgrade-without-widen: no RESULT raised'); }
-  catch (e) { console.log('upgrade-without-widen (control, K14 must fail):', String((e as any).message).slice(0, 300)); }
+  catch (e) { console.log('upgrade-without-widen (control, K15 must fail):', String((e as any).message).slice(0, 300)); }
   console.log('left behind:', JSON.stringify(await sql.query(`SELECT to_regclass('tlk_docs') AS t`)));
 }
