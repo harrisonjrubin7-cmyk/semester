@@ -89,6 +89,7 @@ import type { default as _RegistrationChangesEp } from '../src/api/registrationC
 import type { default as _RegradeEp } from '../src/api/regrade';
 import type { default as _ReslifeEp } from '../src/api/reslife';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
+import type { default as _RosterImportEp } from '../src/api/rosterImport';
 import type { default as _SandboxApiEp } from '../src/api/sandboxApi';
 import type { default as _ScholarshipsEp } from '../src/api/scholarships';
 import type { default as _SearchEp } from '../src/api/search';
@@ -543,6 +544,11 @@ export type RoleAppsInputType = NonNullable<_RoleAppsCfg['inputSchema']> extends
 export type RoleAppsOutputType = Awaited<ReturnType<_RoleAppsCfg['execute']>>;
 export const roleApps = createCaller<RoleAppsInputType, RoleAppsOutputType>('roleApps');
 
+type _RosterImportCfg = typeof _RosterImportEp;
+export type RosterImportInputType = NonNullable<_RosterImportCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RosterImportCfg['execute']>[0]['input'];
+export type RosterImportOutputType = Awaited<ReturnType<_RosterImportCfg['execute']>>;
+export const rosterImport = createCaller<RosterImportInputType, RosterImportOutputType>('rosterImport');
+
 type _SandboxApiCfg = typeof _SandboxApiEp;
 export type SandboxApiInputType = NonNullable<_SandboxApiCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SandboxApiCfg['execute']>[0]['input'];
 export type SandboxApiOutputType = Awaited<ReturnType<_SandboxApiCfg['execute']>>;
@@ -722,6 +728,7 @@ export const api = {
   regrade,
   reslife,
   roleApps,
+  rosterImport,
   sandboxApi,
   scholarships,
   search,
