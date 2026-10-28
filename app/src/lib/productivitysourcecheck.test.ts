@@ -77,10 +77,10 @@ describe('the productivity source-check function', () => {
     expect(deps.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('does not treat script or style content with spaced end tags as source text', async () => {
+  it('does not treat malformed script or style element content as source text', async () => {
     const deps = dependencies({
       fetch: vi.fn(async () => new Response(
-        '<script>Injected source text</script ><style>Injected source text</style ><p>Exact source text</p>',
+        '<script>Injected source text</script\t\n bar><style>Injected source text</style ><p>Exact source text</p>',
         { headers: { 'Content-Type': 'text/html' } },
       )),
     });

@@ -48,10 +48,48 @@ async function approvedUrl(raw: string, deps: ProductivitySourceCheckDeps): Prom
   return url;
 }
 
-const normalize = (value: string) => value
-  .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
-  .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
-  .replace(/<[^>]*>/g, ' ')
+function withoutRawTextElements(value: string) {
+  let result = value;
+  for (const tag of ['script', 'style']) {
+    let searchFrom = 0;
+    while (searchFrom < result.length) {
+      const lower = result.toLowerCase();
+      const start = lower.indexOf(`<${tag}`, searchFrom);
+      if (start < 0) break;
+      const afterName = lower[start + tag.length + 1];
+      if (afterName && /[a-z0-9:_-]/.test(afterName)) {
+        searchFrom = start + tag.length + 1;
+        continue;
+      }
+      const openEnd = lower.indexOf('>', start + tag.length + 1);
+      if (openEnd < 0) return result.slice(0, start);
+      const close = lower.indexOf(`</${tag}`, openEnd + 1);
+      if (close < 0) return result.slice(0, start);
+      const closeEnd = lower.indexOf('>', close + tag.length + 2);
+      if (closeEnd < 0) return result.slice(0, start);
+      result = `${result.slice(0, start)} ${result.slice(closeEnd + 1)}`;
+      searchFrom = start + 1;
+    }
+  }
+  return result;
+}
+
+function withoutTags(value: string) {
+  let result = '';
+  let insideTag = false;
+  for (const character of value) {
+    if (!insideTag && character === '<') {
+      insideTag = true;
+      result += ' ';
+    } else if (insideTag && character === '>') {
+      insideTag = false;
+      result += ' ';
+    } else if (!insideTag) result += character;
+  }
+  return result;
+}
+
+const normalize = (value: string) => withoutTags(withoutRawTextElements(value))
   .replace(/&nbsp;/gi, ' ')
   .replace(/&amp;/gi, '&')
   .replace(/\s+/g, ' ')
