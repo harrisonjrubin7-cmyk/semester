@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
+import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { LayoutDashboard, Users, ShieldCheck } from 'lucide-react';
+import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import { familyView, FamilyViewOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Textarea } from '@project/components/ui/textarea';
@@ -9,7 +12,6 @@ import { toast } from 'sonner';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { cn } from '@project/components/lib/utils';
 import { Wordmark } from '@project/components/brand/Mark';
-import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const G: Record<string, string> = { Official: '◆', Connected: '⇄', 'Made Here': '◇', Yours: '○', Sample: '◌', 'AI Assisted': '✦' };
 const Tag = ({ s }: { s: string }) => <span className={cn('inline-flex gap-1 rounded-[3px] border border-border px-1.5 text-[11px] text-muted-foreground', s === 'Sample' && 'border-dashed')}>{G[s] ?? '○'} {s}</span>;
@@ -28,31 +30,80 @@ function Note({ studentId, name }: { studentId: string; name: string }) {
   );
 }
 
-export default function App() {
-  const { user, isLoading } = useAuth();
-  const [sid, setSid] = useState<string | undefined>();
-  const [d, setD] = useState<FamilyViewOutputType | null>(null);
+type Data = FamilyViewOutputType;
+const GROUPS: NavGroup[] = [
+  { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
+  { group: 'Shared with you', items: [{ to: '/shared', label: 'Shared record', icon: Users, hint: 'grades holds calendar billing' }] },
+  { group: 'Access', items: [{ to: '/access', label: 'Sharing & access history', icon: ShieldCheck, hint: 'permissions expiry views' }] },
+];
+const day = (s?: string | null) => (s ? format(new Date(s), 'd MMM yyyy') : '—');
+
+function useFamily(sid?: string) {
+  const [d, setD] = useState<Data | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
-  useEffect(() => { if (user) { setErr(null); familyView({ studentId: sid }).then(setD).catch((e) => setErr(e instanceof Error ? e.message : 'This didn’t load')); } }, [user, sid]);
-  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
+  const load = () => { setErr(null); familyView({ studentId: sid }).then(setD).catch((e) => setErr(e instanceof Error ? e.message : 'This didn’t load')); };
+  useEffect(load, [sid]);
+  return { d, err, load };
+}
+
+/** The privacy-first empty state, with how sharing works. Never a way to find or pressure a student. */
+function NothingShared() {
+  return (
+    <div className="mt-6 rounded-md border border-border bg-card p-6 text-sm">
+      <p className="font-medium">○ Nothing has been shared with you yet</p>
+      <p className="mt-1 text-muted-foreground">Students choose what to share and when access ends. Ask your student to open Semester → You → Privacy → Share with family and invite the email you signed in with.</p>
+      <ul className="mt-3 list-disc space-y-1 pl-5 text-muted-foreground">
+        <li>Every category starts off: grades, holds, calendar and billing are each chosen separately.</li>
+        <li>Access ends on the date the student sets, and they can stop it at any time.</li>
+        <li>The student can see each time you view what they shared.</li>
+      </ul>
+    </div>
+  );
+}
+
+function Today() {
+  const { d, err, load } = useFamily();
+  const v = d?.view;
+  const soon = v?.expiresOn && (new Date(v.expiresOn).getTime() - Date.now()) < 7 * 864e5;
+  return (
+    <>
+      <p className="eyebrow">Family</p>
+      <h1 className="mt-1 text-3xl">Today</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Only what a student chose to share with you, while their sharing is active.</p>
+      {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={load}>Try again</Button></div>}
+      {!d && !err && <div className="mt-6 space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /></div>}
+      {d && !v && <NothingShared />}
+      {d && v && (
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <Panel title="Sharing">
+            <p className="text-sm">{(d.students ?? []).length === 1 ? `${v.name} shares ${v.categories.join(', ')} with you.` : `${(d.students ?? []).length} students share with you.`}</p>
+            <p className={cn('mt-1 text-sm', soon ? 'font-medium' : 'text-muted-foreground')}>{v.expiresOn ? `Until ${day(v.expiresOn)}${soon ? ' — ending within a week' : ''}` : 'No end date'}</p>
+            <Link to="/shared" className="mt-2 inline-block text-sm text-primary underline">Open the shared record</Link>
+          </Panel>
+          <Panel title="Next up">{v.upcoming ? (v.upcoming.length ? <p className="text-sm">{v.upcoming[0].title} · {day(v.upcoming[0].dueAt)}</p> : <p className="text-sm text-muted-foreground">Nothing coming up in what is shared.</p>) : <NotShared what="The calendar is" />}</Panel>
+          {v.holds && v.holds.length > 0 && <Panel title="Needs attention"><p className="text-sm">{v.holds.length} hold{v.holds.length === 1 ? '' : 's'} on the record. Only the owning office can lift a hold.</p></Panel>}
+          {v.billing && v.billing.some((b: { balance: number }) => b.balance > 0) && <Panel title="Balance due"><p className="text-sm">{v.billing.filter((b: { balance: number }) => b.balance > 0).map((b: { term: string; balance: number; nextDue: string | null }) => `${b.term}: ${b.balance.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}${b.nextDue ? ` by ${day(b.nextDue)}` : ''}`).join(' · ')}</p></Panel>}
+        </div>
+      )}
+    </>
+  );
+}
+
+function Shared() {
+  const [sid, setSid] = useState<string | undefined>();
+  const { d, err } = useFamily(sid);
   const v = d?.view;
   return (
-    <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between bg-sidebar px-4 py-3 text-sm text-sidebar-foreground md:px-8">
-        <span className="font-display tracking-[0.3em]">SEMESTER <span className="ml-2 text-xs tracking-normal opacity-60">Family</span></span>
-        <span className="flex items-center gap-3 text-xs"><span className="hidden sm:inline">{user.email}</span><button onClick={() => logout()} className="underline">Sign out</button></span>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+    <>
         <p className="eyebrow">Family</p>
         <h1 className="mt-1 text-3xl">{v ? `${v.name}’s shared record` : 'Shared with you'}</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">You see only what a student chose to share, until the date they set. They can see each time you look, and can stop sharing at any time.</p>
         {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={() => setSid(sid)}>Try again</Button></div>}
         {!d && !err && <div className="mt-6 space-y-3"><Skeleton className="h-24" /><Skeleton className="h-40" /></div>}
-        {d && !v && <div className="mt-6 rounded-md border border-border bg-card p-6 text-sm"><p className="font-medium">○ Nothing is shared with you yet</p><p className="mt-1 text-muted-foreground">Ask your student to open Semester → You → Share with family and enter <span className="font-mono">{user.email}</span>.</p></div>}
+        {d && !v && <NothingShared />}
         {d && v && (
           <>
-            {d.students.length > 1 && <div className="mt-4 flex flex-wrap gap-2">{d.students.map((s: { id: string; name: string }) => <Button key={s.id} size="sm" variant={s.id === v.id ? 'default' : 'outline'} onClick={() => setSid(s.id)}>{s.name}</Button>)}</div>}
+            {(d.students ?? []).length > 1 && <div className="mt-4 flex flex-wrap gap-2">{(d.students ?? []).map((s: { id: string; name: string }) => <Button key={s.id} size="sm" variant={s.id === v.id ? 'default' : 'outline'} onClick={() => setSid(s.id)}>{s.name}</Button>)}</div>}
             <p className="mt-4 rounded-[3px] border border-border bg-accent px-3 py-2 text-xs text-accent-foreground">Shared: {v.categories.join(', ')} · until {v.expiresOn ? format(new Date(v.expiresOn), 'EEE d MMM yyyy') : 'revoked'} · This view is recorded in {v.name}’s access history</p>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               {v.billing && <div className="lg:col-span-2"><Panel title="Account balance">{v.billing.length ? <table className="w-full text-sm"><caption className="sr-only">Balance by term</caption><thead><tr className="text-left text-muted-foreground"><th className="py-1 font-normal">Term</th><th className="font-normal">Balance</th><th className="font-normal">Next due</th></tr></thead><tbody>{v.billing.map((b: { term: string; balance: number; nextDue: string | null }) => <tr key={b.term} className="border-t border-border"><td className="py-1.5">{b.term}</td><td>{b.balance.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</td><td>{b.nextDue ?? '—'}</td></tr>)}</tbody></table> : <p className="text-sm text-muted-foreground">No charges on the account.</p>}<p className="mt-2 text-xs text-muted-foreground">Shared by the student: totals only. Payments are made by the student through the institution.</p></Panel></div>}
@@ -63,8 +114,45 @@ export default function App() {
             </div>
           </>
         )}
-      </main>
-      <AppSwitcher current="family" /><Toaster />
-    </div>
+          </>
+  );
+}
+
+type Hist = { at: string; student: string; categories: string };
+function Access() {
+  const { d } = useFamily();
+  const [h, setH] = useState<Hist[] | null>(null);
+  useEffect(() => { (familyView({ history: true }) as Promise<{ history: Hist[] }>).then((r) => setH(r.history)).catch(() => setH([])); }, []);
+  return (
+    <>
+      <p className="eyebrow">Family</p>
+      <h1 className="mt-1 text-3xl">Sharing & access history</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">What you can see and until when. Only the student can change this; the student sees this same history.</p>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Panel title="Active sharing">{!d ? <Skeleton className="h-16" /> : (d.students ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Nothing is shared with you.</p> :
+          <ul className="space-y-2 text-sm">{(d.students ?? []).map((s: { id: string; name: string; categories: string[]; expiresOn: string | null }) => <li key={s.id}><span className="font-medium">{s.name}</span>: {s.categories.join(', ')} · until {day(s.expiresOn)}</li>)}</ul>}</Panel>
+        <Panel title="Your recent views">{!h ? <Skeleton className="h-16" /> : h.length === 0 ? <p className="text-sm text-muted-foreground">No views yet.</p> :
+          <ul className="space-y-1 text-sm">{h.map((x, i) => <li key={i}>{format(new Date(x.at), 'd MMM yyyy, HH:mm')} · {x.student} · {x.categories}</li>)}</ul>}</Panel>
+      </div>
+    </>
+  );
+}
+
+export default function App() {
+  const { user, isLoading } = useAuth();
+  useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
+  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
+  return (
+    <BrowserRouter>
+      <AppShell app="Family" appKey="family" institutionName="Family workspace" role="Family member" roles={[]} isSample={false} groups={GROUPS}>
+        <Routes>
+          <Route path="/" element={<Today />} />
+          <Route path="/shared" element={<Shared />} />
+          <Route path="/access" element={<Access />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster />
+      </AppShell>
+    </BrowserRouter>
   );
 }

@@ -46,7 +46,7 @@ export async function run() {
   const go = async (label: string, mig: string[]) => { try { await sql.transaction([...mig.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log(label, 'no RESULT raised'); } catch (e) { console.log(label, String((e as Error).message).slice(0, 400)); } };
   const base = [...FIL_MIGRATION, ...SBM_MIGRATION];
   await go('real:', base);
-  const m1 = base.map((q) => q.replace('VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha)', () => 'VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, NULL, NULL)'));
+  const m1 = base.map((q) => q.replace('VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha, v_used + 1)', () => 'VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, NULL, NULL, v_used + 1)'));
   console.log('receipt mutant applied:', m1.join('') !== base.join(''));
   await go('mutant receipt-forgets-version (A10, A13):', m1);
   const m2 = base.map((q) => q.replace(`IF prev = h THEN RETURN 'Nothing changed since version ' || a.current_version || '.'; END IF;`, () => ''));

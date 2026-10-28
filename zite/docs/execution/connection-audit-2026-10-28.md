@@ -228,3 +228,48 @@ and the support request was revoked.
 
 **NOT RUN:** an institution install by an administrator, and approval of support access followed by the time-limited
 view. Both need an administrator account.
+
+## Seventh increment, 28 Oct: multiple submission attempts (C04)
+
+The assignment editor already offered "Attempts allowed", but submission refused any second attempt. Now:
+- `sbm_submit` reads the allowance from the current published version, serialises a student's attempts on a task, and
+  refuses once they are used up.
+- Each receipt is numbered. A retry replays the same attempt rather than creating a new one.
+- A task with no linked assignment keeps one attempt, as before.
+- The student sees "Start attempt N of M" while attempts remain, and the instructor sees every attempt to grade.
+
+Evidence:
+- `apps/semester/dbchecks/attempts.ts`: 8/8. The unlimited-attempts mutant is caught.
+- Submissions still 27/27 and assignments still 16/16. The assignment check's receipt mutant was updated to match the
+  new insert, and it is caught again.
+- Real accounts, 7/7. The test assignment "Lab report (attempts check)" and its two receipts stay in the sample
+  institution, because receipts cannot be deleted.
+
+## Eighth increment, 28 Oct: Employers and Family on the shared Semester shell (owner source S-89)
+
+S-89 asks that Employers and Family be role-specific Semester experiences, not separate-looking portals. Its first
+milestone is the shared shell plus one complete workflow in each. Now:
+- Both apps use `components/AppShell.tsx`, the same shell as Semester, Faculty and Institution. That gives the same
+  sidebar, search (⌘K), notifications, account menu and app switcher. Their Tailwind builds now include the shared
+  components.
+- **Employers.** Today is the landing page. It shows the next action, live opportunities and new applications,
+  institution approvals, and a setup checklist, all counted from this account's own postings and requests. The sidebar
+  has Recruit → Opportunities & applicants, Connect → Institutions, and Fund → Scholarships.
+- **Family.** Today shows the sharing summary with its end date, an "ending within a week" notice, the next shared
+  event, holds, and balance due. Each appears only for categories the student shared. The sidebar has Shared record and
+  Sharing & access history; the latter shows the recipient's own views. The empty state explains how sharing works and
+  never offers a way to find or pressure a student.
+- The two complete workflows already exist and were run earlier today: employer posting → student application (E1–E9),
+  and student share → family view → revocation (F1–F4).
+
+Evidence:
+- All 10 apps type-check.
+- Real accounts, 3/3: the recipient sees their own view history with three fields only, another account sees only its
+  own, and after revocation the recipient's Today has nothing shared.
+
+**NOT RUN:** browser screenshots of the new shells.
+
+**Not built from S-89 yet:**
+- Employers: interviews, offers, talent network, events, projects, mentoring, team roles (recruiter, interviewer and so
+  on), and per-posting re-review.
+- Family: shared tasks and documents, and the invitation-acceptance step (sharing is currently by email match).

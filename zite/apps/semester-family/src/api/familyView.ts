@@ -10,10 +10,18 @@ const first = (v: string | string[] | undefined | null) => ids(v)[0];
 export default createEndpoint({
   description: 'Shows a guardian only what each student has actively shared with them, and logs every view',
   authenticated: true,
-  inputSchema: z.object({ studentId: z.string().optional(), note: z.string().min(1).max(1000).optional() }),
+  inputSchema: z.object({ studentId: z.string().optional(), note: z.string().min(1).max(1000).optional(), history: z.boolean().optional() }),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
     const uid = context.user.id;
+    // The recipient's own view history (the student sees the same events from their side).
+    if (input.history) {
+      const ev = (await zite.auditEvents.findAll({ filters: { actor: uid, action: 'Family view' }, limit: 50 })).records;
+      const sids = [...new Set(ev.map((e) => String(e.recordRef ?? '').replace('user:', '')).filter(Boolean))];
+      const { rows: us } = sids.length ? await zite.sql({ query: `SELECT "id","name","email" FROM "ziteUsers" WHERE "id" = ANY($1)`, params: [sids] }) : { rows: [] as Record<string, unknown>[] };
+      return { history: ev.map((e) => { const sid = String(e.recordRef ?? '').replace('user:', ''); const u = us.find((r) => r.id === sid); return { at: String(e.occurredAt ?? ''), student: String(u?.name || u?.email || 'Student'), categories: String(e.details ?? '') }; })
+        .sort((a, b) => b.at.localeCompare(a.at)) };
+    }
     const today = new Date().toISOString().slice(0, 10);
     const { records } = await zite.consents.findAll({ filters: { recipient: uid, consentType: 'Data Sharing' }, limit: 200 });
     const live = records.filter((c) => c.granted && !c.revoked && (!c.expiresOn || c.expiresOn >= today) && (c.label ?? '').startsWith('Family:'));

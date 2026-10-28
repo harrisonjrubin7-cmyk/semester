@@ -120,9 +120,11 @@ export default createEndpoint({
       const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
       const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
       await ensureSbm();
-      const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, due_at, due_source, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
-      const receiptOf = (id: string) => { const r = receipts.find((x) => x.submission_id === id); return r ? { code: String(r.receipt_code), submittedAt: new Date(String(r.submitted_at)).toISOString(), dueAt: r.due_at ? new Date(String(r.due_at)).toISOString() : null, dueSource: String(r.due_source ?? 'assignment'), late: !!r.late, lateMinutes: Math.ceil(Number(r.late_seconds) / 60), files: (r.files as { name: string; size: number; sha256: string }[]).map((f) => ({ name: f.name, size: f.size, sha256: f.sha256 })) } : null; };
+      const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, due_at, due_source, late, late_seconds, files, attempt FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
+      const receiptOf = (id: string) => { const r = receipts.find((x) => x.submission_id === id); return r ? { attempt: Number(r.attempt ?? 1), code: String(r.receipt_code), submittedAt: new Date(String(r.submitted_at)).toISOString(), dueAt: r.due_at ? new Date(String(r.due_at)).toISOString() : null, dueSource: String(r.due_source ?? 'assignment'), late: !!r.late, lateMinutes: Math.ceil(Number(r.late_seconds) / 60), files: (r.files as { name: string; size: number; sha256: string }[]).map((f) => ({ name: f.name, size: f.size, sha256: f.sha256 })) } : null; };
       const names = grader ? await userNames(visibleSubs.map((x) => first(x.student) ?? '')) : {};
+      // Attempts per assignment for the student (used and allowed by the current published version).
+      const attempts = grader ? {} as Record<string, { used: number; allowed: number }> : Object.fromEntries(await Promise.all(visibleTasks.map(async (t) => [t.id, ((await pg().query(`SELECT used, allowed FROM sbm_attempts($1,$2,$3)`, [a.institutionId, t.id, uid])) as { used: number; allowed: number }[])[0]] as const)));
       const myExt = grader ? [] : (await pg().query(`SELECT task_id, new_due, kind FROM dln_extensions WHERE tenant_id = $1 AND section_id = $2 AND student_id = $3 AND revoked_at IS NULL`, [a.institutionId, s.id, uid])) as Record<string, unknown>[];
       const resources = (await zite.resources.findAll({ filters: { section: s.id }, limit: 300 })).records
         .filter((r) => r.visibility === 'Course' || ids(r.owner).includes(uid));
@@ -130,7 +132,7 @@ export default createEndpoint({
         section: { id: s.id, label: s.label ?? '', code: course?.code ?? '', title: course?.title ?? '', term: s.term ?? '', times: s.meetingTimes ?? '', syllabus: s.syllabus ?? '', policy: s.courseAiPolicy ?? 'Allowed' },
         teaching,
         grader,
-        assignments: assignments.map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, extendedTo: (() => { const e = myExt.find((x) => x.task_id === t.id); return e ? { dueAt: new Date(String(e.new_due)).toISOString(), kind: String(e.kind) } : null; })(), points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
+        assignments: assignments.map((t) => ({ id: t.id, attempts: grader ? null : attempts[t.id] ?? null, title: t.title ?? '', dueAt: t.dueAt ?? null, extendedTo: (() => { const e = myExt.find((x) => x.task_id === t.id); return e ? { dueAt: new Date(String(e.new_due)).toISOString(), kind: String(e.kind) } : null; })(), points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
           return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
@@ -145,10 +147,18 @@ export default createEndpoint({
     if (input.action === 'saveDraft') {
       const t = await zite.tasks.findOne({ id: input.taskId });
       if (!t || !ids(t.owner).includes(uid)) forbid();
-      const existing = (await zite.submissions.findAll({ filters: { student: uid, task: input.taskId }, limit: 1 })).records[0];
-      if (existing && existing.state !== 'Private Draft') forbid('This work was already submitted.');
+      const mineForTask = (await zite.submissions.findAll({ filters: { student: uid, task: input.taskId }, limit: 20 })).records;
+      const existing = mineForTask.find((x) => x.state === 'Private Draft');
+      // A new attempt opens only while the published assignment allows more (sbm_submit enforces it again on submit).
+      let attemptNo = 1;
+      if (!existing && mineForTask.length) {
+        await ensureSbm();
+        const at = ((await pg().query(`SELECT used, allowed FROM sbm_attempts($1,$2,$3)`, [a.institutionId, t!.id, uid])) as { used: number; allowed: number }[])[0];
+        if (at.used >= at.allowed) forbid(at.allowed === 1 ? 'This work was already submitted.' : `You have used all ${at.allowed} attempts for this assignment.`);
+        attemptNo = at.used + 1;
+      }
       // Files come from the private store (decision D2): the student uploads to You -> Files storage, then attaches here.
-      const sub = existing ?? await zite.submissions.create({ record: { label: `${t!.title} · draft`, task: t!.id, student: uid, state: 'Private Draft' } as never });
+      const sub = existing ?? await zite.submissions.create({ record: { label: `${t!.title} · ${attemptNo > 1 ? `attempt ${attemptNo}` : 'draft'}`, task: t!.id, student: uid, state: 'Private Draft' } as never });
       if (input.fileId) {
         await ensureFil();
         const e = ((await pg().query(`SELECT fil_attach($1,$2,$3,'submission',$4) AS e`, [a.institutionId, uid, input.fileId, sub.id])) as { e: string | null }[])[0].e;

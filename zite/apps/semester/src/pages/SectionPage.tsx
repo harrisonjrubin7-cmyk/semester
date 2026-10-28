@@ -22,9 +22,9 @@ import { MIME_ALLOW, MAX_BYTES } from '../lib/fileRules';
 import CourseAccessibility from '../components/CourseAccessibility';
 import CourseExtensions from '../components/CourseExtensions';
 
-type Receipt = { code: string; submittedAt: string; dueAt?: string | null; dueSource?: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
+type Receipt = { attempt?: number; code: string; submittedAt: string; dueAt?: string | null; dueSource?: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
 type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number; scan?: string; scanReason?: string }[] };
-type Asg = { id: string; title: string; dueAt: string | null; extendedTo?: { dueAt: string; kind: string } | null; points: number | null; rubric: string; source: string };
+type Asg = { id: string; title: string; dueAt: string | null; attempts?: { used: number; allowed: number } | null; extendedTo?: { dueAt: string; kind: string } | null; points: number | null; rubric: string; source: string };
 
 const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
 const AttList = ({ s, onDetach }: { s: Sub; onDetach?: (fileId: string) => void }) => (<>{(s.attachments ?? []).map((f) => (
@@ -64,7 +64,7 @@ function GradeRow({ s, rubrics, onSave }: { s: Sub; rubrics: Rubric[]; onSave: (
 function ReceiptLine({ r }: { r: Receipt }) {
   return (
     <div className="mt-2 rounded-md border border-border p-2 text-xs">
-      <p><span className="font-medium">Receipt {r.code}</span> · submitted {new Date(r.submittedAt).toLocaleString()}{r.dueAt && <> · judged against {new Date(r.dueAt).toLocaleString()}{r.dueSource && r.dueSource !== 'assignment' ? ` (${r.dueSource === 'extension:accommodation' ? 'accommodation extension' : 'extension'})` : ''}</>} · {r.late ? <span className="text-destructive">! late by {r.lateMinutes >= 60 ? `${Math.floor(r.lateMinutes / 60)} h ${r.lateMinutes % 60} min` : `${r.lateMinutes} min`}</span> : '✓ on time'}</p>
+      <p><span className="font-medium">{r.attempt && r.attempt > 1 ? `Attempt ${r.attempt} · ` : ''}Receipt {r.code}</span> · submitted {new Date(r.submittedAt).toLocaleString()}{r.dueAt && <> · judged against {new Date(r.dueAt).toLocaleString()}{r.dueSource && r.dueSource !== 'assignment' ? ` (${r.dueSource === 'extension:accommodation' ? 'accommodation extension' : 'extension'})` : ''}</>} · {r.late ? <span className="text-destructive">! late by {r.lateMinutes >= 60 ? `${Math.floor(r.lateMinutes / 60)} h ${r.lateMinutes % 60} min` : `${r.lateMinutes} min`}</span> : '✓ on time'}</p>
       <ul className="mt-1 text-muted-foreground">{r.files.map((f) => <li key={f.sha256 + f.name}>{f.name} · {Math.max(1, Math.round(f.size / 1024))} KB · SHA-256 {f.sha256.slice(0, 12)}…</li>)}</ul>
     </div>
   );
@@ -78,7 +78,7 @@ function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { 
       <p className="text-sm text-muted-foreground">{a.extendedTo ? <><s>{fmt(a.dueAt)}</s> · extended to <span className="font-medium text-foreground">{fmt(a.extendedTo.dueAt)}</span></> : fmt(a.dueAt)}{a.points ? ` · ${a.points} pts` : ''}</p>
       {a.rubric && <div className="mt-2 text-xs text-muted-foreground"><p className="font-medium text-foreground">Rubric</p>{a.rubric.split('\n').map((l) => <p key={l}>{l}</p>)}</div>}
       {sub && sub.state !== 'Private Draft' ? (
-        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.receipt && <ReceiptLine r={sub.receipt} />}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
+        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.receipt && <ReceiptLine r={sub.receipt} />}{a.attempts && a.attempts.used < a.attempts.allowed && sub.state === 'Submitted' && <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={onUpload}>Start attempt {a.attempts.used + 1} of {a.attempts.allowed}</Button>}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
       ) : (
         <div className="mt-3 space-y-2">
           {!sub && <Button size="sm" variant="outline" disabled={busy} onClick={onUpload}>Start a private draft</Button>}
@@ -125,10 +125,10 @@ export default function SectionPage() {
               <TabsContent value="assignments" className="space-y-3">
                 {d.teaching && <AssignmentStudio sectionId={sectionId} onPublished={() => state.reload()} />}
                 {d.assignments.length === 0 ? <Empty>No assignments posted.</Empty> : d.assignments.map((a: Asg) => (
-                  <Assignment key={a.id} a={a} busy={false} sub={d.grader ? undefined : d.submissions.find((s: Sub) => s.taskId === a.id)}
+                  <Assignment key={a.id} a={a} busy={false} sub={d.grader ? undefined : (d.submissions.find((s: Sub) => s.taskId === a.id && s.state === 'Private Draft') ?? [...d.submissions].reverse().find((s: Sub) => s.taskId === a.id))}
                     onUpload={() => act(() => learn({ action: 'saveDraft', taskId: a.id }), 'Draft started')}
                     onAttach={(f) => act(async () => { const fileId = await uploadPrivate(f, 'submission'); await learn({ action: 'saveDraft', taskId: a.id, fileId }); }, 'Attached to your draft')}
-                    onDetach={(fileId) => { const sub = d.submissions.find((s: Sub) => s.taskId === a.id); if (sub) act(() => learn({ action: 'detachFile', submissionId: sub.id, fileId }), 'Removed from your draft'); }}
+                    onDetach={(fileId) => { const sub = d.submissions.find((s: Sub) => s.taskId === a.id && s.state === 'Private Draft'); if (sub) act(() => learn({ action: 'detachFile', submissionId: sub.id, fileId }), 'Removed from your draft'); }}
                     onSubmit={(id) => act(async () => { const r: any = await learn({ action: 'submit', submissionId: id }); toast.success(`Submitted. Receipt ${r.receipt.code}${r.receipt.late ? ' (late)' : ''}`); })} />))}
               </TabsContent>
               <TabsContent value="syllabus"><SyllabusTab d={d} sectionId={sectionId} reload={state.reload} /></TabsContent>

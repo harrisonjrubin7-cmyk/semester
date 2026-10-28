@@ -66,8 +66,20 @@ export const SBM_MIGRATION: string[] = [
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS asg_version int`,
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS asg_sha256 text`,
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS due_source text NOT NULL DEFAULT 'assignment'`,
+  // Attempts (28 Oct): the published assignment version says how many; each receipt is numbered.
+  `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS attempt int NOT NULL DEFAULT 1 CHECK (attempt >= 1)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS sbm_one_receipt_per_attempt ON sbm_receipts (tenant_id, task_id, student_id, attempt)`,
+  // Attempts used and allowed for one student on one task (allowed comes from the current published version; default 1).
+  `CREATE OR REPLACE FUNCTION sbm_attempts(p_tenant text, p_task text, p_student text, OUT used int, OUT allowed int) LANGUAGE plpgsql STABLE AS $$
+   BEGIN
+     SELECT count(*)::int INTO used FROM sbm_receipts WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_student;
+     SELECT greatest(1, least(10, coalesce((v.content->>'attemptsAllowed')::int, 1))) INTO allowed
+       FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
+       WHERE l.task_id = p_task;
+     allowed := coalesce(allowed, 1);
+   END $$`,
   `CREATE OR REPLACE FUNCTION sbm_submit(p_actor text, p_tenant text, p_submission text, p_task text, p_section text, p_is_owner boolean, p_due timestamptz, p_idem text) RETURNS text LANGUAGE plpgsql AS $$
-   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text; v_asg bigint; v_ver int; v_sha text;
+   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text; v_asg bigint; v_ver int; v_sha text; v_used int; v_allowed int;
    BEGIN
      IF NOT coalesce(p_is_owner, false) THEN RETURN 'You can only submit your own draft.'; END IF;
      IF length(coalesce(p_idem,'')) < 8 THEN RETURN 'Missing request key.'; END IF;
@@ -83,6 +95,10 @@ export const SBM_MIGRATION: string[] = [
      END IF;
      IF EXISTS (SELECT 1 FROM sbm_receipts WHERE tenant_id = p_tenant AND submission_id = p_submission) THEN RETURN 'This work was already submitted.'; END IF;
      IF jsonb_array_length(f) = 0 THEN RETURN 'Attach your work before submitting.'; END IF;
+     -- Serialise this student's attempts on this task, then check the allowance.
+     PERFORM pg_advisory_xact_lock(hashtext(p_tenant || '|' || p_task || '|' || p_actor));
+     SELECT a.used, a.allowed INTO v_used, v_allowed FROM sbm_attempts(p_tenant, p_task, p_actor) a;
+     IF v_used >= v_allowed THEN RETURN 'You have used all ' || v_allowed || ' attempt' || CASE WHEN v_allowed = 1 THEN '' ELSE 's' END || ' for this assignment.'; END IF;
      SELECT x.name INTO bad FROM fil_attachments a JOIN fil_files x ON x.id = a.file_id WHERE a.tenant_id = p_tenant AND a.kind = 'submission' AND a.ref_id = p_submission AND x.scan_status <> 'clean' LIMIT 1;
      IF bad IS NOT NULL THEN RETURN 'The file "' || bad || '" has not passed the safety check, so the work cannot be submitted. Remove it or upload a clean copy.'; END IF;
      SELECT new_due, 'extension:' || kind INTO v_due, v_src FROM dln_extensions WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_actor AND revoked_at IS NULL;
@@ -93,8 +109,8 @@ export const SBM_MIGRATION: string[] = [
      SELECT l.assignment_id, a.current_version, v.content_sha256 INTO v_asg, v_ver, v_sha
        FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
        WHERE l.task_id = p_task;
-     INSERT INTO sbm_receipts (tenant_id, submission_id, task_id, section_id, student_id, files, manifest_sha256, due_at, late, late_seconds, receipt_code, idem_key, due_source, asg_id, asg_version, asg_sha256)
-       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha);
+     INSERT INTO sbm_receipts (tenant_id, submission_id, task_id, section_id, student_id, files, manifest_sha256, due_at, late, late_seconds, receipt_code, idem_key, due_source, asg_id, asg_version, asg_sha256, attempt)
+       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha, v_used + 1);
      RETURN 'ok:' || code;
    END $$`,
 ];

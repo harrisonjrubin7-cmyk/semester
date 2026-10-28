@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
+import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { LayoutDashboard, Briefcase, Building2, GraduationCap } from 'lucide-react';
+import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import { employer, EmployerOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
@@ -13,7 +16,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Wordmark } from '@project/components/brand/Mark';
 import Scholarships from './Scholarships';
 import Partners from './Partners';
-import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 type Opp = NonNullable<EmployerOutputType['opportunities']>[number];
 type Draft = { id?: string; version?: number; title: string; kind: 'Internship' | 'Job' | 'Research' | 'Mentorship'; employerName: string; description: string; location: string; closesOn: string | null };
@@ -67,33 +69,68 @@ function Applicants({ o, onDecide }: { o: Opp; onDecide: (applicant: string, ver
   );
 }
 
-export default function App() {
-  const { user, isLoading } = useAuth();
+const GROUPS: NavGroup[] = [
+  { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
+  { group: 'Recruit', items: [{ to: '/opportunities', label: 'Opportunities & applicants', icon: Briefcase, hint: 'postings candidates shortlist' }] },
+  { group: 'Connect', items: [{ to: '/institutions', label: 'Institutions', icon: Building2, hint: 'partnership approval' }] },
+  { group: 'Fund', items: [{ to: '/scholarships', label: 'Scholarships', icon: GraduationCap, hint: 'sponsor review' }] },
+];
+
+type Inst = { id: string; name: string; status: string };
+/** What needs the recruiting team's attention. Every count is from this account's own postings and requests. */
+function Today() {
+  const [d, setD] = useState<EmployerOutputType | null>(null);
+  const [inst, setInst] = useState<Inst[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    employer({ action: 'list' }).then(setD).catch((e) => setErr(msg(e)));
+    (employer({ action: 'partners' }) as Promise<{ institutions: Inst[] }>).then((r) => setInst(r.institutions)).catch(() => setInst([]));
+  }, []);
+  const opps = d?.opportunities ?? [];
+  const apps = opps.flatMap((o) => o.applicants);
+  const fresh = apps.filter((a) => a.stage === 'New').length;
+  const approved = (inst ?? []).filter((i) => i.status === 'Approved').length;
+  const pending = (inst ?? []).filter((i) => i.status === 'Pending').length;
+  const closing = opps.filter((o) => o.closesOn && (new Date(o.closesOn).getTime() - Date.now()) < 7 * 864e5).length;
+  const steps = [
+    { done: (inst ?? []).some((i) => i.status !== 'Not requested'), label: 'Ask an institution to approve you', to: '/institutions' },
+    { done: approved > 0, label: 'Be approved by at least one institution', to: '/institutions' },
+    { done: opps.length > 0, label: 'Post your first opportunity', to: '/opportunities' },
+  ];
+  const next = fresh ? { text: `${fresh} new application${fresh === 1 ? '' : 's'} to review`, to: '/opportunities' } : steps.find((s) => !s.done) ? { text: steps.find((s) => !s.done)!.label, to: steps.find((s) => !s.done)!.to } : null;
+  return (
+    <>
+      <p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Today</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Students see your opportunities only at institutions that approved you, and you see only what each applicant chose to share.</p>
+      {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err}</div>}
+      {!d && !err ? <div className="mt-6 space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /></div> : d && (
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <section className="rounded-md border border-border bg-card p-4 lg:col-span-2"><h2 className="text-lg">Next action</h2>
+            {next ? <Link to={next.to} className="mt-1 inline-block text-sm text-primary underline">{next.text}</Link> : <p className="mt-1 text-sm text-muted-foreground">Nothing needs you right now.</p>}</section>
+          <section className="rounded-md border border-border bg-card p-4"><h2 className="text-lg">Opportunities</h2>
+            <p className="mt-1 text-sm">{opps.length} live · {apps.length} application{apps.length === 1 ? '' : 's'} · {fresh} new{closing ? ` · ${closing} closing within a week` : ''}</p></section>
+          <section className="rounded-md border border-border bg-card p-4"><h2 className="text-lg">Institutions</h2>
+            <p className="mt-1 text-sm">{inst ? `${approved} approved · ${pending} pending` : 'Loading…'}</p></section>
+          <section className="rounded-md border border-border bg-card p-4 lg:col-span-2"><h2 className="text-lg">Setup</h2>
+            <ul className="mt-1 space-y-1 text-sm">{steps.map((s) => <li key={s.label}>{s.done ? '✓' : '○'} <Link to={s.to} className="underline-offset-2 hover:underline">{s.label}</Link></li>)}</ul></section>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Opportunities() {
   const [d, setD] = useState<EmployerOutputType | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [edit, setEdit] = useState<Draft | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [tab, setTab] = useState<'jobs' | 'scholarships' | 'partners'>(() => (location.hash === '#scholarships' ? 'scholarships' : location.hash === '#partners' ? 'partners' : 'jobs'));
-  const pick = (t: 'jobs' | 'scholarships' | 'partners') => { setTab(t); history.replaceState(null, '', t === 'jobs' ? '#' : `#${t}`); };
   const load = () => { setErr(null); employer({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
-  useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
-  useEffect(() => { if (user) load(); }, [user]);
-  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
+  useEffect(load, []);
   const save = async (x: Draft) => { try { await employer({ action: 'save', ...x }); toast(x.id ? 'Saved.' : 'Posted. Students can now apply.'); setEdit(null); load(); } catch (e) { toast(`! ${msg(e)}`); } };
   const decide = async (o: Opp, applicant: string, version: number, decision: 'Shortlisted' | 'Declined' | 'Reset') => { try { await employer({ action: 'decide', id: o.id, applicant, version, decision }); toast(decision === 'Reset' ? 'Moved back to new.' : `${decision}. The student has been notified in Semester.`); load(); } catch (e) { toast(`! ${msg(e)}`); } };
   const remove = async (o: Opp) => { try { await employer({ action: 'delete', id: o.id, version: o.version }); toast('Opportunity removed.'); load(); } catch (e) { toast(`! ${msg(e)}`); } };
   return (
-    <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between bg-sidebar px-4 py-3 text-sm text-sidebar-foreground md:px-8">
-        <span className="font-display tracking-[0.3em]">SEMESTER <span className="ml-2 text-xs tracking-normal opacity-60">Employers</span></span>
-        <span className="flex items-center gap-3 text-xs"><span className="hidden sm:inline">{user.email}</span><button onClick={() => logout()} className="underline">Sign out</button></span>
-      </header>
-      <nav aria-label="Employer sections" className="mx-auto flex max-w-5xl gap-1 px-4 pt-4 md:px-8">
-        {([['jobs', 'Opportunities'], ['partners', 'Institutions'], ['scholarships', 'Scholarships']] as const).map(([k, l]) => (
-          <button key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => pick(k)} className={`rounded px-3 py-2 text-sm ${tab === k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>{l}</button>))}
-      </nav>
-      <main className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        {tab === 'scholarships' ? <Scholarships /> : tab === 'partners' ? <Partners /> : <>
+    <>
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Your opportunities</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Post roles for students, then review who applied. You only see what each applicant chose to make public.</p></div>
           {!edit && <Button onClick={() => setEdit({ title: '', kind: 'Internship', employerName: d?.opportunities?.[0]?.employerName ?? '', description: '', location: '', closesOn: null })}>Post an opportunity</Button>}
@@ -121,9 +158,26 @@ export default function App() {
             </section>
           ))}
         </div>
-        </>}
-      </main>
-      <AppSwitcher current="employers" /><Toaster />
-    </div>
+            </>
+  );
+}
+
+export default function App() {
+  const { user, isLoading } = useAuth();
+  useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
+  if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
+  return (
+    <BrowserRouter>
+      <AppShell app="Employers" appKey="employers" institutionName="Employer workspace" role="Recruiter" roles={[]} isSample={false} groups={GROUPS}>
+        <Routes>
+          <Route path="/" element={<Today />} />
+          <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/institutions" element={<Partners />} />
+          <Route path="/scholarships" element={<Scholarships />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster />
+      </AppShell>
+    </BrowserRouter>
   );
 }
