@@ -49,8 +49,8 @@ async function approvedUrl(raw: string, deps: ProductivitySourceCheckDeps): Prom
 }
 
 const normalize = (value: string) => value
-  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-  .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
+  .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
   .replace(/<[^>]*>/g, ' ')
   .replace(/&nbsp;/gi, ' ')
   .replace(/&amp;/gi, '&')

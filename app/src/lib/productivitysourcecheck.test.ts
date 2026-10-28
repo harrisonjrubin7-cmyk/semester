@@ -76,4 +76,19 @@ describe('the productivity source-check function', () => {
     expect(deps.authenticated).toHaveBeenCalledWith('Bearer good-token');
     expect(deps.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('does not treat script or style content with spaced end tags as source text', async () => {
+    const deps = dependencies({
+      fetch: vi.fn(async () => new Response(
+        '<script>Injected source text</script ><style>Injected source text</style ><p>Exact source text</p>',
+        { headers: { 'Content-Type': 'text/html' } },
+      )),
+    });
+    const response = await handleProductivitySourceCheck(
+      post('Bearer good-token', { url: URL, excerpt: 'Injected source text' }),
+      deps,
+    );
+    expect(response.status).toBe(200);
+    expect((await read(response)).excerptFound).toBe(false);
+  });
 });
