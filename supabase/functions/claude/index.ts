@@ -34,7 +34,7 @@
  * set on the device, and only falls back to this.
  */
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '../_shared/cors.ts';
 import { clampRequest, modelsForPlan, type SharedPlan } from '../_shared/clamp.ts';
 import { planFromSubscriptions } from '../_shared/sharedplan.ts';

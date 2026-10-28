@@ -163,6 +163,12 @@ describe('each rule can fail', () => {
     expect(rulesIn(check(clean({ 'supabase/functions/x/index.ts': "import z from 'zod';" })))).toEqual(['functions-are-self-contained']);
   });
 
+  it('functions-are-self-contained: reviewed Deno import-map aliases are accepted', () => {
+    expect(rulesIn(check(clean({
+      'supabase/functions/x/index.ts': "import { createClient } from '@supabase/supabase-js'; import { jwtVerify } from 'jose'; import webpush from 'web-push';",
+    })))).not.toContain('functions-are-self-contained');
+  });
+
   it('functions-are-self-contained: even in a test', () => {
     expect(rulesIn(check(clean({ 'supabase/functions/x/x.test.ts': "import '../../../packages/contract/src/index.ts';" })))).toEqual(['functions-are-self-contained']);
   });

@@ -18,7 +18,7 @@ describe('the Edge Function copy of the access saga tick', () => {
   it('carries no import Deno cannot resolve', () => {
     for (const [name, text] of render()) {
       for (const m of text.matchAll(/\bfrom\s+['"]([^'"]+)['"]/g)) {
-        expect(m[1], `${name}: ${m[1]}`).toMatch(/^(\.\/[a-z-]+\.ts|jsr:@supabase\/supabase-js@2)$/);
+        expect(m[1], `${name}: ${m[1]}`).toMatch(/^(\.\/[a-z-]+\.ts|@supabase\/supabase-js)$/);
       }
     }
   });

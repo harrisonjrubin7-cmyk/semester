@@ -48,7 +48,7 @@
  * is rendered there — one implementation, no second copy in Deno to drift.
  */
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '../_shared/cors.ts';
 import { followSafely } from '../_shared/safefetch.ts';
 

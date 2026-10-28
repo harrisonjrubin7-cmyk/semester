@@ -12,9 +12,9 @@
  *
  * What changes on the way: the two `server/` files import the library as
  * `../../src/lib/integration/x.ts`, which becomes `./x.ts` because everything
- * lands in one directory; and the type-only `@supabase/supabase-js` import
- * becomes the `jsr:` specifier the other functions use. Any other bare import
- * is refused, because Deno would have nothing to resolve it to.
+ * lands in one directory. The type-only `@supabase/supabase-js` import remains
+ * an alias resolved by each function's checked-in `deno.json`. Any other bare
+ * import is refused, because Deno would have nothing to resolve it to.
  *
  *     cd app && node scripts/edge-integration.ts
  */
@@ -56,7 +56,7 @@ const SPECIFIER = /(\bfrom\s+|\bimport\s*\(\s*)(['"])([^'"]+)\2/g;
 function rewrite(source: string, from: string): string {
   return source.replace(SPECIFIER, (whole, lead: string, quote: string, spec: string) => {
     let out: string;
-    if (spec === '@supabase/supabase-js') out = 'jsr:@supabase/supabase-js@2';
+    if (spec === '@supabase/supabase-js') out = spec;
     else if (spec.startsWith('../../src/lib/integration/')) out = `./${spec.slice('../../src/lib/integration/'.length)}`;
     else if (spec === '../../../packages/platform/src/canvas-read-adapter.ts' && from === 'server/integration/registry.ts') out = './canvas-read-adapter.ts';
     else if (spec === '../kernel/clock.ts' && from.endsWith('/canvas-read-adapter.ts')) out = './clock.ts';

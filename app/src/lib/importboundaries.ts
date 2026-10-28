@@ -97,6 +97,9 @@ export const GATEWAY_EXTERNAL_EXCEPTIONS: Readonly<Record<string, { spec: string
 
 const named = (spec: string, allowed: readonly string[]) => allowed.some((a) => spec === a || spec.startsWith(`${a}/`));
 
+/** Bare aliases whose registry and version are pinned by every owning function's deno.json. */
+export const FUNCTION_IMPORT_MAP_ALIASES: readonly string[] = ['@supabase/supabase-js', 'jose', 'web-push'];
+
 export interface Options {
   /** Overridden by the tests, to show a stale or a missing entry is caught. */
   ledger?: readonly string[];
@@ -139,9 +142,9 @@ export function checkBoundaries(tree: Tree, options: Options = {}): Violation[] 
 
       if (zone === 'functions') {
         if (target !== null && target !== 'functions') {
-          out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'Edge functions run on Deno and import only each other (`_shared/`), `jsr:` and `npm:`. Share code the other way: the app imports the function module, as its tests do.' });
-        } else if (r.kind === 'external' && !/^(jsr|npm):/.test(spec)) {
-          out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'A bare specifier means nothing to Deno without an import map. Write `jsr:` or `npm:` with the version pinned.' });
+          out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'Edge functions run on Deno and import only each other (`_shared/`) plus registry dependencies pinned by a function-local import map. Share code the other way: the app imports the function module, as its tests do.' });
+        } else if (r.kind === 'external' && !/^(jsr|npm):/.test(spec) && !named(spec, FUNCTION_IMPORT_MAP_ALIASES)) {
+          out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'A bare specifier means nothing to Deno without a checked-in import map. Add the reviewed alias to FUNCTION_IMPORT_MAP_ALIASES and pin its registry and version in every owning function deno.json.' });
         } else if (r.kind === 'unresolved') {
           out.push({ rule: 'functions-are-self-contained', file, spec, fix: 'This import resolves to no file under supabase/functions/.' });
         }

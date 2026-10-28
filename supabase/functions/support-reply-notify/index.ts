@@ -1,4 +1,4 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleSupportNotice, normalizeUtcActivationInstant } from '../_shared/supportnotify.ts';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';

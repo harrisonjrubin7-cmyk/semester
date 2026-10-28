@@ -37,7 +37,7 @@
  * same connection twice. Nothing is ingested twice: the second batch carries
  * the same idempotency key and `runSync` records it as a duplicate.
  */
-import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AdapterDeclaration } from './adapter.ts';
 import type { ConnectionStatus } from './catalog.ts';
 import type { ProviderBatch } from './pipeline.ts';

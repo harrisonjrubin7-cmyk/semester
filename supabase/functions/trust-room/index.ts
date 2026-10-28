@@ -12,7 +12,7 @@
  * the credential, and the database decides what it opens. See
  * `supabase/DEPLOY.md` → trust-room.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleTrustRoom, type RoomRow } from '../_shared/trustroom.ts';
 
 const db = createClient(

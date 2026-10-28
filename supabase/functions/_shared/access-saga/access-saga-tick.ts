@@ -25,7 +25,7 @@
  * storage failure: it is counted as `failed` with its message and the tick
  * moves on, because one saga that cannot be ticked must not stop the others.
  */
-import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { AccessSagaRunner, type RunnerOptions, type Services } from './access-saga.ts';
 import { PostgresAccessSagaStore } from './postgres-access-saga.ts';
 

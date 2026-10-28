@@ -15,7 +15,7 @@
  * when both `RESEND_API_KEY` and `LEAD_NOTIFY_EMAIL` are set; the address is
  * configuration, never code. See `docs/COMMERCIAL-CORE.md`.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleLeadIntake, notificationEmail, type SubmitRow } from '../_shared/leadintake.ts';
 
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';

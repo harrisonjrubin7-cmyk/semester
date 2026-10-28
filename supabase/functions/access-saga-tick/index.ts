@@ -19,7 +19,7 @@
  * then each tick answers `outcome: unregistered` with the count of sagas that
  * are due, and claims none of them.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { SERVICES } from '../_shared/access-saga/access-saga-registry.ts';
 import { runScheduledAccessSagaTick } from '../_shared/access-saga/access-saga-tick.ts';
 import { serveTick } from '../_shared/integrationtick.ts';

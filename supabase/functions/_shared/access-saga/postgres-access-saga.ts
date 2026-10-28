@@ -1,7 +1,7 @@
 // Generated from app/server/institution/postgres-access-saga.ts by app/scripts/edge-access-saga.ts. Do not edit;
 // change the source and run `cd app && node scripts/edge-access-saga.ts`.
 
-import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   ACCESS_REQUEST_ACTIONS,
   ACCESS_SAGA_STATES,

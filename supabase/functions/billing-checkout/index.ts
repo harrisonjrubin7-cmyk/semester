@@ -12,7 +12,7 @@
  * caller's token itself. New checkout is code-held off even when payment
  * credentials and the operations setting exist. See `docs/COMMERCIAL-CORE.md`.
  */
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 import { handleBillingCheckout, type BeginRow } from '../_shared/billingcheckout.ts';
 
 const db = createClient(
