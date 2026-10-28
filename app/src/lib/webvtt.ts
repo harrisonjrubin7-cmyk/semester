@@ -2,27 +2,20 @@
  * WebVTT caption tracks for the recordings the app plays, built from the text
  * the recordings were spoken from.
  *
- * Every word in a caption here already existed in this repository with a time
- * attached to it: a podcast episode is `audio/scripts/<stem>.json` (the words)
- * plus `<stem>.lines.json` (the second each line starts and ends, written by
- * `audio/synth.py` or recovered by `pipeline/align-audio.mjs`), and a lesson
- * is the cue list `pipeline/lessons.py` wrote into `lessons.json` as it
- * rendered the narration. Nothing is transcribed and nothing is apportioned
- * by character count — `video/src/captions.ts` has the measurement for why an
- * interpolated caption is worse than none.
+ * Podcast and lesson captions come from the repository text and timings that
+ * rendered them. Four older single-narrator recordings predate those sources;
+ * their machine-generated, unreviewed timed cues live under
+ * `audio/transcripts/`, pinned to the exact MP3 hash they were recovered from.
+ * Nothing is apportioned by character count — `video/src/captions.ts` has the
+ * measurement for why an interpolated caption is worse than none.
  *
  * `scripts/captions.ts` writes the files; `webvtt.test.ts` fails if any
  * recording is missing one, if one has no cues, or if one has drifted from
  * the text it was built from.
  *
- * ## The four without
- *
- * The single-narrator "full read" editions (`UNCAPTIONED` below) have no line
- * times at all: the course data says their chapter marks are "approximate —
- * this recording has no pauses to lock them to". A track for them would have
- * to invent where each sentence falls, so they get none, and the list is
- * exact — the test fails if a recording gains source times and stays on it,
- * or if a new recording is added without either.
+ * `webvtt.test.ts` keeps every prerecorded media file paired with a non-empty,
+ * ordered track that reaches the measured end of that exact recording. That
+ * is repository coverage, not a human accuracy review or a WCAG conclusion.
  */
 
 export interface Cue {
@@ -142,21 +135,9 @@ export function lessonCues(lesson: LessonSource): Cue[] {
 /* ------------------------------------------------------------------------ */
 /* Which recordings have one.                                                */
 
-/**
- * Recordings with no line-level times anywhere in the repository, and so no
- * captions. Each is a single narrator reading a study guide, with chapter
- * marks the course data itself calls approximate.
- */
-export const UNCAPTIONED: ReadonlySet<string> = new Set([
-  '/audio/econ-guide.mp3',
-  '/audio/core-full.mp3',
-  '/audio/psci-full.mp3',
-  '/audio/psci-condensed.mp3',
-]);
-
-/** `/audio/econ-podcast.mp3` → `/audio/econ-podcast.vtt`, or null for one of the four. */
+/** `/audio/econ-podcast.mp3` → `/audio/econ-podcast.vtt`. */
 export function captionsFor(src: string): string | null {
-  if (UNCAPTIONED.has(src) || !/^\/audio\/.+\.mp3$/.test(src)) return null;
+  if (!/^\/audio\/.+\.mp3$/.test(src)) return null;
   return src.replace(/\.mp3$/, '.vtt');
 }
 

@@ -631,17 +631,14 @@ habit.
 - **Every outcome is announced.** One live region, in `components/Said.tsx`,
   for the things that happened because somebody acted and are otherwise
   visible only as something on the screen having changed.
-- **Every recording has its words.** The four podcasts are an hour and a half
-  of speech, and a study mode nobody deaf or hard of hearing could use. Every
-  line of it was already in this repository, in `audio/scripts/` — it is what
-  the synthesiser spoke to make the MP3s — so `npm run transcripts` writes it
-  into `data/transcripts/` and Listen shows it under the chapters that play
-  it. Generated, never edited: `transcript.test.ts` compares the words on the
-  page to the words in the script, so a re-recorded episode cannot go on
-  showing the old one's lines. Loaded as a chunk per course when Listen is
-  opened, because nineteen thousand words do not belong in front of a first
-  paint. (A Full read has none, and needs none — it is the study guide spoken,
-  and the guide is already in Read and Field guide.)
+- **Every recording has a caption track.** Podcast and lesson tracks are built
+  from the same repository text and timings that rendered their MP3s. The four
+  older single-narrator files predate those sources, so their timed cues were
+  recovered from the exact audio, labeled machine-generated and unreviewed,
+  and pinned to each MP3's SHA-256 under `audio/transcripts/`. `npm run
+  captions -- --check` fails if a track is missing, stale, empty, out of order,
+  detached from its source hash or materially short of the recording. This is
+  repository coverage, not a manual caption-accuracy or WCAG conclusion.
 - **Reduced motion reaches the scrolls the app makes itself.** `app.css` has
   flattened every CSS animation and transition for a long time, which reads as
   complete and is half the job: `scrollTo({ behavior: 'smooth' })` is a script

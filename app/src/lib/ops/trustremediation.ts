@@ -421,12 +421,13 @@ export const ITEMS: readonly Item[] = [
   },
   {
     id: 'TR-40', before: 'pilot', owner: 'accessibility', effort: 'S',
-    title: 'Caption the remaining audio and video',
-    finding: 'Forty-eight caption files against fifty-two audio files; video has none.',
+    title: 'Caption the remaining prerecorded media',
+    finding: 'Four legacy single-narrator recordings had no caption track or renderer source; the repository ships no prerecorded video file, and its source inventory names the remaining live-camera elements.',
     sources: ['app/scripts/captions.ts', 'app/src/lib/webvtt.test.ts'],
-    fix: 'Generate the four missing files and have the test require one per media file; caption or transcribe the video.',
+    fix: 'Recover timed cues from each exact legacy MP3, preserve them as machine-generated and unreviewed, pin them to the audio hashes, make the test require one current track per shipped prerecorded media file, and state that it is not a conformance claim.',
     moves: ['TC-A11-07'],
     files: 'The extended test.',
+    done: { proof: 'app/src/lib/webvtt.test.ts', on: '2026-10-27' },
   },
 
   {

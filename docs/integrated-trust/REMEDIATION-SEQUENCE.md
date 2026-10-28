@@ -4,7 +4,7 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
 
-49 items, 6 finished and 43 open, closing the gaps recorded in the [control register](CONTROL-FRAMEWORK.md). A test requires every control that is not enforced to be moved by at least one item, so a gap cannot be recorded without a plan for it.
+49 items, 7 finished and 42 open, closing the gaps recorded in the [control register](CONTROL-FRAMEWORK.md). A test requires every control that is not enforced to be moved by at least one item, so a gap cannot be recorded without a plan for it.
 
 **Priority is the point at which the item has to be done**, not how hard it is. The four points are the release profiles in `release-profiles.ts`: P0 — before an invitation-only beta carries real student data; P1 — before an institutional pilot; P2 — before an institution is charged; P3 — before a broad enterprise sale. **Effort** is S (a day or two), M (a week or two), L (longer, or dependent on others).
 
@@ -17,7 +17,7 @@ An item is finished only when a test, check or workflow that fails without it is
 | Priority | Before | Items | Open | Needs a person |
 | --- | --- | ---: | ---: | ---: |
 | P0 | Before an invitation-only beta carries real student data | 11 | 6 | 4 |
-| P1 | Before an institutional pilot | 30 | 29 | 7 |
+| P1 | Before an institutional pilot | 30 | 28 | 7 |
 | P2 | Before an institution is charged | 6 | 6 | 1 |
 | P3 | Before a broad enterprise sale | 2 | 2 | 2 |
 
@@ -69,7 +69,7 @@ An item is finished only when a test, check or workflow that fails without it is
 | TR-37 | Name the support owner and hours, and set ticket retention | Tickets are behind a flag that is off; no owner or hours; no closed-ticket retention. Shown by [SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md](../SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md), [support-tickets.check.sql](../../supabase/support-tickets.check.sql). | Staff the queue, publish hours in plain terms, switch the flag on for the pilot, and add the retention period. | TC-SUP-02 | success | M | — | The first week of queue figures. |
 | TR-38 | ✔ Assert that impersonation does not exist | The absence of staff impersonation is true and unguarded. Shown by [OPERATIONS-CONSOLE-MAP.md](../OPERATIONS-CONSOLE-MAP.md), [boundaries.ts](../../app/src/lib/ops/boundaries.ts). | Add a database check that no function lets one account read as another outside the grant tables. **Done 2026-10-27:** [no-impersonation.check.sql](../../supabase/no-impersonation.check.sql) fails without it. | TC-SUP-03 | security | S | — | The check. |
 | TR-39 | Deliver incident messages and give a message a record | The composer builds text; no subscriber list or delivery exists and posting means editing JSON and waiting for a deploy. Shown by [incident-comms.ts](../../app/src/lib/governance/incident-comms.ts), [status-incidents.json](../../app/public/status-incidents.json). | Add a send path to a test list and an institution contact list with delivery receipts; record each message sent against its incident. | TC-INC-01, TC-INC-02 | trust | M | — | Exercise TT-12 sends. |
-| TR-40 | Caption the remaining audio and video | Forty-eight caption files against fifty-two audio files; video has none. Shown by [captions.ts](../../app/scripts/captions.ts), [webvtt.test.ts](../../app/src/lib/webvtt.test.ts). | Generate the four missing files and have the test require one per media file; caption or transcribe the video. | TC-A11-07 | accessibility | S | — | The extended test. |
+| TR-40 | ✔ Caption the remaining prerecorded media | Four legacy single-narrator recordings had no caption track or renderer source; the repository ships no prerecorded video file, and its source inventory names the remaining live-camera elements. Shown by [captions.ts](../../app/scripts/captions.ts), [webvtt.test.ts](../../app/src/lib/webvtt.test.ts). | Recover timed cues from each exact legacy MP3, preserve them as machine-generated and unreviewed, pin them to the audio hashes, make the test require one current track per shipped prerecorded media file, and state that it is not a conformance claim. **Done 2026-10-27:** [webvtt.test.ts](../../app/src/lib/webvtt.test.ts) fails without it. | TC-A11-07 | accessibility | S | — | The extended test. |
 | TR-49 | Make the combined risk review a release gate | evaluate() in riskreview.ts is read by its own test and by whoever runs a release; no release profile, workflow or activation check consults it, and none of the governance evaluators is wired to CI. Shown by [riskreview.ts](../../app/src/lib/ops/riskreview.ts), [release-profiles.ts](../../app/src/lib/governance/release-profiles.ts), [activation-control-plane.ts](../../app/src/lib/governance/activation-control-plane.ts). | Add a combined-risk-review gate to the technical release gates, resolved through gateFor() for the capabilities a profile names, and have a high-risk activation read it; regenerate the profile register. | TC-PRV-07 | engineering | M | TR-12 | The regenerated release-profile register. |
 
 ## P2 — Before an institution is charged

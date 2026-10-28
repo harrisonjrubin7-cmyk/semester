@@ -3,8 +3,8 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { planned } from '../../scripts/captions';
 import {
-  UNCAPTIONED,
   captionsFor,
   clipCaption,
   episodeCues,
@@ -31,6 +31,7 @@ const SRC = fileURLToPath(new URL('..', import.meta.url));
 const APP = join(SRC, '..');
 const PUBLIC = join(APP, 'public');
 const SCRIPTS = join(APP, '..', 'audio', 'scripts');
+const TRANSCRIPTS = join(APP, '..', 'audio', 'transcripts');
 
 function walk(dir: string, match: RegExp, found: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -48,13 +49,27 @@ const recordings = walk(join(PUBLIC, 'audio'), /\.(mp3|mp4|webm)$/).map(served).
 const made = (JSON.parse(readFileSync(join(APP, '..', 'audio', 'manifest.json'), 'utf8')) as {
   made: Record<string, { seconds: number }>;
 }).made;
+const recovered = readdirSync(TRANSCRIPTS)
+  .filter((file) => file.endsWith('.json'))
+  .map((file) => JSON.parse(readFileSync(join(TRANSCRIPTS, file), 'utf8')) as {
+    id: string;
+    audio: string;
+    durationSeconds: number;
+    generatedOn: string;
+    language: string;
+    model: string;
+    review: string;
+    cues: [start: number, end: number, text: string][];
+  });
 
 /** The recording's length as the pipeline measured it when it rendered it. */
 function lengthOf(src: string): number {
   const key = src.replace(/^\/audio\/(lessons\/)?/, '').replace(/\.\w+$/, '');
   const entry = made[key];
-  if (!entry) throw new Error(`${src}: not in audio/manifest.json, so its length is unknown`);
-  return entry.seconds;
+  if (entry) return entry.seconds;
+  const transcript = recovered.find((row) => row.audio.endsWith(src));
+  if (transcript) return transcript.durationSeconds;
+  throw new Error(`${src}: neither the render manifest nor a hash-pinned transcript records its length`);
 }
 
 describe('the format', () => {
@@ -90,24 +105,18 @@ describe('every recording the app ships', () => {
     expect(recordings.length).toBeGreaterThanOrEqual(52);
   });
 
-  it('has a caption file beside it, unless it is one of the four with no line times', () => {
-    const missing = recordings.filter(
-      (src) => !UNCAPTIONED.has(src) && !existsSync(join(PUBLIC, src.replace(/\.\w+$/, '.vtt'))),
-    );
+  it('has one generated caption file beside every prerecorded media file', () => {
+    const plan = planned();
+    expect(plan.size).toBe(recordings.length);
+    const missing = recordings.filter((src) => !existsSync(join(PUBLIC, src.replace(/\.\w+$/, '.vtt'))));
     expect(missing).toEqual([]);
-  });
-
-  it('the uncaptioned list is exact: each exists, has no track and no timed source', () => {
-    for (const src of UNCAPTIONED) {
-      expect(recordings, src).toContain(src);
-      expect(existsSync(join(PUBLIC, src.replace(/\.mp3$/, '.vtt'))), `${src} has a .vtt now — take it off the list`).toBe(false);
-      const key = src.replace(/^\/audio\//, '').replace(/\.mp3$/, '');
-      expect(made[key], `${src} was rendered by the pipeline, so it has times`).toBeUndefined();
-      expect(captionsFor(src)).toBeNull();
+    for (const src of recordings) {
+      const at = join(PUBLIC, src.replace(/\.\w+$/, '.vtt'));
+      expect(readFileSync(at, 'utf8'), `${src}: stale — run \`npm run captions\` in app/`).toBe(plan.get(at));
     }
   });
 
-  for (const src of recordings.filter((s) => !UNCAPTIONED.has(s))) {
+  for (const src of recordings) {
     it(`${src}: cues from the start to the end of the recording, in order`, () => {
       const cues = parse(readFileSync(join(PUBLIC, src.replace(/\.\w+$/, '.vtt')), 'utf8'));
       expect(cues.length).toBeGreaterThan(0);
@@ -115,11 +124,15 @@ describe('every recording the app ships', () => {
         expect(c.text.trim(), `an empty cue at ${c.start}`).not.toBe('');
         expect(c.end).toBeGreaterThan(c.start);
       }
+      const recoveredLegacy = recovered.some((row) => row.audio.endsWith(src));
       for (let n = 1; n < cues.length; n++) {
         expect(cues[n].start, `cue ${n + 1} starts before cue ${n}`).toBeGreaterThanOrEqual(cues[n - 1].start);
-        // The longest silence either format leaves is the self-test pause:
-        // seven seconds to answer out loud, plus the turn gaps either side.
-        expect(cues[n].start - cues[n - 1].end, `a ${(cues[n].start - cues[n - 1].end).toFixed(1)}s hole before cue ${n + 1}`).toBeLessThanOrEqual(10);
+        // Renderer-source tracks leave at most the seven-second self-test
+        // pause plus turn gaps. The legacy recordings contain measured answer
+        // pauses up to 19.82 seconds; keep that wider bound only on the four
+        // exact-audio-hash-pinned recovered tracks.
+        const maxSilence = recoveredLegacy ? 20 : 10;
+        expect(cues[n].start - cues[n - 1].end, `a ${(cues[n].start - cues[n - 1].end).toFixed(1)}s hole before cue ${n + 1}`).toBeLessThanOrEqual(maxSilence);
       }
       const length = lengthOf(src);
       expect(cues[0].start).toBeLessThanOrEqual(1);
@@ -129,7 +142,7 @@ describe('every recording the app ships', () => {
   }
 });
 
-describe('the words are the words the recording was made from', () => {
+describe('caption sources stay pinned and current', () => {
   const episodes = readdirSync(SCRIPTS).filter((f) => /^[^.]+\.json$/.test(f));
 
   it('found the four episode scripts', () => {
@@ -163,10 +176,24 @@ describe('the words are the words the recording was made from', () => {
       }
     });
   }
+
+  it('keeps recovered legacy cues explicitly machine-generated and unreviewed', () => {
+    expect(recovered).toHaveLength(4);
+    for (const transcript of recovered) {
+      expect(transcript.audio, transcript.id).toBe(`app/public/audio/${transcript.id}.mp3`);
+      expect(transcript.generatedOn, transcript.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(transcript.language, transcript.id).toBe('en');
+      expect(transcript.model, transcript.id).toBe('mlx-community/whisper-large-v3-turbo');
+      expect(transcript.review, transcript.id).toBe('machine-generated-unreviewed');
+      expect(transcript.cues.length, transcript.id).toBeGreaterThan(100);
+      expect(Math.max(...transcript.cues.map((cue) => cue[2].length)), transcript.id).toBeLessThanOrEqual(64);
+      expect(Math.max(...transcript.cues.map((cue) => cue[1] - cue[0])), transcript.id).toBeLessThanOrEqual(10);
+    }
+  });
 });
 
 describe('what the app hands the player', () => {
-  it('every audio file the course data names resolves to a caption file that exists, or is one of the four', () => {
+  it('every audio file the course data names resolves to a caption file that exists', () => {
     const named = new Set<string>();
     for (const file of walk(join(SRC, 'data', 'courses'), /\.ts$/)) {
       for (const m of readFileSync(file, 'utf8').matchAll(/["'](\/audio\/[^"']+\.mp3)["']/g)) named.add(m[1]);
@@ -174,8 +201,7 @@ describe('what the app hands the player', () => {
     expect(named.size).toBeGreaterThanOrEqual(52);
     for (const src of named) {
       const vtt = captionsFor(src);
-      if (UNCAPTIONED.has(src)) expect(vtt, src).toBeNull();
-      else expect(vtt && existsSync(join(PUBLIC, vtt)), `${src} → ${vtt}`).toBe(true);
+      expect(vtt && existsSync(join(PUBLIC, vtt)), `${src} → ${vtt}`).toBe(true);
     }
   });
 
