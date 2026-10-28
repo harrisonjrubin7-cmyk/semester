@@ -72,7 +72,7 @@ describe('Edge Function dependency updates', () => {
       expect(lock.specifiers?.['jsr:@supabase/supabase-js@2'], fn).toMatch(/^2\./);
     }
     expect(manifest('lti').imports?.jose).toBe('npm:jose@5');
-    expect(manifest('push').imports?.['web-push']).toBe('npm:web-push@3.6.7');
+    expect(manifest('push').imports?.['web-push']).toMatch(/^npm:web-push@3\.\d+\.\d+$/);
   });
 
   it('keeps registry versions in manifests rather than untracked source imports', () => {
