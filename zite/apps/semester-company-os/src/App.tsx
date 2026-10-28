@@ -15,6 +15,7 @@ import IncidentsPage from './IncidentsPage';
 import MarketingPage from './MarketingPage';
 import MigrationsPage from './MigrationsPage';
 import SupportAccessPage from './SupportAccessPage';
+import CustomerEvidencePage from './CustomerEvidencePage';
 import BoardPage from './BoardPage';
 import DecisionsPage from './DecisionsPage';
 import AtlasPage from './AtlasPage';
@@ -25,7 +26,7 @@ import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
   ['Operations', [['/overview', 'Overview'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
-  ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/support-access', 'Support access'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
+  ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/support-access', 'Support access'], ['/customer-evidence', 'Readiness & assurance'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
 ];
 
 // Internal app: the platform signs in organization members only. No student content is ever loaded here.
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/migrations" element={<MigrationsPage />} />
               <Route path="/support-access" element={<SupportAccessPage />} />
+              <Route path="/customer-evidence" element={<CustomerEvidencePage />} />
               <Route path="/board" element={<BoardPage />} />
               <Route path="/simulator" element={<Simulator />} />
               <Route path="/finance" element={<FinancePage />} />

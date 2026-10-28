@@ -20,6 +20,7 @@ import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _LearnEp } from '../src/api/learn';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
+import type { default as _PortfolioVerifyEp } from '../src/api/portfolioVerify';
 import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
 import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
 import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
@@ -121,6 +122,11 @@ export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchem
 export type OfficialGradesOutputType = Awaited<ReturnType<_OfficialGradesCfg['execute']>>;
 export const officialGrades = createCaller<OfficialGradesInputType, OfficialGradesOutputType>('officialGrades');
 
+type _PortfolioVerifyCfg = typeof _PortfolioVerifyEp;
+export type PortfolioVerifyInputType = NonNullable<_PortfolioVerifyCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PortfolioVerifyCfg['execute']>[0]['input'];
+export type PortfolioVerifyOutputType = Awaited<ReturnType<_PortfolioVerifyCfg['execute']>>;
+export const portfolioVerify = createCaller<PortfolioVerifyInputType, PortfolioVerifyOutputType>('portfolioVerify');
+
 type _RegistrarDecideCfg = typeof _RegistrarDecideEp;
 export type RegistrarDecideInputType = NonNullable<_RegistrarDecideCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarDecideCfg['execute']>[0]['input'];
 export type RegistrarDecideOutputType = Awaited<ReturnType<_RegistrarDecideCfg['execute']>>;
@@ -191,6 +197,7 @@ export const api = {
   learn,
   officeHours,
   officialGrades,
+  portfolioVerify,
   registrarDecide,
   registrarLedger,
   registrarQueue,

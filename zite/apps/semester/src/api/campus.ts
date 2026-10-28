@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { pg } from '../lib/pg';
+import { approvedEmployers } from '../lib/crrServer';
 import { requireAccess, ids, first, forbid, audit } from '../lib/server';
 
 export default createEndpoint({
@@ -11,7 +12,7 @@ export default createEndpoint({
     z.object({ action: z.literal('get') }),
     z.object({ action: z.literal('toggleGroup'), id: z.string() }),
     z.object({ action: z.literal('toggleEvent'), id: z.string() }),
-    z.object({ action: z.literal('apply'), id: z.string() }),
+    z.object({ action: z.literal('apply'), id: z.string(), shareItems: z.array(z.string()).max(10).default([]), shareContact: z.boolean().default(false) }),
     z.object({ action: z.literal('report'), target: z.string(), reason: z.string().min(3) }),
   ]),
   outputSchema: z.any(),
@@ -36,6 +37,12 @@ export default createEndpoint({
     if (input.action === 'apply') {
       const o = await zite.opportunities.findOne({ id: input.id });
       if (!o) forbid();
+      // Only employers this institution approved reach its students, and only with what the student chooses to share.
+      const employerId = first(o!.postedBy);
+      if (!employerId || !(await approvedEmployers(a.institutionId)).has(employerId)) forbid('This employer is not approved by your institution.');
+      const own = (await zite.resources.findAll({ filters: { owner: uid, kind: 'Portfolio Item' }, limit: 200 })).records.map((r) => r.id);
+      const notMine = input.shareItems.filter((i) => !own.includes(i));
+      if (notMine.length) forbid('You can only share your own portfolio items.');
       // Hiring rules live in Postgres (Employers app migration): open, not closed, not your own posting, once only.
       const sql = pg();
       const ready = ((await sql.query(`SELECT to_regprocedure('emp_apply(text,text)') IS NOT NULL AS ok`)) as { ok: boolean }[])[0].ok;
@@ -44,6 +51,8 @@ export default createEndpoint({
         if (known.length) { const r = (await sql.query(`SELECT emp_apply($1,$2) AS e`, [uid, input.id])) as { e: string | null }[]; if (r[0].e) forbid(r[0].e); }
         else if (o!.closesOn && o!.closesOn < new Date().toISOString().slice(0, 10)) forbid('Applications for this opportunity have closed.');
       }
+      const shared = String(((await sql.query(`SELECT crr_share($1,$2,$3,$4,$5,$6) AS r`, [a.institutionId, input.id, employerId, uid, input.shareItems, input.shareContact])) as { r: string }[])[0].r);
+      if (shared !== 'ok') forbid(shared);
       if (!ids(o!.applicants).includes(uid)) await zite.opportunities.update({ id: input.id, record: { applicants: [...ids(o!.applicants), uid] } as never });
       return { ok: true };
     }
@@ -53,8 +62,9 @@ export default createEndpoint({
       await audit(a, 'Moderation report filed', ref, input.target, 'Member');
       return { ok: true };
     }
-    const [groups, events, opps] = await Promise.all([
-      zite.groups.findAll({ limit: 200 }), zite.events.findAll({ limit: 200 }), zite.opportunities.findAll({ limit: 200 }),
+    const [groups, events, opps, approved, portfolio] = await Promise.all([
+      zite.groups.findAll({ limit: 200 }), zite.events.findAll({ limit: 200 }), zite.opportunities.findAll({ limit: 200 }), approvedEmployers(a.institutionId),
+      zite.resources.findAll({ filters: { owner: uid, kind: 'Portfolio Item' }, limit: 200 }),
     ]);
     const mine = (g: (typeof groups.records)[number]) => !first(g.institution) || ids(g.institution).includes(a.institutionId);
     const okGroups = groups.records.filter(mine);
@@ -65,7 +75,8 @@ export default createEndpoint({
       groups: okGroups.filter((g) => g.kind !== 'Course Discussion').map((g) => ({ id: g.id, name: g.name ?? '', kind: g.kind ?? 'Club', members: ids(g.members).length, joined: ids(g.members).includes(uid) })),
       events: events.records.map((e) => ({ id: e.id, title: e.title ?? '', startsAt: e.startsAt ?? null, location: e.location ?? '', group: gName[first(e.group) ?? ''] ?? '', going: ids(e.attendees).includes(uid), count: ids(e.attendees).length }))
         .sort((x, y) => (x.startsAt ?? '').localeCompare(y.startsAt ?? '')),
-      opportunities: opps.records.map((o) => ({ id: o.id, title: o.title ?? '', kind: o.kind ?? 'Job', employer: o.employerName ?? '', applied: ids(o.applicants).includes(uid) })),
+      opportunities: opps.records.filter((o) => approved.has(first(o.postedBy) ?? '')).map((o) => ({ id: o.id, title: o.title ?? '', kind: o.kind ?? 'Job', employer: o.employerName ?? '', applied: ids(o.applicants).includes(uid) })),
+      portfolio: portfolio.records.map((r) => ({ id: r.id, title: r.title ?? 'Untitled' })),
     };
   },
 });

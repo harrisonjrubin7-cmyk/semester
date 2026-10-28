@@ -9,6 +9,7 @@ import type { default as _CapabilityEvidenceEp } from '../src/api/capabilityEvid
 import type { default as _DecideGateEp } from '../src/api/decideGate';
 import type { default as _GetLabDataEp } from '../src/api/getLabData';
 import type { default as _RecordSimulationRunEp } from '../src/api/recordSimulationRun';
+import type { default as _ReleaseAssuranceEp } from '../src/api/releaseAssurance';
 import type { default as _RequestSuiteRunEp } from '../src/api/requestSuiteRun';
 import type { default as _SavePolicyEp } from '../src/api/savePolicy';
 import type { default as _UpdateCapabilityEp } from '../src/api/updateCapability';
@@ -49,6 +50,11 @@ export type RecordSimulationRunInputType = NonNullable<_RecordSimulationRunCfg['
 export type RecordSimulationRunOutputType = Awaited<ReturnType<_RecordSimulationRunCfg['execute']>>;
 export const recordSimulationRun = createCaller<RecordSimulationRunInputType, RecordSimulationRunOutputType>('recordSimulationRun');
 
+type _ReleaseAssuranceCfg = typeof _ReleaseAssuranceEp;
+export type ReleaseAssuranceInputType = NonNullable<_ReleaseAssuranceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReleaseAssuranceCfg['execute']>[0]['input'];
+export type ReleaseAssuranceOutputType = Awaited<ReturnType<_ReleaseAssuranceCfg['execute']>>;
+export const releaseAssurance = createCaller<ReleaseAssuranceInputType, ReleaseAssuranceOutputType>('releaseAssurance');
+
 type _RequestSuiteRunCfg = typeof _RequestSuiteRunEp;
 export type RequestSuiteRunInputType = NonNullable<_RequestSuiteRunCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RequestSuiteRunCfg['execute']>[0]['input'];
 export type RequestSuiteRunOutputType = Awaited<ReturnType<_RequestSuiteRunCfg['execute']>>;
@@ -78,6 +84,7 @@ export const api = {
   decideGate,
   getLabData,
   recordSimulationRun,
+  releaseAssurance,
   requestSuiteRun,
   savePolicy,
   updateCapability,

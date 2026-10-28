@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap, Briefcase, Globe } from 'lucide-react';
 import { institutionOps } from 'zitejs/api';
 import { useLoad } from './lib/useLoad';
 import { DeniedOrError } from './components/States';
@@ -11,6 +11,8 @@ import { AppShell, type NavGroup, type NavItem } from '../../semester/src/compon
 import Overview from './pages/Overview';
 import Requests from './pages/Requests';
 import Holds from './pages/Holds';
+import Employers from './pages/Employers';
+import Programs from './pages/Programs';
 import Console from './pages/Console';
 import Audit from './pages/Audit';
 import Structure from './pages/Structure';
@@ -28,9 +30,11 @@ function groupsFor(can: Record<string, boolean>): NavGroup[] {
     { group: null, items: items([{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }]) },
     { group: 'Academics', items: items([{ to: '/requests', label: 'Sections & teaching assignments', icon: GitPullRequestArrow, hint: 'section requests' },
       { to: '/structure', label: 'Academic structure', icon: Building2, hint: 'departments rooms' },
+      { to: '/programs', label: 'Public programs', icon: Globe, need: 'catalog.manage', hint: 'public site admissions listing' },
       { to: '/registration', label: 'Registration & enrollment', icon: ClipboardList, need: 'registrar.read', hint: 'registrar desk waitlist add drop overrides' },
       { to: '/records', label: 'Academic records', icon: GraduationCap, need: 'registrar.read', hint: 'official grades transcripts standing grading policy' }]) },
-    { group: 'Student lifecycle', items: items([{ to: '/holds', label: 'Holds', icon: Ban, need: 'registration.request.decide' }]) },
+    { group: 'Student lifecycle', items: items([{ to: '/holds', label: 'Holds', icon: Ban, need: 'registration.request.decide' },
+      { to: '/employers', label: 'Employer partnerships', icon: Briefcase, need: 'approval.decide', hint: 'career employers recruiters' }]) },
     { group: 'Governance', items: items([{ to: '/console', label: 'Access & connections', icon: PlugZap, need: 'member.manage', hint: 'members' },
       { to: '/audit', label: 'Audit & assurance', icon: ScrollText, need: 'audit.read', hint: 'audit log' }]) },
   ];
@@ -53,6 +57,8 @@ function Shell() {
         <Route path="/requests" element={<Requests />} />
         <Route path="/structure" element={<Structure />} />
         <Route path="/holds" element={<Holds />} />
+        <Route path="/programs" element={<Programs />} />
+        <Route path="/employers" element={<Employers />} />
         <Route path="/registration" element={<Registration />} />
         <Route path="/records" element={<Records />} />
         <Route path="/console" element={<Console />} />

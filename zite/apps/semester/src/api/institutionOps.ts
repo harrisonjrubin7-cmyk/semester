@@ -28,7 +28,7 @@ export default createEndpoint({
     const uid = context.user.id;
     if (input.action === 'access') {
       // What this screen may ask for (Institution overview). Each widget then calls its own authorized action.
-      const c = await capabilities(uid, ['readiness.read', 'registration.request.decide', 'registrar.read', 'audit.read', 'member.manage', 'catalog.manage']);
+      const c = await capabilities(uid, ['readiness.read', 'registration.request.decide', 'registrar.read', 'audit.read', 'member.manage', 'catalog.manage', 'approval.decide']);
       const inst = c.institutionId ? await zite.institutions.findOne({ id: c.institutionId }) : undefined;
       return { roles: c.roles, member: !!c.institutionId, institutionName: inst?.name ?? '', isSample: !!inst?.isSample, can: c.can };
     }

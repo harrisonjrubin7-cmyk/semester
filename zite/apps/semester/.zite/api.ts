@@ -17,8 +17,10 @@ import type { default as _AskEp } from '../src/api/ask';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _AssetsEp } from '../src/api/assets';
 import type { default as _AssignmentsEp } from '../src/api/assignments';
+import type { default as _AssuranceEvidenceEp } from '../src/api/assuranceEvidence';
 import type { default as _AuditEp } from '../src/api/audit';
 import type { default as _CampusEp } from '../src/api/campus';
+import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
 import type { default as _CareerServicesEp } from '../src/api/careerServices';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
@@ -68,10 +70,13 @@ import type { default as _OrganizationsEp } from '../src/api/organizations';
 import type { default as _PapersEp } from '../src/api/papers';
 import type { default as _ParkingEp } from '../src/api/parking';
 import type { default as _PartnersEp } from '../src/api/partners';
+import type { default as _PortfolioVerifyEp } from '../src/api/portfolioVerify';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProcurementEp } from '../src/api/procurement';
 import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
+import type { default as _PublicProgramsEp } from '../src/api/publicPrograms';
+import type { default as _ReadinessShareEp } from '../src/api/readinessShare';
 import type { default as _ReconciliationEp } from '../src/api/reconciliation';
 import type { default as _RecordsRightsEp } from '../src/api/recordsRights';
 import type { default as _RecruitingEp } from '../src/api/recruiting';
@@ -178,6 +183,11 @@ export type AssignmentsInputType = NonNullable<_AssignmentsCfg['inputSchema']> e
 export type AssignmentsOutputType = Awaited<ReturnType<_AssignmentsCfg['execute']>>;
 export const assignments = createCaller<AssignmentsInputType, AssignmentsOutputType>('assignments');
 
+type _AssuranceEvidenceCfg = typeof _AssuranceEvidenceEp;
+export type AssuranceEvidenceInputType = NonNullable<_AssuranceEvidenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssuranceEvidenceCfg['execute']>[0]['input'];
+export type AssuranceEvidenceOutputType = Awaited<ReturnType<_AssuranceEvidenceCfg['execute']>>;
+export const assuranceEvidence = createCaller<AssuranceEvidenceInputType, AssuranceEvidenceOutputType>('assuranceEvidence');
+
 type _AuditCfg = typeof _AuditEp;
 export type AuditInputType = NonNullable<_AuditCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AuditCfg['execute']>[0]['input'];
 export type AuditOutputType = Awaited<ReturnType<_AuditCfg['execute']>>;
@@ -187,6 +197,11 @@ type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
 export type CampusOutputType = Awaited<ReturnType<_CampusCfg['execute']>>;
 export const campus = createCaller<CampusInputType, CampusOutputType>('campus');
+
+type _CareerPartnersCfg = typeof _CareerPartnersEp;
+export type CareerPartnersInputType = NonNullable<_CareerPartnersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CareerPartnersCfg['execute']>[0]['input'];
+export type CareerPartnersOutputType = Awaited<ReturnType<_CareerPartnersCfg['execute']>>;
+export const careerPartners = createCaller<CareerPartnersInputType, CareerPartnersOutputType>('careerPartners');
 
 type _CareerServicesCfg = typeof _CareerServicesEp;
 export type CareerServicesInputType = NonNullable<_CareerServicesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CareerServicesCfg['execute']>[0]['input'];
@@ -433,6 +448,11 @@ export type PartnersInputType = NonNullable<_PartnersCfg['inputSchema']> extends
 export type PartnersOutputType = Awaited<ReturnType<_PartnersCfg['execute']>>;
 export const partners = createCaller<PartnersInputType, PartnersOutputType>('partners');
 
+type _PortfolioVerifyCfg = typeof _PortfolioVerifyEp;
+export type PortfolioVerifyInputType = NonNullable<_PortfolioVerifyCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PortfolioVerifyCfg['execute']>[0]['input'];
+export type PortfolioVerifyOutputType = Awaited<ReturnType<_PortfolioVerifyCfg['execute']>>;
+export const portfolioVerify = createCaller<PortfolioVerifyInputType, PortfolioVerifyOutputType>('portfolioVerify');
+
 type _PrivacyCfg = typeof _PrivacyEp;
 export type PrivacyInputType = NonNullable<_PrivacyCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PrivacyCfg['execute']>[0]['input'];
 export type PrivacyOutputType = Awaited<ReturnType<_PrivacyCfg['execute']>>;
@@ -452,6 +472,16 @@ type _ProgressCfg = typeof _ProgressEp;
 export type ProgressInputType = NonNullable<_ProgressCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgressCfg['execute']>[0]['input'];
 export type ProgressOutputType = Awaited<ReturnType<_ProgressCfg['execute']>>;
 export const progress = createCaller<ProgressInputType, ProgressOutputType>('progress');
+
+type _PublicProgramsCfg = typeof _PublicProgramsEp;
+export type PublicProgramsInputType = NonNullable<_PublicProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PublicProgramsCfg['execute']>[0]['input'];
+export type PublicProgramsOutputType = Awaited<ReturnType<_PublicProgramsCfg['execute']>>;
+export const publicPrograms = createCaller<PublicProgramsInputType, PublicProgramsOutputType>('publicPrograms');
+
+type _ReadinessShareCfg = typeof _ReadinessShareEp;
+export type ReadinessShareInputType = NonNullable<_ReadinessShareCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReadinessShareCfg['execute']>[0]['input'];
+export type ReadinessShareOutputType = Awaited<ReturnType<_ReadinessShareCfg['execute']>>;
+export const readinessShare = createCaller<ReadinessShareInputType, ReadinessShareOutputType>('readinessShare');
 
 type _ReconciliationCfg = typeof _ReconciliationEp;
 export type ReconciliationInputType = NonNullable<_ReconciliationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReconciliationCfg['execute']>[0]['input'];
@@ -620,8 +650,10 @@ export const api = {
   assessments,
   assets,
   assignments,
+  assuranceEvidence,
   audit,
   campus,
+  careerPartners,
   careerServices,
   catalog,
   community,
@@ -671,10 +703,13 @@ export const api = {
   papers,
   parking,
   partners,
+  portfolioVerify,
   privacy,
   procurement,
   programs,
   progress,
+  publicPrograms,
+  readinessShare,
   reconciliation,
   recordsRights,
   recruiting,

@@ -9,6 +9,7 @@ import type { default as _BoardEp } from '../src/api/board';
 import type { default as _CompanyDataEp } from '../src/api/companyData';
 import type { default as _CompanyMutateEp } from '../src/api/companyMutate';
 import type { default as _CompanyOpsEp } from '../src/api/companyOps';
+import type { default as _CustomerEvidenceEp } from '../src/api/customerEvidence';
 import type { default as _DecisionsEp } from '../src/api/decisions';
 import type { default as _FinanceEp } from '../src/api/finance';
 import type { default as _FinanceCommandEp } from '../src/api/financeCommand';
@@ -55,6 +56,11 @@ type _CompanyOpsCfg = typeof _CompanyOpsEp;
 export type CompanyOpsInputType = NonNullable<_CompanyOpsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CompanyOpsCfg['execute']>[0]['input'];
 export type CompanyOpsOutputType = Awaited<ReturnType<_CompanyOpsCfg['execute']>>;
 export const companyOps = createCaller<CompanyOpsInputType, CompanyOpsOutputType>('companyOps');
+
+type _CustomerEvidenceCfg = typeof _CustomerEvidenceEp;
+export type CustomerEvidenceInputType = NonNullable<_CustomerEvidenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CustomerEvidenceCfg['execute']>[0]['input'];
+export type CustomerEvidenceOutputType = Awaited<ReturnType<_CustomerEvidenceCfg['execute']>>;
+export const customerEvidence = createCaller<CustomerEvidenceInputType, CustomerEvidenceOutputType>('customerEvidence');
 
 type _DecisionsCfg = typeof _DecisionsEp;
 export type DecisionsInputType = NonNullable<_DecisionsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DecisionsCfg['execute']>[0]['input'];
@@ -120,6 +126,7 @@ export const api = {
   companyData,
   companyMutate,
   companyOps,
+  customerEvidence,
   decisions,
   finance,
   financeCommand,

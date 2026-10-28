@@ -12,7 +12,7 @@ export default createEndpoint({
     z.object({ action: z.literal('revoke'), id: z.string() }),
     z.object({ action: z.literal('export') }),
     z.object({ action: z.literal('requestDeletion') }),
-    z.object({ action: z.literal('shareFamily'), email: z.string().email(), categories: z.array(z.enum(['Grades', 'Holds', 'Calendar'])).min(1), expiresOn: z.string() }),
+    z.object({ action: z.literal('shareFamily'), email: z.string().email(), categories: z.array(z.enum(['Grades', 'Holds', 'Calendar', 'Billing'])).min(1), expiresOn: z.string() }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {

@@ -9,7 +9,7 @@ import { DatePicker } from '@project/components/ui/date-picker';
 import { Panel, ActionPreview, errMsg } from './kit';
 import { ConfirmAction } from './overlays';
 
-const CATS = ['Grades', 'Holds', 'Calendar'] as const;
+const CATS = ['Grades', 'Holds', 'Calendar', 'Billing'] as const;
 
 export default function FamilyShare({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState('');
@@ -25,7 +25,7 @@ export default function FamilyShare({ onDone }: { onDone: () => void }) {
         <DatePicker value={until} onChange={setUntil} />
       </div>
       <ConfirmAction trigger={<Button className="mt-3" disabled={!valid}>Review share</Button>} title="Share with family?" confirmLabel="Share" keepLabel="Don’t share"
-        onConfirm={async () => { try { await privacy({ action: 'shareFamily', email, categories: cats as ('Grades' | 'Holds' | 'Calendar')[], expiresOn: until!.toISOString().slice(0, 10) }); toast('Shared. You can revoke it any time above.'); setEmail(''); setCats([]); onDone(); } catch (e) { throw new Error(errMsg(e)); } }}>
+        onConfirm={async () => { try { await privacy({ action: 'shareFamily', email, categories: cats as ('Grades' | 'Holds' | 'Calendar' | 'Billing')[], expiresOn: until!.toISOString().slice(0, 10) }); toast('Shared. You can revoke it any time above.'); setEmail(''); setCats([]); onDone(); } catch (e) { throw new Error(errMsg(e)); } }}>
         <ActionPreview says={`${email} can see your ${cats.join(', ').toLowerCase()} in Semester Family.`} exactly={`Until ${until?.toDateString() ?? ''}. Each time they look, it shows in your access history.`} stays="Everything else stays private." recovery={{ kind: 'undo', how: 'revoke it from Shares and consents.' }} />
       </ConfirmAction>
     </Panel>

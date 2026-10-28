@@ -12,6 +12,7 @@ import PoliciesPage from './pages/PoliciesPage';
 import GatesPage from './pages/GatesPage';
 import ArtifactsPage from './pages/ArtifactsPage';
 import CapabilitiesPage from './pages/CapabilitiesPage';
+import ReleasesPage from './pages/ReleasesPage';
 import PortfolioPage from './pages/PortfolioPage';
 import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/gates" element={<GatesPage />} />
           <Route path="/artifacts" element={<ArtifactsPage />} />
           <Route path="/capabilities" element={<CapabilitiesPage />} />
+          <Route path="/releases" element={<ReleasesPage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
         </Route>
       </Routes>

@@ -6,7 +6,7 @@ import { requireAccess, requireAction, first, forbid, audit, userNames } from '.
 // Balances are official: imported from the institution's finance system, read-only here.
 // Semester never takes, refunds or moves money. Students may request a payment plan; Student Accounts staff decide.
 type Entry = { id: string; type: string; label: string; amount: number; term: string; dueDate: string; source: string; at: string };
-const signed = (type: string, amt: number) => (type === 'Charge' ? amt : -amt);
+import { signed } from '../lib/billingRules';
 const toEntry = (e: Awaited<ReturnType<typeof zite.accountLedgerEntries.findAll>>['records'][0]): Entry => ({
   id: e.id, type: e.entryType ?? 'Charge', label: e.label ?? '', amount: Number(e.amount ?? 0), term: e.term ?? '', dueDate: e.dueDate ?? '', source: e.source ?? 'Official', at: e.recordedAt ?? '',
 });

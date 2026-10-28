@@ -7,6 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { useLoad, fmtDate } from '../lib/useLoad';
 import { loadOh } from '../lib/oh';
 import { LoadingBlock, DeniedOrError, Empty, PageHeader } from '../components/States';
+import { InstructorVerify } from '../../../semester/src/components/PortfolioVerify';
 
 export default function Teaching() {
   const oh = useLoad(loadOh);
@@ -35,6 +36,7 @@ export default function Teaching() {
     <div>
       <PageHeader title="Teaching" sub="Your sections, today's office hours and what needs your decision. Course grades stay separate from official records until the registrar posts them." />
       <NextUp today={today.data} />
+      <Card className="mt-6"><CardHeader><CardTitle className="text-base">Portfolio verification requests</CardTitle></CardHeader><CardContent><InstructorVerify /></CardContent></Card>
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Submissions to grade" value={countLabel(today.data?.toGrade as never, today.loading)} to="/queue" note={stateNote(today.data?.toGrade, today.error)} />
         <Stat label="Final grades to release" value={countLabel(today.data?.finalGrades as never, today.loading)} to="/final-grades" note={stateNote(today.data?.finalGrades, today.error)} />

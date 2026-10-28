@@ -21,7 +21,7 @@ test('every cited file exists', () => {
 });
 test('no status is stronger than its evidence', () => { eq(CONNECTIONS.flatMap(statusProblems), []); });
 test('the guard catches an overclaim (control)', () => {
-  const bad: Connection = { ...CONNECTIONS[5], status: 'observed' };
+  const bad: Connection = { ...CONNECTIONS[5], id: 'C06', status: 'observed', code: [], tests: [] };
   eq(statusProblems(bad), ['C06: observed needs code references', 'C06: observed needs test evidence']);
 });
 test('the summary counts every connection', () => { eq(Object.values(summary()).reduce((a, b) => a + b, 0), 23); });

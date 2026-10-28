@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { holdsFor } from '../../../semester/src/lib/holdServer';
+import { termBalances } from '../../../semester/src/lib/billingRules';
 
 const ids = (v: string | string[] | undefined | null): string[] => (!v ? [] : Array.isArray(v) ? v : [v]);
 const first = (v: string | string[] | undefined | null) => ids(v)[0];
@@ -42,6 +43,9 @@ export default createEndpoint({
       can('Grades') ? zite.sections.findAll({ limit: 1000, fields: ['label', 'course', 'term'] }) : null,
       can('Grades') ? zite.courses.findAll({ limit: 1000, fields: ['code', 'title'] }) : null,
     ]);
+    // Billing share: per-term balance and next due date only. No line items, payment methods or aid detail.
+    const ledger = can('Billing') ? await zite.accountLedgerEntries.findAll({ filters: { student: sel.id }, limit: 500 }) : null;
+    const billing = ledger ? termBalances(ledger.records.map((e) => ({ type: e.entryType ?? 'Charge', amount: Number(e.amount ?? 0), term: e.term ?? '', dueDate: e.dueDate ?? '' }))) : null;
     const sById = Object.fromEntries((secs?.records ?? []).map((s) => [s.id, s]));
     const cById = Object.fromEntries((courses?.records ?? []).map((c) => [c.id, c]));
     await zite.auditEvents.create({ record: { action: 'Family view', actor: uid, recordRef: `user:${sel.id}`, authority: 'Student share', details: sel.categories.join(', '), viaAssistant: false, institution: null } as never });
@@ -51,6 +55,7 @@ export default createEndpoint({
       view: {
         ...sel,
         grades: enr ? enr.records.filter((e) => e.gradeReleased).map((e) => { const s = sById[first(e.section) ?? '']; const c = cById[first(s?.course) ?? '']; return { id: e.id, code: c?.code ?? '', title: c?.title ?? '', term: s?.term ?? '', grade: e.finalGrade ?? '', source: e.source ?? 'Official' }; }) : null,
+        billing,
         holds: holds ? holds.map((h) => ({ id: h.id, title: h.title, office: h.office, source: 'Official' })) : null,
         upcoming: tasks ? tasks.records.filter((t) => (t.dueAt ?? '') >= now).sort((x, y) => (x.dueAt ?? '').localeCompare(y.dueAt ?? '')).slice(0, 15).map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, done: t.status === 'Done', source: t.source ?? 'Official' })) : null,
       },

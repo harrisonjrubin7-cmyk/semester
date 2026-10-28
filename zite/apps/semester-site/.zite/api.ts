@@ -2,9 +2,15 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _PublishedPostsEp } from '../src/api/publishedPosts';
 import type { default as _SubmitRequestEp } from '../src/api/submitRequest';
 import type { default as _TrustCenterEp } from '../src/api/trustCenter';
+
+type _ProgramsCfg = typeof _ProgramsEp;
+export type ProgramsInputType = NonNullable<_ProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgramsCfg['execute']>[0]['input'];
+export type ProgramsOutputType = Awaited<ReturnType<_ProgramsCfg['execute']>>;
+export const programs = createCaller<ProgramsInputType, ProgramsOutputType>('programs');
 
 type _PublishedPostsCfg = typeof _PublishedPostsEp;
 export type PublishedPostsInputType = NonNullable<_PublishedPostsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PublishedPostsCfg['execute']>[0]['input'];
@@ -23,6 +29,7 @@ export const trustCenter = createCaller<TrustCenterInputType, TrustCenterOutputT
 
 
 export const api = {
+  programs,
   publishedPosts,
   submitRequest,
   trustCenter,

@@ -4,10 +4,14 @@ import { createCaller } from 'zitejs/caller';
 
 import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
+import type { default as _AssuranceEvidenceEp } from '../src/api/assuranceEvidence';
+import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
 import type { default as _HelpEp } from '../src/api/help';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
+import type { default as _PublicProgramsEp } from '../src/api/publicPrograms';
+import type { default as _ReadinessShareEp } from '../src/api/readinessShare';
 import type { default as _RegistrarDecideEp } from '../src/api/registrarDecide';
 import type { default as _RegistrarLedgerEp } from '../src/api/registrarLedger';
 import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
@@ -25,6 +29,16 @@ type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
 export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
 export const appDirectory = createCaller<AppDirectoryInputType, AppDirectoryOutputType>('appDirectory');
+
+type _AssuranceEvidenceCfg = typeof _AssuranceEvidenceEp;
+export type AssuranceEvidenceInputType = NonNullable<_AssuranceEvidenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssuranceEvidenceCfg['execute']>[0]['input'];
+export type AssuranceEvidenceOutputType = Awaited<ReturnType<_AssuranceEvidenceCfg['execute']>>;
+export const assuranceEvidence = createCaller<AssuranceEvidenceInputType, AssuranceEvidenceOutputType>('assuranceEvidence');
+
+type _CareerPartnersCfg = typeof _CareerPartnersEp;
+export type CareerPartnersInputType = NonNullable<_CareerPartnersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CareerPartnersCfg['execute']>[0]['input'];
+export type CareerPartnersOutputType = Awaited<ReturnType<_CareerPartnersCfg['execute']>>;
+export const careerPartners = createCaller<CareerPartnersInputType, CareerPartnersOutputType>('careerPartners');
 
 type _HelpCfg = typeof _HelpEp;
 export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpCfg['execute']>[0]['input'];
@@ -45,6 +59,16 @@ type _OfficialGradesCfg = typeof _OfficialGradesEp;
 export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
 export type OfficialGradesOutputType = Awaited<ReturnType<_OfficialGradesCfg['execute']>>;
 export const officialGrades = createCaller<OfficialGradesInputType, OfficialGradesOutputType>('officialGrades');
+
+type _PublicProgramsCfg = typeof _PublicProgramsEp;
+export type PublicProgramsInputType = NonNullable<_PublicProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PublicProgramsCfg['execute']>[0]['input'];
+export type PublicProgramsOutputType = Awaited<ReturnType<_PublicProgramsCfg['execute']>>;
+export const publicPrograms = createCaller<PublicProgramsInputType, PublicProgramsOutputType>('publicPrograms');
+
+type _ReadinessShareCfg = typeof _ReadinessShareEp;
+export type ReadinessShareInputType = NonNullable<_ReadinessShareCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReadinessShareCfg['execute']>[0]['input'];
+export type ReadinessShareOutputType = Awaited<ReturnType<_ReadinessShareCfg['execute']>>;
+export const readinessShare = createCaller<ReadinessShareInputType, ReadinessShareOutputType>('readinessShare');
 
 type _RegistrarDecideCfg = typeof _RegistrarDecideEp;
 export type RegistrarDecideInputType = NonNullable<_RegistrarDecideCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_RegistrarDecideCfg['execute']>[0]['input'];
@@ -85,10 +109,14 @@ export const studentAccount = createCaller<StudentAccountInputType, StudentAccou
 export const api = {
   academicStanding,
   appDirectory,
+  assuranceEvidence,
+  careerPartners,
   help,
   institutionConsole,
   institutionOps,
   officialGrades,
+  publicPrograms,
+  readinessShare,
   registrarDecide,
   registrarLedger,
   registrarQueue,

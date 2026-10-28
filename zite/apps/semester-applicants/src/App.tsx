@@ -19,8 +19,21 @@ type App = NonNullable<D['applications']>[number];
 const GL: Record<string, string> = { Draft: '○', Submitted: '…', 'Under Review': '…', Admitted: '✓', Waitlisted: '?', Declined: '!', Withdrawn: '⊘' };
 const msg = (e: unknown) => (e instanceof Error ? e.message : 'That didn’t work');
 
+// Arriving from a published program on the public site (?institution=…&program=…): keep the choice through sign-in.
+const START_KEY = 'semester.applicants.start';
+function startChoice(): { institutionId: string; program: string } | null {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('institution')) sessionStorage.setItem(START_KEY, JSON.stringify({ institutionId: q.get('institution'), program: (q.get('program') ?? '').slice(0, 120) }));
+    const v = sessionStorage.getItem(START_KEY);
+    return v ? JSON.parse(v) : null;
+  } catch { return null; }
+}
+const clearStart = () => { try { sessionStorage.removeItem(START_KEY); history.replaceState(null, '', location.pathname); } catch { /* storage unavailable */ } };
+const START = startChoice();
+
 function Editor({ d, app, onDone }: { d: D; app: App | null; onDone: () => void }) {
-  const [f, setF] = useState({ institutionId: app?.institutionId ?? '', program: app?.program ?? '', entryTerm: app?.entryTerm ?? 'Fall 2027', statement: app?.statement ?? '', documents: app?.documents ?? [] });
+  const [f, setF] = useState({ institutionId: app?.institutionId ?? (START && (d.institutions ?? []).some((i) => i.id === START.institutionId) ? START.institutionId : ''), program: app?.program ?? (START?.program ?? ''), entryTerm: app?.entryTerm ?? 'Fall 2027', statement: app?.statement ?? '', documents: app?.documents ?? [] });
   const { upload, isUploading } = useUpload();
   const [busy, setBusy] = useState(false);
   const save = async () => { setBusy(true); try { await applications({ action: 'save', id: app?.id, ...f }); toast('Draft saved. Only you can see it until you submit.'); onDone(); } catch (e) { toast(`! ${msg(e)}`); } setBusy(false); };
@@ -91,6 +104,7 @@ export default function App() {
   const load = () => { setErr(null); applications({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) load(); }, [user]);
+  useEffect(() => { if (d && START && !editing) { setEditing('new'); clearStart(); } }, [d]);
   if (isLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-sidebar text-lg text-sidebar-foreground"><Wordmark /></div>;
   return (
     <div className="min-h-screen bg-background">

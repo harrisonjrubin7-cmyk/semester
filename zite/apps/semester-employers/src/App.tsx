@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@project/components/ui/alert-dialog';
 import { Wordmark } from '@project/components/brand/Mark';
 import Scholarships from './Scholarships';
+import Partners from './Partners';
 import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 type Opp = NonNullable<EmployerOutputType['opportunities']>[number];
@@ -58,8 +59,8 @@ function Applicants({ o, onDecide }: { o: Opp; onDecide: (applicant: string, ver
               {a.stage !== 'New' && <Button size="sm" variant="ghost" onClick={() => onDecide(a.id, a.version, 'Reset')}>Undo</Button>}
             </div>
           </div>
-          {a.portfolio.length ? <ul className="mt-2 space-y-1">{a.portfolio.map((p) => <li key={p.id} className="text-xs"><span className="mr-1">○</span>{p.title}{p.file && <a href={p.file} target="_blank" rel="noreferrer" className="ml-2 underline">Open</a>}{p.body && <span className="block text-muted-foreground">{p.body}</span>}</li>)}</ul>
-            : <p className="mt-1 text-xs text-muted-foreground">⊘ No public portfolio items. Students choose what employers can see.</p>}
+          {a.portfolio.length ? <ul className="mt-2 space-y-1">{a.portfolio.map((p) => <li key={p.id} className="text-xs"><span className="mr-1">○</span>{p.title}{p.file && <a href={p.file} target="_blank" rel="noreferrer" className="ml-2 underline">Open</a>}{p.body && <span className="block text-muted-foreground">{p.body}</span>}{(p as { verified?: { statement: string; by: string }[] }).verified?.map((v, i) => <span key={i} className="mt-0.5 block">✓ Verified by {v.by}: {v.statement}</span>)}</li>)}</ul>
+            : <p className="mt-1 text-xs text-muted-foreground">⊘ Nothing shared. Students choose what employers can see when they apply.</p>}
         </li>
       ))}
     </ul>
@@ -72,8 +73,8 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   const [edit, setEdit] = useState<Draft | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [tab, setTab] = useState<'jobs' | 'scholarships'>(() => (location.hash === '#scholarships' ? 'scholarships' : 'jobs'));
-  const pick = (t: 'jobs' | 'scholarships') => { setTab(t); history.replaceState(null, '', t === 'scholarships' ? '#scholarships' : '#'); };
+  const [tab, setTab] = useState<'jobs' | 'scholarships' | 'partners'>(() => (location.hash === '#scholarships' ? 'scholarships' : location.hash === '#partners' ? 'partners' : 'jobs'));
+  const pick = (t: 'jobs' | 'scholarships' | 'partners') => { setTab(t); history.replaceState(null, '', t === 'jobs' ? '#' : `#${t}`); };
   const load = () => { setErr(null); employer({ action: 'list' }).then(setD).catch((e) => setErr(msg(e))); };
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   useEffect(() => { if (user) load(); }, [user]);
@@ -88,11 +89,11 @@ export default function App() {
         <span className="flex items-center gap-3 text-xs"><span className="hidden sm:inline">{user.email}</span><button onClick={() => logout()} className="underline">Sign out</button></span>
       </header>
       <nav aria-label="Employer sections" className="mx-auto flex max-w-5xl gap-1 px-4 pt-4 md:px-8">
-        {([['jobs', 'Opportunities'], ['scholarships', 'Scholarships']] as const).map(([k, l]) => (
+        {([['jobs', 'Opportunities'], ['partners', 'Institutions'], ['scholarships', 'Scholarships']] as const).map(([k, l]) => (
           <button key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => pick(k)} className={`rounded px-3 py-2 text-sm ${tab === k ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}>{l}</button>))}
       </nav>
       <main className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        {tab === 'scholarships' ? <Scholarships /> : <>
+        {tab === 'scholarships' ? <Scholarships /> : tab === 'partners' ? <Partners /> : <>
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Your opportunities</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Post roles for students, then review who applied. You only see what each applicant chose to make public.</p></div>
           {!edit && <Button onClick={() => setEdit({ title: '', kind: 'Internship', employerName: d?.opportunities?.[0]?.employerName ?? '', description: '', location: '', closesOn: null })}>Post an opportunity</Button>}

@@ -10,6 +10,7 @@ export const PUBLIC: Record<string, string> = {
   'semester-site/src/api/publishedPosts.ts': 'Public website: lists posts already approved for publication',
   'semester-site/src/api/submitRequest.ts': 'Public website: write-only contact form, returns nothing back, throttled',
   'semester-site/src/api/trustCenter.ts': 'Public website: approved public Trust Center content only',
+  'semester-site/src/api/programs.ts': 'Public website: program listings an institution explicitly published, public fields only',
   'semester/src/api/sandboxApi.ts': 'Developer app API: authenticates by app token on every call; returns synthetic sandbox data only',
 };
 

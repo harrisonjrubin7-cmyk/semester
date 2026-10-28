@@ -15,6 +15,7 @@ const nav = [
   { to: '/gates', label: 'Release gates', icon: FileCheck2 },
   { to: '/artifacts', label: 'Artifact parity', icon: ScrollText },
   { to: '/capabilities', label: 'Capability register', icon: Map },
+  { to: '/releases', label: 'Evidence releases', icon: FileCheck2 },
   { to: '/portfolio', label: 'App portfolio', icon: LayoutGrid },
 ];
 

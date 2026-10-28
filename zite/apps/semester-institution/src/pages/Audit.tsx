@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { useLoad, fmtDate } from '../lib/useLoad';
 import { loadConsole } from '../lib/console';
 import { LoadingBlock, DeniedOrError, Empty, PageHeader } from '../components/States';
+import { AssurancePanel } from '../components/Releases';
 
 const PAGE = 25;
 
@@ -51,6 +52,7 @@ export default function Audit() {
           )}
         </>
       )}
+      <AssurancePanel />
     </div>
   );
 }

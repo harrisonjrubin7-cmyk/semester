@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useLoad, errMsg, fmtDate } from '../lib/useLoad';
 import { loadConsole } from '../lib/console';
 import { LoadingBlock, DeniedOrError, PageHeader } from '../components/States';
+import { ReadinessSharePanel } from '../components/Releases';
 
 export default function Console() {
   const q = useLoad(loadConsole);
@@ -26,6 +27,7 @@ export default function Console() {
   return (
     <div>
       <PageHeader title="Members & connections" sub={`${d.institution.name} · retention ${d.institution.retentionDays} days · invite code ${d.institution.inviteCode || '—'}`} />
+      <div className="mb-6"><ReadinessSharePanel /></div>
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle className="text-base">Connections and data freshness</CardTitle></CardHeader>

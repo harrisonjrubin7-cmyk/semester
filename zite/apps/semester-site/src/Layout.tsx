@@ -6,6 +6,7 @@ import { Button } from '@project/components/ui/button';
 import { Wordmark } from '@project/components/brand/Mark';
 
 const NAV = [
+  { to: '/programs', label: 'Programs' },
   { to: '/pilot', label: 'Pilot' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/trust', label: 'Trust' },
