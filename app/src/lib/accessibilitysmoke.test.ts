@@ -6,6 +6,11 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(join(process.cwd(), 'scripts/accessibility-smoke.mjs'), 'utf8');
 
 describe('the real-browser accessibility smoke', () => {
+  it('normalizes a base URL that does not already end in a slash', () => {
+    expect(source).toContain("const ROUTE_BASE = BASE.endsWith('/') ? BASE : `${BASE}/`");
+    expect(source).not.toContain("BASE.replace(/\\/$/, '/')");
+  });
+
   it('takes the complete route inventory from the shared destination parser', () => {
     expect(source).toContain("from './destinations.mjs'");
     expect(source).toContain('const DESTINATIONS = destinations()');

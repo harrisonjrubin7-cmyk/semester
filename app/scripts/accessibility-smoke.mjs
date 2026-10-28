@@ -22,6 +22,7 @@ import { arrived, destinations, proofSelector } from './destinations.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const BASE = process.env.SMOKE_URL || 'http://localhost:4173/';
+const ROUTE_BASE = BASE.endsWith('/') ? BASE : `${BASE}/`;
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
 const SETTLE = Number(process.env.SMOKE_SETTLE || 1200);
 const AXE_VIEWPORT = { width: 375, height: 900 };
@@ -100,7 +101,7 @@ async function inspect(journey, hash, viewport, label) {
   try {
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(`page error: ${String(error).split('\n')[0]}`));
-    await page.goto(`${BASE.replace(/\/$/, '/')}${hash}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${ROUTE_BASE}${hash}`, { waitUntil: 'domcontentloaded' });
     await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
     await page.waitForTimeout(SETTLE);
 
@@ -219,7 +220,7 @@ async function inspectDestination({ screen, label }) {
     const page = await context.newPage();
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(String(error).split('\n')[0]));
-    await page.goto(`${BASE.replace(/\/$/, '/')}#/${screen}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${ROUTE_BASE}#/${screen}`, { waitUntil: 'domcontentloaded' });
     await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
     await page.waitForTimeout(SETTLE);
 
