@@ -17,7 +17,7 @@ This page is the platform-wide model the audit found missing. It does not replac
 | # | Boundary | Assumption |
 | --- | --- | --- |
 | B1 | Browser ↔ Supabase (PostgREST, Auth, Storage) | The client is hostile. It holds only a publishable key (ADR 0002). |
-| B2 | Browser ↔ edge functions | Each function authenticates itself (`verify_jwt = false` on all thirteen; auth is in code). |
+| B2 | Browser ↔ edge functions | Each function authenticates itself (`verify_jwt = false` in all 18 deployed function directories; auth is in code). |
 | B3 | Edge functions / gateway ↔ Postgres | Service-role access; never exposed to the client. |
 | B4 | Semester ↔ Stripe | Stripe state enters only through a signature-verified webhook. |
 | B5 | Semester ↔ AI providers | Provider output is untrusted text; uploaded material is untrusted input. |
@@ -44,7 +44,7 @@ Status: **Held** = a control exists and a test in the tree would fail without it
 
 | Threat | Control | Evidence | Status |
 | --- | --- | --- | --- |
-| Reading or writing another user's rows | RLS on every table; ownership by `auth.uid()`; capability checks by `private.has_capability` | `rls-coverage`, `integration-rls-matrix`, `definer-sweep`, per-feature suites (78 `*.check.sql`) | Held for what the suites cover; tenant scoping of classmates/rooms/groups is **open** (G-03) |
+| Reading or writing another user's rows | RLS on every table; ownership by `auth.uid()`; capability checks by `private.has_capability` | `rls-coverage`, `integration-rls-matrix`, `definer-sweep`, per-feature suites (167 `*.check.sql`) | Held for what the suites cover; tenant scoping of classmates/rooms/groups is **open** (G-03) |
 | Client writing its own audit history | `audit_event` has no client write path; recorder is service-only (M1) | `audit-and-subject-requests.check.sql` (22 checks) | Held |
 | Editing or deleting audit evidence | immutability triggers; purge only through the retention sweep past three years | same suite; `retention-sweeps.check.sql` | Held |
 | Privilege escalation through a `security definer` function | pinned `search_path`; every callable definer function is called by a zero-privilege account | `definer-sweep.check.sql`; register DR-02 notes object-id (BOLA) cases are left to feature suites | Partial |

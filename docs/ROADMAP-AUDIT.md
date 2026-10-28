@@ -114,7 +114,7 @@ A status is a claim from a reading of headers, registers and migration text, not
 | B3-08 | An SBOM per release | Landed | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml)<br>[`app/src/lib/supplychain.test.ts`](../app/src/lib/supplychain.test.ts) | Not signed and not published. |
 | B3-09 | Build provenance and signed artifacts | Absent | — | No attestation; below SLSA build level 2. |
 | B3-10 | Static application security testing | Absent | — | No CodeQL or Semgrep workflow. |
-| B3-11 | A dependency vulnerability scan | Partial | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)<br>[`.github/dependabot.yml`](../.github/dependabot.yml) | npm audit runs and is non-blocking by design. |
+| B3-11 | A dependency vulnerability scan | Partial | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)<br>[`.github/dependabot.yml`](../.github/dependabot.yml) | The candidate CI gate blocks high and critical npm advisories; required-check enforcement on main is not verified. |
 | B3-12 | A licence scan | Landed | [`app/src/lib/supplychain.test.ts`](../app/src/lib/supplychain.test.ts)<br>[`app/src/lib/supplychain.ts`](../app/src/lib/supplychain.ts) | None. |
 | B3-13 | Infrastructure and container scanning | Absent | — | Nothing scans IaC or containers. |
 | B3-14 | Typecheck, lint and unit tests in CI | Landed | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)<br>[`app/src/lib/supplychain.test.ts`](../app/src/lib/supplychain.test.ts) | None. |

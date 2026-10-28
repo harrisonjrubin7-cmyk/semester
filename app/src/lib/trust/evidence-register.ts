@@ -9,8 +9,9 @@
  *
  * `SEMESTER-OPERATING-SYSTEM.md` has listed the "Security/compliance evidence
  * index" as missing since it was written: `docs/evidence/` did not exist then
- * (it now holds a few dated files from operating particular controls, none of
- * them indexed here by control), the
+ * (it now holds a few dated files from operating or rehearsing particular
+ * controls, including records that are indexed here without meeting the full
+ * artifact requested by their rows), the
  * master register lets no row above `tested` until it does, and the trust
  * package is the set of documents a reviewer reads rather than proof any of
  * them is operated. Three documents of 28 September 2026 ask for exactly the
@@ -215,8 +216,9 @@ export const EVIDENCE: readonly EvidenceRow[] = [
       { path: 'supabase/deletion.check.sql', shows: 'account deletion empties every table it claims' },
       { path: 'app/src/lib/deleteaccount.test.ts', shows: 'the delete-account function, live in production' },
       { path: 'supabase/scheduler.sql', shows: 'the sweeps that run the clocks' },
+      { path: 'supabase/migrations/20260930100000_legal_holds.sql', shows: 'a live account, tenant or platform hold refuses account deletion and stops or scopes retention sweeps' },
     ],
-    produce: 'Run one test-account deletion in production, trace it through every table and the backups’ expiry, file the trace. A legal hold cannot yet be placed, so the hold half is owed (RM-02).',
+    produce: 'Run one authorized synthetic-account deletion in the target environment, then place and release a synthetic hold and repeat the sequence; trace both through every table and backup expiry and file the record. The repository mechanism is defined, but no target hold exercise is filed.',
   },
   {
     id: 'SEC-BCP-001', control: 'Backup restoration — a backup that has never been restored', rubric: 'security',
@@ -235,9 +237,10 @@ export const EVIDENCE: readonly EvidenceRow[] = [
     evidence: 'Runbook, tabletop attendance, after-action corrective plan.', frequency: 'Annual and on major change', owner: 'security', visibility: 'summary', status: 'defined',
     holds: [
       { path: 'app/src/lib/governance/incident-comms.test.ts', shows: 'every audience gets a notice with the sections its policy requires' },
-      { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'severity, flow and university-facing templates; never exercised' },
+      { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'severity, flow and university-facing templates' },
+      { path: 'docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md', shows: 'a completed document/repository walkthrough whose evidence ceiling keeps the target exercise open' },
     ],
-    produce: 'One P1 walked from first report to customer notice, with who did what and the gaps found; the proof calendar’s month-one tabletop.',
+    produce: 'Run the same scenario against an authorized target with staffed escalation, delivery acknowledgement and customer-communication roles; file who did what and the gaps found. The repository walkthrough is not that target exercise.',
   },
   {
     id: 'SEC-LOG-001', control: 'Audit logging — an administrative action with no record', rubric: 'security',
@@ -326,9 +329,15 @@ export const EVIDENCE: readonly EvidenceRow[] = [
   {
     id: 'RET-001', control: 'Legal hold — a deletion that ran while a hold should have stopped it', rubric: 'privacy',
     rests: ['RM-02', 'RM-04', 'RM-05', 'RM-08'],
-    evidence: 'A hold placed, deletion refused, the hold released, deletion resumed — logged.', frequency: 'On each hold; the mechanism tested quarterly', owner: 'privacy', visibility: 'nda', status: 'owed',
-    holds: [{ path: 'docs/operating-model/OPERATIONAL-MATURITY.md', shows: 'the records-management area: no hold object, no placing role, no runbook' }],
-    produce: 'A hold table, a placing role, the check in the deletion path, a runbook; then the test that proves the sequence.',
+    evidence: 'A hold placed, deletion refused, the hold released, deletion resumed — logged.', frequency: 'On each hold; the mechanism tested quarterly', owner: 'privacy', visibility: 'nda', status: 'defined',
+    holds: [
+      { path: 'supabase/migrations/20260930100000_legal_holds.sql', shows: 'the legal_holds table, scoped placement and release capabilities, immutable history, two-person release rule, deletion refusal and sweep integration' },
+      { path: 'supabase/legal-holds.check.sql', shows: 'placement, cross-tenant refusal, immutable release and delete-account refusal' },
+      { path: 'supabase/hold-aware-sweeps.check.sql', shows: 'tenant and account holds preserve only the rows they cover' },
+      { path: 'supabase/hold-blind-sweeps.check.sql', shows: 'the remaining retention sweeps obey account, tenant and platform holds' },
+      { path: 'supabase/hold-gated-sweeps.check.sql', shows: 'platform holds pause sweeps and released holds let the next sweep run' },
+    ],
+    produce: 'Run and file the quarterly synthetic sequence in an authorized target: place a hold, prove deletion and covered sweeps refuse, release it with a second operator, then prove deletion resumes. Counsel-owned placement criteria and case management remain outside the repository mechanism.',
   },
   {
     id: 'SEC-STATUS-001', control: 'Availability and status — an outage the customer learns of first', rubric: 'security',

@@ -83,20 +83,22 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-03', before: 'invitation', owner: 'success', effort: 'S',
     title: 'Bring public accessibility text back inside the evidence',
-    finding: 'The company site says axe-core was run on every page and form (no such run is in the tree), calls the nightly sweep a check of painted pixels while it was green with failures, and lists captions and form errors as known issues after both were fixed.',
+    finding: 'The company site says axe-core was run on every page and form although no such public-site result is in the tree, and its generic caption and form-error wording hides the exact remaining boundaries: four audio recordings have no timed source, prerecorded video coverage is incomplete, and public forms are outside the student-app error guards.',
     sources: ['PUBLIC-CLAIMS-APPROVAL-REGISTER.md', 'company-site/index.html', 'docs/accessibility/AT-PASS-PROTOCOL.md'],
-    fix: 'Change the text to what the tree can show, and add the new claims to the register with their evidence.',
+    fix: 'Limit the public text and CLM-007 to the six student-app journeys, scheduled Chromium sweep and exact caption/form boundaries the tree can show, and make a source test reject any return to universal public-site accessibility claims.',
     moves: ['TC-A11-01', 'TC-A11-06'],
     files: 'The claims-register diff.',
+    done: { proof: 'app/src/lib/publicaccessibilityclaims.test.ts', on: '2026-10-27' },
   },
   {
     id: 'TR-04', before: 'invitation', owner: 'trust', effort: 'M',
     title: 'Reconcile the registers that contradict each other',
-    finding: 'The database suites are counted as 36, 78 and 106 in three documents; RET-001 says no legal hold can be placed while legal_holds and four checks exist; MFA is "absent" in two registers and implemented for the console; SOC2-READINESS says no risk register and no tabletop; the threat model says thirteen functions where sixteen exist.',
+    finding: 'The two source documents count 36 and 78 database suites while the branch has 167; RET-001 says no legal hold can be placed although legal_holds and its hold suites exist; SOC2-READINESS says no risk register and no tabletop although both have repository evidence; the threat model says thirteen function directories where 18 exist. MFA repository enforcement is already distinguished from missing production-provider exports and must stay that way.',
     sources: ['docs/SECURITY-GAP-ANALYSIS.md', 'docs/SECURITY-THREAT-MODEL.md', 'docs/trust/EVIDENCE-REGISTER.md', 'docs/trust/SOC2-READINESS.md', 'app/src/lib/masterregister.ts'],
-    fix: 'Correct each to what the tree shows, citing the file, and add a count to the test that holds the document.',
+    fix: 'Count suites and deployed function directories from the tree; cite the legal-hold, risk-register and repository-tabletop sources; preserve the missing target-operation and provider-export boundaries; add one fail-closed reconciliation test for every statement.',
     moves: ['TC-PRV-02', 'TC-SEC-10'],
     files: 'The corrected documents.',
+    done: { proof: 'app/src/lib/trustreconciliation.test.ts', on: '2026-10-27' },
   },
   {
     id: 'TR-05', before: 'invitation', owner: 'security', effort: 'S',
@@ -106,6 +108,7 @@ export const ITEMS: readonly Item[] = [
     fix: 'Remove continue-on-error; keep a dated allowlist for an advisory with no fix.',
     moves: ['TC-SEC-05'],
     files: 'The CI run that fails on a planted advisory, then passes.',
+    done: { proof: '.github/workflows/ci.yml', on: '2026-10-27' },
   },
   {
     id: 'TR-06', before: 'invitation', owner: 'founder', effort: 'S', person: true,
@@ -405,6 +408,7 @@ export const ITEMS: readonly Item[] = [
     fix: 'Add a database check that no function lets one account read as another outside the grant tables.',
     moves: ['TC-SUP-03'],
     files: 'The check.',
+    done: { proof: 'supabase/no-impersonation.check.sql', on: '2026-10-27' },
   },
   {
     id: 'TR-39', before: 'pilot', owner: 'trust', effort: 'M',
