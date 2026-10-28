@@ -51,13 +51,38 @@ function NothingShared() {
   return (
     <div className="mt-6 rounded-md border border-border bg-card p-6 text-sm">
       <p className="font-medium">○ Nothing has been shared with you yet</p>
-      <p className="mt-1 text-muted-foreground">Students choose what to share and when access ends. Ask your student to open Semester → You → Privacy → Share with family and invite the email you signed in with.</p>
+      <p className="mt-1 text-muted-foreground">Students choose what to share and when access ends. Ask your student to open Semester → You → Privacy → Share with family and invite the email you signed in with. The invitation appears here for you to accept.</p>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-muted-foreground">
         <li>Every category starts off: grades, holds, calendar and billing are each chosen separately.</li>
         <li>Access ends on the date the student sets, and they can stop it at any time.</li>
         <li>The student can see each time you view what they shared.</li>
       </ul>
     </div>
+  );
+}
+
+type Inv = { id: number; student: string; categories: string[]; expiresOn: string; invitedAt: string };
+/** Invitations sent to the email this account signed in with. Nothing is visible until accepted. */
+function Invitations({ onChange }: { onChange: () => void }) {
+  const [rows, setRows] = useState<Inv[] | null>(null);
+  const [busy, setBusy] = useState<number | null>(null);
+  const load = () => { (familyView({ invitations: true }) as Promise<{ invitations: Inv[] }>).then((r) => setRows(r.invitations)).catch(() => setRows([])); };
+  useEffect(load, []);
+  const answer = async (id: number, accept: boolean) => {
+    setBusy(id);
+    try { await familyView({ respond: { id, accept } }); toast(accept ? 'Accepted. You can now see what was shared.' : 'Declined. Nothing was shared.'); load(); onChange(); }
+    catch (e) { toast(`! ${e instanceof Error ? e.message : 'That didn’t work'}`); } finally { setBusy(null); }
+  };
+  if (!rows || !rows.length) return null;
+  return (
+    <div className="mt-6"><Panel title="Invitations">
+      <ul className="space-y-3 text-sm">{rows.map((r) => (
+        <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3 last:border-0 last:pb-0">
+          <span><span className="font-medium">{r.student}</span> invites you to see {r.categories.join(', ').toLowerCase()} until {day(r.expiresOn)}. They will see each time you look.</span>
+          <span className="flex gap-2"><Button size="sm" disabled={busy === r.id} onClick={() => answer(r.id, true)}>Accept</Button>
+            <Button size="sm" variant="outline" disabled={busy === r.id} onClick={() => answer(r.id, false)}>Decline</Button></span>
+        </li>))}</ul>
+    </Panel></div>
   );
 }
 
@@ -72,6 +97,7 @@ function Today() {
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Only what a student chose to share with you, while their sharing is active.</p>
       {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={load}>Try again</Button></div>}
       {!d && !err && <div className="mt-6 space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /></div>}
+      <Invitations onChange={load} />
       {d && !v && <NothingShared />}
       {d && v && (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -120,7 +146,8 @@ function Shared() {
 
 type Hist = { at: string; student: string; categories: string };
 function Access() {
-  const { d } = useFamily();
+  const { d, load } = useFamily();
+  const leave = async (ids: number[], name: string) => { try { for (const id of ids) await familyView({ leave: id }); toast(`You no longer see what ${name} shared.`); load(); } catch (e) { toast(`! ${e instanceof Error ? e.message : 'That didn’t work'}`); } };
   const [h, setH] = useState<Hist[] | null>(null);
   useEffect(() => { (familyView({ history: true }) as Promise<{ history: Hist[] }>).then((r) => setH(r.history)).catch(() => setH([])); }, []);
   return (
@@ -130,7 +157,7 @@ function Access() {
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">What you can see and until when. Only the student can change this; the student sees this same history.</p>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Active sharing">{!d ? <Skeleton className="h-16" /> : (d.students ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Nothing is shared with you.</p> :
-          <ul className="space-y-2 text-sm">{(d.students ?? []).map((s: { id: string; name: string; categories: string[]; expiresOn: string | null }) => <li key={s.id}><span className="font-medium">{s.name}</span>: {s.categories.join(', ')} · until {day(s.expiresOn)}</li>)}</ul>}</Panel>
+          <ul className="space-y-2 text-sm">{(d.students ?? []).map((s: { id: string; name: string; categories: string[]; expiresOn: string | null; inviteIds: number[] }) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-2"><span><span className="font-medium">{s.name}</span>: {s.categories.join(', ')} · until {day(s.expiresOn)}</span><Button size="sm" variant="outline" onClick={() => leave(s.inviteIds, s.name)}>Stop seeing this</Button></li>)}</ul>}</Panel>
         <Panel title="Your recent views">{!h ? <Skeleton className="h-16" /> : h.length === 0 ? <p className="text-sm text-muted-foreground">No views yet.</p> :
           <ul className="space-y-1 text-sm">{h.map((x, i) => <li key={i}>{format(new Date(x.at), 'd MMM yyyy, HH:mm')} · {x.student} · {x.categories}</li>)}</ul>}</Panel>
       </div>

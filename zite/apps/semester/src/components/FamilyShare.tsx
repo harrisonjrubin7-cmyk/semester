@@ -24,9 +24,9 @@ export default function FamilyShare({ onDone }: { onDone: () => void }) {
         <div className="flex flex-wrap items-center gap-3 text-sm">{CATS.map((c) => <label key={c} className="flex items-center gap-1.5"><Checkbox checked={cats.includes(c)} onCheckedChange={(v) => setCats(v ? [...cats, c] : cats.filter((x) => x !== c))} />{c}</label>)}</div>
         <DatePicker value={until} onChange={setUntil} />
       </div>
-      <ConfirmAction trigger={<Button className="mt-3" disabled={!valid}>Review share</Button>} title="Share with family?" confirmLabel="Share" keepLabel="Don’t share"
-        onConfirm={async () => { try { await privacy({ action: 'shareFamily', email, categories: cats as ('Grades' | 'Holds' | 'Calendar' | 'Billing')[], expiresOn: until!.toISOString().slice(0, 10) }); toast('Shared. You can revoke it any time above.'); setEmail(''); setCats([]); onDone(); } catch (e) { throw new Error(errMsg(e)); } }}>
-        <ActionPreview says={`${email} can see your ${cats.join(', ').toLowerCase()} in Semester Family.`} exactly={`Until ${until?.toDateString() ?? ''}. Each time they look, it shows in your access history.`} stays="Everything else stays private." recovery={{ kind: 'undo', how: 'revoke it from Shares and consents.' }} />
+      <ConfirmAction trigger={<Button className="mt-3" disabled={!valid}>Review share</Button>} title="Invite family?" confirmLabel="Send invitation" keepLabel="Don’t share"
+        onConfirm={async () => { try { await privacy({ action: 'shareFamily', email, categories: cats as ('Grades' | 'Holds' | 'Calendar' | 'Billing')[], expiresOn: until!.toISOString().slice(0, 10) }); toast('Invitation sent. Nothing is visible until they accept in Semester Family; you can revoke it any time above.'); setEmail(''); setCats([]); onDone(); } catch (e) { throw new Error(errMsg(e)); } }}>
+        <ActionPreview says={`${email} is invited to see your ${cats.join(', ').toLowerCase()} in Semester Family, once they accept.`} exactly={`Until ${until?.toDateString() ?? ''}. Each time they look, it shows in your access history.`} stays="Everything else stays private." recovery={{ kind: 'undo', how: 'revoke it from Shares and consents.' }} />
       </ConfirmAction>
     </Panel>
   );

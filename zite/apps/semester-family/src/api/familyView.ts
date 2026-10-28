@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { createEndpoint } from 'zitejs/backend';
+import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { holdsFor } from '../../../semester/src/lib/holdServer';
 import { termBalances } from '../../../semester/src/lib/billingRules';
+import { pg } from '../../../semester/src/lib/pg';
+import { ensureFam } from '../../../semester/src/lib/famServer';
 
 const ids = (v: string | string[] | undefined | null): string[] => (!v ? [] : Array.isArray(v) ? v : [v]);
 const first = (v: string | string[] | undefined | null) => ids(v)[0];
@@ -10,10 +12,38 @@ const first = (v: string | string[] | undefined | null) => ids(v)[0];
 export default createEndpoint({
   description: 'Shows a guardian only what each student has actively shared with them, and logs every view',
   authenticated: true,
-  inputSchema: z.object({ studentId: z.string().optional(), note: z.string().min(1).max(1000).optional(), history: z.boolean().optional() }),
+  inputSchema: z.object({ studentId: z.string().optional(), note: z.string().min(1).max(1000).optional(), history: z.boolean().optional(),
+    invitations: z.boolean().optional(), respond: z.object({ id: z.number().int(), accept: z.boolean() }).optional(), leave: z.number().int().optional() }),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
     const uid = context.user.id;
+    await ensureFam();
+    const today = new Date().toISOString().slice(0, 10);
+    // The signed-in account's own email, read on the server: only that account can answer an invitation sent to it.
+    const myEmail = String(((await zite.sql({ query: `SELECT "email" FROM "ziteUsers" WHERE "id" = $1`, params: [uid] })).rows[0] as { email?: string } | undefined)?.email ?? '').toLowerCase();
+    const one = async (q: string, p: unknown[]) => String(((await pg().query(q, p)) as { r: string }[])[0].r);
+    const no = (m: string): never => { throw new ZiteError({ code: 'FORBIDDEN', message: m, userFacingMessage: m }); };
+    if (input.respond) {
+      const r = await one(`SELECT fam_respond($1,$2,$3,$4,$5::date) AS r`, [uid, myEmail, input.respond.id, input.respond.accept, today]);
+      if (r !== 'ok') no(r);
+      await zite.auditEvents.create({ record: { action: input.respond.accept ? 'Family invitation accepted' : 'Family invitation declined', actor: uid, recordRef: `family-invite:${input.respond.id}`, authority: 'Invited recipient', details: '', viaAssistant: false, institution: null } as never });
+      return { ok: true };
+    }
+    if (input.leave != null) {
+      // Only the family member leaves here; a student ends sharing from Semester → Privacy, which also closes their consent record.
+      const mineAsRecipient = (await pg().query(`SELECT 1 FROM fam_invites WHERE id = $1 AND recipient_id = $2`, [input.leave, uid])) as unknown[];
+      if (!mineAsRecipient.length) no('Sharing not found.');
+      const r = await one(`SELECT fam_end($1,$2) AS r`, [uid, input.leave]);
+      if (r !== 'ok') no(r);
+      await zite.auditEvents.create({ record: { action: 'Family sharing left', actor: uid, recordRef: `family-invite:${input.leave}`, authority: 'Recipient', details: '', viaAssistant: false, institution: null } as never });
+      return { ok: true };
+    }
+    if (input.invitations) {
+      const rows = (await pg().query(`SELECT id, student_id, categories, expires_on, invited_at FROM fam_invites WHERE recipient_email = $1 AND state = 'Pending' AND expires_on >= $2::date AND student_id <> $3 ORDER BY invited_at DESC`, [myEmail, today, uid])) as Record<string, unknown>[];
+      const sids = [...new Set(rows.map((r) => String(r.student_id)))];
+      const { rows: us } = sids.length ? await zite.sql({ query: `SELECT "id","name","email" FROM "ziteUsers" WHERE "id" = ANY($1)`, params: [sids] }) : { rows: [] as Record<string, unknown>[] };
+      return { invitations: rows.map((r) => { const u = us.find((x) => x.id === r.student_id); return { id: Number(r.id), student: String(u?.name || u?.email || 'A student'), categories: r.categories as string[], expiresOn: String(r.expires_on).slice(0, 10), invitedAt: new Date(String(r.invited_at)).toISOString() }; }) };
+    }
     // The recipient's own view history (the student sees the same events from their side).
     if (input.history) {
       const ev = (await zite.auditEvents.findAll({ filters: { actor: uid, action: 'Family view' }, limit: 50 })).records;
@@ -22,17 +52,16 @@ export default createEndpoint({
       return { history: ev.map((e) => { const sid = String(e.recordRef ?? '').replace('user:', ''); const u = us.find((r) => r.id === sid); return { at: String(e.occurredAt ?? ''), student: String(u?.name || u?.email || 'Student'), categories: String(e.details ?? '') }; })
         .sort((a, b) => b.at.localeCompare(a.at)) };
     }
-    const today = new Date().toISOString().slice(0, 10);
-    const { records } = await zite.consents.findAll({ filters: { recipient: uid, consentType: 'Data Sharing' }, limit: 200 });
-    const live = records.filter((c) => c.granted && !c.revoked && (!c.expiresOn || c.expiresOn >= today) && (c.label ?? '').startsWith('Family:'));
-    const studentIds = [...new Set(live.flatMap((c) => ids(c.member)))];
+    // Only accepted, unexpired invitations bound to this account (fam_live); a student's direct consent record alone is not access.
+    const live = (await pg().query(`SELECT invite_id, student_id, categories, expires_on FROM fam_live($1,$2::date)`, [uid, today])) as { invite_id: number; student_id: string; categories: string[]; expires_on: string }[];
+    const studentIds = [...new Set(live.map((c) => c.student_id))];
     const { rows } = studentIds.length ? await zite.sql({ query: `SELECT "id","name","email" FROM "ziteUsers" WHERE "id" = ANY($1)`, params: [studentIds] }) : { rows: [] as Record<string, unknown>[] };
     const name = (id: string) => String(rows.find((r) => r.id === id)?.name || rows.find((r) => r.id === id)?.email || 'Student');
     const students = studentIds.map((s) => {
-      const cs = live.filter((c) => first(c.member) === s);
-      const cats = [...new Set(cs.flatMap((c) => (c.label ?? '').replace('Family:', '').split(',').map((x) => x.trim())))];
-      const expires = cs.map((c) => c.expiresOn ?? '').sort().reverse()[0] ?? null;
-      return { id: s, name: name(s), categories: cats, expiresOn: expires };
+      const cs = live.filter((c) => c.student_id === s);
+      const cats = [...new Set(cs.flatMap((c) => c.categories))];
+      const expires = cs.map((c) => String(c.expires_on).slice(0, 10)).sort().reverse()[0] ?? null;
+      return { id: s, name: name(s), categories: cats, expiresOn: expires, inviteIds: cs.map((c) => Number(c.invite_id)) };
     });
     const sel = students.find((s) => s.id === input.studentId) ?? students[0];
     if (!sel) return { students, view: null };

@@ -167,8 +167,8 @@ export const DOMAINS: Domain[] = [
     capabilities: [], connections: [], files: [S + 'api/alumni.ts'], evidence: [D('Alumni directory'), I('alumni affiliation views only')], gaps: ['Gifts and pledges not built; they need the finance foundation and the money-movement decision'] },
   { id: 'family', area: A2, name: 'Family and delegates', scope: 'Invitations, bounded shares, payer authority, communications, revocation', apps: ['family', 'student', 'institution'], owner: 'Delegation (Registrar + Student accounts)',
     firstProof: 'Revocation removes future access without deleting required transaction history', replaces: ['Parent portals'],
-    capabilities: [], connections: ['C10', 'C11', 'C12'], files: [S + 'api/privacy.ts', 'apps/semester-family/src/api/familyView.ts'], evidence: [D('S-89 Family'), I('student-chosen categories, billing view, access history')],
-    gaps: ['Payer authority (C11) missing: money movement blocked', 'Invitation-acceptance step not built', 'No database check of revocation'] },
+    capabilities: [], connections: ['C10', 'C11', 'C12'], files: [S + 'api/privacy.ts', S + 'lib/famMigration.ts', 'apps/semester-family/src/api/familyView.ts'], evidence: [D('S-89 Family'), I('invitations, acceptance, student-chosen categories, billing view, access history, revocation and leaving'), T(K + 'familyInvites.ts; live run 28 Oct')],
+    gaps: ['Payer authority (C11) missing: money movement blocked', 'Shared tasks and documents (S-89) not built'] },
   // C. University business and enterprise operations
   { id: 'finance', area: A3, name: 'Finance and ERP', scope: 'Chart of accounts, funds, budgets, journals, receivables, payables, assets, close', apps: ['institution'], owner: 'Controller',
     firstProof: 'Approved transaction posts balanced entries and reconciles to supporting evidence', replaces: ['Workday Financials', 'Oracle Fusion', 'PeopleSoft Financials', 'SAP S/4HANA', 'Unit4'],

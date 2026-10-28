@@ -367,3 +367,21 @@ An assignment version can name one of its section's course group sets ("One subm
   - A second draft is refused; switching to individual after submission is refused; grade, release, and the student sees 18/20.
 - **NOT RUN:** a second real student seeing a teammate's submission (only one student account; covered by G3, G5, G6 and G8).
 - **Test data:** the test assignment "Group submission check", its group set and its receipt remain in Northgate, because receipts are append-only.
+
+## Twelfth increment, 28 Oct: family invitations must be accepted (C10, S-89 Family)
+
+Before this, sharing took effect immediately and only reached people who already had an account. Now a student's share is an invitation (`lib/famMigration.ts`):
+
+- Only the signed-in account holding the invited email can accept, and accepting binds the invitation to that account. Nothing is visible before acceptance or after the end date.
+- Sharing lasts at most a year, and there is one active invitation per person: to change what someone sees, the student revokes and shares again.
+- The student revokes from Privacy, which also closes their consent record. The family member can stop viewing from Semester Family.
+- Every step is written to an append-only log.
+- Semester Family reads only accepted invitations (`fam_live`). Consent records from before 28 Oct no longer give access, so a student must share again.
+
+Evidence:
+- **Database check** `dbchecks/familyInvites.ts`: 23/23. Mutant "any account accepts" fails 8 checks; mutant "expiry ignored" fails F14. Nothing left behind.
+- **Live run 1**, student account inviting the faculty account's email: 14 steps. The old consent records give no access; a duplicate invitation is refused; nothing is visible before acceptance; the student cannot accept; after acceptance the view is exactly Calendar and Holds (Grades and Billing are not shared); the student sees "accepted"; revoking stops access; sharing again works.
+  - It also found a defect: the student could end a share through Semester Family's "stop seeing" action, which left their consent record marked granted.
+  - Fixed: that action now accepts only the family member.
+- **Re-run** after the fix: 9/9. The student is refused on the family path, the family member leaves, the student sees "they stopped viewing", and revoking a pending invitation removes it.
+- **NOT RUN:** an invitee with no account signing in for the first time (needs a new account); browser screenshots.

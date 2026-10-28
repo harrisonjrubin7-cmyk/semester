@@ -9,7 +9,7 @@ import { useWorkspace } from '../lib/workspace';
 import FamilyShare from '../components/FamilyShare';
 import { MyRecordsRights } from '../components/RecordsRights';
 
-type C = { id: string; label: string; type: string; granted: boolean; recipient: string; expiresOn: string | null };
+type C = { id: string; label: string; type: string; granted: boolean; recipient: string; expiresOn: string | null; family?: string | null };
 
 export default function You() {
   const { membership, role } = useWorkspace();
@@ -31,7 +31,7 @@ export default function You() {
           <Panel title="Shares and consents">
             {d.consents.length === 0 ? <Empty>No consents recorded.</Empty> : d.consents.map((c: C) => (
               <div key={c.id} className="flex items-center justify-between gap-3 border-b border-border py-2.5 text-sm last:border-0">
-                <span>{c.label}{c.recipient && ` → ${c.recipient}`}{c.expiresOn && <span className="text-muted-foreground"> · until {fmtDay(c.expiresOn)}</span>}</span>
+                <span>{c.label}{c.recipient && !c.label.includes(' → ') && ` → ${c.recipient}`}{c.expiresOn && <span className="text-muted-foreground"> · until {fmtDay(c.expiresOn)}</span>}{c.family && <span className="text-muted-foreground"> · {({ Pending: 'awaiting their acceptance', Accepted: 'accepted', Declined: 'declined', Revoked: 'revoked', Left: 'they stopped viewing' } as Record<string, string>)[c.family] ?? c.family}</span>}</span>
                 {c.type === 'Terms' ? <span className="text-xs text-muted-foreground">✓ Accepted</span>
                   : c.type === 'AI Training' ? <span className="text-xs text-muted-foreground">Off · locked</span>
                   : c.type === 'Data Sharing' ? (c.granted ? <Button size="sm" variant="ghost" onClick={() => act(() => privacy({ action: 'revoke', id: c.id }), 'Revoked')}>Revoke</Button> : <span className="text-xs text-muted-foreground">Revoked</span>)
