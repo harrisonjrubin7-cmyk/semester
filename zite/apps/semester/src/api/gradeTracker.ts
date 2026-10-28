@@ -4,7 +4,8 @@ import { zite } from 'zitejs/db';
 import { requireAccess, first, forbid } from '../lib/server';
 import { pg } from '../lib/pg';
 import { GTR_MIGRATION } from '../lib/gtrMigration';
-import { STATUSES, DEFAULT_SCALE } from '../lib/gradeCalc';
+import { STATUSES } from '../lib/gradeCalc';
+import { policyFor } from '../lib/gplServer';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
@@ -60,9 +61,11 @@ export default createEndpoint({
     const sById = Object.fromEntries(secs.records.map((s) => [s.id, s]));
     const courseOf = (e: (typeof enr.records)[0]) => cById[first(sById[first(e.section) ?? '']?.course) ?? ''];
     const released = enr.records.filter((e) => e.status === 'Completed' && e.gradeReleased);
+    // The institution's approved grading policy (or the sample policy), the same one transcripts use.
+    const policy = await policyFor(T, a.institutionName);
     let qp = 0, cr = 0;
     const official = released.map((e) => {
-      const c = courseOf(e); const p = DEFAULT_SCALE[e.finalGrade ?? '']; const credits = c?.credits ?? 0;
+      const c = courseOf(e); const p = policy.scale[e.finalGrade ?? '']; const credits = c?.credits ?? 0;
       if (p !== undefined && credits > 0) { qp += p * credits; cr += credits; }
       return { code: c?.code ?? '', title: c?.title ?? '', credits, grade: e.finalGrade ?? '', gpaBearing: p !== undefined, term: sById[first(e.section) ?? '']?.term ?? '' };
     });
@@ -70,7 +73,7 @@ export default createEndpoint({
     return {
       result,
       plans: plans.map((p) => ({ id: Number(p.id), kind: String(p.kind), name: String(p.name), doc: p.doc, version: Number(p.version), updatedAt: iso(p.updated_at) })),
-      official, current, priorExact: { qualityPoints: Math.round(qp * 1000) / 1000, credits: cr }, scale: DEFAULT_SCALE,
+      official, current, priorExact: { qualityPoints: Math.round(qp * 1000) / 1000, credits: cr }, scale: policy.scale, policyLabel: policy.label, policySource: policy.source,
     };
   },
 });

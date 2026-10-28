@@ -5,21 +5,14 @@ import { requireAccess, requireAction, forbid, userNames, tenantScope, ids, firs
 import { pg } from '../lib/pg';
 import { OGR_GRADES } from '../lib/ogrMigration';
 import { ensureOgr, one, propose, isInstructorOfRecord, project, gradebookBasis, transcriptEntries } from '../lib/ogrServer';
-import { buildTranscript, termOrder, policyProblems, DEFAULT_POLICY, type GradingPolicy } from '../lib/transcriptRules';
-import { GPL_MIGRATION } from '../lib/gplMigration';
+import { buildTranscript, termOrder, policyProblems, DEFAULT_POLICY } from '../lib/transcriptRules';
+import { ensureGpl, policyFor } from '../lib/gplServer';
 
-let gplReady: Promise<void> | null = null;
-const ensureGpl = () => { if (!gplReady) gplReady = (async () => { for (const q of GPL_MIGRATION) await pg().query(q); })().catch((e) => { gplReady = null; throw e; }); return gplReady; };
 const GRADE_KEY = z.string().trim().min(1).max(4).regex(/^[A-Z][A-Z+-]{0,3}$/, 'Grades are capital letters, + or -');
 const POLICY = z.object({ scale: z.record(GRADE_KEY, z.number().min(0).max(5)), passing: z.array(GRADE_KEY).max(10), noCredit: z.array(GRADE_KEY).max(10),
-  notAttempted: z.array(GRADE_KEY).max(10), incomplete: z.array(GRADE_KEY).max(10), repeat: z.enum(['latest', 'highest', 'all']) })
+  notAttempted: z.array(GRADE_KEY).max(10), incomplete: z.array(GRADE_KEY).max(10), repeat: z.enum(['latest', 'highest', 'all']),
+  standing: z.object({ minGpa: z.number().min(0).max(5), honorsGpa: z.number().min(0).max(5), honorsCredits: z.number().int().min(0).max(40) }).optional() })
   .refine((p) => Object.keys(p.scale).length >= 2 && Object.keys(p.scale).length <= 30, 'The scale needs 2 to 30 grades');
-/** The institution's approved policy, or the sample policy when none is approved. */
-async function policyFor(T: string, institution: string): Promise<GradingPolicy & { version: number }> {
-  await ensureGpl();
-  const r = ((await pg().query(`SELECT version, policy FROM gpl_policies WHERE tenant_id = $1 AND status = 'Approved'`, [T])) as { version: number; policy: Omit<GradingPolicy, 'label' | 'source'> }[])[0];
-  return r ? { ...r.policy, label: `${institution} grading policy, version ${r.version}`, source: 'institution', version: Number(r.version) } : { ...DEFAULT_POLICY, version: 0 };
-}
 
 // Course grade → released to the student → certified by the instructor of record → posted by the registrar as an
 // append-only official revision (spec §16 first executable increment). Official projection is held in design mode.

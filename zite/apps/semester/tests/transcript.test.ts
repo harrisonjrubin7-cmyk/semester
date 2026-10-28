@@ -64,3 +64,20 @@ test('registrar scale editor round-trips the sample scale and reports bad lines'
   eq(scaleFromText('a = 4\nB+ : 3.3\nB = three\na = 3').problems, ['Line 3: write it as "B+ = 3.3".', 'A is listed twice.']);
   eq(gradeList(' p, s ,,cr '), ['P', 'S', 'CR']);
 });
+const T3 = ['Fall 2026', 'Spring 2027', 'Fall 2027'];
+const termOf = (k: number, id: string, g: string, credits = 12) => e({ enrollmentId: id, grade: g, credits, course: `C ${id}`, term: T3[k], termOrder: termOrder(T3[k]) });
+test('standing: warning on one low term, probation when the cumulative falls below, committee referral on a second low term', () => {
+  const t = buildTranscript([termOf(0, 'a', 'B'), termOf(1, 'b', 'D'), termOf(2, 'c', 'D')]);
+  eq(t.terms.map((x) => [x.gpa, x.cumulativeGpa, x.standing]), [[3, 3, 'Good standing'], [1, 2, 'Academic warning'], [1, 1.66, 'Academic probation']]);
+  const u = buildTranscript([termOf(0, 'a', 'D'), termOf(1, 'b', 'D'), termOf(2, 'c', 'A')]);
+  eq(u.terms.map((x) => x.standing), ['Academic probation', 'Refer to standing committee', 'Good standing']);
+});
+test('honors need the GPA and enough graded credits; a pass/fail-only term leaves standing unchanged', () => {
+  const t = buildTranscript([termOf(0, 'a', 'A'), termOf(1, 'b', 'A', 9), termOf(2, 'c', 'P')]);
+  eq(t.terms.map((x) => [x.honors, x.standing]), [[true, 'Good standing'], [false, 'Good standing'], [false, 'Good standing']]);
+});
+test('standing thresholds come from the policy and are checked', () => {
+  const t = buildTranscript([termOf(0, 'a', 'C')], { ...DEFAULT_POLICY, standing: { minGpa: 2.5, honorsGpa: 3.5, honorsCredits: 12 } });
+  eq(t.terms[0].standing, 'Academic probation');
+  eq(policyProblems({ ...DEFAULT_POLICY, standing: { minGpa: 3, honorsGpa: 2, honorsCredits: 12 } }), ['Standing thresholds are out of range.']);
+});

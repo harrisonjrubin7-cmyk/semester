@@ -10,7 +10,12 @@ export type GradingPolicy = {
   notAttempted: string[];          // neither attempted nor earned (W, AU)
   incomplete: string[];            // attempted, no credit yet, never replaces an earlier grade (I, IP)
   repeat: RepeatRule;              // how a course taken more than once counts
+  standing?: StandingRules;        // optional; DEFAULT_STANDING when absent
 };
+/** Academic standing is computed for the registrar to review; it is never applied as a sanction automatically. */
+export type StandingRules = { minGpa: number; honorsGpa: number; honorsCredits: number };
+export const DEFAULT_STANDING: StandingRules = { minGpa: 2.0, honorsGpa: 3.5, honorsCredits: 12 };
+export type Standing = 'Good standing' | 'Academic warning' | 'Academic probation' | 'Refer to standing committee';
 export const DEFAULT_POLICY: GradingPolicy = {
   label: 'Sample policy: 4.0 scale with plus/minus, latest attempt counts', source: 'sample',
   scale: { 'A+': 4.0, A: 4.0, 'A-': 3.7, 'B+': 3.3, B: 3.0, 'B-': 2.7, 'C+': 2.3, C: 2.0, 'C-': 1.7, 'D+': 1.3, D: 1.0, 'D-': 0.7, F: 0.0 },
@@ -27,12 +32,13 @@ export function policyProblems(p: GradingPolicy): string[] {
   for (const [g, v] of Object.entries(p.scale)) if (!(v >= 0 && v <= 5)) out.push(`${g} must be worth 0 to 5 points.`);
   if (!Object.values(p.scale).some((v) => v === 0)) out.push('The scale needs a failing grade worth 0.');
   if (!['latest', 'highest', 'all'].includes(p.repeat)) out.push('Unknown repeat rule.');
+  if (p.standing) { const s = p.standing; if (!(s.minGpa >= 0 && s.minGpa <= 5) || !(s.honorsGpa >= s.minGpa && s.honorsGpa <= 5) || !(s.honorsCredits >= 0 && s.honorsCredits <= 40)) out.push('Standing thresholds are out of range.'); }
   return out;
 }
 
 export type Entry = { enrollmentId: string; revision: number; grade: string; authority: string; term: string; termOrder: number; course: string; title: string; credits: number };
 export type Row = { course: string; title: string; credits: number; grade: string; earned: number; inGpa: boolean; points: number | null; revision: number; corrected: boolean; repeat: 'counted' | 'excluded' | null };
-export type Term = { term: string; rows: Row[]; attempted: number; earned: number; gpaCredits: number; qualityPoints: number; gpa: number | null };
+export type Term = { term: string; rows: Row[]; attempted: number; earned: number; gpaCredits: number; qualityPoints: number; gpa: number | null; cumulativeGpa: number | null; standing: Standing | null; honors: boolean };
 export type Transcript = { terms: Term[]; attempted: number; earned: number; gpaCredits: number; qualityPoints: number; gpa: number | null; official: boolean; scale: 'default' | 'institution'; policy: { label: string; repeat: RepeatRule } };
 
 const round = (n: number, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
@@ -71,8 +77,20 @@ export function buildTranscript(entries: Entry[], policy: GradingPolicy = DEFAUL
     const attempted = rows.filter((r) => !policy.notAttempted.includes(r.grade)).reduce((n, r) => n + r.credits, 0);
     const gpaCredits = rows.filter((r) => r.inGpa).reduce((n, r) => n + r.credits, 0);
     const qualityPoints = round(rows.reduce((n, r) => n + (r.points ?? 0), 0), 3);
-    return { term, rows, attempted, earned: rows.reduce((n, r) => n + r.earned, 0), gpaCredits, qualityPoints, gpa: gpaOf(qualityPoints, gpaCredits) };
+    return { term, rows, attempted, earned: rows.reduce((n, r) => n + r.earned, 0), gpaCredits, qualityPoints, gpa: gpaOf(qualityPoints, gpaCredits), cumulativeGpa: null as number | null, standing: null as Standing | null, honors: false };
   });
+  // Standing after each term from the cumulative GPA through that term. A term with no graded credit leaves standing unchanged.
+  // Note: an earlier attempt excluded by a later repeat is excluded here too (the record as it stands today).
+  const st = { ...DEFAULT_STANDING, ...(policy.standing ?? {}) };
+  let cqp = 0, ccr = 0, prev: Standing | null = null;
+  for (const t of terms) {
+    cqp += t.qualityPoints; ccr += t.gpaCredits; t.cumulativeGpa = gpaOf(round(cqp, 3), ccr);
+    if (t.gpa === null || t.cumulativeGpa === null) { t.standing = prev; continue; }
+    const lowCum = t.cumulativeGpa < st.minGpa, lowTerm = t.gpa < st.minGpa;
+    t.standing = lowCum ? ((prev === 'Academic probation' || prev === 'Refer to standing committee') && lowTerm ? 'Refer to standing committee' : 'Academic probation') : lowTerm ? 'Academic warning' : 'Good standing';
+    t.honors = t.gpaCredits >= st.honorsCredits && t.gpa >= st.honorsGpa;
+    prev = t.standing;
+  }
   const sum = (k: 'attempted' | 'earned' | 'gpaCredits' | 'qualityPoints') => round(terms.reduce((n, t) => n + t[k], 0), 3);
   const all = [...latest.values()];
   return { terms, attempted: sum('attempted'), earned: sum('earned'), gpaCredits: sum('gpaCredits'), qualityPoints: sum('qualityPoints'), gpa: gpaOf(sum('qualityPoints'), sum('gpaCredits')),

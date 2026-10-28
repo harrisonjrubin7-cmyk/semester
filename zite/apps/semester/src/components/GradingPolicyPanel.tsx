@@ -5,7 +5,7 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
 import { Panel, Empty, useLoad, Status, fmt, errMsg } from './kit';
-import { policyProblems, scaleFromText, scaleToText, gradeList, type RepeatRule } from '../lib/transcriptRules';
+import { policyProblems, scaleFromText, scaleToText, gradeList, DEFAULT_STANDING, type RepeatRule } from '../lib/transcriptRules';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const REPEAT: Record<RepeatRule, string> = { latest: 'The latest completed attempt counts', highest: 'The highest grade counts', all: 'Every attempt counts' };
@@ -14,13 +14,13 @@ const denied = (e: string | null) => !!e && /access|role|allow|registrar|Only/i.
 /** Registrar: the institution's grading policy. One registrar proposes; a different registrar approves before transcripts use it. */
 export default function GradingPolicyPanel() {
   const s = useLoad(() => api({ action: 'policy' } as never) as Promise<any>, []);
-  const [edit, setEdit] = useState<{ scale: string; passing: string; noCredit: string; notAttempted: string; incomplete: string; repeat: RepeatRule; note: string } | null>(null);
+  const [edit, setEdit] = useState<{ scale: string; passing: string; noCredit: string; notAttempted: string; incomplete: string; repeat: RepeatRule; note: string; minGpa: string; honorsGpa: string; honorsCredits: string } | null>(null);
   const [why, setWhy] = useState('');
   const [busy, setBusy] = useState(false);
   const draft = useMemo(() => {
     if (!edit) return null;
     const { scale, problems } = scaleFromText(edit.scale);
-    const policy = { scale, passing: gradeList(edit.passing), noCredit: gradeList(edit.noCredit), notAttempted: gradeList(edit.notAttempted), incomplete: gradeList(edit.incomplete), repeat: edit.repeat };
+    const policy = { scale, passing: gradeList(edit.passing), noCredit: gradeList(edit.noCredit), notAttempted: gradeList(edit.notAttempted), incomplete: gradeList(edit.incomplete), repeat: edit.repeat, standing: { minGpa: Number(edit.minGpa), honorsGpa: Number(edit.honorsGpa), honorsCredits: Number(edit.honorsCredits) } };
     return { policy, problems: [...problems, ...policyProblems({ ...policy, label: '', source: 'institution' })] };
   }, [edit]);
   const run = async (body: object, ok: string) => { setBusy(true); try { await api(body as never); toast(ok); setEdit(null); setWhy(''); s.reload(); } catch (e) { toast(`! ${errMsg(e)}`); } finally { setBusy(false); } };
@@ -28,7 +28,7 @@ export default function GradingPolicyPanel() {
   if (s.error) return denied(s.error) ? null : <Panel title="Grading policy"><p className="text-sm">! {s.error}</p></Panel>;
   if (!s.data) return null;
   const d: any = s.data; const cur = d.current; const pending = d.history.find((h: any) => h.status === 'Proposed');
-  const open = (p: any) => setEdit({ scale: scaleToText(p.scale), passing: p.passing.join(', '), noCredit: p.noCredit.join(', '), notAttempted: p.notAttempted.join(', '), incomplete: p.incomplete.join(', '), repeat: p.repeat, note: '' });
+  const open = (p: any) => setEdit({ scale: scaleToText(p.scale), passing: p.passing.join(', '), noCredit: p.noCredit.join(', '), notAttempted: p.notAttempted.join(', '), incomplete: p.incomplete.join(', '), repeat: p.repeat, note: '', minGpa: String((p.standing ?? DEFAULT_STANDING).minGpa), honorsGpa: String((p.standing ?? DEFAULT_STANDING).honorsGpa), honorsCredits: String((p.standing ?? DEFAULT_STANDING).honorsCredits) });
   return (
     <Panel title="Grading policy" action={<Status value={cur.source === 'institution' ? `Version ${cur.version} in force` : 'Sample policy in force'} />}>
       <p className="text-xs text-muted-foreground">Transcripts and GPA use this policy. A change takes effect only after a second registrar approves it; every version is kept.</p>
@@ -36,7 +36,7 @@ export default function GradingPolicyPanel() {
         <div><p className="font-medium">{cur.label}</p>
           <p className="text-xs">{Object.entries(cur.scale).map(([g, v]: any) => `${g} ${Number(v).toFixed(1)}`).join(' · ')}</p></div>
         <ul className="text-xs"><li>Credit outside GPA: {cur.passing.join(', ') || 'none'}</li><li>No credit: {cur.noCredit.join(', ') || 'none'}</li>
-          <li>Not attempted: {cur.notAttempted.join(', ') || 'none'}</li><li>Incomplete: {cur.incomplete.join(', ') || 'none'}</li><li>Repeats: {REPEAT[cur.repeat as RepeatRule]}</li></ul>
+          <li>Not attempted: {cur.notAttempted.join(', ') || 'none'}</li><li>Incomplete: {cur.incomplete.join(', ') || 'none'}</li><li>Repeats: {REPEAT[cur.repeat as RepeatRule]}</li><li>Good standing from GPA {(cur.standing ?? DEFAULT_STANDING).minGpa.toFixed(2)} · Dean’s list at {(cur.standing ?? DEFAULT_STANDING).honorsGpa.toFixed(2)} with {(cur.standing ?? DEFAULT_STANDING).honorsCredits} graded credits</li></ul>
       </div>
 
       {pending ? (
@@ -63,6 +63,11 @@ export default function GradingPolicyPanel() {
           <label className="text-xs sm:col-span-2">Repeated courses
             <select className="mt-1 block w-full rounded-md border border-input bg-background p-2 text-sm" value={edit.repeat} onChange={(e) => setEdit({ ...edit, repeat: e.target.value as RepeatRule })}>
               {(Object.keys(REPEAT) as RepeatRule[]).map((k) => <option key={k} value={k}>{REPEAT[k]}</option>)}</select></label>
+          <div className="grid grid-cols-3 gap-2 sm:col-span-2">
+            <label className="text-xs">Good standing from GPA<Input inputMode="decimal" value={edit.minGpa} onChange={(e) => setEdit({ ...edit, minGpa: e.target.value })} /></label>
+            <label className="text-xs">Dean’s list GPA<Input inputMode="decimal" value={edit.honorsGpa} onChange={(e) => setEdit({ ...edit, honorsGpa: e.target.value })} /></label>
+            <label className="text-xs">Dean’s list credits<Input inputMode="numeric" value={edit.honorsCredits} onChange={(e) => setEdit({ ...edit, honorsCredits: e.target.value })} /></label>
+          </div>
           <Input className="sm:col-span-2" aria-label="Source of this policy" placeholder="Based on (for example: 2026–27 catalog, Academic Regulations §4.2)" value={edit.note} onChange={(e) => setEdit({ ...edit, note: e.target.value })} />
           <div id="gp-problems" role="status" aria-live="polite" className="sm:col-span-2">{draft!.problems.length > 0 && <ul className="text-xs">{draft!.problems.map((p, i) => <li key={i}>! {p}</li>)}</ul>}</div>
           <div className="flex gap-2 sm:col-span-2"><Button size="sm" disabled={busy || draft!.problems.length > 0 || edit.note.trim().length < 10} onClick={() => run({ action: 'proposePolicy', policy: draft!.policy, note: edit.note, expectedVersion: cur.version }, 'Proposed. Another registrar must approve it.')}>Propose for approval</Button>

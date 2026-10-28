@@ -116,6 +116,7 @@ function Gpa({ d, reload }: { d: any; reload: () => void }) {
   return (
     <Panel title="GPA simulator">
       <p className="text-xs font-medium">Planning estimate — not an official transcript calculation.</p>
+      {d.policyLabel && <p className="text-xs text-muted-foreground">Grade points from {d.policyLabel}{d.policySource === 'sample' ? ' (your institution has not approved its own policy yet)' : ''}. Repeat rules are not applied to estimates.</p>}
       <div className="mt-2 grid gap-2 sm:grid-cols-3">
         <div className="rounded-md border border-border p-3"><p className="text-xs text-muted-foreground">Term GPA</p><p className="text-2xl tabular-nums">{r.term ?? '—'}</p></div>
         <div className="rounded-md border border-border p-3"><p className="text-xs text-muted-foreground">Projected cumulative{r.approximate ? ' (approximate)' : ''}</p><p className="text-2xl tabular-nums">{r.cumulative ?? '—'}</p></div>
