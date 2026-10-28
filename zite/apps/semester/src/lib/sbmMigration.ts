@@ -4,10 +4,13 @@
 // date — all in one transaction. The same request key replays the same receipt; a reused key with a different manifest
 // is refused. Receipts are append-only. p_is_owner is computed by the server (the student owns this draft).
 import { ASG_MIGRATION } from './asgMigration';
+import { GRP_MIGRATION } from './grpMigration';
 
 export const SBM_MIGRATION: string[] = [
   // Assignment versions first: a receipt records the version it was submitted against (28 Oct).
   ...ASG_MIGRATION,
+  // Course groups: a group assignment's receipt names the group (28 Oct).
+  ...GRP_MIGRATION,
   `CREATE TABLE IF NOT EXISTS sbm_receipts (id bigserial PRIMARY KEY, tenant_id text NOT NULL, submission_id text NOT NULL, task_id text NOT NULL,
      section_id text NOT NULL, student_id text NOT NULL, files jsonb NOT NULL CHECK (jsonb_typeof(files) = 'array'), manifest_sha256 text NOT NULL,
      due_at timestamptz, submitted_at timestamptz NOT NULL DEFAULT now(), late boolean NOT NULL, late_seconds int NOT NULL DEFAULT 0 CHECK (late_seconds >= 0),
@@ -69,17 +72,32 @@ export const SBM_MIGRATION: string[] = [
   // Attempts (28 Oct): the published assignment version says how many; each receipt is numbered.
   `ALTER TABLE sbm_receipts ADD COLUMN IF NOT EXISTS attempt int NOT NULL DEFAULT 1 CHECK (attempt >= 1)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS sbm_one_receipt_per_attempt ON sbm_receipts (tenant_id, task_id, student_id, attempt)`,
+  // Group receipts (28 Oct): one receipt per group attempt, with the members frozen at the moment of submission. A later
+  // change of group membership never changes who a submitted piece of work belongs to.
+  `CREATE TABLE IF NOT EXISTS sbm_group_receipts (receipt_id bigint PRIMARY KEY REFERENCES sbm_receipts(id), tenant_id text NOT NULL, asg_id bigint NOT NULL,
+     set_id bigint NOT NULL, group_id bigint NOT NULL, members text[] NOT NULL CHECK (cardinality(members) >= 1), submitted_by text NOT NULL,
+     CHECK (submitted_by = ANY(members)))`,
+  `CREATE INDEX IF NOT EXISTS sbm_group_receipts_group ON sbm_group_receipts (tenant_id, asg_id, group_id)`,
+  `DROP TRIGGER IF EXISTS sbm_group_receipts_append_only ON sbm_group_receipts`,
+  `CREATE TRIGGER sbm_group_receipts_append_only BEFORE UPDATE OR DELETE ON sbm_group_receipts FOR EACH ROW EXECUTE FUNCTION sbm_refuse_change()`,
   // Attempts used and allowed for one student on one task (allowed comes from the current published version; default 1).
   `CREATE OR REPLACE FUNCTION sbm_attempts(p_tenant text, p_task text, p_student text, OUT used int, OUT allowed int) LANGUAGE plpgsql STABLE AS $$
+   DECLARE v_asg bigint; v_gs bigint; v_grp bigint;
    BEGIN
-     SELECT count(*)::int INTO used FROM sbm_receipts WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_student;
-     SELECT greatest(1, least(10, coalesce((v.content->>'attemptsAllowed')::int, 1))) INTO allowed
+     SELECT greatest(1, least(10, coalesce((v.content->>'attemptsAllowed')::int, 1))), a.id, nullif(v.content->>'groupSetId', '')::bigint INTO allowed, v_asg, v_gs
        FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
        WHERE l.task_id = p_task;
      allowed := coalesce(allowed, 1);
+     IF v_gs IS NOT NULL THEN SELECT group_id INTO v_grp FROM grp_members WHERE set_id = v_gs AND student_id = p_student; END IF;
+     IF v_grp IS NOT NULL THEN
+       -- Group work: attempts belong to the group, whoever submitted them.
+       SELECT count(*)::int INTO used FROM sbm_group_receipts WHERE tenant_id = p_tenant AND asg_id = v_asg AND group_id = v_grp;
+     ELSE
+       SELECT count(*)::int INTO used FROM sbm_receipts WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_student;
+     END IF;
    END $$`,
   `CREATE OR REPLACE FUNCTION sbm_submit(p_actor text, p_tenant text, p_submission text, p_task text, p_section text, p_is_owner boolean, p_due timestamptz, p_idem text) RETURNS text LANGUAGE plpgsql AS $$
-   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text; v_asg bigint; v_ver int; v_sha text; v_used int; v_allowed int;
+   DECLARE f jsonb; h text; prior sbm_receipts%ROWTYPE; code text; late_s int; v_due timestamptz; v_src text; bad text; v_asg bigint; v_ver int; v_sha text; v_used int; v_allowed int; v_gs bigint; v_grp bigint; v_rid bigint;
    BEGIN
      IF NOT coalesce(p_is_owner, false) THEN RETURN 'You can only submit your own draft.'; END IF;
      IF length(coalesce(p_idem,'')) < 8 THEN RETURN 'Missing request key.'; END IF;
@@ -95,6 +113,15 @@ export const SBM_MIGRATION: string[] = [
      END IF;
      IF EXISTS (SELECT 1 FROM sbm_receipts WHERE tenant_id = p_tenant AND submission_id = p_submission) THEN RETURN 'This work was already submitted.'; END IF;
      IF jsonb_array_length(f) = 0 THEN RETURN 'Attach your work before submitting.'; END IF;
+     SELECT l.assignment_id, a.current_version, v.content_sha256, nullif(v.content->>'groupSetId', '')::bigint INTO v_asg, v_ver, v_sha, v_gs
+       FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
+       WHERE l.task_id = p_task;
+     IF v_gs IS NOT NULL THEN
+       SELECT group_id INTO v_grp FROM grp_members WHERE set_id = v_gs AND student_id = p_actor;
+       IF v_grp IS NULL THEN RETURN 'This is group work. Join a group in its group set before submitting.'; END IF;
+       -- Serialise the whole group's attempts on this assignment.
+       PERFORM pg_advisory_xact_lock(hashtext(p_tenant || '|asg:' || v_asg || '|grp:' || v_grp));
+     END IF;
      -- Serialise this student's attempts on this task, then check the allowance.
      PERFORM pg_advisory_xact_lock(hashtext(p_tenant || '|' || p_task || '|' || p_actor));
      SELECT a.used, a.allowed INTO v_used, v_allowed FROM sbm_attempts(p_tenant, p_task, p_actor) a;
@@ -102,15 +129,19 @@ export const SBM_MIGRATION: string[] = [
      SELECT x.name INTO bad FROM fil_attachments a JOIN fil_files x ON x.id = a.file_id WHERE a.tenant_id = p_tenant AND a.kind = 'submission' AND a.ref_id = p_submission AND x.scan_status <> 'clean' LIMIT 1;
      IF bad IS NOT NULL THEN RETURN 'The file "' || bad || '" has not passed the safety check, so the work cannot be submitted. Remove it or upload a clean copy.'; END IF;
      SELECT new_due, 'extension:' || kind INTO v_due, v_src FROM dln_extensions WHERE tenant_id = p_tenant AND task_id = p_task AND student_id = p_actor AND revoked_at IS NULL;
+     -- Group work keeps the assignment's due date: one member's individual extension does not move the group's (owner decision pending).
+     IF v_grp IS NOT NULL THEN v_due := NULL; END IF;
      IF v_due IS NULL THEN v_due := p_due; v_src := 'assignment'; END IF;
      late_s := CASE WHEN v_due IS NOT NULL AND now() > v_due THEN greatest(1, ceil(extract(epoch FROM now() - v_due))::int) ELSE 0 END;
      code := upper(substr(encode(sha256(convert_to(p_tenant || p_submission || h || clock_timestamp()::text, 'UTF8')), 'hex'), 1, 10));
      UPDATE fil_attachments SET locked = true WHERE tenant_id = p_tenant AND kind = 'submission' AND ref_id = p_submission AND NOT locked;
-     SELECT l.assignment_id, a.current_version, v.content_sha256 INTO v_asg, v_ver, v_sha
-       FROM asg_task_links l JOIN asg_assignments a ON a.id = l.assignment_id JOIN asg_versions v ON v.assignment_id = a.id AND v.version = a.current_version
-       WHERE l.task_id = p_task;
      INSERT INTO sbm_receipts (tenant_id, submission_id, task_id, section_id, student_id, files, manifest_sha256, due_at, late, late_seconds, receipt_code, idem_key, due_source, asg_id, asg_version, asg_sha256, attempt)
-       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha, v_used + 1);
+       VALUES (p_tenant, p_submission, p_task, p_section, p_actor, f, h, v_due, late_s > 0, late_s, code, p_idem, v_src, v_asg, v_ver, v_sha, v_used + 1)
+       RETURNING id INTO v_rid;
+     IF v_grp IS NOT NULL THEN
+       INSERT INTO sbm_group_receipts (receipt_id, tenant_id, asg_id, set_id, group_id, members, submitted_by)
+         SELECT v_rid, p_tenant, v_asg, v_gs, v_grp, array_agg(student_id ORDER BY student_id), p_actor FROM grp_members WHERE group_id = v_grp;
+     END IF;
      RETURN 'ok:' || code;
    END $$`,
 ];

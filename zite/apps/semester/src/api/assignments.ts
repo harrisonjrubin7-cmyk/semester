@@ -12,7 +12,7 @@ let ready: Promise<void> | null = null;
 const ensure = () => { if (!ready) ready = (async () => { await ensureFil(); for (const q of SBM_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const one = async (q: string, p: unknown[]) => String(((await pg().query(q, p)) as { r: string | null }[])[0]?.r ?? '');
 const DRAFT = z.object({ title: z.string().max(200), instructions: z.string().max(20000), dueAt: z.string().max(40), points: z.number().min(0).max(1000),
-  rubric: z.string().max(8000), attemptsAllowed: z.number().int().min(1).max(10), aiPolicy: z.enum(AI_POLICIES) });
+  rubric: z.string().max(8000), attemptsAllowed: z.number().int().min(1).max(10), aiPolicy: z.enum(AI_POLICIES), groupSetId: z.number().int().positive().nullable().optional() });
 
 // Assignment versions (S-80 §6, S-82 §8B). Drafts belong to the instructor of record and are never shown to students;
 // publishing freezes an exact version; students only ever see the current published version; receipts keep the version
@@ -76,6 +76,16 @@ export default createEndpoint({
     // publish: freeze the stored draft (never the browser's copy), then give it to every enrolled student.
     const problems = publishProblems(draft);
     const what = changes(cur ?? null, draft);
+    // Group work: the set must be one of this section's own group sets, and individual ↔ group cannot change once work was
+    // submitted (attempts and receipts would no longer mean the same thing).
+    if (draft.groupSetId != null) {
+      const own = (await pg().query(`SELECT 1 FROM grp_sets WHERE id = $1 AND tenant_id = $2 AND section_id = $3`, [draft.groupSetId, T, s!.id])) as Row[];
+      if (!own.length) forbid('That group set is not in this section.');
+    }
+    if (cur && ((cur as AssignmentDraft).groupSetId ?? null) !== (draft.groupSetId ?? null)) {
+      const n = (await pg().query(`SELECT 1 FROM sbm_receipts WHERE asg_id = $1 LIMIT 1`, [input.id])) as Row[];
+      if (n.length) forbid('Work has already been submitted, so this assignment cannot switch between individual and group work. Create a new assignment instead.');
+    }
     const r = await one(`SELECT asg_publish($1,$2,$3,$4,$5,$6,$7,$8) AS r`, [me, T, input.id, true, input.expectedDraftVersion, problems.length === 0, what, input.note]);
     if (!r.startsWith('ok:')) forbid(problems.length ? problems.join(' ') : r);
     const v = Number(r.split(':')[1]);

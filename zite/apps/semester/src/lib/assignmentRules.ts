@@ -1,12 +1,13 @@
 // Assignment versions (S-80 §6 LMS test 2, S-82 §8B): a draft is invisible to students; publishing freezes an exact,
 // numbered version; a revision is a new version and never rewrites what was assigned or submitted. Pure; the database
 // re-checks the same rules (lib/asgMigration.ts). Tested in tests/assignmentRules.test.ts.
-export type AssignmentDraft = { title: string; instructions: string; dueAt: string; points: number; rubric: string; attemptsAllowed: number; aiPolicy: string };
-export const FIELDS: (keyof AssignmentDraft)[] = ['title', 'instructions', 'dueAt', 'points', 'rubric', 'attemptsAllowed', 'aiPolicy'];
+export type AssignmentDraft = { title: string; instructions: string; dueAt: string; points: number; rubric: string; attemptsAllowed: number; aiPolicy: string;
+  /** Course group set for group work (grp_sets.id); absent or null for individual work. */ groupSetId?: number | null };
+export const FIELDS: (keyof AssignmentDraft)[] = ['title', 'instructions', 'dueAt', 'points', 'rubric', 'attemptsAllowed', 'aiPolicy', 'groupSetId'];
 export const AI_POLICIES = ['Course policy', 'Allowed', 'Outlining only', 'Not allowed'] as const;
-const LABEL: Record<keyof AssignmentDraft, string> = { title: 'Title', instructions: 'Instructions', dueAt: 'Due date', points: 'Points', rubric: 'Rubric', attemptsAllowed: 'Attempts allowed', aiPolicy: 'AI use' };
+const LABEL: Record<keyof AssignmentDraft, string> = { title: 'Title', instructions: 'Instructions', dueAt: 'Due date', points: 'Points', rubric: 'Rubric', attemptsAllowed: 'Attempts allowed', aiPolicy: 'AI use', groupSetId: 'Group work' };
 
-export const emptyDraft = (): AssignmentDraft => ({ title: '', instructions: '', dueAt: '', points: 100, rubric: '', attemptsAllowed: 1, aiPolicy: 'Course policy' });
+export const emptyDraft = (): AssignmentDraft => ({ title: '', instructions: '', dueAt: '', points: 100, rubric: '', attemptsAllowed: 1, aiPolicy: 'Course policy', groupSetId: null });
 
 /** Problems that stop a draft from being published (a draft may be saved with problems). */
 export function publishProblems(d: AssignmentDraft, now = new Date()): string[] {
@@ -20,13 +21,16 @@ export function publishProblems(d: AssignmentDraft, now = new Date()): string[] 
   if (d.instructions.length > 20000) out.push('Instructions can be up to 20,000 characters.');
   if (d.rubric.length > 8000) out.push('The rubric can be up to 8,000 characters.');
   if (!(AI_POLICIES as readonly string[]).includes(d.aiPolicy)) out.push('Choose an AI-use rule.');
+  if (d.groupSetId != null && !(Number.isInteger(d.groupSetId) && d.groupSetId > 0)) out.push('Choose a group set for group work.');
   return out;
 }
 
 /** What changed between two versions, in words, for the change notice and history. */
 export function changes(a: AssignmentDraft | null, b: AssignmentDraft): string[] {
   if (!a) return ['First published'];
-  return FIELDS.filter((f) => (f === 'dueAt' ? new Date(a.dueAt).getTime() !== new Date(b.dueAt).getTime() : a[f] !== b[f])).map((f) =>
+  const grp = (x: AssignmentDraft) => x.groupSetId ?? null;
+  return FIELDS.filter((f) => (f === 'dueAt' ? new Date(a.dueAt).getTime() !== new Date(b.dueAt).getTime() : f === 'groupSetId' ? grp(a) !== grp(b) : a[f] !== b[f])).map((f) =>
+    f === 'groupSetId' ? `Group work: ${grp(a) == null ? 'individual' : 'group set ' + grp(a)} → ${grp(b) == null ? 'individual' : 'group set ' + grp(b)}` :
     f === 'dueAt' ? `Due date: ${new Date(a.dueAt).toISOString().slice(0, 16)} → ${new Date(b.dueAt).toISOString().slice(0, 16)}` :
     f === 'points' || f === 'attemptsAllowed' || f === 'aiPolicy' ? `${LABEL[f]}: ${a[f]} → ${b[f]}` : `${LABEL[f]} changed`);
 }

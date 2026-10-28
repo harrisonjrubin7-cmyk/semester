@@ -21,6 +21,13 @@ const ensureCrs = () => {
   return crsReady;
 };
 
+// Group work (28 Oct): the members frozen on a submission's group receipt, or null for individual work.
+const groupOf = async (tenant: string, submissionIds: string[]) => {
+  if (!submissionIds.length) return [] as { submission_id: string; members: string[]; group_name: string; submitted_by: string }[];
+  return (await pg().query(`SELECT s.submission_id, gr.members, gr.submitted_by, g.name AS group_name FROM sbm_group_receipts gr JOIN sbm_receipts s ON s.id = gr.receipt_id
+    JOIN grp_groups g ON g.id = gr.group_id WHERE s.tenant_id = $1 AND s.submission_id = ANY($2)`, [tenant, submissionIds])) as { submission_id: string; members: string[]; group_name: string; submitted_by: string }[];
+};
+
 export default createEndpoint({
   description: 'Course spaces: sections, assignments, private drafts, submissions, grading and release',
   authenticated: true,
@@ -117,7 +124,13 @@ export default createEndpoint({
       // Dedupe assignments by title for the faculty view (sample assignments are per-student)
       const assignments = [...new Map(visibleTasks.map((t) => [grader ? t.title : t.id, t])).values()];
       const subs = (await zite.submissions.findAll({ limit: 2000 })).records.filter((x) => tasks.some((t) => t.id === first(x.task)));
-      const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid));
+      await ensureSbm();
+      const sectionReceipts = tasks.length ? (await pg().query(`SELECT s.submission_id, l.task_id AS my_task FROM sbm_group_receipts gr JOIN sbm_receipts s ON s.id = gr.receipt_id
+        LEFT JOIN asg_task_links l ON l.assignment_id = gr.asg_id AND l.student_id = $3
+        WHERE s.tenant_id = $1 AND s.section_id = $2 AND $3 = ANY(gr.members)`, [a.institutionId, s.id, uid])) as { submission_id: string; my_task: string | null }[] : [];
+      const groupIds = new Set(sectionReceipts.map((r) => r.submission_id));
+      const visibleSubs = subs.filter((x) => grader ? x.state !== 'Private Draft' : ids(x.student).includes(uid) || groupIds.has(x.id));
+      const groups = await groupOf(a.institutionId, visibleSubs.map((x) => x.id));
       const attached = await attachmentsFor(a.institutionId, 'submission', visibleSubs.map((x) => x.id));
       await ensureSbm();
       const receipts = visibleSubs.length ? ((await pg().query(`SELECT submission_id, receipt_code, submitted_at, due_at, due_source, late, late_seconds, files, attempt FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = ANY($2)`, [a.institutionId, visibleSubs.map((x) => x.id)])) as Record<string, unknown>[]) : [];
@@ -135,7 +148,10 @@ export default createEndpoint({
         assignments: assignments.map((t) => ({ id: t.id, attempts: grader ? null : attempts[t.id] ?? null, title: t.title ?? '', dueAt: t.dueAt ?? null, extendedTo: (() => { const e = myExt.find((x) => x.task_id === t.id); return e ? { dueAt: new Date(String(e.new_due)).toISOString(), kind: String(e.kind) } : null; })(), points: t.points ?? null, rubric: t.rubric ?? '', source: t.source ?? 'Official' })),
         submissions: visibleSubs.map((x) => {
           const t = tasks.find((tt) => tt.id === first(x.task));
-          return { id: x.id, receipt: receiptOf(x.id), taskId: first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
+          const gw = groups.find((g) => g.submission_id === x.id);
+          // A teammate's group submission is shown on the viewer's own copy of the assignment.
+          const myTask = !grader && gw && !ids(x.student).includes(uid) ? sectionReceipts.find((r) => r.submission_id === x.id)?.my_task ?? null : null;
+          return { id: x.id, group: gw ? { name: gw.group_name, members: gw.members.length, byYou: gw.submitted_by === uid, mine: !ids(x.student).includes(uid) } : null, receipt: receiptOf(x.id), taskId: myTask ?? first(x.task) ?? '', taskTitle: t?.title ?? '', student: names[first(x.student) ?? ''] ?? 'You', state: x.state ?? 'Private Draft', score: x.score ?? null, feedback: (grader || x.state === 'Released') ? x.feedback ?? '' : '', files: (x.files ?? []).map((f) => ({ name: f.originalName || f.filename, url: f.url })), attachments: (attached[x.id] ?? []).map((f) => ({ fileId: f.fileId, name: f.name, size: f.size, scan: f.scan, scanReason: f.scanReason })) };
         }).map((x) => grader ? x : { ...x, score: x.state === 'Released' ? x.score : null }),
         materials: resources.map((r) => { const [first_, ...rest] = (r.body ?? '').split('\n'); const url = /^https:\/\//.test(first_ ?? '') ? first_ : null;
           return { id: r.id, title: r.title ?? '', kind: r.kind ?? 'Material', source: r.source ?? 'Yours', url, note: url ? rest.join(' ') : '', course: r.visibility === 'Course' }; }),
@@ -151,10 +167,10 @@ export default createEndpoint({
       const existing = mineForTask.find((x) => x.state === 'Private Draft');
       // A new attempt opens only while the published assignment allows more (sbm_submit enforces it again on submit).
       let attemptNo = 1;
-      if (!existing && mineForTask.length) {
+      if (!existing) {
         await ensureSbm();
         const at = ((await pg().query(`SELECT used, allowed FROM sbm_attempts($1,$2,$3)`, [a.institutionId, t!.id, uid])) as { used: number; allowed: number }[])[0];
-        if (at.used >= at.allowed) forbid(at.allowed === 1 ? 'This work was already submitted.' : `You have used all ${at.allowed} attempts for this assignment.`);
+        if (at.used >= at.allowed && (mineForTask.length || at.used > 0)) forbid(at.allowed === 1 ? 'This work was already submitted.' : `You have used all ${at.allowed} attempts for this assignment.`);
         attemptNo = at.used + 1;
       }
       // Files come from the private store (decision D2): the student uploads to You -> Files storage, then attaches here.
@@ -178,7 +194,8 @@ export default createEndpoint({
       // Who may see this work: the student, or the instructor of its section once it is submitted.
       const x = await zite.submissions.findOne({ id: input.submissionId });
       if (!x) forbid('You do not have access to this file.');
-      const own = ids(x!.student).includes(uid);
+      await ensureSbm();
+      const own = ids(x!.student).includes(uid) || (x!.state !== 'Private Draft' && (await groupOf(a.institutionId, [x!.id])).some((g) => g.members.includes(uid)));
       if (!own) {
         const t = await zite.tasks.findOne({ id: first(x!.task) ?? '' });
         const s2 = t ? await zite.sections.findOne({ id: first(t.section) ?? '' }) : null;
@@ -221,7 +238,9 @@ export default createEndpoint({
       const studentIds = [...new Set(tasks.flatMap((t) => ids(t.owner)))];
       const names = await userNames(studentIds);
       const ext = (await pg().query(`SELECT id, task_id, student_id, new_due, original_due, kind, acc_request_id, note, granted_at FROM dln_extensions WHERE tenant_id = $1 AND section_id = $2 AND revoked_at IS NULL`, [T, s.id])) as Record<string, unknown>[];
-      const subd = (await pg().query(`SELECT task_id, student_id FROM sbm_receipts WHERE tenant_id = $1 AND section_id = $2`, [T, s.id])) as Record<string, unknown>[];
+      const subd = (await pg().query(`SELECT task_id, student_id FROM sbm_receipts WHERE tenant_id = $1 AND section_id = $2
+        UNION SELECT l.task_id, m AS student_id FROM sbm_group_receipts gr JOIN sbm_receipts r ON r.id = gr.receipt_id CROSS JOIN unnest(gr.members) m
+          JOIN asg_task_links l ON l.assignment_id = gr.asg_id AND l.student_id = m WHERE r.tenant_id = $1 AND r.section_id = $2`, [T, s.id])) as Record<string, unknown>[];
       const letters = (await pg().query(`SELECT request_id, student_id, arrangements, valid_until FROM acc_instructor_letters($1, $2)`, [T, [s.id]])) as Record<string, unknown>[];
       const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
       return {
@@ -249,6 +268,14 @@ export default createEndpoint({
       // Project into Zite (idempotent; a replay repairs a projection that failed after the receipt was issued).
       if (x!.state === 'Private Draft') await zite.submissions.update({ id: x!.id, record: { state: 'Submitted' } as never });
       if (task && task.status !== 'Done') await zite.tasks.update({ id: task.id, record: { status: 'Done' } as never });
+      // Group work: every frozen member's own task for this assignment is done too (idempotent projection).
+      const gw = (await groupOf(a.institutionId, [x!.id]))[0];
+      if (gw) {
+        const links = (await pg().query(`SELECT l.task_id FROM asg_task_links l JOIN sbm_receipts s ON s.asg_id = l.assignment_id WHERE s.tenant_id = $1 AND s.submission_id = $2 AND l.student_id = ANY($3)`,
+          [a.institutionId, x!.id, gw.members])) as { task_id: string }[];
+        for (const l of links) { const mt = await zite.tasks.findOne({ id: l.task_id }); if (mt && mt.status !== 'Done') await zite.tasks.update({ id: mt.id, record: { status: 'Done' } as never }); }
+        if (!replay) await audit(a, 'Group work submitted', `submission:${x!.id}`, `${gw.group_name}: ${gw.members.length} members, receipt ${code}`, 'Student');
+      }
       if (!replay) await audit(a, 'Work submitted', `submission:${x!.id}`, `receipt ${code}`, 'Student');
       const rc = ((await pg().query(`SELECT receipt_code, submitted_at, due_at, due_source, late, late_seconds, files FROM sbm_receipts WHERE tenant_id = $1 AND submission_id = $2`, [a.institutionId, x!.id])) as Record<string, unknown>[])[0];
       return { ok: true, replay: !!replay, receipt: { code: String(rc.receipt_code), submittedAt: new Date(String(rc.submitted_at)).toISOString(), dueAt: rc.due_at ? new Date(String(rc.due_at)).toISOString() : null, dueSource: String(rc.due_source ?? 'assignment'), late: !!rc.late, lateMinutes: Math.ceil(Number(rc.late_seconds) / 60), files: rc.files } };
@@ -262,6 +289,8 @@ export default createEndpoint({
       if (!grader || x!.state === 'Private Draft') forbid('Only the section instructor or a grading delegate can grade submitted work.');
       if (x!.state === 'Released') forbid('This grade is already released. Changes go through a regrade request.');
       if (first(x!.student) === uid) forbid('You cannot grade your own submission.');
+      await ensureSbm();
+      if ((await groupOf(a.institutionId, [x!.id])).some((g) => g.members.includes(uid))) forbid('You cannot grade work submitted by your own group.');
       let score = input.score;
       if (input.rubric) {
         // The score comes from the frozen rubric version, not from the client.

@@ -23,7 +23,7 @@ import CourseAccessibility from '../components/CourseAccessibility';
 import CourseExtensions from '../components/CourseExtensions';
 
 type Receipt = { attempt?: number; code: string; submittedAt: string; dueAt?: string | null; dueSource?: string; late: boolean; lateMinutes: number; files: { name: string; size: number; sha256: string }[] };
-type Sub = { id: string; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number; scan?: string; scanReason?: string }[] };
+type Sub = { id: string; group?: { name: string; members: number; byYou: boolean; mine: boolean } | null; receipt: Receipt | null; taskId: string; taskTitle: string; student: string; state: string; score: number | null; feedback: string; files: { name: string; url: string }[]; attachments: { fileId: string; name: string; size: number; scan?: string; scanReason?: string }[] };
 type Asg = { id: string; title: string; dueAt: string | null; attempts?: { used: number; allowed: number } | null; extendedTo?: { dueAt: string; kind: string } | null; points: number | null; rubric: string; source: string };
 
 const openAtt = async (submissionId: string, fileId: string) => { try { saveBytes((await learn({ action: 'openAttachment', submissionId, fileId })) as never); } catch (e) { toast.error(errMsg(e)); } };
@@ -44,7 +44,7 @@ function GradeRow({ s, rubrics, onSave }: { s: Sub; rubrics: Rubric[]; onSave: (
   const rs = r ? rubricScore(r.criteria, sel) : null;
   return (
     <div className="border-b border-border py-3 text-sm last:border-0">
-      <div className="flex justify-between"><span className="font-medium">{s.student} · {s.taskTitle}</span><Status value={s.state} /></div>
+      <div className="flex justify-between"><span className="font-medium">{s.group ? `${s.group.name} (${s.group.members} members, submitted by ${s.student})` : s.student} · {s.taskTitle}</span><Status value={s.state} /></div>
       {s.receipt && <ReceiptLine r={s.receipt} />}
       {s.files.map((f) => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">{f.name}</a>)}
       <AttList s={s} />
@@ -78,7 +78,7 @@ function Assignment({ a, sub, onUpload, onSubmit, onAttach, onDetach, busy }: { 
       <p className="text-sm text-muted-foreground">{a.extendedTo ? <><s>{fmt(a.dueAt)}</s> · extended to <span className="font-medium text-foreground">{fmt(a.extendedTo.dueAt)}</span></> : fmt(a.dueAt)}{a.points ? ` · ${a.points} pts` : ''}</p>
       {a.rubric && <div className="mt-2 text-xs text-muted-foreground"><p className="font-medium text-foreground">Rubric</p>{a.rubric.split('\n').map((l) => <p key={l}>{l}</p>)}</div>}
       {sub && sub.state !== 'Private Draft' ? (
-        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.receipt && <ReceiptLine r={sub.receipt} />}{a.attempts && a.attempts.used < a.attempts.allowed && sub.state === 'Submitted' && <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={onUpload}>Start attempt {a.attempts.used + 1} of {a.attempts.allowed}</Button>}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
+        <div className="mt-3 text-sm"><Status value={sub.state} />{sub.group && <p className="text-xs text-muted-foreground">Group work · {sub.group.name} · {sub.group.byYou ? 'you submitted for the group' : 'submitted by a teammate'}</p>}{sub.receipt && <ReceiptLine r={sub.receipt} />}{a.attempts && a.attempts.used < a.attempts.allowed && sub.state === 'Submitted' && <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={onUpload}>Start attempt {a.attempts.used + 1} of {a.attempts.allowed}</Button>}{sub.state === 'Released' && <p className="mt-1">Score {sub.score}{a.points ? ` / ${a.points}` : ''} · {sub.feedback}</p>}{sub.state !== 'Released' && <p className="text-xs text-muted-foreground">Grades appear when your instructor releases them.</p>}</div>
       ) : (
         <div className="mt-3 space-y-2">
           {!sub && <Button size="sm" variant="outline" disabled={busy} onClick={onUpload}>Start a private draft</Button>}

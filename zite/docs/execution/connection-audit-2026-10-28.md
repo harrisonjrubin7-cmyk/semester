@@ -348,3 +348,22 @@ The applicant names a recommender and an email. Only the signed-in account holdi
 - Database check `dbchecks/recommendations.ts`: 22/22. Mutant "any account accepts" fails 8 checks (R7 among them); mutant "letter owned by someone else" fails R13 and R14. Nothing left behind.
 - Live, through the real endpoints (faculty account as applicant, the second account as recommender): 13/13. Another account cannot ask on the application or accept the request; the inbox shows it only to the invited email; accept → submit works; a second letter is refused; the applicant's view carries no letter; both accounts are refused by admissions `openLetter` because neither holds an admissions role. The test draft was withdrawn afterwards; its request and letter record remain because the log is append-only.
 - NOT RUN: a reviewer or administrator opening a letter (needs the third account); browser screenshots.
+
+## Eleventh increment, 28 Oct: group submissions (C04, S-91 LMS gap)
+
+An assignment version can name one of its section's course group sets ("One submission per group"). The set is frozen with the published version. Any member submits for the group:
+- Attempts belong to the group and are counted under a group lock.
+- The receipt freezes the members as they were at that moment, so leaving or joining a group later never changes whose work it is.
+- Members see the group's work on their own copy of the assignment and can open its files.
+- Each member's own task is marked done.
+- A member of the group cannot grade it.
+- Once work has been submitted, an assignment cannot switch between individual and group work.
+- One member's individual extension does not move the group's deadline. This is the cautious default; the owner decides whether accommodations should carry over to group work.
+
+- **Database check** `dbchecks/groupSubmissions.ts`: 11/11. Three mutants (per-student attempt counting, no membership check, a member's extension moving the group deadline) fail 3, 1 and 1 checks respectively. The existing checks still pass with the changed migration: attempts 8/8, submissions 27/27, assignments 16/16, file screening 13/13, group work 15/15, all mutants caught.
+- **Live run**, instructor (faculty account) and student (second account): 13/13.
+  - Create a set and assign the student; a group set from another section is refused; publish group work.
+  - Upload, then submit for the group. The receipt names the student as member and submitter; the student and the instructor both see the group.
+  - A second draft is refused; switching to individual after submission is refused; grade, release, and the student sees 18/20.
+- **NOT RUN:** a second real student seeing a teammate's submission (only one student account; covered by G3, G5, G6 and G8).
+- **Test data:** the test assignment "Group submission check", its group set and its receipt remain in Northgate, because receipts are append-only.

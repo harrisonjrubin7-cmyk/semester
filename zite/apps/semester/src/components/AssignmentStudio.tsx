@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { assignments } from 'zitejs/api';
+import { assignments, courseGroups } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
@@ -13,6 +13,8 @@ const local = (iso: string) => { if (!iso) return ''; const d = new Date(iso); i
 /** Instructor of record: draft → preview → publish an exact version → revise as a new version. Students never see drafts. */
 export default function AssignmentStudio({ sectionId, onPublished }: { sectionId: string; onPublished?: () => void }) {
   const s = useLoad(() => assignments({ action: 'list', sectionId } as never) as Promise<any>, [sectionId]);
+  const gs = useLoad(() => courseGroups({ action: 'get', sectionId } as never) as Promise<any>, [sectionId]);
+  const sets: { id: number; name: string }[] = gs.data?.sets ?? [];
   const [open, setOpen] = useState<{ id: number | null; draftVersion: number; draft: AssignmentDraft } | null>(null);
   const [preview, setPreview] = useState<any>(null);
   const [history, setHistory] = useState<{ id: number; versions: any[] } | null>(null);
@@ -59,6 +61,12 @@ export default function AssignmentStudio({ sectionId, onPublished }: { sectionId
             <label className="text-xs">Attempts allowed<Input inputMode="numeric" value={String(open.draft.attemptsAllowed)} onChange={(e) => set({ attemptsAllowed: Math.round(Number(e.target.value) || 0) })} /></label>
             <label className="text-xs">AI use<select className="mt-1 block w-full rounded-md border border-input bg-background p-2 text-sm" value={open.draft.aiPolicy} onChange={(e) => set({ aiPolicy: e.target.value })}>
               {AI_POLICIES.map((p) => <option key={p}>{p}</option>)}</select></label>
+            <label className="text-xs sm:col-span-2">Who submits<select className="mt-1 block w-full rounded-md border border-input bg-background p-2 text-sm" value={open.draft.groupSetId ?? ''}
+              onChange={(e) => set({ groupSetId: e.target.value ? Number(e.target.value) : null })}>
+              <option value="">Each student individually</option>
+              {sets.map((g) => <option key={g.id} value={g.id}>One submission per group · {g.name}</option>)}</select>
+              {!sets.length && <span className="mt-1 block text-muted-foreground">To set group work, first create a group set under Groups.</span>}
+              {open.draft.groupSetId != null && <span className="mt-1 block text-muted-foreground">Any member submits for the group; attempts are shared; the group keeps the assignment's due date (individual extensions do not apply).</span>}</label>
             <label className="text-xs sm:col-span-2">Rubric (one criterion per line)<Textarea rows={3} value={open.draft.rubric} onChange={(e) => set({ rubric: e.target.value })} /></label>
             <div role="status" aria-live="polite" className="sm:col-span-2">{local_problems.length > 0 && <ul className="text-xs">{local_problems.map((p) => <li key={p}>! {p}</li>)}</ul>}</div>
             <div className="flex flex-wrap gap-2 sm:col-span-2">

@@ -14,3 +14,18 @@ test('changes between versions are listed in words; an identical republish lists
   eq(changes(d(), d({ dueAt: '2026-11-06T23:00:00Z', points: 90, instructions: 'Use two sources.' })), ['Instructions changed', 'Due date: 2026-11-04T23:00 → 2026-11-06T23:00', 'Points: 100 → 90']);
   eq(changes(d(), d({ dueAt: '2026-11-04T23:00:00.000Z' })), []);
 });
+
+// Group work (28 Oct)
+test('group work: a group set is optional; a bad id stops publication', () => {
+  const ok = { ...emptyDraft(), title: 'Team project', dueAt: '2030-01-01T00:00:00Z' };
+  eq(publishProblems(ok, new Date('2029-01-01')), []);
+  eq(publishProblems({ ...ok, groupSetId: 7 }, new Date('2029-01-01')), []);
+  eq(publishProblems({ ...ok, groupSetId: 0 }, new Date('2029-01-01')), ['Choose a group set for group work.']);
+});
+test('group work: switching is reported in words; an old draft without the field counts as individual', () => {
+  const a = { ...emptyDraft(), title: 'T', dueAt: '2030-01-01T00:00:00Z' };
+  const legacy = { ...a } as Partial<typeof a>; delete legacy.groupSetId;
+  eq(changes(legacy as typeof a, a), []);
+  eq(changes(a, { ...a, groupSetId: 4 }), ['Group work: individual → group set 4']);
+  eq(changes({ ...a, groupSetId: 4 }, { ...a, groupSetId: null }), ['Group work: group set 4 → individual']);
+});
