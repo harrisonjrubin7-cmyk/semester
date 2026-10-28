@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  calendarFeedDeps,
   handleCalendarFeed,
   type CalendarFeedDeps,
 } from '../../../supabase/functions/_shared/calendarfeed';
@@ -19,6 +20,17 @@ function dependencies(overrides: Partial<CalendarFeedDeps> = {}) {
 }
 
 describe('the calendar feed function', () => {
+  it('normalizes the Supabase RPC thenable into the promised dependency contract', async () => {
+    const rpcResult = { data: { body: calendar }, error: null };
+    const thenable: PromiseLike<typeof rpcResult> = {
+      then: (resolve, reject) => Promise.resolve(rpcResult).then(resolve, reject),
+    };
+    const deps = calendarFeedDeps(() => thenable);
+
+    expect(deps.readFeed(TOKEN, 'apple')).toBeInstanceOf(Promise);
+    await expect(deps.readFeed(TOKEN, 'apple')).resolves.toEqual(rpcResult);
+  });
+
   it('allows only calendar read methods before configuration or database work', async () => {
     const deps = dependencies();
     const response = await handleCalendarFeed(new Request(URL, { method: 'POST' }), deps);

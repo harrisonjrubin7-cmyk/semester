@@ -11,6 +11,19 @@ export interface CalendarFeedDeps {
   }>;
 }
 
+type CalendarFeedResult = Awaited<ReturnType<CalendarFeedDeps['readFeed']>>;
+
+/** Normalize Supabase's PromiseLike RPC builder at the environment boundary. */
+export function calendarFeedDeps(
+  readFeed: (token: string, family: string) => PromiseLike<CalendarFeedResult>,
+): CalendarFeedDeps {
+  return {
+    async readFeed(token, family) {
+      return readFeed(token, family);
+    },
+  };
+}
+
 /** 24 random bytes as hex — the same shape `app/src/lib/subscribe.ts` generates. */
 const TOKEN = /^[0-9a-f]{48}$/;
 

@@ -59,7 +59,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { handleCalendarFeed } from '../_shared/calendarfeed.ts';
+import { calendarFeedDeps, handleCalendarFeed } from '../_shared/calendarfeed.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -68,6 +68,6 @@ const db = SUPABASE_URL && SERVICE_KEY
   ? createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
   : null;
 
-Deno.serve((req: Request) => handleCalendarFeed(req, db ? {
-  readFeed: (token, family) => db.rpc('read_feed', { feed_token: token, family }),
-} : null));
+Deno.serve((req: Request) => handleCalendarFeed(req, db
+  ? calendarFeedDeps((token, family) => db.rpc('read_feed', { feed_token: token, family }))
+  : null));
