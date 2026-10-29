@@ -126,6 +126,7 @@ export const GUARD_MANIFEST: Manifest = {
   "cur_committee",
   "cur_events",
   "cur_proposals",
+  "dak_acks",
   "dea_allocations",
   "dea_deans",
   "dea_escalations",
@@ -786,6 +787,12 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "cur_events"
+  },
+  {
+   "trigger": "dak_acks_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "dak_acks"
   },
   {
    "trigger": "dea_events_append_only",

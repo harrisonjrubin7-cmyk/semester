@@ -525,3 +525,11 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Accepting a transcript posts no credit; evaluation still decides each course.
 - Evidence: dbchecks/transcripts 18/18; 3 mutants red (unscreened file, anyone reads, self-review stopped by the table). Suites 669 / 99. check_app passed for Student.
 - Open: transcripts are not in the Action Center yet. Official electronic transcript exchange (e.g. Parchment) needs a connector and credentials.
+
+## 29 Oct — Decision acknowledgment (dak-001): Student /plan/transition
+- The applicant reads their released admissions decision and acknowledges it, once.
+- The record keeps a fingerprint of the exact decision and message shown. A stale or altered screen is refused.
+- Rules: only the applicant, only after release, only within the institution. The acknowledgment is written to the admissions log and is append-only.
+- Acknowledging accepts no offer and pays nothing: enrollment intent and deposit stay separate.
+- Admissions staff (decision capability) see who has and has not acknowledged.
+- Evidence: dbchecks/decisionAck 8/8; 3 mutants red. Suites 669 / 99. check_app passed for Student.

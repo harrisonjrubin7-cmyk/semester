@@ -5,6 +5,7 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
 import { PageHeader, Panel, Empty, Loadable, useLoad, Status, errMsg, fmt } from '../components/kit';
+import DecisionAck from '../components/DecisionAck';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const sel = 'rounded-md border border-border bg-background p-2 text-sm';
@@ -161,6 +162,7 @@ export default function Transition() {
   return (
     <div className="space-y-4">
       <PageHeader eyebrow="Plan" title="Transition and orientation" sub="Your first-year checklist, orientation sessions, enrollment intent and placement. Staff tools appear for first-year staff, orientation leaders and admissions." />
+      <div className="mb-4 space-y-4"><DecisionAck /></div>
       <Loadable state={state}>{(d: any) => <>
         <Student d={d} act={act} />
         {d.staff && <Staff d={d} act={act} />}

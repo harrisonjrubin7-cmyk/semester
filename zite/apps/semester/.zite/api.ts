@@ -43,6 +43,7 @@ import type { default as _CourseReuseEp } from '../src/api/courseReuse';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DeansEp } from '../src/api/deans';
+import type { default as _DecisionAckEp } from '../src/api/decisionAck';
 import type { default as _DegreePlanEp } from '../src/api/degreePlan';
 import type { default as _DepartmentFormsEp } from '../src/api/departmentForms';
 import type { default as _DepartmentStaffingEp } from '../src/api/departmentStaffing';
@@ -339,6 +340,11 @@ type _DeansCfg = typeof _DeansEp;
 export type DeansInputType = NonNullable<_DeansCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DeansCfg['execute']>[0]['input'];
 export type DeansOutputType = Awaited<ReturnType<_DeansCfg['execute']>>;
 export const deans = createCaller<DeansInputType, DeansOutputType>('deans');
+
+type _DecisionAckCfg = typeof _DecisionAckEp;
+export type DecisionAckInputType = NonNullable<_DecisionAckCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DecisionAckCfg['execute']>[0]['input'];
+export type DecisionAckOutputType = Awaited<ReturnType<_DecisionAckCfg['execute']>>;
+export const decisionAck = createCaller<DecisionAckInputType, DecisionAckOutputType>('decisionAck');
 
 type _DegreePlanCfg = typeof _DegreePlanEp;
 export type DegreePlanInputType = NonNullable<_DegreePlanCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DegreePlanCfg['execute']>[0]['input'];
@@ -838,6 +844,7 @@ export const api = {
   courseTeam,
   curriculum,
   deans,
+  decisionAck,
   degreePlan,
   departmentForms,
   departmentStaffing,
