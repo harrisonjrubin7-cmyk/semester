@@ -112,6 +112,11 @@ export const GUARD_MANIFEST: Manifest = {
   "crr_shares",
   "crs_delegations",
   "crs_syllabus_versions",
+  "csx_actions",
+  "csx_events",
+  "csx_goals",
+  "csx_links",
+  "csx_qbrs",
   "ctx_active",
   "ctx_events",
   "cur_committee",
@@ -719,6 +724,18 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "crs_syllabus_versions"
+  },
+  {
+   "trigger": "csx_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "csx_events"
+  },
+  {
+   "trigger": "csx_qbrs_snapshot_fixed",
+   "timing": "BEFORE",
+   "events": "UPDATE",
+   "table": "csx_qbrs"
   },
   {
    "trigger": "ctx_events_append_only",

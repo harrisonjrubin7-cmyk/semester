@@ -13,3 +13,5 @@ campaignClaims (29 Oct) 30/30; campaigns re-run 24/24 after mkt-002. Mutants: ex
 self-approved source (stopped by the table constraint), approve-unsourced check removed (stays 30/30 because the approval trigger refuses it — C30 accepts either refusal, which is the backstop working).
 marketingAdmin (29 Oct) 30/30. Mutants: withdrawals ignored in segments (4 red), paused channel submits (2 red), hash ignores segment (1 red),
 self-approved template (stopped by the table constraint). campaignClaims now sets an email sender name before its clean launch check (still 30/30).
+customerSuccess (29 Oct) 22/22. Mutants: proposer confirms its own link (stopped by the table constraint), confirm a different institution (2 red),
+hold without prepare (stopped by the snapshot constraint).

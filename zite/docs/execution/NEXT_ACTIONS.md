@@ -406,3 +406,12 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Gate note: `npx tsc --noEmit -p apps/<app>` type-checks nothing (solution tsconfig with references); check_app is the real type gate and caught
   a quoting error here. Earlier reports' "type check clean" lines rest on check_app.
 - Owner: career center staff (car_staff 'center') must be granted for opportunities to go live.
+
+## 29 Oct — Customer Success adoption, success plans and QBRs (csx-001), /customer-success
+- New company role customer_success (granted by the owner only). An account is linked to an institution by customer success and confirmed by a
+  different platform admin; until then no adoption is shown. Adoption = membership counts by role/status, modules on, metered calls (last 30 vs prior
+  30 days); any count of 1-4 shows "fewer than 5". No person or student record is read.
+- Goals with measure/target/due; achieved or missed needs evidence. QBRs: plan → prepare (server freezes a hashed snapshot) → held (notes) → follow-ups.
+  Nothing is sent to customers.
+- Live read (counts only): Northgate has fewer than 5 active members, so every figure is suppressed; the pipeline has 2 accounts and none at the
+  Customer stage, so the page lists no accounts until one is marked Customer or linked.
