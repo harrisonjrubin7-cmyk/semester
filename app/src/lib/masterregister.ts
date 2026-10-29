@@ -766,8 +766,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Security and resilience tests',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'integration_webhook_events: durable inbox, payload hash, unique idempotency key' }, { path: 'app/src/lib/integration/pipeline.test.ts', shows: 'Tests a webhook delivered twice is counted once' }],
-    gap: 'No inbound webhook endpoint with signature verification, timestamp window or replay protection (HMAC exists only for outbound escalation). Needs receiver, schema validation, and security/resilience tests.',
+    evidence: [{ path: 'supabase/migrations/20260927170000_integration_control_plane.sql', shows: 'integration_webhook_events: durable inbox, payload hash, unique idempotency key' }, { path: 'app/src/lib/integration/pipeline.test.ts', shows: 'Tests a webhook delivered twice is counted once' }, { path: 'app/server/integration/webhook.ts', shows: 'Provider-neutral raw-body HMAC, timestamp, bounded-envelope and replay verification seam' }, { path: 'app/server/integration/webhook.test.ts', shows: 'Refuses forged, stale, oversized, malformed and replayed events and fails closed when replay protection is unavailable' }],
+    gap: 'No provider-specific endpoint is deployed. The verifier is not wired to secret resolution, provider schemas or the worker, and its included replay store is process-local rather than durable or shared. Needs an approved provider route, durable replay-store binding, credentials and live security/resilience evidence.',
   },
   {
     id: 'INT-014',
