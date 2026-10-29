@@ -10,6 +10,7 @@
 //   failing lines are ineligible unless an exception is requested with a reason and reference and approved by a second officer.
 // - A review is certified by an officer or administrator other than the one who opened it, only when every line is decided.
 //   Certified reviews and their lines never change. History is append-only.
+// - Athletes see their own certified results only (ath_my_lines).
 export const ATH_RULE_KINDS = ['min_term_credits', 'min_cumulative_gpa', 'min_completed_credits'] as const;
 const KINDS = ATH_RULE_KINDS.map((k) => `'${k}'`).join(', ');
 
@@ -193,4 +194,10 @@ export const ATH_MIGRATION: string[] = [
      INSERT INTO ath_events (tenant_id, actor_id, area, action, target, detail) VALUES (p_tenant, p_actor, 'review', 'certify', 'review:' || rv.id, coalesce(p_note, ''));
      RETURN 'ok:' || rv.id;
    END $$`,
+  // An athlete's own certified results only (decision 29 Oct). Drafts, open reviews and other athletes' lines are never returned.
+  `CREATE OR REPLACE FUNCTION ath_my_lines(p_tenant text, p_user text) RETURNS TABLE (facts jsonb, results jsonb, outcome text, exception_ref text, term text, certified_at timestamptz, team text, sport text, rules_version int)
+     LANGUAGE sql STABLE AS $$
+     SELECT l.facts, l.results, l.outcome, l.exception_ref, v.term, v.certified_at, t.name, t.sport, s.version
+       FROM ath_review_lines l JOIN ath_reviews v ON v.id = l.review_id JOIN ath_teams t ON t.id = v.team_id JOIN ath_rule_sets s ON s.id = v.rule_set_id
+      WHERE v.tenant_id = p_tenant AND l.student_id = p_user AND v.state = 'certified' ORDER BY v.certified_at DESC LIMIT 20 $$`,
 ];

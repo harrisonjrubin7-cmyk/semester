@@ -36,7 +36,15 @@ export default createEndpoint({
     let isAdmin = false;
     try { await requireAction(me, 'member.manage'); isAdmin = true; } catch { /* not an administrator */ }
     const officer = ((await sql.query(`SELECT ath_is_officer($1,$2) AS o`, [T, me])) as { o: boolean }[])[0].o;
-    if (!officer && !isAdmin) forbid('Athletics compliance is for compliance officers and institution administrators.');
+    // Athletes see only their own result, and only once the review is certified (decision 29 Oct: their own academic records;
+    // drafts and other athletes' lines stay with officers and administrators).
+    if (!officer && !isAdmin) {
+      if (input.action !== 'get') forbid('Athletics compliance is for compliance officers and institution administrators.');
+      const own = (await sql.query(`SELECT * FROM ath_my_lines($1, $2)`, [T, me])) as Row[];
+      return { me, officer: false, isAdmin: false, athleteView: true, kinds: ATH_RULE_KINDS, officers: [], rules: [], teams: [], reviews: [],
+        mine: own.map((r) => ({ team: String(r.team), sport: String(r.sport), term: String(r.term), rulesVersion: Number(r.rules_version), certifiedAt: iso(r.certified_at), outcome: String(r.outcome),
+          facts: r.facts as Facts, results: r.results as { kind: string; required: number; actual: number | null; pass: boolean }[], exceptionRef: r.exception_ref ? String(r.exception_ref) : null })) };
+    }
     const one = async (q: string, p: unknown[]) => ((await sql.query(q, p)) as { r: string | null }[])[0].r;
     const okOr = (r: string | null) => { if (!r?.startsWith('ok:')) forbid(r ?? 'Could not save it.'); return r!.slice(3); };
     const scope = await tenantScope(T);
@@ -104,7 +112,7 @@ export default createEndpoint({
       ...reviews.flatMap((v) => [String(v.opened_by), String(v.certified_by ?? '')]), ...lines.flatMap((l) => [String(l.exception_by ?? ''), String(l.exception_approved_by ?? '')])].filter(Boolean));
     const nm = (id: unknown) => (id ? names[String(id)] ?? 'Member' : null);
     return {
-      me, officer, isAdmin, kinds: ATH_RULE_KINDS, officers: officers.map((o) => nm(o.user_id)),
+      me, officer, isAdmin, athleteView: false, mine: [], kinds: ATH_RULE_KINDS, officers: officers.map((o) => nm(o.user_id)),
       rules: rules.map((r) => ({ id: Number(r.id), version: Number(r.version), rules: r.rules as { kind: string; value: number }[], hash: String(r.rules_hash), note: String(r.note), state: String(r.state), mine: r.author_id === me, author: nm(r.author_id), approver: nm(r.approver_id), approvedAt: iso(r.approved_at), rev: Number(r.rev) })),
       teams: teams.map((t) => ({ id: Number(t.id), name: String(t.name), sport: String(t.sport), roster: roster.filter((r) => Number(r.team_id) === Number(t.id)).map((r) => ({ id: String(r.student_id), name: nm(r.student_id) })) })),
       reviews: reviews.map((v) => ({ id: Number(v.id), teamId: Number(v.team_id), team: String(teams.find((t) => Number(t.id) === Number(v.team_id))?.name ?? 'Team'), term: String(v.term), rulesVersion: Number(v.rules_version), state: String(v.state),

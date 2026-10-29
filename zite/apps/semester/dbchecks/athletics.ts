@@ -68,6 +68,11 @@ BEGIN
   res := ath_eval(${RULES}, '{"term_credits":12,"cumulative_gpa":2.0}'::jsonb);
   INSERT INTO rr VALUES (NOT EXISTS (SELECT 1 FROM jsonb_array_elements(res) e WHERE NOT (e->>'pass')::boolean), 'T21 meeting the minimum exactly passes');
 
+  INSERT INTO rr VALUES ((SELECT count(*) FROM ath_my_lines('t1', 's2')) = 1 AND (SELECT outcome FROM ath_my_lines('t1', 's2')) = 'exception' AND (SELECT count(*) FROM ath_my_lines('t2', 's2')) = 0, 'T24 an athlete sees their own certified result');
+  x := ath_team('t1', 'o1', 'create', NULL, 'Men''s Track', 'Track', NULL); tm := substr(x, 4)::bigint;
+  x := ath_team('t1', 'o1', 'add', tm, NULL, NULL, 's2');
+  x := ath_open_review('t1', 'o1', tm, 'Fall 2026', '{"s2":{"term_credits":9,"cumulative_gpa":2.8,"completed_credits":30}}'::jsonb);
+  INSERT INTO rr VALUES ((SELECT count(*) FROM ath_my_lines('t1', 's2')) = 1, 'T25 an open review stays hidden from the athlete');
   got := false; BEGIN UPDATE ath_rule_sets SET approver_id = author_id WHERE id = rs2; EXCEPTION WHEN check_violation THEN got := true; END;
   INSERT INTO rr VALUES (got, 'T22 the table refuses self-approved rules');
   got := false; BEGIN DELETE FROM ath_events; EXCEPTION WHEN OTHERS THEN got := true; END;
@@ -76,7 +81,7 @@ BEGIN
     coalesce((SELECT string_agg(lbl, ' | ') FROM rr WHERE ok IS NOT TRUE), '');
 END $$`;
 
-export async function run() {
+export async function run(only?: string) {
   const sql = neon(process.env.ZITE_POSTGRES_URL!);
   const base = [...ATH_MIGRATION];
   const go = async (label: string, mig: string[]) => { try { await sql.transaction([...mig.map((q) => sql.query(q)), sql.query(CHECKS)]); console.log(label, 'no RESULT raised'); } catch (e) { console.log(label, String((e as Error).message).slice(0, 700)); } };
@@ -87,7 +92,8 @@ export async function run() {
     ['opener certifies (T16)', `IF rv.opened_by = p_actor THEN RETURN`, `IF false THEN RETURN`],
     ['undecided lines certified (T15)', `IF undecided > 0 THEN RETURN`, `IF false THEN RETURN`],
     ['missing GPA passes (T10)', `'pass', a.actual IS NOT NULL AND a.actual >= (r->>'value')::numeric)`, `'pass', coalesce(a.actual >= (r->>'value')::numeric, true))`],
+    ['athletes see open reviews (T25)', `AND l.student_id = p_user AND v.state = 'certified' ORDER BY`, `AND l.student_id = p_user ORDER BY`],
     ['certified lines editable (T18)', `IF EXISTS (SELECT 1 FROM ath_reviews WHERE id = OLD.review_id AND state = 'certified') THEN RAISE`, `IF false THEN RAISE`],
   ];
-  for (const [name, from, to] of muts) { const m = base.map((q) => q.replace(from, () => to)); console.log(`${name} applied:`, m.join('') !== base.join('')); await go(`mutant ${name}:`, m); }
+  for (const [name, from, to] of muts.filter(([n]) => !only || n.includes(only))) { const m = base.map((q) => q.replace(from, () => to)); console.log(`${name} applied:`, m.join('') !== base.join('')); await go(`mutant ${name}:`, m); }
 }

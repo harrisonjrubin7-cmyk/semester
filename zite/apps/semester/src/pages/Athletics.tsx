@@ -11,7 +11,8 @@ type RuleSet = { id: number; version: number; rules: Rule[]; hash: string; note:
 type Line = { studentId: string; name: string | null; facts: { term_credits: number; completed_credits: number; cumulative_gpa: number | null }; results: { kind: string; required: number; actual: number | null; pass: boolean }[];
   passes: boolean; outcome: string | null; exceptionReason: string | null; exceptionRef: string | null; exceptionBy: string | null; exceptionByMe: boolean; exceptionApprovedBy: string | null };
 type Review = { id: number; teamId: number; team: string; term: string; rulesVersion: number; state: string; openedBy: string | null; openedByMe: boolean; certifiedBy: string | null; certifiedAt: string | null; note: string; rev: number; lines: Line[] };
-type Data = { officer: boolean; isAdmin: boolean; kinds: readonly string[]; officers: (string | null)[]; rules: RuleSet[]; teams: { id: number; name: string; sport: string; roster: { id: string; name: string | null }[] }[]; reviews: Review[] };
+type Mine = { team: string; sport: string; term: string; rulesVersion: number; certifiedAt: string | null; outcome: string; facts: Line['facts']; results: Line['results']; exceptionRef: string | null };
+type Data = { athleteView: boolean; mine: Mine[]; officer: boolean; isAdmin: boolean; kinds: readonly string[]; officers: (string | null)[]; rules: RuleSet[]; teams: { id: number; name: string; sport: string; roster: { id: string; name: string | null }[] }[]; reviews: Review[] };
 
 const LABEL: Record<string, string> = { min_term_credits: 'Minimum credits this term', min_cumulative_gpa: 'Minimum cumulative GPA (4.0 scale)', min_completed_credits: 'Minimum completed credits' };
 const call = async (input: Record<string, unknown>, ok: string, reload: () => void) => { try { await athletics(input as never); toast.success(ok); reload(); return true; } catch (e) { toast.error(errMsg(e)); return false; } };
@@ -114,12 +115,25 @@ function Officers({ d, reload }: { d: Data; reload: () => void }) {
   );
 }
 
+function MyEligibility({ d }: { d: Data }) {
+  return (
+    <Panel title="Your eligibility">
+      {d.mine.length === 0 ? <Empty>No certified eligibility review includes you. If you are on a team, your result appears here once the compliance office certifies the term review.</Empty> : d.mine.map((m, i) => (
+        <div key={i} className="border-b border-border py-2 text-sm last:border-0">
+          <div className="flex flex-wrap items-start justify-between gap-2"><p className="font-medium">{m.team} · {m.term}</p><Status value={m.outcome === 'exception' ? 'eligible (exception)' : m.outcome} /></div>
+          {m.results.map((x) => <p key={x.kind} className="text-xs">{x.pass ? '✓' : '✕'} {LABEL[x.kind]}: {x.actual ?? 'none'} (needs {x.required})</p>)}
+          <p className="text-xs text-muted-foreground">Rules version {m.rulesVersion} · certified {fmt(m.certifiedAt)}{m.exceptionRef ? ` · exception ${m.exceptionRef}` : ''}. Questions go to your athletics compliance office.</p>
+        </div>))}
+    </Panel>
+  );
+}
+
 export default function Athletics() {
   const s = useLoad(() => athletics({ action: 'get' }) as Promise<Data>);
   return (
     <div className="space-y-4">
       <PageHeader eyebrow="Athletics compliance" title="Eligibility" sub="Your institution's eligibility rules, team rosters, term reviews from official records, exceptions and certification." />
-      <Loadable state={s}>{(d: Data) => (<>
+      <Loadable state={s}>{(d: Data) => d.athleteView ? <MyEligibility d={d} /> : (<>
         <Rules d={d} reload={s.reload} />
         <Teams d={d} reload={s.reload} />
         <Reviews d={d} reload={s.reload} />
