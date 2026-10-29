@@ -613,7 +613,8 @@ Deno.serve(async (req) => {
          * Two POSTs carrying the same state would race otherwise, and the loser
          * would be a replayed launch that both halves believe. The RPC does the
          * check and write in one statement (`spent_at is null` in its
-         * `update … returning`).
+         * `update … returning`). `lti.check.sql` spends a live state once, then asserts the same state
+         * spends a second time for nobody.
          */
         const { data, error } = await client.rpc('spend_lti_nonce', { want_state: state }).maybeSingle();
         if (error) return { ok: false as const, reason: 'spend-failed', detail: error.message, status: 500 };
