@@ -517,6 +517,12 @@ export const GUARD_MANIFEST: Manifest = {
   "tut_requests",
   "tut_staff",
   "tut_tutors",
+  "vet_certifications",
+  "vet_events",
+  "vet_lines",
+  "vet_officials",
+  "vet_policies",
+  "vet_requests",
   "vfy_claims",
   "vfy_events"
  ],
@@ -1480,6 +1486,18 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "tut_events"
+  },
+  {
+   "trigger": "vet_certifications_fixed",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE",
+   "table": "vet_certifications"
+  },
+  {
+   "trigger": "vet_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "vet_events"
   },
   {
    "trigger": "vfy_events_append_only",

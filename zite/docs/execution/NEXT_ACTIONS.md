@@ -415,3 +415,18 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   Nothing is sent to customers.
 - Live read (counts only): Northgate has fewer than 5 active members, so every figure is suppressed; the pipeline has 2 accounts and none at the
   Customer stage, so the page lists no accounts until one is marked Customer or linked.
+
+## 29 Oct — Veterans Certifying Official benefits intake and certification review (vet-001), /benefits/veterans
+- Student intake per term (chapter, level, program, COE-on-file declaration; no documents stored). Officials appointed by an administrator, never self.
+  Review copies the term's enrolled courses (this institution's sections, server-computed), each marked applicable or not (reason); the database sums
+  applicable credits and derives training time from confirmed or default thresholds (12/9/6 undergraduate, 9/7/5 graduate — defaults until an
+  official confirms the institution's own); facts frozen with a hash; certifier is never the student. Enrolment drift is flagged for amendment.
+- Agency hand-off stays blocked: nothing goes to the VA. The official records the VA's reference after submitting in the VA's system.
+- dbcheck veterans 24/24; mutants: undecided lines certified (5 red), non-applicable credits counted (1 red), own request (table constraint).
+
+## 29 Oct — Decision register: 11 answers proposed from repository evidence (owner asked to close them)
+- Proposed (as 'Claude (draft from repository evidence)', scripts/decisionProposals.ts): repo, book2, cohort, fields, sources, roles, ai, envs,
+  support, retention, plans. Each is "proposed", not decided: the register requires a different person to confirm, so the founder confirms
+  (or edits and re-proposes) on Company OS → Decision register. Confirming is a one-click human step this agent cannot take.
+- Left open: reviewers (who the security, legal, accounting and accessibility reviewers are) and budget. Only the founder knows these.
+- cohort and plans are interim status statements (one pilot workspace; no plans or prices approved), not commercial choices.

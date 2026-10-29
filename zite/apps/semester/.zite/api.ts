@@ -127,6 +127,7 @@ import type { default as _ToolkitEp } from '../src/api/toolkit';
 import type { default as _TransferEp } from '../src/api/transfer';
 import type { default as _TransitionEp } from '../src/api/transition';
 import type { default as _TutoringEp } from '../src/api/tutoring';
+import type { default as _VeteransEp } from '../src/api/veterans';
 
 type _AcademicCalendarCfg = typeof _AcademicCalendarEp;
 export type AcademicCalendarInputType = NonNullable<_AcademicCalendarCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicCalendarCfg['execute']>[0]['input'];
@@ -753,6 +754,11 @@ export type TutoringInputType = NonNullable<_TutoringCfg['inputSchema']> extends
 export type TutoringOutputType = Awaited<ReturnType<_TutoringCfg['execute']>>;
 export const tutoring = createCaller<TutoringInputType, TutoringOutputType>('tutoring');
 
+type _VeteransCfg = typeof _VeteransEp;
+export type VeteransInputType = NonNullable<_VeteransCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_VeteransCfg['execute']>[0]['input'];
+export type VeteransOutputType = Awaited<ReturnType<_VeteransCfg['execute']>>;
+export const veterans = createCaller<VeteransInputType, VeteransOutputType>('veterans');
+
 
 export const api = {
   academicCalendar,
@@ -880,4 +886,5 @@ export const api = {
   transfer,
   transition,
   tutoring,
+  veterans,
 };
