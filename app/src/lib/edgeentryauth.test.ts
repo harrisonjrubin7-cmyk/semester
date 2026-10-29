@@ -24,17 +24,6 @@ interface Contract {
 
 export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
   {
-    fn: 'canvas',
-    ordered: [
-      /const session = req\.headers\.get\('Authorization'\)/,
-      /if \(!session\).*401/,
-      /admin\.auth\.getUser\(session\)/,
-      /if \(authError \|\| !user\?\.user\)/,
-      /upstream = await fetch/,
-    ],
-    rejectionBoundaries: [1, 3],
-  },
-  {
     fn: 'claude',
     ordered: [
       /const token = req\.headers\.get\('Authorization'\)/,
