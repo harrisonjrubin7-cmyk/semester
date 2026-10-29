@@ -4,12 +4,11 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { OVR_MIGRATION } from '../lib/ovrMigration';
-import { liveShares, ConsentRow } from '../lib/shares';
+import { adviseesSharing } from '../lib/advisees';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
 const ensure = () => { if (!ready) ready = (async () => { for (const q of OVR_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
-const ids = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : v ? [String(v)] : []);
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 
 // Overrides and exceptions desk (ovr-001). Students see their own requests; advisors endorse credit overloads and late
@@ -31,13 +30,7 @@ export default createEndpoint({
     try { await requireAction(me, 'registration.request.decide'); registrar = true; } catch { /* not a registrar */ }
     // An advisor sees and endorses only students who have shared their registration plan with them (advisorShare.ts).
     const scope = await tenantScope(T);
-    let advisees: string[] = [];
-    if (a.roles.includes('Advisor')) {
-      const c = (await zite.consents.findAll({ filters: { recipient: me, consentType: 'Data Sharing' }, limit: 2000 })).records.map((r) => ({
-        id: r.id, member: ids(r.member), recipient: ids(r.recipient), label: r.label ?? '', consentType: r.consentType ?? '', granted: !!r.granted, revoked: !!r.revoked, expiresOn: r.expiresOn ?? null,
-      }) as ConsentRow);
-      advisees = liveShares(c, me, 'Advisor', new Date().toISOString().slice(0, 10)).filter((x) => scope.members.has(x.studentId) && x.categories.includes('Registration plan')).map((x) => x.studentId);
-    }
+    const advisees = a.roles.includes('Advisor') ? await adviseesSharing(me, scope.members, ['Registration plan']) : [];
     const advisor = a.roles.includes('Advisor');
     if (input.action === 'step') {
       const target = ((await sql.query(`SELECT student_id FROM ovr_requests WHERE id = $1 AND tenant_id = $2`, [input.id, T])) as Row[])[0];

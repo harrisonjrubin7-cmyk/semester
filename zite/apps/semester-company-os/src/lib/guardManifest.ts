@@ -165,6 +165,8 @@ export const GUARD_MANIFEST: Manifest = {
   "dng_locations",
   "dng_orders",
   "dng_staff",
+  "dpl_events",
+  "dpl_plans",
   "dsa_acks",
   "dsa_appeals",
   "dsa_checks",
@@ -842,6 +844,12 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "dng_events"
+  },
+  {
+   "trigger": "dpl_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "dpl_events"
   },
   {
    "trigger": "dsa_events_append_only",

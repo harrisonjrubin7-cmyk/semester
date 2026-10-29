@@ -472,3 +472,21 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Advisors see only students who have shared "Registration plan" with them (advisorShare consent).
 - Evidence: dbchecks/overrides 19/19; 3 mutants red. Suites 652 / 99. check_app passed for Student, Faculty and Company OS.
 - Open: older task-based overrides still list in staff.ts until migrated. Nobody holds the Advisor role with a share in Northgate yet.
+
+## 29 Oct — Degree plans (dpl-001): Student /plan/degree-plan
+- A student lays out future terms (up to 12 terms, 10 courses each) from the institution's catalog.
+- The plan is checked against the student's requirements and their completed and in-progress work (lib/planRules.ts). The check reports:
+  - unknown courses, duplicates and courses already taken;
+  - prerequisites not finished in an earlier term;
+  - terms over the credit cap;
+  - credits each requirement is still short.
+- The student sends the plan to an advisor. Only an advisor the student shared "Degree progress" or "Registration plan" with can approve it or ask for changes, and the student can never review their own plan.
+- Approval freezes a copy. Editing afterwards starts a new draft, and the last approved copy stays visible.
+- The plan is advice only; it registers nobody.
+- Shared advisee lookup moved to lib/advisees.ts, and overrides.ts now uses it.
+- Evidence:
+  - planRules 6/6, and reverting the same-term prerequisite rule turns 2 tests red;
+  - dbchecks/degreePlans 16/16, with 3 mutants red;
+  - suites 658 / 99;
+  - check_app passed for Student, Faculty and Company OS.
+- Open: there are no plan templates by major yet, and a student can't see which advisor reviews before submitting.

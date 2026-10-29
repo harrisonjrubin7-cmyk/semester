@@ -46,6 +46,7 @@ import Veterans from './pages/Veterans';
 import Capstone from './pages/Capstone';
 import Assistantships from './pages/Assistantships';
 import Overrides from './pages/Overrides';
+import DegreePlan from './pages/DegreePlan';
 import Admissions from './pages/Admissions';
 import { Gradebook, TAQueue, RegistrarDesk, StudentAccounts, StudentAffairs } from './pages/Staff';
 import { Analytics, RegistrationHolds } from './pages/Institution';
@@ -256,6 +257,7 @@ export default function App() {
             <Route path="/plan" element={<CalendarPage />} />
             <Route path="/plan/registration" element={<Registration />} />
             <Route path="/plan/overrides" element={<Overrides />} />
+            <Route path="/plan/degree-plan" element={<DegreePlan />} />
             <Route path="/plan/career" element={<Career />} />
             <Route path="/learn" element={<Courses />} />
             <Route path="/learn/study" element={<Study />} />
