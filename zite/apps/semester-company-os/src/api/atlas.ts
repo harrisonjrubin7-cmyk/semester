@@ -62,7 +62,7 @@ export default createEndpoint({
 
     // Coverage from the maintained role register: explicit denominators.
     const caps = ROLE_APP_ROWS.flatMap(([, , , c]) => c);
-    const built = caps.filter((c) => c[2] === 'existing').length, partial = caps.filter((c) => c[2] === 'incomplete').length;
+    const built = caps.filter((c) => c[2] === 'existing').length, partial = caps.filter((c) => c[2] === 'incomplete').length, blocked = caps.filter((c) => c[2] === 'blocked').length;
     const rolesFull = ROLE_APP_ROWS.filter(([, , , c]) => c.every((x) => x[2] === 'existing')).length;
 
     // Capability register (Security Lab) with per-dimension evidence.
@@ -84,7 +84,7 @@ export default createEndpoint({
     return {
       result, today, myRoles, dimensions: DIMENSIONS,
       coverage: {
-        roleApps: ROLE_APP_ROWS.length, capabilities: coverage(built, caps.length).label, partial, missing: caps.length - built - partial, rolesFull: coverage(rolesFull, ROLE_APP_ROWS.length).label,
+        roleApps: ROLE_APP_ROWS.length, capabilities: coverage(built, caps.length).label, partial, blocked, missing: caps.length - built - partial - blocked, rolesFull: coverage(rolesFull, ROLE_APP_ROWS.length).label,
         workflowContracts: coverage(0, null).label, activation: coverage(0, null).label,
       },
       dimCounts, capabilities,

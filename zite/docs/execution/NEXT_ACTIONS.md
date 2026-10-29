@@ -303,3 +303,15 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Wave 1 shell destinations DONE (70729f2): Faculty and Institution gain a Personal manifest group — Action Center (/today), Mail (/mail), Calendar (/calendar), Workspace (/workspace), Files (/files) — mounting the shared Student pages behind C23 endpoint shims (inbox, getToday, manageTask, affiliation in both; files new in Institution). Student paths redirect. No capability gate: personal destinations serve the caller's own records, and the shared endpoints authorize server-side. check_app ok all ten apps; browser NOT RUN, so rendering in the two host apps is implemented_unverified.
 - Term completion → archive → retention DONE (56599f8): term_lifecycle + term_complete/term_archive (approved calendar required, classes must have ended, each step once, cal_events + audit trail). Archiving deletes nothing; completed/archived terms refuse waitlist joins, drops and swaps in registrationChanges. Registrar UI on the Academic calendar page. dbchecks/terms RESULT pass=13 fails=0, both guard mutants caught; termRules.test 3/3; Semester suites 600 pass.
 - Course reuse remains the open half of that plan row: the teaching shell spans Zite module records (learn endpoint) plus asg_assignments/asm_assessments/crs_syllabus_versions in pg; the copy must carry content and settings only — never enrollments, submissions, attempts, grades or discussions — and needs its own increment with per-store checks.
+
+## 29 Oct (session 012Ao7hws4oRJVEmvS6aNJcj): role-app gap map re-verified; clusters claimed
+- Owner asked to complete every missing and partial role-app capability (Atlas showed 274/460 built, 20/69 roles full). A read-only audit checked all 186 against code. Applied only evidence-backed changes in `lib/roleApps.ts`:
+  - 8 turned green, each with a dbcheck or test;
+  - 9 missing → incomplete;
+  - 11 incomplete → missing (confirmed no code: Platform Admin flags/quotas/maintenance/configuration, attribution ×2, Customer Success adoption/success plans/QBRs, Content Owner licensing/accessibility);
+  - 12 → new state `blocked`, waiting on owner decisions (immigration ×4, agency handoffs, counseling crisis routing, payment-processor reconciliation, vendor credentials, payment handoffs, marketplace orders/settlements/refunds).
+- Now 282/460 built, 99 partial, 67 missing, 12 blocked; 21/69 roles full. Atlas and the Role apps page show "blocked" separately.
+- **Claimed by this session, in order — please don't start these in parallel:**
+  1. DONE 29 Oct: dbchecks for the five unverified promotions. studentAccounts 18/18, company-os migrations 25/25, campaigns 24/24, trustRoom 5/5, trustRules.test 12/12; mutants caught. 8 capabilities flipped to built: now 290/460 built, 92 partial, 66 missing, 12 blocked; 21/69 roles full.
+  2. Office service layer: University Staff queues/requests/knowledge/resolution, Support Agent help articles.
+  3. Community safety: Moderator contextual review/warnings, Community Manager setup/health.

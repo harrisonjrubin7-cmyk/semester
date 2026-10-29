@@ -67,12 +67,12 @@ export function RoleAppsGapMap() {
       <Panel title={`Role apps · ${d.stats.apps} apps · ${d.stats.capabilities} capabilities`}>
         <p className="text-sm text-muted-foreground">{d.stats.existing} ready · {d.stats.incomplete} partly built · {d.stats.missing} not built. Mapping is from capability wording and needs owner review; it is the starting gap map, not verification.</p>
         <div className="mt-3 overflow-x-auto"><table className="w-full text-sm">
-          <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">App</th><th>Host</th><th>Ready</th><th>Partly</th><th>Not built</th><th>Gaps</th></tr></thead>
+          <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">App</th><th>Host</th><th>Ready</th><th>Partly</th><th>Not built</th><th>Blocked</th><th>Gaps</th></tr></thead>
           <tbody>{d.apps.map((a: any) => (
             <tr key={a.key} className="border-t border-border align-top">
               <td className="py-2">{a.role}</td><td className="py-2">{a.hostLabel}</td>
-              <td className="py-2 tabular-nums">{a.stats.existing}</td><td className="py-2 tabular-nums">{a.stats.incomplete}</td><td className="py-2 tabular-nums">{a.stats.missing}</td>
-              <td className="py-2 text-xs text-muted-foreground">{a.capabilities.filter((c: any) => c.state === 'missing').map((c: any) => c.name).join(', ') || '—'}</td>
+              <td className="py-2 tabular-nums">{a.stats.existing}</td><td className="py-2 tabular-nums">{a.stats.incomplete}</td><td className="py-2 tabular-nums">{a.stats.missing}</td><td className="py-2 tabular-nums" title="Waits on an owner decision">{a.stats.blocked}</td>
+              <td className="py-2 text-xs text-muted-foreground">{a.capabilities.filter((c: any) => c.state === 'missing').map((c: any) => c.name).join(', ') || '—'}{a.capabilities.some((c: any) => c.state === 'blocked') && <span className="block">Blocked: {a.capabilities.filter((c: any) => c.state === 'blocked').map((c: any) => c.name).join(', ')}</span>}</td>
             </tr>))}</tbody>
         </table></div>
       </Panel>)}

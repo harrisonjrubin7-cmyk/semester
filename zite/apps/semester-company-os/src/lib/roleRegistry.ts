@@ -8,7 +8,7 @@ export type RoleAppStatus = 'partial' | 'missing';
 export type RoleAppEntry = { n: number; role: string; key: string; host: string; existing: boolean; status: RoleAppStatus };
 
 export const ROLE_APPS: RoleAppEntry[] = CANONICAL.map((a, i) => {
-  const existing = a.capabilities.some((c) => c.state !== 'missing');
+  const existing = a.capabilities.some((c) => c.state === 'existing' || c.state === 'incomplete');
   return { n: i + 1, role: a.role, key: a.key, host: a.host, existing, status: (existing ? 'partial' : 'missing') as RoleAppStatus };
 });
 

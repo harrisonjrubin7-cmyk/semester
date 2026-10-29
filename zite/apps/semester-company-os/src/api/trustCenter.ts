@@ -2,25 +2,15 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { pg } from '../lib/fin';
 import { rolesOf } from '../lib/coRoles';
+import { TRUST_DDL, TRUST_STATUS as STATUS, TRUST_SECTIONS as SECTIONS, controlProblem, subprocessorProblem, decideProblem } from '../lib/trustRules';
 
 // Trust Center edits: one person proposes with evidence, a different privacy officer approves, and only then does the
 // public site change. Same tables the public site reads (it seeds them on first view; ON CONFLICT keeps edits).
-const DDL = [
-  `CREATE TABLE IF NOT EXISTS site_trust_controls (section TEXT NOT NULL CHECK (section IN ('security','privacy','ai','accessibility')), control TEXT NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('In place','Verified in test','In progress','Not yet in place')), detail TEXT NOT NULL DEFAULT '', sort INT NOT NULL DEFAULT 0,
-    reviewed_on DATE NOT NULL DEFAULT '2026-10-22', PRIMARY KEY (section, control))`,
-  `CREATE TABLE IF NOT EXISTS site_subprocessors (name TEXT PRIMARY KEY, purpose TEXT NOT NULL, added_on DATE NOT NULL DEFAULT '2026-10-22', active BOOLEAN NOT NULL DEFAULT true)`,
-  `CREATE TABLE IF NOT EXISTS site_trust_changes (id BIGSERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('control','subprocessor')), payload JSONB NOT NULL,
-    evidence TEXT NOT NULL, proposed_by TEXT NOT NULL, proposed_name TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
-    decided_by TEXT, decided_name TEXT, decision_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), decided_at TIMESTAMPTZ,
-    CHECK (decided_by IS NULL OR decided_by <> proposed_by))`,
-];
+const DDL = TRUST_DDL;
 let ready: Promise<void> | null = null;
 const ensure = () => { if (!ready) { const s = pg(); ready = (async () => { for (const q of DDL) await s.query(q); })().catch((e) => { ready = null; throw e; }); } return ready; };
 const fail = (m: string): never => { const e = new ZiteError(m); e.userFacingMessage = m; throw e; };
 
-const STATUS = ['In place', 'Verified in test', 'In progress', 'Not yet in place'] as const;
-const SECTIONS = ['security', 'privacy', 'ai', 'accessibility'] as const;
 
 export default createEndpoint({
   description: 'Trust Center: propose control and subprocessor changes with evidence; a second privacy officer approves before the public site changes',
@@ -47,16 +37,13 @@ export default createEndpoint({
 
     if (input.action === 'proposeControl') {
       const control = (input.control ?? '').trim();
-      if (!input.section || !input.status || control.length < 3) fail('Choose a section, a control name and a status.');
       // Status, not certifications: a verified claim needs a dated source.
-      if ((input.status === 'In place' || input.status === 'Verified in test') && evidence.length < 15) fail('A verified status needs evidence: what was checked, how, and when.');
-      if (evidence.length < 5) fail('Say why this change is needed.');
+      const why = controlProblem({ section: input.section, status: input.status, control, evidence }); if (why) fail(why);
       await sql.query(`INSERT INTO site_trust_changes (kind, payload, evidence, proposed_by, proposed_name) VALUES ('control', $1, $2, $3, $4)`,
         [JSON.stringify({ section: input.section, control, status: input.status, detail: (input.detail ?? '').trim().slice(0, 600) }), evidence, me, who]);
     } else if (input.action === 'proposeSubprocessor') {
       const name = (input.name ?? '').trim(), purpose = (input.purpose ?? '').trim();
-      if (name.length < 2 || (input.active !== false && purpose.length < 10)) fail('Give the service name and what it does with data.');
-      if (evidence.length < 5) fail('Say why (e.g. contract signed, DPA reference).');
+      const why = subprocessorProblem({ name, purpose, active: input.active, evidence }); if (why) fail(why);
       await sql.query(`INSERT INTO site_trust_changes (kind, payload, evidence, proposed_by, proposed_name) VALUES ('subprocessor', $1, $2, $3, $4)`,
         [JSON.stringify({ name, purpose: purpose.slice(0, 300), active: input.active !== false }), evidence, me, who]);
     } else if (input.action === 'withdraw') {
@@ -68,10 +55,8 @@ export default createEndpoint({
       if (!canDecide) fail('Only a privacy officer can decide Trust Center changes.');
       const rows = (await sql.query(`SELECT * FROM site_trust_changes WHERE id = $1`, [input.changeId])) as { id: number; kind: string; payload: Record<string, unknown>; proposed_by: string; status: string }[];
       const c = rows[0];
-      if (!c || c.status !== 'pending') fail('This change was already decided.');
-      if (c.proposed_by === me) fail('You proposed this change, so someone else has to decide it.');
       const note = (input.note ?? '').trim();
-      if (input.action === 'reject' && note.length < 5) fail('Add a short reason.');
+      const why = decideProblem({ canDecide, me, change: c, action: input.action, note }); if (why) fail(why);
       if (input.action === 'approve') {
         const p = c.payload;
         if (c.kind === 'control') {

@@ -97,7 +97,7 @@ export default function AtlasPage() {
       <Loadable state={s}>{(d: any) => (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Figure label="Role-app capabilities built" value={d.coverage.capabilities} note={`${d.coverage.partial} partial, ${d.coverage.missing} missing across ${d.coverage.roleApps} role apps`} />
+            <Figure label="Role-app capabilities built" value={d.coverage.capabilities} note={`${d.coverage.partial} partial, ${d.coverage.missing} missing, ${d.coverage.blocked} blocked by owner decisions, across ${d.coverage.roleApps} role apps`} />
             <Figure label="Role apps fully built" value={d.coverage.rolesFull} />
             <Figure label="Workflow contracts reviewed" value={d.coverage.workflowContracts} note="No approved workflow scope is recorded yet" />
             <Figure label="Capabilities activated" value={d.coverage.activation} note="No institution has approved activation" />
