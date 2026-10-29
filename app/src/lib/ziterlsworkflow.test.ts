@@ -15,7 +15,7 @@ function failures(workflow: string): string[] {
     ['read-only token', /^permissions:\n\s+contents: read/m],
     ['PostgreSQL 17 service', /image: postgres:17\b/],
     ['Redis service', /image: redis:7\.4-alpine\b/],
-    ['no generated lock', /npm install --ignore-scripts --package-lock=false\n\s+test ! -e package-lock\.json/],
+    ['frozen resolver install', /npm ci --ignore-scripts\n\s+git diff --exit-code -- package-lock\.json/],
     ['all SQL migrations', /migration_006\.sql[\s\S]*migration_007_registrar\.sql[\s\S]*migration_008_registrar_doc\.sql[\s\S]*migration_009_tuition\.sql[\s\S]*migration_010_audit_outbox\.sql[\s\S]*migration_011_files\.sql/],
     ['SQL isolation checks', /bash test\.sh 127\.0\.0\.1 5432/],
     ['TypeScript check', /npm run typecheck/],
@@ -32,7 +32,8 @@ describe('the standalone Zite RLS verifier workflow', () => {
   it.each([
     ['database service', 'image: postgres:17', 'image: postgres:16'],
     ['Redis service', 'image: redis:7.4-alpine', 'image: redis:7-alpine'],
-    ['lock boundary', 'npm install --ignore-scripts --package-lock=false', 'npm install'],
+    ['lock install', 'npm ci --ignore-scripts', 'npm install'],
+    ['lock drift check', 'git diff --exit-code -- package-lock.json', 'true'],
     ['SQL isolation suite', 'bash test.sh 127.0.0.1 5432', 'true'],
     ['typecheck', 'npm run typecheck', 'true'],
     ['tests', 'run: npm test -- --no-file-parallelism', 'run: npm test'],

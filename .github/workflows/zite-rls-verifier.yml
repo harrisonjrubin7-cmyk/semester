@@ -55,11 +55,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
-      - name: Install exact direct verifier dependencies without creating a lock
+      - name: Install the committed verifier dependency graph
         working-directory: zite/docs/execution/rls/api
         run: |
-          npm install --ignore-scripts --package-lock=false
-          test ! -e package-lock.json
+          npm ci --ignore-scripts
+          git diff --exit-code -- package-lock.json
       - name: Build the synthetic verification database
         working-directory: zite/docs/execution/rls
         run: |

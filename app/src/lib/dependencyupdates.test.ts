@@ -133,8 +133,17 @@ describe('Zite RLS verifier dependency updates', () => {
     expect(ziteRlsVerifierUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
   });
 
-  it('keeps the unresolved transitive graph explicit', () => {
-    expect(existsSync(join(root, 'zite/docs/execution/rls/api/package-lock.json'))).toBe(false);
+  it('holds a committed npm graph that matches every direct range', () => {
+    const manifest = JSON.parse(read('zite/docs/execution/rls/api/package.json'));
+    const lock = JSON.parse(read('zite/docs/execution/rls/api/package-lock.json'));
+    expect(lock.lockfileVersion).toBe(3);
+    expect(lock.packages[''].dependencies).toEqual(manifest.dependencies);
+    expect(lock.packages[''].devDependencies).toEqual(manifest.devDependencies);
+    expect(Object.entries(lock.packages).filter(([path]) => path.startsWith('node_modules/'))).not.toHaveLength(0);
+    for (const [path, resolved] of Object.entries<Record<string, unknown>>(lock.packages)) {
+      if (!path.startsWith('node_modules/') || !('resolved' in resolved)) continue;
+      expect(resolved, `${path} has no integrity`).toHaveProperty('integrity');
+    }
   });
 
   it('fails closed when the directory or npm ecosystem is removed', () => {
