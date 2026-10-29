@@ -159,7 +159,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'code-test',
     state: 'partial',
     proof: ['app/src/lib/edgeguards.test.ts', 'app/src/lib/edgeentryauth.test.ts'],
-    gap: 'All eighteen functions set verify_jwt = false and rely on their own checks. Fourteen use direct handler behavior tests; four inline Deno entrypoints use ordered source mutation controls, not an authenticated deployed-function exercise.',
+    gap: 'All eighteen functions set verify_jwt = false and rely on their own checks. Fifteen use direct handler behavior tests; three inline Deno entrypoints use ordered source mutation controls, not an authenticated deployed-function exercise.',
     owner: 'security',
   },
   {

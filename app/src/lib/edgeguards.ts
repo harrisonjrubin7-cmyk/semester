@@ -64,7 +64,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
   { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },
   { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: [/handleProductivitySourceCheck\(/], behaviorProof: proof('app/src/lib/productivitysourcecheck.test.ts', /handleProductivitySourceCheck/, /rejects a missing, invalid or unreadable session/) },
-  { fn: 'fetchcal', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /fetchcal/, /getUser/) },
+  { fn: 'fetchcal', guards: ['user-token'], evidence: [/handleFetchcalRequest\(/], behaviorProof: proof('app/src/lib/fetchcalauth.test.ts', /handleFetchcalRequest/, /before protected fetch/) },
   { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
   { fn: 'access-saga-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/, /access_saga_tick_authorized/], behaviorProof: proof('app/src/lib/integrationtick.test.ts', /serveTick/, /status\)\.toBe\(401\)/) },
   { fn: 'ops-projector', guards: ['shared-secret'], evidence: [/OPS_PROJECTOR_SECRET/, /serveOpsProjector\(/], behaviorProof: proof('app/src/lib/opsprojector.test.ts', /serveOpsProjector/, /status\)\.toBe\(401\)/) },
