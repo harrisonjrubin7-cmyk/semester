@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Flag } from 'lucide-react';
 import { PageHeader, Panel, Empty, SourceTag, fmt, useLoad, Loadable, errMsg } from '../components/kit';
 
-type G = { id: string; name: string; kind: string; members: number; joined: boolean };
+type G = { id: string; name: string; kind: string; members: number; joined: boolean; policy?: string; archived?: boolean; pending?: boolean };
 type E = { id: string; title: string; startsAt: string | null; location: string; group: string; going: boolean; count: number };
 
 function ProfileVisibility() {
@@ -47,7 +47,8 @@ export default function Campus() {
                 <Panel key={g.id}>
                   <div className="flex items-start justify-between"><p className="eyebrow">{g.kind}</p><div className="flex items-center gap-1"><SourceTag source="Sample" /><ReportBtn target={g.name} /></div></div>
                   <p className="font-display text-xl">{g.name}</p><p className="text-sm text-muted-foreground">{g.members} members</p>
-                  <Button size="sm" variant={g.joined ? 'outline' : 'default'} className="mt-3 w-full" onClick={() => act(() => campus({ action: 'toggleGroup', id: g.id }))}>{g.joined ? '✓ Joined · Leave' : 'Join'}</Button>
+                  {g.pending ? <p className="mt-3 text-xs text-muted-foreground">… Request sent. A community manager will answer.</p> : g.archived && !g.joined ? <p className="mt-3 text-xs text-muted-foreground">Archived · not taking new members</p> :
+                    <Button size="sm" variant={g.joined ? 'outline' : 'default'} className="mt-3 w-full" onClick={() => act(async () => { const r = (await campus({ action: 'toggleGroup', id: g.id })) as { requested?: boolean }; if (r.requested) toast.success('Request sent to the community managers'); })}>{g.joined ? '✓ Joined · Leave' : g.policy === 'request' ? 'Ask to join' : 'Join'}</Button>}
                 </Panel>))}
             </div>
             <Panel title="Events">

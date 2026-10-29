@@ -5,6 +5,7 @@ import { pg } from '../lib/pg';
 import { approvedEmployers } from '../lib/crrServer';
 import { EMP_PROFILE_MIGRATION } from '../lib/empProfileMigration';
 import { requireAccess, ids, first, forbid, audit } from '../lib/server';
+import { ensureCmy } from '../lib/cmyServer';
 
 let empReady: Promise<void> | null = null;
 const ensureEmp = () => { if (!empReady) { const sql = pg(); empReady = (async () => { for (const q of EMP_PROFILE_MIGRATION) await sql.query(q); })().catch((e) => { empReady = null; throw e; }); } return empReady; };
@@ -14,7 +15,7 @@ export default createEndpoint({
   authenticated: true,
   inputSchema: z.discriminatedUnion('action', [
     z.object({ action: z.literal('get') }),
-    z.object({ action: z.literal('toggleGroup'), id: z.string() }),
+    z.object({ action: z.literal('toggleGroup'), id: z.string(), note: z.string().max(500).optional() }),
     z.object({ action: z.literal('toggleEvent'), id: z.string() }),
     z.object({ action: z.literal('apply'), id: z.string(), shareItems: z.array(z.string()).max(10).default([]), shareContact: z.boolean().default(false) }),
     z.object({ action: z.literal('report'), target: z.string(), reason: z.string().min(3) }),
@@ -27,9 +28,21 @@ export default createEndpoint({
     const toggle = (list: string[]) => (list.includes(uid) ? list.filter((x) => x !== uid) : [...list, uid]);
     if (input.action === 'toggleGroup') {
       const g = await zite.groups.findOne({ id: input.id });
-      if (!g || !ids(g.institution).includes(a.institutionId) && first(g.institution)) forbid();
-      await zite.groups.update({ id: input.id, record: { members: toggle(ids(g!.members)) } as never });
-      return { ok: true };
+      if (!g) forbid();
+      const members = ids(g!.members);
+      if (members.includes(uid)) {   // leaving is always allowed
+        await zite.groups.update({ id: input.id, record: { members: members.filter((m) => m !== uid) } as never });
+        return { ok: true, joined: false };
+      }
+      // Joining: decided in the database from the group's own institution and kind (cmy_can_join). Fixed 29 Oct: this used to let
+      // anyone join any group, including course discussions and groups with no institution.
+      await ensureCmy();
+      const groupTenant = ids(g!.institution).includes(a.institutionId) ? a.institutionId : (first(g!.institution) ?? null);
+      const verdict = ((await pg().query(`SELECT cmy_can_join($1,$2,$3,$4,$5,$6) AS r`, [a.institutionId, uid, g!.id, groupTenant, g!.kind ?? 'Club', input.note ?? ''])) as { r: string }[])[0].r;
+      if (verdict === 'requested') return { ok: true, joined: false, requested: true };
+      if (verdict !== 'join') forbid(verdict);
+      await zite.groups.update({ id: input.id, record: { members: [...members, uid] } as never });
+      return { ok: true, joined: true };
     }
     if (input.action === 'toggleEvent') {
       const e = await zite.events.findOne({ id: input.id });
@@ -83,11 +96,14 @@ export default createEndpoint({
     ]);
     const mine = (g: (typeof groups.records)[number]) => !first(g.institution) || ids(g.institution).includes(a.institutionId);
     const okGroups = groups.records.filter(mine);
+    await ensureCmy();
+    const cmy = new Map(((await pg().query(`SELECT group_id, join_policy, state FROM cmy_communities WHERE tenant_id = $1`, [a.institutionId])) as { group_id: string; join_policy: string; state: string }[]).map((r) => [r.group_id, { policy: r.join_policy, archived: r.state === 'archived' }]));
+    const pending = new Set(((await pg().query(`SELECT group_id FROM cmy_requests WHERE tenant_id = $1 AND user_id = $2 AND state = 'pending'`, [a.institutionId, uid])) as { group_id: string }[]).map((r) => r.group_id));
     const okIds = new Set(okGroups.map((g) => g.id));
     const gName = Object.fromEntries(okGroups.map((g) => [g.id, g.name ?? '']));
     events.records = events.records.filter((e) => !first(e.group) || okIds.has(first(e.group)!));
     return {
-      groups: okGroups.filter((g) => g.kind !== 'Course Discussion').map((g) => ({ id: g.id, name: g.name ?? '', kind: g.kind ?? 'Club', members: ids(g.members).length, joined: ids(g.members).includes(uid) })),
+      groups: okGroups.filter((g) => g.kind !== 'Course Discussion' && first(g.institution)).map((g) => ({ id: g.id, name: g.name ?? '', kind: g.kind ?? 'Club', members: ids(g.members).length, joined: ids(g.members).includes(uid), policy: cmy.get(g.id)?.policy ?? 'open', archived: cmy.get(g.id)?.archived ?? false, pending: pending.has(g.id) })),
       events: events.records.map((e) => ({ id: e.id, title: e.title ?? '', startsAt: e.startsAt ?? null, location: e.location ?? '', group: gName[first(e.group) ?? ''] ?? '', going: ids(e.attendees).includes(uid), count: ids(e.attendees).length }))
         .sort((x, y) => (x.startsAt ?? '').localeCompare(y.startsAt ?? '')),
       opportunities: opps.records.filter((o) => approved.has(first(o.postedBy) ?? '')).map((o) => ({ id: o.id, title: o.title ?? '', kind: o.kind ?? 'Job', employer: o.employerName ?? '', applied: ids(o.applicants).includes(uid) })),

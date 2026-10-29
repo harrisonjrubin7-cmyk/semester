@@ -5,11 +5,13 @@ import { requireAccess, requireAction, forbid, audit, userNames, tenantScope } f
 import { pg } from '../lib/pg';
 import { PTA_MIGRATION } from '../lib/ptaMigration';
 import { TRF_MIGRATION } from '../lib/trfMigration';
+import { PRC_MIGRATION } from '../lib/prcMigration';
+import { SUP_MIGRATION } from '../lib/supMigration';
 import { SCOPES, relStatus, accessLive, RelState } from '../lib/partnerRules';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
-const ensure = () => { if (!ready) ready = (async () => { for (const q of [...TRF_MIGRATION, ...PTA_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
+const ensure = () => { if (!ready) ready = (async () => { for (const q of [...TRF_MIGRATION, ...PTA_MIGRATION, ...PRC_MIGRATION, ...SUP_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) : null);
@@ -30,6 +32,7 @@ export default createEndpoint({
     z.object({ action: z.literal('accept'), relId: z.number().int(), expectedVersion: z.number().int(), hash: z.string().min(10).max(100) }),
     z.object({ action: z.literal('articulate'), relId: z.number().int(), course: z.string().min(3).max(30), outcome: z.enum(['equivalent', 'elective', 'no_credit']), code: z.string().max(20).default(''),
       credits: z.number().positive().max(12).nullable(), term: z.string().min(4).max(20) }),
+    z.object({ action: z.literal('orderAck'), relId: z.number().int(), poId: z.number().int(), kind: z.enum(['acknowledged', 'shipped']), note: z.string().max(300).default('') }),
     z.object({ action: z.literal('setStaff'), email: z.string().email().max(200), on: z.boolean() }),
     z.object({ action: z.literal('manage'), relId: z.number().int(), step: z.enum(['verify', 'reject', 'propose', 'suspend', 'reinstate', 'offboard']), expectedVersion: z.number().int(), note: z.string().max(2000).default(''),
       text: z.string().max(10000).default(''), validTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null), scopes: z.array(z.enum(SCOPES)).default([]) }),
@@ -77,6 +80,12 @@ export default createEndpoint({
       if (!out?.startsWith('ok:')) forbid(out ?? 'Failed.');
       result = { ruleId: Number(out!.slice(3)) };
     }
+    if (input.action === 'orderAck') {
+      const rel = (await sql.query(`SELECT tenant_id, org_id FROM pta_relationships WHERE id = $1`, [input.relId])) as Row[];
+      if (!rel.length) forbid('Relationship not found.');
+      fail(await one(`SELECT sup_ack($1,$2,$3,$4,$5,$6) AS r`, [me, String(rel[0].tenant_id), Number(rel[0].org_id), input.poId, input.kind, input.note]));
+      result = { acked: input.poId };
+    }
     if (input.action === 'setStaff') {
       if (!isAdmin || !T) forbid('Only administrators manage partner managers.');
       const uid = await userByEmail(input.email);
@@ -105,13 +114,16 @@ export default createEndpoint({
     const names = await userNames([...new Set([...members.map((m) => String(m.user_id)), ...staff.map((s) => String(s.user_id)), ...queue.flatMap((q) => [q.verified_by, q.proposed_by, q.accepted_by]).filter(Boolean).map(String)])]);
     const nm = (v: unknown) => (v ? names[String(v)] ?? 'Member' : null);
     const arts = orgIds.length ? (await sql.query(`SELECT * FROM trf_rules WHERE partner_org_id = ANY($1::bigint[]) ORDER BY created_at DESC LIMIT 300`, [orgIds])) as Row[] : [];
+    const ordersByRel = new Map<string, Row[]>();
+    for (const r of rels) { if (String(r.state) === 'active' && ((r.scopes as string[]) ?? []).includes('view_orders')) ordersByRel.set(`${r.tenant_id}:${r.org_id}`, (await sql.query(`SELECT * FROM sup_orders($1,$2)`, [String(r.tenant_id), Number(r.org_id)])) as Row[]); }
     const rel = (r: Row) => {
       const st = String(r.state) as RelState, to = r.valid_to ? new Date(String(r.valid_to) + 'T23:59:59Z') : null;
       return { id: Number(r.id), institution: instName[String(r.tenant_id)] ?? 'Institution', state: st, status: relStatus(st, to, now), live: accessLive(st, to, now), version: Number(r.version),
         requestedScopes: (r.requested_scopes as string[]) ?? [], scopes: (r.scopes as string[]) ?? [], validTo: day(r.valid_to), agreementText: String(r.agreement_text), agreementHash: r.agreement_hash ? String(r.agreement_hash) : null,
         statusNote: String(r.status_note), acceptedAt: iso(r.accepted_at),
         articulations: arts.filter((x) => String(x.tenant_id) === String(r.tenant_id) && String(x.partner_org_id) === String(r.org_id))
-          .map((x) => ({ id: Number(x.id), course: String(x.ext_course), outcome: String(x.outcome), code: (x.internal_code as string) ?? null, state: String(x.state), note: (x.decision_note as string) ?? '' })) };
+          .map((x) => ({ id: Number(x.id), course: String(x.ext_course), outcome: String(x.outcome), code: (x.internal_code as string) ?? null, state: String(x.state), note: (x.decision_note as string) ?? '' })),
+        orders: (ordersByRel.get(`${r.tenant_id}:${r.org_id}`) ?? []).map((x) => ({ poId: Number(x.po_id), supplier: String(x.supplier), description: String(x.description), amount: Number(x.amount), state: String(x.po_state), received: Number(x.received), invoiced: Number(x.invoiced), ackKind: x.ack_kind ? String(x.ack_kind) : null, ackAt: iso(x.ack_at) })) };
     };
 
     return {

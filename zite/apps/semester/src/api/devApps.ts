@@ -10,7 +10,7 @@ export default createEndpoint({
   description: 'Administrators register sandbox apps, install them with scopes for their institution, and revoke installs',
   authenticated: true,
   inputSchema: z.object({
-    action: z.enum(['list', 'register', 'requestScopes', 'install', 'revoke', 'suspend']),
+    action: z.enum(['list', 'register', 'requestScopes', 'install', 'revoke', 'rotate', 'suspend']),
     name: z.string().max(80).optional(),
     appId: z.string().optional(),
     installId: z.string().optional(),
@@ -61,6 +61,12 @@ export default createEndpoint({
       const r = (await sql.query(`UPDATE dev_installs SET status = 'revoked', revoked_by = $3, revoked_at = now() WHERE id = $1 AND tenant_id = $2 AND status = 'active' RETURNING id`, [input.installId, T, a.userId])) as unknown[];
       if (!r.length) throw new ZiteError('Install not found or already revoked.');
       await log('revoke', input.installId!); message = 'Revoked. The next call with that token fails.';
+    } else if (input.action === 'rotate') {
+      const minted = `smst_sbx_${crypto.randomUUID().replace(/-/g, '')}${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      const r = (await sql.query(`SELECT dev_rotate_token($1,$2,$3,$4,$5) AS e`, [a.userId, T, input.installId, await sha256(minted), input.days ?? 30])) as { e: string | null }[];
+      if (r[0].e) throw new ZiteError(r[0].e);
+      await audit(a, 'Developer app: rotate token', input.installId!, `${input.days ?? 30} days`, 'Institution');
+      token = minted; message = 'Token rotated. The old token stops working now — copy the new one, only its hash is stored.';
     } else if (input.action === 'suspend') {
       const r = (await sql.query(`UPDATE dev_apps SET status = 'suspended' WHERE id = $1 AND developer_id = $2 RETURNING id`, [input.appId, a.userId])) as unknown[];
       if (!r.length) throw new ZiteError('Only the developer who registered an app can suspend it.');

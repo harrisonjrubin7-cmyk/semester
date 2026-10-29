@@ -25,6 +25,9 @@ export default createEndpoint({
     z.object({ action: z.literal('appeal'), reportId: z.string(), text: z.string().max(2000) }),
     z.object({ action: z.literal('reviewAppeal'), reportId: z.string(), outcome: z.enum(['upheld', 'overturned']), note: z.string().max(1000) }),
     z.object({ action: z.literal('setModerator'), userId: z.string(), on: z.boolean() }),
+    z.object({ action: z.literal('warn'), reportId: z.string(), guideline: z.string().max(1000), message: z.string().max(2000), days: z.number().int() }),
+    z.object({ action: z.literal('withdrawWarning'), id: z.number().int(), reason: z.string().max(1000) }),
+    z.object({ action: z.literal('reverse'), reportId: z.string(), reason: z.string().max(1000) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -76,6 +79,30 @@ export default createEndpoint({
       await audit(a, `Moderation appeal ${input.outcome}`, `report:${input.reportId}`, input.note, 'Moderator');
       return { ok: true };
     }
+    if (input.action === 'warn') {
+      // The warned person is the author of the report, resolved here; the request never names a person.
+      const r = ((await sql.query(`SELECT author_id FROM mod_reports WHERE id = $1 AND tenant_id = $2`, [input.reportId, T])) as { author_id: string }[])[0];
+      if (!r) forbid('Report not found.');
+      const out = ((await sql.query(`SELECT mod_warn($1,$2,$3,$4,$5,$6,$7) AS e`, [uid, T, r!.author_id, input.reportId, input.guideline, input.message, input.days])) as { e: string }[])[0].e;
+      if (!out?.startsWith('ok:')) forbid(out ?? 'Could not warn.');
+      await notify(r!.author_id, `A moderator sent you a warning about a community guideline: ${input.message} It expires in ${input.days} days and does not affect your account.`);
+      await audit(a, 'Moderation warning', `report:${input.reportId}`, input.guideline, 'Moderator');
+      return { ok: true };
+    }
+    if (input.action === 'withdrawWarning') {
+      check(((await sql.query(`SELECT mod_withdraw_warning($1,$2,$3,$4) AS e`, [uid, T, input.id, input.reason])) as { e: string | null }[])[0].e);
+      const w = ((await sql.query(`SELECT author_id FROM mod_warnings WHERE id = $1`, [input.id])) as { author_id: string }[])[0];
+      if (w) await notify(w.author_id, `A moderator withdrew a warning they had given you: ${input.reason}`);
+      await audit(a, 'Moderation warning withdrawn', `modWarning:${input.id}`, input.reason, 'Moderator');
+      return { ok: true };
+    }
+    if (input.action === 'reverse') {
+      check(((await sql.query(`SELECT mod_reverse($1,$2,$3,$4) AS e`, [uid, T, input.reportId, input.reason])) as { e: string | null }[])[0].e);
+      const r = ((await sql.query(`SELECT author_id FROM mod_reports WHERE id = $1`, [input.reportId])) as { author_id: string }[])[0];
+      if (r) await notify(r.author_id, `A moderator who was not involved reversed a decision on your post. It is visible again. ${input.reason}`);
+      await audit(a, 'Moderation reversed', `report:${input.reportId}`, input.reason, 'Moderator');
+      return { ok: true };
+    }
     if (input.action === 'setModerator') {
       if (!a.roles.includes('Administrator')) forbid('Only administrators appoint moderators.');
       if (!(await tenantScope(T)).members.has(input.userId)) forbid('That person is not in your institution.');
@@ -90,7 +117,26 @@ export default createEndpoint({
       const queue = isMod ? (await sql.query(`SELECT * FROM mod_reports WHERE tenant_id = $1 AND state IN ('open','appealed') ORDER BY number`, [T])) as Record<string, unknown>[] : [];
       const mods = a.roles.includes('Administrator') ? (await sql.query(`SELECT user_id FROM mod_staff WHERE tenant_id = $1 AND revoked_at IS NULL`, [T])) as { user_id: string }[] : [];
       const members = a.roles.includes('Administrator') ? [...(await tenantScope(T)).members].filter((m) => m !== uid) : [];
-      const names = await userNames([...queue.flatMap((q) => [String(q.author_id), String(q.reporter_id)]), ...mods.map((m) => m.user_id), ...members]);
+      const recent = isMod ? (await sql.query(`SELECT r.* FROM mod_reports r WHERE r.tenant_id = $1 AND r.decision IN ('hide','remove') AND r.state IN ('decided','appeal_decided')
+        AND coalesce(r.appeal_outcome,'') <> 'overturned' AND r.decided_at > now() - interval '30 days' AND NOT EXISTS (SELECT 1 FROM mod_reversals v WHERE v.report_id = r.id) ORDER BY r.number DESC LIMIT 100`, [T])) as Record<string, unknown>[] : [];
+      const warnings = isMod ? (await sql.query(`SELECT * FROM mod_warnings WHERE tenant_id = $1 AND withdrawn_at IS NULL AND expires_at > now() ORDER BY id DESC LIMIT 200`, [T])) as Record<string, unknown>[] : [];
+      const myWarnings = (await sql.query(`SELECT * FROM mod_warnings WHERE tenant_id = $1 AND author_id = $2 ORDER BY id DESC LIMIT 50`, [T, uid])) as Record<string, unknown>[];
+      // Contextual review: counts from mod_context (NULL unless an uninvolved moderator) and up to two posts either side in the same group.
+      const context = new Map<string, unknown>();
+      for (const q of queue) {
+        const c = ((await sql.query(`SELECT mod_context($1,$2,$3) AS c`, [uid, T, String(q.id)])) as { c: Record<string, number> | null }[])[0].c;
+        if (!c) continue;
+        const m = await zite.messages.findOne({ id: String(q.message_id) }).catch(() => null);
+        let around: { author: string; body: string; at: string | null; reported: boolean }[] = [];
+        if (m && first(m.group)) {
+          const all = (await zite.messages.findAll({ filters: { group: first(m.group)! }, limit: 200 })).records.sort((x, y) => (x.sentAt ?? '').localeCompare(y.sentAt ?? ''));
+          const i = all.findIndex((x) => x.id === m.id);
+          const nm = await userNames(all.slice(Math.max(0, i - 2), i + 3).map((x) => first(x.sender) ?? ''));
+          around = all.slice(Math.max(0, i - 2), i + 3).map((x) => ({ author: nm[first(x.sender) ?? ''] ?? 'Member', body: (x.body ?? '').slice(0, 300), at: x.sentAt ?? null, reported: x.id === m.id }));
+        }
+        context.set(String(q.id), { counts: c, around });
+      }
+      const names = await userNames([...queue.flatMap((q) => [String(q.author_id), String(q.reporter_id)]), ...recent.map((r) => String(r.author_id)), ...warnings.map((w) => String(w.author_id)), ...mods.map((m) => m.user_id), ...members]);
       return {
         isMod, isAdmin: a.roles.includes('Administrator'),
         myDecisions: mineDecided.map((r) => ({ id: String(r.id), excerpt: String(r.excerpt), decision: String(r.decision), policy: String(r.policy ?? ''), state: String(r.state),
@@ -98,7 +144,10 @@ export default createEndpoint({
           canAppeal: r.state === 'decided' && new Date(String(r.decided_at)).getTime() > Date.now() - 14 * 864e5 })),
         queue: queue.map((r) => ({ id: String(r.id), number: Number(r.number), excerpt: String(r.excerpt), reason: String(r.reason), state: String(r.state),
           author: names[String(r.author_id)] ?? 'Member', reporter: names[String(r.reporter_id)] ?? 'Member', involved: [r.author_id, r.reporter_id, r.decided_by].includes(uid),
-          decision: (r.decision as string) ?? null, policy: (r.policy as string) ?? '', appealText: (r.appeal_text as string) ?? '', createdAt: iso(r.created_at) })),
+          decision: (r.decision as string) ?? null, policy: (r.policy as string) ?? '', appealText: (r.appeal_text as string) ?? '', createdAt: iso(r.created_at), context: context.get(String(r.id)) ?? null })),
+        reversible: recent.filter((r) => ![r.decided_by, r.author_id, r.reporter_id, r.appeal_by].includes(uid)).map((r) => ({ id: String(r.id), number: Number(r.number), excerpt: String(r.excerpt), decision: String(r.decision), policy: String(r.policy ?? ''), author: names[String(r.author_id)] ?? 'Member', decidedAt: iso(r.decided_at) })),
+        warnings: warnings.map((w) => ({ id: Number(w.id), author: names[String(w.author_id)] ?? 'Member', mine: String(w.author_id) === uid, guideline: String(w.guideline), message: String(w.message), expiresAt: iso(w.expires_at), createdAt: iso(w.created_at) })),
+        myWarnings: myWarnings.map((w) => ({ id: Number(w.id), message: String(w.message), guideline: String(w.guideline), expiresAt: iso(w.expires_at), withdrawn: !!w.withdrawn_at, withdrawnReason: (w.withdrawn_reason as string) ?? '', active: !w.withdrawn_at && new Date(String(w.expires_at)).getTime() > Date.now() })),
         moderators: mods.map((m) => ({ id: m.user_id, name: names[m.user_id] ?? 'Member' })),
         members: members.map((m) => ({ id: m, name: names[m] ?? 'Member' })).sort((x, y) => x.name.localeCompare(y.name)),
       };

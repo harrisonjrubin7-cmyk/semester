@@ -8,13 +8,14 @@ import { cn } from '@project/components/lib/utils';
 import { useLoad } from './hooks';
 import { ReviewQueue, AppsTable, KeysTable, AuditLog } from './components/Console';
 import { Sandbox, Docs } from './components/Sandbox';
+import { MyApps } from './components/MyApps';
 import { Wordmark } from '@project/components/brand/Mark';
 import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const TABS = [
   { id: 'review', label: 'Review queue', group: 'Platform' }, { id: 'apps', label: 'Apps', group: 'Platform' },
   { id: 'keys', label: 'Tokens', group: 'Platform' }, { id: 'audit', label: 'Audit', group: 'Platform' },
-  { id: 'sandbox', label: 'Sandbox', group: 'Build' }, { id: 'docs', label: 'API reference', group: 'Build' },
+  { id: 'sandbox', label: 'Sandbox', group: 'Build' }, { id: 'myapps', label: 'My apps', group: 'Build' }, { id: 'docs', label: 'API reference', group: 'Build' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -35,6 +36,7 @@ function PlatformArea({ tab }: { tab: Tab }) {
 
 function BuildArea({ tab }: { tab: Tab }) {
   const s = useLoad(() => sandbox({ action: 'list' }));
+  if (tab === 'myapps') return <MyApps />;
   if (s.error) return <Notice>{s.error}</Notice>;
   if (!s.data) return <Loading />;
   if (!s.data.ready) return <Notice>{s.data.message}</Notice>;

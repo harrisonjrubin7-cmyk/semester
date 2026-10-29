@@ -68,4 +68,19 @@ BEGIN
   INSERT INTO dev_audit (tenant_id, actor_id, action, target, detail) VALUES ('semester-company', p_reviewer, CASE WHEN p_approve THEN 'review.approve' ELSE 'review.reject' END, a.id, array_to_string(a.requested_scopes, ', ') || ' · ' || p_note);
   RETURN NULL;
 END $$`,
+  // Token rotation: the institution that owns an install replaces its token. The old hash is
+  // overwritten, so the old token stops matching any install on the very next call.
+  `CREATE OR REPLACE FUNCTION dev_rotate_token(p_actor text, p_tenant text, p_install text, p_token_hash text, p_days int) RETURNS text LANGUAGE plpgsql AS $$
+DECLARE i dev_installs%ROWTYPE; a dev_apps%ROWTYPE;
+BEGIN
+  SELECT * INTO i FROM dev_installs WHERE id = p_install AND tenant_id = p_tenant FOR UPDATE;
+  IF NOT FOUND THEN RETURN 'Install not found.'; END IF;
+  IF i.status <> 'active' THEN RETURN 'Only an active install can be rotated. A revoked install needs a new install.'; END IF;
+  SELECT * INTO a FROM dev_apps WHERE id = i.app_id;
+  IF a.status = 'suspended' THEN RETURN 'The app is suspended; its tokens cannot be rotated.'; END IF;
+  IF p_days < 1 OR p_days > 90 THEN RETURN 'Tokens last between 1 and 90 days.'; END IF;
+  UPDATE dev_installs SET token_hash = p_token_hash, expires_at = now() + make_interval(days => p_days) WHERE id = i.id;
+  INSERT INTO dev_audit (tenant_id, actor_id, action, target, detail) VALUES (p_tenant, p_actor, 'rotate', i.id, i.app_id || ' · token replaced, old token stops working now');
+  RETURN NULL;
+END $$`,
 ];

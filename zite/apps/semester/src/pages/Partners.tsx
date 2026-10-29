@@ -5,6 +5,7 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
 import { PageHeader, Panel, Empty, Loadable, useLoad, Status, errMsg, fmt } from '../components/kit';
+import { money } from '../lib/procureRules';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const sel = 'mt-1 block w-full rounded-md border border-border bg-background p-2 text-sm';
@@ -40,6 +41,27 @@ function Articulate({ r, reload }: { r: any; reload: () => void }) {
   );
 }
 
+function SupplierOrders({ r, reload }: { r: any; reload: () => void }) {
+  const act = useAct(reload);
+  const [note, setNote] = useState('');
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-border p-2">
+      <p className="text-xs font-medium">Purchase orders from {r.institution}</p>
+      <Input aria-label="Note for the buyer" placeholder="Optional note for the buyer (e.g. a tracking reference)" value={note} onChange={(e) => setNote(e.target.value)} />
+      {r.orders.length ? <ul className="space-y-2">{r.orders.map((o: any) => (
+        <li key={o.poId} className="rounded-md border border-border p-2 text-xs">
+          <p><b>PO #{o.poId}</b> · {o.description} · {money(o.amount)} · <Status value={o.state} /></p>
+          <p className="mt-1 text-muted-foreground">Received {money(o.received)} of {money(o.amount)} · invoiced {money(o.invoiced)}{o.ackKind ? ` · you marked it ${o.ackKind}${o.ackAt ? ` on ${fmt(o.ackAt)}` : ''}` : ' · not yet acknowledged'}</p>
+          {o.state === 'issued' && <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => act(() => partners({ action: 'orderAck', relId: r.id, poId: o.poId, kind: 'acknowledged', note }), 'Order acknowledged.')}>Acknowledge</Button>
+            <Button size="sm" variant="outline" onClick={() => act(() => partners({ action: 'orderAck', relId: r.id, poId: o.poId, kind: 'shipped', note }), 'Marked as shipped.')}>Mark shipped</Button>
+          </div>}
+        </li>))}</ul> : <p className="text-xs text-muted-foreground">No orders yet. Orders appear once the institution issues a purchase order to a supplier name its buyer has linked to your organization.</p>}
+      <p className="text-xs text-muted-foreground">Acknowledging or marking shipped tells the buyer where things stand. It never changes the order, and nothing is paid here.</p>
+    </div>
+  );
+}
+
 function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
   const act = useAct(reload);
   const [m, setM] = useState({ email: '', role: 'member' });
@@ -58,6 +80,7 @@ function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
               {admin ? <Button size="sm" onClick={() => act(() => partners({ action: 'accept', relId: r.id, expectedVersion: r.version, hash: r.agreementHash }), 'Agreement accepted.')}>Accept these exact terms</Button> : <p className="text-xs text-muted-foreground">An administrator of your organization accepts it.</p>}
             </div>}
             {r.live && r.scopes.includes('propose_articulation') && <Articulate r={r} reload={reload} />}
+            {r.live && r.scopes.includes('view_orders') && <SupplierOrders r={r} reload={reload} />}
           </li>))}</ul> : <Empty>Not working with any institution yet.</Empty>}
         {admin && <div className="mt-2 space-y-2 rounded-md border border-border p-2">
           <p className="text-xs font-medium">Apply to an institution</p>

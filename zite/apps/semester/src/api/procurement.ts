@@ -4,10 +4,12 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, forbid, audit, userNames, tenantScope } from '../lib/server';
 import { pg } from '../lib/pg';
 import { PRC_MIGRATION } from '../lib/prcMigration';
+import { SUP_MIGRATION } from '../lib/supMigration';
+import { PTA_MIGRATION } from '../lib/ptaMigration';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
-const ensure = () => { if (!ready) ready = (async () => { for (const q of PRC_MIGRATION) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
+const ensure = () => { if (!ready) ready = (async () => { for (const q of [...PRC_MIGRATION, ...PTA_MIGRATION, ...SUP_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 const CENTS = z.number().int().positive().max(1_000_000_000);
 
@@ -31,6 +33,8 @@ export default createEndpoint({
     z.object({ action: z.literal('invoice'), poId: z.number().int(), invoiceNo: z.string().min(1).max(60), amount: CENTS }),
     z.object({ action: z.literal('invoiceStep'), invoiceId: z.number().int(), step: z.enum(['accept', 'dispute', 'handoff', 'posted']), note: z.string().max(500).default('') }),
     z.object({ action: z.literal('closePo'), poId: z.number().int() }),
+    z.object({ action: z.literal('linkSupplier'), supplierKey: z.string().min(1).max(200), orgId: z.number().int() }),
+    z.object({ action: z.literal('unlinkSupplier'), supplierKey: z.string().min(1).max(200) }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -72,6 +76,8 @@ export default createEndpoint({
     if (input.action === 'invoice') result = { invoiceId: ok(await one(`SELECT prc_invoice($1,$2,$3,$4,$5) AS r`, [me, T, input.poId, input.invoiceNo, input.amount])) };
     if (input.action === 'invoiceStep') fail(await one(`SELECT prc_invoice_step($1,$2,$3,$4,$5) AS r`, [me, T, input.invoiceId, input.step, input.note]));
     if (input.action === 'closePo') fail(await one(`SELECT prc_close_po($1,$2,$3) AS r`, [me, T, input.poId]));
+    if (input.action === 'linkSupplier') fail(await one(`SELECT sup_link($1,$2,$3,$4) AS r`, [me, T, input.supplierKey, input.orgId]));
+    if (input.action === 'unlinkSupplier') fail(await one(`SELECT sup_unlink($1,$2,$3) AS r`, [me, T, input.supplierKey]));
 
     const staff = roles.length > 0 || isAdmin;
     const rules = ((await sql.query(`SELECT * FROM prc_rules WHERE tenant_id = $1`, [T])) as Row[])[0] ?? null;
@@ -82,6 +88,9 @@ export default createEndpoint({
     const pos = rids.length ? (await sql.query(`SELECT p.*, (SELECT coalesce(sum(amount),0) FROM prc_receipts WHERE po_id = p.id)::int AS received FROM prc_pos p WHERE req_id = ANY($1::bigint[])`, [rids])) as Row[] : [];
     const pids = pos.map((p) => Number(p.id));
     const invoices = pids.length ? (await sql.query(`SELECT * FROM prc_invoices WHERE po_id = ANY($1::bigint[]) ORDER BY created_at`, [pids])) as Row[] : [];
+    const isBuyer = roles.includes('buyer');
+    const supplierLinks = isBuyer ? (await sql.query(`SELECT DISTINCT r.supplier_key, r.supplier, l.org_id, o.name AS org_name FROM prc_requisitions r LEFT JOIN prc_supplier_links l ON l.tenant_id = r.tenant_id AND l.supplier_key = r.supplier_key LEFT JOIN pta_orgs o ON o.id = l.org_id WHERE r.tenant_id = $1 ORDER BY r.supplier`, [T])) as Row[] : [];
+    const partnerOrgs = isBuyer ? (await sql.query(`SELECT DISTINCT o.id, o.name FROM pta_relationships rel JOIN pta_orgs o ON o.id = rel.org_id WHERE rel.tenant_id = $1 AND rel.state NOT IN ('offboarded','rejected') ORDER BY o.name`, [T])) as Row[] : [];
     const team = isAdmin ? (await sql.query(`SELECT user_id, role FROM prc_staff WHERE tenant_id = $1 AND revoked_at IS NULL ORDER BY role`, [T])) as Row[] : [];
     const names = await userNames([...reqs.flatMap((r) => [r.requester_id, r.approver1, r.approver2]), ...pos.map((p) => p.issued_by), ...invoices.flatMap((i) => [i.decided_by, i.entered_by, i.handed_by, i.posted_by]), ...team.map((t) => t.user_id)].filter(Boolean).map(String));
     const nm = (v: unknown) => (v ? names[String(v)] ?? 'Member' : null);
@@ -101,6 +110,8 @@ export default createEndpoint({
               decidedBy: nm(i.decided_by), note: String(i.decision_note), enteredByMe: i.entered_by === me, postingRef: String(i.posting_ref) })) } : null };
       }),
       team: team.map((t) => ({ name: nm(t.user_id), role: String(t.role) })),
+      supplierLinks: supplierLinks.map((s) => ({ key: String(s.supplier_key), supplier: String(s.supplier), orgId: s.org_id ? Number(s.org_id) : null, orgName: s.org_name ? String(s.org_name) : null })),
+      partnerOrgs: partnerOrgs.map((o) => ({ id: Number(o.id), name: String(o.name) })),
     };
   },
 });

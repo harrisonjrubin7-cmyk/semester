@@ -24,6 +24,7 @@ export default createEndpoint({
   outputSchema: z.object({
     ready: z.boolean(), token: z.string().nullable(), message: z.string(),
     scopes: z.array(z.object({ key: z.string(), label: z.string() })), forbidden: z.array(z.string()),
+    examples: z.array(z.object({ scope: z.string(), data: z.string() })),
     apps: z.array(z.object({ id: z.string(), name: z.string(), scopes: z.array(z.string()), status: z.string(), tokens: z.number() })),
     response: z.object({ status: z.number(), body: z.any(), ms: z.number() }).nullable(),
   }),
@@ -34,7 +35,8 @@ export default createEndpoint({
     await ensureDevSchema();
     const ready = await schemaReady();
     const base = { ready, token: null as string | null, message: '', response: null as null | { status: number; body: unknown; ms: number },
-      scopes: Object.entries(SCOPES).map(([key, label]) => ({ key, label })), forbidden: FORBIDDEN_SCOPES };
+      scopes: Object.entries(SCOPES).map(([key, label]) => ({ key, label })), forbidden: FORBIDDEN_SCOPES,
+      examples: Object.entries(DATA).map(([scope, rows]) => ({ scope, data: JSON.stringify(rows.slice(0, 2), null, 1) })) };
     if (!ready) return { ...base, apps: [], message: 'The developer platform update hasn’t reached the database yet. Open Developer apps in Semester once, then reload.' };
 
     const check = (scopes: string[]) => { const bad = scopes.filter((s) => !(s in SCOPES)); if (bad.length) fail(`Scope ${bad.join(', ')} can’t be granted to an app.`); };

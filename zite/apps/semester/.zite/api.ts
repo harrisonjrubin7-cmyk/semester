@@ -24,6 +24,7 @@ import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
 import type { default as _CareerServicesEp } from '../src/api/careerServices';
 import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
+import type { default as _CommunityAdminEp } from '../src/api/communityAdmin';
 import type { default as _ContinuingEp } from '../src/api/continuing';
 import type { default as _CouncilEp } from '../src/api/council';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
@@ -33,6 +34,7 @@ import type { default as _CourseReuseEp } from '../src/api/courseReuse';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DepartmentFormsEp } from '../src/api/departmentForms';
+import type { default as _DepartmentStaffingEp } from '../src/api/departmentStaffing';
 import type { default as _DesignEp } from '../src/api/design';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
@@ -222,6 +224,11 @@ export type CommunityInputType = NonNullable<_CommunityCfg['inputSchema']> exten
 export type CommunityOutputType = Awaited<ReturnType<_CommunityCfg['execute']>>;
 export const community = createCaller<CommunityInputType, CommunityOutputType>('community');
 
+type _CommunityAdminCfg = typeof _CommunityAdminEp;
+export type CommunityAdminInputType = NonNullable<_CommunityAdminCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CommunityAdminCfg['execute']>[0]['input'];
+export type CommunityAdminOutputType = Awaited<ReturnType<_CommunityAdminCfg['execute']>>;
+export const communityAdmin = createCaller<CommunityAdminInputType, CommunityAdminOutputType>('communityAdmin');
+
 type _ContinuingCfg = typeof _ContinuingEp;
 export type ContinuingInputType = NonNullable<_ContinuingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ContinuingCfg['execute']>[0]['input'];
 export type ContinuingOutputType = Awaited<ReturnType<_ContinuingCfg['execute']>>;
@@ -266,6 +273,11 @@ type _DepartmentFormsCfg = typeof _DepartmentFormsEp;
 export type DepartmentFormsInputType = NonNullable<_DepartmentFormsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DepartmentFormsCfg['execute']>[0]['input'];
 export type DepartmentFormsOutputType = Awaited<ReturnType<_DepartmentFormsCfg['execute']>>;
 export const departmentForms = createCaller<DepartmentFormsInputType, DepartmentFormsOutputType>('departmentForms');
+
+type _DepartmentStaffingCfg = typeof _DepartmentStaffingEp;
+export type DepartmentStaffingInputType = NonNullable<_DepartmentStaffingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DepartmentStaffingCfg['execute']>[0]['input'];
+export type DepartmentStaffingOutputType = Awaited<ReturnType<_DepartmentStaffingCfg['execute']>>;
+export const departmentStaffing = createCaller<DepartmentStaffingInputType, DepartmentStaffingOutputType>('departmentStaffing');
 
 type _DesignCfg = typeof _DesignEp;
 export type DesignInputType = NonNullable<_DesignCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DesignCfg['execute']>[0]['input'];
@@ -681,6 +693,7 @@ export const api = {
   careerServices,
   catalog,
   community,
+  communityAdmin,
   continuing,
   council,
   courseAccessibility,
@@ -690,6 +703,7 @@ export const api = {
   courseTeam,
   curriculum,
   departmentForms,
+  departmentStaffing,
   design,
   devApps,
   dining,

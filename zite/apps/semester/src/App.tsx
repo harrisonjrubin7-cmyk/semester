@@ -52,6 +52,8 @@ import Housing from './pages/Housing';
 import ITService from './pages/ITService';
 import Offices from './pages/Offices';
 import DepartmentForms from './pages/DepartmentForms';
+import DepartmentStaffing from './pages/DepartmentStaffing';
+import CommunityAdmin from './pages/CommunityAdmin';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -146,6 +148,7 @@ export default function App() {
             <Route path="/learn/decks" element={<Decks />} />
             <Route path="/help/advising" element={<Advising />} />
             <Route path="/campus/community" element={<Community />} />
+            <Route path="/campus/communities" element={<CommunityAdmin />} />
             <Route path="/campus/groupwork" element={<GroupWork />} />
             <Route path="/records/final-grades" element={<FinalGrades />} />
             <Route path="/campus/places" element={<Maps />} />
@@ -209,6 +212,7 @@ export default function App() {
             <Route path="/institution" element={<InstitutionHome />} />
             <Route path="/institution/sections" element={<SectionRequests />} />
             <Route path="/institution/forms" element={<DepartmentForms />} />
+            <Route path="/institution/staffing" element={<DepartmentStaffing />} />
             <Route path="/institution/curriculum" element={<Curriculum />} />
             <Route path="/institution/programs" element={<Programs />} />
             <Route path="/staff/analytics" element={<Analytics />} />

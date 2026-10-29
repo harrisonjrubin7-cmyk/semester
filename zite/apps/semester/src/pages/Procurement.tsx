@@ -78,6 +78,7 @@ export default function Procurement() {
   const [ru, setRu] = useState({ a: '5000', b: '10000', d: '30', t: '5' });
   const [bg, setBg] = useState({ code: '', name: '', amount: '' });
   const [st, setSt] = useState({ email: '', role: 'buyer' });
+  const [linkSel, setLinkSel] = useState<Record<string, string>>({});
   return (
     <>
       <PageHeader eyebrow="Operations" title="Procurement" sub="Request, approve, order, receive and match. Payment is finance's: matched invoices are handed over, never paid from here." />
@@ -94,6 +95,18 @@ export default function Procurement() {
           </Panel>
           <Panel title={d.staff ? 'Requisitions' : 'Your requests'}>{d.requisitions.length ? <ul className="space-y-2">{d.requisitions.map((r: any) => <Req key={r.id} r={r} d={d} reload={s.reload} />)}</ul> : <Empty>Nothing yet.</Empty>}</Panel>
           {d.staff && <Panel title="Budgets">{d.budgets.length ? <ul className="text-xs">{d.budgets.map((b: any) => <li key={b.code}><b>{b.code}</b> {b.name}: {money(b.amount)} · committed or spent {money(b.used)} · remaining {money(b.amount - b.used)}</li>)}</ul> : <Empty>No budgets.</Empty>}</Panel>}
+          {d.roles?.includes('buyer') && <Panel title="Supplier portal">
+            <p className="mb-2 text-xs text-muted-foreground">Link a supplier name to a partner organization so its members can see their purchase orders and acknowledge or report shipment, where their agreement grants View orders. Linking shares nothing else.</p>
+            {d.supplierLinks.length ? <ul className="space-y-2">{d.supplierLinks.map((lk: any) => (
+              <li key={lk.key} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="min-w-40"><b>{lk.supplier}</b>{lk.orgName ? <span className="block text-xs text-muted-foreground">Linked to {lk.orgName}</span> : <span className="block text-xs text-muted-foreground">Not linked</span>}</span>
+                <select aria-label={`Organization for ${lk.supplier}`} className={sel} value={linkSel[lk.key] ?? (lk.orgId ? String(lk.orgId) : '')} onChange={(e) => setLinkSel({ ...linkSel, [lk.key]: e.target.value })}>
+                  <option value="">Choose organization…</option>{d.partnerOrgs.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+                <Button size="sm" variant="outline" disabled={!(linkSel[lk.key] ?? (lk.orgId ? String(lk.orgId) : ''))} onClick={() => act(() => procurement({ action: 'linkSupplier', supplierKey: lk.key, orgId: Number(linkSel[lk.key] ?? lk.orgId) }), 'Supplier linked.')}>Link</Button>
+                {lk.orgId && <Button size="sm" variant="outline" onClick={() => act(() => procurement({ action: 'unlinkSupplier', supplierKey: lk.key }), 'Supplier unlinked.')}>Unlink</Button>}
+              </li>))}</ul> : <Empty>No suppliers yet.</Empty>}
+          </Panel>}
           {d.isAdmin && <Panel title="Rules, budgets and roles">
             <div className="grid gap-2 text-sm sm:grid-cols-5">
               <label className="text-xs">Two approvers from ($)<Input type="number" value={ru.a} onChange={(e) => setRu({ ...ru, a: e.target.value })} /></label>

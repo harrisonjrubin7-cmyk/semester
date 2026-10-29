@@ -16,3 +16,6 @@ Inventory 37/37, Facilities 27/27, ID card 29/29, Records rights 30/30, Partners
 `import { run as a } from './dbchecks/it'; ...` — one import per file; the runner cannot import this README.
 Office service (29 Oct): officeService 48/48; mutants caught: own-request (stopped by the table constraint), cross-office visibility, self-publish (constraint), unseen text, revocation.
 Department forms (29 Oct): departmentForms 31/31; mutants caught: self-approve (constraint), audience, answer validation, edit open form.
+Department staffing (29 Oct): departmentStaffing 24/24; mutants caught: overfill, chair self-approval (constraint), answer by others, accept before approval (constraint).
+Moderation (29 Oct): moderation 32/32; mutants caught: decider reverses (constraint), reversal ignored by visibility, context for involved moderator, withdrawn warnings counted.
+Communities (29 Oct): communities 26/26; mutants caught: course discussion join, cross-institution join, request policy ignored, self-decide (constraint).

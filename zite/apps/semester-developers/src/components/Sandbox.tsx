@@ -86,6 +86,24 @@ export function Docs({ d }: { d: D }) {
       <Section title="Result codes">
         <table className="w-full text-sm"><tbody>{CODES.map(([c, s, m]) => <tr key={c} className="border-b last:border-0 align-top"><td className="py-1.5 pr-2 font-mono text-xs">{c}</td><td className="pr-2 font-mono text-xs">{s}</td><td className="text-xs text-muted-foreground">{m}</td></tr>)}</tbody></table>
       </Section>
+      <Section title="Token lifecycle">
+        <ul className="list-disc space-y-2 pl-4 text-sm">
+          <li>One token per install, shown once — at install time or after a rotation. Only its SHA-256 hash is stored, so a lost token cannot be recovered, only replaced.</li>
+          <li>Tokens last at most 90 days (30 in the sandbox). Expiry is set at install and reset by rotation.</li>
+          <li>Rotation happens on the institution's Developer apps page in Semester: the new token replaces the old one immediately, and the old token returns NO_INSTALL from the next call.</li>
+          <li>Revocation by the institution or by Semester applies to the next call. Every call re-checks the token, the install, the app, its expiry and the scope.</li>
+          <li>Developers manage their own keys day to day under My apps: review state, installs, expiries and call counts — never a token value.</li>
+        </ul>
+      </Section>
+      <Section title="Example responses">
+        <p className="mb-3 text-xs text-muted-foreground">Synthetic data, exactly as the request tester returns it. The envelope is the same for every scope; only <code className="font-mono">data</code> changes.</p>
+        {d.examples.map((e) => (
+          <div key={e.scope} className="mb-4 last:mb-0">
+            <p className="mb-1 font-mono text-xs">{e.scope}</p>
+            <pre className="overflow-auto rounded bg-sidebar p-3 font-mono text-xs text-sidebar-foreground">{`{ "ok": true, "code": "OK", "synthetic": true, "data": ${e.data} }`}</pre>
+          </div>
+        ))}
+      </Section>
     </div>
   );
 }
