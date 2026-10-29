@@ -112,6 +112,56 @@ export function courseEngineApiUpdateProblems(source: string): string[] {
   return problems;
 }
 
+export function ziteRlsVerifierUpdateProblems(source: string): string[] {
+  const problems: string[] = [];
+  const block = updateBlocks(source).find((candidate) => /^\s*directory:\s*\/zite\/docs\/execution\/rls\/api\s*$/m.test(candidate));
+
+  if (!block) return ['Zite RLS verifier has no dedicated dependency updater'];
+  if (!/^- package-ecosystem:\s*npm\s*$/m.test(block)) problems.push('Zite RLS verifier updater does not use the npm ecosystem');
+  if (!/^\s*interval:\s*weekly\s*$/m.test(block)) problems.push('Zite RLS verifier updater is not weekly');
+  if (!/^\s*open-pull-requests-limit:\s*[1-9]\d*\s*$/m.test(block)) problems.push('Zite RLS verifier updater has no positive pull-request limit');
+  if (!/^\s*zite-rls-verifier-minor-and-patch:\s*$/m.test(block)) problems.push('Zite RLS verifier minor and patch updates are not grouped');
+  if (!/^\s*- '\*'\s*$/m.test(block)) problems.push('Zite RLS verifier update group does not cover every dependency');
+  if (!/^\s*- minor\s*$/m.test(block) || !/^\s*- patch\s*$/m.test(block)) problems.push('Zite RLS verifier update group does not cover both minor and patch updates');
+
+  return problems;
+}
+
+describe('Zite RLS verifier dependency updates', () => {
+  it('holds a weekly, bounded updater beside the standalone manifest', () => {
+    expect(existsSync(join(root, 'zite/docs/execution/rls/api/package.json'))).toBe(true);
+    expect(ziteRlsVerifierUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
+  });
+
+  it('keeps the unresolved transitive graph explicit', () => {
+    expect(existsSync(join(root, 'zite/docs/execution/rls/api/package-lock.json'))).toBe(false);
+  });
+
+  it('fails closed when the directory or npm ecosystem is removed', () => {
+    const source = read('.github/dependabot.yml');
+    expect(ziteRlsVerifierUpdateProblems(source.replace('directory: /zite/docs/execution/rls/api', 'directory: /zite/docs/execution/rls/api-disabled'))).toContain(
+      'Zite RLS verifier has no dedicated dependency updater',
+    );
+    expect(ziteRlsVerifierUpdateProblems(source.replace(/(- package-ecosystem: )npm(\n\s+directory: \/zite\/docs\/execution\/rls\/api)/, '$1disabled$2'))).toContain(
+      'Zite RLS verifier updater does not use the npm ecosystem',
+    );
+  });
+
+  it('fails closed when cadence, queue bounds or grouped update types drift', () => {
+    const source = read('.github/dependabot.yml');
+    const verifier = updateBlocks(source).find((block) => block.includes('directory: /zite/docs/execution/rls/api'))!;
+    expect(ziteRlsVerifierUpdateProblems(source.replace(verifier, verifier.replace('interval: weekly', 'interval: monthly')))).toContain(
+      'Zite RLS verifier updater is not weekly',
+    );
+    expect(ziteRlsVerifierUpdateProblems(source.replace(verifier, verifier.replace('open-pull-requests-limit: 5', 'open-pull-requests-limit: 0')))).toContain(
+      'Zite RLS verifier updater has no positive pull-request limit',
+    );
+    expect(ziteRlsVerifierUpdateProblems(source.replace(verifier, verifier.replace('          - patch\n', '')))).toContain(
+      'Zite RLS verifier update group does not cover both minor and patch updates',
+    );
+  });
+});
+
 describe('Course Engine API dependency updates', () => {
   it('holds a weekly, bounded updater beside the Python manifest', () => {
     expect(existsSync(join(root, 'course-engine/apps/api/pyproject.toml'))).toBe(true);
