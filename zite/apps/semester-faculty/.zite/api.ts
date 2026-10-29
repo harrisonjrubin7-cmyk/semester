@@ -10,6 +10,7 @@ import type { default as _AssignmentsEp } from '../src/api/assignments';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
+import type { default as _CourseReuseEp } from '../src/api/courseReuse';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
@@ -75,6 +76,11 @@ type _CourseGroupsCfg = typeof _CourseGroupsEp;
 export type CourseGroupsInputType = NonNullable<_CourseGroupsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseGroupsCfg['execute']>[0]['input'];
 export type CourseGroupsOutputType = Awaited<ReturnType<_CourseGroupsCfg['execute']>>;
 export const courseGroups = createCaller<CourseGroupsInputType, CourseGroupsOutputType>('courseGroups');
+
+type _CourseReuseCfg = typeof _CourseReuseEp;
+export type CourseReuseInputType = NonNullable<_CourseReuseCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseReuseCfg['execute']>[0]['input'];
+export type CourseReuseOutputType = Awaited<ReturnType<_CourseReuseCfg['execute']>>;
+export const courseReuse = createCaller<CourseReuseInputType, CourseReuseOutputType>('courseReuse');
 
 type _CourseTeamCfg = typeof _CourseTeamEp;
 export type CourseTeamInputType = NonNullable<_CourseTeamCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseTeamCfg['execute']>[0]['input'];
@@ -211,6 +217,7 @@ export const api = {
   courseAccessibility,
   courseDiscussion,
   courseGroups,
+  courseReuse,
   courseTeam,
   curriculum,
   facultyToday,

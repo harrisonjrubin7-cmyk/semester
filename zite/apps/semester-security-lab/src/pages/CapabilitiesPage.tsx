@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@project/components/ui/table';
 import { PageHeader } from '../components/Badges';
 import StageEvidence from '../components/StageEvidence';
+import ProposedEvidence from '../components/ProposedEvidence';
 
 type Item = CapabilitiesOutputType['items'][0];
 const STATUSES = ['Designed', 'Implemented-unverified', 'Tested', 'Institution-approved', 'Production-enabled'] as const;
@@ -72,6 +73,7 @@ export default function CapabilitiesPage() {
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {counts.map(([s, n]) => <Card key={s} className="p-3"><div className="text-xs text-muted-foreground">{s}</div><div className="font-mono text-2xl font-semibold">{items ? n : '—'}</div></Card>)}
       </div>
+      <ProposedEvidence onRecorded={load} />
       <div className="mb-3 flex flex-wrap gap-2">
         <Input placeholder="Search capability, app, route…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
         <Select value={layer} onValueChange={setLayer}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger>

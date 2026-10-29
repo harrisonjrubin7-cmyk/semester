@@ -7,6 +7,7 @@ import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _CapabilitiesEp } from '../src/api/capabilities';
 import type { default as _CapabilityEvidenceEp } from '../src/api/capabilityEvidence';
 import type { default as _DecideGateEp } from '../src/api/decideGate';
+import type { default as _EvidenceProposalsEp } from '../src/api/evidenceProposals';
 import type { default as _GetLabDataEp } from '../src/api/getLabData';
 import type { default as _RecordSimulationRunEp } from '../src/api/recordSimulationRun';
 import type { default as _ReleaseAssuranceEp } from '../src/api/releaseAssurance';
@@ -39,6 +40,11 @@ type _DecideGateCfg = typeof _DecideGateEp;
 export type DecideGateInputType = NonNullable<_DecideGateCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DecideGateCfg['execute']>[0]['input'];
 export type DecideGateOutputType = Awaited<ReturnType<_DecideGateCfg['execute']>>;
 export const decideGate = createCaller<DecideGateInputType, DecideGateOutputType>('decideGate');
+
+type _EvidenceProposalsCfg = typeof _EvidenceProposalsEp;
+export type EvidenceProposalsInputType = NonNullable<_EvidenceProposalsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EvidenceProposalsCfg['execute']>[0]['input'];
+export type EvidenceProposalsOutputType = Awaited<ReturnType<_EvidenceProposalsCfg['execute']>>;
+export const evidenceProposals = createCaller<EvidenceProposalsInputType, EvidenceProposalsOutputType>('evidenceProposals');
 
 type _GetLabDataCfg = typeof _GetLabDataEp;
 export type GetLabDataInputType = NonNullable<_GetLabDataCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetLabDataCfg['execute']>[0]['input'];
@@ -82,6 +88,7 @@ export const api = {
   capabilities,
   capabilityEvidence,
   decideGate,
+  evidenceProposals,
   getLabData,
   recordSimulationRun,
   releaseAssurance,

@@ -50,6 +50,8 @@ import Faculty, { Appointments } from './pages/Faculty';
 import Integrity from './pages/Integrity';
 import Housing from './pages/Housing';
 import ITService from './pages/ITService';
+import Offices from './pages/Offices';
+import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
 import Inventory from './pages/Inventory';
@@ -220,6 +222,8 @@ export default function App() {
             <Route path="/learn/ask" element={<Ask />} />
             <Route path="/learn/syllabi" element={<SyllabusHub />} />
             <Route path="/learn/:sectionId" element={<SectionPage />} />
+            <Route path="/help/offices" element={<Offices />} />
+            <Route path="/help/knowledge" element={<Knowledge />} />
             <Route path="/help" element={<Help />} />
             <Route path="/campus" element={<Campus />} />
             <Route path="/progress" element={<Progress />} />

@@ -29,6 +29,7 @@ import type { default as _CouncilEp } from '../src/api/council';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
 import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
+import type { default as _CourseReuseEp } from '../src/api/courseReuse';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _DesignEp } from '../src/api/design';
@@ -64,6 +65,7 @@ import type { default as _LibraryEp } from '../src/api/library';
 import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _MigrationApprovalEp } from '../src/api/migrationApproval';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
+import type { default as _OfficeServiceEp } from '../src/api/officeService';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _OrganizationsEp } from '../src/api/organizations';
@@ -244,6 +246,11 @@ export type CourseGroupsInputType = NonNullable<_CourseGroupsCfg['inputSchema']>
 export type CourseGroupsOutputType = Awaited<ReturnType<_CourseGroupsCfg['execute']>>;
 export const courseGroups = createCaller<CourseGroupsInputType, CourseGroupsOutputType>('courseGroups');
 
+type _CourseReuseCfg = typeof _CourseReuseEp;
+export type CourseReuseInputType = NonNullable<_CourseReuseCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseReuseCfg['execute']>[0]['input'];
+export type CourseReuseOutputType = Awaited<ReturnType<_CourseReuseCfg['execute']>>;
+export const courseReuse = createCaller<CourseReuseInputType, CourseReuseOutputType>('courseReuse');
+
 type _CourseTeamCfg = typeof _CourseTeamEp;
 export type CourseTeamInputType = NonNullable<_CourseTeamCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CourseTeamCfg['execute']>[0]['input'];
 export type CourseTeamOutputType = Awaited<ReturnType<_CourseTeamCfg['execute']>>;
@@ -418,6 +425,11 @@ type _OfficeHoursCfg = typeof _OfficeHoursEp;
 export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeHoursCfg['execute']>[0]['input'];
 export type OfficeHoursOutputType = Awaited<ReturnType<_OfficeHoursCfg['execute']>>;
 export const officeHours = createCaller<OfficeHoursInputType, OfficeHoursOutputType>('officeHours');
+
+type _OfficeServiceCfg = typeof _OfficeServiceEp;
+export type OfficeServiceInputType = NonNullable<_OfficeServiceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeServiceCfg['execute']>[0]['input'];
+export type OfficeServiceOutputType = Awaited<ReturnType<_OfficeServiceCfg['execute']>>;
+export const officeService = createCaller<OfficeServiceInputType, OfficeServiceOutputType>('officeService');
 
 type _OfficialGradesCfg = typeof _OfficialGradesEp;
 export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
@@ -668,6 +680,7 @@ export const api = {
   courseAccessibility,
   courseDiscussion,
   courseGroups,
+  courseReuse,
   courseTeam,
   curriculum,
   design,
@@ -703,6 +716,7 @@ export const api = {
   manageTask,
   migrationApproval,
   officeHours,
+  officeService,
   officialGrades,
   onboard,
   organizations,

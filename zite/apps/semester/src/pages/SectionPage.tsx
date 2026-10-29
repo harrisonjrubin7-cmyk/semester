@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SyllabusTab, MaterialsTab } from '../components/CourseStudio';
 import { toast } from 'sonner';
-import { learn } from 'zitejs/api';
+import { learn, courseReuse } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@project/components/ui/tabs';
@@ -103,6 +103,34 @@ function GradingPanel({ d, sectionId, act }: { d: any; sectionId: string; act: (
   );
 }
 
+function ReusePanel({ sectionId, term }: { sectionId: string; term: string }) {
+  const [newTerm, setNewTerm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<any>(null);
+  const go = async () => {
+    setBusy(true);
+    try { const r: any = await courseReuse({ action: 'copy', sectionId, newTerm: newTerm.trim() }); setDone(r); toast.success(`Created ${r.label}.`); }
+    catch (e) { toast.error(errMsg(e)); }
+    setBusy(false);
+  };
+  if (done) return (
+    <Panel title="Reuse for a new term">
+      <p className="text-sm">Created <span className="font-medium">{done.label}</span>: {done.assignments} assignment drafts, {done.assessments} assessment drafts{done.syllabusCopied ? ', the syllabus' : ''} and {done.materials} materials copied. No student work, grades or discussions came across.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Assignment due dates were cleared; assessment windows {done.datesNeedReview ? 'were copied unchanged — check them before publishing' : `shifted by ${done.datesShiftDays} days — check them before publishing`}.</p>
+      <Link className="mt-2 inline-block text-sm text-primary underline" to={`/learn/${done.newSectionId}`}>Open the new section →</Link>
+    </Panel>
+  );
+  return (
+    <Panel title="Reuse for a new term">
+      <p className="text-xs text-muted-foreground">Copies this course's syllabus, assignments and assessments (as drafts), materials and AI policy into a new section you teach in another term. Students, submissions, grades and discussions never copy.</p>
+      <div className="mt-2 flex gap-2">
+        <Input aria-label="New term" placeholder="e.g. Spring 2027" value={newTerm} onChange={(e) => setNewTerm(e.target.value)} />
+        <Button size="sm" disabled={busy || newTerm.trim().length < 3 || newTerm.trim() === term} onClick={go}>{busy ? 'Copying…' : 'Reuse'}</Button>
+      </div>
+    </Panel>
+  );
+}
+
 export default function SectionPage() {
   const { sectionId = '' } = useParams();
   const state = useLoad(() => learn({ action: 'section', sectionId }), [sectionId]);
@@ -149,6 +177,7 @@ export default function SectionPage() {
               <p className="mt-1 text-xs text-muted-foreground">Set by the instructor. Ask Semester follows it.</p>
             </Panel>
             {d.teaching && <Panel title="At a glance"><p className="text-sm">{d.submissions.filter((s: Sub) => s.state === 'Submitted').length} to grade · {d.submissions.filter((s: Sub) => s.state === 'Graded').length} graded, unreleased</p></Panel>}
+            {d.teaching && <ReusePanel sectionId={sectionId} term={d.section.term} />}
             {!d.teaching && <Panel title="Ask about this course"><Link to="/learn/ask" className="text-sm text-primary underline">Open Ask Semester →</Link></Panel>}
           </div>
         </div>

@@ -1,4 +1,21 @@
 {
   "id": "jw85ejkuj1",
-  "accessMode": "internal"
+  "accessMode": "internal",
+  "seoSettings": {
+    "title": "Semester Security Lab ",
+    "description": "",
+    "thumbnailUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/widgetid-default/n6AN4F8JAcL4ZhLdDmM4Pp/Screenshot-2026-10-22-at-2.43.12aPM.png",
+    "faviconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/widgetid-default/foactLTBf4paguzYDzzUph/download-1.png"
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "Semester Security Lab",
+    "appIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/pwa/b1619e7ac3661a5c/source-779b5a093be166f377e3355c16d6a639",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/pwa/b1619e7ac3661a5c/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/pwa/b1619e7ac3661a5c/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/pwa/b1619e7ac3661a5c/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-900028/flowpublicid-jw85ejkuj1/pwa/b1619e7ac3661a5c/favicon-32.png"
+    }
+  }
 }
