@@ -13,53 +13,6 @@ import RequestForm from './RequestForm';
 
 const Check = ({ children }: { children: React.ReactNode }) => <li className="flex gap-2"><span aria-hidden className="text-primary">✓</span><span>{children}</span></li>;
 
-export function Home() {
-  useDocTitle(null);
-  return (
-    <>
-      <header className="mx-auto max-w-5xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24">
-        <Eyebrow>For universities and their students</Eyebrow>
-        <h1 className="font-editorial mt-3 max-w-3xl text-balance text-4xl leading-[1.1] sm:text-6xl">One clear next step for every student.</h1>
-        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">Semester turns the semester into the next thing to do, and shows where each fact came from. Your current systems stay authoritative until each area is verified, reconciled and authorized to move.</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg"><Link to="/pilot/request">Request a pilot design session</Link></Button>
-          <Button asChild size="lg" variant="outline"><Link to="/pilot">How the pilot works</Link></Button>
-        </div>
-      </header>
-
-      <Section eyebrow="What students get" title="The next thing to do, with its source" intro="Students see what needs them today, why, and who can help, in one calm place.">
-        <div className="grid gap-px overflow-hidden rounded-[3px] border border-border bg-border sm:grid-cols-3">
-          {[
-            ['Today', 'Deadlines, holds and approvals that need the student, each labelled Official, Connected, Yours or Sample.'],
-            ['Registration readiness', 'Holds, missing prerequisites and time conflicts surface weeks before the registration window, with the office that can fix each one.'],
-            ['Help that knows the rules', 'Advising and support booking, and an assistant that follows each course’s AI rules and cites its sources.'],
-          ].map(([t, d]) => <div key={t} className="bg-card p-6"><h3 className="text-xl">{t}</h3><p className="mt-2 text-sm text-muted-foreground">{d}</p></div>)}
-        </div>
-      </Section>
-
-      <Section eyebrow="How it fits" title="It sits on top of what you have" intro="Nothing is replaced in a pilot. Semester reads approved records, works out what is ready and what is blocked, and hands official actions back to the office that owns them.">
-        <ol className="grid gap-3 sm:grid-cols-5">
-          {['Your student information system stays authoritative', 'Semester reads only the fields you approve', 'Deterministic checks show what is ready or blocked', 'The student gets one next step and who can help', 'Official changes go back to the owning office'].map((s, i) => (
-            <li key={s} className="rounded-[3px] border border-border bg-card p-4 text-sm"><span className="font-mono text-xs text-muted-foreground">{i + 1}</span><p className="mt-1">{s}</p></li>
-          ))}
-        </ol>
-      </Section>
-
-      <Section eyebrow="Questions institutions ask" title="Straight answers">
-        <dl className="divide-y divide-border border-y border-border">
-          {[
-            ['We already have a portal.', 'Semester sits on top of it and turns its data into a next step. Nothing is replaced in the pilot.'],
-            ['Our advisors are overloaded.', 'Students resolve more on their own. Advisors see only what a student chooses to share with them, not a new inbox.'],
-            ['What about AI?', 'Course AI rules are enforced before anything is read, answers are labelled and cited, and student records never reach an AI provider.'],
-            ['Will it change official records?', 'No. Your SIS stays authoritative. Semester labels what it works out itself and hands official actions to your offices.'],
-            ['You are a small company.', 'Insurance, a data processing addendum, security questionnaire answers and exit and export terms belong in the contract. See Trust for what is in place today and what is not yet.'],
-          ].map(([q, a]) => <div key={q} className="grid gap-1 py-4 sm:grid-cols-[1fr_2fr] sm:gap-6"><dt className="font-display text-lg">{q}</dt><dd className="text-muted-foreground">{a}</dd></div>)}
-        </dl>
-      </Section>
-    </>
-  );
-}
-
 export function Pilot() {
   return (
     <>
@@ -81,6 +34,15 @@ export function Pilot() {
       <Section eyebrow="Start" title="Request a pilot design session">
         <Button asChild size="lg"><Link to="/pilot/request">Request a pilot</Link></Button>
       </Section>
+    </>
+  );
+}
+
+export function RequestDemo() {
+  return (
+    <>
+      <PageTitle eyebrow="Demo" title="Request a demo" intro="We’ll walk you through Semester with synthetic data and answer your questions. Nothing is connected to your systems for a demo." />
+      <div className="mx-auto max-w-3xl px-4 pb-20 sm:px-6"><RequestForm kind="Demo request" messageLabel="What would you like to see?" messagePlaceholder="For example: how registration readiness works, or how families and employers are kept to what students share." /></div>
     </>
   );
 }

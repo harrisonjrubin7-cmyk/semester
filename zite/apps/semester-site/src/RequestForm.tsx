@@ -8,7 +8,7 @@ import { Checkbox } from '@project/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 
 type Kind = SubmitRequestInputType['kind'];
-const KINDS: Kind[] = ['Pilot request', 'Pricing request', 'Security document request', 'Accessibility feedback', 'Contact'];
+const KINDS: Kind[] = ['Demo request', 'Pilot request', 'Pricing request', 'Security document request', 'Accessibility feedback', 'Contact'];
 
 /** Shared request form for the pilot, pricing, trust and contact pages. Errors are tied to their fields. */
 export default function RequestForm({ kind: fixedKind, messageLabel = 'How can we help?', messagePlaceholder }: { kind?: Kind; messageLabel?: string; messagePlaceholder?: string }) {

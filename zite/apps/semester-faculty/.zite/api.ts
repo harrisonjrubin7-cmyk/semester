@@ -3,6 +3,7 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
+import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _AssignmentsEp } from '../src/api/assignments';
@@ -13,11 +14,14 @@ import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
 import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
 import type { default as _FilesEp } from '../src/api/files';
+import type { default as _GetTodayEp } from '../src/api/getToday';
 import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
 import type { default as _GuidesEp } from '../src/api/guides';
 import type { default as _HelpEp } from '../src/api/help';
+import type { default as _InboxEp } from '../src/api/inbox';
 import type { default as _IntegrityEp } from '../src/api/integrity';
 import type { default as _LearnEp } from '../src/api/learn';
+import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _OfficeHoursEp } from '../src/api/officeHours';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _PortfolioVerifyEp } from '../src/api/portfolioVerify';
@@ -36,6 +40,11 @@ type _AcademicStandingCfg = typeof _AcademicStandingEp;
 export type AcademicStandingInputType = NonNullable<_AcademicStandingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AcademicStandingCfg['execute']>[0]['input'];
 export type AcademicStandingOutputType = Awaited<ReturnType<_AcademicStandingCfg['execute']>>;
 export const academicStanding = createCaller<AcademicStandingInputType, AcademicStandingOutputType>('academicStanding');
+
+type _AffiliationCfg = typeof _AffiliationEp;
+export type AffiliationInputType = NonNullable<_AffiliationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AffiliationCfg['execute']>[0]['input'];
+export type AffiliationOutputType = Awaited<ReturnType<_AffiliationCfg['execute']>>;
+export const affiliation = createCaller<AffiliationInputType, AffiliationOutputType>('affiliation');
 
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
@@ -87,6 +96,11 @@ export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _in
 export type FilesOutputType = Awaited<ReturnType<_FilesCfg['execute']>>;
 export const files = createCaller<FilesInputType, FilesOutputType>('files');
 
+type _GetTodayCfg = typeof _GetTodayEp;
+export type GetTodayInputType = NonNullable<_GetTodayCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetTodayCfg['execute']>[0]['input'];
+export type GetTodayOutputType = Awaited<ReturnType<_GetTodayCfg['execute']>>;
+export const getToday = createCaller<GetTodayInputType, GetTodayOutputType>('getToday');
+
 type _GetWorkspaceCfg = typeof _GetWorkspaceEp;
 export type GetWorkspaceInputType = NonNullable<_GetWorkspaceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetWorkspaceCfg['execute']>[0]['input'];
 export type GetWorkspaceOutputType = Awaited<ReturnType<_GetWorkspaceCfg['execute']>>;
@@ -102,6 +116,11 @@ export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _inpu
 export type HelpOutputType = Awaited<ReturnType<_HelpCfg['execute']>>;
 export const help = createCaller<HelpInputType, HelpOutputType>('help');
 
+type _InboxCfg = typeof _InboxEp;
+export type InboxInputType = NonNullable<_InboxCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InboxCfg['execute']>[0]['input'];
+export type InboxOutputType = Awaited<ReturnType<_InboxCfg['execute']>>;
+export const inbox = createCaller<InboxInputType, InboxOutputType>('inbox');
+
 type _IntegrityCfg = typeof _IntegrityEp;
 export type IntegrityInputType = NonNullable<_IntegrityCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IntegrityCfg['execute']>[0]['input'];
 export type IntegrityOutputType = Awaited<ReturnType<_IntegrityCfg['execute']>>;
@@ -111,6 +130,11 @@ type _LearnCfg = typeof _LearnEp;
 export type LearnInputType = NonNullable<_LearnCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_LearnCfg['execute']>[0]['input'];
 export type LearnOutputType = Awaited<ReturnType<_LearnCfg['execute']>>;
 export const learn = createCaller<LearnInputType, LearnOutputType>('learn');
+
+type _ManageTaskCfg = typeof _ManageTaskEp;
+export type ManageTaskInputType = NonNullable<_ManageTaskCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ManageTaskCfg['execute']>[0]['input'];
+export type ManageTaskOutputType = Awaited<ReturnType<_ManageTaskCfg['execute']>>;
+export const manageTask = createCaller<ManageTaskInputType, ManageTaskOutputType>('manageTask');
 
 type _OfficeHoursCfg = typeof _OfficeHoursEp;
 export type OfficeHoursInputType = NonNullable<_OfficeHoursCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficeHoursCfg['execute']>[0]['input'];
@@ -180,6 +204,7 @@ export const teaching = createCaller<TeachingInputType, TeachingOutputType>('tea
 
 export const api = {
   academicStanding,
+  affiliation,
   appDirectory,
   assessments,
   assignments,
@@ -190,11 +215,14 @@ export const api = {
   curriculum,
   facultyToday,
   files,
+  getToday,
   getWorkspace,
   guides,
   help,
+  inbox,
   integrity,
   learn,
+  manageTask,
   officeHours,
   officialGrades,
   portfolioVerify,

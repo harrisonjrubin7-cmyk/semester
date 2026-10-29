@@ -3716,6 +3716,11 @@
                   "value": "fJKp",
                   "label": "Contact",
                   "color": "gray"
+                },
+                {
+                  "value": "4Upp",
+                  "label": "Demo request",
+                  "color": "teal"
                 }
               ],
               "disableColors": false

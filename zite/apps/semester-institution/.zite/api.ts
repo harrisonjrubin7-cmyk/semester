@@ -3,12 +3,17 @@
 import { createCaller } from 'zitejs/caller';
 
 import type { default as _AcademicStandingEp } from '../src/api/academicStanding';
+import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _AssuranceEvidenceEp } from '../src/api/assuranceEvidence';
 import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
+import type { default as _FilesEp } from '../src/api/files';
+import type { default as _GetTodayEp } from '../src/api/getToday';
 import type { default as _HelpEp } from '../src/api/help';
+import type { default as _InboxEp } from '../src/api/inbox';
 import type { default as _InstitutionConsoleEp } from '../src/api/institutionConsole';
 import type { default as _InstitutionOpsEp } from '../src/api/institutionOps';
+import type { default as _ManageTaskEp } from '../src/api/manageTask';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _PublicProgramsEp } from '../src/api/publicPrograms';
 import type { default as _ReadinessShareEp } from '../src/api/readinessShare';
@@ -25,6 +30,11 @@ export type AcademicStandingInputType = NonNullable<_AcademicStandingCfg['inputS
 export type AcademicStandingOutputType = Awaited<ReturnType<_AcademicStandingCfg['execute']>>;
 export const academicStanding = createCaller<AcademicStandingInputType, AcademicStandingOutputType>('academicStanding');
 
+type _AffiliationCfg = typeof _AffiliationEp;
+export type AffiliationInputType = NonNullable<_AffiliationCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AffiliationCfg['execute']>[0]['input'];
+export type AffiliationOutputType = Awaited<ReturnType<_AffiliationCfg['execute']>>;
+export const affiliation = createCaller<AffiliationInputType, AffiliationOutputType>('affiliation');
+
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
 export type AppDirectoryInputType = NonNullable<_AppDirectoryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AppDirectoryCfg['execute']>[0]['input'];
 export type AppDirectoryOutputType = Awaited<ReturnType<_AppDirectoryCfg['execute']>>;
@@ -40,10 +50,25 @@ export type CareerPartnersInputType = NonNullable<_CareerPartnersCfg['inputSchem
 export type CareerPartnersOutputType = Awaited<ReturnType<_CareerPartnersCfg['execute']>>;
 export const careerPartners = createCaller<CareerPartnersInputType, CareerPartnersOutputType>('careerPartners');
 
+type _FilesCfg = typeof _FilesEp;
+export type FilesInputType = NonNullable<_FilesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FilesCfg['execute']>[0]['input'];
+export type FilesOutputType = Awaited<ReturnType<_FilesCfg['execute']>>;
+export const files = createCaller<FilesInputType, FilesOutputType>('files');
+
+type _GetTodayCfg = typeof _GetTodayEp;
+export type GetTodayInputType = NonNullable<_GetTodayCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetTodayCfg['execute']>[0]['input'];
+export type GetTodayOutputType = Awaited<ReturnType<_GetTodayCfg['execute']>>;
+export const getToday = createCaller<GetTodayInputType, GetTodayOutputType>('getToday');
+
 type _HelpCfg = typeof _HelpEp;
 export type HelpInputType = NonNullable<_HelpCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpCfg['execute']>[0]['input'];
 export type HelpOutputType = Awaited<ReturnType<_HelpCfg['execute']>>;
 export const help = createCaller<HelpInputType, HelpOutputType>('help');
+
+type _InboxCfg = typeof _InboxEp;
+export type InboxInputType = NonNullable<_InboxCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InboxCfg['execute']>[0]['input'];
+export type InboxOutputType = Awaited<ReturnType<_InboxCfg['execute']>>;
+export const inbox = createCaller<InboxInputType, InboxOutputType>('inbox');
 
 type _InstitutionConsoleCfg = typeof _InstitutionConsoleEp;
 export type InstitutionConsoleInputType = NonNullable<_InstitutionConsoleCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionConsoleCfg['execute']>[0]['input'];
@@ -54,6 +79,11 @@ type _InstitutionOpsCfg = typeof _InstitutionOpsEp;
 export type InstitutionOpsInputType = NonNullable<_InstitutionOpsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InstitutionOpsCfg['execute']>[0]['input'];
 export type InstitutionOpsOutputType = Awaited<ReturnType<_InstitutionOpsCfg['execute']>>;
 export const institutionOps = createCaller<InstitutionOpsInputType, InstitutionOpsOutputType>('institutionOps');
+
+type _ManageTaskCfg = typeof _ManageTaskEp;
+export type ManageTaskInputType = NonNullable<_ManageTaskCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ManageTaskCfg['execute']>[0]['input'];
+export type ManageTaskOutputType = Awaited<ReturnType<_ManageTaskCfg['execute']>>;
+export const manageTask = createCaller<ManageTaskInputType, ManageTaskOutputType>('manageTask');
 
 type _OfficialGradesCfg = typeof _OfficialGradesEp;
 export type OfficialGradesInputType = NonNullable<_OfficialGradesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OfficialGradesCfg['execute']>[0]['input'];
@@ -108,12 +138,17 @@ export const studentAccount = createCaller<StudentAccountInputType, StudentAccou
 
 export const api = {
   academicStanding,
+  affiliation,
   appDirectory,
   assuranceEvidence,
   careerPartners,
+  files,
+  getToday,
   help,
+  inbox,
   institutionConsole,
   institutionOps,
+  manageTask,
   officialGrades,
   publicPrograms,
   readinessShare,

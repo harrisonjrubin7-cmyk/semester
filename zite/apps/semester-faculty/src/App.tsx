@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { Home, Scale, CalendarClock, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked, Award } from 'lucide-react';
+import { Home, Scale, CalendarClock, Table2, Inbox, ShieldAlert, GitPullRequestArrow, BookMarked, Award, ListChecks, Mail, CalendarDays, FolderOpen, FileText } from 'lucide-react';
 import { getWorkspace, GetWorkspaceOutputType } from 'zitejs/api';
 import { WorkspaceContext, useWorkspace } from '../../semester/src/lib/workspace';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
@@ -19,11 +19,17 @@ import FinalGrades from './pages/FinalGrades';
 import SectionPage from './pages/Section';
 import Regrades from './pages/Regrades';
 import OfficeHours from './pages/OfficeHours';
+import Today from '../../semester/src/pages/Today';
+import InboxPage from '../../semester/src/pages/Inbox';
+import CalendarPage from '../../semester/src/pages/CalendarPage';
+import Workspaces from '../../semester/src/pages/Workspaces';
+import Files from '../../semester/src/pages/Files';
 
 // Faculty navigation manifest (owner PDFs 28 Oct, Faculty IA). Only destinations that exist are listed; planned workspaces
 // (content & modules, announcements, teaching portfolio, research, workload…) are tracked in docs/execution/platform-build-plan-2026-10-28.md.
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: Home, end: true }, { to: '/office-hours', label: 'Office hours', icon: CalendarClock }] },
+  { group: 'Personal', items: [{ to: '/today', label: 'Action Center', icon: ListChecks, hint: 'tasks notices deadlines' }, { to: '/mail', label: 'Mail', icon: Mail, hint: 'messages inbox' }, { to: '/calendar', label: 'Calendar', icon: CalendarDays, hint: 'schedule plan' }, { to: '/workspace', label: 'Workspace', icon: FolderOpen, hint: 'workspaces affiliations' }, { to: '/files', label: 'Files', icon: FileText, hint: 'documents' }] },
   { group: 'Teach', items: [{ to: '/queue', label: 'Grading queue', icon: Inbox }, { to: '/gradebook', label: 'Gradebook', icon: Table2 }, { to: '/final-grades', label: 'Final grades', icon: Award, hint: 'course grade certify registrar' }] },
   { group: 'Support', items: [{ to: '/regrades', label: 'Extensions & regrades', icon: Scale, hint: 'regrade requests' }, { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert }] },
   { group: 'Develop', items: [{ to: '/curriculum', label: 'Curriculum proposals', icon: BookMarked }, { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
@@ -43,6 +49,15 @@ function Shell() {
       isSample={!!membership.isSample} groups={GROUPS}>
       <Routes>
             <Route path="/" element={<Teaching />} />
+            <Route path="/today" element={<Today />} />
+            <Route path="/mail" element={<InboxPage key="m" initial="mail" />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/workspace" element={<Workspaces />} />
+            <Route path="/files" element={<Files />} />
+            <Route path="/today/mail" element={<Navigate to="/mail" replace />} />
+            <Route path="/plan" element={<Navigate to="/calendar" replace />} />
+            <Route path="/you/files" element={<Navigate to="/files" replace />} />
+            <Route path="/you/workspaces" element={<Navigate to="/workspace" replace />} />
             <Route path="/sections/:id" element={<SectionPage />} />
             <Route path="/regrades" element={<Regrades />} />
             <Route path="/office-hours" element={<OfficeHours />} />

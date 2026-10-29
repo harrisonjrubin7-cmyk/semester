@@ -17,6 +17,7 @@ export default function AcademicCalendar() {
   const s = useLoad(() => academicCalendar({ action: 'get' }));
   const [f, setF] = useState({ term: '', regOpens: '', regCloses: '', addDropEnds: '', classesStart: '', classesEnd: '', note: '' });
   const [notes, setNotes] = useState<Record<number, string>>({});
+  const [lifeNotes, setLifeNotes] = useState<Record<string, string>>({});
   const set = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value });
   return (
     <>
@@ -26,8 +27,17 @@ export default function AcademicCalendar() {
           <Panel title="Effective calendar">
             {!d.effective.length ? <Empty>No approved term calendars yet. Registration has no window until one is approved.</Empty> : d.effective.map((c: any) => (
               <div key={c.id} className="border-t border-border py-2 first:border-0">
-                <p className="flex flex-wrap items-center gap-2 font-medium">{c.term} <Status value={WIN[c.window]} /> <span className="text-xs font-normal text-muted-foreground">v{c.version}{c.decidedBy && ` · approved by ${c.decidedBy}`}</span></p>
+                <p className="flex flex-wrap items-center gap-2 font-medium">{c.term} <Status value={WIN[c.window]} />{c.lifeState !== 'open' && <Status value={c.lifeState} />} <span className="text-xs font-normal text-muted-foreground">v{c.version}{c.decidedBy && ` · approved by ${c.decidedBy}`}</span></p>
                 <Dates c={c} />
+                {c.lifeState !== 'open' && <p className="mt-1 text-xs text-muted-foreground">This term is {c.lifeState}{c.completedBy && ` · completed by ${c.completedBy}`}{c.archivedAt && ` · archived ${fmtDay(c.archivedAt)}`}. Every record is retained and stays readable; registration changes are closed.</p>}
+                {d.canEdit && c.lifeState === 'open' && <div className="mt-2 flex flex-wrap gap-2">
+                  <Input aria-label="Completion note" className="max-w-sm" placeholder="Completion note (optional)" value={lifeNotes[c.term] ?? ''} onChange={(e) => setLifeNotes({ ...lifeNotes, [c.term]: e.target.value })} />
+                  <Button size="sm" variant="outline" onClick={() => run({ action: 'complete', term: c.term, note: lifeNotes[c.term] ?? '' }, 'Term completed. Registration changes are closed for it.', s.reload)}>Complete term</Button>
+                </div>}
+                {d.canEdit && c.lifeState === 'completed' && <div className="mt-2 flex flex-wrap gap-2">
+                  <Input aria-label="Archive note" className="max-w-sm" placeholder="Archive note (optional)" value={lifeNotes[c.term] ?? ''} onChange={(e) => setLifeNotes({ ...lifeNotes, [c.term]: e.target.value })} />
+                  <Button size="sm" variant="outline" onClick={() => run({ action: 'archive', term: c.term, note: lifeNotes[c.term] ?? '' }, 'Term archived. Every record is retained.', s.reload)}>Archive term</Button>
+                </div>}
               </div>))}
           </Panel>
           {d.canEdit && <>

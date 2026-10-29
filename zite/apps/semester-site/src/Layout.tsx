@@ -37,6 +37,15 @@ export function Section({ eyebrow, title, intro, children, id }: { eyebrow?: str
 }
 
 /** Per-route browser title (S-94 §7 per-route metadata). Pages with a PageTitle get it automatically. */
+// Five groups (S-94 §3 section 13), linking only to pages that exist. Company OS, Security Lab and Developers are not public destinations.
+const FOOTER: { title: string; links: [string, string][] }[] = [
+  { title: 'Product', links: [['Platform overview', '/#platform'], ['Registration readiness', '/pilot'], ['Pricing', '/pricing']] },
+  { title: 'Who it’s for', links: [['Institutions', '/pilot'], ['Applicants: programs', '/programs']] },
+  { title: 'Implementation', links: [['Request a pilot', '/pilot/request'], ['Request a demo', '/request-demo']] },
+  { title: 'Resources and company', links: [['Updates', '/updates'], ['Mission', '/mission'], ['Contact', '/contact']] },
+  { title: 'Trust and legal', links: [['Trust', '/trust'], ['Privacy', '/trust/privacy'], ['Security', '/trust/security'], ['Accessibility', '/trust/accessibility'], ['Responsible AI', '/trust/responsible-ai']] },
+];
+
 export function useDocTitle(title: string | null) {
   useEffect(() => { document.title = title ? `${title} · Semester` : 'Semester · One clear next step for every student'; }, [title]);
 }
@@ -71,7 +80,7 @@ export default function Layout() {
           <Link to="/" aria-label="Semester home"><Mark /></Link>
           <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
             {NAV.map((n) => <NavLink key={n.to} to={n.to} className={({ isActive }) => cn('text-sm hover:text-foreground', isActive ? 'font-medium text-foreground' : 'text-muted-foreground')}>{n.label}</NavLink>)}
-            <Button asChild size="sm"><Link to="/pilot/request">Request a pilot</Link></Button>
+            <Button asChild size="sm"><Link to="/request-demo">Request a demo</Link></Button>
           </nav>
           <button className="inline-flex h-11 w-11 items-center justify-center rounded-[3px] md:hidden" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} aria-controls="mobile-nav" onClick={() => setOpen(!open)}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -80,19 +89,18 @@ export default function Layout() {
         {open && (
           <nav id="mobile-nav" aria-label="Main" className="border-t border-border px-4 pb-4 md:hidden">
             <ul className="flex flex-col">{NAV.map((n) => <li key={n.to}><NavLink to={n.to} className="block py-3 text-base">{n.label}</NavLink></li>)}</ul>
-            <Button asChild className="mt-2 w-full"><Link to="/pilot/request">Request a pilot</Link></Button>
+            <Button asChild className="mt-2 w-full"><Link to="/request-demo">Request a demo</Link></Button>
           </nav>
         )}
       </header>
       <main id="main" className="flex-1"><Outlet /></main>
       <footer className="border-t border-border bg-card">
-        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 text-sm sm:grid-cols-4 sm:px-6">
-          <div className="sm:col-span-2">
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 text-sm sm:grid-cols-3 lg:grid-cols-6 sm:px-6">
+          <div className="sm:col-span-3 lg:col-span-1">
             <Mark className="text-base" />
-            <p className="mt-2 max-w-sm text-muted-foreground">One clear next step for every student. Current systems stay authoritative until each move is verified and authorized.</p>
+            <p className="mt-2 max-w-sm text-muted-foreground">Semester is building a connected Education Operating System for students and institutions — from the next task to the systems that support an entire educational journey. Current systems stay authoritative until each move is verified and authorized.</p>
           </div>
-          <div><p className="eyebrow">Product</p><ul className="mt-2 space-y-1.5"><li><Link to="/pilot" className="hover:underline">Registration Readiness Pilot</Link></li><li><Link to="/pricing" className="hover:underline">Pricing</Link></li><li><Link to="/pricing#compare" className="hover:underline">Feature comparison</Link></li></ul></div>
-          <div><p className="eyebrow">Company</p><ul className="mt-2 space-y-1.5"><li><Link to="/trust" className="hover:underline">Trust</Link></li><li><Link to="/mission" className="hover:underline">Mission</Link></li><li><Link to="/contact" className="hover:underline">Contact</Link></li></ul></div>
+          {FOOTER.map((g) => <div key={g.title}><p className="eyebrow">{g.title}</p><ul className="mt-2 space-y-1.5">{g.links.map(([label, to]) => <li key={to}><Link to={to} className="hover:underline">{label}</Link></li>)}</ul></div>)}
         </div>
         <p className="mx-auto max-w-5xl px-4 pb-8 text-xs text-muted-foreground sm:px-6">Terms of Service, Privacy Policy and Data Processing Addendum are drafts under counsel review and are available on request through Contact. © {new Date().getFullYear()} Semester.</p>
       </footer>

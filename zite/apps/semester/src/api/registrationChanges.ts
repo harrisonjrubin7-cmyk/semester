@@ -4,7 +4,8 @@ import { zite } from 'zitejs/db';
 import { requireAccess, requireAction, first, forbid, audit, tenantScope, userNames } from '../lib/server';
 import { pg, ensureSchema, dispatchOutbox } from '../lib/pg';
 import { WL_MIGRATION } from '../lib/wlMigration';
-import { registrationWindow, maxCredits } from '../lib/calendarServer';
+import { registrationWindow, maxCredits, termState } from '../lib/calendarServer';
+import { closedTermMessage } from '../lib/termRules';
 import { checkChange, Sec } from '../lib/changeRules';
 import { tenantSources } from '../lib/sourcesServer';
 import { sisBlock } from '../lib/sources';
@@ -117,6 +118,7 @@ export default createEndpoint({
 
     if (input.action === 'joinWaitlist') {
       inTenant(input.sectionId);
+      fail(closedTermMessage(await termState(T, toSec(input.sectionId).term)));
       fail(((await sql.query(`SELECT reg_wl_join($1,$2,$3,$4) AS e`, [T, input.sectionId, me, cap(input.sectionId)])) as { e: string | null }[])[0].e);
       await mirror(me, input.sectionId, 'Waitlisted').catch(() => undefined);
       await audit(a, 'Joined waitlist', `section:${input.sectionId}`, '', 'Student self-service');
@@ -134,6 +136,7 @@ export default createEndpoint({
       const held = (await mySeats()).map(toSec);
       const term = toSec(from).term;
       const win = await registrationWindow(T, term);
+      fail(closedTermMessage(await termState(T, term)));
       fail(checkChange({ kind: to ? 'swap' : 'drop', window: win, from: toSec(from), to: to ? toSec(to) : undefined, held: held.filter((s) => s.term === term), maxCredits: await maxCredits(T) }));
       fail(((await sql.query(`SELECT reg_change_request($1,$2,$3,$4,$5,$6) AS e`, [T, me, to ? 'swap' : 'drop', from, to ?? null, input.reason])) as { e: string | null }[])[0].e);
       await audit(a, to ? 'Swap requested' : 'Drop requested', `section:${from}`, to ? `to ${label(to)}` : '', 'Student self-service');

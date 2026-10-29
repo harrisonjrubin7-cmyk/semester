@@ -4,7 +4,7 @@ import { transfer } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
-import { PageHeader, Panel, Empty, Status, fmtDay, useLoad, Loadable, errMsg } from '../components/kit';
+import { PageHeader, Panel, Empty, Status, fmtDay, useLoad, Loadable, errMsg, UncertainNote } from '../components/kit';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const run = async (input: any, ok: string, reload: () => void) => { try { await transfer(input); toast(ok); reload(); return true; } catch (e) { toast(`! ${errMsg(e)}`); return false; } };
@@ -89,7 +89,7 @@ export default function Transfer() {
             <p className="mt-2 text-xs text-muted-foreground">Transcript uploads stay off until private storage is in place; the registrar may ask for an official transcript separately.</p>
           </Panel>
           {d.pathComparison && d.pathComparison.requirements.length > 0 && <Panel title="How transfer credit would apply to your degree">
-            <p className="text-xs text-muted-foreground">A planning scenario, not your official degree audit. Evaluated = decided by the registrar; provisional = published rules for courses not yet evaluated.</p>
+            <UncertainNote>A planning scenario, not your official degree audit. Evaluated = decided by the registrar; provisional = published rules for courses not yet evaluated, and the registrar's evaluation is what settles them.</UncertainNote>
             <table className="mt-2 w-full text-sm"><thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1">Requirement</th><th>Official</th><th>+ evaluated</th><th>+ provisional</th></tr></thead>
               <tbody>{d.pathComparison.requirements.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1.5">{r.name}</td><td>{r.official}/{r.required}</td><td>{r.withEvaluated}/{r.required}</td><td>{r.withProvisional}/{r.required}</td></tr>)}</tbody></table>
             {(d.pathComparison.electiveEvaluated > 0 || d.pathComparison.electiveProvisional > 0) && <p className="mt-2 text-sm">Elective credit: {d.pathComparison.electiveEvaluated} evaluated, {d.pathComparison.electiveProvisional} provisional (counts toward total credits, not a specific requirement).</p>}

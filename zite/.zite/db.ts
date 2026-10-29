@@ -859,7 +859,7 @@ export type InboundRequestsRecordType = {
   email?: string;
   institution?: string;
   role?: string;
-  kind?: "Pilot request" | "Pricing request" | "Security document request" | "Accessibility feedback" | "Contact" | string;
+  kind?: "Pilot request" | "Pricing request" | "Security document request" | "Accessibility feedback" | "Contact" | "Demo request" | string;
   message?: string;
   consentToContact?: boolean;
   status?: "New" | "Contacted" | "Qualified" | "Closed" | string;
@@ -874,7 +874,7 @@ export type InboundRequestsRecordInput = {
   email: string | null;
   institution: string | null;
   role: string | null;
-  kind: "Pilot request" | "Pricing request" | "Security document request" | "Accessibility feedback" | "Contact" | string | null;
+  kind: "Pilot request" | "Pricing request" | "Security document request" | "Accessibility feedback" | "Contact" | "Demo request" | string | null;
   message: string | null;
   consentToContact: string | boolean | null;
   status: "New" | "Contacted" | "Qualified" | "Closed" | string | null;

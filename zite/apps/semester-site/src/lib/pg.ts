@@ -28,6 +28,12 @@ const MIGRATION = [
   `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS routing text NOT NULL DEFAULT 'pending'`,
   `CREATE UNIQUE INDEX IF NOT EXISTS site_inbound_requests_key ON site_inbound_requests (request_key) WHERE request_key IS NOT NULL`,
   `CREATE UNIQUE INDEX IF NOT EXISTS site_inbound_requests_ref ON site_inbound_requests (reference) WHERE reference IS NOT NULL`,
+  // Demo requests (S-94 §3, 28 Oct). The kind list is widened, never narrowed: existing rows all remain valid.
+  `DO $$ BEGIN
+     ALTER TABLE site_inbound_requests DROP CONSTRAINT IF EXISTS site_inbound_requests_kind_check;
+     ALTER TABLE site_inbound_requests ADD CONSTRAINT site_inbound_requests_kind_check
+       CHECK (kind IN ('Pilot request','Pricing request','Security document request','Accessibility feedback','Contact','Demo request'));
+   END $$`,
 ];
 
 let ready: Promise<void> | null = null;

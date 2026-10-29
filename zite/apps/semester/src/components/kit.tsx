@@ -1,5 +1,6 @@
 import { friendlyError } from '../lib/clientError';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { freshnessOf, routeLoadError, STALE_AFTER_MS } from '../lib/freshness';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { contextSession } from '../lib/contextSession';
 import { format } from 'date-fns';
 import { cn } from '@project/components/lib/utils';
@@ -60,19 +61,49 @@ export const fmtDay = (iso?: string | null) => (iso ? format(new Date(iso), 'EEE
 export function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const dataRef = useRef<T | null>(null);
   const reload = useCallback(async () => {
-    setError(null);
     // Responses that arrive after a context switch are dropped (lib/contextSession.ts), so one app's data never shows in another.
     const { token } = contextSession.begin();
-    try { const v = await fn(); if (contextSession.accept(token)) setData(v); }
-    catch (e) { if (contextSession.accept(token)) setError(e instanceof Error ? e.message : 'Something went wrong'); }
+    try {
+      const v = await fn();
+      if (contextSession.accept(token)) { dataRef.current = v; setData(v); setLoadedAt(Date.now()); setError(null); setRefreshError(null); }
+    } catch (e) {
+      // A failed refresh keeps the last good data on screen (it becomes the stale state); only a first-load
+      // failure is the page error.
+      if (contextSession.accept(token)) {
+        const routed = routeLoadError(dataRef.current != null, e instanceof Error ? e.message : 'Something went wrong');
+        setError(routed.error); setRefreshError(routed.refreshError);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   useEffect(() => { reload(); }, [reload]);
-  return { data, error, reload };
+  return { data, error, refreshError, loadedAt, reload };
 }
 
-export function Loadable<T>({ state, children }: { state: { data: T | null; error: string | null; reload: () => void }; // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/** Stale — the data on screen is the last version that loaded; say when it is from and offer a retry. */
+export function StaleNote({ when, problem, onRetry }: { when?: string | null; problem?: string | null; onRetry?: () => void }) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border bg-card px-3 py-2 text-xs text-muted-foreground" role="status">
+      <span>↻ Showing the last version{when ? ` from ${when}` : ''} — it may be out of date.{problem ? ` ${problem}` : ''}</span>
+      {onRetry && <Button size="sm" variant="outline" onClick={onRetry}>Try again</Button>}
+    </div>
+  );
+}
+
+/** Uncertain — the value shown is provisional, estimated or not yet confirmed by its owner. Name what would settle it. */
+export function UncertainNote({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-3 rounded-md border border-dashed border-border bg-card px-3 py-2 text-xs text-muted-foreground" role="note">
+      <span className="font-medium text-foreground">? Not settled yet. </span>{children}
+    </div>
+  );
+}
+
+export function Loadable<T>({ state, staleAfterMs = STALE_AFTER_MS, children }: { state: { data: T | null; error: string | null; refreshError?: string | null; loadedAt?: number | null; reload: () => void }; staleAfterMs?: number; // eslint-disable-next-line @typescript-eslint/no-explicit-any
   children: (d: any) => ReactNode }) {
   if (state.error) {
     const offline = typeof navigator !== 'undefined' && !navigator.onLine;
@@ -85,7 +116,13 @@ export function Loadable<T>({ state, children }: { state: { data: T | null; erro
     );
   }
   if (!state.data) return <div className="space-y-3"><Skeleton className="h-8 w-1/3" /><Skeleton className="h-32 w-full" /><Skeleton className="h-32 w-full" /></div>;
-  return <>{children(state.data)}</>;
+  const stale = state.refreshError != null || freshnessOf(state.loadedAt ?? null, Date.now(), staleAfterMs) === 'stale';
+  return (
+    <>
+      {stale && <StaleNote when={state.loadedAt ? fmt(new Date(state.loadedAt).toISOString()) : null} problem={state.refreshError ? `The refresh didn't go through: ${state.refreshError}` : null} onRetry={state.reload} />}
+      {children(state.data)}
+    </>
+  );
 }
 
 /** Source Line — a statement, a thin editorial rule, its source chip. Only where a real source exists. */

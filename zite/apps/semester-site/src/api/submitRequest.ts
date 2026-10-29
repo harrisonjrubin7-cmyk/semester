@@ -4,7 +4,7 @@ import { zite } from 'zitejs/db';
 import { createHash, randomBytes } from 'node:crypto';
 import { pg, ensureSchema } from '../lib/pg';
 
-const KINDS = ['Pilot request', 'Pricing request', 'Security document request', 'Accessibility feedback', 'Contact'] as const;
+const KINDS = ['Pilot request', 'Pricing request', 'Security document request', 'Accessibility feedback', 'Contact', 'Demo request'] as const;
 
 const refuse = (message: string) => { throw new ZiteError({ code: 'BAD_REQUEST', message, userFacingMessage: message }); };
 

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap, Briefcase, Globe } from 'lucide-react';
+import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap, Briefcase, Globe, ListChecks, Mail, CalendarDays, FolderOpen, FileText } from 'lucide-react';
 import { institutionOps } from 'zitejs/api';
 import { useLoad } from './lib/useLoad';
 import { DeniedOrError } from './components/States';
@@ -18,6 +18,11 @@ import Audit from './pages/Audit';
 import Structure from './pages/Structure';
 import Records from './pages/Records';
 import Registration from './pages/Registration';
+import Today from '../../semester/src/pages/Today';
+import InboxPage from '../../semester/src/pages/Inbox';
+import CalendarPage from '../../semester/src/pages/CalendarPage';
+import Workspaces from '../../semester/src/pages/Workspaces';
+import Files from '../../semester/src/pages/Files';
 
 type Access = { roles: string[]; member: boolean; institutionName: string; isSample: boolean; can: Record<string, boolean> };
 
@@ -28,6 +33,7 @@ function groupsFor(can: Record<string, boolean>): NavGroup[] {
   const items = (xs: (NavItem & { need?: string })[]) => xs.filter((x) => !x.need || can[x.need]);
   return [
     { group: null, items: items([{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }]) },
+    { group: 'Personal', items: items([{ to: '/today', label: 'Action Center', icon: ListChecks, hint: 'tasks notices deadlines' }, { to: '/mail', label: 'Mail', icon: Mail, hint: 'messages inbox' }, { to: '/calendar', label: 'Calendar', icon: CalendarDays, hint: 'schedule plan' }, { to: '/workspace', label: 'Workspace', icon: FolderOpen, hint: 'workspaces affiliations' }, { to: '/files', label: 'Files', icon: FileText, hint: 'documents' }]) },
     { group: 'Academics', items: items([{ to: '/requests', label: 'Sections & teaching assignments', icon: GitPullRequestArrow, hint: 'section requests' },
       { to: '/structure', label: 'Academic structure', icon: Building2, hint: 'departments rooms' },
       { to: '/programs', label: 'Public programs', icon: Globe, need: 'catalog.manage', hint: 'public site admissions listing' },
@@ -54,6 +60,15 @@ function Shell() {
     <AppShell app="Institution" appKey="institution" institutionName={a.institutionName} role={a.roles.join(', ') || 'Member'} roles={[]} isSample={a.isSample} groups={groupsFor(a.can)}>
       <Routes>
         <Route path="/" element={<Overview />} />
+        <Route path="/today" element={<Today />} />
+        <Route path="/mail" element={<InboxPage key="m" initial="mail" />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/workspace" element={<Workspaces />} />
+        <Route path="/files" element={<Files />} />
+        <Route path="/today/mail" element={<Navigate to="/mail" replace />} />
+        <Route path="/plan" element={<Navigate to="/calendar" replace />} />
+        <Route path="/you/files" element={<Navigate to="/files" replace />} />
+        <Route path="/you/workspaces" element={<Navigate to="/workspace" replace />} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/structure" element={<Structure />} />
         <Route path="/holds" element={<Holds />} />
