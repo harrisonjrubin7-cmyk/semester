@@ -85,6 +85,7 @@ import type { default as _PartnersEp } from '../src/api/partners';
 import type { default as _PortfolioVerifyEp } from '../src/api/portfolioVerify';
 import type { default as _PrivacyEp } from '../src/api/privacy';
 import type { default as _ProcurementEp } from '../src/api/procurement';
+import type { default as _ProgramReviewEp } from '../src/api/programReview';
 import type { default as _ProgramsEp } from '../src/api/programs';
 import type { default as _ProgressEp } from '../src/api/progress';
 import type { default as _PublicProgramsEp } from '../src/api/publicPrograms';
@@ -539,6 +540,11 @@ export type ProcurementInputType = NonNullable<_ProcurementCfg['inputSchema']> e
 export type ProcurementOutputType = Awaited<ReturnType<_ProcurementCfg['execute']>>;
 export const procurement = createCaller<ProcurementInputType, ProcurementOutputType>('procurement');
 
+type _ProgramReviewCfg = typeof _ProgramReviewEp;
+export type ProgramReviewInputType = NonNullable<_ProgramReviewCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgramReviewCfg['execute']>[0]['input'];
+export type ProgramReviewOutputType = Awaited<ReturnType<_ProgramReviewCfg['execute']>>;
+export const programReview = createCaller<ProgramReviewInputType, ProgramReviewOutputType>('programReview');
+
 type _ProgramsCfg = typeof _ProgramsEp;
 export type ProgramsInputType = NonNullable<_ProgramsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ProgramsCfg['execute']>[0]['input'];
 export type ProgramsOutputType = Awaited<ReturnType<_ProgramsCfg['execute']>>;
@@ -814,6 +820,7 @@ export const api = {
   portfolioVerify,
   privacy,
   procurement,
+  programReview,
   programs,
   progress,
   publicPrograms,
