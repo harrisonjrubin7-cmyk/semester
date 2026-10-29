@@ -7,11 +7,13 @@ import { PTA_MIGRATION } from '../lib/ptaMigration';
 import { TRF_MIGRATION } from '../lib/trfMigration';
 import { PRC_MIGRATION } from '../lib/prcMigration';
 import { SUP_MIGRATION } from '../lib/supMigration';
+import { CNT_MIGRATION } from '../lib/cntMigration';
+import { RSA_MIGRATION } from '../lib/rsaMigration';
 import { SCOPES, relStatus, accessLive, RelState } from '../lib/partnerRules';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
-const ensure = () => { if (!ready) ready = (async () => { for (const q of [...TRF_MIGRATION, ...PTA_MIGRATION, ...PRC_MIGRATION, ...SUP_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
+const ensure = () => { if (!ready) ready = (async () => { for (const q of [...TRF_MIGRATION, ...PTA_MIGRATION, ...PRC_MIGRATION, ...SUP_MIGRATION, ...CNT_MIGRATION, ...RSA_MIGRATION]) await pg().query(q); })().catch((e) => { ready = null; throw e; }); return ready; };
 const fail = (e: string | null | undefined) => { if (e) forbid(e); };
 const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
 const day = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 10) : null);
@@ -33,6 +35,8 @@ export default createEndpoint({
     z.object({ action: z.literal('articulate'), relId: z.number().int(), course: z.string().min(3).max(30), outcome: z.enum(['equivalent', 'elective', 'no_credit']), code: z.string().max(20).default(''),
       credits: z.number().positive().max(12).nullable(), term: z.string().min(4).max(20) }),
     z.object({ action: z.literal('orderAck'), relId: z.number().int(), poId: z.number().int(), kind: z.enum(['acknowledged', 'shipped']), note: z.string().max(300).default('') }),
+    z.object({ action: z.literal('acceptContract'), contractId: z.number().int(), expectedVersion: z.number().int(), hash: z.string().min(10).max(100) }),
+    z.object({ action: z.literal('submitResearch'), relId: z.number().int(), title: z.string().min(5).max(160), summary: z.string().min(20).max(4000), amountCents: z.number().int().min(0).max(1_000_000_000_00) }),
     z.object({ action: z.literal('setStaff'), email: z.string().email().max(200), on: z.boolean() }),
     z.object({ action: z.literal('manage'), relId: z.number().int(), step: z.enum(['verify', 'reject', 'propose', 'suspend', 'reinstate', 'offboard']), expectedVersion: z.number().int(), note: z.string().max(2000).default(''),
       text: z.string().max(10000).default(''), validTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null), scopes: z.array(z.enum(SCOPES)).default([]) }),
@@ -86,6 +90,17 @@ export default createEndpoint({
       fail(await one(`SELECT sup_ack($1,$2,$3,$4,$5,$6) AS r`, [me, String(rel[0].tenant_id), Number(rel[0].org_id), input.poId, input.kind, input.note]));
       result = { acked: input.poId };
     }
+    if (input.action === 'submitResearch') {
+      const relRows = (await sql.query(`SELECT r.tenant_id, r.org_id FROM pta_relationships r WHERE r.id = $1 AND EXISTS (SELECT 1 FROM pta_members m WHERE m.org_id = r.org_id AND m.user_id = $2)`, [input.relId, me])) as Row[];
+      const rel = relRows[0];
+      if (!rel) forbid('That relationship is not yours.');
+      fail(await one(`SELECT rsa_submit_partner($1,$2,$3,$4,$5,$6) AS r`, [me, String(rel!.tenant_id), Number(rel!.org_id), input.title, input.summary, input.amountCents]));
+      result = { submitted: true };
+    }
+    if (input.action === 'acceptContract') {
+      fail(await one(`SELECT cnt_accept($1,$2,$3,$4) AS r`, [me, input.contractId, input.expectedVersion, input.hash]));
+      result = { accepted: input.contractId };
+    }
     if (input.action === 'setStaff') {
       if (!isAdmin || !T) forbid('Only administrators manage partner managers.');
       const uid = await userByEmail(input.email);
@@ -116,6 +131,10 @@ export default createEndpoint({
     const arts = orgIds.length ? (await sql.query(`SELECT * FROM trf_rules WHERE partner_org_id = ANY($1::bigint[]) ORDER BY created_at DESC LIMIT 300`, [orgIds])) as Row[] : [];
     const ordersByRel = new Map<string, Row[]>();
     for (const r of rels) { if (String(r.state) === 'active' && ((r.scopes as string[]) ?? []).includes('view_orders')) ordersByRel.set(`${r.tenant_id}:${r.org_id}`, (await sql.query(`SELECT * FROM sup_orders($1,$2)`, [String(r.tenant_id), Number(r.org_id)])) as Row[]); }
+    const contractsByRel = new Map<string, Row[]>();
+    for (const r of rels) contractsByRel.set(`${r.tenant_id}:${r.org_id}`, (await sql.query(`SELECT * FROM cnt_contracts WHERE tenant_id = $1 AND org_id = $2 ORDER BY updated_at DESC LIMIT 100`, [String(r.tenant_id), Number(r.org_id)])) as Row[]);
+    const researchByRel = new Map<string, Row[]>();
+    for (const r of rels) researchByRel.set(`${r.tenant_id}:${r.org_id}`, (await sql.query(`SELECT * FROM rsa_requests WHERE tenant_id = $1 AND org_id = $2 ORDER BY created_at DESC LIMIT 50`, [String(r.tenant_id), Number(r.org_id)])) as Row[]);
     const rel = (r: Row) => {
       const st = String(r.state) as RelState, to = r.valid_to ? new Date(String(r.valid_to) + 'T23:59:59Z') : null;
       return { id: Number(r.id), institution: instName[String(r.tenant_id)] ?? 'Institution', state: st, status: relStatus(st, to, now), live: accessLive(st, to, now), version: Number(r.version),
@@ -123,7 +142,9 @@ export default createEndpoint({
         statusNote: String(r.status_note), acceptedAt: iso(r.accepted_at),
         articulations: arts.filter((x) => String(x.tenant_id) === String(r.tenant_id) && String(x.partner_org_id) === String(r.org_id))
           .map((x) => ({ id: Number(x.id), course: String(x.ext_course), outcome: String(x.outcome), code: (x.internal_code as string) ?? null, state: String(x.state), note: (x.decision_note as string) ?? '' })),
-        orders: (ordersByRel.get(`${r.tenant_id}:${r.org_id}`) ?? []).map((x) => ({ poId: Number(x.po_id), supplier: String(x.supplier), description: String(x.description), amount: Number(x.amount), state: String(x.po_state), received: Number(x.received), invoiced: Number(x.invoiced), ackKind: x.ack_kind ? String(x.ack_kind) : null, ackAt: iso(x.ack_at) })) };
+        orders: (ordersByRel.get(`${r.tenant_id}:${r.org_id}`) ?? []).map((x) => ({ poId: Number(x.po_id), supplier: String(x.supplier), description: String(x.description), amount: Number(x.amount), state: String(x.po_state), received: Number(x.received), invoiced: Number(x.invoiced), ackKind: x.ack_kind ? String(x.ack_kind) : null, ackAt: iso(x.ack_at) })),
+        contracts: (contractsByRel.get(`${r.tenant_id}:${r.org_id}`) ?? []).map((x) => ({ id: Number(x.id), title: String(x.title), kind: String(x.kind), valueCents: Number(x.value_cents), startsOn: day(x.starts_on), endsOn: day(x.ends_on), state: String(x.state), version: Number(x.version), terms: String(x.terms_text), termsHash: x.terms_hash ? String(x.terms_hash) : null })),
+        researchRequests: (researchByRel.get(`${r.tenant_id}:${r.org_id}`) ?? []).map((x) => ({ id: Number(x.id), title: String(x.title), state: String(x.state), projectCode: x.project_code ? String(x.project_code) : null, amountCents: Number(x.amount_cents) })) };
     };
 
     return {

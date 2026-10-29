@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap, Briefcase, Globe, ListChecks, Mail, CalendarDays, FolderOpen, FileText } from 'lucide-react';
+import { LayoutDashboard, GitPullRequestArrow, Ban, PlugZap, ScrollText, Building2, ClipboardList, GraduationCap, Briefcase, Globe, ListChecks, Mail, CalendarDays, FolderOpen, FileText, ShoppingCart, Calculator, FlaskConical, Award, Scale } from 'lucide-react';
 import { institutionOps } from 'zitejs/api';
 import { useLoad } from './lib/useLoad';
 import { DeniedOrError } from './components/States';
@@ -13,6 +13,7 @@ import Requests from './pages/Requests';
 import Holds from './pages/Holds';
 import Employers from './pages/Employers';
 import Programs from './pages/Programs';
+import Visits from './pages/Visits';
 import Console from './pages/Console';
 import Audit from './pages/Audit';
 import Structure from './pages/Structure';
@@ -23,6 +24,12 @@ import InboxPage from '../../semester/src/pages/Inbox';
 import CalendarPage from '../../semester/src/pages/CalendarPage';
 import Workspaces from '../../semester/src/pages/Workspaces';
 import Files from '../../semester/src/pages/Files';
+import Procurement from '../../semester/src/pages/Procurement';
+import Contracts from '../../semester/src/pages/Contracts';
+import BudgetPlanning from '../../semester/src/pages/BudgetPlanning';
+import ResearchAdmin from '../../semester/src/pages/ResearchAdmin';
+import Grants from '../../semester/src/pages/Grants';
+import EthicsReview from '../../semester/src/pages/EthicsReview';
 
 type Access = { roles: string[]; member: boolean; institutionName: string; isSample: boolean; can: Record<string, boolean> };
 
@@ -37,10 +44,17 @@ function groupsFor(can: Record<string, boolean>): NavGroup[] {
     { group: 'Academics', items: items([{ to: '/requests', label: 'Sections & teaching assignments', icon: GitPullRequestArrow, hint: 'section requests' },
       { to: '/structure', label: 'Academic structure', icon: Building2, hint: 'departments rooms' },
       { to: '/programs', label: 'Public programs', icon: Globe, need: 'catalog.manage', hint: 'public site admissions listing' },
+      { to: '/visits', label: 'Visit slots', icon: CalendarDays, need: 'catalog.manage', hint: 'admissions tours information sessions interviews' },
       { to: '/registration', label: 'Registration & enrollment', icon: ClipboardList, need: 'registrar.read', hint: 'registrar desk waitlist add drop overrides' },
       { to: '/records', label: 'Academic records', icon: GraduationCap, need: 'registrar.read', hint: 'official grades transcripts standing grading policy' }]) },
     { group: 'Student lifecycle', items: items([{ to: '/holds', label: 'Holds', icon: Ban, need: 'registration.request.decide' },
       { to: '/employers', label: 'Employer partnerships', icon: Briefcase, need: 'approval.decide', hint: 'career employers recruiters' }]) },
+    { group: 'Campus operations', items: items([{ to: '/procurement', label: 'Procurement', icon: ShoppingCart, hint: 'budgets requisitions purchase orders suppliers' },
+      { to: '/contracts', label: 'Contracts', icon: FileText, hint: 'partner agreements terms acceptance' },
+      { to: '/budget-planning', label: 'Budget & planning', icon: Calculator, hint: 'fiscal year plans variance' },
+      { to: '/research', label: 'Research admin', icon: FlaskConical, hint: 'research requests project registration' },
+      { to: '/grants', label: 'Grants', icon: Award, hint: 'sponsored projects verification spend reports' },
+      { to: '/ethics', label: 'Ethics review', icon: Scale, hint: 'protocol review committee' }]) },
     { group: 'Governance', items: items([{ to: '/console', label: 'Access & connections', icon: PlugZap, need: 'member.manage', hint: 'members' },
       { to: '/audit', label: 'Audit & assurance', icon: ScrollText, need: 'audit.read', hint: 'audit log' }]) },
   ];
@@ -73,9 +87,16 @@ function Shell() {
         <Route path="/structure" element={<Structure />} />
         <Route path="/holds" element={<Holds />} />
         <Route path="/programs" element={<Programs />} />
+        <Route path="/visits" element={<Visits />} />
         <Route path="/employers" element={<Employers />} />
         <Route path="/registration" element={<Registration />} />
         <Route path="/records" element={<Records />} />
+        <Route path="/procurement" element={<Procurement />} />
+        <Route path="/contracts" element={<Contracts />} />
+        <Route path="/budget-planning" element={<BudgetPlanning />} />
+        <Route path="/research" element={<ResearchAdmin />} />
+        <Route path="/grants" element={<Grants />} />
+        <Route path="/ethics" element={<EthicsReview />} />
         <Route path="/console" element={<Console />} />
         <Route path="/audit" element={<Audit />} />
         <Route path="*" element={<Navigate to="/" replace />} />

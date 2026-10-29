@@ -5,6 +5,7 @@ import { createCaller } from 'zitejs/caller';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _MyAppsEp } from '../src/api/myApps';
 import type { default as _PlatformEp } from '../src/api/platform';
+import type { default as _ResearchPartnerEp } from '../src/api/researchPartner';
 import type { default as _SandboxEp } from '../src/api/sandbox';
 
 type _AppDirectoryCfg = typeof _AppDirectoryEp;
@@ -22,6 +23,11 @@ export type PlatformInputType = NonNullable<_PlatformCfg['inputSchema']> extends
 export type PlatformOutputType = Awaited<ReturnType<_PlatformCfg['execute']>>;
 export const platform = createCaller<PlatformInputType, PlatformOutputType>('platform');
 
+type _ResearchPartnerCfg = typeof _ResearchPartnerEp;
+export type ResearchPartnerInputType = NonNullable<_ResearchPartnerCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ResearchPartnerCfg['execute']>[0]['input'];
+export type ResearchPartnerOutputType = Awaited<ReturnType<_ResearchPartnerCfg['execute']>>;
+export const researchPartner = createCaller<ResearchPartnerInputType, ResearchPartnerOutputType>('researchPartner');
+
 type _SandboxCfg = typeof _SandboxEp;
 export type SandboxInputType = NonNullable<_SandboxCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_SandboxCfg['execute']>[0]['input'];
 export type SandboxOutputType = Awaited<ReturnType<_SandboxCfg['execute']>>;
@@ -32,5 +38,6 @@ export const api = {
   appDirectory,
   myApps,
   platform,
+  researchPartner,
   sandbox,
 };

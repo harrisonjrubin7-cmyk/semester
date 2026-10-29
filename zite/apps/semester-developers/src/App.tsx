@@ -9,6 +9,7 @@ import { useLoad } from './hooks';
 import { ReviewQueue, AppsTable, KeysTable, AuditLog } from './components/Console';
 import { Sandbox, Docs } from './components/Sandbox';
 import { MyApps } from './components/MyApps';
+import { ResearchPartner } from './components/ResearchPartner';
 import { Wordmark } from '@project/components/brand/Mark';
 import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'review', label: 'Review queue', group: 'Platform' }, { id: 'apps', label: 'Apps', group: 'Platform' },
   { id: 'keys', label: 'Tokens', group: 'Platform' }, { id: 'audit', label: 'Audit', group: 'Platform' },
   { id: 'sandbox', label: 'Sandbox', group: 'Build' }, { id: 'myapps', label: 'My apps', group: 'Build' }, { id: 'docs', label: 'API reference', group: 'Build' },
+  { id: 'research', label: 'Research access', group: 'Research' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -57,12 +59,12 @@ export default function App() {
         </div>
         <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4">
           {TABS.map((t, i) => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={cn('whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors', i === 4 && 'ml-4',
+            <button key={t.id} onClick={() => setTab(t.id)} className={cn('whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors', (i === 4 || i === 7) && 'ml-4',
               tab === t.id ? 'border-sidebar-primary text-sidebar-accent-foreground' : 'border-transparent text-sidebar-foreground/70 hover:text-sidebar-accent-foreground')}>{t.label}</button>))}
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {isPlatform ? <PlatformArea key="p" tab={tab} /> : <BuildArea key="b" tab={tab} />}
+        {tab === 'research' ? <ResearchPartner /> : isPlatform ? <PlatformArea key="p" tab={tab} /> : <BuildArea key="b" tab={tab} />}
       </main>
       <AppSwitcher current="developers" /><Toaster />
     </div>

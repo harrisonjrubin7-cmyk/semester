@@ -54,6 +54,8 @@ import Offices from './pages/Offices';
 import DepartmentForms from './pages/DepartmentForms';
 import DepartmentStaffing from './pages/DepartmentStaffing';
 import CommunityAdmin from './pages/CommunityAdmin';
+import Research from './pages/Research';
+import ResearchProtocols from './pages/ResearchProtocols';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -84,6 +86,11 @@ import { AppSwitcher } from './components/AppSwitcher';
 import HumanResources from './pages/HumanResources';
 import Recruiting from './pages/Recruiting';
 import Procurement from './pages/Procurement';
+import Contracts from './pages/Contracts';
+import BudgetPlanning from './pages/BudgetPlanning';
+import ResearchAdmin from './pages/ResearchAdmin';
+import Grants from './pages/Grants';
+import EthicsReview from './pages/EthicsReview';
 import Organizations from './pages/Organizations';
 import Transition from './pages/Transition';
 import Partners from './pages/Partners';
@@ -203,6 +210,11 @@ export default function App() {
             <Route path="/you/work" element={<HumanResources />} />
             <Route path="/you/recruiting" element={<Recruiting />} />
             <Route path="/campus/procurement" element={<Procurement />} />
+            <Route path="/campus/contracts" element={<Contracts />} />
+            <Route path="/campus/budget-planning" element={<BudgetPlanning />} />
+            <Route path="/campus/research" element={<ResearchAdmin />} />
+            <Route path="/campus/grants" element={<Grants />} />
+            <Route path="/campus/ethics" element={<EthicsReview />} />
             <Route path="/campus/organizations" element={<Organizations />} />
             <Route path="/plan/transition" element={<Transition />} />
             <Route path="/staff/holds" element={<RegistrationHolds />} />
@@ -216,6 +228,8 @@ export default function App() {
             <Route path="/institution/curriculum" element={<Curriculum />} />
             <Route path="/institution/programs" element={<Programs />} />
             <Route path="/staff/analytics" element={<Analytics />} />
+            <Route path="/staff/research" element={<Research />} />
+            <Route path="/staff/research-protocols" element={<ResearchProtocols />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
             <Route path="/staff/mentoring" element={<Mentoring />} />

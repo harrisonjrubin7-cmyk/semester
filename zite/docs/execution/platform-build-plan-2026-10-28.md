@@ -154,9 +154,17 @@ grading is instructor-of-record or a bounded delegate (tested); official grades 
 certify (database check); diagnostic accommodation evidence is never sent to instructors (letters carry arrangements
 only); private study notes have no staff read path.
 
-Acceptance tests (S-82 §11) still to add as a fixture run: second synthetic institution B, a student who is also a TA,
-an expired instructor assignment, a revoked delegate, interrupted upload, stale attempt grading, final-grade timeout
-reconciliation, withdrawn student access, course copy without prior work, keyboard-only grading.
+Acceptance tests (S-82 §11): the fixture run exists — `apps/semester/dbchecks/acceptanceS82.ts`, RESULT pass=18
+fails=0 (29 Oct 2026). Verified at the SQL-rule layer: second synthetic institution B (cross-tenant decide refused,
+nothing visible), a student who is also a TA (grades others, never their own attempt), expired delegation confers
+no access, revoked delegate loses access at once, interrupted upload (a file whose scan never clears is unreadable
+by granted readers until it does), stale attempt grading (released attempts refuse grading), final-grade timeout
+reconciliation (ogr_post replays the same request key instead of double-posting, and refuses the key on a different
+grade; the certifier cannot post), withdrawn student access (withdrawn enrollment records no attendance), and
+course copy without prior work (empty shell copies cleanly). Two honest remainders: dated instructor-of-record
+assignments that expire on their own are still not modelled (connectionRegister documents this; dated *delegate*
+access does expire, asserted in the fixture), and keyboard-only grading is a UI property that belongs to the
+browser pass over the published app, not to a database fixture.
 
 ## 9. Next increments
 

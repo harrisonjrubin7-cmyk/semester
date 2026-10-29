@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { rawMetrics } from '../lib/analyticsServer';
 import { requireAction, first, forbid, audit, userNames, inSet, capabilities } from '../lib/server';
 import { pg } from '../lib/pg';
 import { HLD_MIGRATION } from '../lib/hldMigration';
@@ -35,27 +36,7 @@ export default createEndpoint({
 
     if (input.action === 'analytics' || input.action === 'export') {
       const a = await requireAction(uid, 'readiness.read');
-      const p = [a.institutionId];
-      const q = (query: string) => zite.sql({ query, params: p }).then((r) => r.rows);
-      const [members, enroll, reqs, holds, cases, plans] = await Promise.all([
-        q(`SELECT r AS role, COUNT(*)::int AS n FROM "Memberships" m JOIN "InstitutionsMemberships" l ON l."membershipsId" = m.id,
-             jsonb_array_elements_text(m."roles") r WHERE l."institutionsId" = $1 AND m."status" = 'Active' GROUP BY r`),
-        q(`SELECT e."status" AS k, COUNT(*)::int AS n FROM "Enrollments" e JOIN "EnrollmentsSections" es ON es."enrollmentsId" = e.id
-             JOIN "CoursesSections" cs ON cs."sectionsId" = es."sectionsId" JOIN "CoursesInstitutions" ci ON ci."coursesId" = cs."coursesId"
-             WHERE ci."institutionsId" = $1 GROUP BY e."status"`),
-        q(`SELECT r."state" AS k, COUNT(*)::int AS n FROM "RegistrationRequests" r JOIN "RegistrationRequestsInstitutions" l ON l."registrationRequestsId" = r.id
-             WHERE l."institutionsId" = $1 GROUP BY r."state"`),
-        q(`SELECT h."originatingOffice" AS k, COUNT(*)::int AS n FROM "StudentHolds" h JOIN "InstitutionsStudentHolds" l ON l."studentHoldsId" = h.id
-             WHERE l."institutionsId" = $1 AND h."status" = 'Active' GROUP BY h."originatingOffice"`),
-        q(`SELECT r."resultCode" AS k, COUNT(*)::int AS n FROM "RegistrationRequests" r JOIN "RegistrationRequestsInstitutions" l ON l."registrationRequestsId" = r.id
-             WHERE l."institutionsId" = $1 AND r."state" = 'Rejected' GROUP BY r."resultCode"`),
-        q(`SELECT p."status" AS k, COUNT(*)::int AS n FROM "PaymentPlanRequests" p JOIN "InstitutionsPaymentPlanRequests" l ON l."paymentPlanRequestsId" = p.id
-             WHERE l."institutionsId" = $1 GROUP BY p."status"`),
-      ]);
-      const pairs = (rows: Record<string, unknown>[], key = 'k') => rows.map((r) => ({ label: String(r[key] ?? 'Unset'), value: Number(r.n) }));
-      // Disclosure control (lib/analytics.ts): raw counts never leave the server; small cells are suppressed with a complement.
-      const raw: Record<string, ReturnType<typeof pairs>> = { members_by_role: pairs(members, 'role'), enrollments_by_status: pairs(enroll), registration_requests: pairs(reqs),
-        rejection_reasons: pairs(cases), holds_by_office: pairs(holds), payment_plans: pairs(plans) };
+      const raw = await rawMetrics(a.institutionId);
       const metrics = METRICS.map((m) => ({ ...m, ...suppress(raw[m.id] ?? []) }));
       if (input.action === 'export') {
         await audit(a, 'Aggregate analytics exported', `institution:${a.institutionId}`, `${metrics.length} metrics, cells under ${MIN_CELL} suppressed`, a.roles.join(', '));

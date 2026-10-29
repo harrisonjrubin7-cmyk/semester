@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAuth, loginWithRedirect } from 'zitejs/auth';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { LayoutDashboard, FileText, Compass, PenLine } from 'lucide-react';
+import { LayoutDashboard, FileText, Compass, PenLine, CalendarDays } from 'lucide-react';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import RecommendationsToWrite, { ApplicantRecommendations } from './Recommendations';
 import { applications, ApplicationsOutputType } from 'zitejs/api';
@@ -140,7 +140,7 @@ function Card({ a, onEdit, reload }: { a: App; onEdit: () => void; reload: () =>
 
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
-  { group: 'Explore', items: [{ to: '/programs', label: 'Programs', icon: Compass, hint: 'institutions published programs' }] },
+  { group: 'Explore', items: [{ to: '/programs', label: 'Programs', icon: Compass, hint: 'institutions published programs' }, { to: '/visits', label: 'Visits', icon: CalendarDays, hint: 'tours information sessions interviews' }] },
   { group: 'Apply', items: [{ to: '/applications', label: 'Applications', icon: FileText, hint: 'drafts submitted decisions' },
     { to: '/recommendations', label: 'Recommendations to write', icon: PenLine, hint: 'recommender letters' }] },
 ];
@@ -183,6 +183,49 @@ function Today() {
 
 type Prog = { id: number; institutionId: string; institution: string; name: string; summary: string; entryTerms: string; accepting: boolean; annualCostCents: number | null; durationText: string; format: string; requirements: string; shortlisted: boolean };
 const money = (cents: number | null) => (cents == null ? 'Not published' : `$${(cents / 100).toLocaleString('en-US')}`);
+type VisitSlot = { id: number; institution: string; startsAt: string; kind: string; location: string; note: string; seatsLeft: number; myBookingId: number | null };
+type MyVisit = { bookingId: number; institution: string; startsAt: string; kind: string; location: string; note: string; guests: number };
+const VKIND: Record<string, string> = { tour: 'Campus tour', info_session: 'Information session', interview: 'Interview' };
+
+function Visits() {
+  const [data, setData] = useState<{ slots: VisitSlot[]; mine: MyVisit[] } | null>(null);
+  const [guests, setGuests] = useState<Record<number, string>>({});
+  const load = () => (applications({ action: 'visits' }) as unknown as Promise<{ slots: VisitSlot[]; mine: MyVisit[] }>).then(setData).catch(() => setData({ slots: [], mine: [] }));
+  useEffect(() => { load(); }, []);
+  const book = async (s: VisitSlot) => { try { await applications({ action: 'bookVisit', slotId: s.id, guests: Number(guests[s.id] ?? 1) } as never); toast.success('Visit booked.'); load(); } catch (e) { toast.error(msg(e)); load(); } };
+  const cancel = async (m: MyVisit) => { try { await applications({ action: 'cancelVisit', bookingId: m.bookingId } as never); toast.success('Booking cancelled.'); load(); } catch (e) { toast.error(msg(e)); load(); } };
+  return (
+    <div className="mx-auto max-w-4xl">
+      <p className="eyebrow">Explore</p><h1 className="mt-1 text-3xl">Visits</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Tours, information sessions and interviews published by institutions. Booking holds seats for you and your guests; cancel any time before the visit.</p>
+      {!data ? <Skeleton className="mt-6 h-40 w-full" /> : (
+        <>
+          {data.mine.length > 0 && <div className="mt-6"><h2 className="text-lg font-semibold">Your visits</h2>
+            <ul className="mt-2 space-y-2">{data.mine.map((m) => (
+              <li key={m.bookingId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3">
+                <p className="text-sm"><b>{VKIND[m.kind]}</b> · {m.institution} · {format(new Date(m.startsAt), 'PPp')}{m.location ? ` · ${m.location}` : ''} · {m.guests} {m.guests === 1 ? 'person' : 'people'}</p>
+                <Button size="sm" variant="outline" onClick={() => cancel(m)}>Cancel booking</Button>
+              </li>))}</ul></div>}
+          <h2 className="mt-6 text-lg font-semibold">Open visits</h2>
+          {!data.slots.length ? <p className="mt-2 text-sm text-muted-foreground">No visits are open right now. Institutions publish new slots through the term.</p> : (
+            <ul className="mt-2 space-y-2">{data.slots.map((s) => (
+              <li key={s.id} className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm"><b>{VKIND[s.kind]}</b> · {s.institution} · {format(new Date(s.startsAt), 'PPp')}{s.location ? ` · ${s.location}` : ''}</p>
+                  {s.myBookingId ? <span className="text-xs text-muted-foreground">You are booked on this visit</span> : s.seatsLeft <= 0 ? <span className="text-xs text-muted-foreground">Full</span> : (
+                    <span className="flex items-center gap-2">
+                      <Input aria-label="People" type="number" min={1} max={6} className="w-20" value={guests[s.id] ?? '1'} onChange={(e) => setGuests({ ...guests, [s.id]: e.target.value })} />
+                      <Button size="sm" onClick={() => book(s)}>Book</Button>
+                    </span>)}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{s.seatsLeft} seats left{s.note ? ` · ${s.note}` : ''}</p>
+              </li>))}</ul>)}
+        </>
+      )}
+    </div>
+  );
+}
+
 function Programs() {
   const [rows, setRows] = useState<Prog[] | null>(null);
   const [q, setQ] = useState('');
@@ -288,6 +331,7 @@ export default function App() {
           <Route path="/" element={landing === '/' ? <Today /> : <Navigate to="/applications" replace />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/programs" element={<Programs />} />
+          <Route path="/visits" element={<Visits />} />
           <Route path="/recommendations" element={<RecommendationsToWrite />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

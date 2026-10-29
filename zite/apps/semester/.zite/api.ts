@@ -7,6 +7,7 @@ import type { default as _AcademicStandingEp } from '../src/api/academicStanding
 import type { default as _AccommodationsEp } from '../src/api/accommodations';
 import type { default as _AccountServicesEp } from '../src/api/accountServices';
 import type { default as _AdmissionsEp } from '../src/api/admissions';
+import type { default as _AdmissionsVisitsEp } from '../src/api/admissionsVisits';
 import type { default as _AdvisorShareEp } from '../src/api/advisorShare';
 import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AidOfficeEp } from '../src/api/aidOffice';
@@ -19,6 +20,7 @@ import type { default as _AssetsEp } from '../src/api/assets';
 import type { default as _AssignmentsEp } from '../src/api/assignments';
 import type { default as _AssuranceEvidenceEp } from '../src/api/assuranceEvidence';
 import type { default as _AuditEp } from '../src/api/audit';
+import type { default as _BudgetPlansEp } from '../src/api/budgetPlans';
 import type { default as _CampusEp } from '../src/api/campus';
 import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
 import type { default as _CareerServicesEp } from '../src/api/careerServices';
@@ -26,6 +28,7 @@ import type { default as _CatalogEp } from '../src/api/catalog';
 import type { default as _CommunityEp } from '../src/api/community';
 import type { default as _CommunityAdminEp } from '../src/api/communityAdmin';
 import type { default as _ContinuingEp } from '../src/api/continuing';
+import type { default as _ContractsEp } from '../src/api/contracts';
 import type { default as _CouncilEp } from '../src/api/council';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
@@ -39,6 +42,7 @@ import type { default as _DesignEp } from '../src/api/design';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _DisabilityEp } from '../src/api/disability';
+import type { default as _EthicsEp } from '../src/api/ethics';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
 import type { default as _FacilitiesEp } from '../src/api/facilities';
 import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
@@ -49,6 +53,7 @@ import type { default as _GetWorkspaceEp } from '../src/api/getWorkspace';
 import type { default as _GovernanceEp } from '../src/api/governance';
 import type { default as _GradeTrackerEp } from '../src/api/gradeTracker';
 import type { default as _GraduateEp } from '../src/api/graduate';
+import type { default as _GrantsEp } from '../src/api/grants';
 import type { default as _GroupWorkEp } from '../src/api/groupWork';
 import type { default as _GuidesEp } from '../src/api/guides';
 import type { default as _HelpEp } from '../src/api/help';
@@ -92,6 +97,9 @@ import type { default as _RegistrarQueueEp } from '../src/api/registrarQueue';
 import type { default as _RegistrationEp } from '../src/api/registration';
 import type { default as _RegistrationChangesEp } from '../src/api/registrationChanges';
 import type { default as _RegradeEp } from '../src/api/regrade';
+import type { default as _ResearchEp } from '../src/api/research';
+import type { default as _ResearchAdminEp } from '../src/api/researchAdmin';
+import type { default as _ResearchProtocolsEp } from '../src/api/researchProtocols';
 import type { default as _ReslifeEp } from '../src/api/reslife';
 import type { default as _RoleAppsEp } from '../src/api/roleApps';
 import type { default as _RosterImportEp } from '../src/api/rosterImport';
@@ -138,6 +146,11 @@ type _AdmissionsCfg = typeof _AdmissionsEp;
 export type AdmissionsInputType = NonNullable<_AdmissionsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdmissionsCfg['execute']>[0]['input'];
 export type AdmissionsOutputType = Awaited<ReturnType<_AdmissionsCfg['execute']>>;
 export const admissions = createCaller<AdmissionsInputType, AdmissionsOutputType>('admissions');
+
+type _AdmissionsVisitsCfg = typeof _AdmissionsVisitsEp;
+export type AdmissionsVisitsInputType = NonNullable<_AdmissionsVisitsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdmissionsVisitsCfg['execute']>[0]['input'];
+export type AdmissionsVisitsOutputType = Awaited<ReturnType<_AdmissionsVisitsCfg['execute']>>;
+export const admissionsVisits = createCaller<AdmissionsVisitsInputType, AdmissionsVisitsOutputType>('admissionsVisits');
 
 type _AdvisorShareCfg = typeof _AdvisorShareEp;
 export type AdvisorShareInputType = NonNullable<_AdvisorShareCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdvisorShareCfg['execute']>[0]['input'];
@@ -199,6 +212,11 @@ export type AuditInputType = NonNullable<_AuditCfg['inputSchema']> extends { _in
 export type AuditOutputType = Awaited<ReturnType<_AuditCfg['execute']>>;
 export const audit = createCaller<AuditInputType, AuditOutputType>('audit');
 
+type _BudgetPlansCfg = typeof _BudgetPlansEp;
+export type BudgetPlansInputType = NonNullable<_BudgetPlansCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_BudgetPlansCfg['execute']>[0]['input'];
+export type BudgetPlansOutputType = Awaited<ReturnType<_BudgetPlansCfg['execute']>>;
+export const budgetPlans = createCaller<BudgetPlansInputType, BudgetPlansOutputType>('budgetPlans');
+
 type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
 export type CampusOutputType = Awaited<ReturnType<_CampusCfg['execute']>>;
@@ -233,6 +251,11 @@ type _ContinuingCfg = typeof _ContinuingEp;
 export type ContinuingInputType = NonNullable<_ContinuingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ContinuingCfg['execute']>[0]['input'];
 export type ContinuingOutputType = Awaited<ReturnType<_ContinuingCfg['execute']>>;
 export const continuing = createCaller<ContinuingInputType, ContinuingOutputType>('continuing');
+
+type _ContractsCfg = typeof _ContractsEp;
+export type ContractsInputType = NonNullable<_ContractsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ContractsCfg['execute']>[0]['input'];
+export type ContractsOutputType = Awaited<ReturnType<_ContractsCfg['execute']>>;
+export const contracts = createCaller<ContractsInputType, ContractsOutputType>('contracts');
 
 type _CouncilCfg = typeof _CouncilEp;
 export type CouncilInputType = NonNullable<_CouncilCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CouncilCfg['execute']>[0]['input'];
@@ -299,6 +322,11 @@ export type DisabilityInputType = NonNullable<_DisabilityCfg['inputSchema']> ext
 export type DisabilityOutputType = Awaited<ReturnType<_DisabilityCfg['execute']>>;
 export const disability = createCaller<DisabilityInputType, DisabilityOutputType>('disability');
 
+type _EthicsCfg = typeof _EthicsEp;
+export type EthicsInputType = NonNullable<_EthicsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EthicsCfg['execute']>[0]['input'];
+export type EthicsOutputType = Awaited<ReturnType<_EthicsCfg['execute']>>;
+export const ethics = createCaller<EthicsInputType, EthicsOutputType>('ethics');
+
 type _EventDeliveryCfg = typeof _EventDeliveryEp;
 export type EventDeliveryInputType = NonNullable<_EventDeliveryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EventDeliveryCfg['execute']>[0]['input'];
 export type EventDeliveryOutputType = Awaited<ReturnType<_EventDeliveryCfg['execute']>>;
@@ -348,6 +376,11 @@ type _GraduateCfg = typeof _GraduateEp;
 export type GraduateInputType = NonNullable<_GraduateCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GraduateCfg['execute']>[0]['input'];
 export type GraduateOutputType = Awaited<ReturnType<_GraduateCfg['execute']>>;
 export const graduate = createCaller<GraduateInputType, GraduateOutputType>('graduate');
+
+type _GrantsCfg = typeof _GrantsEp;
+export type GrantsInputType = NonNullable<_GrantsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GrantsCfg['execute']>[0]['input'];
+export type GrantsOutputType = Awaited<ReturnType<_GrantsCfg['execute']>>;
+export const grants = createCaller<GrantsInputType, GrantsOutputType>('grants');
 
 type _GroupWorkCfg = typeof _GroupWorkEp;
 export type GroupWorkInputType = NonNullable<_GroupWorkCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GroupWorkCfg['execute']>[0]['input'];
@@ -564,6 +597,21 @@ export type RegradeInputType = NonNullable<_RegradeCfg['inputSchema']> extends {
 export type RegradeOutputType = Awaited<ReturnType<_RegradeCfg['execute']>>;
 export const regrade = createCaller<RegradeInputType, RegradeOutputType>('regrade');
 
+type _ResearchCfg = typeof _ResearchEp;
+export type ResearchInputType = NonNullable<_ResearchCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ResearchCfg['execute']>[0]['input'];
+export type ResearchOutputType = Awaited<ReturnType<_ResearchCfg['execute']>>;
+export const research = createCaller<ResearchInputType, ResearchOutputType>('research');
+
+type _ResearchAdminCfg = typeof _ResearchAdminEp;
+export type ResearchAdminInputType = NonNullable<_ResearchAdminCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ResearchAdminCfg['execute']>[0]['input'];
+export type ResearchAdminOutputType = Awaited<ReturnType<_ResearchAdminCfg['execute']>>;
+export const researchAdmin = createCaller<ResearchAdminInputType, ResearchAdminOutputType>('researchAdmin');
+
+type _ResearchProtocolsCfg = typeof _ResearchProtocolsEp;
+export type ResearchProtocolsInputType = NonNullable<_ResearchProtocolsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ResearchProtocolsCfg['execute']>[0]['input'];
+export type ResearchProtocolsOutputType = Awaited<ReturnType<_ResearchProtocolsCfg['execute']>>;
+export const researchProtocols = createCaller<ResearchProtocolsInputType, ResearchProtocolsOutputType>('researchProtocols');
+
 type _ReslifeCfg = typeof _ReslifeEp;
 export type ReslifeInputType = NonNullable<_ReslifeCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ReslifeCfg['execute']>[0]['input'];
 export type ReslifeOutputType = Awaited<ReturnType<_ReslifeCfg['execute']>>;
@@ -676,6 +724,7 @@ export const api = {
   accommodations,
   accountServices,
   admissions,
+  admissionsVisits,
   advisorShare,
   affiliation,
   aidOffice,
@@ -688,6 +737,7 @@ export const api = {
   assignments,
   assuranceEvidence,
   audit,
+  budgetPlans,
   campus,
   careerPartners,
   careerServices,
@@ -695,6 +745,7 @@ export const api = {
   community,
   communityAdmin,
   continuing,
+  contracts,
   council,
   courseAccessibility,
   courseDiscussion,
@@ -708,6 +759,7 @@ export const api = {
   devApps,
   dining,
   disability,
+  ethics,
   eventDelivery,
   facilities,
   facultyToday,
@@ -718,6 +770,7 @@ export const api = {
   governance,
   gradeTracker,
   graduate,
+  grants,
   groupWork,
   guides,
   help,
@@ -761,6 +814,9 @@ export const api = {
   registration,
   registrationChanges,
   regrade,
+  research,
+  researchAdmin,
+  researchProtocols,
   reslife,
   roleApps,
   rosterImport,

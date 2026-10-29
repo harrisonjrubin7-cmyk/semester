@@ -19,3 +19,4 @@ Department forms (29 Oct): departmentForms 31/31; mutants caught: self-approve (
 Department staffing (29 Oct): departmentStaffing 24/24; mutants caught: overfill, chair self-approval (constraint), answer by others, accept before approval (constraint).
 Moderation (29 Oct): moderation 32/32; mutants caught: decider reverses (constraint), reversal ignored by visibility, context for involved moderator, withdrawn warnings counted.
 Communities (29 Oct): communities 26/26; mutants caught: course discussion join, cross-institution join, request policy ignored, self-decide (constraint).
+Research data (29 Oct): researchData 27/27; mutants caught: small cells stored, self-approval (constraint), unapproved cohorts, edit approved.

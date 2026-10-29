@@ -62,6 +62,46 @@ function SupplierOrders({ r, reload }: { r: any; reload: () => void }) {
   );
 }
 
+function ContractsBlock({ r, admin, reload }: { r: any; admin: boolean; reload: () => void }) {
+  const act = useAct(reload);
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-border p-2">
+      <p className="text-xs font-medium">Contracts with {r.institution}</p>
+      {r.contracts.map((c: any) => (
+        <div key={c.id} className="rounded-md border border-border p-2 text-xs">
+          <p><b>{c.title}</b> · {money(c.valueCents)}{c.endsOn ? ` · ends ${c.endsOn}` : ''} · <Status value={c.state} /></p>
+          {c.state === 'proposed' && <>
+            <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap">{c.terms}</pre>
+            <p className="mt-1 text-muted-foreground">Fingerprint {c.termsHash ? c.termsHash.slice(0, 12) : ''}… — accepting agrees to exactly these terms, this value and this end date. Any change voids this and needs a new acceptance.</p>
+            {admin ? <div className="mt-2"><Button size="sm" onClick={() => act(() => partners({ action: 'acceptContract', contractId: c.id, expectedVersion: c.version, hash: c.termsHash }), 'Contract accepted on these exact terms.')}>Accept these exact terms</Button></div>
+            : <p className="mt-1 text-muted-foreground">An administrator of your organization accepts it.</p>}
+          </>}
+          {c.state === 'active' && <p className="mt-1 text-muted-foreground">Active on the accepted terms.</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResearchRequests({ r, reload }: { r: any; reload: () => void }) {
+  const act = useAct(reload);
+  const [f, setF] = useState({ title: '', summary: '', amount: '' });
+  return (
+    <div className="mt-2 rounded-md border border-border p-2">
+      <p className="text-xs font-medium">Research requests to {r.institution}</p>
+      {r.researchRequests.length > 0 && <ul className="mt-1 space-y-1 text-xs">{r.researchRequests.map((x: any) => <li key={x.id} className="flex flex-wrap items-center justify-between gap-2"><span>{x.title}{x.projectCode ? ` · ${x.projectCode}` : ''}{x.amountCents ? ` · ${money(x.amountCents)}` : ''}</span><Status value={x.state} /></li>)}</ul>}
+      <div className="mt-2 grid gap-2">
+        <Input aria-label="Request title" placeholder="Collaboration title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+        <Textarea aria-label="Request summary" rows={2} placeholder="What you propose to research together, and what you need from the institution." value={f.summary} onChange={(e) => setF({ ...f, summary: e.target.value })} />
+        <div className="flex flex-wrap gap-2">
+          <Input aria-label="Amount in dollars" type="number" min={0} step={0.01} placeholder="Amount ($, optional)" className="w-44" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
+          <Button size="sm" disabled={f.title.trim().length < 5 || f.summary.trim().length < 20} onClick={async () => { if (await act(() => partners({ action: 'submitResearch', relId: r.id, title: f.title, summary: f.summary, amountCents: Math.round(Number(f.amount || 0) * 100) }), 'Research request sent.')) setF({ title: '', summary: '', amount: '' }); }}>Send request</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
   const act = useAct(reload);
   const [m, setM] = useState({ email: '', role: 'member' });
@@ -81,6 +121,8 @@ function Org({ o, d, reload }: { o: any; d: any; reload: () => void }) {
             </div>}
             {r.live && r.scopes.includes('propose_articulation') && <Articulate r={r} reload={reload} />}
             {r.live && r.scopes.includes('view_orders') && <SupplierOrders r={r} reload={reload} />}
+            {r.contracts?.length > 0 && <ContractsBlock r={r} admin={admin} reload={reload} />}
+            {r.live && r.scopes.includes('submit_research_requests') && <ResearchRequests r={r} reload={reload} />}
           </li>))}</ul> : <Empty>Not working with any institution yet.</Empty>}
         {admin && <div className="mt-2 space-y-2 rounded-md border border-border p-2">
           <p className="text-xs font-medium">Apply to an institution</p>

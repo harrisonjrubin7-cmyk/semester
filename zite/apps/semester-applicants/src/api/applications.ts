@@ -5,6 +5,7 @@ import { pg } from '../../../semester/src/lib/pg';
 import { APK_MIGRATION } from '../../../semester/src/lib/apkMigration';
 import { SPG_MIGRATION } from '../../../semester/src/lib/spgMigration';
 import { SHORTLIST_MIGRATION } from '../../../semester/src/lib/shortlistMigration';
+import { ADV_MIGRATION } from '../../../semester/src/lib/advMigration';
 import { putScanned, ensureFil } from '../../../semester/src/lib/filServer';
 import { checkUpload, decodeBase64 } from '../../../semester/src/lib/fileRules';
 import { buildPackage, canonical, missing as missingOf, dimensions, modeNotice, type Mode } from '../../../semester/src/lib/applicationRules';
@@ -36,6 +37,9 @@ export default createEndpoint({
     z.object({ action: z.literal('programs') }),
     z.object({ action: z.literal('shortlistAdd'), programId: z.number().int() }),
     z.object({ action: z.literal('shortlistRemove'), programId: z.number().int() }),
+    z.object({ action: z.literal('visits') }),
+    z.object({ action: z.literal('bookVisit'), slotId: z.number().int(), guests: z.number().int().min(1).max(6) }),
+    z.object({ action: z.literal('cancelVisit'), bookingId: z.number().int() }),
     z.object({ action: z.literal('withdraw'), id: z.string() }),
   ]),
   outputSchema: z.any(),
@@ -106,6 +110,27 @@ export default createEndpoint({
       const r = String(((await pg().query(`SELECT ${fn}($1,$2) AS r`, [uid, input.programId])) as Row[])[0].r);
       if (r !== 'ok') no(r);
       return { ok: true };
+    }
+    if (input.action === 'visits' || input.action === 'bookVisit' || input.action === 'cancelVisit') {
+      for (const q of ADV_MIGRATION) await pg().query(q);
+      if (input.action === 'bookVisit' || input.action === 'cancelVisit') {
+        const fn = input.action === 'bookVisit' ? 'adv_book' : 'adv_cancel';
+        const args = input.action === 'bookVisit' ? [uid, input.slotId, input.guests] : [uid, input.bookingId];
+        const r = String(((await pg().query(`SELECT ${fn}($1,$2${input.action === 'bookVisit' ? ',$3' : ''}) AS r`, args)) as Row[])[0].r ?? '');
+        if (r) no(r);
+        return { ok: true };
+      }
+      const slots = (await pg().query(`SELECT s.*, (SELECT coalesce(sum(guests), 0) FROM adv_bookings b WHERE b.slot_id = s.id AND b.state = 'booked') AS taken
+        FROM adv_slots s WHERE s.state = 'open' AND s.starts_at > now() ORDER BY s.starts_at LIMIT 200`)) as Row[];
+      const mine = (await pg().query(`SELECT b.id AS booking_id, b.guests, s.id AS slot_id, s.tenant_id, s.starts_at, s.kind, s.location, s.note
+        FROM adv_bookings b JOIN adv_slots s ON s.id = b.slot_id WHERE b.user_id = $1 AND b.state = 'booked' ORDER BY s.starts_at`, [uid])) as Row[];
+      const insts = (await zite.institutions.findAll({ limit: 500, fields: ['name'] })).records;
+      const iname = (t: unknown) => insts.find((i) => i.id === String(t))?.name ?? 'Institution';
+      const mySlot = new Map(mine.map((m) => [Number(m.slot_id), Number(m.booking_id)]));
+      return {
+        slots: slots.map((s) => ({ id: Number(s.id), institutionId: String(s.tenant_id), institution: iname(s.tenant_id), startsAt: new Date(String(s.starts_at)).toISOString(), kind: String(s.kind), location: String(s.location), note: String(s.note), seatsLeft: Number(s.capacity) - Number(s.taken), myBookingId: mySlot.get(Number(s.id)) ?? null })),
+        mine: mine.map((m) => ({ bookingId: Number(m.booking_id), slotId: Number(m.slot_id), institution: iname(m.tenant_id), startsAt: new Date(String(m.starts_at)).toISOString(), kind: String(m.kind), location: String(m.location), note: String(m.note), guests: Number(m.guests) })),
+      };
     }
     if (input.action === 'programs') {
       for (const q of [...SPG_MIGRATION, ...SHORTLIST_MIGRATION]) await pg().query(q);
