@@ -7,6 +7,7 @@ const workflow = readFileSync(join(process.cwd(), '..', '.github', 'workflows', 
 const sweep = readFileSync(join(process.cwd(), 'scripts', 'targets-sweep.mjs'), 'utf8');
 const appCss = readFileSync(join(process.cwd(), 'src', 'styles', 'app.css'), 'utf8');
 const featuresCss = readFileSync(join(process.cwd(), 'src', 'styles', 'features.css'), 'utf8');
+const calendar = readFileSync(join(process.cwd(), 'src', 'screens', 'Calendar.tsx'), 'utf8');
 
 describe('the scheduled target-size sweep', () => {
   it('runs nightly with pipe failures preserved and keeps its output', () => {
@@ -32,5 +33,12 @@ describe('the scheduled target-size sweep', () => {
   it('keeps the compact hub titles and directory filters at the AA minimum', () => {
     expect(appCss).toContain('button.jx-entry-title { min-height: 24px; }');
     expect(featuresCss).toContain('.portal-filter-row>button{min-height:24px}');
+  });
+
+  it('keeps the calendar move control at the AA minimum in Tight density', () => {
+    const start = calendar.indexOf('const CARRY = {');
+    const carry = calendar.slice(start, calendar.indexOf('} as const;', start));
+    expect(carry).toContain('minHeight: 24');
+    expect(carry).not.toMatch(/[^n]\bheight: 24/);
   });
 });
