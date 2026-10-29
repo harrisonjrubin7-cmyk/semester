@@ -42,6 +42,33 @@ function Approvals() {
     </div>))}</div>}</Loadable>;
 }
 
+function CalendarImport({ id, reload }: { id: string; reload: () => void }) {
+  const [ics, setIcs] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ terms: { term: string; dates: Record<string, string>; missing: string[] }[]; unused: string[]; results: { term: string; result: string }[] } | null>(null);
+  const run = async (apply: boolean) => {
+    setBusy(true);
+    try { const r = await consoleApi({ action: 'calendarImport', id, ics, apply } as never) as never; setPreview(r); if (apply) { toast('Calendar proposals created.'); reload(); } }
+    catch (e) { toast(`! ${errMsg(e)}`); } finally { setBusy(false); }
+  };
+  const file = async (f: File | undefined) => { if (f) setIcs(await f.text()); };
+  const complete = preview?.terms.filter((t) => !t.missing.length).length ?? 0;
+  return (
+    <div className="mt-3 space-y-2 rounded-md border border-border p-2">
+      <label className="block text-xs">Academic calendar export (.ics)<input type="file" accept=".ics,text/calendar" className="mt-1 block text-xs" onChange={(e) => file(e.target.files?.[0])} /></label>
+      <p className="text-xs text-muted-foreground">Each term needs five events naming the term, e.g. "Spring 2027 Registration opens", "… Registration closes", "… Last day to add", "… First day of classes", "… Last day of classes".</p>
+      <div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy || ics.length < 20} onClick={() => run(false)}>Dry run</Button>
+        <Button size="sm" disabled={busy || !preview || !complete} onClick={() => run(true)}>Propose {complete} term{complete === 1 ? '' : 's'}</Button></div>
+      {preview && <div className="text-xs">
+        {preview.terms.map((t) => <p key={t.term}>{t.missing.length ? '✗' : '✓'} {t.term}: {Object.entries(t.dates).map(([k, v]) => `${k} ${v}`).join(', ')}{t.missing.length ? ` — missing ${t.missing.join(', ')}` : ''}</p>)}
+        {!preview.terms.length && <p>No term dates found.</p>}
+        {preview.unused.length > 0 && <p className="text-muted-foreground">{preview.unused.length} other events ignored.</p>}
+        {preview.results.map((r) => <p key={r.term}>{r.term}: {r.result}</p>)}
+      </div>}
+    </div>
+  );
+}
+
 export default function Console() {
   const state = useLoad(() => consoleApi({ action: 'get' }));
   const [roleReq, setRoleReq] = useState<Record<string, string>>({});
@@ -82,11 +109,12 @@ export default function Console() {
                     {x.lastReconciliation && <p className="mt-1 text-xs text-muted-foreground">{x.lastReconciliation}</p>}
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" onClick={() => act(() => consoleApi({ action: 'setAuthorized', id: x.id, authorized: !x.authorized }))}>{x.authorized ? 'Withdraw authorization' : 'Authorize'}</Button>
-                      <Button size="sm" variant="outline" disabled={!x.authorized} onClick={() => act(() => consoleApi({ action: 'runSync', id: x.id }))}>Run sync{x.retryCount ? ` · retry ${x.retryCount}` : ''}</Button>
-                      <Button size="sm" variant="ghost" disabled={x.syncStatus === 'Never Run'} onClick={() => act(() => consoleApi({ action: 'rollback', id: x.id }))}>Roll back</Button>
+                      <Button size="sm" variant="outline" disabled={!x.authorized} onClick={() => act(async () => { const r = await consoleApi({ action: 'runSync', id: x.id }) as { note?: string }; if (r?.note) toast(r.note); }, 'Checked.')}>Check connection{x.retryCount ? ` · retry ${x.retryCount}` : ''}</Button>
+                      <Button size="sm" variant="ghost" disabled={x.syncStatus === 'Never Run'} onClick={() => act(() => consoleApi({ action: 'rollback', id: x.id }))}>Reset</Button>
                     </div>
+                    {x.connector === 'Calendar' && x.authorized && <CalendarImport id={x.id} reload={state.reload} />}
                   </div>))}
-                <p className="mt-2 text-xs text-muted-foreground">No live system is configured in the foundation phase. Syncs record an honest failure until a real connection is set up.</p>
+                <p className="mt-2 text-xs text-muted-foreground">SIS runs through Roster import (shadow mode: compared with Semester, never written). Calendar reads your .ics export and proposes term dates for a second registrar to approve. LMS and SSO need credentials from your LMS vendor and identity provider; checking them records what is missing.</p>
               </Panel>
               <div className="space-y-4">
                 <Panel title="Activation checklist">{d.checklist.map((c: { label: string; done: boolean }) => <p key={c.label} className="py-1 text-sm">{c.done ? '☑' : '☐'} {c.label}</p>)}</Panel>

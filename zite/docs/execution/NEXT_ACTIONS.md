@@ -444,3 +444,15 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   harrisonjrubin7@gmail.com in co_roles (granted_by records the request). No other role was added. Platform, Infrastructure health and the
   confirm step of Customer Success links now open for that account; the role check reads the table live, so no republish is needed for it.
 - Company OS error banners now show the server's sentence ("You don't have access to this yet …") instead of raw 'API call failed (403): {json}'.
+
+## 29 Oct — Connectors made real where possible; Northgate (sample) authorized and entitled on the owner's request
+- SIS connector = the existing roster gateway (rosterImport.ts, rgw-001, shadow mode). "Check connection" now reads the approved connection, last
+  import, staged and quarantined counts and marks the connector Synced; it never writes enrollments. (A second roster reconciler was drafted and
+  removed: it duplicated rgw-001.)
+- Calendar connector: upload the institution's .ics; a dry run finds each term's five dates (lib/connectorImport.ts, 3 tests); "Propose" creates
+  academic-calendar proposals (cal-001) that a second registrar must approve. Needs registrar authority.
+- LMS (LTI 1.3 registration) and SSO (SAML/OIDC metadata) need outside credentials; "Check connection" records exactly what is missing and no
+  longer counts fake failed retries.
+- Owner request: all four Northgate connectors authorized (sample institution only; script refuses otherwise), and all eight modules granted with
+  the note "SAMPLE INSTITUTION: no order or contract". Northgate stays unmanaged, so nothing switched off. Payments, proctoring and marketplace
+  have no code behind them; granting them changes nothing live.
