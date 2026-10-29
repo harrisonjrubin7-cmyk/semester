@@ -72,6 +72,18 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectTrueModal');
   });
 
+  it('forces and axe-scans the true modal storage-error state on every critical journey at each width', () => {
+    expect(source).toContain('async function inspectTrueModalStorageError(journey, hash, viewport)');
+    expect(source).toContain("startsWith('semester.productivity.v1:')");
+    expect(source).toContain("getByRole('alert')");
+    expect(source).toContain('Synthetic storage refusal');
+    expect(source).toContain('failed capture changed the Quick Add text');
+    expect(source).toContain('failed capture was persisted');
+    expect(source).toContain('const expectedTrueModalStorageErrorMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length');
+    expect(source).toContain('trueModalStorageErrorMeasured !== expectedTrueModalStorageErrorMeasurements');
+    expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectTrueModalStorageError');
+  });
+
   it('refuses an unreachable or error-bound destination as an instrument failure', () => {
     expect(source).toContain('if (!arrived(screen, destinationLabel, seen))');
     expect(source).toContain("seen.error) instrumentFailures.push");
