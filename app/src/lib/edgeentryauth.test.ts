@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * A few Edge Functions still keep their complete handler in index.ts because
- * the Deno runtime is their only caller. This test holds those entrypoints to
+ * One Edge Function still keeps its complete handler in index.ts because the
+ * Deno runtime is its only caller. This test holds that entrypoint to
  * an ordered fail-closed boundary: reject an absent or invalid credential
  * before the first protected database read or outbound request.
  *
@@ -23,17 +23,6 @@ interface Contract {
 }
 
 export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
-  {
-    fn: 'claude',
-    ordered: [
-      /const token = req\.headers\.get\('Authorization'\)/,
-      /if \(!token\).*401/,
-      /admin\.auth\.getUser\(token\)/,
-      /if \(authError \|\| !user\?\.user\)/,
-      /aiGenerationKilled\(admin, null\)/,
-    ],
-    rejectionBoundaries: [1, 3],
-  },
   {
     fn: 'lti',
     ordered: [

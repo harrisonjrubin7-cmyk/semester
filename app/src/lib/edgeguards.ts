@@ -61,7 +61,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/], behaviorProof: proof('app/src/lib/billing/webhook.test.ts', /handleBillingWebhook/, /Stripe-Signature/) },
   { fn: 'calendar', guards: ['link-token'], evidence: [/handleCalendarFeed\(/], behaviorProof: proof('app/src/lib/calendarfeed.test.ts', /handleCalendarFeed/, /rejects malformed link tokens before database work/) },
   { fn: 'canvas', guards: ['user-token'], evidence: [/handleCanvasRequest\(/], behaviorProof: proof('app/src/lib/canvasauth.test.ts', /handleCanvasRequest/, /before protected Canvas fetch/) },
-  { fn: 'claude', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/edgeentryauth.test.ts', /claude/, /getUser/) },
+  { fn: 'claude', guards: ['user-token'], evidence: [/handleClaudeRequest\(/], behaviorProof: proof('app/src/lib/claudeauth.test.ts', /handleClaudeRequest/, /before protected generation/) },
   { fn: 'delete-account', guards: ['user-token'], evidence: USER, behaviorProof: proof('app/src/lib/deleteaccount.test.ts', /serveDeleteAccount/, /status\)\.toBe\(401\)/) },
   { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: [/handleProductivitySourceCheck\(/], behaviorProof: proof('app/src/lib/productivitysourcecheck.test.ts', /handleProductivitySourceCheck/, /rejects a missing, invalid or unreadable session/) },
   { fn: 'fetchcal', guards: ['user-token'], evidence: [/handleFetchcalRequest\(/], behaviorProof: proof('app/src/lib/fetchcalauth.test.ts', /handleFetchcalRequest/, /before protected fetch/) },
