@@ -1056,8 +1056,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Privacy/RLS tests',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/institution-ops.ts', shows: 'MIN_COHORT = 10 suppression for cells, funnels and exports' }, { path: 'app/src/lib/institution-ops.test.ts', shows: 'Tests suppression and export refusal' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'outcome_aggregates n >= 10 check, readable only with outcomes:read' }],
-    gap: 'The threshold is fixed, not set by tenant policy. No check.sql exercises outcome_aggregates RLS or the n >= 10 constraint. Complementary/differencing suppression isn\'t addressed.',
+    evidence: [{ path: 'app/src/lib/institution-ops.ts', shows: 'MIN_COHORT = 10 suppression for cells, funnels and exports' }, { path: 'app/src/lib/institution-ops.test.ts', shows: 'Tests suppression and export refusal' }, { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'outcome_aggregates n >= 10 check, readable only with outcomes:read' }, { path: 'supabase/outcome-aggregates.check.sql', shows: 'Exercises the n >= 10 floor, same-school positive control, cross-school and no-capability refusal, revoked-grant refusal, anonymous refusal and read-only client access' }],
+    gap: 'The threshold is fixed, not set by tenant policy. Complementary/differencing suppression is not addressed, and the PostgreSQL check is repository/CI evidence rather than a live-provider or institutional exercise.',
   },
   {
     id: 'UOS-009',
