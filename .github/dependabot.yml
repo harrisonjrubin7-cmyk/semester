@@ -36,7 +36,8 @@
 #   · `course-engine/apps/api/` declares Python ranges in `pyproject.toml` and
 #     now has a recurring updater, but still has no committed resolver lock.
 #   · `zite/docs/execution/rls/api/` is a standalone verification package
-#     outside the Zite workspace and has no committed lockfile.
+#     outside the Zite workspace. It now receives direct-dependency update
+#     proposals below, but still has no committed resolver lock.
 #   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
 #     TypeScript in this repository, so they have no dependencies of their own.
 #
@@ -44,7 +45,9 @@
 # Starter has its own policy, data-access and worker packages with dedicated CI.
 # Course Engine's web app has its own pnpm lockfile and dedicated CI. Its
 # Python API is also checked by that CI, but its declared ranges are resolved
-# afresh because the API has no committed resolver lock. Video has
+# afresh because the API has no committed resolver lock. The standalone Zite
+# verifier is exercised by its synthetic PostgreSQL/Redis workflow and now has
+# its own updater, while its transitive graph remains unresolved. Video has
 # a separate npm lockfile and is installed and typechecked in the main CI
 # workflow. Pipeline has a separate npm lockfile for its course-production
 # scripts. Zite has one root workspace lockfile for its eight apps and shared
@@ -257,6 +260,33 @@ updates:
     open-pull-requests-limit: 5
     groups:
       zite-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The standalone Zite RLS verifier ─────────────────────────────────
+  #
+  # This package is intentionally outside the root Zite workspace. Its CI
+  # installs the manifest without writing a lock, so Dependabot can keep the
+  # direct ranges visible but cannot make the transitive graph reproducible.
+  # A proposal here is repository maintenance evidence only: it neither
+  # publishes a Zite app nor verifies the separately owned authenticated
+  # runtime.
+  - package-ecosystem: npm
+    directory: /zite/docs/execution/rls/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      zite-rls-verifier-minor-and-patch:
         patterns:
           - '*'
         update-types:
