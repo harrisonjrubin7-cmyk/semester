@@ -490,3 +490,18 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   - suites 658 / 99;
   - check_app passed for Student, Faculty and Company OS.
 - Open: there are no plan templates by major yet, and a student can't see which advisor reviews before submitting.
+
+## 29 Oct — Student Action Center joins the registers (act-001): Student /today
+- Today's Action Center already ranked holds, approvals and due work from tasks. It now also pulls from the registers, through lib/actionRules.ts with the same fixed priorities (no scoring):
+  - override approvals to use before they expire;
+  - override requests still waiting on an advisor or registrar;
+  - the desk queue for advisors (advisees who shared their registration plan) and registrars;
+  - a degree plan with changes requested, and advisee plans waiting for review;
+  - assistantship offers waiting for a reply.
+- Each item says who acts, what they may do and where. Nothing acts on anyone's behalf, and nobody sees their own request on a desk.
+- A register whose table does not exist yet is skipped.
+- Evidence:
+  - actionRules 6/6; removing the de-duplication turns 1 test red, and dropping the own-request filter turns 1 red;
+  - the register queries ran against the live database in a rolled-back transaction;
+  - suites 664 / 99;
+  - check_app passed for Student and Company OS.

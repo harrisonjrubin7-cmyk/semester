@@ -2,7 +2,37 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { holdsFor } from '../lib/holdServer';
-import { requireAccess, first, ids, tenantScope, inSet } from '../lib/server';
+import { requireAccess, requireAction, first, ids, tenantScope, inSet } from '../lib/server';
+import { pg } from '../lib/pg';
+import { adviseesSharing } from '../lib/advisees';
+import { Action, rankActions, ownOverrideActions, deskOverrideActions, planActions, offerActions, OvrRow, DplRow, GasRow } from '../lib/actionRules';
+
+/** Rows from a register that may not exist yet in this database (registers create their tables on first use). */
+async function rowsIf<T>(table: string, query: string, params: unknown[]): Promise<T[]> {
+  const ok = ((await pg().query(`SELECT to_regclass($1) IS NOT NULL AS ok`, [table])) as { ok: boolean }[])[0].ok;
+  return ok ? ((await pg().query(query, params)) as T[]) : [];
+}
+
+/** What the registers (overrides, degree plans, assistantship offers) have waiting on this person. */
+async function registerActions(a: { userId: string; institutionId: string; roles: string[] }, members: Set<string>): Promise<Action[]> {
+  const T = a.institutionId, me = a.userId;
+  let registrar = false;
+  try { await requireAction(me, 'registration.request.decide'); registrar = true; } catch { /* not a registrar */ }
+  const isAdvisor = a.roles.includes('Advisor');
+  const [ovrAdv, dplAdv] = isAdvisor ? await Promise.all([adviseesSharing(me, members, ['Registration plan']), adviseesSharing(me, members, ['Degree progress', 'Registration plan'])]) : [[], []];
+  const [ownOvr, deskOvr, ownPlan, advPlans, offers] = await Promise.all([
+    rowsIf<OvrRow>('ovr_requests', `SELECT id, kind, term, state, expires_at, student_id FROM ovr_requests WHERE tenant_id = $1 AND student_id = $2 AND state IN ('requested', 'endorsed', 'approved')`, [T, me]),
+    registrar || ovrAdv.length ? rowsIf<OvrRow>('ovr_requests', `SELECT id, kind, term, state, expires_at, student_id FROM ovr_requests WHERE tenant_id = $1 AND student_id <> $2 AND state IN ('requested', 'endorsed') ORDER BY id LIMIT 300`, [T, me]) : Promise.resolve([]),
+    rowsIf<DplRow>('dpl_plans', `SELECT id, state, student_id, review_note FROM dpl_plans WHERE tenant_id = $1 AND student_id = $2`, [T, me]),
+    dplAdv.length ? rowsIf<DplRow>('dpl_plans', `SELECT id, state, student_id FROM dpl_plans WHERE tenant_id = $1 AND student_id = ANY($2::text[]) AND state = 'submitted'`, [T, dplAdv]) : Promise.resolve([]),
+    rowsIf<GasRow>('gas_applications', `SELECT a.id, p.title, a.state FROM gas_applications a JOIN gas_postings p ON p.id = a.posting_id WHERE p.tenant_id = $1 AND a.student_id = $2 AND a.state = 'offered'`, [T, me]),
+  ]);
+  const now = Date.now();
+  return [...ownOverrideActions(ownOvr.map((r) => ({ ...r, id: Number(r.id), expires_at: r.expires_at ? new Date(r.expires_at).toISOString() : null })), now),
+    ...deskOverrideActions(deskOvr.map((r) => ({ ...r, id: Number(r.id) })), me, new Set(ovrAdv), registrar),
+    ...planActions(ownPlan[0] ? { ...ownPlan[0], id: Number(ownPlan[0].id) } : null, advPlans.map((r) => ({ ...r, id: Number(r.id) }))),
+    ...offerActions(offers.map((r) => ({ ...r, id: Number(r.id) })))];
+}
 
 export default createEndpoint({
   description: 'Gathers what needs the member today: tasks, holds, approvals, events and appointments',
@@ -37,10 +67,11 @@ export default createEndpoint({
       .map((t) => ({ id: t.id, title: t.title ?? '', mine: ids(t.requestedBy).includes(uid), office: t.owningOffice ?? '' }));
     // Action Center: fixed priority rules, no scoring. 1 holds (block registration),
     // 2 approvals waiting on this member, 3 overdue work, 4 work due within 48h, 5 own requests in flight.
+    // Registers (overrides, degree plans, assistantship offers) add their items through lib/actionRules.ts.
     const now = Date.now();
     const asOf = new Date(now).toISOString();
     const open = tasks.filter((t) => t.status === 'Open' && !t.parentId);
-    const actions = [
+    const taskActions = [
       ...holdViews.map((h) => ({
         id: h.id, priority: 1, title: h.title, state: 'Blocked',
         reason: h.message || (h.blocksRegistration ? 'This hold blocks registration.' : 'A hold can stop official requests.'),
@@ -71,7 +102,8 @@ export default createEndpoint({
         permittedAction: 'Check status', link: '/plan/registration',
         recovery: 'If it stalls, contact the office through Help.',
       })),
-    ].sort((x, y) => x.priority - y.priority || x.title.localeCompare(y.title));
+    ] as Action[];
+    const actions = rankActions([...taskActions, ...(await registerActions(a, tenant.members))]);
     return {
       asOf,
       actions,
