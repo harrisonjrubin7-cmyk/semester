@@ -352,6 +352,8 @@ export const GUARD_MANIFEST: Manifest = {
   "osv_offices",
   "osv_requests",
   "osv_staff",
+  "ovr_events",
+  "ovr_requests",
   "pcl_assignments",
   "pcl_conflicts",
   "pcl_events",
@@ -1230,6 +1232,12 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "osv_messages"
+  },
+  {
+   "trigger": "ovr_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "ovr_events"
   },
   {
    "trigger": "pcl_events_append_only",

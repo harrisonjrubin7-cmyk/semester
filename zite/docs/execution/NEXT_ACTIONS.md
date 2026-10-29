@@ -463,3 +463,12 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   poster or student) confirms or ends early with a reason. Official funding view = confirmed appointments only; no money moves.
 - Gap noted: there is no graduate-student marker on memberships, so any Student may apply; the page labels these as graduate positions.
 - dbcheck assistantships 17/17; mutants: hours cap (2 red), poster confirms (2 red), openings ignored (2 red).
+
+## 29 Oct — Registration overrides and advising exceptions (ovr-001): Student /plan/overrides
+- Kinds: prerequisite override (asked from the section on Registration), credit overload and late registration.
+- Path: student asks → advisor endorses (overload, late registration) → a registrar decides. The endorser and the decider must be different people, and neither can be the student; the table CHECKs enforce this even if the function is bypassed.
+- An approval lasts 30 days and works once: `ovr_use` consumes it when registration is submitted using it.
+- Registration honours active approvals for prerequisites, the credit cap and a closed window.
+- Advisors see only students who have shared "Registration plan" with them (advisorShare consent).
+- Evidence: dbchecks/overrides 19/19; 3 mutants red. Suites 652 / 99. check_app passed for Student, Faculty and Company OS.
+- Open: older task-based overrides still list in staff.ts until migrated. Nobody holds the Advisor role with a share in Northgate yet.

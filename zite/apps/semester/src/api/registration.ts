@@ -16,6 +16,9 @@ let hldReady: Promise<void> | null = null;
 const ensureHld = () => { if (!hldReady) hldReady = (async () => { for (const q of HLD_MIGRATION) await pg().query(q); })().catch((e) => { hldReady = null; throw e; }); return hldReady; };
 type Reservation = { forbidden?: boolean; created?: boolean; sections: string[]; state: 'reserved' | 'done'; term: string };
 import { registrationWindow, maxCredits } from '../lib/calendarServer';
+import { OVR_MIGRATION } from '../lib/ovrMigration';
+let ovrReady: Promise<void> | null = null;
+const ensureOvr = () => { if (!ovrReady) ovrReady = (async () => { for (const q of OVR_MIGRATION) await pg().query(q); })().catch((e) => { ovrReady = null; throw e; }); return ovrReady; };
 
 const parse = (t: string) => {
   const m = t.match(/^([A-Za-z/]+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
@@ -36,6 +39,7 @@ export default createEndpoint({
     z.object({ action: z.literal('add'), sectionId: z.string() }),
     z.object({ action: z.literal('remove'), enrollmentId: z.string() }),
     z.object({ action: z.literal('requestOverride'), sectionId: z.string(), reason: z.string().min(5) }),
+    z.object({ action: z.literal('requestException'), kind: z.enum(['credit_overload', 'late_registration']), term: z.string().max(40), sectionId: z.string().optional(), credits: z.number().min(1).max(40).optional(), reason: z.string().min(10).max(2000) }),
     z.object({ action: z.literal('respondToHold'), holdId: z.string(), body: z.string().min(1).max(2000) }),
     z.object({ action: z.literal('submit'), term: z.string(), requestKey: z.string().min(8).max(100) }),
     z.object({ action: z.literal('withdrawRequest'), enrollmentId: z.string() }),
@@ -69,13 +73,17 @@ export default createEndpoint({
       await audit(a, 'Registration request withdrawn', `enrollment:${e!.id}`, '', 'Student self-service');
       return { ok: true };
     }
-    if (input.action === 'requestOverride') {
-      const s = await zite.sections.findOne({ id: input.sectionId });
-      if (!s || !tenant.sections.has(s.id)) forbid();
-      const t = await zite.tasks.create({
-        record: { title: `Prerequisite override · ${(s!.label ?? '').split(' · ')[0]}`, owner: uid, requestedBy: uid, type: 'Approval Request', source: 'Made Here', status: 'Pending Approval', section: s!.id, rubric: input.reason, owningOffice: 'Academic Advising' } as never,
-      });
-      await audit(a, 'Override requested', `task:${t.id}`, input.reason, 'Student self-service');
+    if (input.action === 'requestOverride' || input.action === 'requestException') {
+      // Overrides and exceptions (ovr-001): one register; registrars decide, advisors endorse overloads and late registration.
+      await ensureOvr();
+      const sid = input.action === 'requestOverride' ? input.sectionId : input.sectionId;
+      let term = input.action === 'requestException' ? input.term : '';
+      if (sid) { const s = await zite.sections.findOne({ id: sid }); if (!s || !tenant.sections.has(s.id)) forbid(); if (!term) term = s!.term ?? ''; }
+      const p = input.action === 'requestOverride' ? { kind: 'prerequisite', term, sectionId: sid, reason: input.reason.length >= 10 ? input.reason : `${input.reason} (prerequisite)` }
+        : { kind: input.kind, term, sectionId: sid, credits: input.credits, reason: input.reason };
+      const r = ((await pg().query(`SELECT ovr_request($1,$2,$3,$4::jsonb) AS r`, [a.institutionId, uid, a.roles.includes('Student'), JSON.stringify(p)])) as { r: string }[])[0].r;
+      if (!r.startsWith('ok:')) forbid(r);
+      await audit(a, input.action === 'requestOverride' ? 'Override requested' : 'Exception requested', `override:${r.slice(3)}`, p.reason, 'Student self-service');
       return { ok: true };
     }
 
@@ -111,8 +119,14 @@ export default createEndpoint({
     );
     const inTerm = (e: (typeof mine.records)[0]) => secById[first(e.section) ?? '']?.term === term;
     const planned = mine.records.filter((e) => e.status === 'Planned' && inTerm(e));
-    const approvedOverrides = new Set(requests.records.filter((r) => r.status === 'Approved').map((r) => first(r.section)));
-    const pendingOverrides = new Set(requests.records.filter((r) => r.status === 'Pending Approval').map((r) => first(r.section)));
+    // Older overrides were approval tasks; new ones are ovr-001 requests. Both count; only ovr approvals are single use.
+    await ensureOvr();
+    const ovr = (await pg().query(`SELECT id, kind, section_id, credits_requested, state, expires_at FROM ovr_requests WHERE tenant_id = $1 AND student_id = $2 AND lower(term) = lower($3)`, [a.institutionId, uid, term])) as { id: number; kind: string; section_id: string | null; credits_requested: string | null; state: string; expires_at: string | null }[];
+    const live = ovr.filter((o) => o.state === 'approved' && o.expires_at && new Date(o.expires_at).getTime() > Date.now());
+    const approvedOverrides = new Set([...requests.records.filter((r) => r.status === 'Approved').map((r) => first(r.section)), ...live.filter((o) => o.kind === 'prerequisite').map((o) => o.section_id)]);
+    const pendingOverrides = new Set([...requests.records.filter((r) => r.status === 'Pending Approval').map((r) => first(r.section)),
+      ...ovr.filter((o) => o.kind === 'prerequisite' && ['requested'].includes(o.state)).map((o) => o.section_id)]);
+    const relied: number[] = [];
     const describe = (sid: string) => {
       const s = secById[sid]; const c = courseById[first(s?.course) ?? ''];
       const missing = ids(c?.prerequisites).filter((p) => !completedCourses.has(p)).map((p) => courseById[p]?.code ?? '');
@@ -139,13 +153,20 @@ export default createEndpoint({
       // Registration window (approved academic calendar). Terms without an approved calendar behave as before.
       const win = await registrationWindow(a.institutionId, input.term);
       if (win === 'not_yet') forbid(`Registration for ${input.term} has not opened yet.`);
-      if (win === 'closed') forbid(`Registration for ${input.term} is closed. Ask the registrar about late changes.`);
+      if (win === 'closed') {
+        const late = live.filter((o) => o.kind === 'late_registration');
+        const uncovered = planned.map((e) => first(e.section)!).filter((sid) => !late.some((o) => o.section_id === sid));
+        if (uncovered.length) forbid(`Registration for ${input.term} is closed. Ask for a late-registration exception (your advisor endorses it, the registrar decides).`);
+        relied.push(...late.filter((o) => planned.some((e) => first(e.section) === o.section_id)).map((o) => Number(o.id)));
+      }
       // Approved registration rules: credit limit across what is planned now and already requested/enrolled this term.
       const cap = await maxCredits(a.institutionId);
       if (cap != null) {
         const held = mine.records.filter((e) => inTerm(e) && ['Requested', 'Enrolled', 'Waitlisted'].includes(e.status ?? '')).reduce((n, e) => n + Number(describe(first(e.section)!).credits || 0), 0);
         const total = held + draft.reduce((n, d) => n + Number(d.credits || 0), 0);
-        if (total > cap) forbid(`That would be ${total} credits this term; the limit is ${cap}. Remove a course or ask your advisor about an overload.`);
+        const overload = live.filter((o) => o.kind === 'credit_overload' && Number(o.credits_requested) >= total).sort((x, y) => Number(x.credits_requested) - Number(y.credits_requested))[0];
+        if (total > cap && !overload) forbid(`That would be ${total} credits this term; the limit is ${cap}. Remove a course or request a credit overload (your advisor endorses it, the registrar decides).`);
+        if (total > cap && overload) relied.push(Number(overload.id));
       }
       // Registrar-placed holds that block registration.
       const regHolds = await zite.studentHolds.findAll({ filters: { student: uid, status: 'Active', blocksRegistration: true }, limit: 20 });
@@ -161,6 +182,8 @@ export default createEndpoint({
         if (outcome === 'conflict') forbid('This request ID was already used for different sections. Reload and submit again.');
         if (outcome === 'replay') return { ok: true, submitted: r.sections.length, replayed: true };
       }
+      relied.push(...live.filter((o) => o.kind === 'prerequisite' && plannedSections.includes(String(o.section_id)) && (describe(String(o.section_id)).missing.length > 0)).map((o) => Number(o.id)));
+      if (relied.length) await pg().query(`SELECT ovr_use($1,$2,$3::bigint[])`, [a.institutionId, uid, [...new Set(relied)]]);
       await audit(a, 'Registration request submitted', `user:${uid}`, `${term}: ${draft.map((d) => d.code).join(', ')} (${readiness.credits} credits) · key ${input.requestKey.slice(0, 8)}`, 'Student self-service');
       }
       // Write (or finish writing) exactly the reserved sections. Each step is safe to repeat.

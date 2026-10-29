@@ -84,6 +84,7 @@ import type { default as _OfficeServiceEp } from '../src/api/officeService';
 import type { default as _OfficialGradesEp } from '../src/api/officialGrades';
 import type { default as _OnboardEp } from '../src/api/onboard';
 import type { default as _OrganizationsEp } from '../src/api/organizations';
+import type { default as _OverridesEp } from '../src/api/overrides';
 import type { default as _PapersEp } from '../src/api/papers';
 import type { default as _ParkingEp } from '../src/api/parking';
 import type { default as _PartnersEp } from '../src/api/partners';
@@ -541,6 +542,11 @@ export type OrganizationsInputType = NonNullable<_OrganizationsCfg['inputSchema'
 export type OrganizationsOutputType = Awaited<ReturnType<_OrganizationsCfg['execute']>>;
 export const organizations = createCaller<OrganizationsInputType, OrganizationsOutputType>('organizations');
 
+type _OverridesCfg = typeof _OverridesEp;
+export type OverridesInputType = NonNullable<_OverridesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_OverridesCfg['execute']>[0]['input'];
+export type OverridesOutputType = Awaited<ReturnType<_OverridesCfg['execute']>>;
+export const overrides = createCaller<OverridesInputType, OverridesOutputType>('overrides');
+
 type _PapersCfg = typeof _PapersEp;
 export type PapersInputType = NonNullable<_PapersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PapersCfg['execute']>[0]['input'];
 export type PapersOutputType = Awaited<ReturnType<_PapersCfg['execute']>>;
@@ -855,6 +861,7 @@ export const api = {
   officialGrades,
   onboard,
   organizations,
+  overrides,
   papers,
   parking,
   partners,
