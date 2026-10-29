@@ -11,10 +11,10 @@
  * that overflows at the 320 CSS-pixel reflow viewport used to represent 400%
  * zoom from a 1280-pixel baseline.
  *
- * The shared Accessibility tools dialog and Quick Add true modal are also
- * opened on every critical journey at each axe width so focus entry, focus
- * containment, Escape focus return and rendered modal state are measured
- * rather than inferred from source tests.
+ * The shared Accessibility tools dialog, Quick Add true modal and independent
+ * Search everything true modal are also opened on every critical journey at
+ * each axe width so focus entry, focus containment, Escape focus return and
+ * rendered modal state are measured rather than inferred from source tests.
  * Exit 0 only after every journey and every configured axe width were measured.
  * Exit 1 on a finding and 2 when the instrument itself could not run.
  */
@@ -83,6 +83,7 @@ let measured = 0;
 let axeMeasured = 0;
 let accessibilityDialogMeasured = 0;
 let trueModalMeasured = 0;
+let searchModalMeasured = 0;
 const axeControlsPassed = new Set();
 const instrumentFailures = [];
 
@@ -446,6 +447,81 @@ async function inspectTrueModal(journey, hash, viewport) {
   }
 }
 
+async function inspectSearchModal(journey, hash, viewport) {
+  const context = await contextFor(viewport);
+  const widthLabel = `${viewport.width}px`;
+  try {
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error).split('\n')[0]));
+    await page.goto(`${ROUTE_BASE}${hash}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.waitForTimeout(SETTLE);
+
+    const opener = page.getByRole('button', { name: 'Search, ask or add', exact: true });
+    await opener.waitFor({ state: 'visible', timeout: 15_000 });
+    await opener.click();
+    const dialog = page.getByRole('dialog', { name: 'Search everything', exact: true });
+    await dialog.waitFor({ state: 'visible', timeout: 15_000 });
+    await dialog.getByRole('textbox', { name: 'Search, ask or add', exact: true })
+      .waitFor({ state: 'visible', timeout: 15_000 });
+    await page.waitForTimeout(50);
+
+    const state = await page.evaluate(() => {
+      const modal = document.querySelector('[role="dialog"][aria-label="Search everything"]');
+      return {
+        ariaModal: modal?.getAttribute('aria-modal'),
+        focusInside: Boolean(modal && modal.contains(document.activeElement)),
+      };
+    });
+    const messages = pageErrors.map((error) => `page error: ${error}`);
+    if (state.ariaModal !== 'true') messages.push(`Search modal aria-modal was ${state.ariaModal || 'missing'}`);
+    if (!state.focusInside) messages.push('focus did not enter the search modal');
+
+    const focusEdge = async (edge) => page.evaluate((which) => {
+      const modal = document.querySelector('[role="dialog"][aria-label="Search everything"]');
+      const focusable = modal ? [...modal.querySelectorAll('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.disabled && element.getAttribute('aria-hidden') !== 'true') : [];
+      const target = which === 'first' ? focusable[0] : focusable[focusable.length - 1];
+      if (target instanceof HTMLElement) target.focus();
+      return focusable.length;
+    }, edge);
+    const focusStayedInside = () => page.evaluate(() => {
+      const modal = document.querySelector('[role="dialog"][aria-label="Search everything"]');
+      return Boolean(modal && modal.contains(document.activeElement));
+    });
+
+    if (await focusEdge('last')) {
+      await page.keyboard.press('Tab');
+      if (!await focusStayedInside()) messages.push('Tab escaped the search modal');
+      await focusEdge('first');
+      await page.keyboard.press('Shift+Tab');
+      if (!await focusStayedInside()) messages.push('Shift+Tab escaped the search modal');
+    } else {
+      messages.push('search modal had no focusable controls');
+    }
+
+    for (const violation of await seriousAxeViolations(page)) {
+      for (const node of violation.nodes) {
+        messages.push(`axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
+      }
+    }
+
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({ state: 'hidden', timeout: 15_000 });
+    if (!await opener.evaluate((trigger) => document.activeElement === trigger)) {
+      messages.push('Escape did not return focus to the search-modal opener');
+    }
+
+    record(`${journey} search modal`, widthLabel, messages);
+    searchModalMeasured += 1;
+  } catch (error) {
+    instrumentFailures.push(`${journey} search modal at ${widthLabel}: inspection failed: ${String(error).split('\n')[0]}`);
+  } finally {
+    await context.close();
+  }
+}
+
 try {
   for (const [journey, hash] of JOURNEYS) {
     await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
@@ -455,6 +531,7 @@ try {
     for (const destination of DESTINATIONS) await inspectDestination(destination, viewport);
     for (const [journey, hash] of JOURNEYS) await inspectAccessibilityDialog(journey, hash, viewport);
     for (const [journey, hash] of JOURNEYS) await inspectTrueModal(journey, hash, viewport);
+    for (const [journey, hash] of JOURNEYS) await inspectSearchModal(journey, hash, viewport);
   }
 } finally {
   await browser.close();
@@ -463,15 +540,19 @@ try {
 const expectedAxeMeasurements = DESTINATIONS.length * AXE_VIEWPORTS.length;
 const expectedAccessibilityDialogMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
 const expectedTrueModalMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
+const expectedSearchModalMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
 if (measured !== JOURNEYS.length * 2 || axeMeasured !== expectedAxeMeasurements
   || accessibilityDialogMeasured !== expectedAccessibilityDialogMeasurements
-  || trueModalMeasured !== expectedTrueModalMeasurements || axeControlsPassed.size !== AXE_VIEWPORTS.length
+  || trueModalMeasured !== expectedTrueModalMeasurements
+  || searchModalMeasured !== expectedSearchModalMeasurements
+  || axeControlsPassed.size !== AXE_VIEWPORTS.length
   || instrumentFailures.length) {
   console.error(
     `accessibility smoke instrument incomplete: journeys ${measured}/${JOURNEYS.length * 2}; ` +
     `phone/tablet axe destinations ${axeMeasured}/${expectedAxeMeasurements}; ` +
     `accessibility dialog states ${accessibilityDialogMeasured}/${expectedAccessibilityDialogMeasurements}; ` +
     `true modal states ${trueModalMeasured}/${expectedTrueModalMeasurements}; ` +
+    `search modal states ${searchModalMeasured}/${expectedSearchModalMeasurements}; ` +
     `controls ${axeControlsPassed.size}/${AXE_VIEWPORTS.length}` +
     `${instrumentFailures.length ? `\n${instrumentFailures.map((item) => `- ${item}`).join('\n')}` : ''}`,
   );
@@ -486,5 +567,6 @@ console.log(
   `${DESTINATIONS.length} registered destinations axe-scanned at ${AXE_WIDTHS.join('px and ')}px; ` +
   `${JOURNEYS.length} shared non-modal accessibility dialog states verified at each axe width; ` +
   `${JOURNEYS.length} shared true-modal states verified at each axe width; ` +
+  `${JOURNEYS.length} shared search-modal states verified at each axe width; ` +
   'skip focus, dialog focus containment and return, landmarks, titles, names and ARIA references verified',
 );
