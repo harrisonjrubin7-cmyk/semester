@@ -52,6 +52,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { handleCanvasRequest } from '../_shared/canvasauth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 
@@ -171,73 +172,81 @@ Deno.serve(async (req) => {
   if (privateHost(host)) return json({ error: 'That address is not on the public internet.' }, 400);
   if (!readablePath(path)) return json({ error: 'Only the Canvas API is readable through this.' }, 400);
 
-  const session = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-  if (!session) return json({ error: 'Sign in to read Canvas on this device.' }, 401);
-
-  const admin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    { auth: { persistSession: false } },
-  );
-  const { data: user, error: authError } = await admin.auth.getUser(session);
-  if (authError || !user?.user) {
-    return json({ error: 'That session is not valid. Sign in again.' }, 401);
-  }
-
-  let upstream: Response;
-  try {
-    upstream = await fetch(`https://${host}${path}`, {
-      method: 'GET',
-      // Not followed. A redirect off a Canvas API path is either an SSO bounce
-      // or something stranger, and following it would carry the Authorization
-      // header to wherever it pointed — which is the one thing this must never
-      // do with a token this strong.
-      redirect: 'manual',
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { Authorization: `Bearer ${canvasToken}`, Accept: 'application/json' },
-    });
-  } catch {
-    // Deliberately not the thrown message: it can carry the host and path, and
-    // the request carried a token.
-    return json({ error: 'Canvas could not be reached.' }, 502);
-  }
-
-  if (upstream.status >= 300 && upstream.status < 400) {
-    await upstream.body?.cancel();
-    return json(
-      { error: 'Canvas redirected that request, which usually means the address is a campus sign-in rather than the API.' },
-      502,
-    );
-  }
-
-  if (upstream.status === 401 || upstream.status === 403) {
-    await upstream.body?.cancel();
-    return json({ error: 'Canvas refused that token. Make a new one under Account → Settings.' }, 401);
-  }
-
-  const text = await readCapped(upstream);
-  if (text === null) return json({ error: 'Canvas answered with more than this will read.' }, 413);
-
-  if (!upstream.ok) return json({ error: `Canvas answered ${upstream.status}.` }, 502);
-
-  // Rule 4. An HTML sign-in page with a 200 on it is the failure this catches.
-  try {
-    JSON.parse(text);
-  } catch {
-    return json(
-      { error: 'That address answered with something that is not the Canvas API — usually a sign-in page, which means the host is right and the token is not being accepted.' },
-      422,
-    );
-  }
-
-  return new Response(text, {
-    headers: {
-      ...cors,
-      'Content-Type': 'application/json; charset=utf-8',
-      // One student's coursework. Nothing shared should hold on to it.
-      'Cache-Control': 'no-store',
-      'Referrer-Policy': 'no-referrer',
-      'X-Content-Type-Options': 'nosniff',
+  return handleCanvasRequest(
+    req,
+    async (session) => {
+      const admin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        { auth: { persistSession: false } },
+      );
+      const { data: user, error: authError } = await admin.auth.getUser(session);
+      return !authError && Boolean(user?.user);
     },
-  });
+    async () => {
+      let upstream: Response;
+      try {
+        upstream = await fetch(`https://${host}${path}`, {
+          method: 'GET',
+          // Not followed. A redirect off a Canvas API path is either an SSO bounce
+          // or something stranger, and following it would carry the Authorization
+          // header to wherever it pointed — which is the one thing this must never
+          // do with a token this strong.
+          redirect: 'manual',
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+          headers: { Authorization: `Bearer ${canvasToken}`, Accept: 'application/json' },
+        });
+      } catch {
+        // Deliberately not the thrown message: it can carry the host and path, and
+        // the request carried a token.
+        return json({ error: 'Canvas could not be reached.' }, 502);
+      }
+
+      if (upstream.status >= 300 && upstream.status < 400) {
+        await upstream.body?.cancel();
+        return json(
+          {
+            error:
+              'Canvas redirected that request, which usually means the address is a campus sign-in rather than the API.',
+          },
+          502,
+        );
+      }
+
+      if (upstream.status === 401 || upstream.status === 403) {
+        await upstream.body?.cancel();
+        return json({ error: 'Canvas refused that token. Make a new one under Account → Settings.' }, 401);
+      }
+
+      const text = await readCapped(upstream);
+      if (text === null) return json({ error: 'Canvas answered with more than this will read.' }, 413);
+
+      if (!upstream.ok) return json({ error: `Canvas answered ${upstream.status}.` }, 502);
+
+      // Rule 4. An HTML sign-in page with a 200 on it is the failure this catches.
+      try {
+        JSON.parse(text);
+      } catch {
+        return json(
+          {
+            error:
+              'That address answered with something that is not the Canvas API — usually a sign-in page, which means the host is right and the token is not being accepted.',
+          },
+          422,
+        );
+      }
+
+      return new Response(text, {
+        headers: {
+          ...cors,
+          'Content-Type': 'application/json; charset=utf-8',
+          // One student's coursework. Nothing shared should hold on to it.
+          'Cache-Control': 'no-store',
+          'Referrer-Policy': 'no-referrer',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    },
+    json,
+  );
 });
