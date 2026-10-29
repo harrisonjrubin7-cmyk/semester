@@ -57,6 +57,7 @@ import CommunityAdmin from './pages/CommunityAdmin';
 import Research from './pages/Research';
 import ResearchProtocols from './pages/ResearchProtocols';
 import ControlPlane from './pages/ControlPlane';
+import College from './pages/College';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -232,6 +233,7 @@ export default function App() {
             <Route path="/staff/analytics" element={<Analytics />} />
             <Route path="/staff/research" element={<Research />} />
             <Route path="/staff/research-protocols" element={<ResearchProtocols />} />
+            <Route path="/institution/college" element={<College />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
             <Route path="/staff/mentoring" element={<Mentoring />} />
