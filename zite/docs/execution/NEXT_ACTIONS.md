@@ -456,3 +456,10 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Owner request: all four Northgate connectors authorized (sample institution only; script refuses otherwise), and all eight modules granted with
   the note "SAMPLE INSTITUTION: no order or contract". Northgate stays unmanaged, so nothing switched off. Payments, proctoring and marketplace
   have no code behind them; granting them changes nothing live.
+
+## 29 Oct — Graduate funding and assistantships (gas-001): Student /progress/assistantships, Faculty /assistantships
+- Faculty/staff post TA/RA/GA positions (5–20 h/week, stipend per term, tuition remission); students apply; the poster offers (terms frozen with a
+  hash); the student accepts unless their accepted + confirmed hours for the term would pass 20; a graduate-office officer (admin-appointed, not the
+  poster or student) confirms or ends early with a reason. Official funding view = confirmed appointments only; no money moves.
+- Gap noted: there is no graduate-student marker on memberships, so any Student may apply; the page labels these as graduate positions.
+- dbcheck assistantships 17/17; mutants: hours cap (2 red), poster confirms (2 red), openings ignored (2 red).

@@ -221,6 +221,10 @@ export const GUARD_MANIFEST: Manifest = {
   "fin_payments",
   "fin_receipts",
   "fin_roles",
+  "gas_applications",
+  "gas_events",
+  "gas_officers",
+  "gas_postings",
   "gpl_events",
   "gpl_policies",
   "grd_committee",
@@ -932,6 +936,18 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE",
    "table": "fin_receipts"
+  },
+  {
+   "trigger": "gas_applications_offer_fixed",
+   "timing": "BEFORE",
+   "events": "UPDATE",
+   "table": "gas_applications"
+  },
+  {
+   "trigger": "gas_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "gas_events"
   },
   {
    "trigger": "gpl_events_append_only",

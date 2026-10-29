@@ -20,6 +20,7 @@ import type { default as _AskEp } from '../src/api/ask';
 import type { default as _AssessmentsEp } from '../src/api/assessments';
 import type { default as _AssetsEp } from '../src/api/assets';
 import type { default as _AssignmentsEp } from '../src/api/assignments';
+import type { default as _AssistantshipsEp } from '../src/api/assistantships';
 import type { default as _AssuranceEvidenceEp } from '../src/api/assuranceEvidence';
 import type { default as _AthleticsEp } from '../src/api/athletics';
 import type { default as _AuditEp } from '../src/api/audit';
@@ -219,6 +220,11 @@ type _AssignmentsCfg = typeof _AssignmentsEp;
 export type AssignmentsInputType = NonNullable<_AssignmentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssignmentsCfg['execute']>[0]['input'];
 export type AssignmentsOutputType = Awaited<ReturnType<_AssignmentsCfg['execute']>>;
 export const assignments = createCaller<AssignmentsInputType, AssignmentsOutputType>('assignments');
+
+type _AssistantshipsCfg = typeof _AssistantshipsEp;
+export type AssistantshipsInputType = NonNullable<_AssistantshipsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssistantshipsCfg['execute']>[0]['input'];
+export type AssistantshipsOutputType = Awaited<ReturnType<_AssistantshipsCfg['execute']>>;
+export const assistantships = createCaller<AssistantshipsInputType, AssistantshipsOutputType>('assistantships');
 
 type _AssuranceEvidenceCfg = typeof _AssuranceEvidenceEp;
 export type AssuranceEvidenceInputType = NonNullable<_AssuranceEvidenceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AssuranceEvidenceCfg['execute']>[0]['input'];
@@ -785,6 +791,7 @@ export const api = {
   assessments,
   assets,
   assignments,
+  assistantships,
   assuranceEvidence,
   athletics,
   audit,
