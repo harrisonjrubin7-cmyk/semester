@@ -54,7 +54,7 @@ BEGIN
   SELECT version INTO v FROM mkt_campaigns WHERE id = v_id;
   r := mkt_cmd('zz_mk1', 'c16', 'h16', 'submit', v_id, jsonb_build_object('version', v, 'audienceSize', 40));
   SELECT mkt_hash(c), c.version INTO h, v FROM mkt_campaigns c WHERE id = v_id;
-  r := mkt_cmd('zz_ap1', 'c17', 'h17', 'approve', v_id, jsonb_build_object('version', v, 'seenHash', h, 'note', 'Looks right'));
+  r := mkt_cmd('zz_ap1', 'c17', 'h17', 'approve', v_id, jsonb_build_object('version', v, 'seenHash', h, 'note', 'Looks right', 'a11yReviewed', true));
   INSERT INTO rr VALUES (r->>'resultCode' = 'OK', 'K17 a different approver approves ' || coalesce(r->>'message',''));
   INSERT INTO rr VALUES ((SELECT state = 'approved' AND approved_by = 'zz_ap1' AND approved_hash = h AND sending = 'disabled' FROM mkt_campaigns WHERE id = v_id), 'K18 approved with the exact hash; sending stays disabled');
   SELECT version INTO v FROM mkt_campaigns WHERE id = v_id;

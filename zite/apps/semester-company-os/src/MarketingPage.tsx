@@ -42,10 +42,91 @@ function NewCampaign({ reload }: { reload: () => void }) {
   );
 }
 
+const KINDS = ['price', 'customer', 'outcome', 'certification', 'security', 'metric', 'availability', 'integration'];
+
+function Claims({ c, d, reload, editable }: { c: C; d: any; reload: () => void; editable: boolean }) {
+  const { run, busy } = useRun(reload);
+  const [f, setF] = useState({ kind: 'outcome', text: '', sourceId: '' });
+  const usable = d.sources.filter((x: any) => x.usable && x.kind === f.kind);
+  return (
+    <Panel title={`Claims · ${c.claims.length}`}>
+      <p className="mb-2 text-xs text-muted-foreground">Every price, customer, outcome, certification, security, metric, availability or integration claim must cite an approved, current source of the same kind with recorded publication permission.</p>
+      {c.hints.length > 0 && !c.claims.length && <p role="alert" className="mb-2 text-sm">The text reads like a claim ({c.hints.join(', ')}). List each claim below or remove the wording.</p>}
+      {c.claimBlockers.map((b: string, i: number) => <p key={i} role="alert" className="text-sm">✗ {b}</p>)}
+      {c.a11y.map((b: string, i: number) => <p key={i} role="alert" className="text-sm">✗ Accessibility: {b}</p>)}
+      <ul className="mt-2 space-y-1 text-sm">{c.claims.map((k: any) => {
+        const src = d.sources.find((x: any) => x.id === k.sourceId);
+        return <li key={k.id} className="flex flex-wrap items-center gap-2"><span aria-hidden>{k.sourced ? '✓' : '✗'}</span><span className="sr-only">{k.sourced ? 'Sourced' : 'Not sourced'}</span>
+          <Chip value={k.kind} /> “{k.text}” — {src ? `${src.title} (${src.state}${src.usable ? '' : ', not usable'})` : 'no source'}
+          {editable && <Button size="sm" variant="ghost" disabled={busy} onClick={() => run({ action: 'claim_remove', campaignId: c.id, version: c.version, claimId: k.id })}>Remove</Button>}</li>;
+      })}</ul>
+      {editable && <form className="mt-3 grid gap-2 sm:grid-cols-[1fr_2fr_2fr_auto]" onSubmit={async (e) => { e.preventDefault();
+        if (await run({ action: 'claim_add', campaignId: c.id, version: c.version, kind: f.kind, text: f.text, ...(f.sourceId ? { sourceId: f.sourceId } : {}) })) setF({ ...f, text: '', sourceId: '' }); }}>
+        <label className="text-xs">Kind<select className="mt-1 block h-9 w-full rounded-[3px] border border-border bg-background px-2 text-sm" value={f.kind} onChange={(x) => setF({ ...f, kind: x.target.value, sourceId: '' })}>{KINDS.map((k) => <option key={k}>{k}</option>)}</select></label>
+        <label className="text-xs">Claim, exactly as written<Input className="mt-1" value={f.text} onChange={(x) => setF({ ...f, text: x.target.value })} /></label>
+        <label className="text-xs">Approved source<select className="mt-1 block h-9 w-full rounded-[3px] border border-border bg-background px-2 text-sm" value={f.sourceId} onChange={(x) => setF({ ...f, sourceId: x.target.value })}>
+          <option value="">{usable.length ? 'Choose a source' : `No approved ${f.kind} source yet`}</option>{usable.map((x: any) => <option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
+        <Button size="sm" className="self-end" disabled={busy || f.text.trim().length < 3}>Add claim</Button>
+      </form>}
+    </Panel>
+  );
+}
+
+function Launch({ c, reload }: { c: C; reload: () => void }) {
+  const { run, busy } = useRun(reload);
+  return (
+    <Panel title="Launch gate">
+      <p className="text-sm">Checks approval, unchanged content, current consent, sourced claims and accessibility. <strong>Sending is disabled</strong>: a clean check sends nothing.</p>
+      {c.launch && <div className="mt-2 text-sm" role="status">Last check by {c.launch.by} · {fmt(c.launch.at)}: {c.launch.outcome === 'blocked' ? 'blocked' : 'every check passes (sending disabled)'}
+        <ul className="mt-1 list-disc pl-5">{c.launch.blockers.map((b: string, i: number) => <li key={i}>{b}</li>)}</ul></div>}
+      <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => run({ action: 'launch_check', campaignId: c.id, version: c.version })}>Run launch check</Button>
+    </Panel>
+  );
+}
+
+function Sources({ d, reload }: { d: any; reload: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [f, setF] = useState({ kind: 'outcome', title: '', reference: '', expiresOn: '' });
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const approver = d.roles.includes('marketing_approver');
+  const call = async (input: Record<string, unknown>) => {
+    setBusy(true);
+    try { const r = await marketing({ op: 'source', ...input } as never) as { resultCode: string; message: string };
+      if (r.resultCode === 'OK') { toast.success(r.message); reload(); return true; } toast.error(r.message); return false;
+    } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
+  };
+  return (
+    <Panel title={`Approved sources · ${d.sources.filter((x: any) => x.usable).length} usable`}>
+      <p className="mb-2 text-xs text-muted-foreground">A source is evidence for one kind of claim. Someone other than the proposer approves it and records who gave publication permission. Revoking a source returns every campaign citing it to draft.</p>
+      <ul className="space-y-2 text-sm">{d.sources.map((x: any) => (
+        <li key={x.id} className="rounded-[3px] border border-border p-2">
+          <span className="flex flex-wrap items-center gap-2"><Chip value={x.kind} /> <strong>{x.title}</strong> <Chip value={x.usable ? 'usable' : x.state === 'approved' ? 'expired' : x.state} /></span>
+          <span className="block text-xs text-muted-foreground">Evidence: {x.reference} · proposed by {x.proposedBy}{x.approvedBy ? ` · approved by ${x.approvedBy}` : ''}{x.expiresOn ? ` · expires ${x.expiresOn}` : ''}</span>
+          {x.permissionNote && <span className="block text-xs">Permission: {x.permissionNote}</span>}
+          {x.revokeReason && <span className="block text-xs">Revoked: {x.revokeReason}</span>}
+          {approver && x.state !== 'revoked' && (x.state === 'proposed' && x.proposedById === d.me ? <span className="block text-xs text-muted-foreground">Someone else must approve your proposal.</span> : (
+            <span className="mt-1 flex flex-wrap gap-2"><Input aria-label={x.state === 'proposed' ? 'Publication permission' : 'Reason to revoke'} className="h-8 max-w-sm" placeholder={x.state === 'proposed' ? 'Who gave publication permission, and where it is recorded' : 'Reason to revoke'}
+              value={notes[x.id] ?? ''} onChange={(e) => setNotes({ ...notes, [x.id]: e.target.value })} />
+              {x.state === 'proposed' && <Button size="sm" disabled={busy} onClick={() => call({ action: 'approve', sourceId: x.id, permissionNote: notes[x.id] ?? '' })}>Approve</Button>}
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => call({ action: 'revoke', sourceId: x.id, reason: notes[x.id] ?? '' })}>Revoke</Button></span>))}
+        </li>))}{!d.sources.length && <li className="text-muted-foreground">No sources yet. Claims cannot be approved until one exists.</li>}</ul>
+      <form className="mt-3 grid gap-2 sm:grid-cols-[1fr_2fr_2fr_1fr_auto]" onSubmit={async (e) => { e.preventDefault();
+        if (await call({ action: 'propose', kind: f.kind, title: f.title, reference: f.reference, ...(f.expiresOn ? { expiresOn: f.expiresOn } : {}) })) setF({ ...f, title: '', reference: '', expiresOn: '' }); }}>
+        <label className="text-xs">Supports<select className="mt-1 block h-9 w-full rounded-[3px] border border-border bg-background px-2 text-sm" value={f.kind} onChange={(x) => setF({ ...f, kind: x.target.value })}>{KINDS.map((k) => <option key={k}>{k}</option>)}</select></label>
+        <label className="text-xs">Title<Input className="mt-1" value={f.title} onChange={(x) => setF({ ...f, title: x.target.value })} /></label>
+        <label className="text-xs">Where the evidence is kept<Input className="mt-1" value={f.reference} onChange={(x) => setF({ ...f, reference: x.target.value })} /></label>
+        <label className="text-xs">Expires (optional)<Input type="date" className="mt-1" value={f.expiresOn} onChange={(x) => setF({ ...f, expiresOn: x.target.value })} /></label>
+        <Button size="sm" className="self-end" disabled={busy || f.title.trim().length < 3}>Propose</Button>
+      </form>
+    </Panel>
+  );
+}
+
 function Campaign({ c, d, reload }: { c: C; d: any; reload: () => void }) {
   const { run, busy } = useRun(reload);
   const [e, setE] = useState({ subject: c.subject, body: c.body, spend: String(c.spendMinor / 100) });
   const [note, setNote] = useState('');
+  const [a11y, setA11y] = useState(false);
   const mine = c.authorId === d.me;
   const canApprove = d.roles.includes('marketing_approver') && !mine && c.state === 'in_review';
   const go = (action: string, extra: Record<string, unknown> = {}) => run({ action, campaignId: c.id, version: c.version, ...extra });
@@ -78,14 +159,17 @@ function Campaign({ c, d, reload }: { c: C; d: any; reload: () => void }) {
           {mine && c.state === 'in_review' && <Button size="sm" variant="outline" className="mt-3" disabled={busy} onClick={() => go('withdraw')}>Withdraw to edit</Button>}
           {canApprove && <div className="mt-3 space-y-2 border-t border-border pt-3">
             <Textarea aria-label="Review note" rows={2} placeholder="Review note (required to reject)" value={note} onChange={(x) => setNote(x.target.value)} />
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={a11y} onChange={(x) => setA11y(x.target.checked)} /> I checked headings, link text, image descriptions and contrast</label>
             <div className="flex gap-2">
-              <Button size="sm" disabled={busy} onClick={() => go('approve', { seenHash: c.hash, note })}>Approve exactly this</Button>
+              <Button size="sm" disabled={busy || !a11y || c.claimBlockers.length > 0} onClick={() => go('approve', { seenHash: c.hash, note, a11yReviewed: true })}>Approve exactly this</Button>
               <Button size="sm" variant="outline" disabled={busy || note.trim().length < 5} onClick={() => go('reject', { seenHash: c.hash, note })}>Reject</Button>
             </div></div>}
           {!mine && c.state === 'in_review' && !d.roles.includes('marketing_approver') && <p className="mt-2 text-xs text-muted-foreground">Waiting for a marketing approver.</p>}
           {mine && c.state === 'in_review' && <p className="mt-2 text-xs text-muted-foreground">Someone other than you must approve it.</p>}
         </Panel>
       )}
+      <Claims c={c} d={d} reload={reload} editable={mine && c.state !== 'in_review' && d.roles.includes('marketer')} />
+      <Launch c={c} reload={reload} />
       <Panel title={`History · ${c.timeline.length}`}>
         <ol className="space-y-1 text-sm">{c.timeline.map((t: any, i: number) => <li key={i}><span className="text-xs text-muted-foreground">{fmt(t.at)} · {t.actor}</span> — {t.action}{t.detail ? ` · ${t.detail}` : ''}</li>)}</ol>
       </Panel>
@@ -104,6 +188,7 @@ export default function MarketingPage() {
         return (
           <div className="space-y-4">
             {d.roles.includes('marketer') && <NewCampaign reload={s.reload} />}
+            <Sources d={d} reload={s.reload} />
             {!d.campaigns.length ? <Panel><p className="text-sm text-muted-foreground">No campaigns yet.</p></Panel> : (
               <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
                 <nav aria-label="Campaigns" className="space-y-1">{d.campaigns.map((c: C) => (
