@@ -52,6 +52,7 @@ import type { default as _DiningEp } from '../src/api/dining';
 import type { default as _DisabilityEp } from '../src/api/disability';
 import type { default as _EthicsEp } from '../src/api/ethics';
 import type { default as _EventDeliveryEp } from '../src/api/eventDelivery';
+import type { default as _ExploreEp } from '../src/api/explore';
 import type { default as _FacilitiesEp } from '../src/api/facilities';
 import type { default as _FacultyTodayEp } from '../src/api/facultyToday';
 import type { default as _FilesEp } from '../src/api/files';
@@ -382,6 +383,11 @@ type _EventDeliveryCfg = typeof _EventDeliveryEp;
 export type EventDeliveryInputType = NonNullable<_EventDeliveryCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_EventDeliveryCfg['execute']>[0]['input'];
 export type EventDeliveryOutputType = Awaited<ReturnType<_EventDeliveryCfg['execute']>>;
 export const eventDelivery = createCaller<EventDeliveryInputType, EventDeliveryOutputType>('eventDelivery');
+
+type _ExploreCfg = typeof _ExploreEp;
+export type ExploreInputType = NonNullable<_ExploreCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ExploreCfg['execute']>[0]['input'];
+export type ExploreOutputType = Awaited<ReturnType<_ExploreCfg['execute']>>;
+export const explore = createCaller<ExploreInputType, ExploreOutputType>('explore');
 
 type _FacilitiesCfg = typeof _FacilitiesEp;
 export type FacilitiesInputType = NonNullable<_FacilitiesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FacilitiesCfg['execute']>[0]['input'];
@@ -835,6 +841,7 @@ export const api = {
   disability,
   ethics,
   eventDelivery,
+  explore,
   facilities,
   facultyToday,
   files,

@@ -505,3 +505,14 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   - the register queries ran against the live database in a rolled-back transaction;
   - suites 664 / 99;
   - check_app passed for Student and Company OS.
+
+## 29 Oct — Major and minor exploration (exp-001): Student /plan/explore
+- Shows how the student's own completed and current courses count toward each program the institution has published (prg_programs, state 'published').
+- For each program it shows credits counted, credits in progress and credits left, plus an estimate of terms left at the program's per-term pace. Programs are ranked by least left to do.
+- Read-only: declaring or changing a program stays with the registrar.
+- Evidence:
+  - whatIfRules 5/5; making a course count twice turns 1 test red;
+  - the live queries ran: Northgate has no published programs, so the page shows its empty state;
+  - suites 669 / 99;
+  - check_app passed for Student.
+- Open: no change-of-major request yet; that is an academic-record change and needs an approval path of its own.
