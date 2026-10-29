@@ -13,6 +13,12 @@ export const GUARD_MANIFEST: Manifest = {
   "adv_staff",
   "aff_current",
   "aff_events",
+  "alu_blocks",
+  "alu_connections",
+  "alu_events",
+  "alu_interest",
+  "alu_opportunities",
+  "alu_profiles",
   "apk_documents",
   "apk_packages",
   "app_shortlist",
@@ -527,6 +533,12 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "aff_events"
+  },
+  {
+   "trigger": "alu_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "alu_events"
   },
   {
    "trigger": "apk_packages_append_only",

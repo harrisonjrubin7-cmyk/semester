@@ -12,6 +12,7 @@ import type { default as _AdvisorShareEp } from '../src/api/advisorShare';
 import type { default as _AffiliationEp } from '../src/api/affiliation';
 import type { default as _AidOfficeEp } from '../src/api/aidOffice';
 import type { default as _AlumniEp } from '../src/api/alumni';
+import type { default as _AlumniNetworkEp } from '../src/api/alumniNetwork';
 import type { default as _AnnouncementsEp } from '../src/api/announcements';
 import type { default as _AppDirectoryEp } from '../src/api/appDirectory';
 import type { default as _ApprovalsEp } from '../src/api/approvals';
@@ -176,6 +177,11 @@ type _AlumniCfg = typeof _AlumniEp;
 export type AlumniInputType = NonNullable<_AlumniCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AlumniCfg['execute']>[0]['input'];
 export type AlumniOutputType = Awaited<ReturnType<_AlumniCfg['execute']>>;
 export const alumni = createCaller<AlumniInputType, AlumniOutputType>('alumni');
+
+type _AlumniNetworkCfg = typeof _AlumniNetworkEp;
+export type AlumniNetworkInputType = NonNullable<_AlumniNetworkCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AlumniNetworkCfg['execute']>[0]['input'];
+export type AlumniNetworkOutputType = Awaited<ReturnType<_AlumniNetworkCfg['execute']>>;
+export const alumniNetwork = createCaller<AlumniNetworkInputType, AlumniNetworkOutputType>('alumniNetwork');
 
 type _AnnouncementsCfg = typeof _AnnouncementsEp;
 export type AnnouncementsInputType = NonNullable<_AnnouncementsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AnnouncementsCfg['execute']>[0]['input'];
@@ -759,6 +765,7 @@ export const api = {
   affiliation,
   aidOffice,
   alumni,
+  alumniNetwork,
   announcements,
   appDirectory,
   approvals,

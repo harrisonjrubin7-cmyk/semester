@@ -41,6 +41,7 @@ import Decks from './pages/Decks';
 import Community from './pages/Community';
 import Maps from './pages/Maps';
 import Mentoring from './pages/Mentoring';
+import Network from './pages/Network';
 import Admissions from './pages/Admissions';
 import { Gradebook, TAQueue, RegistrarDesk, StudentAccounts, StudentAffairs } from './pages/Staff';
 import { Analytics, RegistrationHolds } from './pages/Institution';
@@ -243,6 +244,7 @@ export default function App() {
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
             <Route path="/staff/mentoring" element={<Mentoring />} />
+            <Route path="/network" element={<Network />} />
             <Route path="/staff/admissions" element={<Admissions />} />
             <Route path="/plan" element={<CalendarPage />} />
             <Route path="/plan/registration" element={<Registration />} />

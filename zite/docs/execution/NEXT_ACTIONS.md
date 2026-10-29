@@ -396,3 +396,13 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   FAILING: trigger mkt_campaigns_claims_sourced is not on the live table, because the mkt-002 migration runs only when the republished
   Company OS first opens Marketing. Republishing and opening /marketing applies it.
 - Not built: scheduled automatic runs (would be a scheduled task, needs owner approval) and alerting.
+
+## 29 Oct — Alumni network (alu-001), /network
+- Opt-in directory (alumni only, or alumni and students), no contact details stored; connection requests (20 pending max), accept/decline/block;
+  a block hides both people and stops requests and interest. Opportunities posted by alumni (https links, ends within 90 days) go live only after
+  career center staff other than the poster approve; posters see interest counts and only names people chose to share.
+- Mentoring: students see listed mentors' open slots and book through help.ts (its apt-001 claim table already prevents double booking; a second
+  claim table was drafted and removed for that reason). Alumni see their own completed courses, credentials and verified portfolio items.
+- Gate note: `npx tsc --noEmit -p apps/<app>` type-checks nothing (solution tsconfig with references); check_app is the real type gate and caught
+  a quoting error here. Earlier reports' "type check clean" lines rest on check_app.
+- Owner: career center staff (car_staff 'center') must be granted for opportunities to go live.
