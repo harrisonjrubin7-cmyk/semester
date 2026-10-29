@@ -12,7 +12,7 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
 }
 
 export function Loadable<T>({ state, children }: { state: { data: T | null; error: string | null; loading: boolean; reload: () => void }; children: (d: T) => ReactNode }) {
-  if (state.error) return <div role="alert" className="rounded-[3px] border border-destructive/40 bg-destructive/5 p-4 text-sm">! {state.error} <button onClick={state.reload} className="ml-2 underline">Try again</button></div>;
+  if (state.error) return <div role="alert" className="rounded-[3px] border border-destructive/40 bg-destructive/5 p-4 text-sm">! {friendly(state.error)} <button onClick={state.reload} className="ml-2 underline">Try again</button></div>;
   if (!state.data) return <p role="status" className="p-4 text-sm text-muted-foreground">Loading…</p>;
   return <>{children(state.data)}</>;
 }
@@ -47,4 +47,14 @@ export function Chip({ value }: { value: string }) {
 }
 
 export const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-export const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'That didn’t go through.');
+/** Turns 'API call failed (403): {"message":"…"}' into the server's own sentence; access refusals say so plainly. */
+export function friendly(raw: string): string {
+  const m = raw.match(/^API call failed \((\d{3})\):\s*(\{.*\})\s*$/s);
+  if (!m) return raw;
+  let msg = '';
+  try { const j = JSON.parse(m[2]) as { message?: string; userFacingMessage?: string }; msg = j.userFacingMessage ?? j.message ?? ''; } catch { /* not JSON */ }
+  if (m[1] === '403') return `You don’t have access to this yet. ${msg || 'Your role does not allow it.'} Ask the founder to grant the role.`;
+  if (m[1] === '401') return 'Your session ended. Sign in again.';
+  return msg || `Something went wrong (error ${m[1]}).`;
+}
+export const errMsg = (e: unknown) => (e instanceof Error ? friendly(e.message) : 'That didn’t go through.');

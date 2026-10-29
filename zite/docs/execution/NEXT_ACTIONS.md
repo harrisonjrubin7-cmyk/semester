@@ -438,3 +438,9 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - After the approved final, supervisor and second reader score a 4-criterion rubric blind; both scores give a recommendation band for the
   instructor of record (never an official grade); a gap of 2+ on a criterion is flagged. Faculty app reuses the endpoint (C23 front door).
 - dbcheck capstone 23/23; mutants: out-of-order milestones (1 red), student approves (1 red), scoring before the final (3 red).
+
+## 29 Oct — Platform 403 fixed (owner request)
+- The 403 was correct: the account had no platform_admin role. On the owner's explicit request ("fix this"), platform_admin was granted to
+  harrisonjrubin7@gmail.com in co_roles (granted_by records the request). No other role was added. Platform, Infrastructure health and the
+  confirm step of Customer Success links now open for that account; the role check reads the table live, so no republish is needed for it.
+- Company OS error banners now show the server's sentence ("You don't have access to this yet …") instead of raw 'API call failed (403): {json}'.
