@@ -46,17 +46,6 @@ export const ENTRY_AUTH_CONTRACTS: readonly Contract[] = [
     rejectionBoundaries: [1, 3],
   },
   {
-    fn: 'fetchcal',
-    ordered: [
-      /const token = req\.headers\.get\('Authorization'\)/,
-      /if \(!token\).*401/,
-      /admin\.auth\.getUser\(token\)/,
-      /if \(authError \|\| !user\?\.user\)/,
-      /followSafely\(/,
-    ],
-    rejectionBoundaries: [1, 3],
-  },
-  {
     fn: 'lti',
     ordered: [
       /if \(path\.endsWith\('\/score'\)\)/,

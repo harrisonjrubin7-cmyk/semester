@@ -50,6 +50,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '../_shared/cors.ts';
+import { handleFetchcalRequest } from '../_shared/fetchcalauth.ts';
 import { followSafely } from '../_shared/safefetch.ts';
 
 
@@ -227,77 +228,74 @@ Deno.serve(async (req) => {
   const target = allowed(asked);
   if (!target.ok) return json({ error: target.why }, 400);
 
-  const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-  if (!token) return json({ error: 'Sign in to read a calendar link on this device.' }, 401);
-
-  const admin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    { auth: { persistSession: false } },
-  );
-  const { data: user, error: authError } = await admin.auth.getUser(token);
-  if (authError || !user?.user) {
-    return json({ error: 'That session is not valid. Sign in again.' }, 401);
-  }
-
-  // One deadline for the whole chain, not one per hop.
-  const signal = AbortSignal.timeout(TIMEOUT_MS);
-  let followed: Awaited<ReturnType<typeof followSafely>>;
-  try {
-    followed = await followSafely(target.url, allowed, (url) =>
-      fetch(url, {
-        // Never `follow`: that lets the runtime request a redirect target
-        // before anything here has seen it. `followSafely` walks the chain and
-        // asks `allowed` before every request.
-        redirect: 'manual',
-        signal,
-        // Some campus feeds answer a bare fetch with a login page and the real
-        // calendar only when asked for one. Saying what is wanted is honest and
-        // costs nothing.
-        headers: { Accept: 'text/calendar, text/plain;q=0.8, */*;q=0.1' },
-      }),
+  return handleFetchcalRequest(req, async (token) => {
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      { auth: { persistSession: false } },
     );
-  } catch {
-    // Deliberately not the thrown message: it can contain the URL, and the URL
-    // is a password.
-    return json({ error: 'That calendar could not be reached.' }, 502);
-  }
-  if (!followed.ok) return json({ error: followed.why }, 400);
-  const upstream = followed.response;
+    const { data: user, error: authError } = await admin.auth.getUser(token);
+    return !authError && Boolean(user?.user);
+  }, async () => {
+    // One deadline for the whole chain, not one per hop.
+    const signal = AbortSignal.timeout(TIMEOUT_MS);
+    let followed: Awaited<ReturnType<typeof followSafely>>;
+    try {
+      followed = await followSafely(target.url, allowed, (url) =>
+        fetch(url, {
+          // Never `follow`: that lets the runtime request a redirect target
+          // before anything here has seen it. `followSafely` walks the chain and
+          // asks `allowed` before every request.
+          redirect: 'manual',
+          signal,
+          // Some campus feeds answer a bare fetch with a login page and the real
+          // calendar only when asked for one. Saying what is wanted is honest and
+          // costs nothing.
+          headers: { Accept: 'text/calendar, text/plain;q=0.8, */*;q=0.1' },
+        }),
+      );
+    } catch {
+      // Deliberately not the thrown message: it can contain the URL, and the URL
+      // is a password.
+      return json({ error: 'That calendar could not be reached.' }, 502);
+    }
+    if (!followed.ok) return json({ error: followed.why }, 400);
+    const upstream = followed.response;
 
-  // A second line behind the hop check: wherever the response says it came
-  // from is held to the same rule as the address that was asked for.
-  const landed = allowed(upstream.url || followed.url.toString());
-  if (!landed.ok) {
-    await upstream.body?.cancel();
-    return json({ error: 'That link redirects somewhere this will not follow.' }, 400);
-  }
+    // A second line behind the hop check: wherever the response says it came
+    // from is held to the same rule as the address that was asked for.
+    const landed = allowed(upstream.url || followed.url.toString());
+    if (!landed.ok) {
+      await upstream.body?.cancel();
+      return json({ error: 'That link redirects somewhere this will not follow.' }, 400);
+    }
 
-  if (!upstream.ok) {
-    await upstream.body?.cancel();
-    return json({ error: `The calendar answered ${upstream.status}.` }, 502);
-  }
+    if (!upstream.ok) {
+      await upstream.body?.cancel();
+      return json({ error: `The calendar answered ${upstream.status}.` }, 502);
+    }
 
-  const text = await readCapped(upstream);
-  if (text === null) {
-    return json({ error: 'That calendar is larger than this will fetch.' }, 413);
-  }
-  if (!/BEGIN:VCALENDAR/i.test(text.slice(0, 4096))) {
-    return json(
-      { error: 'That address answered with something that is not a calendar — usually a sign-in page, which means the link is the one you open in a browser rather than the feed.' },
-      422,
-    );
-  }
+    const text = await readCapped(upstream);
+    if (text === null) {
+      return json({ error: 'That calendar is larger than this will fetch.' }, 413);
+    }
+    if (!/BEGIN:VCALENDAR/i.test(text.slice(0, 4096))) {
+      return json(
+        { error: 'That address answered with something that is not a calendar — usually a sign-in page, which means the link is the one you open in a browser rather than the feed.' },
+        422,
+      );
+    }
 
-  return new Response(text, {
-    headers: {
-      ...cors,
-      'Content-Type': 'text/calendar; charset=utf-8',
-      // One student's timetable. Nothing shared should hold on to it, and the
-      // device asks again when it wants it again.
-      'Cache-Control': 'no-store',
-      'Referrer-Policy': 'no-referrer',
-      'X-Content-Type-Options': 'nosniff',
-    },
-  });
+    return new Response(text, {
+      headers: {
+        ...cors,
+        'Content-Type': 'text/calendar; charset=utf-8',
+        // One student's timetable. Nothing shared should hold on to it, and the
+        // device asks again when it wants it again.
+        'Cache-Control': 'no-store',
+        'Referrer-Policy': 'no-referrer',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }, json);
 });
