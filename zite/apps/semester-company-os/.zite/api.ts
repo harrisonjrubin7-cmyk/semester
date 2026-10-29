@@ -18,6 +18,7 @@ import type { default as _HelpArticlesEp } from '../src/api/helpArticles';
 import type { default as _IncidentsEp } from '../src/api/incidents';
 import type { default as _MarketingEp } from '../src/api/marketing';
 import type { default as _MigrationsEp } from '../src/api/migrations';
+import type { default as _PlatformAdminEp } from '../src/api/platformAdmin';
 import type { default as _PublicationsEp } from '../src/api/publications';
 import type { default as _ScenariosEp } from '../src/api/scenarios';
 import type { default as _SupportAccessEp } from '../src/api/supportAccess';
@@ -104,6 +105,11 @@ export type MigrationsInputType = NonNullable<_MigrationsCfg['inputSchema']> ext
 export type MigrationsOutputType = Awaited<ReturnType<_MigrationsCfg['execute']>>;
 export const migrations = createCaller<MigrationsInputType, MigrationsOutputType>('migrations');
 
+type _PlatformAdminCfg = typeof _PlatformAdminEp;
+export type PlatformAdminInputType = NonNullable<_PlatformAdminCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PlatformAdminCfg['execute']>[0]['input'];
+export type PlatformAdminOutputType = Awaited<ReturnType<_PlatformAdminCfg['execute']>>;
+export const platformAdmin = createCaller<PlatformAdminInputType, PlatformAdminOutputType>('platformAdmin');
+
 type _PublicationsCfg = typeof _PublicationsEp;
 export type PublicationsInputType = NonNullable<_PublicationsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_PublicationsCfg['execute']>[0]['input'];
 export type PublicationsOutputType = Awaited<ReturnType<_PublicationsCfg['execute']>>;
@@ -147,6 +153,7 @@ export const api = {
   incidents,
   marketing,
   migrations,
+  platformAdmin,
   publications,
   scenarios,
   supportAccess,

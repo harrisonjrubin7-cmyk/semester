@@ -29,6 +29,7 @@ import type { default as _CommunityEp } from '../src/api/community';
 import type { default as _CommunityAdminEp } from '../src/api/communityAdmin';
 import type { default as _ContinuingEp } from '../src/api/continuing';
 import type { default as _ContractsEp } from '../src/api/contracts';
+import type { default as _ControlPlaneEp } from '../src/api/controlPlane';
 import type { default as _CouncilEp } from '../src/api/council';
 import type { default as _CourseAccessibilityEp } from '../src/api/courseAccessibility';
 import type { default as _CourseDiscussionEp } from '../src/api/courseDiscussion';
@@ -256,6 +257,11 @@ type _ContractsCfg = typeof _ContractsEp;
 export type ContractsInputType = NonNullable<_ContractsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ContractsCfg['execute']>[0]['input'];
 export type ContractsOutputType = Awaited<ReturnType<_ContractsCfg['execute']>>;
 export const contracts = createCaller<ContractsInputType, ContractsOutputType>('contracts');
+
+type _ControlPlaneCfg = typeof _ControlPlaneEp;
+export type ControlPlaneInputType = NonNullable<_ControlPlaneCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_ControlPlaneCfg['execute']>[0]['input'];
+export type ControlPlaneOutputType = Awaited<ReturnType<_ControlPlaneCfg['execute']>>;
+export const controlPlane = createCaller<ControlPlaneInputType, ControlPlaneOutputType>('controlPlane');
 
 type _CouncilCfg = typeof _CouncilEp;
 export type CouncilInputType = NonNullable<_CouncilCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CouncilCfg['execute']>[0]['input'];
@@ -746,6 +752,7 @@ export const api = {
   communityAdmin,
   continuing,
   contracts,
+  controlPlane,
   council,
   courseAccessibility,
   courseDiscussion,

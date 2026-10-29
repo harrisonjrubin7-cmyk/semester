@@ -15,6 +15,7 @@ import IncidentsPage from './IncidentsPage';
 import MarketingPage from './MarketingPage';
 import HelpArticlesPage from './HelpArticlesPage';
 import DisputesPage from './DisputesPage';
+import PlatformPage from './PlatformPage';
 import MigrationsPage from './MigrationsPage';
 import SupportAccessPage from './SupportAccessPage';
 import CustomerEvidencePage from './CustomerEvidencePage';
@@ -27,7 +28,7 @@ import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
-  ['Operations', [['/overview', 'Overview'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
+  ['Operations', [['/overview', 'Overview'], ['/platform', 'Platform'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
   ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/disputes', 'Invoice disputes'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/help-articles', 'Help articles'], ['/support-access', 'Support access'], ['/customer-evidence', 'Readiness & assurance'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
 ];
 
@@ -66,6 +67,7 @@ export default function App() {
               <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/help-articles" element={<HelpArticlesPage />} />
               <Route path="/disputes" element={<DisputesPage />} />
+              <Route path="/platform" element={<PlatformPage />} />
               <Route path="/migrations" element={<MigrationsPage />} />
               <Route path="/support-access" element={<SupportAccessPage />} />
               <Route path="/customer-evidence" element={<CustomerEvidencePage />} />

@@ -56,6 +56,7 @@ import DepartmentStaffing from './pages/DepartmentStaffing';
 import CommunityAdmin from './pages/CommunityAdmin';
 import Research from './pages/Research';
 import ResearchProtocols from './pages/ResearchProtocols';
+import ControlPlane from './pages/ControlPlane';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -147,6 +148,7 @@ export default function App() {
         <AppSwitcher current="semester" />
         <Routes>
           <Route path="/console" element={current === 'Administrator' ? <Console /> : <Navigate to="/today" replace />} />
+          <Route path="/console/control" element={current === 'Administrator' ? <ControlPlane /> : <Navigate to="/today" replace />} />
           <Route element={<Shell />}>
             <Route path="/today" element={<Today />} />
             <Route path="/today/notifications" element={<Inbox key="n" initial="notifications" />} />

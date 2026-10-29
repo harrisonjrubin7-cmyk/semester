@@ -112,6 +112,7 @@ export default function Shell() {
           )}
         </nav>
         {role === 'Administrator' && <Link to="/console" className="mt-4 rounded-[3px] border border-sidebar-border px-2 py-2 text-xs hover:bg-sidebar-accent">Open Institution Console →</Link>}
+        {role === 'Administrator' && <Link to="/console/control" className="mt-2 rounded-[3px] border border-sidebar-border px-2 py-2 text-xs hover:bg-sidebar-accent">Control plane →</Link>}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-2.5 text-sm backdrop-blur md:px-8">
