@@ -2,9 +2,23 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { DESKTOP_AT, TABLET_AT } from './media';
 
 const workflow = readFileSync(join(process.cwd(), '..', '.github', 'workflows', 'contrast.yml'), 'utf8');
 const sweep = readFileSync(join(process.cwd(), 'scripts', 'spacing-sweep.mjs'), 'utf8');
+
+const defaultWidths = (source: string) => {
+  const match = source.match(/process\.env\.SWEEP_WIDTHS \|\| '([^']+)'/);
+  if (!match) throw new Error('the spacing sweep has no default viewport list');
+  return match[1].split(',').map(Number);
+};
+
+const requireDefaultWidths = (source: string) => {
+  const widths = defaultWidths(source);
+  expect(widths).toEqual([420, 1024, 1280]);
+  expect(widths[1]).toBeGreaterThanOrEqual(TABLET_AT);
+  expect(widths[1]).toBeLessThan(DESKTOP_AT);
+};
 
 describe('the scheduled text-spacing sweep', () => {
   it('runs nightly even when another sweep fails and keeps its output', () => {
@@ -23,7 +37,13 @@ describe('the scheduled text-spacing sweep', () => {
     expect(sweep).toContain('process.exit(1)');
   });
 
-  it('walks phone and desktop widths by default', () => {
-    expect(sweep).toContain("process.env.SWEEP_WIDTHS || '420,1280'");
+  it('walks phone, tablet and desktop widths by default', () => {
+    requireDefaultWidths(sweep);
+    expect(sweep).toContain("throw new Error('SWEEP_WIDTHS must contain unique positive integer CSS widths')");
+  });
+
+  it('fails the contract if tablet coverage is removed', () => {
+    const withoutTablet = sweep.replace('420,1024,1280', '420,1280');
+    expect(() => requireDefaultWidths(withoutTablet)).toThrow();
   });
 });
