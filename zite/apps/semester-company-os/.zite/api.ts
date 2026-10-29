@@ -16,6 +16,7 @@ import type { default as _FinanceEp } from '../src/api/finance';
 import type { default as _FinanceCommandEp } from '../src/api/financeCommand';
 import type { default as _HelpArticlesEp } from '../src/api/helpArticles';
 import type { default as _IncidentsEp } from '../src/api/incidents';
+import type { default as _InfraHealthEp } from '../src/api/infraHealth';
 import type { default as _MarketingEp } from '../src/api/marketing';
 import type { default as _MarketingAnalyticsEp } from '../src/api/marketingAnalytics';
 import type { default as _MigrationsEp } from '../src/api/migrations';
@@ -96,6 +97,11 @@ export type IncidentsInputType = NonNullable<_IncidentsCfg['inputSchema']> exten
 export type IncidentsOutputType = Awaited<ReturnType<_IncidentsCfg['execute']>>;
 export const incidents = createCaller<IncidentsInputType, IncidentsOutputType>('incidents');
 
+type _InfraHealthCfg = typeof _InfraHealthEp;
+export type InfraHealthInputType = NonNullable<_InfraHealthCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_InfraHealthCfg['execute']>[0]['input'];
+export type InfraHealthOutputType = Awaited<ReturnType<_InfraHealthCfg['execute']>>;
+export const infraHealth = createCaller<InfraHealthInputType, InfraHealthOutputType>('infraHealth');
+
 type _MarketingCfg = typeof _MarketingEp;
 export type MarketingInputType = NonNullable<_MarketingCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_MarketingCfg['execute']>[0]['input'];
 export type MarketingOutputType = Awaited<ReturnType<_MarketingCfg['execute']>>;
@@ -157,6 +163,7 @@ export const api = {
   financeCommand,
   helpArticles,
   incidents,
+  infraHealth,
   marketing,
   marketingAnalytics,
   migrations,

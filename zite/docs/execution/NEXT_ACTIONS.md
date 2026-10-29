@@ -387,3 +387,12 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   submit, approve and launch; email needs a sender name to pass launch. Sending stays CHECK-constrained 'disabled' per channel. The daily cap is stored
   for when sending is ever enabled; nothing enforces it today because nothing sends.
 - Owner: set the email sender name (needs a marketing approver) before any launch check can pass for email.
+
+## 29 Oct — Platform Admin infrastructure health (pl-001), /platform/health
+- Measures now and keeps each run (append-only): database round trip (median of 5), every integrity/append-only trigger declared in code
+  present on its table (manifest generated from the migrations; a test fails when the manifest drifts), module coverage, bloat, long queries, size.
+- Lists what is not measured: public uptime, app builds/publishes, backups, outbound delivery. Reads catalog and statistics views only.
+- First live measurement (read-only, not stored): round trip 106 ms OK; bloat OK; long queries OK; 264 of 506 declared tables exist; 31.6 MB;
+  FAILING: trigger mkt_campaigns_claims_sourced is not on the live table, because the mkt-002 migration runs only when the republished
+  Company OS first opens Marketing. Republishing and opening /marketing applies it.
+- Not built: scheduled automatic runs (would be a scheduled task, needs owner approval) and alerting.
