@@ -121,13 +121,12 @@ updates:
 
   # ── The standalone Course Engine Python API tree ───────────────────────
   #
-  # The API declares PEP 621 dependency ranges in pyproject.toml. Dependabot
-  # can propose range changes, while the dedicated Course Engine CI installs
-  # those ranges on Python 3.12 and runs lint plus the SQLite/Postgres test
-  # matrix. There is no committed resolver lock, so this updater improves
-  # maintenance coverage without claiming reproducible transitive resolution.
-  # A proposal remains a repository candidate; it does not deploy the API,
-  # publish a course or activate a tenant.
+  # The API declares PEP 621 dependency ranges in pyproject.toml and commits
+  # the resolved Python 3.12 graph in uv.lock. Dependabot can propose range and
+  # lock changes, while the dedicated Course Engine CI installs that graph in
+  # locked mode and runs lint plus the SQLite/Postgres test matrix. A proposal
+  # remains a repository candidate; it does not deploy the API, publish a
+  # course or activate a tenant.
   - package-ecosystem: pip
     directory: /course-engine/apps/api
     schedule:
