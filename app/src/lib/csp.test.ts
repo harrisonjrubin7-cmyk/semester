@@ -165,9 +165,12 @@ describe('the policy is there and says the things that make it worth having', ()
     expect(policyTag()).not.toContain("'unsafe-eval'");
   });
 
-  it('documents the legacy fallback and separates inline dependencies for CSP3 browsers', () => {
+  it('closes the legacy fallback and separates inline dependencies for CSP3 browsers', () => {
     /*
-     * This one looks like the thing to delete and is not, so it is pinned.
+     * The broad fallback used to include `'unsafe-inline'` for Safari before
+     * 16.1. That browser generation is outside the supported latest and
+     * previous major versions, so the fallback is closed while CSP3 keeps the
+     * two measured dependencies explicit.
      *
      * Mermaid returns a diagram as an SVG string with a <style> element inside
      * it — 59 rules, measured — and `components/Drawing.tsx` puts that string
@@ -183,7 +186,7 @@ describe('the policy is there and says the things that make it worth having', ()
      * draws unstyled. The separated exceptions remain until those styles are
      * migrated; this test does not claim they reduce the effective allowance.
      */
-    expect(directives().get('style-src')).toEqual(["'self'", "'unsafe-inline'"]);
+    expect(directives().get('style-src')).toEqual(["'self'"]);
     expect(directives().get('style-src-attr')).toContain("'unsafe-inline'");
     expect(directives().get('style-src-elem')).toContain("'unsafe-inline'");
   });
