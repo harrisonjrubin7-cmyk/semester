@@ -60,6 +60,7 @@ import ControlPlane from './pages/ControlPlane';
 import College from './pages/College';
 import ProgramReview from './pages/ProgramReview';
 import Announcements from './pages/Announcements';
+import Athletics from './pages/Athletics';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -238,6 +239,7 @@ export default function App() {
             <Route path="/institution/college" element={<College />} />
             <Route path="/institution/program-review" element={<ProgramReview />} />
             <Route path="/campus/announcements" element={<Announcements />} />
+            <Route path="/institution/athletics" element={<Athletics />} />
             <Route path="/staff/accounts" element={<><StudentAccounts /><AccountServicesStaff /></>} />
             <Route path="/staff/affairs" element={<StudentAffairs />} />
             <Route path="/staff/mentoring" element={<Mentoring />} />
