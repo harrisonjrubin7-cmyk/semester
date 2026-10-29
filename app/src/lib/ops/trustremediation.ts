@@ -295,9 +295,9 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-26', before: 'pilot', owner: 'accessibility', effort: 'M',
     title: 'Widen automated accessibility coverage',
-    finding: 'Real-browser axe now covers the default synthetic state of all sixty-three registered destinations at 375 pixels and found the Calendar and equation label-in-name defects fixed in that slice. The nightly workflow also runs the fail-closed target-size sweep across every registered destination, phone and desktop widths, and all three density settings. Signed-in, error, modal, tablet and real-device states remain outside the axe slice; text spacing is not checked.',
-    sources: ['app/src/a11y/axe.test.tsx', 'app/scripts/accessibility-smoke.mjs', 'app/scripts/targets-sweep.mjs'],
-    fix: 'Extend the real-browser axe sweep from the complete default destination inventory into signed-in, error and modal states; add a text-spacing check.',
+    finding: 'Real-browser axe covers the default synthetic state of all sixty-three registered destinations at 375 pixels. The nightly workflow also runs fail-closed target-size and WCAG 1.4.12 text-spacing sweeps across every registered destination: target size at phone and desktop widths and all three density settings, and text spacing at phone and desktop widths with a planted control. Signed-in, error, modal, tablet and real-device states remain outside the axe and text-spacing slices, and the spacing sweep does not detect overlap between separate text boxes.',
+    sources: ['app/src/a11y/axe.test.tsx', 'app/scripts/accessibility-smoke.mjs', 'app/scripts/targets-sweep.mjs', 'app/scripts/spacing-sweep.mjs', '.github/workflows/contrast.yml'],
+    fix: 'Extend the real-browser axe and text-spacing sweeps from the complete default destination inventory into signed-in, error and modal states; add tablet coverage and an overlap check.',
     moves: ['TC-A11-01', 'TC-A11-04'],
     files: 'The expanded smoke output.',
   },
