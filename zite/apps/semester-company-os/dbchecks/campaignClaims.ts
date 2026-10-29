@@ -79,6 +79,7 @@ BEGIN
   SELECT version INTO v FROM mkt_campaigns WHERE id = v_id;
   r := mkt_cmd('zz_mk1', 'k19', 'h19', 'launch_check', v_id, jsonb_build_object('version', v, 'audienceNow', 3));
   INSERT INTO rr VALUES ((SELECT outcome FROM mkt_launch_checks WHERE campaign_id = v_id ORDER BY id DESC LIMIT 1) = 'blocked', 'C23 consent withdrawn since approval blocks launch ' || coalesce(r->>'message',''));
+  t := mkt_admin('zz_ap2', 'channel_set', jsonb_build_object('channel', 'email', 'version', (SELECT version FROM mkt_channels WHERE channel = 'email'), 'senderLabel', 'Semester team', 'note', 'Sender name for the check'));
   r := mkt_cmd('zz_ap2', 'k20', 'h20', 'launch_check', v_id, jsonb_build_object('version', v, 'audienceNow', 5));
   INSERT INTO rr VALUES ((SELECT outcome FROM mkt_launch_checks WHERE campaign_id = v_id ORDER BY id DESC LIMIT 1) = 'ready_sending_disabled'
     AND (SELECT sending FROM mkt_campaigns WHERE id = v_id) = 'disabled', 'C24 a clean check is recorded; sending stays disabled ' || coalesce(r->>'message',''));

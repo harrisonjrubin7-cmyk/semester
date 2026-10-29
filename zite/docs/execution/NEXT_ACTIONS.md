@@ -378,3 +378,12 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
 - Launch checks re-count consent at check time. A clean check sends nothing: sending remains CHECK-constrained 'disabled'.
 - Limits: the claim detector and accessibility lint are heuristics; the reviewer confirmation is the real accessibility review. No real sources exist —
   an owner must propose and a second marketing approver must approve them. Marketing Admin audiences, templates and channels are still incomplete.
+
+## 29 Oct — Marketing Admin audiences, templates and channels (mkt-003)
+- Segments: consented, not-withdrawn contacts narrowed by request type, stated role, link tags and date; never message text or student records;
+  definition fixed once made; the campaign hash covers the segment; submit and launch count the segment on the server.
+- Templates: second-person approval of the exact text; no claim wording; accessibility and unsubscribe checks; campaigns from a template are still reviewed.
+- Channels: a marketing approver pauses/opens a channel, sets the sender name and daily cap (expected version, reason required). Paused blocks create,
+  submit, approve and launch; email needs a sender name to pass launch. Sending stays CHECK-constrained 'disabled' per channel. The daily cap is stored
+  for when sending is ever enabled; nothing enforces it today because nothing sends.
+- Owner: set the email sender name (needs a marketing approver) before any launch check can pass for email.

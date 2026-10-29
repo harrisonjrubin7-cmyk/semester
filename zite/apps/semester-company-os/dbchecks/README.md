@@ -11,3 +11,5 @@ helpArticles (29 Oct) 18/18 (mutants: self-publish stopped by constraint, unseen
 disputes (29 Oct) 18/18 (mutants: self-decision stopped by constraint, unseen dispute, workspace isolation — all caught).
 campaignClaims (29 Oct) 30/30; campaigns re-run 24/24 after mkt-002. Mutants: expired source counted (7 red), revoke keeps approvals (2 red),
 self-approved source (stopped by the table constraint), approve-unsourced check removed (stays 30/30 because the approval trigger refuses it — C30 accepts either refusal, which is the backstop working).
+marketingAdmin (29 Oct) 30/30. Mutants: withdrawals ignored in segments (4 red), paused channel submits (2 red), hash ignores segment (1 red),
+self-approved template (stopped by the table constraint). campaignClaims now sets an email sender name before its clean launch check (still 30/30).

@@ -26,18 +26,23 @@ function useRun(reload: () => void) {
   return { run, busy };
 }
 
-function NewCampaign({ reload }: { reload: () => void }) {
-  const [f, setF] = useState({ name: '', channel: 'email', goal: '' });
+function NewCampaign({ d, reload }: { d: any; reload: () => void }) {
+  const [f, setF] = useState({ name: '', channel: 'email', goal: '', templateId: '' });
+  const tpls = d.templates.filter((t: any) => t.state === 'approved' && t.channel === f.channel);
+  const paused = d.channels.find((c: any) => c.channel === f.channel)?.status === 'paused';
   const { run, busy } = useRun(reload);
   return (
     <Panel title="New campaign">
-      <form className="grid gap-2 sm:grid-cols-[2fr_1fr_2fr_auto]" onSubmit={async (e) => { e.preventDefault(); if (await run({ action: 'create', ...f })) setF({ name: '', channel: 'email', goal: '' }); }}>
+      <form className="grid gap-2 sm:grid-cols-[2fr_1fr_2fr_2fr_auto]" onSubmit={async (e) => { e.preventDefault(); const { templateId, ...rest } = f; if (await run({ action: 'create', ...rest, ...(templateId ? { templateId } : {}) })) setF({ name: '', channel: 'email', goal: '', templateId: '' }); }}>
         <Input aria-label="Campaign name" placeholder="Campaign name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <select aria-label="Channel" className="rounded-[3px] border border-input bg-background p-2 text-sm" value={f.channel} onChange={(e) => setF({ ...f, channel: e.target.value })}>
+        <select aria-label="Channel" className="rounded-[3px] border border-input bg-background p-2 text-sm" value={f.channel} onChange={(e) => setF({ ...f, channel: e.target.value, templateId: '' })}>
           <option value="email">Email</option><option value="event">Event</option><option value="social">Social</option></select>
         <Input aria-label="Goal" placeholder="Goal (e.g. 3 pilot conversations)" value={f.goal} onChange={(e) => setF({ ...f, goal: e.target.value })} />
-        <Button type="submit" disabled={busy || f.name.trim().length < 3}>Create draft</Button>
+        <select aria-label="Start from template" className="rounded-[3px] border border-input bg-background p-2 text-sm" value={f.templateId} onChange={(e) => setF({ ...f, templateId: e.target.value })}>
+          <option value="">{tpls.length ? 'Blank (or choose a template)' : 'No approved template for this channel'}</option>{tpls.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
+        <Button type="submit" disabled={busy || paused || f.name.trim().length < 3}>Create draft</Button>
       </form>
+      {paused && <p role="status" className="mt-2 text-sm">The {f.channel} channel is paused, so new {f.channel} campaigns cannot be started.</p>}
     </Panel>
   );
 }
@@ -84,6 +89,110 @@ function Launch({ c, reload }: { c: C; reload: () => void }) {
   );
 }
 
+const KIND_OPTIONS = ['Pilot request', 'Pricing request', 'Security document request', 'Accessibility feedback', 'Contact', 'Demo request'];
+const sel = 'mt-1 block h-9 w-full rounded-[3px] border border-border bg-background px-2 text-sm';
+
+function useAdmin(reload: () => void) {
+  const [busy, setBusy] = useState(false);
+  const call = async (input: Record<string, unknown>) => {
+    setBusy(true);
+    try { const r = await marketing({ op: 'admin', ...input } as never) as { resultCode: string; message: string };
+      if (r.resultCode === 'OK') { toast.success(r.message); reload(); return true; } toast.error(r.message); return false;
+    } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
+  };
+  return { call, busy };
+}
+
+function Segments({ d, reload }: { d: any; reload: () => void }) {
+  const { call, busy } = useAdmin(reload);
+  const blank = { name: '', kinds: [] as string[], roleTerms: '', utmSource: '', utmCampaign: '', since: '' };
+  const [f, setF] = useState(blank);
+  const marketer = d.roles.includes('marketer');
+  return (
+    <Panel title={`Audience segments · ${d.segments.filter((g: any) => g.state === 'active').length} active`}>
+      <p className="mb-2 text-xs text-muted-foreground">A segment narrows the consented audience by request type, stated role, link tags or date. It never reads message text or any student record, and its definition cannot change after it is made.</p>
+      <ul className="space-y-1 text-sm">{d.segments.map((g: any) => (
+        <li key={g.id} className="flex flex-wrap items-center gap-2"><strong>{g.name}</strong> <Chip value={g.state} /> {g.size} people now
+          <span className="text-xs text-muted-foreground">{[g.kinds.join(', '), g.roleTerms.length ? `role has ${g.roleTerms.join(' or ')}` : '', g.utmSource && `source ${g.utmSource}`, g.utmCampaign && `campaign ${g.utmCampaign}`, g.since && `since ${g.since}`].filter(Boolean).join(' · ') || 'everyone who consented'}</span>
+          {marketer && g.state === 'active' && <Button size="sm" variant="ghost" disabled={busy} onClick={() => call({ action: 'segment_retire', segmentId: g.id })}>Retire</Button>}</li>))}
+        {!d.segments.length && <li className="text-muted-foreground">No segments yet; campaigns go to everyone who consented.</li>}</ul>
+      {marketer && <form className="mt-3 grid gap-2 sm:grid-cols-3" onSubmit={async (e) => { e.preventDefault();
+        const ok = await call({ action: 'segment_create', name: f.name, kinds: f.kinds, roleTerms: f.roleTerms.split(',').map((x) => x.trim()).filter(Boolean),
+          ...(f.utmSource ? { utmSource: f.utmSource } : {}), ...(f.utmCampaign ? { utmCampaign: f.utmCampaign } : {}), ...(f.since ? { since: f.since } : {}) });
+        if (ok) setF(blank); }}>
+        <label className="text-xs">Name<Input className="mt-1" value={f.name} onChange={(x) => setF({ ...f, name: x.target.value })} /></label>
+        <label className="text-xs">Role contains (comma separated)<Input className="mt-1" placeholder="dean, provost" value={f.roleTerms} onChange={(x) => setF({ ...f, roleTerms: x.target.value })} /></label>
+        <label className="text-xs">Requests since<Input type="date" className="mt-1" value={f.since} onChange={(x) => setF({ ...f, since: x.target.value })} /></label>
+        <fieldset className="text-xs sm:col-span-3"><legend>Request types (none = all)</legend><span className="mt-1 flex flex-wrap gap-3">{KIND_OPTIONS.map((k) => (
+          <label key={k} className="flex items-center gap-1 text-sm"><input type="checkbox" checked={f.kinds.includes(k)} onChange={(x) => setF({ ...f, kinds: x.target.checked ? [...f.kinds, k] : f.kinds.filter((y) => y !== k) })} />{k}</label>))}</span></fieldset>
+        <label className="text-xs">Link source tag<Input className="mt-1" value={f.utmSource} onChange={(x) => setF({ ...f, utmSource: x.target.value })} /></label>
+        <label className="text-xs">Link campaign tag<Input className="mt-1" value={f.utmCampaign} onChange={(x) => setF({ ...f, utmCampaign: x.target.value })} /></label>
+        <Button size="sm" className="self-end" disabled={busy || f.name.trim().length < 3}>Create segment</Button>
+      </form>}
+    </Panel>
+  );
+}
+
+function Templates({ d, reload }: { d: any; reload: () => void }) {
+  const { call, busy } = useAdmin(reload);
+  const blank = { name: '', channel: 'email', subject: '', body: '' };
+  const [f, setF] = useState(blank);
+  const marketer = d.roles.includes('marketer');
+  const approver = d.roles.includes('marketing_approver');
+  return (
+    <Panel title={`Templates · ${d.templates.filter((t: any) => t.state === 'approved').length} approved`}>
+      <p className="mb-2 text-xs text-muted-foreground">Someone other than the author approves a template. Approved templates carry no claims and pass the accessibility checks. A campaign started from one is still reviewed.</p>
+      <ul className="space-y-2 text-sm">{d.templates.map((t: any) => (
+        <li key={t.id} className="rounded-[3px] border border-border p-2">
+          <span className="flex flex-wrap items-center gap-2"><strong>{t.name}</strong> <Chip value={t.channel} /> <Chip value={t.state} /> <span className="text-xs text-muted-foreground">by {t.author}{t.approvedBy ? ` · approved by ${t.approvedBy}` : ''}</span></span>
+          <span className="mt-1 block font-medium">{t.subject}</span><span className="block whitespace-pre-wrap text-xs">{t.body}</span>
+          <span className="mt-1 flex gap-2">
+            {approver && t.state === 'draft' && t.authorId !== d.me && <Button size="sm" disabled={busy} onClick={() => call({ action: 'template_approve', templateId: t.id, seenBody: t.seen })}>Approve exactly this</Button>}
+            {approver && t.state === 'draft' && t.authorId === d.me && <span className="text-xs text-muted-foreground">Someone else must approve your template.</span>}
+            {t.state !== 'retired' && (approver || t.authorId === d.me) && <Button size="sm" variant="outline" disabled={busy} onClick={() => call({ action: 'template_retire', templateId: t.id })}>Retire</Button>}</span>
+        </li>))}{!d.templates.length && <li className="text-muted-foreground">No templates yet.</li>}</ul>
+      {marketer && <form className="mt-3 grid gap-2" onSubmit={async (e) => { e.preventDefault(); if (await call({ action: 'template_create', ...f })) setF(blank); }}>
+        <span className="grid gap-2 sm:grid-cols-[2fr_1fr]"><label className="text-xs">Name<Input className="mt-1" value={f.name} onChange={(x) => setF({ ...f, name: x.target.value })} /></label>
+          <label className="text-xs">Channel<select className={sel} value={f.channel} onChange={(x) => setF({ ...f, channel: x.target.value })}><option value="email">Email</option><option value="event">Event</option><option value="social">Social</option></select></label></span>
+        <label className="text-xs">Subject<Input className="mt-1" value={f.subject} onChange={(x) => setF({ ...f, subject: x.target.value })} /></label>
+        <label className="text-xs">Body{f.channel === 'email' ? ' (must include {{unsubscribe}})' : ''}<Textarea className="mt-1" rows={4} value={f.body} onChange={(x) => setF({ ...f, body: x.target.value })} /></label>
+        <Button size="sm" className="justify-self-start" disabled={busy || f.name.trim().length < 3}>Create template</Button>
+      </form>}
+    </Panel>
+  );
+}
+
+function Channel({ c, approver, reload }: { c: any; approver: boolean; reload: () => void }) {
+  const { call, busy } = useAdmin(reload);
+  const [f, setF] = useState({ status: c.status, senderLabel: c.senderLabel, dailyCap: String(c.dailyCap), note: '' });
+  return (
+    <li className="rounded-[3px] border border-border p-2 text-sm">
+      <span className="flex flex-wrap items-center gap-2"><strong className="capitalize">{c.channel}</strong> <Chip value={c.status} /> <Chip value="sending disabled" />
+        <span className="text-xs text-muted-foreground">Sender: {c.senderLabel || 'not set'} · daily cap {c.dailyCap || 'none'}{c.updatedBy ? ` · last changed by ${c.updatedBy}` : ''}{c.note ? ` · ${c.note}` : ''}</span></span>
+      {approver && <form className="mt-2 grid gap-2 sm:grid-cols-[1fr_2fr_1fr_2fr_auto]" onSubmit={async (e) => { e.preventDefault();
+        if (await call({ action: 'channel_set', channel: c.channel, version: c.version, status: f.status, senderLabel: f.senderLabel, dailyCap: Number(f.dailyCap || 0), note: f.note })) setF({ ...f, note: '' }); }}>
+        <label className="text-xs">Status<select className={sel} value={f.status} onChange={(x) => setF({ ...f, status: x.target.value })}><option value="open">Open</option><option value="paused">Paused</option></select></label>
+        <label className="text-xs">Sender name<Input className="mt-1" value={f.senderLabel} onChange={(x) => setF({ ...f, senderLabel: x.target.value })} /></label>
+        <label className="text-xs">Daily cap<Input type="number" min={0} className="mt-1" value={f.dailyCap} onChange={(x) => setF({ ...f, dailyCap: x.target.value })} /></label>
+        <label className="text-xs">Why<Input className="mt-1" value={f.note} onChange={(x) => setF({ ...f, note: x.target.value })} /></label>
+        <Button size="sm" className="self-end" disabled={busy || f.note.trim().length < 5}>Save</Button>
+      </form>}
+    </li>
+  );
+}
+
+function Channels({ d, reload }: { d: any; reload: () => void }) {
+  const approver = d.roles.includes('marketing_approver');
+  return (
+    <Panel title="Channels">
+      <p className="mb-2 text-xs text-muted-foreground">A paused channel blocks new campaigns, submission, approval and launch. Email needs a sender name before launch. Sending is disabled on every channel; these settings do not change that.</p>
+      <ul className="space-y-2">{d.channels.map((c: any) => <Channel key={`${c.channel}:${c.version}`} c={c} approver={approver} reload={reload} />)}</ul>
+      {d.adminEvents.length > 0 && <details className="mt-3 text-sm"><summary>Admin history · {d.adminEvents.length}</summary>
+        <ol className="mt-1 space-y-1">{d.adminEvents.map((e: any, i: number) => <li key={i}><span className="text-xs text-muted-foreground">{fmt(e.at)} · {e.actor}</span> — {e.kind} {e.action}{e.detail ? ` · ${e.detail}` : ''}</li>)}</ol></details>}
+    </Panel>
+  );
+}
+
 function Sources({ d, reload }: { d: any; reload: () => void }) {
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({ kind: 'outcome', title: '', reference: '', expiresOn: '' });
@@ -124,7 +233,8 @@ function Sources({ d, reload }: { d: any; reload: () => void }) {
 
 function Campaign({ c, d, reload }: { c: C; d: any; reload: () => void }) {
   const { run, busy } = useRun(reload);
-  const [e, setE] = useState({ subject: c.subject, body: c.body, spend: String(c.spendMinor / 100) });
+  const [e, setE] = useState({ subject: c.subject, body: c.body, spend: String(c.spendMinor / 100), segmentId: c.segmentId ?? '' });
+  const seg = d.segments.find((g: any) => g.id === c.segmentId);
   const [note, setNote] = useState('');
   const [a11y, setA11y] = useState(false);
   const mine = c.authorId === d.me;
@@ -134,6 +244,7 @@ function Campaign({ c, d, reload }: { c: C; d: any; reload: () => void }) {
     <div className="space-y-4">
       <Panel title={<span className="flex flex-wrap items-center gap-2">#{c.number} {c.name} <Chip value={c.state.replace('_', ' ')} /><Chip value={c.channel} /></span>}>
         <p className="text-sm">By {c.author}{c.goal ? ` · Goal: ${c.goal}` : ''}</p>
+        <p className="mt-1 text-sm">Segment: {seg ? `${seg.name}${seg.state === 'retired' ? ' (retired)' : ''}` : 'everyone who consented'}{c.templateId ? ` · From template: ${d.templates.find((t: any) => t.id === c.templateId)?.name ?? 'unknown'}` : ''}</p>
         <p className="mt-1 text-sm">Audience: {c.audienceSize ?? '—'} consented contacts{c.audienceSize == null ? ' (counted when submitted)' : ' (snapshot at submission)'} · Spend: {usd(c.spendMinor)}</p>
         {c.state === 'approved' && <p className="mt-2 text-sm">Approved by {c.approvedBy} · {fmt(c.approvedAt)}. <strong>Sending is disabled:</strong> nothing has been or can be sent from here.</p>}
         {c.note && <p className="mt-1 text-xs text-muted-foreground">Review note: {c.note}</p>}
@@ -146,10 +257,12 @@ function Campaign({ c, d, reload }: { c: C; d: any; reload: () => void }) {
             <Textarea aria-label="Body" rows={8} placeholder={c.channel === 'email' ? 'Body. Must include {{unsubscribe}}.' : 'Body'} value={e.body} onChange={(x) => setE({ ...e, body: x.target.value })} />
             <label className="block text-xs">Paid spend (USD)<Input type="number" min={0} step="0.01" value={e.spend} onChange={(x) => setE({ ...e, spend: x.target.value })} className="mt-1 w-40" /></label>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" disabled={busy} onClick={() => go('edit', { subject: e.subject, body: e.body, spendMinor: Math.round(Number(e.spend || 0) * 100) })}>Save</Button>
+              <Button size="sm" disabled={busy} onClick={() => go('edit', { subject: e.subject, body: e.body, spendMinor: Math.round(Number(e.spend || 0) * 100), segmentId: e.segmentId || null })}>Save</Button>
               {['draft', 'rejected'].includes(c.state) && <Button size="sm" variant="outline" disabled={busy} onClick={() => go('submit')}>Submit for approval</Button>}
             </div>
-            <p className="text-xs text-muted-foreground">Audience is fixed: only the {d.audience} contacts who consented to contact. Student and education records can never be an audience.</p>
+            <label className="block text-xs">Audience<select className="mt-1 block h-9 w-full max-w-md rounded-[3px] border border-border bg-background px-2 text-sm" value={e.segmentId} onChange={(x) => setE({ ...e, segmentId: x.target.value })}>
+              <option value="">Everyone who consented ({d.audience})</option>{d.segments.filter((g: any) => g.state === 'active' || g.id === c.segmentId).map((g: any) => <option key={g.id} value={g.id}>{g.name} ({g.size}{g.state === 'retired' ? ', retired' : ''})</option>)}</select></label>
+            <p className="text-xs text-muted-foreground">Audiences only ever include contacts who consented and have not withdrawn. Student and education records can never be an audience.</p>
           </div>
         </Panel>
       ) : (
@@ -187,8 +300,9 @@ export default function MarketingPage() {
         const cur = d.campaigns.find((c: C) => c.id === sel) ?? d.campaigns[0];
         return (
           <div className="space-y-4">
-            {d.roles.includes('marketer') && <NewCampaign reload={s.reload} />}
-            <Sources d={d} reload={s.reload} />
+            {d.roles.includes('marketer') && <NewCampaign d={d} reload={s.reload} />}
+            <details className="rounded-[3px] border border-border p-3"><summary className="cursor-pointer text-sm font-medium">Audiences, templates, channels and sources</summary>
+              <div className="mt-3 space-y-4"><Segments d={d} reload={s.reload} /><Templates d={d} reload={s.reload} /><Channels d={d} reload={s.reload} /><Sources d={d} reload={s.reload} /></div></details>
             {!d.campaigns.length ? <Panel><p className="text-sm text-muted-foreground">No campaigns yet.</p></Panel> : (
               <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
                 <nav aria-label="Campaigns" className="space-y-1">{d.campaigns.map((c: C) => (
