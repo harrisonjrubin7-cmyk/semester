@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-166 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+167 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -147,6 +147,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/ops-projector-worker.check.sql` | Bounded, manually invoked ops-projector worker boundary (P1-04). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
+| `supabase/outcome-aggregates.check.sql` | Outcome aggregates: small-cell floor and school-scoped read authorization. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |

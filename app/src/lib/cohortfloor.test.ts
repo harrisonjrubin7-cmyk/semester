@@ -22,6 +22,7 @@ const dir = join(import.meta.dirname, '../../../supabase/migrations');
 const sql = readdirSync(dir)
   .filter((f) => f.endsWith('.sql'))
   .map((f) => ({ file: f, text: readFileSync(join(dir, f), 'utf8') }));
+const outcomeCheck = readFileSync(join(dir, '..', 'outcome-aggregates.check.sql'), 'utf8');
 
 /**
  * Counts that look like a floor and are not one. Each is matched by file and
@@ -84,5 +85,15 @@ describe('the small-cell floor', () => {
   it('would notice one floor lowered (control)', () => {
     const lowered = sql.map((f) => ({ ...f, text: f.text.replace('check (n >= 10)', 'check (n >= 5)') }));
     expect(floors(lowered).filter((f) => f.floor !== MIN_COHORT)).toHaveLength(1);
+  });
+
+  it('executes the outcome floor and authorization boundary in the database suite', () => {
+    expect(outcomeCheck).toContain("'a cohort smaller than ten'");
+    expect(outcomeCheck).toContain("'an authorized reader sees the aggregate at their school — THE CONTROL'");
+    expect(outcomeCheck).toContain("'an authorized reader cannot see another school aggregate'");
+    expect(outcomeCheck).toContain("'a same-school account without outcomes:read sees no aggregate'");
+    expect(outcomeCheck).toContain("'a revoked outcomes reader sees no aggregate'");
+    expect(outcomeCheck).toContain("'an anonymous request reading outcome aggregates'");
+    expect(outcomeCheck).toContain("'an authenticated reader inserting a service-produced aggregate'");
   });
 });

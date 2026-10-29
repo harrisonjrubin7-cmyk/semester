@@ -64,7 +64,7 @@ Status: **Held** = a control exists and a test in the tree would fail without it
 | Threat | Control | Evidence | Status |
 | --- | --- | --- | --- |
 | Cross-tenant read | `tenant_id` foreign keys on ~43 tables; capability scoped to a school | `integration-rls-matrix`, `tenant-*` suites | Partial (G-03) |
-| Small-cell re-identification in aggregates | `n >= 10` CHECK constraints and `HAVING` on demand and outcome data; campaign report suppresses under 10 | constraints in migrations | Partial — no complementary suppression or protection against overlapping cuts (G-24) |
+| Small-cell re-identification in aggregates | `n >= 10` CHECK constraints and `HAVING` on demand and outcome data; campaign report suppresses under 10 | constraints in migrations; `outcome-aggregates.check.sql` exercises the outcome floor and school-scoped reads | Partial — no complementary suppression or protection against overlapping cuts (G-24) |
 | Secrets in the repo | gitleaks in CI; publishable key only in the client; secrets listed in `SECRETS.md` and checked by `secrets.test.ts` | CI job `secrets` | Held; rotation log is empty |
 | OAuth tokens stolen from the browser | narrowest scopes; tokens kept in `localStorage`; provider-side revoke on disconnect | `oauthscopes`, `revoke.ts` | **Open** — plaintext in storage, exposed to any XSS (G-22) |
 | Prompt injection exfiltrating data | untrusted text fenced in `<material>` tags with a fixed data rule | `injection.test.ts` (structural) | **Open** for live models — the red team is "still owed" (G-14) |
