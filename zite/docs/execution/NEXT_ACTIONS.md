@@ -516,3 +516,12 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   - suites 669 / 99;
   - check_app passed for Student.
 - Open: no change-of-major request yet; that is an academic-record change and needs an approval path of its own.
+
+## 29 Oct — Transcript intake for transfer credit (trt-001): Student /plan/transfer
+- A student attaches a transcript to their own open transfer request: up to 3 files, PDF or image, uploaded to their private files.
+- Only a file that passed screening can be attached.
+- A registrar, never the student, reviews it: accepted as official, accepted as unofficial, or not usable with a reason. The student is notified.
+- Only the student and registrars can open it, within the institution. Every read and refusal goes to fil_access_log.
+- Accepting a transcript posts no credit; evaluation still decides each course.
+- Evidence: dbchecks/transcripts 18/18; 3 mutants red (unscreened file, anyone reads, self-review stopped by the table). Suites 669 / 99. check_app passed for Student.
+- Open: transcripts are not in the Action Center yet. Official electronic transcript exchange (e.g. Parchment) needs a connector and credentials.

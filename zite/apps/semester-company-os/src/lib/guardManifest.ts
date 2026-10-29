@@ -525,6 +525,8 @@ export const GUARD_MANIFEST: Manifest = {
   "trn_session_leaders",
   "trn_sessions",
   "trn_staff",
+  "trt_events",
+  "trt_transcripts",
   "tut_events",
   "tut_requests",
   "tut_staff",
@@ -1534,6 +1536,12 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "trn_outreach"
+  },
+  {
+   "trigger": "trt_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "trt_events"
   },
   {
    "trigger": "tut_events_append_only",

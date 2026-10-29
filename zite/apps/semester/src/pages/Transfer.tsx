@@ -5,6 +5,7 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
 import { PageHeader, Panel, Empty, Status, fmtDay, useLoad, Loadable, errMsg, UncertainNote } from '../components/kit';
+import TranscriptIntake from '../components/TranscriptIntake';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const run = async (input: any, ok: string, reload: () => void) => { try { await transfer(input); toast(ok); reload(); return true; } catch (e) { toast(`! ${errMsg(e)}`); return false; } };
@@ -72,6 +73,7 @@ export default function Transfer() {
               </div>))}
             <p className="mt-2 text-xs text-muted-foreground">Decisions here are the evaluation record. Posting credit to your official transcript is done by the registrar separately.</p>
           </Panel>
+          <TranscriptIntake />
           <Panel title="Request an evaluation">
             <Input aria-label="Institution" placeholder="Where you took these courses" value={inst} onChange={(e) => setInst(e.target.value)} />
             {lines.map((l, i) => (

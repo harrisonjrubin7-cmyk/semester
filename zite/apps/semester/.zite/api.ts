@@ -129,6 +129,7 @@ import type { default as _SupportAccessApprovalEp } from '../src/api/supportAcce
 import type { default as _SyllabusHubEp } from '../src/api/syllabusHub';
 import type { default as _TeachingEp } from '../src/api/teaching';
 import type { default as _ToolkitEp } from '../src/api/toolkit';
+import type { default as _TranscriptsEp } from '../src/api/transcripts';
 import type { default as _TransferEp } from '../src/api/transfer';
 import type { default as _TransitionEp } from '../src/api/transition';
 import type { default as _TutoringEp } from '../src/api/tutoring';
@@ -769,6 +770,11 @@ export type ToolkitInputType = NonNullable<_ToolkitCfg['inputSchema']> extends {
 export type ToolkitOutputType = Awaited<ReturnType<_ToolkitCfg['execute']>>;
 export const toolkit = createCaller<ToolkitInputType, ToolkitOutputType>('toolkit');
 
+type _TranscriptsCfg = typeof _TranscriptsEp;
+export type TranscriptsInputType = NonNullable<_TranscriptsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TranscriptsCfg['execute']>[0]['input'];
+export type TranscriptsOutputType = Awaited<ReturnType<_TranscriptsCfg['execute']>>;
+export const transcripts = createCaller<TranscriptsInputType, TranscriptsOutputType>('transcripts');
+
 type _TransferCfg = typeof _TransferEp;
 export type TransferInputType = NonNullable<_TransferCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_TransferCfg['execute']>[0]['input'];
 export type TransferOutputType = Awaited<ReturnType<_TransferCfg['execute']>>;
@@ -918,6 +924,7 @@ export const api = {
   syllabusHub,
   teaching,
   toolkit,
+  transcripts,
   transfer,
   transition,
   tutoring,
