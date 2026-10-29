@@ -27,7 +27,10 @@ export default function RequestForm({ kind: fixedKind, messageLabel = 'How can w
     e.preventDefault();
     setError(null); setState('sending');
     try {
-      const r = await submitRequest({ kind, ...f, consent, requestKey: key });
+      // Campaign tags from the link the visitor arrived with (utm_source / utm_medium / utm_campaign); the server sanitises them.
+      const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const source = q ? { source: q.get('utm_source') ?? undefined, medium: q.get('utm_medium') ?? undefined, campaign: q.get('utm_campaign') ?? undefined } : undefined;
+      const r = await submitRequest({ kind, ...f, consent, requestKey: key, source });
       setReceipt({ reference: r.reference, routing: r.routing });
       setState('sent');
     } catch (err) {

@@ -5,7 +5,7 @@ export function pg() {
   return neon(process.env.ZITE_POSTGRES_URL as string);
 }
 
-const MIGRATION = [
+export const SITE_MIGRATION = [
   `CREATE TABLE IF NOT EXISTS site_inbound_requests (
     id BIGSERIAL PRIMARY KEY,
     kind TEXT NOT NULL CHECK (kind IN ('Pilot request','Pricing request','Security document request','Accessibility feedback','Contact')),
@@ -34,13 +34,17 @@ const MIGRATION = [
      ALTER TABLE site_inbound_requests ADD CONSTRAINT site_inbound_requests_kind_check
        CHECK (kind IN ('Pilot request','Pricing request','Security document request','Accessibility feedback','Contact','Demo request'));
    END $$`,
+  // Attribution (mka-001, 29 Oct): the utm_* tags of the link the visitor arrived with, sanitised by submitRequest. Not personal data.
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS utm_source text`,
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS utm_medium text`,
+  `ALTER TABLE site_inbound_requests ADD COLUMN IF NOT EXISTS utm_campaign text`,
 ];
 
 let ready: Promise<void> | null = null;
 export function ensureSchema() {
   if (!ready) {
     const sql = pg();
-    ready = (async () => { for (const s of MIGRATION) await sql.query(s); })().catch((e) => { ready = null; throw e; });
+    ready = (async () => { for (const s of SITE_MIGRATION) await sql.query(s); })().catch((e) => { ready = null; throw e; });
   }
   return ready;
 }

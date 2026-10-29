@@ -3,25 +3,23 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { pg, sha256 } from '../lib/fin';
 import { ensureCoRoles, rolesOf } from '../lib/coRoles';
+import { MKA_MIGRATION } from '../lib/mkaMigration';
+import { SITE_MIGRATION } from '../../../semester-site/src/lib/pg';
 import { MKT_MIGRATION } from '../lib/mktMigration';
 
 let ready: Promise<void> | null = null;
 const ensureMkt = () => {
-  if (!ready) ready = (async () => { await ensureCoRoles(); const sql = pg(); for (const s of MKT_MIGRATION) await sql.query(s); })().catch((e) => { ready = null; throw e; });
+  if (!ready) ready = (async () => { await ensureCoRoles(); const sql = pg(); for (const s of [...SITE_MIGRATION, ...MKT_MIGRATION, ...MKA_MIGRATION]) await sql.query(s); })().catch((e) => { ready = null; throw e; });
   return ready;
 };
 
 // The data API returns at most 2000 rows per call; page through with offset (stops at 100k rows).
-async function everyRow<T>(page: (o: { offset: number; limit: number }) => Promise<{ records: T[]; hasMore: boolean }>): Promise<{ records: T[] }> {
-  const records: T[] = [];
-  for (let offset = 0; offset < 100_000; offset += 2000) { const r = await page({ offset, limit: 2000 }); records.push(...r.records); if (!r.hasMore || r.records.length === 0) break; }
-  return { records };
-}
 
-/** The only audience: inbound contacts who consented to contact. Counted on the server; never student or education records. */
+/** The only audience: distinct people who consented through the site's contact forms, minus anyone whose latest consent-ledger
+ *  event is a withdrawal (mka_audience, lib/mkaMigration.ts). Counted on the server; never student or education records.
+ *  (Fixed 29 Oct: this used to count inbox rows, so a person with two requests counted twice and withdrawals were impossible.) */
 async function consentedAudience() {
-  const { records } = await everyRow((o) => zite.inboundRequests.findAll({ filters: { consentToContact: true }, fields: ['consentToContact'], ...o }));
-  return records.length;
+  return ((await pg().query(`SELECT mka_audience() AS n`)) as { n: number }[])[0].n;
 }
 
 // Marketing and Growth (APP-021): draft → submit (audience snapshot) → approval of the exact content by someone else → sending disabled.
