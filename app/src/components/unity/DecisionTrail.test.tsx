@@ -12,6 +12,7 @@ describe('decision trail', () => {
     expect(html).toContain('Needs review');
     expect(html).not.toContain('Completed');
     expect(html).toContain('Prepare registration');
+    expect(html).toContain('<span>Steps</span> <span class="decision-trail-meta nums">3/4</span>');
   });
   it('shows explicit blocked and completed evidence when supplied', () => {
     const html = renderToStaticMarkup(<DecisionTrail workflow={STUDENT_WORKFLOWS[0]} current="calendar" states={{degree: 'Completed', yes: 'Blocked'}} onOpen={() => {}} />);

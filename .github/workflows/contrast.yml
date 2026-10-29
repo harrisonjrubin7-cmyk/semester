@@ -150,6 +150,21 @@ jobs:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
         run: npm run sweep:spacing 2>&1 | tee /tmp/spacing.txt
 
+      # Axe is a semantic complement to the layout sweeps above. It walks the
+      # same complete destination inventory at phone and tablet widths, proves
+      # the instrument with planted button-name and image-alt violations at
+      # each width, and fails closed on an incomplete walk or page error. This
+      # remains automated default-state evidence, not a manual or conformance
+      # result. `if: always()` keeps earlier layout findings from hiding it.
+      - name: Destination axe
+        if: always()
+        shell: bash
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
+          SMOKE_URL: http://localhost:5173/
+        run: npm run smoke:a11y 2>&1 | tee /tmp/a11y.txt
+
       # Kept whether the step passed or failed: a green run's coverage numbers
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
@@ -162,5 +177,6 @@ jobs:
             /tmp/walls.txt
             /tmp/targets.txt
             /tmp/spacing.txt
+            /tmp/a11y.txt
             /tmp/vite.log
           retention-days: 30
