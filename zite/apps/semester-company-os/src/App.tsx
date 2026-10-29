@@ -13,6 +13,8 @@ import TrustCenterPage from './TrustCenterPage';
 import AppReviewPage from './AppReviewPage';
 import IncidentsPage from './IncidentsPage';
 import MarketingPage from './MarketingPage';
+import HelpArticlesPage from './HelpArticlesPage';
+import DisputesPage from './DisputesPage';
 import MigrationsPage from './MigrationsPage';
 import SupportAccessPage from './SupportAccessPage';
 import CustomerEvidencePage from './CustomerEvidencePage';
@@ -26,7 +28,7 @@ import { AppSwitcher } from '../../semester/src/components/AppSwitcher';
 const GROUPS: [string, [string, string][]][] = [
   ['Workspaces', WORKSPACE_KEYS.map(([k, l]) => [`/w/${k}`, l] as [string, string])],
   ['Operations', [['/overview', 'Overview'], ['/atlas', 'Atlas'], ['/requests', 'Inbound requests'], ['/risks', 'Risk register'], ['/decisions', 'Decision register'], ['/evidence', 'Release evidence'], ['/publications', 'Site publications'], ['/trust-center', 'Trust Center'], ['/incidents', 'Incidents'], ['/marketing', 'Marketing'], ['/app-review', 'App review'], ['/simulator', 'Simulator']]],
-  ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/support-access', 'Support access'], ['/customer-evidence', 'Readiness & assurance'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
+  ['Customers', [['/crm', 'Pipeline'], ['/finance', 'Invoices & approvals'], ['/disputes', 'Invoice disputes'], ['/accounts', 'Accounts'], ['/deals', 'Deals'], ['/contracts', 'Contracts'], ['/implementation', 'Implementation'], ['/migrations', 'Migrations'], ['/support', 'Support'], ['/help-articles', 'Help articles'], ['/support-access', 'Support access'], ['/customer-evidence', 'Readiness & assurance'], ['/board', 'Board reporting'], ['/audit', 'Audit log']]],
 ];
 
 // Internal app: the platform signs in organization members only. No student content is ever loaded here.
@@ -62,6 +64,8 @@ export default function App() {
               <Route path="/app-review" element={<AppReviewPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/marketing" element={<MarketingPage />} />
+              <Route path="/help-articles" element={<HelpArticlesPage />} />
+              <Route path="/disputes" element={<DisputesPage />} />
               <Route path="/migrations" element={<MigrationsPage />} />
               <Route path="/support-access" element={<SupportAccessPage />} />
               <Route path="/customer-evidence" element={<CustomerEvidencePage />} />

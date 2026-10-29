@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth, loginWithRedirect } from 'zitejs/auth';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Building2, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Building2, GraduationCap, Users, ListChecks } from 'lucide-react';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import { employer, EmployerOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
@@ -71,7 +71,9 @@ function Applicants({ o, onDecide }: { o: Opp; onDecide: (applicant: string, ver
 
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
-  { group: 'Recruit', items: [{ to: '/opportunities', label: 'Opportunities & applicants', icon: Briefcase, hint: 'postings candidates shortlist' }] },
+  { group: 'Recruit', items: [{ to: '/opportunities', label: 'Opportunities & applicants', icon: Briefcase, hint: 'postings candidates shortlist' },
+    { to: '/candidates', label: 'Candidates', icon: Users, hint: 'students who opted in' },
+    { to: '/pipeline', label: 'Pipeline', icon: ListChecks, hint: 'stages across postings' }] },
   { group: 'Connect', items: [{ to: '/institutions', label: 'Institutions', icon: Building2, hint: 'partnership approval' }] },
   { group: 'Fund', items: [{ to: '/scholarships', label: 'Scholarships', icon: GraduationCap, hint: 'sponsor review' }] },
 ];
@@ -113,6 +115,84 @@ function Today() {
             <p className="mt-1 text-sm">{inst ? `${approved} approved · ${pending} pending` : 'Loading…'}</p></section>
           <section className="rounded-md border border-border bg-card p-4 lg:col-span-2"><h2 className="text-lg">Setup</h2>
             <ul className="mt-1 space-y-1 text-sm">{steps.map((s) => <li key={s.label}>{s.done ? '✓' : '○'} <Link to={s.to} className="underline-offset-2 hover:underline">{s.label}</Link></li>)}</ul></section>
+        </div>
+      )}
+    </>
+  );
+}
+
+type Cand = { id: string; name: string; headline: string; program: string; gradYear: number | null; skills: string; roles: string; applications: { posting: string; stage: string }[] };
+
+function Candidates() {
+  const [q, setQ] = useState('');
+  const [grad, setGrad] = useState('');
+  const [d, setD] = useState<{ approvedInstitutions: number; candidates: Cand[] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const load = () => { setErr(null); (employer({ action: 'candidates', query: q, gradYear: grad.trim() === '' ? null : Number(grad) }) as Promise<{ approvedInstitutions: number; candidates: Cand[] }>).then(setD).catch((e) => setErr(msg(e))); };
+  useEffect(load, []);
+  return (
+    <>
+      <p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Candidates</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Students who chose to be discoverable, at institutions that approved you. You see only the profile each student wrote for discovery — nothing else from their record.</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Input aria-label="Search candidates" className="max-w-xs" placeholder="Skill, program, role…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input aria-label="Graduation year" className="max-w-[10rem]" inputMode="numeric" placeholder="Grad year" value={grad} onChange={(e) => setGrad(e.target.value)} />
+        <Button variant="outline" onClick={load}>Search</Button>
+      </div>
+      {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={load}>Try again</Button></div>}
+      {!d && !err && <div className="mt-6 space-y-3"><Skeleton className="h-24" /></div>}
+      {d && d.approvedInstitutions === 0 && <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No institution has approved you yet. Ask under Institutions — candidate search only covers institutions that approved you.</p>}
+      {d && d.approvedInstitutions > 0 && !d.candidates.length && <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No discoverable students match. Students choose whether to be discoverable, so an empty result is normal.</p>}
+      {d && d.candidates.length > 0 && <ul className="mt-6 space-y-3">{d.candidates.map((c) => (
+        <li key={c.id} className="rounded-md border border-border bg-card p-4">
+          <p className="font-medium">{c.name}</p>
+          <p className="text-sm">{c.headline}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{[c.program, c.gradYear ? `Class of ${c.gradYear}` : null].filter(Boolean).join(' · ')}</p>
+          {c.skills && <p className="mt-1 text-xs text-muted-foreground">Skills: {c.skills}</p>}
+          {c.roles && <p className="mt-1 text-xs text-muted-foreground">Looking for: {c.roles}</p>}
+          {c.applications.length > 0 && <p className="mt-2 text-xs">{c.applications.map((x, i) => <span key={i} className="mr-2 rounded-[3px] border border-border px-1.5 py-0.5">{x.posting}: {x.stage}</span>)}</p>}
+        </li>))}</ul>}
+    </>
+  );
+}
+
+type PipeRow = { applicantId: string; name: string; stage: string; postingId: string; postingTitle: string; kind: string; postingVersion: number };
+
+function Pipeline() {
+  const [rows, setRows] = useState<PipeRow[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const load = () => { setErr(null); (employer({ action: 'pipeline' }) as Promise<{ pipeline: PipeRow[] }>).then((r) => setRows(r.pipeline)).catch((e) => setErr(msg(e))); };
+  useEffect(load, []);
+  const move = async (r: PipeRow, decision: 'Shortlisted' | 'Declined' | 'Reset') => { try { await employer({ action: 'decide', id: r.postingId, applicant: r.applicantId, version: r.postingVersion, decision }); toast(decision === 'Reset' ? 'Moved back to new. The student has been notified in Semester.' : `${decision}. The student has been notified in Semester.`); load(); } catch (e) { toast(`! ${msg(e)}`); } };
+  const stages = ['New', 'Shortlisted', 'Declined'] as const;
+  return (
+    <>
+      <p className="eyebrow">Employers</p><h1 className="mt-1 text-3xl">Pipeline</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Every application to your postings, by stage. Moving a candidate notifies the student in Semester.</p>
+      {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={load}>Try again</Button></div>}
+      {!rows && !err && <div className="mt-6 space-y-3"><Skeleton className="h-24" /></div>}
+      {rows && !rows.length && <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No applications yet. They appear here as students apply to your postings.</p>}
+      {rows && rows.length > 0 && (
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {stages.map((s) => (
+            <section key={s} className="rounded-md border border-border bg-card p-3">
+              <h2 className="text-sm font-medium">{s} · {rows.filter((r) => r.stage === s).length}</h2>
+              <div className="mt-2 space-y-2">
+                {rows.filter((r) => r.stage === s).map((r) => (
+                  <div key={`${r.postingId}:${r.applicantId}`} className="rounded-[3px] border border-border p-2 text-sm">
+                    <p className="font-medium">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{r.postingTitle} · {r.kind}</p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {s === 'New' && <><Button size="sm" onClick={() => move(r, 'Shortlisted')}>Shortlist</Button><Button size="sm" variant="outline" onClick={() => move(r, 'Declined')}>Decline</Button></>}
+                      {s === 'Shortlisted' && <><Button size="sm" variant="outline" onClick={() => move(r, 'Declined')}>Decline</Button><Button size="sm" variant="outline" onClick={() => move(r, 'Reset')}>Back to new</Button></>}
+                      {s === 'Declined' && <Button size="sm" variant="outline" onClick={() => move(r, 'Reset')}>Restore to new</Button>}
+                    </div>
+                  </div>
+                ))}
+                {rows.filter((r) => r.stage === s).length === 0 && <p className="text-xs text-muted-foreground">Nobody here.</p>}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </>
@@ -172,6 +252,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/candidates" element={<Candidates />} />
+          <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/institutions" element={<Partners />} />
           <Route path="/scholarships" element={<Scholarships />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -32,6 +32,7 @@ import type { default as _CourseGroupsEp } from '../src/api/courseGroups';
 import type { default as _CourseReuseEp } from '../src/api/courseReuse';
 import type { default as _CourseTeamEp } from '../src/api/courseTeam';
 import type { default as _CurriculumEp } from '../src/api/curriculum';
+import type { default as _DepartmentFormsEp } from '../src/api/departmentForms';
 import type { default as _DesignEp } from '../src/api/design';
 import type { default as _DevAppsEp } from '../src/api/devApps';
 import type { default as _DiningEp } from '../src/api/dining';
@@ -260,6 +261,11 @@ type _CurriculumCfg = typeof _CurriculumEp;
 export type CurriculumInputType = NonNullable<_CurriculumCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CurriculumCfg['execute']>[0]['input'];
 export type CurriculumOutputType = Awaited<ReturnType<_CurriculumCfg['execute']>>;
 export const curriculum = createCaller<CurriculumInputType, CurriculumOutputType>('curriculum');
+
+type _DepartmentFormsCfg = typeof _DepartmentFormsEp;
+export type DepartmentFormsInputType = NonNullable<_DepartmentFormsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DepartmentFormsCfg['execute']>[0]['input'];
+export type DepartmentFormsOutputType = Awaited<ReturnType<_DepartmentFormsCfg['execute']>>;
+export const departmentForms = createCaller<DepartmentFormsInputType, DepartmentFormsOutputType>('departmentForms');
 
 type _DesignCfg = typeof _DesignEp;
 export type DesignInputType = NonNullable<_DesignCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DesignCfg['execute']>[0]['input'];
@@ -683,6 +689,7 @@ export const api = {
   courseReuse,
   courseTeam,
   curriculum,
+  departmentForms,
   design,
   devApps,
   dining,

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useAuth, loginWithRedirect } from 'zitejs/auth';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, CalendarDays } from 'lucide-react';
 import { AppShell, type NavGroup } from '../../semester/src/components/AppShell';
 import { familyView, FamilyViewOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
@@ -33,7 +33,8 @@ function Note({ studentId, name }: { studentId: string; name: string }) {
 type Data = FamilyViewOutputType;
 const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: LayoutDashboard, end: true }] },
-  { group: 'Shared with you', items: [{ to: '/shared', label: 'Shared record', icon: Users, hint: 'grades holds calendar billing' }] },
+  { group: 'Shared with you', items: [{ to: '/shared', label: 'Shared record', icon: Users, hint: 'grades holds calendar billing' },
+    { to: '/schedule', label: 'Schedule', icon: CalendarDays, hint: 'classes deadlines key dates' }] },
   { group: 'Access', items: [{ to: '/access', label: 'Sharing & access history', icon: ShieldCheck, hint: 'permissions expiry views' }] },
 ];
 const day = (s?: string | null) => (s ? format(new Date(s), 'd MMM yyyy') : '—');
@@ -144,6 +145,55 @@ function Shared() {
   );
 }
 
+type SchedClass = { id: string; code: string; title: string; term: string; times: string };
+type KeyDate = { term: string; regOpens: string; regCloses: string; addDropEnds: string; classesStart: string; classesEnd: string };
+
+function Schedule() {
+  const [sid, setSid] = useState<string | undefined>();
+  const { d, err } = useFamily(sid);
+  const v = d?.view;
+  const sch = (v as { schedule?: { classes: SchedClass[]; keyDates: KeyDate[] } | null } | undefined)?.schedule;
+  const terms = [...new Set((sch?.classes ?? []).map((c) => c.term))];
+  const dateOnly = (s: string) => day(`${s}T12:00:00`);
+  return (
+    <>
+      <p className="eyebrow">Family</p>
+      <h1 className="mt-1 text-3xl">{v ? `${v.name}’s schedule` : 'Schedule'}</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Classes, deadlines and key term dates — shown only while your student shares their calendar with you.</p>
+      {err && <div className="mt-6 rounded-md border border-border bg-card p-4 text-sm">! {err} <Button size="sm" variant="outline" className="ml-2" onClick={() => setSid(sid)}>Try again</Button></div>}
+      {!d && !err && <div className="mt-6 space-y-3"><Skeleton className="h-24" /><Skeleton className="h-40" /></div>}
+      {d && !v && <NothingShared />}
+      {d && v && (
+        <>
+          {(d.students ?? []).length > 1 && <div className="mt-4 flex flex-wrap gap-2">{(d.students ?? []).map((s: { id: string; name: string }) => <Button key={s.id} size="sm" variant={s.id === v.id ? 'default' : 'outline'} onClick={() => setSid(s.id)}>{s.name}</Button>)}</div>}
+          {!sch ? <div className="mt-6"><NotShared what="The calendar is" /></div> : (
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <Panel title="Classes">
+                {sch.classes.length ? terms.map((t) => (
+                  <div key={t} className="mb-3 last:mb-0">
+                    <p className="eyebrow">{t}</p>
+                    {sch.classes.filter((c) => c.term === t).map((c) => <p key={c.id} className="flex justify-between border-b border-border py-2 text-sm last:border-0"><span><span className="font-mono">{c.code}</span> {c.title}</span><span className="text-muted-foreground">{c.times || 'Times to be announced'}</span></p>)}
+                  </div>
+                )) : <p className="text-sm text-muted-foreground">No enrolled classes to show.</p>}
+              </Panel>
+              <Panel title="Coming up">{v.upcoming ? (v.upcoming.length ? v.upcoming.map((t: { id: string; title: string; dueAt: string | null; done: boolean; source: string }) => <p key={t.id} className="flex justify-between border-b border-border py-2 text-sm last:border-0"><span>{t.done ? '✓' : '○'} {t.title}<span className="block text-xs text-muted-foreground">{t.dueAt ? format(new Date(t.dueAt), 'EEE d MMM · HH:mm') : ''}</span></span><Tag s={t.source} /></p>) : <p className="text-sm text-muted-foreground">Nothing due soon.</p>) : <NotShared what="Calendar" />}</Panel>
+              <div className="lg:col-span-2"><Panel title="Key dates">
+                {sch.keyDates.length ? sch.keyDates.map((k) => (
+                  <div key={k.term} className="border-b border-border py-2 text-sm last:border-0">
+                    <p className="eyebrow">{k.term}</p>
+                    <p>Classes {dateOnly(k.classesStart)} → {dateOnly(k.classesEnd)} · Add/drop ends {dateOnly(k.addDropEnds)}</p>
+                    <p className="text-xs text-muted-foreground">Registration {day(k.regOpens)} → {day(k.regCloses)} · From the institution's approved academic calendar</p>
+                  </div>
+                )) : <p className="text-sm text-muted-foreground">No approved term calendar to show yet.</p>}
+              </Panel></div>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 type Hist = { at: string; student: string; categories: string };
 function Access() {
   const { d, load } = useFamily();
@@ -175,6 +225,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/shared" element={<Shared />} />
+          <Route path="/schedule" element={<Schedule />} />
           <Route path="/access" element={<Access />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -49,4 +49,23 @@ export const SPG_MIGRATION: string[] = [
      INSERT INTO spg_events (tenant_id, program_id, actor_id, action) VALUES (p_tenant, p_id, p_actor, lower(p_state));
      RETURN 'ok';
    END $$`,
+  // Fit-and-cost details (Applicants discovery): published by the institution itself, shown labelled as such.
+  `ALTER TABLE spg_programs ADD COLUMN IF NOT EXISTS annual_cost_cents int CHECK (annual_cost_cents IS NULL OR annual_cost_cents >= 0)`,
+  `ALTER TABLE spg_programs ADD COLUMN IF NOT EXISTS duration_text text NOT NULL DEFAULT ''`,
+  `ALTER TABLE spg_programs ADD COLUMN IF NOT EXISTS format text NOT NULL DEFAULT ''`,
+  `ALTER TABLE spg_programs ADD COLUMN IF NOT EXISTS requirements text NOT NULL DEFAULT ''`,
+  `CREATE OR REPLACE FUNCTION spg_save_details(p_actor text, p_tenant text, p_ok boolean, p_id bigint, p_cost int, p_duration text, p_format text, p_requirements text, p_expected int) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE r spg_programs%ROWTYPE;
+   BEGIN
+     IF NOT p_ok THEN RETURN 'Only catalog managers edit public programs.'; END IF;
+     SELECT * INTO r FROM spg_programs WHERE id = p_id AND tenant_id = p_tenant FOR UPDATE;
+     IF NOT FOUND THEN RETURN 'Program not found.'; END IF;
+     IF r.version <> p_expected THEN RETURN 'Someone changed this program since you opened it. Reload and try again.'; END IF;
+     IF p_cost IS NOT NULL AND p_cost < 0 THEN RETURN 'The published annual cost cannot be negative.'; END IF;
+     IF coalesce(p_format, '') NOT IN ('', 'On campus', 'Online', 'Hybrid') THEN RETURN 'Pick a format the listing offers.'; END IF;
+     UPDATE spg_programs SET annual_cost_cents = p_cost, duration_text = left(coalesce(p_duration, ''), 120), format = coalesce(p_format, ''),
+       requirements = left(coalesce(p_requirements, ''), 1000), state = 'Draft', version = version + 1, edited_by = p_actor WHERE id = p_id;
+     INSERT INTO spg_events (tenant_id, program_id, actor_id, action) VALUES (p_tenant, p_id, p_actor, 'details saved');
+     RETURN 'ok:' || p_id;
+   END $$`,
 ];

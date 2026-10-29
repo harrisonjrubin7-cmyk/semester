@@ -11,8 +11,10 @@ import type { default as _CompanyMutateEp } from '../src/api/companyMutate';
 import type { default as _CompanyOpsEp } from '../src/api/companyOps';
 import type { default as _CustomerEvidenceEp } from '../src/api/customerEvidence';
 import type { default as _DecisionsEp } from '../src/api/decisions';
+import type { default as _DisputesEp } from '../src/api/disputes';
 import type { default as _FinanceEp } from '../src/api/finance';
 import type { default as _FinanceCommandEp } from '../src/api/financeCommand';
+import type { default as _HelpArticlesEp } from '../src/api/helpArticles';
 import type { default as _IncidentsEp } from '../src/api/incidents';
 import type { default as _MarketingEp } from '../src/api/marketing';
 import type { default as _MigrationsEp } from '../src/api/migrations';
@@ -67,6 +69,11 @@ export type DecisionsInputType = NonNullable<_DecisionsCfg['inputSchema']> exten
 export type DecisionsOutputType = Awaited<ReturnType<_DecisionsCfg['execute']>>;
 export const decisions = createCaller<DecisionsInputType, DecisionsOutputType>('decisions');
 
+type _DisputesCfg = typeof _DisputesEp;
+export type DisputesInputType = NonNullable<_DisputesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_DisputesCfg['execute']>[0]['input'];
+export type DisputesOutputType = Awaited<ReturnType<_DisputesCfg['execute']>>;
+export const disputes = createCaller<DisputesInputType, DisputesOutputType>('disputes');
+
 type _FinanceCfg = typeof _FinanceEp;
 export type FinanceInputType = NonNullable<_FinanceCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FinanceCfg['execute']>[0]['input'];
 export type FinanceOutputType = Awaited<ReturnType<_FinanceCfg['execute']>>;
@@ -76,6 +83,11 @@ type _FinanceCommandCfg = typeof _FinanceCommandEp;
 export type FinanceCommandInputType = NonNullable<_FinanceCommandCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_FinanceCommandCfg['execute']>[0]['input'];
 export type FinanceCommandOutputType = Awaited<ReturnType<_FinanceCommandCfg['execute']>>;
 export const financeCommand = createCaller<FinanceCommandInputType, FinanceCommandOutputType>('financeCommand');
+
+type _HelpArticlesCfg = typeof _HelpArticlesEp;
+export type HelpArticlesInputType = NonNullable<_HelpArticlesCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_HelpArticlesCfg['execute']>[0]['input'];
+export type HelpArticlesOutputType = Awaited<ReturnType<_HelpArticlesCfg['execute']>>;
+export const helpArticles = createCaller<HelpArticlesInputType, HelpArticlesOutputType>('helpArticles');
 
 type _IncidentsCfg = typeof _IncidentsEp;
 export type IncidentsInputType = NonNullable<_IncidentsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_IncidentsCfg['execute']>[0]['input'];
@@ -128,8 +140,10 @@ export const api = {
   companyOps,
   customerEvidence,
   decisions,
+  disputes,
   finance,
   financeCommand,
+  helpArticles,
   incidents,
   marketing,
   migrations,

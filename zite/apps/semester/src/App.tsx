@@ -51,6 +51,7 @@ import Integrity from './pages/Integrity';
 import Housing from './pages/Housing';
 import ITService from './pages/ITService';
 import Offices from './pages/Offices';
+import DepartmentForms from './pages/DepartmentForms';
 import Knowledge from './pages/Knowledge';
 import Library from './pages/Library';
 import Parking from './pages/Parking';
@@ -207,6 +208,7 @@ export default function App() {
             <Route path="/help/appointments" element={<Appointments />} />
             <Route path="/institution" element={<InstitutionHome />} />
             <Route path="/institution/sections" element={<SectionRequests />} />
+            <Route path="/institution/forms" element={<DepartmentForms />} />
             <Route path="/institution/curriculum" element={<Curriculum />} />
             <Route path="/institution/programs" element={<Programs />} />
             <Route path="/staff/analytics" element={<Analytics />} />

@@ -4,6 +4,10 @@ import { zite } from 'zitejs/db';
 import { pg } from '../lib/hiring';
 import { ensureHiringSchema, importOwn, dispatch } from '../lib/hiringServer';
 import { ensureCrr } from '../../../semester/src/lib/crrServer';
+import { EMP_PROFILE_MIGRATION } from '../../../semester/src/lib/empProfileMigration';
+
+let empReady: Promise<void> | null = null;
+const ensureEmp = () => { if (!empReady) { const sql = pg(); empReady = (async () => { for (const q of EMP_PROFILE_MIGRATION) await sql.query(q); })().catch((e) => { empReady = null; throw e; }); } return empReady; };
 
 const KIND = z.enum(['Internship', 'Job', 'Research', 'Mentorship']);
 const deny = (m: string): never => { const e = new ZiteError(m); (e as unknown as { userFacingMessage: string }).userFacingMessage = m; throw e; };
@@ -18,6 +22,8 @@ export default createEndpoint({
     z.object({ action: z.literal('save'), id: z.string().optional(), version: z.number().int().optional(), title: z.string().min(3), kind: KIND, employerName: z.string().min(2), description: z.string().max(5000).optional(), location: z.string().max(200).optional(), closesOn: z.string().nullable().optional() }),
     z.object({ action: z.literal('decide'), id: z.string(), applicant: z.string(), version: z.number().int(), decision: z.enum(['Shortlisted', 'Declined', 'Reset']) }),
     z.object({ action: z.literal('delete'), id: z.string(), version: z.number().int() }),
+    z.object({ action: z.literal('candidates'), query: z.string().max(120).optional(), gradYear: z.number().int().nullable().optional() }),
+    z.object({ action: z.literal('pipeline') }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -40,6 +46,27 @@ export default createEndpoint({
       return { institutions: insts.map((i) => { const m = mine.find((x) => x.tenant_id === i.id); return { id: i.id, name: i.name ?? 'Institution', status: m?.status ?? 'Not requested', note: m?.status === 'Declined' ? m.note : '' }; }) };
     }
 
+    // Candidate search: only students who opted in to discovery, and only at institutions that approved
+    // this employer (crr_partners) — the same approval that gates applying (emp_search_candidates enforces both).
+    if (input.action === 'candidates') {
+      await ensureEmp();
+      type PRow = { student_id: string; headline: string; program: string; grad_year: number | null; skills: string; roles: string; tenant_id: string };
+      const tenants = ((await sql.query(`SELECT tenant_id FROM crr_partners WHERE employer_id = $1 AND status = 'Approved'`, [uid])) as { tenant_id: string }[]).map((r) => String(r.tenant_id));
+      const rows = tenants.length ? (await sql.query(`SELECT student_id, headline, program, grad_year, skills, roles, tenant_id FROM emp_search_candidates($1,$2,$3)`, [tenants, input.query ?? '', input.gradYear ?? null])) as PRow[] : [];
+      const sids = rows.map((r) => r.student_id);
+      const { rows: us } = sids.length ? await zite.sql({ query: `SELECT "id","name","email" FROM "ziteUsers" WHERE "id" = ANY($1)`, params: [sids] }) : { rows: [] as Record<string, unknown>[] };
+      const apps = sids.length ? (await sql.query(`SELECT a.applicant_id, a.stage, p.title FROM emp_applications a JOIN emp_postings p ON p.id = a.posting_id WHERE p.owner_id = $1 AND a.applicant_id = ANY($2)`, [uid, sids])) as { applicant_id: string; stage: string; title: string }[] : [];
+      return { approvedInstitutions: tenants.length, candidates: rows.map((r) => { const u = us.find((x) => x.id === r.student_id); return { id: r.student_id, name: String(u?.name || u?.email || 'Student'), headline: r.headline, program: r.program, gradYear: r.grad_year, skills: r.skills, roles: r.roles, applications: apps.filter((x) => x.applicant_id === r.student_id).map((x) => ({ posting: x.title, stage: x.stage })) }; }) };
+    }
+    // Pipeline: every application to my postings, grouped by stage in the page. Stage moves reuse the
+    // existing decide action with the posting's current version, returned here per application.
+    if (input.action === 'pipeline') {
+      type ARow = { applicant_id: string; stage: string; posting_id: string; title: string; kind: string; version: number };
+      const rows = (await sql.query(`SELECT a.applicant_id, a.stage, a.posting_id, p.title, p.kind, p.version FROM emp_applications a JOIN emp_postings p ON p.id = a.posting_id WHERE p.owner_id = $1 ORDER BY p.title, a.applicant_id`, [uid])) as ARow[];
+      const sids = [...new Set(rows.map((r) => r.applicant_id))];
+      const { rows: us } = sids.length ? await zite.sql({ query: `SELECT "id","name","email" FROM "ziteUsers" WHERE "id" = ANY($1)`, params: [sids] }) : { rows: [] as Record<string, unknown>[] };
+      return { pipeline: rows.map((r) => { const u = us.find((x) => x.id === r.applicant_id); return { applicantId: r.applicant_id, name: String(u?.name || u?.email || 'Student'), stage: r.stage, postingId: r.posting_id, postingTitle: r.title, kind: r.kind, postingVersion: Number(r.version) }; }) };
+    }
     if (input.action === 'save') {
       const id = input.id ?? `opp_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
       await one(`SELECT emp_save($1,$2,$3,$4,$5,$6,$7,$8,$9) AS e`, [uid, id, input.title, input.kind, input.employerName, input.description ?? '', input.location ?? '', input.closesOn || null, input.version ?? 0]);

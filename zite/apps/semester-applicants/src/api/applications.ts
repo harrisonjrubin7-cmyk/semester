@@ -3,6 +3,8 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { pg } from '../../../semester/src/lib/pg';
 import { APK_MIGRATION } from '../../../semester/src/lib/apkMigration';
+import { SPG_MIGRATION } from '../../../semester/src/lib/spgMigration';
+import { SHORTLIST_MIGRATION } from '../../../semester/src/lib/shortlistMigration';
 import { putScanned, ensureFil } from '../../../semester/src/lib/filServer';
 import { checkUpload, decodeBase64 } from '../../../semester/src/lib/fileRules';
 import { buildPackage, canonical, missing as missingOf, dimensions, modeNotice, type Mode } from '../../../semester/src/lib/applicationRules';
@@ -32,6 +34,8 @@ export default createEndpoint({
     z.object({ action: z.literal('openDocument'), id: z.string(), fileId: z.string().uuid() }),
     z.object({ action: z.literal('submit'), id: z.string(), previewSha: z.string().length(64), attested: z.boolean(), requestKey: z.string().min(8).max(80) }),
     z.object({ action: z.literal('programs') }),
+    z.object({ action: z.literal('shortlistAdd'), programId: z.number().int() }),
+    z.object({ action: z.literal('shortlistRemove'), programId: z.number().int() }),
     z.object({ action: z.literal('withdraw'), id: z.string() }),
   ]),
   outputSchema: z.any(),
@@ -96,11 +100,20 @@ export default createEndpoint({
       if (!replay) await log('Application submitted', d.institutionId, r.id);
       return { ok: true, receipt: code, version: Number(version), replay: !!replay };
     }
+    if (input.action === 'shortlistAdd' || input.action === 'shortlistRemove') {
+      for (const q of [...SPG_MIGRATION, ...SHORTLIST_MIGRATION]) await pg().query(q);
+      const fn = input.action === 'shortlistAdd' ? 'app_shortlist_add' : 'app_shortlist_remove';
+      const r = String(((await pg().query(`SELECT ${fn}($1,$2) AS r`, [uid, input.programId])) as Row[])[0].r);
+      if (r !== 'ok') no(r);
+      return { ok: true };
+    }
     if (input.action === 'programs') {
-      const has = ((await pg().query(`SELECT to_regclass('spg_programs') IS NOT NULL AS ok`)) as Row[])[0].ok;
-      const rows = has ? (await pg().query(`SELECT id, tenant_id, name, summary, entry_terms, accepting FROM spg_programs WHERE state = 'Published' ORDER BY name LIMIT 500`)) as Row[] : [];
+      for (const q of [...SPG_MIGRATION, ...SHORTLIST_MIGRATION]) await pg().query(q);
+      const rows = (await pg().query(`SELECT p.id, p.tenant_id, p.name, p.summary, p.entry_terms, p.accepting, p.annual_cost_cents, p.duration_text, p.format, p.requirements,
+          EXISTS (SELECT 1 FROM app_shortlist s WHERE s.user_id = $1 AND s.program_id = p.id) AS shortlisted
+        FROM spg_programs p WHERE p.state = 'Published' ORDER BY p.name LIMIT 500`, [uid])) as Row[];
       const insts = rows.length ? (await zite.institutions.findAll({ limit: 500, fields: ['name'] })).records : [];
-      return { programs: rows.map((p) => ({ id: Number(p.id), institutionId: String(p.tenant_id), institution: insts.find((i) => i.id === p.tenant_id)?.name ?? 'Institution', name: String(p.name), summary: String(p.summary), entryTerms: String(p.entry_terms), accepting: !!p.accepting })) };
+      return { programs: rows.map((p) => ({ id: Number(p.id), institutionId: String(p.tenant_id), institution: insts.find((i) => i.id === p.tenant_id)?.name ?? 'Institution', name: String(p.name), summary: String(p.summary), entryTerms: String(p.entry_terms), accepting: !!p.accepting, annualCostCents: p.annual_cost_cents == null ? null : Number(p.annual_cost_cents), durationText: String(p.duration_text ?? ''), format: String(p.format ?? ''), requirements: String(p.requirements ?? ''), shortlisted: !!p.shortlisted })) };
     }
     if (input.action === 'withdraw') {
       const r = await own(input.id);

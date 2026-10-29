@@ -3,7 +3,11 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { pg } from '../lib/pg';
 import { approvedEmployers } from '../lib/crrServer';
+import { EMP_PROFILE_MIGRATION } from '../lib/empProfileMigration';
 import { requireAccess, ids, first, forbid, audit } from '../lib/server';
+
+let empReady: Promise<void> | null = null;
+const ensureEmp = () => { if (!empReady) { const sql = pg(); empReady = (async () => { for (const q of EMP_PROFILE_MIGRATION) await sql.query(q); })().catch((e) => { empReady = null; throw e; }); } return empReady; };
 
 export default createEndpoint({
   description: 'Campus and career: groups, events, opportunities, joining, RSVPs, applications and reports',
@@ -14,6 +18,7 @@ export default createEndpoint({
     z.object({ action: z.literal('toggleEvent'), id: z.string() }),
     z.object({ action: z.literal('apply'), id: z.string(), shareItems: z.array(z.string()).max(10).default([]), shareContact: z.boolean().default(false) }),
     z.object({ action: z.literal('report'), target: z.string(), reason: z.string().min(3) }),
+    z.object({ action: z.literal('saveProfile'), headline: z.string().max(120), program: z.string().max(120), gradYear: z.number().int().nullable(), skills: z.string().max(500), roles: z.string().max(300), discoverable: z.boolean() }),
   ]),
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
@@ -62,6 +67,16 @@ export default createEndpoint({
       await audit(a, 'Moderation report filed', ref, input.target, 'Member');
       return { ok: true };
     }
+    if (input.action === 'saveProfile') {
+      await ensureEmp();
+      const r = String(((await pg().query(`SELECT emp_profile_save($1,$2,$3,$4,$5,$6,$7,$8) AS r`, [uid, a.institutionId, input.headline, input.program, input.gradYear, input.skills, input.roles, input.discoverable])) as { r: string }[])[0].r);
+      if (r !== 'ok') forbid(r);
+      await audit(a, 'Employer discovery profile updated', `user:${uid}`, input.discoverable ? 'Discoverable by approved employers' : 'Not discoverable', 'Student');
+      return { ok: true };
+    }
+    await ensureEmp();
+    const profileRow = ((await pg().query(`SELECT headline, program, grad_year, skills, roles, discoverable FROM emp_profiles WHERE student_id = $1`, [uid])) as Record<string, unknown>[])[0];
+    const profile = profileRow ? { headline: String(profileRow.headline), program: String(profileRow.program), gradYear: profileRow.grad_year == null ? null : Number(profileRow.grad_year), skills: String(profileRow.skills), roles: String(profileRow.roles), discoverable: !!profileRow.discoverable } : null;
     const [groups, events, opps, approved, portfolio] = await Promise.all([
       zite.groups.findAll({ limit: 200 }), zite.events.findAll({ limit: 200 }), zite.opportunities.findAll({ limit: 200 }), approvedEmployers(a.institutionId),
       zite.resources.findAll({ filters: { owner: uid, kind: 'Portfolio Item' }, limit: 200 }),
@@ -77,6 +92,7 @@ export default createEndpoint({
         .sort((x, y) => (x.startsAt ?? '').localeCompare(y.startsAt ?? '')),
       opportunities: opps.records.filter((o) => approved.has(first(o.postedBy) ?? '')).map((o) => ({ id: o.id, title: o.title ?? '', kind: o.kind ?? 'Job', employer: o.employerName ?? '', applied: ids(o.applicants).includes(uid) })),
       portfolio: portfolio.records.map((r) => ({ id: r.id, title: r.title ?? 'Untitled' })),
+      profile,
     };
   },
 });

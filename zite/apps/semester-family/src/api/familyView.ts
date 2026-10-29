@@ -74,11 +74,11 @@ export default createEndpoint({
     }
     const can = (c: string) => sel.categories.includes(c);
     const [enr, holds, tasks, secs, courses] = await Promise.all([
-      can('Grades') ? zite.enrollments.findAll({ filters: { student: sel.id }, limit: 300 }) : null,
+      can('Grades') || can('Calendar') ? zite.enrollments.findAll({ filters: { student: sel.id }, limit: 300 }) : null,
       can('Holds') ? holdsFor(sel.id) : null,
       can('Calendar') ? zite.tasks.findAll({ filters: { owner: sel.id, type: 'Assignment' }, limit: 300 }) : null,
-      can('Grades') ? zite.sections.findAll({ limit: 1000, fields: ['label', 'course', 'term'] }) : null,
-      can('Grades') ? zite.courses.findAll({ limit: 1000, fields: ['code', 'title'] }) : null,
+      can('Grades') || can('Calendar') ? zite.sections.findAll({ limit: 1000, fields: ['label', 'course', 'term', 'meetingTimes'] }) : null,
+      can('Grades') || can('Calendar') ? zite.courses.findAll({ limit: 1000, fields: ['code', 'title'] }) : null,
     ]);
     // Billing share: per-term balance and next due date only. No line items, payment methods or aid detail.
     const ledger = can('Billing') ? await zite.accountLedgerEntries.findAll({ filters: { student: sel.id }, limit: 500 }) : null;
@@ -89,12 +89,40 @@ export default createEndpoint({
     // The delegation's own access log: one event per live invitation behind this view, so the student sees exactly
     // which grant was used and what it covered. fam_log_access refuses anything but a live accepted binding.
     for (const c of live.filter((x) => x.student_id === sel.id)) await pg().query(`SELECT fam_log_access($1,$2,$3,$4::text[])`, [Number(c.invite_id), sel.id, uid, c.categories]);
+    // Schedule share (Calendar category): the enrolled classes with their meeting times, plus the approved
+    // academic calendar's key dates for those terms. Enrollment rows contribute section and status only —
+    // grades stay behind the Grades category even though the same rows are loaded.
+    let schedule: { classes: { id: string; code: string; title: string; term: string; times: string }[]; keyDates: { term: string; regOpens: string; regCloses: string; addDropEnds: string; classesStart: string; classesEnd: string }[] } | null = null;
+    if (can('Calendar') && enr) {
+      const built = enr.records.filter((e) => e.status === 'Enrolled').flatMap((e) => {
+        const s = sById[first(e.section) ?? '']; if (!s) return [];
+        const c = cById[first(s.course) ?? ''];
+        return [{ id: e.id, code: c?.code ?? '', title: c?.title ?? '', term: String(s.term ?? ''), times: String(s.meetingTimes ?? ''), courseId: first(s.course) ?? '' }];
+      }).sort((x, y) => x.term.localeCompare(y.term) || x.code.localeCompare(y.code));
+      const terms = [...new Set(built.map((c) => c.term).filter(Boolean))];
+      const courseIds = [...new Set(built.map((c) => c.courseId).filter(Boolean))];
+      let keyDates: { term: string; regOpens: string; regCloses: string; addDropEnds: string; classesStart: string; classesEnd: string }[] = [];
+      if (terms.length && courseIds.length) {
+        const links = (await zite.sql({ query: `SELECT "coursesId" AS c, "institutionsId" AS t FROM "CoursesInstitutions" WHERE "coursesId" = ANY($1)`, params: [courseIds] })).rows as { c: string; t: string }[];
+        const tenants = [...new Set(links.map((l) => String(l.t)))];
+        const hasCal = ((await pg().query(`SELECT to_regclass('cal_terms') IS NOT NULL AS ok`)) as { ok: boolean }[])[0].ok;
+        if (tenants.length && hasCal) {
+          const rows = (await pg().query(`SELECT tenant_id, term, reg_opens, reg_closes, add_drop_ends, classes_start, classes_end FROM cal_terms WHERE state = 'approved' AND tenant_id = ANY($1) AND term = ANY($2) ORDER BY version DESC`, [tenants, terms])) as Record<string, unknown>[];
+          const seen = new Set<string>();
+          keyDates = rows.filter((r) => { const k = `${r.tenant_id}|${r.term}`; if (seen.has(k)) return false; seen.add(k); return true; })
+            .map((r) => ({ term: String(r.term), regOpens: new Date(String(r.reg_opens)).toISOString(), regCloses: new Date(String(r.reg_closes)).toISOString(), addDropEnds: String(r.add_drop_ends).slice(0, 10), classesStart: String(r.classes_start).slice(0, 10), classesEnd: String(r.classes_end).slice(0, 10) }))
+            .sort((x, y) => x.classesStart.localeCompare(y.classesStart));
+        }
+      }
+      schedule = { classes: built.map(({ courseId: _courseId, ...rest }) => rest), keyDates };
+    }
     const now = new Date().toISOString();
     return {
       students,
       view: {
         ...sel,
-        grades: enr ? enr.records.filter((e) => e.gradeReleased).map((e) => { const s = sById[first(e.section) ?? '']; const c = cById[first(s?.course) ?? '']; return { id: e.id, code: c?.code ?? '', title: c?.title ?? '', term: s?.term ?? '', grade: e.finalGrade ?? '', source: e.source ?? 'Official' }; }) : null,
+        schedule,
+        grades: can('Grades') && enr ? enr.records.filter((e) => e.gradeReleased).map((e) => { const s = sById[first(e.section) ?? '']; const c = cById[first(s?.course) ?? '']; return { id: e.id, code: c?.code ?? '', title: c?.title ?? '', term: s?.term ?? '', grade: e.finalGrade ?? '', source: e.source ?? 'Official' }; }) : null,
         billing,
         holds: holds ? holds.map((h) => ({ id: h.id, title: h.title, office: h.office, source: 'Official' })) : null,
         upcoming: tasks ? tasks.records.filter((t) => (t.dueAt ?? '') >= now).sort((x, y) => (x.dueAt ?? '').localeCompare(y.dueAt ?? '')).slice(0, 15).map((t) => ({ id: t.id, title: t.title ?? '', dueAt: t.dueAt ?? null, done: t.status === 'Done', source: t.source ?? 'Official' })) : null,

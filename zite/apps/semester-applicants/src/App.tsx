@@ -181,24 +181,75 @@ function Today() {
   );
 }
 
-type Prog = { id: number; institutionId: string; institution: string; name: string; summary: string; entryTerms: string; accepting: boolean };
+type Prog = { id: number; institutionId: string; institution: string; name: string; summary: string; entryTerms: string; accepting: boolean; annualCostCents: number | null; durationText: string; format: string; requirements: string; shortlisted: boolean };
+const money = (cents: number | null) => (cents == null ? 'Not published' : `$${(cents / 100).toLocaleString('en-US')}`);
 function Programs() {
   const [rows, setRows] = useState<Prog[] | null>(null);
-  useEffect(() => { (applications({ action: 'programs' }) as Promise<{ programs: Prog[] }>).then((r) => setRows(r.programs)).catch(() => setRows([])); }, []);
+  const [q, setQ] = useState('');
+  const [inst, setInst] = useState('all');
+  const [formatF, setFormatF] = useState('all');
+  const [acceptingOnly, setAcceptingOnly] = useState(false);
+  const load = () => (applications({ action: 'programs' }) as Promise<{ programs: Prog[] }>).then((r) => setRows(r.programs)).catch(() => setRows([]));
+  useEffect(() => { load(); }, []);
   const start = (p: Prog) => { try { sessionStorage.setItem(START_KEY, JSON.stringify({ institutionId: p.institutionId, program: p.name })); } catch { /* storage unavailable */ } location.assign('/applications'); };
+  const toggle = async (p: Prog) => {
+    setRows((rs) => rs?.map((x) => (x.id === p.id ? { ...x, shortlisted: !x.shortlisted } : x)) ?? rs);
+    try { await applications({ action: p.shortlisted ? 'shortlistRemove' : 'shortlistAdd', programId: p.id }); }
+    catch (e) { toast.error(msg(e)); load(); }
+  };
+  const needle = q.trim().toLowerCase();
+  const shown = (rows ?? []).filter((p) => (inst === 'all' || p.institution === inst) && (formatF === 'all' || p.format === formatF) && (!acceptingOnly || p.accepting)
+    && (!needle || `${p.name} ${p.institution} ${p.summary} ${p.requirements}`.toLowerCase().includes(needle)));
+  const shortlist = (rows ?? []).filter((p) => p.shortlisted);
+  const compared = shortlist.slice(0, 4);
+  const insts = [...new Set((rows ?? []).map((p) => p.institution))].sort();
+  const sel = 'rounded-[3px] border border-input bg-background p-2 text-sm';
+  const cmpRows: { label: string; get: (p: Prog) => string }[] = [
+    { label: 'Institution', get: (p) => p.institution },
+    { label: 'Published annual cost', get: (p) => money(p.annualCostCents) },
+    { label: 'Duration', get: (p) => p.durationText || 'Not stated' },
+    { label: 'Format', get: (p) => p.format || 'Not stated' },
+    { label: 'Entry terms', get: (p) => p.entryTerms || 'Not stated' },
+    { label: 'Requirements', get: (p) => p.requirements || 'Not stated' },
+    { label: 'Accepting', get: (p) => (p.accepting ? 'Yes' : 'Not right now') },
+  ];
   return (
     <>
       <p className="eyebrow">Explore</p><h1 className="mt-1 text-3xl">Programs</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Programs institutions published on Semester. Each institution sets its own requirements and decides on applications.</p>
-      {!rows ? <div className="mt-6 space-y-3"><Skeleton className="h-24" /></div> : !rows.length ? <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No institution has published a program yet. You can still prepare an application to any institution and submit it through that institution’s own channel.</p> : (
-        <ul className="mt-6 space-y-3">{rows.map((p) => (
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Programs institutions published on Semester. Each institution sets its own requirements and decides on applications. Costs and details below are published by the institutions themselves — Semester does not set or verify them, so confirm in the official catalog before you apply.</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Input aria-label="Search programs" className="max-w-xs" placeholder="Search name, institution, topic…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select aria-label="Institution" className={sel} value={inst} onChange={(e) => setInst(e.target.value)}><option value="all">All institutions</option>{insts.map((i) => <option key={i} value={i}>{i}</option>)}</select>
+        <select aria-label="Format" className={sel} value={formatF} onChange={(e) => setFormatF(e.target.value)}><option value="all">Any format</option><option>On campus</option><option>Online</option><option>Hybrid</option></select>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={acceptingOnly} onChange={(e) => setAcceptingOnly(e.target.checked)} />Accepting applications</label>
+      </div>
+      {!rows ? <div className="mt-6 space-y-3"><Skeleton className="h-24" /></div> : !rows.length ? <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No institution has published a program yet. You can still prepare an application to any institution and submit it through that institution’s own channel.</p> : !shown.length ? <p className="mt-6 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">No published program matches those filters.</p> : (
+        <ul className="mt-6 space-y-3">{shown.map((p) => (
           <li key={p.id} className="rounded-md border border-border bg-card p-4">
-            <p className="eyebrow">{p.institution}</p><h2 className="text-lg">{p.name}</h2>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div><p className="eyebrow">{p.institution}</p><h2 className="text-lg">{p.name}</h2></div>
+              <Button size="sm" variant={p.shortlisted ? 'default' : 'outline'} onClick={() => toggle(p)}>{p.shortlisted ? '★ Shortlisted' : '☆ Shortlist'}</Button>
+            </div>
             {p.entryTerms && <p className="text-xs text-muted-foreground">Entry: {p.entryTerms}</p>}
             <p className="mt-1 text-sm">{p.summary}</p>
+            {(p.annualCostCents != null || p.durationText || p.format) && <p className="mt-1 text-xs text-muted-foreground">{[p.annualCostCents != null ? `${money(p.annualCostCents)} / year (published)` : null, p.durationText || null, p.format || null].filter(Boolean).join(' · ')}</p>}
+            {p.requirements && <p className="mt-1 text-xs text-muted-foreground">Requirements: {p.requirements}</p>}
             {p.accepting ? <Button size="sm" className="mt-2" onClick={() => start(p)}>Start an application</Button> : <p className="mt-2 text-xs text-muted-foreground">Not accepting applications right now.</p>}
           </li>))}</ul>
       )}
+      {compared.length >= 2 && (
+        <div className="mt-8">
+          <h2 className="text-xl">Compare your shortlist</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Side by side, exactly as published. {shortlist.length > 4 ? 'Showing the first 4 of your shortlist.' : ''} Costs are annual figures published by each institution; confirm them in the official catalog before applying.</p>
+          <div className="mt-3 overflow-x-auto rounded-md border border-border">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-card text-left"><th className="p-2" />{compared.map((p) => <th key={p.id} className="p-2 font-medium">{p.name}</th>)}</tr></thead>
+              <tbody>{cmpRows.map((r) => <tr key={r.label} className="border-t border-border"><td className="p-2 text-xs text-muted-foreground">{r.label}</td>{compared.map((p) => <td key={p.id} className="p-2 align-top">{r.get(p)}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {compared.length === 1 && <p className="mt-6 text-sm text-muted-foreground">Shortlist one more program to compare them side by side.</p>}
     </>
   );
 }
