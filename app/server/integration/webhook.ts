@@ -6,8 +6,6 @@
  * configuration, select a provider schema, and hand the accepted event to the
  * integration worker. The raw body is verified before JSON parsing.
  */
-import { hmacSha256, timingSafeEqual, utf8 } from '../../../packages/platform/src/kernel/canonical.ts';
-
 export const MAX_INTEGRATION_WEBHOOK_BYTES = 256 * 1024;
 export const INTEGRATION_WEBHOOK_TOLERANCE_SECONDS = 300;
 
@@ -62,6 +60,25 @@ export interface VerifyWebhookInput {
 
 const TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/;
 const HEX_SIGNATURE = /^[0-9a-f]{64}$/;
+const encoder = new TextEncoder();
+
+async function hmacSha256(key: string, message: string): Promise<Uint8Array> {
+  const imported = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(key),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  return new Uint8Array(await crypto.subtle.sign('HMAC', imported, encoder.encode(message)));
+}
+
+function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  let difference = a.length ^ b.length;
+  const length = Math.max(a.length, b.length);
+  for (let i = 0; i < length; i++) difference |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  return difference === 0;
+}
 
 function signatureBytes(value: string): Uint8Array | null {
   if (!HEX_SIGNATURE.test(value)) return null;
@@ -107,7 +124,7 @@ function readEnvelope(value: unknown): IntegrationWebhookEvent | null {
 }
 
 export async function verifyIntegrationWebhook(input: VerifyWebhookInput): Promise<WebhookVerification> {
-  if (new TextEncoder().encode(input.rawBody).byteLength > MAX_INTEGRATION_WEBHOOK_BYTES) {
+  if (encoder.encode(input.rawBody).byteLength > MAX_INTEGRATION_WEBHOOK_BYTES) {
     return { ok: false, code: 'body_too_large' };
   }
   if (!input.secret) return { ok: false, code: 'missing_secret' };
@@ -116,7 +133,7 @@ export async function verifyIntegrationWebhook(input: VerifyWebhookInput): Promi
   const signature = parseSignatureHeader(input.signatureHeader);
   if (!signature) return { ok: false, code: 'missing_signature' };
   if (Math.abs(input.nowSeconds - signature.t) > tolerance) return { ok: false, code: 'stale_signature' };
-  const expected = await hmacSha256(utf8(input.secret), utf8(`${signature.t}.${input.rawBody}`));
+  const expected = await hmacSha256(input.secret, `${signature.t}.${input.rawBody}`);
   let matched = false;
   for (const candidate of signature.v1) if (timingSafeEqual(candidate, expected)) matched = true;
   if (!matched) return { ok: false, code: 'signature_mismatch' };

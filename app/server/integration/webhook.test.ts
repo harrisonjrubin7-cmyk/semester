@@ -1,5 +1,5 @@
+import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { hmacSha256, toHex, utf8 } from '../../../packages/platform/src/kernel/canonical.ts';
 import {
   MAX_INTEGRATION_WEBHOOK_BYTES,
   MemoryWebhookReplayStore,
@@ -11,7 +11,7 @@ const SECRET = 'provider-webhook-secret';
 const NOW = 1_800_000_000;
 
 async function signed(rawBody: string, timestamp = NOW): Promise<string> {
-  return `t=${timestamp},v1=${toHex(await hmacSha256(utf8(SECRET), utf8(`${timestamp}.${rawBody}`)))}`;
+  return `t=${timestamp},v1=${createHmac('sha256', SECRET).update(`${timestamp}.${rawBody}`).digest('hex')}`;
 }
 
 const body = (id = 'evt_001') => JSON.stringify({ id, type: 'course.updated', version: '1', data: { courseId: 'c-1' } });
