@@ -1,4 +1,4 @@
-# The painted-contrast and target-size sweeps, on a schedule.
+# The painted-contrast, target-size and text-spacing sweeps, on a schedule.
 #
 # Not part of `ci.yml`, and the reasons are worth stating because "why is this
 # not a required check" is the first question anyone will have:
@@ -136,6 +136,20 @@ jobs:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
         run: npm run sweep:targets 2>&1 | tee /tmp/targets.txt
 
+      # WCAG 1.4.12 is layout evidence too. This applies the standard's text-
+      # spacing overrides to every registered destination at phone and desktop
+      # widths. The instrument proves it can distinguish a fixed-height text
+      # loss from a box that grows, refuses an incomplete destination walk and
+      # exits non-zero when the override introduces clipping or horizontal
+      # scrolling. `if: always()` keeps one red sweep from hiding another.
+      - name: Text spacing
+        if: always()
+        shell: bash
+        working-directory: app
+        env:
+          SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
+        run: npm run sweep:spacing 2>&1 | tee /tmp/spacing.txt
+
       # Kept whether the step passed or failed: a green run's coverage numbers
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
@@ -147,5 +161,6 @@ jobs:
             /tmp/contrast.txt
             /tmp/walls.txt
             /tmp/targets.txt
+            /tmp/spacing.txt
             /tmp/vite.log
           retention-days: 30

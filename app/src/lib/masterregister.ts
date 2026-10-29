@@ -1136,8 +1136,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Automated/manual report',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/contrast.test.ts', shows: 'Contrast of faded rungs across all grounds and surfaces' }, { path: 'app/src/styles/textscale.test.ts', shows: 'Text scaling rules' }, { path: 'app/src/a11y/motion.test.ts', shows: 'Reduced-motion setting makes motion jump instead of glide' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: '320px reflow overflow check on six journeys' }],
-    gap: 'No text-spacing (1.4.12) test, no 200% zoom run and no manual report. Reflow covers six journeys only.',
+    evidence: [{ path: 'app/src/lib/contrast.test.ts', shows: 'Contrast of faded rungs across all grounds and surfaces' }, { path: 'app/src/styles/textscale.test.ts', shows: 'Text scaling rules' }, { path: 'app/src/a11y/motion.test.ts', shows: 'Reduced-motion setting makes motion jump instead of glide' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: '320px reflow overflow check on six journeys' }, { path: 'app/scripts/spacing-sweep.mjs', shows: 'WCAG 1.4.12 overrides across every default destination at phone and desktop widths, scheduled by contrast.yml' }],
+    gap: 'No 200% zoom run and no manual report. Reflow covers six journeys only. Text spacing covers default states at two widths but not signed-in, error, modal, tablet or real-device states, and does not detect overlap between separate text boxes.',
   },
   {
     id: 'A11Y-005',
