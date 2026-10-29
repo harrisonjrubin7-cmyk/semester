@@ -430,3 +430,11 @@ S-75's schema is a proposed logical contract; it says itself not to migrate it o
   (or edits and re-proposes) on Company OS → Decision register. Confirming is a one-click human step this agent cannot take.
 - Left open: reviewers (who the security, legal, accounting and accessibility reviewers are) and budget. Only the founder knows these.
 - cohort and plans are interim status statements (one pilot workspace; no plans or prices approved), not commercial choices.
+
+## 29 Oct — Undergraduate capstone (cap-001): Student /progress/capstone, Faculty /capstones
+- Student proposes one capstone per term to an active faculty supervisor; supervisor accepts or declines with a reason and names a second reader
+  (not the supervisor or student). Milestones proposal → plan → draft → final open in order; text plus optional https link (no files stored);
+  approve or revise with a note; decided submissions are frozen; resubmissions are new versions.
+- After the approved final, supervisor and second reader score a 4-criterion rubric blind; both scores give a recommendation band for the
+  instructor of record (never an official grade); a gap of 2+ on a criterion is flagged. Faculty app reuses the endpoint (C23 front door).
+- dbcheck capstone 23/23; mutants: out-of-order milestones (1 red), student approves (1 red), scoring before the final (3 red).

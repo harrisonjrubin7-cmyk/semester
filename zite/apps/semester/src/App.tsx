@@ -43,6 +43,7 @@ import Maps from './pages/Maps';
 import Mentoring from './pages/Mentoring';
 import Network from './pages/Network';
 import Veterans from './pages/Veterans';
+import Capstone from './pages/Capstone';
 import Admissions from './pages/Admissions';
 import { Gradebook, TAQueue, RegistrarDesk, StudentAccounts, StudentAffairs } from './pages/Staff';
 import { Analytics, RegistrationHolds } from './pages/Institution';
@@ -179,6 +180,7 @@ export default function App() {
             <Route path="/campus/dining" element={<Dining />} />
             <Route path="/learn/tutoring" element={<Tutoring />} />
             <Route path="/progress/graduate" element={<Graduate />} />
+            <Route path="/progress/capstone" element={<Capstone />} />
             <Route path="/help/referrals" element={<Referrals />} />
             <Route path="/apps" element={<RoleApps />} />
             <Route path="/apps/:key" element={<RoleAppHome />} />

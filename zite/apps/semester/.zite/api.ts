@@ -25,6 +25,7 @@ import type { default as _AthleticsEp } from '../src/api/athletics';
 import type { default as _AuditEp } from '../src/api/audit';
 import type { default as _BudgetPlansEp } from '../src/api/budgetPlans';
 import type { default as _CampusEp } from '../src/api/campus';
+import type { default as _CapstoneEp } from '../src/api/capstone';
 import type { default as _CareerPartnersEp } from '../src/api/careerPartners';
 import type { default as _CareerServicesEp } from '../src/api/careerServices';
 import type { default as _CatalogEp } from '../src/api/catalog';
@@ -243,6 +244,11 @@ type _CampusCfg = typeof _CampusEp;
 export type CampusInputType = NonNullable<_CampusCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CampusCfg['execute']>[0]['input'];
 export type CampusOutputType = Awaited<ReturnType<_CampusCfg['execute']>>;
 export const campus = createCaller<CampusInputType, CampusOutputType>('campus');
+
+type _CapstoneCfg = typeof _CapstoneEp;
+export type CapstoneInputType = NonNullable<_CapstoneCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CapstoneCfg['execute']>[0]['input'];
+export type CapstoneOutputType = Awaited<ReturnType<_CapstoneCfg['execute']>>;
+export const capstone = createCaller<CapstoneInputType, CapstoneOutputType>('capstone');
 
 type _CareerPartnersCfg = typeof _CareerPartnersEp;
 export type CareerPartnersInputType = NonNullable<_CareerPartnersCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CareerPartnersCfg['execute']>[0]['input'];
@@ -784,6 +790,7 @@ export const api = {
   audit,
   budgetPlans,
   campus,
+  capstone,
   careerPartners,
   careerServices,
   catalog,

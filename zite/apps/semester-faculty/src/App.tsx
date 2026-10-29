@@ -19,6 +19,7 @@ import FinalGrades from './pages/FinalGrades';
 import SectionPage from './pages/Section';
 import Regrades from './pages/Regrades';
 import OfficeHours from './pages/OfficeHours';
+import Capstone from '../../semester/src/pages/Capstone';
 import Today from '../../semester/src/pages/Today';
 import InboxPage from '../../semester/src/pages/Inbox';
 import CalendarPage from '../../semester/src/pages/CalendarPage';
@@ -31,7 +32,7 @@ const GROUPS: NavGroup[] = [
   { group: null, items: [{ to: '/', label: 'Today', icon: Home, end: true }, { to: '/office-hours', label: 'Office hours', icon: CalendarClock }] },
   { group: 'Personal', items: [{ to: '/today', label: 'Action Center', icon: ListChecks, hint: 'tasks notices deadlines' }, { to: '/mail', label: 'Mail', icon: Mail, hint: 'messages inbox' }, { to: '/calendar', label: 'Calendar', icon: CalendarDays, hint: 'schedule plan' }, { to: '/workspace', label: 'Workspace', icon: FolderOpen, hint: 'workspaces affiliations' }, { to: '/files', label: 'Files', icon: FileText, hint: 'documents' }] },
   { group: 'Teach', items: [{ to: '/queue', label: 'Grading queue', icon: Inbox }, { to: '/gradebook', label: 'Gradebook', icon: Table2 }, { to: '/final-grades', label: 'Final grades', icon: Award, hint: 'course grade certify registrar' }] },
-  { group: 'Support', items: [{ to: '/regrades', label: 'Extensions & regrades', icon: Scale, hint: 'regrade requests' }, { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert }] },
+  { group: 'Support', items: [{ to: '/capstones', label: 'Capstones', icon: Award, hint: 'capstone supervision second reader' }, { to: '/regrades', label: 'Extensions & regrades', icon: Scale, hint: 'regrade requests' }, { to: '/integrity', label: 'Academic integrity', icon: ShieldAlert }] },
   { group: 'Develop', items: [{ to: '/curriculum', label: 'Curriculum proposals', icon: BookMarked }, { to: '/section-requests', label: 'Section requests', icon: GitPullRequestArrow },
     { to: '/guides', label: 'Study guides', icon: BookMarked }, { to: '/sources', label: 'Reading lists', icon: BookMarked, hint: 'sources bibliography' }] },
 ];
@@ -50,6 +51,7 @@ function Shell() {
       <Routes>
             <Route path="/" element={<Teaching />} />
             <Route path="/today" element={<Today />} />
+            <Route path="/capstones" element={<Capstone />} />
             <Route path="/mail" element={<InboxPage key="m" initial="mail" />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/workspace" element={<Workspaces />} />

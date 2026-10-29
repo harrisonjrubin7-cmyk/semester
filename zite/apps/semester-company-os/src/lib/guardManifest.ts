@@ -73,6 +73,10 @@ export const GUARD_MANIFEST: Manifest = {
   "brd_snapshots",
   "cal_events",
   "cal_terms",
+  "cap_events",
+  "cap_projects",
+  "cap_scores",
+  "cap_submissions",
   "car_actions",
   "car_events",
   "car_fair_regs",
@@ -664,6 +668,24 @@ export const GUARD_MANIFEST: Manifest = {
    "timing": "BEFORE",
    "events": "UPDATE OR DELETE OR TRUNCATE",
    "table": "cal_events"
+  },
+  {
+   "trigger": "cap_events_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "cap_events"
+  },
+  {
+   "trigger": "cap_scores_append_only",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE OR TRUNCATE",
+   "table": "cap_scores"
+  },
+  {
+   "trigger": "cap_submissions_fixed",
+   "timing": "BEFORE",
+   "events": "UPDATE OR DELETE",
+   "table": "cap_submissions"
   },
   {
    "trigger": "car_events_append_only",
