@@ -5,6 +5,7 @@ import { pg, fail } from '../lib/db';
 import { DGV_MIGRATION } from '../../../semester/src/lib/dgvMigration';
 import { RSD_MIGRATION } from '../../../semester/src/lib/rsdMigration';
 import { RPP_MIGRATION } from '../../../semester/src/lib/rppMigration';
+import { requireModule, moduleOn } from '../../../semester/src/lib/tcpServer';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
@@ -35,17 +36,21 @@ export default createEndpoint({
 
     if (input.action === 'submit') {
       if (!inst.records.some((r) => r.id === input.institutionId)) fail('Choose an institution.');
+      await requireModule(input.institutionId, 'research_partners', []);
       const r = await one(`SELECT rpp_submit($1,$2,$3,$4,$5,$6,$7,$8::bigint[],$9) AS r`, [me, input.requestKey, input.institutionId, input.organization, input.title, input.aims, input.ethicsRef, input.datasets, input.retentionDays]);
       if (!r || !(r.startsWith('ok:') || r.startsWith('replay:'))) fail(r ?? 'Could not submit it.');
     }
     if (input.action === 'withdraw') { const r = await one(`SELECT rpp_withdraw($1,$2,$3) AS r`, [me, input.id, input.reason]); if (r) fail(r); }
     if (input.action === 'accept') { const r = await one(`SELECT rpp_accept($1,$2,$3) AS r`, [me, input.agreementId, input.seenHash]); if (r) fail(r); }
     if (input.action === 'submitOutput') {
+      const t = ((await sql.query(`SELECT tenant_id FROM rpp_protocols WHERE id = $1 AND partner_id = $2`, [input.protocolId, me])) as { tenant_id: string }[])[0];
+      if (t) await requireModule(t.tenant_id, 'research_partners', []);
       const r = await one(`SELECT rpp_output_submit($1,$2,$3,$4,$5::bigint[]) AS r`, [me, input.protocolId, input.title, input.body, input.cites]);
       if (!r?.startsWith('ok:')) fail(r ?? 'Could not submit it.');
     }
 
-    const chosen = input.action === 'get' ? input.institutionId : input.action === 'submit' ? input.institutionId : undefined;
+    const picked = input.action === 'get' ? input.institutionId : input.action === 'submit' ? input.institutionId : undefined;
+    const chosen = picked && (await moduleOn(picked, 'research_partners', [])) ? picked : undefined;
     const [protocols, agreements, outputs, offered] = await Promise.all([
       sql.query(`SELECT * FROM rpp_protocols WHERE partner_id = $1 ORDER BY created_at DESC LIMIT 100`, [me]) as Promise<Row[]>,
       sql.query(`SELECT g.id, g.protocol_id, g.terms, g.terms_hash, g.days, g.issued_at, g.accepted_at, g.expires_at, g.revoked_at, g.revoked_reason, (g.accepted_at IS NOT NULL AND g.revoked_at IS NULL AND g.expires_at > now()) AS active
@@ -54,8 +59,12 @@ export default createEndpoint({
       chosen ? (sql.query(`SELECT id, title, purpose, version FROM rsd_defs WHERE tenant_id = $1 AND kind = 'dataset' AND state = 'approved' ORDER BY title`, [chosen]) as Promise<Row[]>) : Promise.resolve([] as Row[]),
     ]);
     // Secure analysis: only snapshots rpp_read_ok allows right now, for datasets named in this partner's approved protocols.
-    const snaps = (await sql.query(`SELECT s.id, s.def_id, d.title, d.version, s.code_version, s.min_cell, s.output, s.output_hash, s.run_at
+    const snapsAll = (await sql.query(`SELECT s.id, s.tenant_id, s.def_id, d.title, d.version, s.code_version, s.min_cell, s.output, s.output_hash, s.run_at
       FROM rsd_snapshots s JOIN rsd_defs d ON d.id = s.def_id WHERE rpp_read_ok($1, s.id) ORDER BY s.run_at DESC LIMIT 100`, [me])) as Row[];
+    // Control plane: an institution that switched research partners off stops all partner reading at once.
+    const onFor = new Map<string, boolean>();
+    for (const t of new Set(snapsAll.map((x) => String(x.tenant_id)))) onFor.set(t, await moduleOn(t, 'research_partners', []));
+    const snaps = snapsAll.filter((x) => onFor.get(String(x.tenant_id)));
     const dsIds = [...new Set(protocols.flatMap((p) => p.datasets as number[]))];
     const dsRows = dsIds.length ? ((await sql.query(`SELECT id, title, version FROM rsd_defs WHERE id = ANY($1::bigint[])`, [dsIds])) as Row[]) : [];
     const dsTitle = (id: unknown) => { const d = dsRows.find((x) => String(x.id) === String(id)); return d ? `${d.title} v${d.version}` : `#${id}`; };

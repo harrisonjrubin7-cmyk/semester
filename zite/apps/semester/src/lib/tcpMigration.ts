@@ -18,6 +18,12 @@
 // - Maintenance: windows are scheduled at least an hour ahead, last at most 8 hours, and are shown in-app only. Nothing is sent.
 // - Company staff get configuration authority only; no function here reads a student record.
 export const TCP_MODULES = ['ai_assistant', 'proctoring', 'payments', 'marketplace', 'family_portal', 'employer_network', 'research_partners', 'developer_api'] as const;
+/** Modules whose code consults tcp_gate today (lib/tcpServer.ts requireModule). The others can be entitled and rolled out,
+ *  but nothing reads that yet; both consoles say so. Add a module here only in the commit that wires its check. */
+export const TCP_ENFORCED: { module: (typeof TCP_MODULES)[number]; where: string; quota: boolean }[] = [
+  { module: 'ai_assistant', where: 'apps/semester/src/api/ask.ts', quota: true },
+  { module: 'research_partners', where: 'apps/semester-developers/src/api/researchPartner.ts', quota: false },
+];
 export const TCP_SETTINGS = ['timezone', 'week_start', 'grade_scale', 'late_grace_days', 'default_locale'] as const;
 const MODS = TCP_MODULES.map((m) => `'${m}'`).join(', ');
 const KEYS = TCP_SETTINGS.map((m) => `'${m}'`).join(', ');
@@ -294,5 +300,39 @@ export const TCP_MIGRATION: string[] = [
        RETURN 'ok:' || m.id;
      END IF;
      RETURN 'Unknown step.';
+   END $$`,
+  // Gating (tcp-001 part 2). An institution is unmanaged until a platform admin puts it under entitlement control; unmanaged
+  // institutions keep today's behaviour (every module on), so switching gating on is an explicit, recorded act.
+  `CREATE TABLE IF NOT EXISTS tcp_tenants (tenant_id text PRIMARY KEY, managed boolean NOT NULL, reason text NOT NULL CHECK (length(trim(reason)) >= 10), set_by text NOT NULL, set_at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS tcp_usage (tenant_id text NOT NULL, module text NOT NULL, day date NOT NULL, calls int NOT NULL DEFAULT 0 CHECK (calls >= 0), PRIMARY KEY (tenant_id, module, day))`,
+  `CREATE OR REPLACE FUNCTION tcp_managed(p_tenant text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT coalesce((SELECT managed FROM tcp_tenants WHERE tenant_id = p_tenant), false) $$`,
+  // The one question a module asks: is it on here, for these roles? A flag named module.<module> acts only as a stop: killed,
+  // it turns the module off everywhere; overridden off for one institution, it turns it off there. Its default is ignored. External audiences pass '{}' and need stage all.
+  `CREATE OR REPLACE FUNCTION tcp_gate(p_tenant text, p_module text, p_roles text[]) RETURNS text LANGUAGE sql STABLE AS $$
+     SELECT CASE
+       WHEN EXISTS (SELECT 1 FROM tcp_flags f WHERE f.key = 'module.' || p_module AND (f.killed OR EXISTS (SELECT 1 FROM tcp_flag_overrides o WHERE o.key = f.key AND o.tenant_id = p_tenant AND NOT o.on_value))) THEN 'This feature is switched off right now.'
+       WHEN NOT tcp_managed(p_tenant) THEN NULL
+       WHEN NOT tcp_entitled(p_tenant, p_module) THEN 'Your institution''s plan does not include this feature.'
+       WHEN NOT tcp_module_on(p_tenant, p_module, coalesce(p_roles, '{}')) THEN 'Your institution has not turned this feature on for you yet.'
+       ELSE NULL END $$`,
+  // Counts one call and refuses once the day's quota is used. Only managed institutions with a quota are limited.
+  `CREATE OR REPLACE FUNCTION tcp_consume(p_tenant text, p_module text) RETURNS text LANGUAGE plpgsql AS $$
+   DECLARE lim int; used int;
+   BEGIN
+     INSERT INTO tcp_usage (tenant_id, module, day, calls) VALUES (p_tenant, p_module, current_date, 0) ON CONFLICT DO NOTHING;
+     SELECT calls INTO used FROM tcp_usage WHERE tenant_id = p_tenant AND module = p_module AND day = current_date FOR UPDATE;
+     lim := CASE WHEN tcp_managed(p_tenant) THEN (SELECT api_calls_day FROM tcp_entitlements WHERE tenant_id = p_tenant AND module = p_module AND granted) END;
+     IF lim IS NOT NULL AND used >= lim THEN RETURN 'Your institution has used today''s allowance for this feature. It resets at midnight.'; END IF;
+     UPDATE tcp_usage SET calls = calls + 1 WHERE tenant_id = p_tenant AND module = p_module AND day = current_date;
+     RETURN NULL;
+   END $$`,
+  `CREATE OR REPLACE FUNCTION tcp_manage(p_actor text, p_is_platform boolean, p_tenant text, p_on boolean, p_reason text) RETURNS text LANGUAGE plpgsql AS $$
+   BEGIN
+     IF NOT p_is_platform THEN RETURN 'Only a platform admin changes entitlement control.'; END IF;
+     IF length(trim(coalesce(p_reason, ''))) < 10 THEN RETURN 'Say why (10+ characters).'; END IF;
+     INSERT INTO tcp_tenants (tenant_id, managed, reason, set_by) VALUES (p_tenant, p_on, trim(p_reason), p_actor)
+       ON CONFLICT (tenant_id) DO UPDATE SET managed = EXCLUDED.managed, reason = EXCLUDED.reason, set_by = EXCLUDED.set_by, set_at = now();
+     INSERT INTO tcp_events (tenant_id, actor_id, area, action, detail) VALUES (p_tenant, p_actor, 'entitlement', CASE WHEN p_on THEN 'managed' ELSE 'unmanaged' END, trim(p_reason));
+     RETURN NULL;
    END $$`,
 ];

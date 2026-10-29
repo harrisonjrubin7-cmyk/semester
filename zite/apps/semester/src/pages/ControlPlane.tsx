@@ -11,8 +11,8 @@ type Unit = { id: number; name: string; kind: string; parentId: number | null; r
 type Dept = { id: number; name: string; active: boolean; unitId: number | null };
 type Policy = { id: number; key: string; version: number; title: string; body: string; hash: string; state: string; mine: boolean; author: string | null; approver: string | null; approvedAt: string | null; rev: number };
 type Setting = { key: string; value: unknown; version: number; updatedAt: string | null };
-type Mod = { module: string; entitled: boolean; seatLimit: number | null; apiCallsDay: number | null; stage: string; pilotRoles: string[]; pilotBy: string | null; pilotMine: boolean; pilotAt: string | null; rev: number };
-type Data = { roles: readonly string[]; units: Unit[]; departments: Dept[]; policies: Policy[]; settings: Setting[]; moduleState: Mod[]; maintenance: { id: number; title: string; impact: string; startsAt: string | null; endsAt: string | null }[];
+type Mod = { module: string; enforced: boolean; quotaEnforced: boolean; callsToday: number; entitled: boolean; seatLimit: number | null; apiCallsDay: number | null; stage: string; pilotRoles: string[]; pilotBy: string | null; pilotMine: boolean; pilotAt: string | null; rev: number };
+type Data = { managed: boolean; roles: readonly string[]; units: Unit[]; departments: Dept[]; policies: Policy[]; settings: Setting[]; moduleState: Mod[]; maintenance: { id: number; title: string; impact: string; startsAt: string | null; endsAt: string | null }[];
   events: { who: string | null; area: string; action: string; target: string; detail: string; at: string | null }[] };
 
 const run = async (input: Record<string, unknown>, ok: string, reload: () => void) => { try { await controlPlane(input as never); toast.success(ok); reload(); return true; } catch (e) { toast.error(errMsg(e)); return false; } };
@@ -87,8 +87,8 @@ function ModuleRow({ m, d, reload }: { m: Mod; d: Data; reload: () => void }) {
   const go = (stage: string) => run({ action: 'roll', module: m.module, stage, roles, expectedVersion: m.rev, reason: why }, stage === 'off' ? 'Turned off' : stage === 'pilot' ? 'Pilot started' : 'On for everyone', reload);
   return (
     <div className="border-b border-border py-2 text-sm last:border-0">
-      <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{label(m.module)}</p>
-        <span className="text-xs">{m.entitled ? `Entitled${m.seatLimit ? ` · ${m.seatLimit} seats` : ''}${m.apiCallsDay ? ` · ${m.apiCallsDay} API calls/day` : ''}` : 'Not in your plan'} · <Status value={m.stage} /></span></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-medium">{label(m.module)} <span className="text-xs font-normal text-muted-foreground">{m.enforced ? 'enforced' : 'not yet enforced — settings are recorded but the feature does not check them'}</span></p>
+        <span className="text-xs">{m.callsToday ? `${m.callsToday} uses today · ` : ''}{m.entitled ? `Entitled${m.seatLimit ? ` · ${m.seatLimit} seats` : ''}${m.apiCallsDay ? ` · ${m.apiCallsDay} API calls/day` : ''}` : 'Not in your plan'} · <Status value={m.stage} /></span></div>
       {m.stage === 'pilot' && <p className="text-xs text-muted-foreground">Pilot for {m.pilotRoles.join(', ')} since {fmt(m.pilotAt)} by {m.pilotMine ? 'you' : m.pilotBy}{m.pilotMine ? ' — another administrator turns it on for everyone' : ''}</p>}
       {m.entitled && <div className="mt-1 flex flex-wrap items-center gap-2">
         {m.stage !== 'all' && <fieldset className="flex flex-wrap gap-2"><legend className="sr-only">Pilot roles</legend>{d.roles.map((r) => <label key={r} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={roles.includes(r)} onChange={(e) => setRoles(e.target.checked ? [...roles, r] : roles.filter((x) => x !== r))} />{r}</label>)}</fieldset>}
@@ -111,7 +111,7 @@ export default function ControlPlane() {
         <Structure d={d} reload={s.reload} />
         <Policies d={d} reload={s.reload} />
         <Panel title="Configuration">{d.settings.map((x) => <SettingRow key={x.key} s={x} reload={s.reload} />)}</Panel>
-        <Panel title="Entitlements and rollout">{d.moduleState.map((m) => <ModuleRow key={m.module} m={m} d={d} reload={s.reload} />)}</Panel>
+        <Panel title="Entitlements and rollout"><p className="mb-2 text-xs text-muted-foreground">{d.managed ? 'Your institution is under entitlement control: a module is available only when it is in your plan and rolled out here.' : 'Your institution is not yet under entitlement control, so every module stays available as before. Rollout settings take effect once Semester applies your plan.'}</p>{d.moduleState.map((m) => <ModuleRow key={m.module} m={m} d={d} reload={s.reload} />)}</Panel>
         <Panel title="Recent changes">{d.events.length === 0 ? <Empty>No changes yet.</Empty> : d.events.map((e, i) => <p key={i} className="border-b border-border py-1 text-xs last:border-0">{fmt(e.at)} · {e.who} · {e.area} {e.action} {e.target}{e.detail ? ` — ${e.detail}` : ''}</p>)}</Panel>
       </>)}</Loadable>
     </div>

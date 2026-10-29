@@ -5,6 +5,7 @@ import { integrations } from 'zitejs/integrations';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, tenantScope, first } from '../lib/server';
 import { rateLimit } from '../lib/rateLimitServer';
+import { requireModule } from '../lib/tcpServer';
 import { scopedSearch, Hit } from '../lib/search';
 import { gate, classify, sendableToAI, promptRule, SectionRef, CoursePolicy } from '../lib/aiGate';
 import { specialistInstruction, specialistByKey } from '../lib/intelligence';
@@ -21,6 +22,8 @@ export default createEndpoint({
     // SEC-046: per-user budget, then the tenant budget (only after the membership check above).
     await rateLimit('ask.user', a.userId);
     await rateLimit('ask.tenant', a.institutionId);
+    // Control plane: entitlement, rollout, the module.ai_assistant stop flag and the daily quota (tcp_gate / tcp_consume).
+    await requireModule(a.institutionId, 'ai_assistant', a.roles, { consume: true });
     const consent = await zite.consents.findOne({ filters: { member: a.userId, consentType: 'Assistant Use' } });
     const allowed = !!consent?.granted && !consent?.revoked;
     const inst = await zite.institutions.findOne({ id: a.institutionId });

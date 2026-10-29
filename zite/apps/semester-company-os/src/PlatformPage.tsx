@@ -5,8 +5,8 @@ import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Header, Panel, Chip, Loadable, useLoad, fmt, errMsg } from './ui';
 
-type Mod = { module: string; granted: boolean; seatLimit: number | null; apiCallsDay: number | null; rev: number; note: string; stage: string };
-type Tenant = { id: string; name: string; modules: Mod[]; overrides: { key: string; on: boolean; reason: string }[]; inMaintenance: boolean };
+type Mod = { module: string; enforced: boolean; quotaEnforced: boolean; callsToday: number; granted: boolean; seatLimit: number | null; apiCallsDay: number | null; rev: number; note: string; stage: string };
+type Tenant = { id: string; name: string; managed: boolean; modules: Mod[]; overrides: { key: string; on: boolean; reason: string }[]; inMaintenance: boolean };
 type Flag = { key: string; description: string; defaultOn: boolean; killed: boolean; proposedOn: boolean | null; proposedByMe: boolean; rev: number; overrides: { tenantId: string; institution: string; on: boolean; reason: string }[] };
 type D = { fleet: Tenant[]; flags: Flag[]; maintenance: { id: number; scope: string; title: string; impact: string; startsAt: string | null; endsAt: string | null }[];
   events: { institution: string; mine: boolean; area: string; action: string; target: string; detail: string; at: string | null }[] };
@@ -19,12 +19,24 @@ function EntRow({ t, m, set }: { t: Tenant; m: Mod; set: (d: D) => void }) {
   const go = (granted: boolean) => call({ action: 'entitle', tenantId: t.id, module: m.module, granted, seatLimit: seats ? Number(seats) : null, apiCallsDay: calls ? Number(calls) : null, expectedVersion: m.rev, note }, granted ? 'Entitlement saved' : 'Entitlement revoked; rollout turned off', set);
   return (
     <div className="flex flex-wrap items-center gap-2 border-t py-1 text-xs">
-      <span className="w-36 font-medium">{label(m.module)}</span><Chip value={m.granted ? `granted · ${m.stage}` : 'not granted'} />
+      <span className="w-36 font-medium">{label(m.module)}<span className="block font-normal text-muted-foreground">{m.enforced ? (m.quotaEnforced ? 'enforced, quota enforced' : 'enforced, no quota check') : 'not yet enforced'}</span></span><Chip value={m.granted ? `granted · ${m.stage}` : 'not granted'} /><span className="text-muted-foreground">{m.callsToday} calls today</span>
       <Input aria-label={`Seat limit for ${label(m.module)}`} className="h-7 w-20" placeholder="seats" value={seats} onChange={(e) => setSeats(e.target.value.replace(/\D/g, ''))} />
       <Input aria-label={`API calls per day for ${label(m.module)}`} className="h-7 w-24" placeholder="calls/day" value={calls} onChange={(e) => setCalls(e.target.value.replace(/\D/g, ''))} />
       <Input aria-label={`Reference for ${label(m.module)}`} className="h-7 w-48" placeholder="Order or contract reference" value={note} onChange={(e) => setNote(e.target.value)} />
       <Button size="sm" variant="outline" disabled={note.trim().length < 10} onClick={() => go(true)}>{m.granted ? 'Update' : 'Grant'}</Button>
       {m.granted && <Button size="sm" variant="ghost" disabled={note.trim().length < 10} onClick={() => go(false)}>Revoke</Button>}
+    </div>
+  );
+}
+
+function ManageRow({ t, set }: { t: Tenant; set: (d: D) => void }) {
+  const [why, setWhy] = useState('');
+  const off = t.modules.filter((m) => !m.granted || m.stage === 'off').map((m) => label(m.module));
+  return (
+    <div className="my-1 flex flex-wrap items-center gap-2 text-xs">
+      <Input aria-label={`Reason for entitlement control at ${t.name}`} className="h-7 w-56" placeholder="Why (10+ characters)" value={why} onChange={(e) => setWhy(e.target.value)} />
+      <Button size="sm" variant="outline" disabled={why.trim().length < 10} onClick={() => call({ action: 'manage', tenantId: t.id, managed: !t.managed, reason: why }, t.managed ? 'Unmanaged: every module on again' : 'Under entitlement control', set)}>{t.managed ? 'Release entitlement control' : 'Put under entitlement control'}</Button>
+      {!t.managed && off.length > 0 && <span className="text-muted-foreground">Turning this on switches off here: {off.join(', ')}</span>}
     </div>
   );
 }
@@ -61,7 +73,8 @@ export default function PlatformPage() {
       <Header eyebrow="Operations" title="Platform" sub="Tenant fleet, entitlements and quotas, feature flags and maintenance. Configuration only — no student records are loaded here." />
       <Loadable state={s}>{(d) => { const set = (_x: D) => s.reload(); return (<>
         <Panel title="Tenant fleet">{d.fleet.length === 0 ? <p className="text-sm text-muted-foreground">No institutions yet.</p> : d.fleet.map((t) => (
-          <div key={t.id} className="border-b py-3 last:border-0"><p className="text-sm font-medium">{t.name} {t.inMaintenance && <Chip value="in maintenance" />}</p>
+          <div key={t.id} className="border-b py-3 last:border-0"><p className="text-sm font-medium">{t.name} <Chip value={t.managed ? 'under entitlement control' : 'unmanaged — every module on'} /> {t.inMaintenance && <Chip value="in maintenance" />}</p>
+            <ManageRow t={t} set={set} />
             {t.overrides.length > 0 && <p className="text-xs text-muted-foreground">Flag overrides: {t.overrides.map((o) => `${o.key}=${o.on ? 'on' : 'off'}`).join(', ')}</p>}
             {t.modules.map((m) => <EntRow key={m.module} t={t} m={m} set={set} />)}</div>))}</Panel>
         <Panel title="Feature flags">

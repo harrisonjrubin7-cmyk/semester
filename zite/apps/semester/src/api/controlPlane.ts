@@ -3,7 +3,7 @@ import { createEndpoint } from 'zitejs/backend';
 import { requireAccess, requireAction, forbid, audit, userNames } from '../lib/server';
 import { pg } from '../lib/pg';
 import { SREQ_MIGRATION } from '../lib/sreqMigration';
-import { TCP_MIGRATION, TCP_MODULES, TCP_SETTINGS } from '../lib/tcpMigration';
+import { TCP_MIGRATION, TCP_MODULES, TCP_ENFORCED, TCP_SETTINGS } from '../lib/tcpMigration';
 
 type Row = Record<string, unknown>;
 let ready: Promise<void> | null = null;
@@ -63,10 +63,12 @@ export default createEndpoint({
       sql.query(`SELECT id, title, impact, starts_at, ends_at FROM tcp_maintenance WHERE cancelled_at IS NULL AND ends_at > now() AND (tenant_id IS NULL OR tenant_id = $1) ORDER BY starts_at`, [T]) as Promise<Row[]>,
       sql.query(`SELECT actor_id, area, action, target, detail, at FROM tcp_events WHERE tenant_id = $1 ORDER BY at DESC LIMIT 40`, [T]) as Promise<Row[]>,
     ]);
+    const managed = ((await sql.query(`SELECT tcp_managed($1) AS m`, [T])) as { m: boolean }[])[0].m;
+    const usage = (await sql.query(`SELECT module, calls FROM tcp_usage WHERE tenant_id = $1 AND day = current_date`, [T])) as Row[];
     const names = await userNames([...policies.flatMap((p) => [String(p.author_id), String(p.approver_id ?? '')]), ...rolls.map((r) => String(r.pilot_by ?? '')), ...events.map((e) => String(e.actor_id))].filter(Boolean));
     const nm = (id: unknown) => (id ? names[String(id)] ?? 'Semester staff' : null);
     return {
-      me, roles: ROLES, modules: TCP_MODULES, settingKeys: TCP_SETTINGS,
+      me, managed, roles: ROLES, modules: TCP_MODULES, settingKeys: TCP_SETTINGS,
       units: units.map((u) => ({ id: Number(u.id), name: String(u.name), kind: String(u.kind), parentId: u.parent_id == null ? null : Number(u.parent_id), rev: Number(u.rev) })),
       departments: depts.map((d) => ({ id: Number(d.id), name: String(d.name), active: Boolean(d.active), unitId: d.unit_id == null ? null : Number(d.unit_id) })),
       policies: policies.map((p) => ({ id: Number(p.id), key: String(p.key), version: Number(p.version), title: String(p.title), body: String(p.body), hash: String(p.body_hash), state: String(p.state), mine: p.author_id === me,
@@ -74,7 +76,8 @@ export default createEndpoint({
       settings: TCP_SETTINGS.map((k) => { const s = settings.find((x) => x.key === k); return { key: k, value: s ? s.value : null, version: s ? Number(s.version) : 0, updatedAt: s ? iso(s.updated_at) : null }; }),
       moduleState: TCP_MODULES.map((m) => {
         const e = ents.find((x) => x.module === m), r = rolls.find((x) => x.module === m);
-        return { module: m, entitled: Boolean(e?.granted), seatLimit: e?.seat_limit == null ? null : Number(e.seat_limit), apiCallsDay: e?.api_calls_day == null ? null : Number(e.api_calls_day),
+        const enf = TCP_ENFORCED.find((x) => x.module === m);
+        return { module: m, enforced: Boolean(enf), quotaEnforced: Boolean(enf?.quota), callsToday: Number(usage.find((u) => u.module === m)?.calls ?? 0), entitled: Boolean(e?.granted), seatLimit: e?.seat_limit == null ? null : Number(e.seat_limit), apiCallsDay: e?.api_calls_day == null ? null : Number(e.api_calls_day),
           stage: r ? String(r.stage) : 'off', pilotRoles: (r?.pilot_roles as string[]) ?? [], pilotBy: nm(r?.pilot_by), pilotMine: r?.pilot_by === me, pilotAt: iso(r?.pilot_at), rev: r ? Number(r.rev) : 0 };
       }),
       maintenance: maint.map((m) => ({ id: Number(m.id), title: String(m.title), impact: String(m.impact), startsAt: iso(m.starts_at), endsAt: iso(m.ends_at) })),

@@ -111,6 +111,23 @@ BEGIN
   x := tcp_flag('a1', false, 'kill', 'grading.new_editor', 5, NULL, NULL, 'Institution admin tries');
   INSERT INTO rr VALUES (x = 'Only a platform admin changes flags.', 'C38 only platform admins change flags');
 
+  -- Gating: unmanaged keeps today's behaviour; managed follows entitlement + rollout; module.<name> flag kills; quotas count.
+  INSERT INTO rr VALUES (tcp_gate('t3', 'ai_assistant', ARRAY['Student']) IS NULL, 'G1 an unmanaged institution keeps every module on');
+  x := tcp_manage('a1', false, 't3', true, 'Signed order 2026-200');
+  INSERT INTO rr VALUES (x = 'Only a platform admin changes entitlement control.', 'G2 only platform admins manage gating');
+  x := tcp_manage('pl1', true, 't3', true, 'Signed order 2026-200');
+  INSERT INTO rr VALUES (x IS NULL AND tcp_gate('t3', 'ai_assistant', ARRAY['Student']) = 'Your institution''s plan does not include this feature.', 'G3 managed and not entitled: off');
+  x := tcp_entitle('pl1', true, 't3', 'ai_assistant', true, NULL, 2, 0, 'Signed order 2026-200');
+  INSERT INTO rr VALUES (tcp_gate('t3', 'ai_assistant', ARRAY['Student']) = 'Your institution has not turned this feature on for you yet.', 'G4 entitled but not rolled out: off');
+  x := tcp_roll('t3', 'a1', true, 'ai_assistant', 'pilot', ARRAY['Faculty'], 0, 'Faculty try it first');
+  INSERT INTO rr VALUES (tcp_gate('t3', 'ai_assistant', ARRAY['Faculty']) IS NULL AND tcp_gate('t3', 'ai_assistant', ARRAY['Student']) IS NOT NULL AND tcp_gate('t3', 'ai_assistant', '{}') IS NOT NULL, 'G5 pilot roles only; external audiences wait for all');
+  INSERT INTO rr VALUES (tcp_consume('t3', 'ai_assistant') IS NULL AND tcp_consume('t3', 'ai_assistant') IS NULL AND tcp_consume('t3', 'ai_assistant') = 'Your institution has used today''s allowance for this feature. It resets at midnight.', 'G6 daily quota enforced');
+  x := tcp_consume('t4', 'ai_assistant');
+  INSERT INTO rr VALUES (x IS NULL AND (SELECT calls FROM tcp_usage WHERE tenant_id = 't4' AND module = 'ai_assistant' AND day = current_date) = 1, 'G7 unmanaged institutions are counted, not limited');
+  x := tcp_flag('pl1', true, 'define', 'module.ai_assistant', NULL, NULL, NULL, 'Emergency stop for the AI assistant');
+  INSERT INTO rr VALUES (tcp_gate('t4', 'ai_assistant', ARRAY['Student']) IS NULL, 'G8 a defined flag left off by default does not stop the module');
+  x := tcp_flag('pl1', true, 'kill', 'module.ai_assistant', 1, NULL, NULL, 'Provider returning unsafe output');
+  INSERT INTO rr VALUES (tcp_gate('t4', 'ai_assistant', ARRAY['Student']) = 'This feature is switched off right now.' AND tcp_gate('t3', 'ai_assistant', ARRAY['Faculty']) = 'This feature is switched off right now.', 'G9 the kill switch stops it everywhere');
   got := false; BEGIN UPDATE tcp_policies SET approver_id = author_id WHERE id = p1; EXCEPTION WHEN check_violation THEN got := true; END;
   INSERT INTO rr VALUES (got, 'C39 the table refuses self-approval');
   got := false; BEGIN DELETE FROM tcp_events; EXCEPTION WHEN OTHERS THEN got := true; END;
@@ -131,6 +148,10 @@ export async function run() {
     ['rollout during maintenance (C32)', `IF tcp_in_maintenance(p_tenant) THEN RETURN`, `IF false THEN RETURN`],
     ['flag self-approval (C35)', `IF f.proposed_by = p_actor THEN RETURN`, `IF false THEN RETURN`],
     ['kill ignored (C37)', `SELECT CASE WHEN f.killed THEN false ELSE`, `SELECT CASE WHEN false THEN false ELSE`],
+    ['unmanaged gated (G1)', `WHEN NOT tcp_managed(p_tenant) THEN NULL`, `WHEN false THEN NULL`],
+    ['module flag default kills (G8)', `AND (f.killed OR EXISTS (SELECT 1 FROM tcp_flag_overrides o WHERE o.key = f.key AND o.tenant_id = p_tenant AND NOT o.on_value))) THEN`, `AND (f.killed OR NOT f.default_on)) THEN`],
+    ['quota ignored (G6)', `IF lim IS NOT NULL AND used >= lim THEN RETURN`, `IF false THEN RETURN`],
+    ['pilot roles ignored (G5)', `WHEN NOT tcp_module_on(p_tenant, p_module, coalesce(p_roles, '{}')) THEN`, `WHEN NOT tcp_entitled(p_tenant, p_module) THEN`],
     ['structure cycle (C4)', `IF cyc THEN RETURN`, `IF false THEN RETURN`],
   ];
   for (const [name, from, to] of muts) { const m = base.map((q) => q.replace(from, () => to)); console.log(`${name} applied:`, m.join('') !== base.join('')); await go(`mutant ${name}:`, m); }
