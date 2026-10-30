@@ -28,11 +28,10 @@ For direct backend development:
 
 ```bash
 cd apps/api
-python3.12 -m venv .venv
-. .venv/bin/activate
-pip install -e '.[dev]'
-alembic upgrade head
-uvicorn app.main:app --reload
+python3.12 -m pip install uv==0.13.6
+uv sync --locked --extra dev
+uv run --locked --extra dev alembic upgrade head
+uv run --locked --extra dev uvicorn app.main:app --reload
 ```
 
 ## Trust contract

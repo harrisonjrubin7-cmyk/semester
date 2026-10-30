@@ -172,8 +172,9 @@ describe('Zite RLS verifier dependency updates', () => {
 });
 
 describe('Course Engine API dependency updates', () => {
-  it('holds a weekly, bounded updater beside the Python manifest', () => {
+  it('holds a weekly, bounded updater beside the Python manifest and resolver lock', () => {
     expect(existsSync(join(root, 'course-engine/apps/api/pyproject.toml'))).toBe(true);
+    expect(existsSync(join(root, 'course-engine/apps/api/uv.lock'))).toBe(true);
     expect(courseEngineApiUpdateProblems(read('.github/dependabot.yml'))).toEqual([]);
   });
 
