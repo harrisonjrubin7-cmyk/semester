@@ -324,7 +324,7 @@ async function inspectAccessibilityDialog(journey, hash, viewport) {
     const dialog = page.getByRole('dialog', { name: 'Accessibility tools', exact: true });
     await dialog.waitFor({ state: 'visible', timeout: 15_000 });
     await dialog.getByRole('button', { name: 'Close Accessibility tools', exact: true }).waitFor({ state: 'visible', timeout: 15_000 });
-    await page.waitForTimeout(50);
+    await dialog.getByRole('group', { name: 'Accessibility preferences', exact: true }).waitFor({ state: 'visible', timeout: 15_000 });
 
     const state = await page.evaluate(() => {
       const trigger = document.querySelector('button[aria-label="Accessibility tools"]');

@@ -50,6 +50,7 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('async function inspectAccessibilityDialog(journey, hash, viewport)');
     expect(source).toContain("getByRole('button', { name: 'Accessibility tools', exact: true })");
     expect(source).toContain("getByRole('dialog', { name: 'Accessibility tools', exact: true })");
+    expect(source).toContain("getByRole('group', { name: 'Accessibility preferences', exact: true })");
     expect(source).toContain("state.ariaModal !== 'false'");
     expect(source).toContain("await page.keyboard.press('Escape')");
     expect(source).toContain('Escape did not return focus to the opener');
