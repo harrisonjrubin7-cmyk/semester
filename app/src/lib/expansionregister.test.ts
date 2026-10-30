@@ -130,6 +130,8 @@ describe('the strategic expansion register', () => {
       expect(recovery).toContain(gate);
     }
     expect(recovery).toMatch(/approval from the incident lead plus the environment owner/i);
+    expect(recovery).toMatch(/reopening a workflow or integration is not incident closure/i);
+    expect(recovery).toMatch(/closure also requires tenant-impact decisions, required notifications, corrective actions with owners and dates/i);
     expect(runbook).toMatch(/must not .*accept a known-vulnerable replacement without a recorded exception/i);
   });
 
