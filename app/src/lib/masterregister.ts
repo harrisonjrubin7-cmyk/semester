@@ -1126,7 +1126,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Screen-reader test',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/a11y/landmarks.test.ts', shows: 'One main, one h1, a reachable navigation' }, { path: 'app/src/a11y/labels.test.ts', shows: 'Guards accessible names' }, { path: 'app/src/a11y/modal.test.ts', shows: 'Dialog focus behaviour' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Checks for duplicate mains, broken ARIA references and unnamed controls; opens the shared non-modal Accessibility tools dialog and shared Quick Add true modal on seven critical journeys at phone and tablet widths to verify modal state, focus entry, true-modal focus containment, axe result and Escape focus return' }],
+    evidence: [{ path: 'app/src/a11y/landmarks.test.ts', shows: 'One main, one h1, a reachable navigation' }, { path: 'app/src/a11y/labels.test.ts', shows: 'Guards accessible names' }, { path: 'app/src/a11y/modal.test.ts', shows: 'Dialog focus behaviour' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Checks for duplicate mains, broken ARIA references and unnamed controls; opens the shared non-modal Accessibility tools dialog and shared Quick Add true modal on seven critical journeys at phone and tablet widths, then forces the Quick Add storage-refusal state to verify its alert, preserved input, absent write, modal focus, axe result and Escape focus return' }],
     gap: 'No screen-reader testing (NVDA, JAWS, VoiceOver, TalkBack) has been recorded. Live regions, additional modals and other interactive states are not verified across routes.',
   },
   {

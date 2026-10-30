@@ -392,12 +392,12 @@ export const CONTROLS: readonly Control[] = [
   {
     id: 'TC-A11-01',
     family: 'accessibility',
-    does: 'axe-core runs in real Chromium over every registered destination at 375 and 1024 pixels, plus the shared non-modal Accessibility tools dialog and shared Quick Add true modal on seven critical journeys at both widths, and in jsdom over focused desktop and phone cases, failing on serious or critical violations.',
+    does: 'axe-core runs in real Chromium over every registered destination at 375 and 1024 pixels, plus the shared non-modal Accessibility tools dialog, shared Quick Add true modal and its forced local-storage refusal on seven critical journeys at both widths, and in jsdom over focused desktop and phone cases, failing on serious or critical violations.',
     domains: ['learning', 'productivity', 'campus', 'identity'],
     mechanism: 'ci',
     state: 'partial',
     proof: ['.github/workflows/ci.yml', 'app/src/lib/accessibilitysmoke.test.ts', 'app/src/a11y/axe.test.tsx'],
-    gap: 'The phone-and-tablet browser sweep covers the default synthetic state of all sixty-three registered destinations, one shared non-modal dialog and one shared true modal on seven critical journeys; signed-in, error, additional modal, other interactive and real-device states remain outside it, and automated axe results are not a manual assistive-technology pass.',
+    gap: 'The phone-and-tablet browser sweep covers the default synthetic state of all sixty-three registered destinations, one shared non-modal dialog, one shared true modal and that modal’s local-storage refusal on seven critical journeys; signed-in, other error, additional modal, other interactive and real-device states remain outside it, and automated axe results are not a manual assistive-technology pass.',
     owner: 'accessibility',
   },
   {

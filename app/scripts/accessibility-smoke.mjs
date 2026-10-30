@@ -13,8 +13,8 @@
  *
  * The shared Accessibility tools dialog and Quick Add true modal are also
  * opened on every critical journey at each axe width so focus entry, focus
- * containment, Escape focus return and rendered modal state are measured
- * rather than inferred from source tests.
+ * containment, Escape focus return, rendered modal state and a refused local
+ * capture are measured rather than inferred from source tests.
  * Exit 0 only after every journey and every configured axe width were measured.
  * Exit 1 on a finding and 2 when the instrument itself could not run.
  */
@@ -83,6 +83,7 @@ let measured = 0;
 let axeMeasured = 0;
 let accessibilityDialogMeasured = 0;
 let trueModalMeasured = 0;
+let trueModalStorageErrorMeasured = 0;
 const axeControlsPassed = new Set();
 const instrumentFailures = [];
 
@@ -446,6 +447,89 @@ async function inspectTrueModal(journey, hash, viewport) {
   }
 }
 
+async function inspectTrueModalStorageError(journey, hash, viewport) {
+  const context = await contextFor(viewport);
+  const widthLabel = `${viewport.width}px`;
+  const captureText = 'psci reading tomorrow';
+  try {
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error).split('\n')[0]));
+    await page.goto(`${ROUTE_BASE}${hash}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.waitForTimeout(SETTLE);
+
+    const opener = page.getByRole('button', { name: 'Add something in one line', exact: true });
+    await opener.waitFor({ state: 'visible', timeout: 15_000 });
+    await opener.click();
+    const dialog = page.getByRole('dialog', { name: 'Add something quickly', exact: true });
+    await dialog.waitFor({ state: 'visible', timeout: 15_000 });
+    const field = dialog.getByRole('textbox', { name: 'What to add', exact: true });
+    await field.fill(captureText);
+
+    await page.evaluate(() => {
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function refuseProductivityCapture(key, value) {
+        if (String(key).startsWith('semester.productivity.v1:')) {
+          throw new DOMException('Synthetic storage refusal', 'QuotaExceededError');
+        }
+        return setItem.call(this, key, value);
+      };
+    });
+    await dialog.getByRole('button', { name: 'Capture for later', exact: true }).click();
+    const alert = dialog.getByRole('alert');
+    await alert.waitFor({ state: 'visible', timeout: 15_000 });
+
+    const state = await page.evaluate((expected) => {
+      const modal = document.querySelector('[role="dialog"][aria-label="Add something quickly"]');
+      const field = modal?.querySelector('input[aria-label="What to add"]');
+      const error = modal?.querySelector('[role="alert"]');
+      const statuses = modal ? [...modal.querySelectorAll('[role="status"]')] : [];
+      const productivityValues = [];
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith('semester.productivity.v1:')) productivityValues.push(localStorage.getItem(key) || '');
+      }
+      return {
+        errorText: error?.textContent?.replace(/\s+/g, ' ').trim() || '',
+        statusText: statuses.map((node) => node.textContent?.replace(/\s+/g, ' ').trim() || '').join(' '),
+        inputValue: field instanceof HTMLInputElement ? field.value : '',
+        focusInside: Boolean(modal && modal.contains(document.activeElement)),
+        persisted: productivityValues.some((value) => value.includes(expected)),
+      };
+    }, captureText);
+    const messages = pageErrors.map((error) => `page error: ${error}`);
+    if (!state.errorText.includes('Changes could not be saved: Synthetic storage refusal')) {
+      messages.push(`storage refusal alert was "${state.errorText || 'missing'}"`);
+    }
+    if (!state.statusText.includes('Could not save captured context.')) {
+      messages.push(`storage refusal status was "${state.statusText || 'missing'}"`);
+    }
+    if (state.inputValue !== captureText) messages.push('failed capture changed the Quick Add text');
+    if (state.persisted) messages.push('failed capture was persisted');
+    if (!state.focusInside) messages.push('focus left the true modal after the storage refusal');
+
+    for (const violation of await seriousAxeViolations(page)) {
+      for (const node of violation.nodes) {
+        messages.push(`axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
+      }
+    }
+
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({ state: 'hidden', timeout: 15_000 });
+    if (!await opener.evaluate((trigger) => document.activeElement === trigger)) {
+      messages.push('Escape did not return focus after the storage refusal');
+    }
+
+    record(`${journey} true modal storage error`, widthLabel, messages);
+    trueModalStorageErrorMeasured += 1;
+  } catch (error) {
+    instrumentFailures.push(`${journey} true modal storage error at ${widthLabel}: inspection failed: ${String(error).split('\n')[0]}`);
+  } finally {
+    await context.close();
+  }
+}
+
 try {
   for (const [journey, hash] of JOURNEYS) {
     await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
@@ -455,6 +539,7 @@ try {
     for (const destination of DESTINATIONS) await inspectDestination(destination, viewport);
     for (const [journey, hash] of JOURNEYS) await inspectAccessibilityDialog(journey, hash, viewport);
     for (const [journey, hash] of JOURNEYS) await inspectTrueModal(journey, hash, viewport);
+    for (const [journey, hash] of JOURNEYS) await inspectTrueModalStorageError(journey, hash, viewport);
   }
 } finally {
   await browser.close();
@@ -463,15 +548,19 @@ try {
 const expectedAxeMeasurements = DESTINATIONS.length * AXE_VIEWPORTS.length;
 const expectedAccessibilityDialogMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
 const expectedTrueModalMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
+const expectedTrueModalStorageErrorMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
 if (measured !== JOURNEYS.length * 2 || axeMeasured !== expectedAxeMeasurements
   || accessibilityDialogMeasured !== expectedAccessibilityDialogMeasurements
-  || trueModalMeasured !== expectedTrueModalMeasurements || axeControlsPassed.size !== AXE_VIEWPORTS.length
+  || trueModalMeasured !== expectedTrueModalMeasurements
+  || trueModalStorageErrorMeasured !== expectedTrueModalStorageErrorMeasurements
+  || axeControlsPassed.size !== AXE_VIEWPORTS.length
   || instrumentFailures.length) {
   console.error(
     `accessibility smoke instrument incomplete: journeys ${measured}/${JOURNEYS.length * 2}; ` +
     `phone/tablet axe destinations ${axeMeasured}/${expectedAxeMeasurements}; ` +
     `accessibility dialog states ${accessibilityDialogMeasured}/${expectedAccessibilityDialogMeasurements}; ` +
     `true modal states ${trueModalMeasured}/${expectedTrueModalMeasurements}; ` +
+    `true modal storage-error states ${trueModalStorageErrorMeasured}/${expectedTrueModalStorageErrorMeasurements}; ` +
     `controls ${axeControlsPassed.size}/${AXE_VIEWPORTS.length}` +
     `${instrumentFailures.length ? `\n${instrumentFailures.map((item) => `- ${item}`).join('\n')}` : ''}`,
   );
@@ -486,5 +575,6 @@ console.log(
   `${DESTINATIONS.length} registered destinations axe-scanned at ${AXE_WIDTHS.join('px and ')}px; ` +
   `${JOURNEYS.length} shared non-modal accessibility dialog states verified at each axe width; ` +
   `${JOURNEYS.length} shared true-modal states verified at each axe width; ` +
+  `${JOURNEYS.length} shared true-modal storage-error states verified at each axe width; ` +
   'skip focus, dialog focus containment and return, landmarks, titles, names and ARIA references verified',
 );
