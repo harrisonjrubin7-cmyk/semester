@@ -25,6 +25,25 @@ same split the subprocessor register makes:
 | **Medium** | A subprocessor that receives request metadata only, or an institution-directed party the institution chose and contracts with | Before a pilot, then yearly |
 | **Student-directed** | The student's own account at a service they connected. Not a subprocessor; Semester has no contract with it | No vendor assessment. The review is that the privacy screen still says truthfully what goes there before it happens |
 
+## Proposed ownership and review targets
+
+Proposed seats are not assignments or sign-offs. This table holds the candidate
+primary seat, independent backup and target for the first human review so those
+decisions cannot disappear between planning and procurement. It does not fill
+the register's **Owner** or **Last review** cells, does not show that any person
+accepted the work, and does not show that an attestation, DPA, region or exit
+path was reviewed. Each subprocessor's engineering fallback and exit path is
+held separately in `app/src/lib/trust/exitplans.ts`.
+
+| Party | Risk tier | Proposed owner seat | Proposed backup seat | Review target | Status |
+| --- | --- | --- | --- | --- | --- |
+| Supabase | High | `security` | `engineering` | 2027-03-31 | Proposed |
+| GitHub Pages | Medium | `engineering` | `security` | 2027-03-31 | Proposed |
+| Vercel | High | `engineering` | `security` | 2027-03-31 | Proposed |
+| Anthropic (Semester’s key) | High | `privacy` | `security` | 2027-03-31 | Proposed |
+| Stripe | High | `finance` | `security` | 2027-03-31 | Proposed |
+| Resend | Medium | `operations` | `privacy` | 2027-03-31 | Proposed |
+
 ## The register
 
 | Party | Kind | Data shared | Hosting region | Security attestation (public, unverified) | DPA / terms on file | Risk tier | Owner | Last review |
