@@ -137,10 +137,10 @@ jobs:
         run: npm run sweep:targets 2>&1 | tee /tmp/targets.txt
 
       # WCAG 1.4.12 is layout evidence too. This applies the standard's text-
-      # spacing overrides to every registered destination at phone and desktop
-      # widths. The instrument proves it can distinguish a fixed-height text
-      # loss from a box that grows, refuses an incomplete destination walk and
-      # exits non-zero when the override introduces clipping or horizontal
+      # spacing overrides to every registered destination at phone, tablet and
+      # desktop widths. The instrument proves it can distinguish a fixed-height
+      # text loss from a box that grows, refuses an incomplete destination walk
+      # and exits non-zero when the override introduces clipping or horizontal
       # scrolling. `if: always()` keeps one red sweep from hiding another.
       - name: Text spacing
         if: always()

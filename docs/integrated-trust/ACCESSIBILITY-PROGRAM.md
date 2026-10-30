@@ -17,7 +17,7 @@ The program's job is to turn "built toward WCAG 2.2 AA" into a record a procurem
 | Token contrast | 11 accents × 13 grounds, both faded strengths, every surface | `app/src/lib/contrast.test.ts` | Yes | What a browser composites |
 | Painted contrast | Thirteen grounds, two widths, hover and focus | `.github/workflows/contrast.yml` nightly | **Yes since 4 October** (it could not before; see TR-01) | 58 of 63 destinations by default; 14,025 gradient-painted elements |
 | Target size | Every registered destination at phone and desktop widths and all three densities | `npm run sweep:targets` via `.github/workflows/contrast.yml` nightly | Yes | Default synthetic state; no real device |
-| Text spacing | WCAG 1.4.12 overrides across every registered destination at phone and desktop widths; planted clipping control | `npm run sweep:spacing` via `.github/workflows/contrast.yml` nightly | Yes | Default synthetic state; no signed-in, error, modal, tablet or real-device states; no overlap detection between separate boxes |
+| Text spacing | WCAG 1.4.12 overrides across every registered destination at phone, tablet and desktop widths; planted clipping control | `npm run sweep:spacing` via `.github/workflows/contrast.yml` nightly | Yes | Default synthetic state; no signed-in, error, modal or real-device states; no overlap detection between separate boxes |
 | Keyboard walk | 40 Tab stops on 13 screens, axe with WCAG 2.2 tags | `app/scripts/keyboard-pass.mjs`, not in `package.json` | No | One recorded run (28 September); axe could not judge contrast in it |
 | Manual and assistive technology | The protocol in `docs/accessibility/AT-PASS-PROTOCOL.md` | — | No | **No result exists** |
 
@@ -28,7 +28,7 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 ### On every change (automated, blocks the merge)
 
 1. The existing guards in section 1, unchanged.
-2. **TR-26:** the complete default destination inventory now receives real-browser axe at 375 pixels, plus a nightly WCAG 1.4.12 text-spacing sweep at phone and desktop widths. Extend both instruments into signed-in, error and modal states; add tablet and overlap coverage and an autocomplete check (1.3.5). Automated evidence still cannot answer these criteria by itself: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
+2. **TR-26:** the complete default destination inventory now receives real-browser axe at 375 pixels, plus a nightly WCAG 1.4.12 text-spacing sweep at phone, tablet and desktop widths. Extend both instruments into signed-in, error and modal states; add tablet axe and text-overlap coverage and an autocomplete check (1.3.5). Automated evidence still cannot answer these criteria by itself: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
 3. A pull request that adds a component states how it was checked with the keyboard alone (the template already asks).
 
 ### Nightly (automated, now able to fail)

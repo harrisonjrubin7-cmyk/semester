@@ -24,12 +24,12 @@
  *
  * ## What it measures
  *
- * Every destination, at a phone and a desktop width. For each: what is clipped
- * or overflowing *before*, then the four properties forced on with `!important`
- * (the same override the standard's own test uses), then what is clipped or
- * overflowing *after*. Only what is **new** is reported. The app has plenty of
- * `overflow: hidden` that is decoration and a sweep that convicted all of it
- * would be argued with instead of acted on.
+ * Every destination, at phone, tablet and desktop widths. For each: what is
+ * clipped or overflowing *before*, then the four properties forced on with
+ * `!important` (the same override the standard's own test uses), then what is
+ * clipped or overflowing *after*. Only what is **new** is reported. The app
+ * has plenty of `overflow: hidden` that is decoration and a sweep that
+ * convicted all of it would be argued with instead of acted on.
  *
  * Three kinds of loss, each a way text stops being readable:
  *
@@ -50,7 +50,7 @@
  * Destinations at their default tab, not every tab and not every state: a
  * modal, an empty state, an error. Text that only appears after an interaction
  * is not seen. Overlap between text boxes is not measured. A clean run means
- * "no new clipping or sideways scroll on the first view of each screen at two
+ * "no new clipping or sideways scroll on the first view of each screen at three
  * widths", and the output says so.
  */
 import { createRequire } from 'node:module';
@@ -67,7 +67,10 @@ if (from) {
 
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
-const WIDTHS = (process.env.SWEEP_WIDTHS || '420,1280').split(',').map(Number);
+const WIDTHS = (process.env.SWEEP_WIDTHS || '420,1024,1280').split(',').map(Number);
+if (WIDTHS.some((width) => !Number.isInteger(width) || width <= 0) || new Set(WIDTHS).size !== WIDTHS.length) {
+  throw new Error('SWEEP_WIDTHS must contain unique positive integer CSS widths');
+}
 
 /** The override the standard's own test applies. */
 const SPACING = `
