@@ -72,6 +72,19 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectTrueModal');
   });
 
+  it('opens and axe-scans the independent search modal on every critical journey at each width', () => {
+    expect(source).toContain('async function inspectSearchModal(journey, hash, viewport)');
+    expect(source).toContain("getByRole('button', { name: 'Search, ask or add', exact: true })");
+    expect(source).toContain("getByRole('dialog', { name: 'Search everything', exact: true })");
+    expect(source).toContain('Search modal aria-modal was');
+    expect(source).toContain('Tab escaped the search modal');
+    expect(source).toContain('Shift+Tab escaped the search modal');
+    expect(source).toContain('Escape did not return focus to the search-modal opener');
+    expect(source).toContain('const expectedSearchModalMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length');
+    expect(source).toContain('searchModalMeasured !== expectedSearchModalMeasurements');
+    expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectSearchModal');
+  });
+
   it('refuses an unreachable or error-bound destination as an instrument failure', () => {
     expect(source).toContain('if (!arrived(screen, destinationLabel, seen))');
     expect(source).toContain("seen.error) instrumentFailures.push");
