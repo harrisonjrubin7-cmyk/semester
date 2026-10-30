@@ -37,6 +37,16 @@ describe('the proposed supplier-risk ownership plan', () => {
     expect(SUPPLIER_RISK_PLANS.map((plan) => plan.party).sort()).toEqual(EXIT_PLANS.map((plan) => plan.party).sort());
   });
 
+  it('never promotes a proposed seat or target into authoritative review fields', () => {
+    const authoritative = register().slice(register().indexOf('## The register'));
+    for (const plan of SUPPLIER_RISK_PLANS) {
+      const row = authoritative.split('\n').find((line) => line.startsWith(`| ${plan.party} | Subprocessor |`));
+      const cells = row?.split('|').slice(1, -1).map((cell) => cell.trim());
+      expect(cells?.[7], `${plan.party} authoritative owner`).toBe('');
+      expect(cells?.[8], `${plan.party} authoritative review date`).toBe('');
+    }
+  });
+
   it('renders the held planning overlay verbatim in the vendor register', () => {
     expect(register()).toContain(renderSupplierRiskPlan());
     expect(register()).toContain('Proposed seats are not assignments or sign-offs');
