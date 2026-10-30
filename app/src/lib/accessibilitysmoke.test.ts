@@ -59,6 +59,19 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectAccessibilityDialog');
   });
 
+  it('opens and axe-scans a true modal on every critical journey at each width', () => {
+    expect(source).toContain('async function inspectTrueModal(journey, hash, viewport)');
+    expect(source).toContain("getByRole('button', { name: 'Add something in one line', exact: true })");
+    expect(source).toContain("getByRole('dialog', { name: 'Add something quickly', exact: true })");
+    expect(source).toContain("state.ariaModal !== 'true'");
+    expect(source).toContain('Tab escaped the true modal');
+    expect(source).toContain('Shift+Tab escaped the true modal');
+    expect(source).toContain('Escape did not return focus to the true-modal opener');
+    expect(source).toContain('const expectedTrueModalMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length');
+    expect(source).toContain('trueModalMeasured !== expectedTrueModalMeasurements');
+    expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectTrueModal');
+  });
+
   it('refuses an unreachable or error-bound destination as an instrument failure', () => {
     expect(source).toContain('if (!arrived(screen, destinationLabel, seen))');
     expect(source).toContain("seen.error) instrumentFailures.push");
