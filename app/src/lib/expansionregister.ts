@@ -95,7 +95,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
       ['Supplier-compromise runbook and tabletop exercise', 'designed', [['docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md', 'supplier-compromise response roles, containment, evidence, communications, recovery, and tabletop design']], 'Runbook designed; no tabletop executed and no artifact exists under docs/evidence/. Response seats, exercise cadence, vendor contacts, tenant contacts, and contractual notification duties have not been validated.'],
       ['Customer notification when a supply-chain event is material', 'tested', [['app/src/lib/governance/incident-comms.ts', 'audiences, approvers, cadence'], ['app/src/lib/governance/incident-comms.test.ts', 'held']], 'No supply-chain trigger names when it applies.'],
       ['Vendor and third-party component risk register', 'tested', [['app/src/lib/trust/subprocessors.ts', 'every host named'], ['app/src/lib/trust/subprocessors.test.ts', 'held to the CSP']], 'No risk rating or review date per vendor.'],
-      ['Corrective actions tracked and re-tested; scan history kept', 'not-started', [], 'Nothing records a finding from report to re-test.'],
+      ['Corrective actions tracked and re-tested; scan history kept', 'building', [['app/src/lib/trust/finding-lifecycle.ts', 'pure lifecycle with exact scan references, deadlines, remediation, retest, reopen, and expiring acceptance'], ['app/src/lib/trust/finding-lifecycle.test.ts', 'negative tests hold closure and concurrency boundaries']], 'Repository lifecycle exists, but there is no durable shared store, scanner ingestion, assignment queue, or notification path. There is no operated scan history, and no real finding has completed this lifecycle.'],
     ],
   },
   {

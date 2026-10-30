@@ -104,6 +104,17 @@ describe('the strategic expansion register', () => {
     expect(runbook).toMatch(/production mutation requires explicit approval/i);
   });
 
+  it('keeps corrective-action tracking at building until real scan history is operated', () => {
+    const item = ITEMS.find((i) => i.item === 'Corrective actions tracked and re-tested; scan history kept')!;
+    expect(item.status).toBe('building');
+    expect(item.evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
+      'app/src/lib/trust/finding-lifecycle.ts',
+      'app/src/lib/trust/finding-lifecycle.test.ts',
+    ]));
+    expect(item.gap).toMatch(/no durable shared store/i);
+    expect(item.gap).toMatch(/no operated scan history/i);
+  });
+
   it('is what docs/STRATEGIC-EXPANSION-REGISTER.md says', () => {
     const rendered = render();
     if (process.env.REGISTERS === 'write') writeFileSync(join(root, DOC), rendered);
