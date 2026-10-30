@@ -8,7 +8,8 @@ describe("JWT verification", () => {
   let keys: { publicKey: CryptoKey; privateKey: CryptoKey };
   const issuer = "https://test-issuer.example";
   const audience = "semester-api";
-  const subject = "10000000-0000-4000-8000-000000000001";
+  // PostgreSQL UUID fixtures are not required to carry RFC version bits.
+  const subject = "10000000-0000-0000-0000-000000000001";
 
   beforeAll(async () => {
     keys = (await generateKeyPair("RS256")) as unknown as typeof keys;

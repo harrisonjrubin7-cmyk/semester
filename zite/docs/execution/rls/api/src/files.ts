@@ -7,6 +7,7 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Pool } from "pg";
 import { z } from "zod";
+import { databaseUuid } from "./schemas";
 import { withTenant, ForbiddenError } from "./database";
 
 export type FileAccessLog = { actor: string | null; tenant: string | null; fileId: string | null; action: string; decision: "allow" | "deny"; reason: string };
@@ -31,8 +32,8 @@ function signLink(cfg: FileConfig, key: string, exp: number) {
 
 export function filesRouter(pool: Pool, cfg: FileConfig, authenticate: RequestHandler): Router {
   const r = express.Router();
-  const tenantParam = z.string().uuid();
-  const idParam = z.string().uuid();
+  const tenantParam = databaseUuid;
+  const idParam = databaseUuid;
 
   // Upload: raw bytes, size-capped by the parser, type decided by content.
   r.post("/api/v1/tenants/:tenantId/files", authenticate, express.raw({ type: "*/*", limit: MAX_BYTES }), async (req, res) => {

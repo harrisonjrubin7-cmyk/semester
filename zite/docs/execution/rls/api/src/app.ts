@@ -5,12 +5,13 @@ import { z } from "zod";
 import { authenticate, type AuthConfig } from "./auth";
 import { ForbiddenError, requireCapability, withTenant } from "./database";
 import type { createLimiter } from "./limiter";
+import { databaseUuid } from "./schemas";
 
 type Limiter = ReturnType<typeof createLimiter>;
 type Dependencies = { pool: Pool; auth: AuthConfig; limiter: Limiter };
 
-const paramsSchema = z.object({ tenantId: z.string().uuid() });
-const querySchema = z.object({ workspaceId: z.string().uuid() });
+const paramsSchema = z.object({ tenantId: databaseUuid });
+const querySchema = z.object({ workspaceId: databaseUuid });
 
 export function createApp(deps: Dependencies) {
   const app = express();
