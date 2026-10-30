@@ -46,6 +46,8 @@ Communications use the incident-communications approval path and distinguish fac
 
 Notify affected institutions when impact or a contractual trigger is established, or when the authorized legal/privacy decision records that uncertainty itself requires notice. Do not wait for perfect attribution if a notification deadline applies. Do not identify a supplier, tenant, attacker, or data category without evidence and approval. Record recipients, channel, approver, time, and the exact message sent.
 
+The repository routing contract recognizes exactly four evidenced bases: confirmed impact, contractual duty, regulatory duty with an exact deadline, or an authorized legal/privacy decision that uncertainty itself requires notice. It preserves unresolved service and tenant assessment blockers, prepares only the existing security-communications route, and sends nothing.
+
 ## Recovery and re-entry
 
 Re-entry requires a known-clean source, reproducible build, reviewed dependency and workflow changes, rotated exposed trust material, security and functional checks, a rollback path, and approval from the incident lead plus the environment owner. Restore incrementally, starting with the smallest non-production or isolated scope that can test the recovery hypothesis.

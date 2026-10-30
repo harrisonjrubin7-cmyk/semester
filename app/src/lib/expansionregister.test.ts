@@ -147,6 +147,19 @@ describe('the strategic expansion register', () => {
     expect(item.gap).toMatch(/no .*operated assessment/i);
   });
 
+  it('holds supply-chain notification to an authorized basis without claiming a sent notice', () => {
+    const item = ITEMS.find((i) => i.item === 'Customer notification when a supply-chain event is material')!;
+    expect(item.status).toBe('tested');
+    expect(item.evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
+      'app/src/lib/trust/supply-chain-notification.ts',
+      'app/src/lib/trust/supply-chain-notification.test.ts',
+    ]));
+    expect(item.gap).toMatch(/no authoritative contract\/regulatory-duty store/i);
+    expect(item.gap).toMatch(/no .*sender integration/i);
+    expect(item.gap).toMatch(/no .*operated decision/i);
+    expect(item.gap).toMatch(/no .*real notice evidence/i);
+  });
+
   it('keeps corrective-action tracking at building until real scan history is operated', () => {
     const item = ITEMS.find((i) => i.item === 'Corrective actions tracked and re-tested; scan history kept')!;
     expect(item.status).toBe('building');
