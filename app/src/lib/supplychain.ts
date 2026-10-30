@@ -63,6 +63,126 @@ export const LOCKFILES: Record<Lockfile, { path: string; ships: boolean; what: s
   pipeline: { path: 'pipeline/package-lock.json', ships: false, what: 'Local course-material pipeline; never deployed' },
 };
 
+/**
+ * Candidate service scope for each governed lockfile. This is deliberately a
+ * candidate map, not a deployment inventory: a lockfile proves where a package
+ * could run, while an SBOM/import trace and authoritative environment inventory
+ * must prove where a specific vulnerable version actually ran.
+ */
+export const ADVISORY_SURFACES: Record<Lockfile, { candidateServices: readonly string[]; note: string }> = {
+  app: {
+    candidateServices: ['web-application', 'institution-gateway', 'operator-console'],
+    note: 'Candidate root-workspace services only; exact package use and deployment require evidence.',
+  },
+  video: {
+    candidateServices: ['video-renderer'],
+    note: 'Local-only rendering service; no tenant deployment is represented by this repository.',
+  },
+  pipeline: {
+    candidateServices: ['course-material-pipeline'],
+    note: 'Local-only content pipeline; no tenant deployment is represented by this repository.',
+  },
+};
+
+export type TenantReachEvidence =
+  | { scope: 'all-active-tenants' | 'no-active-tenants'; evidence: string }
+  | { scope: 'named-tenants'; tenantIds: readonly string[]; evidence: string };
+
+export interface AdvisoryImpactInput {
+  advisoryId: string;
+  packageName: string;
+  installedVersion: string;
+  detectedAt: string;
+  lockfile: Lockfile;
+  serviceImpact?: { services: readonly string[]; evidence: string };
+  tenantReach?: TenantReachEvidence;
+}
+
+export interface AdvisoryImpactAssessment {
+  advisoryId: string;
+  packageName: string;
+  installedVersion: string;
+  detectedAt: string;
+  lockfile: Lockfile;
+  serviceImpact:
+    | { state: 'candidate'; services: readonly string[] }
+    | { state: 'evidenced'; services: readonly string[]; evidence: string };
+  tenantReach:
+    | { state: 'unknown' | 'not-applicable' }
+    | ({ state: 'evidenced' } & TenantReachEvidence);
+  blockers: readonly string[];
+  complete: boolean;
+  /** Materiality, notification and customer impact remain human decisions. */
+  customerImpactDecision: 'not-decided';
+}
+
+const required = (label: string, value: string): string => {
+  const clean = value.trim();
+  if (!clean) throw new Error(`${label} is required`);
+  return clean;
+};
+
+/**
+ * Builds one fail-closed advisory impact record. It never infers a production
+ * deployment or tenant list from repository source and never decides customer
+ * impact. A shipping dependency is incomplete until both exact service evidence
+ * and authoritative tenant reach are attached.
+ */
+export function assessAdvisoryImpact(input: AdvisoryImpactInput): AdvisoryImpactAssessment {
+  const advisoryId = required('advisory ID', input.advisoryId);
+  const packageName = required('package name', input.packageName);
+  const installedVersion = required('installed version', input.installedVersion);
+  const detectedAt = required('detected timestamp', input.detectedAt);
+  if (Number.isNaN(Date.parse(detectedAt))) throw new Error('detected timestamp must be an ISO date');
+
+  const surface = ADVISORY_SURFACES[input.lockfile];
+  const blockers: string[] = [];
+  let serviceImpact: AdvisoryImpactAssessment['serviceImpact'];
+  if (!input.serviceImpact) {
+    serviceImpact = { state: 'candidate', services: surface.candidateServices };
+    blockers.push('Exact package-to-service impact evidence is missing.');
+  } else {
+    const evidence = required('service evidence', input.serviceImpact.evidence);
+    const services = [...new Set(input.serviceImpact.services.map((service) => required('service ID', service)))];
+    if (services.length === 0) throw new Error('At least one affected service is required');
+    for (const service of services) {
+      if (!surface.candidateServices.includes(service)) throw new Error(`${service} is not a candidate service for ${input.lockfile}`);
+    }
+    serviceImpact = { state: 'evidenced', services, evidence };
+  }
+
+  let tenantReach: AdvisoryImpactAssessment['tenantReach'];
+  if (!LOCKFILES[input.lockfile].ships) {
+    if (input.tenantReach) throw new Error(`${input.lockfile} is local-only; tenant reach must be not applicable`);
+    tenantReach = { state: 'not-applicable' };
+  } else if (!input.tenantReach) {
+    tenantReach = { state: 'unknown' };
+    blockers.push('Authoritative tenant reach evidence is missing.');
+  } else {
+    const evidence = required('tenant evidence', input.tenantReach.evidence);
+    if (input.tenantReach.scope === 'named-tenants') {
+      const tenantIds = [...new Set(input.tenantReach.tenantIds.map((tenant) => required('tenant ID', tenant)))];
+      if (tenantIds.length === 0) throw new Error('A named tenant claim requires at least one tenant ID');
+      tenantReach = { state: 'evidenced', scope: 'named-tenants', tenantIds, evidence };
+    } else {
+      tenantReach = { state: 'evidenced', scope: input.tenantReach.scope, evidence };
+    }
+  }
+
+  return {
+    advisoryId,
+    packageName,
+    installedVersion,
+    detectedAt,
+    lockfile: input.lockfile,
+    serviceImpact,
+    tenantReach,
+    blockers,
+    complete: blockers.length === 0,
+    customerImpactDecision: 'not-decided',
+  };
+}
+
 export interface Named {
   /** A package name, or a scope prefix ending in `/` or `-` for a family. */
   pkg: string;
@@ -266,7 +386,7 @@ export const WORKFLOW: readonly { step: string; heldBy: string | null }[] = [
   { step: 'SBOM updated', heldBy: 'pages.yml — npm run sbom on every deploy' },
   { step: 'Release artifact and provenance retained', heldBy: 'supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3)' },
   { step: 'Advisory monitoring', heldBy: '.github/dependabot.yml' },
-  { step: 'Impact assessment: which services and tenants', heldBy: null },
+  { step: 'Impact assessment: which services and tenants', heldBy: 'app/src/lib/supplychain.ts and app/src/lib/supplychain.test.ts — candidate service map and fail-closed evidence contract' },
   { step: 'Patch, mitigate, roll back or disable', heldBy: 'ROLLBACK.md, feature flags (docs/FEATURE-FLAG-REGISTRY.md)' },
   { step: 'Evidence and customer impact recorded', heldBy: null },
 ];

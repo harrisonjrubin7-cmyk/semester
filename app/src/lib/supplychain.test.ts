@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ACTIONS, APPROVED, BY_NAME, FORBIDDEN, LOCKFILES, NAMED, PATCH_POLICY, REGISTRY, WORKFLOW, actionOf, judge, namedFor, type Lockfile } from './supplychain';
+import { ACTIONS, ADVISORY_SURFACES, APPROVED, BY_NAME, FORBIDDEN, LOCKFILES, NAMED, PATCH_POLICY, REGISTRY, WORKFLOW, actionOf, assessAdvisoryImpact, judge, namedFor, type Lockfile } from './supplychain';
 
 /**
  * Holds every lockfile to the licence policy in `supplychain.ts`, every
@@ -195,6 +195,85 @@ describe('the response policy', () => {
   });
 });
 
+describe('advisory impact assessment', () => {
+  const advisory = {
+    advisoryId: 'GHSA-test-1234',
+    packageName: 'example-package',
+    installedVersion: '1.2.3',
+    detectedAt: '2026-10-29T12:00:00Z',
+  } as const;
+
+  it('maps every governed lockfile to candidate service scope without inventing deployment state', () => {
+    expect(Object.keys(ADVISORY_SURFACES).sort()).toEqual([...lockfiles].sort());
+    for (const lockfile of lockfiles) {
+      const surface = ADVISORY_SURFACES[lockfile];
+      expect(surface.candidateServices.length, lockfile).toBeGreaterThan(0);
+      expect(surface.note, lockfile).toMatch(/candidate|local/i);
+    }
+  });
+
+  it('fails closed for a shipping dependency until exact service and tenant evidence are recorded', () => {
+    const assessment = assessAdvisoryImpact({ ...advisory, lockfile: 'app' });
+    expect(assessment.serviceImpact).toEqual({ state: 'candidate', services: ADVISORY_SURFACES.app.candidateServices });
+    expect(assessment.tenantReach).toEqual({ state: 'unknown' });
+    expect(assessment.blockers).toEqual(expect.arrayContaining([
+      expect.stringMatching(/package-to-service/i),
+      expect.stringMatching(/tenant reach/i),
+    ]));
+    expect(assessment.complete).toBe(false);
+    expect(assessment.customerImpactDecision).toBe('not-decided');
+  });
+
+  it('accepts an evidenced subset of known services and authoritative tenant scope', () => {
+    const assessment = assessAdvisoryImpact({
+      ...advisory,
+      lockfile: 'app',
+      serviceImpact: {
+        services: ['web-application'],
+        evidence: 'SBOM sha256:abc plus import trace run 40982554735',
+      },
+      tenantReach: {
+        scope: 'all-active-tenants',
+        evidence: 'authoritative deployment inventory export evidence-2026-10-29',
+      },
+    });
+    expect(assessment.serviceImpact.state).toBe('evidenced');
+    expect(assessment.tenantReach).toEqual({
+      state: 'evidenced',
+      scope: 'all-active-tenants',
+      evidence: 'authoritative deployment inventory export evidence-2026-10-29',
+    });
+    expect(assessment.blockers).toEqual([]);
+    expect(assessment.complete).toBe(true);
+    expect(assessment.customerImpactDecision).toBe('not-decided');
+  });
+
+  it('rejects unsupported services, empty evidence and an empty named-tenant claim', () => {
+    expect(() => assessAdvisoryImpact({
+      ...advisory,
+      lockfile: 'app',
+      serviceImpact: { services: ['video-renderer'], evidence: 'trace' },
+    })).toThrow(/not a candidate service/i);
+    expect(() => assessAdvisoryImpact({
+      ...advisory,
+      lockfile: 'app',
+      serviceImpact: { services: ['web-application'], evidence: ' ' },
+    })).toThrow(/service evidence/i);
+    expect(() => assessAdvisoryImpact({
+      ...advisory,
+      lockfile: 'app',
+      tenantReach: { scope: 'named-tenants', tenantIds: [], evidence: 'inventory' },
+    })).toThrow(/named tenant/i);
+  });
+
+  it('marks local-only tooling as not applicable to tenant reach but still requires service evidence', () => {
+    const assessment = assessAdvisoryImpact({ ...advisory, lockfile: 'video' });
+    expect(assessment.tenantReach).toEqual({ state: 'not-applicable' });
+    expect(assessment.blockers).toEqual([expect.stringMatching(/package-to-service/i)]);
+    expect(assessment.complete).toBe(false);
+  });
+});
+
 it('is what docs/SUPPLY-CHAIN.md says', () => {
   const rendered = render();
   if (process.env.REGISTERS === 'write') writeFileSync(join(root, DOC), rendered);
@@ -275,6 +354,18 @@ function render(): string {
     'headcount threshold. Nothing under `video/` is deployed, and the test refuses',
     'an open decision in anything that is. It must be bought, or the tool',
     'replaced, before Semester is a company above that threshold.',
+    '',
+    '## Advisory impact boundary',
+    '',
+    'A lockfile identifies candidate service scope; it does not prove that a',
+    'specific package reached a deployed service or tenant. `assessAdvisoryImpact`',
+    'requires exact service evidence and, for shipping code, authoritative tenant',
+    'reach before an assessment is complete. Customer impact and notification are',
+    'separate decisions and are never inferred by this repository contract.',
+    '',
+    '| Lockfile | Candidate services | Boundary |',
+    '| --- | --- | --- |',
+    ...lockfiles.map((lockfile) => `| ${lockfile} | ${ADVISORY_SURFACES[lockfile].candidateServices.map((service) => `\`${service}\``).join(', ')} | ${cell(ADVISORY_SURFACES[lockfile].note)} |`),
     '',
     '## A dependency, from request to response',
     '',

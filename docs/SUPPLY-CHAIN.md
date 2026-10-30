@@ -82,6 +82,20 @@ headcount threshold. Nothing under `video/` is deployed, and the test refuses
 an open decision in anything that is. It must be bought, or the tool
 replaced, before Semester is a company above that threshold.
 
+## Advisory impact boundary
+
+A lockfile identifies candidate service scope; it does not prove that a
+specific package reached a deployed service or tenant. `assessAdvisoryImpact`
+requires exact service evidence and, for shipping code, authoritative tenant
+reach before an assessment is complete. Customer impact and notification are
+separate decisions and are never inferred by this repository contract.
+
+| Lockfile | Candidate services | Boundary |
+| --- | --- | --- |
+| app | `web-application`, `institution-gateway`, `operator-console` | Candidate root-workspace services only; exact package use and deployment require evidence. |
+| video | `video-renderer` | Local-only rendering service; no tenant deployment is represented by this repository. |
+| pipeline | `course-material-pipeline` | Local-only content pipeline; no tenant deployment is represented by this repository. |
+
 ## A dependency, from request to response
 
 | Step | Held by |
@@ -94,7 +108,7 @@ replaced, before Semester is a company above that threshold.
 | SBOM updated | pages.yml — npm run sbom on every deploy |
 | Release artifact and provenance retained | supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3) |
 | Advisory monitoring | .github/dependabot.yml |
-| Impact assessment: which services and tenants | **nothing yet** |
+| Impact assessment: which services and tenants | app/src/lib/supplychain.ts and app/src/lib/supplychain.test.ts — candidate service map and fail-closed evidence contract |
 | Patch, mitigate, roll back or disable | ROLLBACK.md, feature flags (docs/FEATURE-FLAG-REGISTRY.md) |
 | Evidence and customer impact recorded | **nothing yet** |
 
