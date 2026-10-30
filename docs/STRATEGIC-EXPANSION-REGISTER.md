@@ -24,7 +24,7 @@ an artifact under `docs/evidence/`.
 
 | Area | Tier | Phase | Items | not-started | designed | building | tested |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [SUP](#sup) Software supply-chain security | 0 | 0 | 36 | 13 | 2 | 9 | 12 |
+| [SUP](#sup) Software supply-chain security | 0 | 0 | 36 | 12 | 2 | 10 | 12 |
 | [CRD](#crd) Digital credentials and the Credential Wallet | 2 | 3 | 11 | 3 | 3 | 3 | 2 |
 | [RES](#res) Research ethics and institutional review | 3 | 4 | 11 | 6 | 3 | 1 | 1 |
 | [BCP](#bcp) Business continuity beyond technology | 1 | 2 | 11 | 7 | 3 | 0 | 1 |
@@ -44,7 +44,7 @@ an artifact under `docs/evidence/`.
 | [BEN](#ben) Higher-ed operating benchmark | 3 | 3 | 6 | 1 | 1 | 0 | 4 |
 | [OUT](#out) Outcome and impact evidence programme | 2 | 3 | 8 | 2 | 2 | 1 | 3 |
 | [CNL](#cnl) Strategic customer councils | 2 | 3 | 6 | 3 | 3 | 0 | 0 |
-| **total** | | | **199** | **62** | **42** | **29** | **66** |
+| **total** | | | **199** | **61** | **42** | **30** | **66** |
 
 ## Tiers
 
@@ -165,7 +165,7 @@ Extend responsibly through standards, partners, and geography.
 | SUP-033 | Supplier-compromise runbook and tabletop exercise | designed | `docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md` — supplier-compromise response roles, containment, evidence, communications, recovery, and tabletop design | Runbook designed; no tabletop executed and no artifact exists under docs/evidence/. Response seats, exercise cadence, vendor contacts, tenant contacts, and contractual notification duties have not been validated. |
 | SUP-034 | Customer notification when a supply-chain event is material | tested | `app/src/lib/governance/incident-comms.ts` — audiences, approvers, cadence<br>`app/src/lib/governance/incident-comms.test.ts` — held | No supply-chain trigger names when it applies. |
 | SUP-035 | Vendor and third-party component risk register | tested | `app/src/lib/trust/subprocessors.ts` — every host named<br>`app/src/lib/trust/subprocessors.test.ts` — held to the CSP | No risk rating or review date per vendor. |
-| SUP-036 | Corrective actions tracked and re-tested; scan history kept | not-started | — | Nothing records a finding from report to re-test. |
+| SUP-036 | Corrective actions tracked and re-tested; scan history kept | building | `app/src/lib/trust/finding-lifecycle.ts` — pure lifecycle with exact scan references, deadlines, remediation, retest, reopen, and expiring acceptance<br>`app/src/lib/trust/finding-lifecycle.test.ts` — negative tests hold closure and concurrency boundaries | Repository lifecycle exists, but there is no durable shared store, scanner ingestion, assignment queue, or notification path. There is no operated scan history, and no real finding has completed this lifecycle. |
 
 ### CRD
 
