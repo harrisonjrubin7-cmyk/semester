@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { jwtVerify, type JWTVerifyGetKey, type KeyLike } from "jose";
-import { z } from "zod";
+import { databaseUuid } from "./schemas";
 
 // CHANGED: the document used Parameters<typeof jwtVerify>[1], which resolves to jose's last overload
 // (a key-resolver function only), so passing a public key in tests fails typecheck. Accept both forms.
@@ -33,7 +33,7 @@ export function authenticate(config: AuthConfig): RequestHandler {
       const { payload } = typeof config.key === "function"
         ? await jwtVerify(match[1], config.key, options)
         : await jwtVerify(match[1], config.key, options);
-      const userId = z.string().uuid().parse(payload.sub);
+      const userId = databaseUuid.parse(payload.sub);
       res.locals.auth = { userId, tokenId: payload.jti ?? null };
       next();
     } catch {
