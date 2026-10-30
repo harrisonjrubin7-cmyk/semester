@@ -86,6 +86,9 @@ describe('the security finding lifecycle', () => {
     });
     expect(closed.status).toBe('closed');
     expect(closed.retest?.result).toBe('passed');
+    expect(() => transition(closed, {
+      type: 'assign', expectedRevision: 3, at: '2026-10-30T03:00:00.000Z', owner: 'engineering',
+    })).toThrow(/closed finding/i);
   });
 
   it('reopens a fixed finding when the retest still finds the defect', () => {
