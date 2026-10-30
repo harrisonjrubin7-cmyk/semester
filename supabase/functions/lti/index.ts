@@ -62,6 +62,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'jose';
 import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { authenticateLtiLaunchRequest } from '../_shared/ltiauth.ts';
 import { JWKS_OPTIONS, checkHeader, decodeHeader, safeError, subjectDigest, verifyOptions } from '../_shared/ltiverify.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
@@ -604,62 +605,82 @@ Deno.serve(async (req) => {
 
   // ── Step two: the platform posts the token back ─────────────────────────
   if (path.endsWith('/launch')) {
-    if (req.method !== 'POST') return refuse('not-post', `Launch arrived as ${req.method}.`, 405);
-    const p = await params(req);
+    const authenticated = await authenticateLtiLaunchRequest(req, {
+      readParams: params,
+      spend: async (state) => {
+        /*
+         * Spent first, and atomically, before anything is fetched or verified.
+         * Two POSTs carrying the same state would race otherwise, and the loser
+         * would be a replayed launch that both halves believe. The RPC does the
+         * check and write in one statement (`spent_at is null` in its
+         * `update … returning`). `lti.check.sql` spends a live state once, then asserts the same state
+         * spends a second time for nobody.
+         */
+        const { data, error } = await client.rpc('spend_lti_nonce', { want_state: state }).maybeSingle();
+        if (error) return { ok: false as const, reason: 'spend-failed', detail: error.message, status: 500 };
+        if (!data) {
+          return {
+            ok: false as const,
+            reason: 'stale-state',
+            detail: 'The launch state is unknown, expired or already spent.',
+          };
+        }
+        return { ok: true as const, value: data };
+      },
+      loadRegistration: async (spent) => {
+        /*
+         * The registration comes from the flight we recorded, never from the
+         * token in hand. A token that chose its registration could choose the
+         * rules it is checked against.
+         */
+        const value = await registration(client, spent.issuer, spent.client_id);
+        return value
+          ? { ok: true as const, value }
+          : {
+              ok: false as const,
+              reason: 'registration-gone',
+              detail: `Registration for ${spent.issuer} is no longer there.`,
+              status: 500,
+            };
+      },
+      verify: async (token, reg, spent) => {
+        let claims: Record<string, unknown>;
+        try {
+          // The header first, before any key is fetched: no key-location
+          // parameter, RS256 only, a key id. `jwtVerify` is then pinned to the
+          // same algorithm list and to this registration's issuer and audience.
+          const header = checkHeader(decodeHeader(token));
+          if (!header.ok) return { ok: false as const, reason: header.reason, detail: header.detail, status: 401 };
+          const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl), verifyOptions(reg));
+          claims = payload as Record<string, unknown>;
+        } catch (e) {
+          return {
+            ok: false as const,
+            reason: 'bad-signature',
+            detail: `The token did not verify against the registration's key set: ${safeError(e)}`,
+            status: 401,
+          };
+        }
 
-    const state = (p.state ?? '').trim();
-    const token = (p.id_token ?? '').trim();
-    if (!state) return refuse('no-state', 'The launch carried no state.');
-    if (!token) return refuse('no-token', 'The launch carried no id_token.');
-
-    /*
-     * Spent first, and atomically, before anything is fetched or verified.
-     * Two POSTs carrying the same state would race otherwise, and the loser
-     * of that race would be a replayed launch that both halves believe. The
-     * RPC does the check and the write in one statement for exactly that
-     * reason (`spent_at is null` in its `update … returning`), and
-     * `lti.check.sql` spends a live state once, then asserts the same state
-     * spends a second time for nobody and that an expired or never-issued
-     * state is refused.
-     */
-    const { data: spent, error: spendError } = await client
-      .rpc('spend_lti_nonce', { want_state: state })
-      .maybeSingle();
-    if (spendError) return refuse('spend-failed', spendError.message, 500);
-    if (!spent) return refuse('stale-state', 'The launch state is unknown, expired or already spent.');
-
-    /*
-     * The registration comes from the flight we recorded, never from the token
-     * in hand. A token that got to choose which registration it is checked
-     * against is a token that passes every check in `_shared/lti.ts`.
-     */
-    const reg = await registration(client, spent.issuer, spent.client_id);
-    if (!reg) return refuse('registration-gone', `Registration for ${spent.issuer} is no longer there.`, 500);
-
-    let claims: Record<string, unknown>;
-    try {
-      // The header first, before any key is fetched: no key-location
-      // parameter, RS256 only, a key id. `jwtVerify` is then pinned to the
-      // same algorithm list and to this registration's issuer and audience.
-      // Every claim rule is in `_shared/lti.ts`, where it is tested.
-      const header = checkHeader(decodeHeader(token));
-      if (!header.ok) return refuse(header.reason, header.detail, 401);
-      const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl), verifyOptions(reg));
-      claims = payload as Record<string, unknown>;
-    } catch (e) {
-      return refuse('bad-signature', `The token did not verify against the registration's key set: ${safeError(e)}`, 401);
-    }
-
-    const verdict = checkLaunch({
-      claims,
-      reg,
-      expectedNonce: spent.nonce,
-      redirectUri: `${new URL(req.url).origin}${new URL(req.url).pathname}`,
-      now: Math.floor(Date.now() / 1000),
+        const verdict = checkLaunch({
+          claims,
+          reg,
+          expectedNonce: spent.nonce,
+          redirectUri: `${new URL(req.url).origin}${new URL(req.url).pathname}`,
+          now: Math.floor(Date.now() / 1000),
+        });
+        return verdict.ok
+          ? { ok: true as const, value: { claims, who: verdict.value } }
+          : { ok: false as const, reason: verdict.reason, detail: verdict.detail, status: 401 };
+      },
+      refuse,
     });
-    if (!verdict.ok) return refuse(verdict.reason, verdict.detail, 401);
+    if (authenticated instanceof Response) return authenticated;
 
-    const who = verdict.value;
+    const {
+      registration: reg,
+      verified: { claims, who },
+    } = authenticated;
     console.log(
       `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
