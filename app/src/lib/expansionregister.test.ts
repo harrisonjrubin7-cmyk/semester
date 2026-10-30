@@ -166,8 +166,11 @@ describe('the strategic expansion register', () => {
     expect(item.evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
       'app/src/lib/trust/finding-lifecycle.ts',
       'app/src/lib/trust/finding-lifecycle.test.ts',
+      'app/src/lib/trust/supply-chain-finding.ts',
+      'app/src/lib/trust/supply-chain-finding.test.ts',
     ]));
     expect(item.gap).toMatch(/no durable shared store/i);
+    expect(item.gap).toMatch(/no authenticated scanner ingestion/i);
     expect(item.gap).toMatch(/no operated scan history/i);
   });
 
