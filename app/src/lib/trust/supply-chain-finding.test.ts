@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { assessAdvisoryImpact } from '../supplychain';
+import { transition } from './finding-lifecycle';
 import { openSupplyChainFinding } from './supply-chain-finding';
 
 const SHA = 'a'.repeat(40);
+const FIX = 'c'.repeat(40);
 const DIGEST = `sha256:${'b'.repeat(64)}`;
+const RETEST_DIGEST = `sha256:${'d'.repeat(64)}`;
 const advisory = {
   advisoryId: 'GHSA-test-5678',
   packageName: 'example-package',
@@ -104,5 +107,38 @@ describe('supply-chain finding intake', () => {
       owner: 'security',
       source: { ...source, commit: 'main' },
     })).toThrow(/commit/i);
+  });
+
+  it('does not turn an independently closed finding into incident closure', () => {
+    const record = openSupplyChainFinding({
+      assessment: assessAdvisoryImpact(advisory),
+      findingId: 'SEC-2026-0047',
+      severity: 'high',
+      owner: 'security',
+      source,
+    });
+    const fixed = transition(record.finding, {
+      type: 'fix',
+      expectedRevision: 1,
+      at: '2026-10-29T19:00:00.000Z',
+      fixedCommit: FIX,
+      remediation: 'github:pull/1712',
+    });
+    const closed = transition(fixed, {
+      type: 'retest',
+      expectedRevision: 2,
+      at: '2026-10-29T20:00:00.000Z',
+      scanner: 'osv-scanner',
+      run: 'github:retest/2',
+      artifact: 'platform-control-retest',
+      digest: RETEST_DIGEST,
+      testedCommit: FIX,
+      result: 'passed',
+    });
+
+    expect(closed.status).toBe('closed');
+    expect(record.incidentClosureEligible).toBe(false);
+    expect(record.impact.customerImpactDecision).toBe('not-decided');
+    expect(record.notification.customerNoticeSent).toBe(false);
   });
 });
