@@ -9,11 +9,13 @@ export async function handleClaudeRequest<Session>(
   const match = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('Authorization') ?? '');
   if (!match) return reply({ error: { message: 'Sign in to use the shared key.' } }, 401);
 
+  let session: Session | null;
   try {
-    const session = await authenticated(match[1]);
-    if (!session) return reply({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
-    return run(session);
+    session = await authenticated(match[1]);
   } catch {
     return reply({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
   }
+
+  if (!session) return reply({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
+  return run(session);
 }

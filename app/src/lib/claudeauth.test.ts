@@ -58,4 +58,20 @@ describe('Claude session boundary', () => {
     expect(authenticated).toHaveBeenCalledOnce();
     expect(run).toHaveBeenCalledWith(session);
   });
+
+  it('does not mislabel protected generation failures as invalid sessions', async () => {
+    const session = { userId: 'student' };
+    const authenticated = vi.fn(async () => session);
+    const run = vi.fn(async () => { throw new Error('provider unavailable'); });
+
+    await expect(handleClaudeRequest(
+      new Request(URL, { headers: { Authorization: 'Bearer claude-token' } }),
+      authenticated,
+      run,
+      reply,
+    )).rejects.toThrow('provider unavailable');
+
+    expect(authenticated).toHaveBeenCalledOnce();
+    expect(run).toHaveBeenCalledWith(session);
+  });
 });
