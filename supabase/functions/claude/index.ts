@@ -35,6 +35,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { handleClaudeRequest } from '../_shared/claudeauth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { clampRequest, modelsForPlan, type SharedPlan } from '../_shared/clamp.ts';
 import { planFromSubscriptions } from '../_shared/sharedplan.ts';
@@ -131,19 +132,18 @@ Deno.serve(async (req) => {
   }
 
   // ── who is asking ───────────────────────────────────────────────────────
-  const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-  if (!token) return json({ error: { message: 'Sign in to use the shared key.' } }, 401);
-
-  const admin = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    { auth: { persistSession: false } },
-  );
-  const { data: user, error: authError } = await admin.auth.getUser(token);
-  if (authError || !user?.user) {
-    return json({ error: { message: 'That session is not valid. Sign in again.' } }, 401);
-  }
-  const userId = user.user.id;
+  return handleClaudeRequest(
+    req,
+    async (token) => {
+      const admin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+        { auth: { persistSession: false } },
+      );
+      const { data: user, error: authError } = await admin.auth.getUser(token);
+      return authError || !user?.user ? null : { admin, userId: user.user.id };
+    },
+    async ({ admin, userId }) => {
 
   // ── whether generation is switched off ──────────────────────────────────
   //
@@ -454,5 +454,8 @@ Deno.serve(async (req) => {
   const text = await upstream.text();
   const usage = usageFromJson(text);
   await settle(usage ? costMicros(usage, priced.model) : null, usage ?? undefined);
-  return new Response(text, { status: upstream.status, headers });
+      return new Response(text, { status: upstream.status, headers });
+    },
+    json,
+  );
 });
