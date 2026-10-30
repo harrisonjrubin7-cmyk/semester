@@ -14,11 +14,15 @@ describe('the real-browser accessibility smoke', () => {
   it('takes the complete route inventory from the shared destination parser', () => {
     expect(source).toContain("from './destinations.mjs'");
     expect(source).toContain('const DESTINATIONS = destinations()');
-    expect(source).toContain('axeMeasured !== DESTINATIONS.length');
+    expect(source).toContain('const expectedAxeMeasurements = DESTINATIONS.length * AXE_VIEWPORTS.length');
+    expect(source).toContain('axeMeasured !== expectedAxeMeasurements');
   });
 
-  it('runs axe over every destination at 375 CSS pixels', () => {
-    expect(source).toContain('const AXE_VIEWPORT = { width: 375, height: 900 }');
+  it('runs axe over every destination at phone and tablet widths', () => {
+    const match = /process\.env\.AXE_WIDTHS \|\| '([^']+)'/.exec(source);
+    expect(match?.[1].split(',').map(Number)).toEqual([375, 1024]);
+    expect(source).toContain('const AXE_VIEWPORTS = AXE_WIDTHS.map');
+    expect(source).toContain('for (const viewport of AXE_VIEWPORTS)');
     expect(source).toContain("require.resolve('axe-core/axe.min.js')");
     expect(source).toContain("globalThis.axe.run(document, { resultTypes: ['violations'] })");
     expect(source).toContain("violation.impact === 'serious' || violation.impact === 'critical'");
@@ -26,14 +30,24 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('the response headers and shipped policy are unchanged');
   });
 
+  it('fails closed on malformed, non-positive or duplicate axe widths', () => {
+    expect(source).toContain("throw new Error('AXE_WIDTHS must contain unique positive integer CSS widths')");
+    expect(source).toContain('!Number.isInteger(width) || width <= 0');
+    expect(source).toContain('new Set(AXE_WIDTHS).size !== AXE_WIDTHS.length');
+
+    const withoutTablet = source.replace("'375,1024'", "'375'");
+    expect(/process\.env\.AXE_WIDTHS \|\| '([^']+)'/.exec(withoutTablet)?.[1]).not.toContain('1024');
+  });
+
   it('proves the axe instrument can see planted violations before accepting a clean result', () => {
     expect(source).toContain("planted.id = 'semester-axe-control'");
     expect(source).toContain("['button-name', 'image-alt'].every");
-    expect(source).toContain('!axeControlPassed');
+    expect(source).toContain('axeControlsPassed.add(viewport.width)');
+    expect(source).toContain('axeControlsPassed.size !== AXE_VIEWPORTS.length');
   });
 
   it('refuses an unreachable or error-bound destination as an instrument failure', () => {
-    expect(source).toContain('if (!arrived(screen, label, seen))');
+    expect(source).toContain('if (!arrived(screen, destinationLabel, seen))');
     expect(source).toContain("seen.error) instrumentFailures.push");
     expect(source).toContain('inspection failed:');
     expect(source).toContain('instrumentFailures.length');

@@ -37,9 +37,9 @@ it('keeps the workflow name in its selector and opens a concise, dismissible tra
   await press('Start support');
   const disclosure = host.querySelector<HTMLElement>('.decision-trail')!;
   const trigger = disclosure.querySelector<HTMLButtonElement>('.system-tool-trigger')!;
-  expect(trigger.textContent).toMatch(/^Steps\d+\/\d+$/);
+  expect(trigger.textContent).toMatch(/^Steps \d+\/\d+$/);
   const visibleLabel = trigger.textContent!;
-  expect(trigger.getAttribute('aria-label')?.replace(/\s/g, '')).toContain(visibleLabel);
+  expect(trigger.getAttribute('aria-label')?.replace(/\s/g, '')).toContain(visibleLabel.replace(/\s/g, ''));
   await act(async () => trigger.click());
   const panel = host.querySelector<HTMLElement>('[role="dialog"]')!;
   expect(panel.style.position).toBe('fixed');

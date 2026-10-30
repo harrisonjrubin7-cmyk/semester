@@ -1096,8 +1096,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Device matrix evidence',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/widthgate.test.ts', shows: 'Every width-reading file may change how, never whether, something is reached' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Seven journeys measured for overflow at 1280px and 320px; all sixty-three registered destinations axe-scanned at 375px' }, { path: 'docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md', shows: 'Responsive test plan' }],
-    gap: 'Seven journeys have 320 and 1280 layout checks and every registered destination has a 375-pixel axe pass. Tablet and laptop layout coverage, non-default states and real-device runs remain open. No device-matrix evidence has been captured.',
+    evidence: [{ path: 'app/src/widthgate.test.ts', shows: 'Every width-reading file may change how, never whether, something is reached' }, { path: 'app/scripts/accessibility-smoke.mjs', shows: 'Seven journeys measured for overflow at 1280px and 320px; all sixty-three registered destinations axe-scanned at 375px and 1024px' }, { path: 'docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md', shows: 'Responsive test plan' }],
+    gap: 'Seven journeys have 320 and 1280 layout checks and every registered destination has phone and tablet axe passes. Laptop layout coverage, non-default states and real-device runs remain open. No device-matrix evidence has been captured.',
   },
   {
     id: 'A11Y-001',

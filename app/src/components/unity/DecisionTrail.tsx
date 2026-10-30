@@ -14,7 +14,7 @@ export function DecisionTrail({workflow, current, states = {}, onOpen, level = 2
 }) {
   const currentIndex = Math.max(0, workflow.steps.findIndex(step => step.screen === current));
   const Heading = `h${level}` as 'h2' | 'h3' | 'h4';
-  return <ToolDisclosure className="decision-trail" label={`${workflow.name} decision trail`} triggerLabel={`Steps ${currentIndex + 1}/${workflow.steps.length} — ${workflow.name} decision trail`} width={416} trigger={<><span>Steps</span><span className="decision-trail-meta nums">{currentIndex + 1}/{workflow.steps.length}</span></>}>
+  return <ToolDisclosure className="decision-trail" label={`${workflow.name} decision trail`} triggerLabel={`Steps ${currentIndex + 1}/${workflow.steps.length} — ${workflow.name} decision trail`} width={416} trigger={<><span>Steps</span>{' '}<span className="decision-trail-meta nums">{currentIndex + 1}/{workflow.steps.length}</span></>}>
     {close => <div className="decision-trail-panel">
     <Heading>{workflow.name}</Heading>
     <p>{workflow.outcome}</p>

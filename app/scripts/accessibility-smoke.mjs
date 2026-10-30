@@ -3,16 +3,16 @@
  *
  * This is intentionally not called a WCAG audit or an ACR. It checks the seven
  * workflows named in docs/market-readiness/ACCESSIBILITY_READINESS.md and runs
- * axe-core over every registered destination at 375 CSS pixels using a real
- * browser, including the deployed base path. Static source guards remain
+ * axe-core over every registered destination at phone and tablet widths using
+ * a real browser, including the deployed base path. Static source guards remain
  * valuable; this catches the integration failures they cannot: a skip link
  * that does not move focus or overwrites the current hash route, a route with
  * two mains, a broken ARIA reference, an unnamed visible control, or a page
  * that overflows at the 320 CSS-pixel reflow viewport used to represent 400%
  * zoom from a 1280-pixel baseline.
  *
- * Exit 0 only after every journey and both viewports were measured. Exit 1 on
- * a finding and 2 when the instrument itself could not run.
+ * Exit 0 only after every journey and every configured axe width were measured.
+ * Exit 1 on a finding and 2 when the instrument itself could not run.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -25,7 +25,12 @@ const BASE = process.env.SMOKE_URL || 'http://localhost:4173/';
 const ROUTE_BASE = BASE.endsWith('/') ? BASE : `${BASE}/`;
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
 const SETTLE = Number(process.env.SMOKE_SETTLE || 1200);
-const AXE_VIEWPORT = { width: 375, height: 900 };
+const AXE_WIDTHS = (process.env.AXE_WIDTHS || '375,1024').split(',').map(Number);
+if (!AXE_WIDTHS.length || AXE_WIDTHS.some((width) => !Number.isInteger(width) || width <= 0)
+  || new Set(AXE_WIDTHS).size !== AXE_WIDTHS.length) {
+  throw new Error('AXE_WIDTHS must contain unique positive integer CSS widths');
+}
+const AXE_VIEWPORTS = AXE_WIDTHS.map((width) => ({ width, height: 900 }));
 const JOURNEYS = [
   ['Home', '#/home'],
   ['Calendar', '#/calendar'],
@@ -72,7 +77,7 @@ const browser = await chromium.launch({
 const findings = [];
 let measured = 0;
 let axeMeasured = 0;
-let axeControlPassed = false;
+const axeControlsPassed = new Set();
 const instrumentFailures = [];
 
 function record(journey, viewport, messages) {
@@ -214,8 +219,9 @@ async function inspect(journey, hash, viewport, label) {
   }
 }
 
-async function inspectDestination({ screen, label }) {
-  const context = await contextFor(AXE_VIEWPORT);
+async function inspectDestination({ screen, label: destinationLabel }, viewport) {
+  const context = await contextFor(viewport);
+  const widthLabel = `${viewport.width}px`;
   try {
     const page = await context.newPage();
     const pageErrors = [];
@@ -230,14 +236,14 @@ async function inspectDestination({ screen, label }) {
       css: proof ? Boolean(document.querySelector(proof)) : false,
       error: document.body.textContent?.includes('Something on this screen went wrong.') ?? false,
     }), selector);
-    if (seen.error) instrumentFailures.push(`${screen}: rendered the screen error boundary`);
-    if (!arrived(screen, label, seen)) {
-      instrumentFailures.push(`${screen}: did not reach destination (saw "${seen.h1}")`);
+    if (seen.error) instrumentFailures.push(`${screen} at ${widthLabel}: rendered the screen error boundary`);
+    if (!arrived(screen, destinationLabel, seen)) {
+      instrumentFailures.push(`${screen} at ${widthLabel}: did not reach destination (saw "${seen.h1}")`);
     }
-    for (const error of pageErrors) instrumentFailures.push(`${screen}: page error: ${error}`);
+    for (const error of pageErrors) instrumentFailures.push(`${screen} at ${widthLabel}: page error: ${error}`);
 
     await page.addScriptTag({ path: axePath });
-    if (!axeControlPassed) {
+    if (!axeControlsPassed.has(viewport.width)) {
       const detected = await page.evaluate(async () => {
         const planted = document.createElement('div');
         planted.id = 'semester-axe-control';
@@ -247,9 +253,10 @@ async function inspectDestination({ screen, label }) {
         planted.remove();
         return result.violations.map((violation) => violation.id);
       });
-      axeControlPassed = ['button-name', 'image-alt'].every((rule) => detected.includes(rule));
-      if (!axeControlPassed) {
-        instrumentFailures.push(`axe control missed planted button-name/image-alt violations (saw ${detected.join(', ') || 'none'})`);
+      const passed = ['button-name', 'image-alt'].every((rule) => detected.includes(rule));
+      if (passed) axeControlsPassed.add(viewport.width);
+      else {
+        instrumentFailures.push(`axe control at ${widthLabel} missed planted button-name/image-alt violations (saw ${detected.join(', ') || 'none'})`);
       }
     }
 
@@ -268,12 +275,12 @@ async function inspectDestination({ screen, label }) {
     });
     for (const violation of violations) {
       for (const node of violation.nodes) {
-        findings.push(`${label} · 375px axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
+        findings.push(`${destinationLabel} · ${widthLabel} axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
       }
     }
     axeMeasured += 1;
   } catch (error) {
-    instrumentFailures.push(`${screen}: inspection failed: ${String(error).split('\n')[0]}`);
+    instrumentFailures.push(`${screen} at ${widthLabel}: inspection failed: ${String(error).split('\n')[0]}`);
   } finally {
     await context.close();
   }
@@ -284,15 +291,20 @@ try {
     await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
     await inspect(journey, hash, { width: 320, height: 900 }, '400% reflow');
   }
-  for (const destination of DESTINATIONS) await inspectDestination(destination);
+  for (const viewport of AXE_VIEWPORTS) {
+    for (const destination of DESTINATIONS) await inspectDestination(destination, viewport);
+  }
 } finally {
   await browser.close();
 }
 
-if (measured !== JOURNEYS.length * 2 || axeMeasured !== DESTINATIONS.length || !axeControlPassed || instrumentFailures.length) {
+const expectedAxeMeasurements = DESTINATIONS.length * AXE_VIEWPORTS.length;
+if (measured !== JOURNEYS.length * 2 || axeMeasured !== expectedAxeMeasurements
+  || axeControlsPassed.size !== AXE_VIEWPORTS.length || instrumentFailures.length) {
   console.error(
     `accessibility smoke instrument incomplete: journeys ${measured}/${JOURNEYS.length * 2}; ` +
-    `375px axe destinations ${axeMeasured}/${DESTINATIONS.length}; control ${axeControlPassed ? 'passed' : 'failed'}` +
+    `phone/tablet axe destinations ${axeMeasured}/${expectedAxeMeasurements}; ` +
+    `controls ${axeControlsPassed.size}/${AXE_VIEWPORTS.length}` +
     `${instrumentFailures.length ? `\n${instrumentFailures.map((item) => `- ${item}`).join('\n')}` : ''}`,
   );
   process.exit(2);
@@ -303,6 +315,6 @@ if (findings.length) {
 }
 console.log(
   `accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop and 400% reflow; ` +
-  `${DESTINATIONS.length} registered destinations axe-scanned at 375px; ` +
+  `${DESTINATIONS.length} registered destinations axe-scanned at ${AXE_WIDTHS.join('px and ')}px; ` +
   'skip focus, landmarks, titles, names and ARIA references verified',
 );
