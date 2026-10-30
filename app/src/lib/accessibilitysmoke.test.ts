@@ -46,6 +46,19 @@ describe('the real-browser accessibility smoke', () => {
     expect(source).toContain('axeControlsPassed.size !== AXE_VIEWPORTS.length');
   });
 
+  it('opens and axe-scans the shared accessibility dialog on every critical journey at each width', () => {
+    expect(source).toContain('async function inspectAccessibilityDialog(journey, hash, viewport)');
+    expect(source).toContain("getByRole('button', { name: 'Accessibility tools', exact: true })");
+    expect(source).toContain("getByRole('dialog', { name: 'Accessibility tools', exact: true })");
+    expect(source).toContain("getByRole('group', { name: 'Accessibility preferences', exact: true })");
+    expect(source).toContain("state.ariaModal !== 'false'");
+    expect(source).toContain("await page.keyboard.press('Escape')");
+    expect(source).toContain('Escape did not return focus to the opener');
+    expect(source).toContain('const expectedAccessibilityDialogMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length');
+    expect(source).toContain('accessibilityDialogMeasured !== expectedAccessibilityDialogMeasurements');
+    expect(source).toContain('for (const [journey, hash] of JOURNEYS) await inspectAccessibilityDialog');
+  });
+
   it('refuses an unreachable or error-bound destination as an instrument failure', () => {
     expect(source).toContain('if (!arrived(screen, destinationLabel, seen))');
     expect(source).toContain("seen.error) instrumentFailures.push");

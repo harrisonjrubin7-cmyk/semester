@@ -392,12 +392,12 @@ export const CONTROLS: readonly Control[] = [
   {
     id: 'TC-A11-01',
     family: 'accessibility',
-    does: 'axe-core runs in real Chromium over every registered destination at 375 and 1024 pixels and in jsdom over focused desktop and phone cases, failing on serious or critical violations.',
+    does: 'axe-core runs in real Chromium over every registered destination at 375 and 1024 pixels, plus the shared non-modal Accessibility tools dialog on seven critical journeys at both widths, and in jsdom over focused desktop and phone cases, failing on serious or critical violations.',
     domains: ['learning', 'productivity', 'campus', 'identity'],
     mechanism: 'ci',
     state: 'partial',
     proof: ['.github/workflows/ci.yml', 'app/src/lib/accessibilitysmoke.test.ts', 'app/src/a11y/axe.test.tsx'],
-    gap: 'The phone-and-tablet browser sweep covers the default synthetic state of all sixty-three registered destinations; signed-in, error, modal and real-device states remain outside it, and automated axe results are not a manual assistive-technology pass.',
+    gap: 'The phone-and-tablet browser sweep covers the default synthetic state of all sixty-three registered destinations and one shared non-modal dialog on seven critical journeys; signed-in, error, true-modal, other interactive and real-device states remain outside it, and automated axe results are not a manual assistive-technology pass.',
     owner: 'accessibility',
   },
   {

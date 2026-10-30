@@ -11,6 +11,9 @@
  * that overflows at the 320 CSS-pixel reflow viewport used to represent 400%
  * zoom from a 1280-pixel baseline.
  *
+ * The shared Accessibility tools dialog is also opened on every critical
+ * journey at each axe width so focus entry, Escape focus return and the
+ * rendered modal state are measured rather than inferred from source tests.
  * Exit 0 only after every journey and every configured axe width were measured.
  * Exit 1 on a finding and 2 when the instrument itself could not run.
  */
@@ -77,6 +80,7 @@ const browser = await chromium.launch({
 const findings = [];
 let measured = 0;
 let axeMeasured = 0;
+let accessibilityDialogMeasured = 0;
 const axeControlsPassed = new Set();
 const instrumentFailures = [];
 
@@ -98,6 +102,23 @@ async function contextFor(viewport) {
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* measured by the page */ }
   }, ['semester.v1', { schemaVersion: schema(), sample: true, nav: 'tabs', seenOnboarding: true }]);
   return context;
+}
+
+async function seriousAxeViolations(page) {
+  await page.addScriptTag({ path: axePath });
+  return page.evaluate(async () => {
+    const result = await globalThis.axe.run(document, { resultTypes: ['violations'] });
+    return result.violations
+      .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
+      .map((violation) => ({
+        id: violation.id,
+        impact: violation.impact,
+        nodes: violation.nodes.map((node) => ({
+          target: node.target.join(' '),
+          summary: (node.failureSummary || '').split('\n').slice(1, 2).join('').trim(),
+        })),
+      }));
+  });
 }
 
 async function inspect(journey, hash, viewport, label) {
@@ -286,6 +307,69 @@ async function inspectDestination({ screen, label: destinationLabel }, viewport)
   }
 }
 
+async function inspectAccessibilityDialog(journey, hash, viewport) {
+  const context = await contextFor(viewport);
+  const widthLabel = `${viewport.width}px`;
+  try {
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error).split('\n')[0]));
+    await page.goto(`${ROUTE_BASE}${hash}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.waitForTimeout(SETTLE);
+
+    const opener = page.getByRole('button', { name: 'Accessibility tools', exact: true });
+    await opener.waitFor({ state: 'visible', timeout: 15_000 });
+    await opener.click();
+    const dialog = page.getByRole('dialog', { name: 'Accessibility tools', exact: true });
+    await dialog.waitFor({ state: 'visible', timeout: 15_000 });
+    await dialog.getByRole('button', { name: 'Close Accessibility tools', exact: true }).waitFor({ state: 'visible', timeout: 15_000 });
+    await dialog.getByRole('group', { name: 'Accessibility preferences', exact: true }).waitFor({ state: 'visible', timeout: 15_000 });
+
+    const state = await page.evaluate(() => {
+      const trigger = document.querySelector('button[aria-label="Accessibility tools"]');
+      const modal = document.querySelector('[role="dialog"][aria-label="Accessibility tools"]');
+      return {
+        ariaModal: modal?.getAttribute('aria-modal'),
+        dialogId: modal?.id || '',
+        expanded: trigger?.getAttribute('aria-expanded'),
+        controls: trigger?.getAttribute('aria-controls'),
+        focusInside: Boolean(modal && modal.contains(document.activeElement)),
+      };
+    });
+    const messages = pageErrors.map((error) => `page error: ${error}`);
+    if (state.ariaModal !== 'false') messages.push(`non-modal dialog aria-modal was ${state.ariaModal || 'missing'}`);
+    if (!state.dialogId || state.controls !== state.dialogId) messages.push('opener did not control the visible dialog');
+    if (state.expanded !== 'true') messages.push(`opener aria-expanded was ${state.expanded || 'missing'}`);
+    if (!state.focusInside) messages.push('focus did not enter the dialog');
+
+    for (const violation of await seriousAxeViolations(page)) {
+      for (const node of violation.nodes) {
+        messages.push(`axe: ${violation.id} (${violation.impact}) at ${node.target}${node.summary ? ` — ${node.summary}` : ''}`);
+      }
+    }
+
+    await page.keyboard.press('Escape');
+    await dialog.waitFor({ state: 'hidden', timeout: 15_000 });
+    const restored = await page.evaluate(() => {
+      const trigger = document.querySelector('button[aria-label="Accessibility tools"]');
+      return {
+        focus: document.activeElement === trigger,
+        expanded: trigger?.getAttribute('aria-expanded'),
+      };
+    });
+    if (!restored.focus) messages.push('Escape did not return focus to the opener');
+    if (restored.expanded !== 'false') messages.push(`closed opener aria-expanded was ${restored.expanded || 'missing'}`);
+
+    record(`${journey} accessibility dialog`, widthLabel, messages);
+    accessibilityDialogMeasured += 1;
+  } catch (error) {
+    instrumentFailures.push(`${journey} accessibility dialog at ${widthLabel}: inspection failed: ${String(error).split('\n')[0]}`);
+  } finally {
+    await context.close();
+  }
+}
+
 try {
   for (const [journey, hash] of JOURNEYS) {
     await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
@@ -293,17 +377,21 @@ try {
   }
   for (const viewport of AXE_VIEWPORTS) {
     for (const destination of DESTINATIONS) await inspectDestination(destination, viewport);
+    for (const [journey, hash] of JOURNEYS) await inspectAccessibilityDialog(journey, hash, viewport);
   }
 } finally {
   await browser.close();
 }
 
 const expectedAxeMeasurements = DESTINATIONS.length * AXE_VIEWPORTS.length;
+const expectedAccessibilityDialogMeasurements = JOURNEYS.length * AXE_VIEWPORTS.length;
 if (measured !== JOURNEYS.length * 2 || axeMeasured !== expectedAxeMeasurements
-  || axeControlsPassed.size !== AXE_VIEWPORTS.length || instrumentFailures.length) {
+  || accessibilityDialogMeasured !== expectedAccessibilityDialogMeasurements || axeControlsPassed.size !== AXE_VIEWPORTS.length
+  || instrumentFailures.length) {
   console.error(
     `accessibility smoke instrument incomplete: journeys ${measured}/${JOURNEYS.length * 2}; ` +
     `phone/tablet axe destinations ${axeMeasured}/${expectedAxeMeasurements}; ` +
+    `accessibility dialog states ${accessibilityDialogMeasured}/${expectedAccessibilityDialogMeasurements}; ` +
     `controls ${axeControlsPassed.size}/${AXE_VIEWPORTS.length}` +
     `${instrumentFailures.length ? `\n${instrumentFailures.map((item) => `- ${item}`).join('\n')}` : ''}`,
   );
@@ -316,5 +404,6 @@ if (findings.length) {
 console.log(
   `accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop and 400% reflow; ` +
   `${DESTINATIONS.length} registered destinations axe-scanned at ${AXE_WIDTHS.join('px and ')}px; ` +
-  'skip focus, landmarks, titles, names and ARIA references verified',
+  `${JOURNEYS.length} shared non-modal accessibility dialog states verified at each axe width; ` +
+  'skip focus, dialog focus return, landmarks, titles, names and ARIA references verified',
 );
