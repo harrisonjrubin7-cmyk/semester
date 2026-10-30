@@ -104,6 +104,37 @@ describe('the strategic expansion register', () => {
     expect(runbook).toMatch(/production mutation requires explicit approval/i);
   });
 
+  it('holds a no-fix dependency emergency closed until a trusted replacement or reviewed fallback exists', () => {
+    const item = ITEMS.find((i) => i.item === 'Emergency patch and feature-disable workflow')!;
+    expect(item.status).toBe('tested');
+    expect(item.evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
+      'docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md',
+      'app/src/lib/expansionregister.test.ts',
+    ]));
+    expect(item.gap).toMatch(/no operated emergency/i);
+    expect(item.gap).toMatch(/service.*tenant.*map/i);
+
+    const runbook = read('docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md');
+    const dependencies = runbook.slice(
+      runbook.indexOf('## Dependencies, Actions, and build images'),
+      runbook.indexOf('## Credentials and trust material'),
+    );
+    expect(dependencies).toMatch(/must not silently upgrade/i);
+    expect(dependencies).toMatch(/if no trusted replacement exists, keep the affected path disabled or use a reviewed fallback/i);
+
+    const recovery = runbook.slice(
+      runbook.indexOf('## Recovery and re-entry'),
+      runbook.indexOf('## Tabletop exercise'),
+    );
+    for (const gate of ['known-clean source', 'reproducible build', 'security and functional checks', 'rollback path']) {
+      expect(recovery).toContain(gate);
+    }
+    expect(recovery).toMatch(/approval from the incident lead plus the environment owner/i);
+    expect(recovery).toMatch(/reopening a workflow or integration is not incident closure/i);
+    expect(recovery).toMatch(/closure also requires tenant-impact decisions, required notifications, corrective actions with owners and dates/i);
+    expect(runbook).toMatch(/must not .*accept a known-vulnerable replacement without a recorded exception/i);
+  });
+
   it('keeps corrective-action tracking at building until real scan history is operated', () => {
     const item = ITEMS.find((i) => i.item === 'Corrective actions tracked and re-tested; scan history kept')!;
     expect(item.status).toBe('building');
