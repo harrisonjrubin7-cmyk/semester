@@ -16,7 +16,8 @@ The program's job is to turn "built toward WCAG 2.2 AA" into a record a procurem
 | Journey smoke | Seven journeys at 1280 and 320 pixels in Chromium: one `main`, one h1, named controls, valid references, no overflow, skip link | `app/scripts/accessibility-smoke.mjs` via `ci.yml` | Yes | Hand-rolled rather than axe; no tablet or real device |
 | Token contrast | 11 accents × 13 grounds, both faded strengths, every surface | `app/src/lib/contrast.test.ts` | Yes | What a browser composites |
 | Painted contrast | Thirteen grounds, two widths, hover and focus | `.github/workflows/contrast.yml` nightly | **Yes since 4 October** (it could not before; see TR-01) | 58 of 63 destinations by default; 14,025 gradient-painted elements |
-| Target size | Three densities, ten routes | `npm run sweep:targets`, local only | No | Not in any workflow |
+| Target size | Every registered destination at phone and desktop widths and all three densities | `npm run sweep:targets` via `.github/workflows/contrast.yml` nightly | Yes | Default synthetic state; no real device |
+| Text spacing | WCAG 1.4.12 overrides across every registered destination at phone and desktop widths; planted clipping control | `npm run sweep:spacing` via `.github/workflows/contrast.yml` nightly | Yes | Default synthetic state; no signed-in, error, modal, tablet or real-device states; no overlap detection between separate boxes |
 | Keyboard walk | 40 Tab stops on 13 screens, axe with WCAG 2.2 tags | `app/scripts/keyboard-pass.mjs`, not in `package.json` | No | One recorded run (28 September); axe could not judge contrast in it |
 | Manual and assistive technology | The protocol in `docs/accessibility/AT-PASS-PROTOCOL.md` | — | No | **No result exists** |
 
@@ -27,14 +28,14 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 ### On every change (automated, blocks the merge)
 
 1. The existing guards in section 1, unchanged.
-2. **TR-26:** the complete default destination inventory now receives real-browser axe at 375 pixels. Extend it into signed-in, error and modal states, and add a text-spacing check (WCAG 1.4.12) and an autocomplete check (1.3.5). Automated evidence still cannot answer these criteria by itself: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
+2. **TR-26:** the complete default destination inventory now receives real-browser axe at 375 pixels, plus a nightly WCAG 1.4.12 text-spacing sweep at phone and desktop widths. Extend both instruments into signed-in, error and modal states; add tablet and overlap coverage and an autocomplete check (1.3.5). Automated evidence still cannot answer these criteria by itself: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
 3. A pull request that adds a component states how it was checked with the keyboard alone (the template already asks).
 
 ### Nightly (automated, now able to fail)
 
 4. The contrast sweep, with its scope widened from the five "chrome" destinations to all sixty-three on a rotating basis (`SWEEP_SCOPE=all` on a third of nights), and gradient-painted elements measured by sampling the screenshot (the `paint.mjs` helper exists) rather than skipped.
-5. The target-size sweep moved into the same workflow.
-6. A failure opens an issue titled with the criterion and the destination, and is owned by the accessibility seat. The sweep's last reported finding, a hovered journey card, is fixed (TR-02), so a red night after that is a new finding and the issue is its record.
+5. The target-size and text-spacing sweeps run in the same workflow, independently with `if: always()`, and retain their logs for thirty days.
+6. A failure is owned by the accessibility seat. The sweep's last reported finding, a hovered journey card, is fixed (TR-02), so a red night after that is a new finding and the retained output is its first record. Automated issue creation is not implemented.
 
 ### Per release of a high-risk capability, and each quarter (manual, filed)
 

@@ -719,6 +719,8 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
 /** The Move control on a row: quiet until it is wanted, then a live target. */
 const CARRY = {
   width: 'auto',
+  // Density may tighten the padding, but WCAG 2.5.8's target floor may not.
+  minHeight: 24,
   flex: 'none',
   padding: 'var(--sp-2) var(--sp-3)',
   fontFamily: 'var(--font-heading)',
