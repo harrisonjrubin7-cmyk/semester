@@ -248,7 +248,7 @@ describe('advisory impact assessment', () => {
     expect(assessment.customerImpactDecision).toBe('not-decided');
   });
 
-  it('rejects unsupported services, empty evidence and an empty named-tenant claim', () => {
+  it('rejects unsupported services, empty evidence, invalid identity and contradictory tenant scope', () => {
     expect(() => assessAdvisoryImpact({
       ...advisory,
       lockfile: 'app',
@@ -264,6 +264,16 @@ describe('advisory impact assessment', () => {
       lockfile: 'app',
       tenantReach: { scope: 'named-tenants', tenantIds: [], evidence: 'inventory' },
     })).toThrow(/named tenant/i);
+    expect(() => assessAdvisoryImpact({
+      ...advisory,
+      detectedAt: 'not-a-date',
+      lockfile: 'app',
+    })).toThrow(/timestamp must be an ISO date/i);
+    expect(() => assessAdvisoryImpact({
+      ...advisory,
+      lockfile: 'video',
+      tenantReach: { scope: 'no-active-tenants', evidence: 'inventory' },
+    })).toThrow(/local-only.*not applicable/i);
   });
 
   it('marks local-only tooling as not applicable to tenant reach but still requires service evidence', () => {
