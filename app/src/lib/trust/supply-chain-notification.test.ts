@@ -92,11 +92,35 @@ describe('supply-chain notification routing', () => {
       },
     } as const;
     expect(() => routeSupplyChainNotice(base as never)).toThrow(/deadline/i);
+    expect(() => routeSupplyChainNotice({
+      assessment: incomplete,
+      trigger: { ...base.trigger, deadline: 'sometime tomorrow' },
+    })).toThrow(/deadline/i);
     const route = routeSupplyChainNotice({
       assessment: incomplete,
       trigger: { ...base.trigger, deadline: '2026-10-30T17:00:00Z' },
     });
     expect(route).toMatchObject({ state: 'notice-required', deadline: '2026-10-30T17:00:00Z', exposure: 'Unknown' });
+  });
+
+  it('routes an authorized uncertainty decision without pretending impact is known', () => {
+    const route = routeSupplyChainNotice({
+      assessment: incomplete,
+      trigger: {
+        kind: 'authorized-uncertainty',
+        decidedBy: 'Legal',
+        evidence: 'Decision LD-9 records that unresolved reachability itself requires notice.',
+      },
+    });
+    expect(route).toMatchObject({
+      state: 'notice-required',
+      basis: 'authorized-uncertainty',
+      exposure: 'Unknown',
+      deadline: null,
+      customerNoticeSent: false,
+    });
+    if (route.state !== 'notice-required') throw new Error('expected notice route');
+    expect(route.unresolvedAssessmentBlockers).toEqual(incomplete.blockers);
   });
 
   it('rejects empty evidence, placeholders, and unauthorized decision makers', () => {
