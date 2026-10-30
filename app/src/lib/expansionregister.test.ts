@@ -112,7 +112,7 @@ describe('the strategic expansion register', () => {
       'app/src/lib/expansionregister.test.ts',
     ]));
     expect(item.gap).toMatch(/no operated emergency/i);
-    expect(item.gap).toMatch(/service.*tenant.*map/i);
+    expect(item.gap).toMatch(/authoritative tenant-impact evidence/i);
 
     const runbook = read('docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md');
     const dependencies = runbook.slice(
@@ -133,6 +133,18 @@ describe('the strategic expansion register', () => {
     expect(recovery).toMatch(/reopening a workflow or integration is not incident closure/i);
     expect(recovery).toMatch(/closure also requires tenant-impact decisions, required notifications, corrective actions with owners and dates/i);
     expect(runbook).toMatch(/must not .*accept a known-vulnerable replacement without a recorded exception/i);
+  });
+
+  it('keeps advisory impact at building until authoritative service and tenant evidence is operated', () => {
+    const item = ITEMS.find((i) => i.item === 'Advisory monitoring linked to affected services and tenants')!;
+    expect(item.status).toBe('building');
+    expect(item.evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
+      'app/src/lib/supplychain.ts',
+      'app/src/lib/supplychain.test.ts',
+    ]));
+    expect(item.gap).toMatch(/no scanner ingestion/i);
+    expect(item.gap).toMatch(/authoritative deployment or tenant inventory/i);
+    expect(item.gap).toMatch(/no .*operated assessment/i);
   });
 
   it('keeps corrective-action tracking at building until real scan history is operated', () => {
