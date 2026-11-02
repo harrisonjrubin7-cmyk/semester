@@ -78,6 +78,32 @@ describe('the strategic expansion register', () => {
     expect(crd.phase).toBe(3);
   });
 
+  it('holds the supplier-compromise design to a response runbook without claiming a drill', () => {
+    const item = ITEMS.find((i) => i.item === 'Supplier-compromise runbook and tabletop exercise')!;
+    expect(item.status).toBe('designed');
+    expect(item.evidence.map((e) => e.path)).toContain('docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md');
+    expect(item.gap).toMatch(/no tabletop (?:has been )?executed/i);
+    expect(item.gap).toMatch(/docs\/evidence/i);
+
+    const runbook = read('docs/trust/SUPPLIER-COMPROMISE-RUNBOOK.md');
+    for (const heading of [
+      'Scope and triggers',
+      'Immediate containment',
+      'Evidence preservation',
+      'Blast-radius and tenant assessment',
+      'Dependencies, Actions, and build images',
+      'Credentials and trust material',
+      'Customer and institution communications',
+      'Recovery and re-entry',
+      'Tabletop exercise',
+      'Stop conditions and prohibitions',
+    ]) expect(runbook).toContain(`## ${heading}`);
+    expect(runbook).toMatch(/exact artifact or package, version, lockfile, workflow run, commit SHA, and SBOM/i);
+    expect(runbook).toMatch(/must not silently upgrade/i);
+    expect(runbook).toMatch(/must not claim (?:the supplier|the system) is safe/i);
+    expect(runbook).toMatch(/production mutation requires explicit approval/i);
+  });
+
   it('is what docs/STRATEGIC-EXPANSION-REGISTER.md says', () => {
     const rendered = render();
     if (process.env.REGISTERS === 'write') writeFileSync(join(root, DOC), rendered);
