@@ -122,6 +122,21 @@ describe('the LMS interoperability matrix', () => {
     expect(GRADE_WRITE.map((s) => s.status)).toContain('not-started');
   });
 
+  it('records the provider guard that actually wraps outbound calls without claiming distributed durability', () => {
+    const step = (id: string) => ALL_STEPS.find((s) => s.id === id)!;
+    for (const id of ['P08', 'C03', 'C04', 'C06']) expect(step(id).status, id).toBe('tested');
+    expect(step('C02').status).toBe('building');
+    expect(step('C02').evidence.map((e) => e.path)).toContain('app/src/lib/integration/provider-client.ts');
+    expect(step('C02').gap).toMatch(/credential|endpoint family|worker/i);
+    expect(step('C02').gap).not.toMatch(/defined and unused/i);
+    expect(step('C06').evidence.map((e) => e.path)).toEqual(expect.arrayContaining([
+      'app/src/lib/integration/rate-control.test.ts',
+      'app/src/lib/integration/provider-client.test.ts',
+    ]));
+    expect(step('C06').gap).toMatch(/in-memory|per pull/i);
+    expect(step('C06').gap).not.toMatch(/manual pause and the kill switches only/i);
+  });
+
   it('can tell a missing file from a present one', () => {
     expect(existsSync(join(root, 'README.md'))).toBe(true);
     expect(existsSync(join(root, 'docs/no-such-lms-evidence.md'))).toBe(false);

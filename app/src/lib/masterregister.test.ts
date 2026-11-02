@@ -106,6 +106,20 @@ describe('the master launch readiness register', () => {
       }
     });
 
+    it('records the integration breaker and Canvas reader at their repository-only maturity', () => {
+      const row = REGISTER.find((r) => r.id === 'INT-001')!;
+      const paths = row.evidence.map((e) => e.path);
+      expect(paths).toEqual(expect.arrayContaining([
+        'app/src/lib/integration/rate-control.ts',
+        'app/src/lib/integration/provider-client.test.ts',
+        'app/server/integration/canvas-read-adapter.test.ts',
+      ]));
+      expect(row.gap).toMatch(/in-memory|per pull/i);
+      expect(row.gap).toMatch(/mocked|live source/i);
+      expect(row.gap).not.toMatch(/no automatic circuit breaker/i);
+      expect(row.gap).not.toMatch(/only mock adapters exist/i);
+    });
+
     it('lets nothing claim an outside event without an artifact under docs/evidence/', () => {
       for (const r of REGISTER) {
         if (NEEDS_EVIDENCE_DIR.includes(r.status)) {
