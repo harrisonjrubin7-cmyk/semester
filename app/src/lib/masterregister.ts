@@ -546,8 +546,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Permission/accessibility test',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'accommodation_passports/shares: functional summary, never diagnosis; instructor reads via audited RPC' }, { path: 'supabase/expansion.check.sql', shows: 'Tests faculty cannot select passports, share read writes access event, revoke stops read' }],
-    gap: 'Schema and permission test exist, but no assessment engine to apply accommodations (extended time etc.) per student/assessment and no UI. Needs application logic, accessibility tests and permission test in an assessment.',
+    evidence: [{ path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'accommodation_passports/shares: functional summary, never diagnosis; instructor reads via audited RPC' }, { path: 'supabase/expansion.check.sql', shows: 'Tests faculty cannot select passports, share read writes access event, revoke stops read' }, { path: 'app/src/components/AccommodationRequestPanel.tsx', shows: 'Student request, own-status, correction, withdrawal, privacy notice and official fallback path' }, { path: 'app/src/components/accommodationrequestpanel.test.tsx', shows: 'Keyboard-native labels, consent, human ownership, correction, withdrawal and fail-closed fallback' }, { path: 'supabase/migrations/20261027130000_accommodation_support_request.sql', shows: 'Tenant-derived minimal intake and exact-school human routing queue without eligibility decisions' }, { path: 'supabase/accommodation-support-request.check.sql', shows: 'Cross-tenant denials, immutable corrections, SLA metadata, same-school ownership and content-free audit events' }],
+    gap: 'The narrow request and status route is source- and synthetically tested only. No assessment engine applies accommodations (extended time etc.) per student/assessment; no reviewer UI, target-tenant activation, staffed SLA/escalation, manual assistive-technology UAT or institutional acceptance has been verified.',
   },
   {
     id: 'LMS-010',

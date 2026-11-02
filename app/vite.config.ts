@@ -712,6 +712,7 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/accommodationrequestpanel.test.tsx',
   'src/components/AboutMe.test.tsx',
   'src/components/SchoolPicker.removal-labels.test.tsx',
   'src/components/ListingDesk.moderation-preview.test.tsx',

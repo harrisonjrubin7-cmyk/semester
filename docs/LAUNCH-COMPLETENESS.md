@@ -38,7 +38,7 @@ specialists and procurement come before any agreement or representation.
 | not-started | Nothing in the tree beyond a document naming the gap |
 | held | A decision already on main answers it differently, and holds until the owner reopens it |
 
-Across the 210 items with a standing: tested 118 · building 40 · designed 41 · not-started 10 · held 1.
+Across the 210 items with a standing: tested 118 · building 41 · designed 40 · not-started 10 · held 1.
 
 ## The finding
 
@@ -72,7 +72,7 @@ have no readiness control today: those are what the brief adds to the thirty.
 The due date is the seat’s to set; a date typed here on nobody’s behalf is a claim
 nobody made.
 
-All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
+All 81: tested 41 · building 9 · designed 26 · not-started 4 · held 1.
 
 ### 2.1 Company and governance
 
@@ -187,7 +187,7 @@ All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 
 ### 2.7 Accessibility and WCAG 2.2
 
-12 rows, the weakest designed: tested 6 · building 2 · designed 4 · not-started 0 · held 0.
+12 rows, the weakest designed: tested 6 · building 3 · designed 3 · not-started 0 · held 0.
 
 | ID | Control | Owner | Readiness control | Due | Standing | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -202,7 +202,7 @@ All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 | LC-HV7-09 | Reduced-motion support tested | `accessibility` | **none** | owner sets | tested | [`app/src/a11y/motion.test.ts`](../app/src/a11y/motion.test.ts) — jumps instead of gliding | None. |
 | LC-HV7-10 | Captions and transcripts process exists | `accessibility` | **none** | owner sets | designed | [`docs/VIDEO_PODCAST_ROADMAP.md`](VIDEO_PODCAST_ROADMAP.md) — media | No publishing checklist. |
 | LC-HV7-11 | Tables, charts, documents and exports accessible | `accessibility` | **none** | owner sets | tested | [`app/src/lib/exportqa.test.ts`](../app/src/lib/exportqa.test.ts) — the exports | Charts are not audited. |
-| LC-HV7-12 | Accessibility issues have a support and remediation path | `accessibility` | **none** | owner sets | designed | [`docs/operating-model/ACCESSIBILITY-GOVERNANCE.md`](operating-model/ACCESSIBILITY-GOVERNANCE.md) — governance | No ticket category or SLA for it. |
+| LC-HV7-12 | Accessibility issues have a support and remediation path | `accessibility` | **none** | owner sets | building | [`docs/operating-model/ACCESSIBILITY-GOVERNANCE.md`](operating-model/ACCESSIBILITY-GOVERNANCE.md) — governance<br>[`app/src/components/AccommodationRequestPanel.tsx`](../app/src/components/AccommodationRequestPanel.tsx) — the authenticated student request, own-status, correction and withdrawal path<br>[`supabase/accommodation-support-request.check.sql`](../supabase/accommodation-support-request.check.sql) — the same-school human queue, SLA metadata and cross-tenant denials | Source and synthetic checks only; no target tenant is activated, no reviewer UI or staffed SLA exists, and no manual assistive-technology UAT has passed. |
 
 ## 3. The registration go-live checklist
 

@@ -866,7 +866,22 @@ declare
     -- own other session and says "no such session" for anyone else's.
     -- `my-sessions.check.sql` attempts each refusal as the account refused.
     'my_sessions()',
-    'end_my_session(want uuid)'
+    'end_my_session(want uuid)',
+
+    -- The seven in 20261027130000_accommodation_support_request.sql. Student
+    -- functions derive both reporter and school from auth.uid() and the
+    -- authenticated profile, then limit reads, corrections and withdrawal to
+    -- that reporter. Queue, claim and resolution functions require the
+    -- existing accommodation:verify capability for the exact school and never
+    -- write an eligibility, approval, denial or academic record. The dedicated
+    -- suite attempts cross-student and cross-school access for every path.
+    'raise_accommodation_support_request(want_key uuid, want_kind text, want_summary text, want_privacy_notice text, want_consent boolean)',
+    'my_accommodation_support_requests()',
+    'correct_accommodation_support_request(want_id uuid, want_key uuid, want_summary text)',
+    'withdraw_accommodation_support_request(want_id uuid)',
+    'accommodation_support_request_queue(want_tenant text)',
+    'claim_accommodation_support_request(want_id uuid)',
+    'resolve_accommodation_support_request(want_id uuid, want_resolution text, want_evidence text)'
   ];
   extra text;
   missing text;
