@@ -113,6 +113,7 @@ ops-projection-dashboard
 ops-projector-worker
 organizations
 outbox
+outcome-aggregates
 payment-inbox
 privacy-case-actions
 privacy-case-workspace

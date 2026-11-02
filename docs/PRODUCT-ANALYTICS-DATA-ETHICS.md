@@ -12,7 +12,7 @@ find out whether the promises are enforced or only written.
 | --- | --- | --- | --- |
 | Activation, weekly active use, 30-day retention | One row per account per day per mark; three marks | `public.activity` (`20260921151000_activity.sql`) | The table's `check` constraint allows only the three marks; `ANALYTICS.md` §"What is checked, and where" |
 | Render and build timings | Per device, in memory, never synced | `app/src/lib/timing.ts` | `app/src/lib/timing.test.ts` fails on any line that stores or syncs a reading |
-| Institutional aggregates: course demand, cohort outcomes | Ten students or more per cell | `course_demand_snapshots`, `outcome_aggregates` (`20260926150000_expansion_roles_and_features.sql`) | Check constraints in SQL; `MIN_COHORT` in `app/src/lib/institution-ops.ts`; and, new here, `app/src/lib/cohortfloor.test.ts` holding the two to the same number |
+| Institutional aggregates: course demand, cohort outcomes | Ten students or more per cell | `course_demand_snapshots`, `outcome_aggregates` (`20260926150000_expansion_roles_and_features.sql`) | Check constraints in SQL; `MIN_COHORT` in `app/src/lib/institution-ops.ts`; `app/src/lib/cohortfloor.test.ts` holding the two to the same number; and `supabase/outcome-aggregates.check.sql` exercising the outcome floor and school-scoped read refusals in throwaway PostgreSQL |
 | Support tickets | Not analytics | `support_tickets` | Tickets are read by people to answer them; no function aggregates them, and the queue carries no identity to aggregate by |
 
 Nothing else. A fourth figure needs a fourth question written into
