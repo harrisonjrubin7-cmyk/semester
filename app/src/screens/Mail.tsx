@@ -33,10 +33,13 @@ import {
   draftAsMail,
   FOLDERS,
   folder as folderById,
+  fullStamp,
   listing,
   pageLabel,
   pages,
+  participants,
   prefill,
+  shown as shownAddress,
   snoozeOptions,
   type Category,
   type FolderId,
@@ -59,6 +62,22 @@ function FlightPlanInboxSlot() {
 
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
+
+function positionList(positions: number[]): string {
+  if (positions.length < 2) return String(positions[0] ?? '');
+  return `${positions.slice(0, -1).join(', ')} and ${positions[positions.length - 1]}`;
+}
+
+function threadIdentity(thread: Thread): string {
+  const last = thread.last;
+  const outgoing = last.folder === 'sent' || last.folder === 'drafts';
+  const people = outgoing
+    ? last.to.length
+      ? `to ${last.to.map(shownAddress).join(', ')}`
+      : 'to nobody yet'
+    : `from ${participants(thread.mails)}`;
+  return `${people}, ${last.subject}, ${fullStamp(last.at)}`;
+}
 
 
 /**
@@ -380,6 +399,18 @@ export function Mail() {
 
   const allPicked = here.length > 0 && picked.length === here.length;
   const acting = chosen.length > 0 ? chosen : open ? ids(open) : [];
+  const actingThreads = picked.length > 0
+    ? threads.filter((thread) => picked.includes(thread.id))
+    : open
+      ? [open]
+      : [];
+  const actionTarget = actingThreads.length > 1
+    ? `${actingThreads.length} selected conversations, positions ${positionList(
+        actingThreads.map((thread) => threads.indexOf(thread) + 1),
+      )} of ${threads.length}`
+    : actingThreads.length === 1
+      ? `${picked.length > 0 ? 'selected' : 'opened'} conversation ${threads.indexOf(actingThreads[0]) + 1} of ${threads.length}, ${threadIdentity(actingThreads[0])}`
+      : 'selected conversations';
   /*
    * On a phone the toolbar is the folders, the search and a refresh, and the
    * actions appear once something is selected — which is what Gmail does on a
@@ -486,7 +517,7 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Archive"
+              aria-label={`Archive ${actionTarget} here`}
               title="Archive"
               disabled={acting.length === 0}
               onClick={() => move(acting, 'archive', 'Archived here.')}
@@ -496,7 +527,7 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Delete"
+              aria-label={`Move ${actionTarget} to trash here`}
               title="Delete"
               disabled={acting.length === 0}
               onClick={() => move(acting, 'trash', 'Moved to trash here.')}
@@ -506,7 +537,7 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Move to"
+              aria-label={`Move ${actionTarget} to another folder`}
               title="Move to a folder"
               aria-expanded={menu?.which === 'move'}
               disabled={acting.length === 0}
@@ -517,7 +548,7 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Snooze"
+              aria-label={`Snooze ${actionTarget}`}
               title="Snooze until…"
               aria-expanded={menu?.which === 'snooze'}
               disabled={acting.length === 0}
@@ -528,7 +559,7 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Mark read"
+              aria-label={`Mark ${actionTarget} read`}
               title="Mark read"
               disabled={acting.length === 0}
               onClick={() => {

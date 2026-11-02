@@ -1,0 +1,49 @@
+# Go/no-go decision sheet (artifact 24). Decision state is PENDING. Nothing in
+# this file is approved. Filling in approved_by is a human act, not a commit.
+release:
+  id: registration-readiness-pilot-0.1.0
+  environment: production
+  tenant_scope: named_pilot_tenant_only
+  date: pending
+
+go_criteria:
+  institution:
+    - business_owner_present
+    - technical_owner_present
+    - pilot_scope_approved
+    - support_escalation_path_confirmed
+  security:
+    - rls_deny_tests_pass
+    - role_scope_tests_pass
+    - session_revocation_test_pass
+    - secrets_review_complete
+  data:
+    - migration_rehearsal_pass
+    - current_source_snapshot_confirmed
+    - reconciliation_test_pass
+  product:
+    - source_status_copy_approved
+    - seven_outcome_states_reviewed
+    - mobile_and_accessibility_evidence_attached
+  operations:
+    - dashboards_operational
+    - alerts_delivered
+    - incident_drill_passed
+    - rollback_rehearsed
+
+no_go_conditions:
+  - "Any cross-tenant or cross-student access failure."
+  - "Any definitive readiness result derived from stale or unknown source data."
+  - "No named institutional escalation owner."
+  - "Migration rehearsal fails."
+  - "Feature flag lacks a tested safe-off behavior."
+  - "Critical accessibility blocker remains unresolved."
+
+decision:
+  state: pending
+  approved_by:
+    - product_owner
+    - platform_owner
+    - security_owner
+    - institution_business_owner
+    - institution_technical_owner

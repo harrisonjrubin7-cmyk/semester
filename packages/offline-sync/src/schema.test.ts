@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DDL, openSequence, SCHEMA_VERSION } from './schema.ts'
+import { DDL, MIGRATIONS, openSequence, SCHEMA_VERSION } from './schema.ts'
 import type { QueuePhase } from './status.ts'
 
 const key = 'ab'.repeat(32)
@@ -38,6 +38,36 @@ describe('the schema', () => {
     expect(() => ins.run('k1', 2)).toThrow()
     expect(() => db.exec("UPDATE outbox SET phase='synced'")).toThrow()
     expect(() => db.exec("UPDATE outbox SET phase='acknowledged'")).toThrow() // an acknowledged row is deleted, never kept
+    db.close()
+  })
+
+  it('keys attachment cleanup state by generation and persists retirement', () => {
+    const ddl = DDL.join('\n')
+    expect(ddl).toMatch(/attachments[\s\S]*blob_name TEXT PRIMARY KEY/)
+    expect(ddl).toMatch(/attachments[\s\S]*retired INTEGER NOT NULL DEFAULT 0/)
+    expect(MIGRATIONS[SCHEMA_VERSION]?.join('\n')).toMatch(/attachments_v1[\s\S]*retired/)
+  })
+
+  it('migrates a v1 attachment index without losing its cleanup identity', async () => {
+    let sqlite: typeof import('node:sqlite') | undefined
+    try { sqlite = await import('node:sqlite') } catch { return }
+    const db = new sqlite.DatabaseSync(':memory:')
+    db.exec("CREATE TABLE schema_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL) WITHOUT ROWID")
+    db.exec("INSERT INTO schema_meta VALUES ('schema_version', '1')")
+    db.exec(`CREATE TABLE attachments (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, data_class TEXT NOT NULL,
+      owner_entity_id TEXT NOT NULL, mime TEXT NOT NULL, size INTEGER NOT NULL,
+      content_sha256 TEXT NOT NULL, scan TEXT NOT NULL, acl_epoch INTEGER NOT NULL,
+      fetched_at INTEGER NOT NULL, last_read_at INTEGER NOT NULL,
+      pinned INTEGER NOT NULL DEFAULT 0, wrapped_key BLOB NOT NULL,
+      blob_name TEXT NOT NULL
+    ) WITHOUT ROWID`)
+    db.exec("INSERT INTO attachments VALUES ('f','t','course_content','c','text/plain',1,'sha','clean',1,1,1,0,x'00','f.old')")
+    for (const stmt of MIGRATIONS[2]!) db.exec(stmt)
+    expect(db.prepare("SELECT blob_name, retired FROM attachments").get()).toEqual({ blob_name: 'f.old', retired: 0 })
+    db.exec("INSERT INTO attachments VALUES ('f','t','course_content','c','text/plain',1,'sha','clean',1,1,1,0,x'00','f.new',1)")
+    expect(db.prepare("SELECT count(*) AS n FROM attachments WHERE id='f'").get()).toEqual({ n: 2 })
+    expect(db.prepare("SELECT v FROM schema_meta WHERE k='schema_version'").get()).toEqual({ v: '2' })
     db.close()
   })
 })

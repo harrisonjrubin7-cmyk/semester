@@ -63,15 +63,18 @@ The "Emitted" column is `yes` when some call in the gateway source can produce t
 | `review_changed` | 409 | yes | The adapter's review at commit differs from the one the person read. |
 | `review_refused` | 409 | yes | The review was answered by a refusal. Prepare a new one. |
 | `already_claimed` | 409 | yes | Another commit holds the claim, or the review expired at the claim. |
+| `idempotency_in_progress` | 409 | yes | The same keyed commit is still running, or this worker lost its lease. Retry the same key after the published `Retry-After` delay when present. |
 | `expired` | 410 | no | Declared for status 410. Every 410 passes `review_expired` instead. |
 | `review_expired` | 410 | yes | The review is more than 10 minutes old. |
 | `too_large` | 413 | yes | A body over 128,000 bytes reached the gateway. |
 | `unsupported_media_type` | 415 | yes | A POST whose `Content-Type` does not start with `application/json`. |
+| `idempotency_key_reused` | 422 | yes | The same key was presented with a different commit body. The gateway refuses to replay another request's result. |
 | `rate_limited` | 429 | yes | More than the allowed requests in the window. |
 | `refused` | 400 | yes | The adapter said no and wrote nothing. The message is the adapter's own sentence. |
 | `outcome_uncertain` | 409, 502 | yes | 502: execute failed and the school may have acted. 409: reconcile asked and the school has not answered. |
 | `read_only` | 503 | yes | Read-only mode is on and the call is a write. |
 | `adapter_not_configured` | 503 | yes | No adapter is installed for the caller's institution and area. |
+| `idempotency_unavailable` | 503 | yes | A keyed action commit cannot reach its durable replay store, so nothing is sent to the institution. |
 | `policy-disabled` | 503 | yes | No intelligence service is configured on this gateway. Note the hyphen: this code is spelled like the intelligence codes. |
 | `unavailable` | 503 | yes | Anything unexpected, and an adapter that cannot reconcile. One fixed sentence. |
 
@@ -400,6 +403,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0033' \
+  -H 'Idempotency-Key: docs-example-0033' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000001","confirmed":true}'
 ```
 
@@ -430,6 +434,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0034' \
+  -H 'Idempotency-Key: docs-example-0034' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000001","confirmed":true}'
 ```
 
@@ -507,6 +512,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0038' \
+  -H 'Idempotency-Key: docs-example-0038' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000002","confirmed":true}'
 ```
 
@@ -533,6 +539,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0039' \
+  -H 'Idempotency-Key: docs-example-0039' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000002","confirmed":true}'
 ```
 
@@ -587,6 +594,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0042' \
+  -H 'Idempotency-Key: docs-example-0042' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000003","confirmed":true}'
 ```
 
@@ -615,6 +623,7 @@ curl -s -X POST 'http://127.0.0.1:8787/actions/commit' \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'X-Correlation-Id: docs-example-0044' \
+  -H 'Idempotency-Key: docs-example-0044' \
   -d '{"reviewId":"00000000-0000-4000-8000-000000000004","confirmed":true}'
 ```
 

@@ -9,8 +9,12 @@
 - Premium responsive Semester shell with Ink navigation, Parchment work surfaces, a persistent context bar, labeled mobile tabs, keyboard command palette, source/status vocabulary, and loading, error, empty, offline, and stale/review language; no invented totals.
 - Owner-scoped source inspection with paginated extracted chunks, document-native location labels, focus-managed source sheet, and authenticated original download.
 - Review resolution UI for confirming, rejecting, or correcting structured extraction payloads without rewriting preserved source files.
+- Calendar editing with a mandatory consequence preview, explicit unspecified-time preservation, authenticated persistence, and one-step session undo.
+- Owner-scoped upload job recovery with reload-safe polling, visible extraction progress, explicit cancellation, idempotent retry dispatch, bounded redelivery of abandoned queued work, and per-job broker failure isolation.
+- Stored study interactions for Cards, Read, Quiz, and Doc: cited asset-bound card review and progress recording, client/server-aligned readable guide validation, authenticated confirmed-version exports, rejected-asset enforcement, and owned quiz sessions with durable answer evidence, bounded progress history, and complete-prompt validation.
 - Atomic worker leases with monotonic fencing, scoped progress/terminal writes, expired-lease redelivery, owner-scoped cancellation, and study-asset deletion barriers. These controls prevent stale database commits; they do not promise exactly-once external provider effects.
-- Tests for shell navigation, command focus, source labels and locations, review correction validation, operational states, semantic tokens, automated axe accessibility, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, ICS, and exports.
+- Production-mode Chromium regression coverage with deterministic API fixtures for axe accessibility, 1440/390/320 px layouts, reviewed desktop/mobile snapshots, landing and shell focus, source inspection, review, calendar preview, card recall, quiz completion, export download, keyboard navigation, and console/page errors.
+- Tests for shell navigation, command focus, source labels and locations, review correction validation, calendar preview/undo, upload job cancellation/retry/redelivery, broker failure isolation, stored study interactions and export download lifecycle, operational states, semantic tokens, jsdom and real-browser axe accessibility, viewport containment, ownership isolation, conflicts, missing date/time behavior, invalid citations, deduplication, safe archives, migrations, concurrent upload completion, ICS, and exports.
 
 ## Mocked or credential-dependent
 
@@ -19,8 +23,8 @@
 
 ## Before production
 
-- Add managed secrets/KMS, signed download endpoints, CSRF/session hardening as appropriate, API rate limits, audit logs, retention/deletion verification, ClamAV or managed scanning, real provider adapters, browser accessibility/visual QA, load tests, backup/restore exercises, independent security review, and institutional privacy/legal approval.
+- Add managed secrets/KMS, signed download endpoints, CSRF/session hardening as appropriate, API rate limits, audit logs, retention/deletion verification, ClamAV or managed scanning, real provider adapters, seeded live-service browser UAT, cross-browser and manual assistive-technology/device QA, load tests, backup/restore exercises, independent security review, and institutional privacy/legal approval.
 - Replace the metadata-driven initial Alembic revision with explicit generated operations if the organization requires fully inspectable DDL diffs.
-- Add worker job polling/cancellation UI, cloud upload providers, exact PDF bounding boxes/OCR overlays, and external-calendar reconciliation.
+- Add cloud upload providers, exact PDF bounding boxes/OCR overlays, and external-calendar reconciliation.
 
 See `docs/audit/course-engine/` at the repository root for the factual current-state inventory, gaps, test coverage, and phased roadmap.

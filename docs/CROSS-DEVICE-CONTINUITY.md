@@ -8,7 +8,12 @@ the spec. Paths are under `app/src/`.
 - **On the device:** IndexedDB database `semester-store`
   (`state/persist/db.ts`), with localStorage `semester.v1` kept as a fallback
   (`state/shape.ts`, `STORAGE_KEY`). `semester.seen` records the per-row
-  `updated_at` stamps this device has already taken.
+  `updated_at` stamps this device has already taken. New fallback writes omit
+  appointments because the localStorage value is readable clear text. If
+  IndexedDB is unavailable, an appointment remains in the current tab only
+  and the app warns that it will not survive a reload; the rest of the local
+  workspace can still use the fallback. This does not retroactively remove an
+  appointment from a legacy `semester.v1` copy written by an older build.
 - **Attached files** stay in IndexedDB on the device that added them and never
   sync (`lib/cloud.ts`, header note).
 - **In the account:** Supabase, as one `state` row (everything except courses)

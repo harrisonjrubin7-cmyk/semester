@@ -4,7 +4,7 @@ import type { Action } from './actions';
 import { activityKind, type ActivityKind, type Commitment } from './activities';
 import type { AthleticEvent } from './athletics';
 import { dateToIso } from './date';
-import { finite, obj } from './device-library';
+import type { Settings } from './life-balance-storage';
 import { percentOf } from './grades';
 import { estimate, type Spent } from './pace';
 import type { Floor, Rest } from './rest';
@@ -14,6 +14,8 @@ import { appointmentsOn, lengthOf } from './select';
 import type { SourceLabel } from './source';
 import type { Appointment, DatedItem } from './types';
 import { WAKING_HOURS, type Window } from './windows';
+
+export { EMPTY_SETTINGS, LIFE_BALANCE_KEY, readSettings, type Commute, type Settings } from './life-balance-storage';
 
 /**
  * Academic life balance (Phase E, `academic_life_balance`) and the Crunch
@@ -59,38 +61,6 @@ export interface Span {
   source: SourceLabel;
   /** A rest block the student protected — theirs, not a commitment, so never part of a long run or a conflict. */
   rest?: boolean;
-}
-
-export interface Commute {
-  /** Weekdays it happens on, 0 = Sunday. */
-  days: number[];
-  /** One way. The day counts it twice. */
-  minutesEachWay: number;
-}
-
-export interface Settings {
-  commute: Commute | null;
-}
-
-export const EMPTY_SETTINGS: Settings = { commute: null };
-export const LIFE_BALANCE_KEY = 'semester.life-balance.v1';
-
-/** A reader for the device store; throws on anything it did not write, so the bytes are kept. */
-export function readSettings(value: unknown): Settings {
-  if (!obj(value)) throw new Error('Saved balance settings are not valid.');
-  if (value.commute === null || value.commute === undefined) return { commute: null };
-  const c = value.commute;
-  if (
-    !obj(c) ||
-    !Array.isArray(c.days) ||
-    c.days.length > 7 ||
-    !c.days.every((d) => Number.isInteger(d) && (d as number) >= 0 && (d as number) <= 6) ||
-    new Set(c.days).size !== c.days.length ||
-    !finite(c.minutesEachWay, 0, 240)
-  ) {
-    throw new Error('A saved commute is not valid.');
-  }
-  return { commute: { days: [...(c.days as number[])].sort(), minutesEachWay: c.minutesEachWay } };
 }
 
 export interface Input {

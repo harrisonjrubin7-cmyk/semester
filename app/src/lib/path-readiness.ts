@@ -20,6 +20,27 @@ export interface PathReadinessInput {
   registration: RegistrationDayData;
   meetings: MeetingLibrary;
   institution: string | null;
+  /** When the catalog was imported (ISO), if a record of it exists. */
+  importedAt?: string | null;
+  /** The moment to measure the import's age from; the clock, unless a test says otherwise. */
+  now?: Date;
+}
+
+/**
+ * How many days a catalog import is trusted to describe the term. Sections,
+ * times and seats move during registration, so a plan checked against an
+ * older import is a plan checked against a term that may no longer exist;
+ * past this the headline says the information is unavailable rather than
+ * Ready, until the student imports again.
+ */
+export const CATALOG_FRESH_DAYS = 30;
+
+/** Whole days since the import, or null when there is no usable date. */
+export function catalogAgeDays(importedAt: string | null | undefined, now: Date): number | null {
+  if (!importedAt) return null;
+  const at = new Date(importedAt).getTime();
+  if (!Number.isFinite(at)) return null;
+  return Math.max(0, Math.floor((now.getTime() - at) / 86_400_000));
 }
 
 export interface PathReadinessItem {
@@ -28,6 +49,32 @@ export interface PathReadinessItem {
   detail: string;
   state: ReadinessState;
   destination: 'degree' | 'yes';
+  /**
+   * Codes the student named that no section in the imported catalog carries.
+   * Empty on every row but `named`, and empty there too while no catalog is
+   * loaded: with nothing to match against, "unmatched" would be a claim with
+   * no source. A code stays here, visibly, until a later import carries it;
+   * matching never adds a section to the cart. Seats are the official system's.
+   */
+  unmatched: string[];
+}
+
+/** "econ 1020" and "ECON1020" are the same code; a catalog and a student rarely space them alike. */
+const codeKey = (code: string): string => code.replace(/\s+/g, '').toUpperCase();
+
+/** Named codes with no section of the same code in the catalog. Empty when there is no catalog to check. */
+export function unmatchedNamed(named: readonly NamedCourse[], catalog: readonly CatalogCourse[]): string[] {
+  if (!catalog.length) return [];
+  const keys = new Set(catalog.map((course) => codeKey(course.code)));
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const course of named) {
+    const code = course.code.trim();
+    if (!code || keys.has(codeKey(code)) || seen.has(codeKey(code))) continue;
+    seen.add(codeKey(code));
+    out.push(code);
+  }
+  return out;
 }
 
 /**
@@ -38,6 +85,13 @@ export interface PathReadinessItem {
  * registration result remain the official system's decision.
  */
 export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
+  const rows = pathReadinessRows(input);
+  return rows.map((row) => ({ unmatched: [], ...row }));
+}
+
+type Row = Omit<PathReadinessItem, 'unmatched'> & { unmatched?: string[] };
+
+function pathReadinessRows(input: PathReadinessInput): Row[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
   const unchecked = uncheckedSections(input.cart);
   const named = input.namedCourses ?? [];
@@ -46,6 +100,11 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const namedOnAgenda = namedCodes.length > 0 && named
     .filter((course) => course.code.trim())
     .every((course) => agendaTexts.has(namedAgendaText({ code: course.code.trim(), term: course.term })));
+  const unmatched = unmatchedNamed(named, input.catalog);
+  // Visible, and only that: the code is still the student's, still not a section, and the cart is untouched.
+  const unmatchedNote = unmatched.length
+    ? ` ${unmatched.join(', ')} ${unmatched.length === 1 ? 'is' : 'are'} not in the imported catalog${input.institution ? ` from ${input.institution}` : ''}, so ${unmatched.length === 1 ? 'it stays' : 'they stay'} listed here as ${unmatched.length === 1 ? 'a course' : 'courses'} you named until an import carries ${unmatched.length === 1 ? 'it' : 'them'}.`
+    : '';
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -71,8 +130,9 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
       detail: !namedCodes.length
         ? 'Name the courses you are considering. Naming a course is not an enrollment.'
         : namedOnAgenda
-          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.`
-          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`,
+          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.${unmatchedNote}`
+          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.${unmatchedNote}`,
+      unmatched,
       // A typed code is preparation. It is ready once each code is on the student's own agenda, which is still not the school's confirmation.
       state: !namedCodes.length ? 'not_started' : namedOnAgenda ? 'ready' : 'attention',
       destination: 'yes',
@@ -184,6 +244,8 @@ export interface ReadinessFacts {
   conflicts: number;
   /** Selected sections with no meeting times (see `uncheckedSections`). */
   unchecked: number;
+  /** Days since the catalog was imported, or null when that is not known. */
+  catalogAgeDays: number | null;
 }
 
 export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
@@ -191,6 +253,7 @@ export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
     catalogSize: input.catalog.length,
     conflicts: readiness(input.registration, input.cart, input.catalog).conflicts,
     unchecked: uncheckedSections(input.cart),
+    catalogAgeDays: catalogAgeDays(input.importedAt, input.now ?? new Date()),
   };
 }
 
@@ -211,6 +274,13 @@ export function overallReadiness(items: readonly PathReadinessItem[], facts: Rea
       state: 'unavailable',
       label: 'Information unavailable',
       why: `${facts.unchecked} selected section${facts.unchecked === 1 ? ' has' : 's have'} no meeting times, so a conflict cannot be ruled out. Check the official listing.`,
+    };
+  }
+  if (facts.catalogAgeDays !== null && facts.catalogAgeDays > CATALOG_FRESH_DAYS) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: `The course catalog was imported ${facts.catalogAgeDays} days ago, longer than the ${CATALOG_FRESH_DAYS} days an import is trusted for. Import it again before you rely on this.`,
     };
   }
   // A student who has not named a course has not left a step undone. Once they have, that row counts.

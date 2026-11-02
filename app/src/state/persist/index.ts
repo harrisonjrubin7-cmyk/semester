@@ -24,6 +24,7 @@
 import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
+import { HELD_KEY, droppedOnRead, forgetUnstoredDrops, heldInSaved, noteIngressDrops, unstoredIngressDrops } from '../../lib/deletions';
 import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
@@ -36,6 +37,19 @@ import {
 /** Where the migration records that it happened, so it happens once. */
 export const MIGRATED = 'migratedFrom';
 export const MIGRATED_VALUE = 'localStorage.v1';
+/**
+ * Inverse writes for an account snapshot that is not owned until its exact
+ * write and the auth boundary both settle. Kept in the same transaction as
+ * the snapshot, so startup can restore authored device state after a crash.
+ */
+export const REMOTE_ROLLBACK = 'remoteWriteRollback';
+
+export class OfflineRecoveryRequired extends Error {
+  constructor() {
+    super('Semester could not safely restore the device copy.');
+    this.name = 'OfflineRecoveryRequired';
+  }
+}
 
 /**
  * The version a database account is assumed to be at when it does not say.
@@ -95,12 +109,48 @@ async function readEverything(): Promise<Partial<Persisted> | null> {
 
   const settings = await readAll(SETTINGS_STORE);
   if (settings === null) return null;
+  const carried = heldWritten !== '' && heldWritten !== UNKNOWN;
+  heldWritten = '';
   for (const [key, value] of settings) {
     if (key === MIGRATED) continue;
+    if (key === HELD_KEY) {
+      out[HELD_KEY] = value;
+      heldWritten = Array.isArray(value) && value.length > 0 ? JSON.stringify(value) : '';
+    }
     if (SETTINGS.includes(key as keyof Persisted)) out[key] = value;
   }
 
+  // The database carried this tab's note and no longer does: another tab
+  // healed and took it off.
+  if (carried && heldWritten === '') forgetUnstoredDrops();
+
   return out as Partial<Persisted>;
+}
+
+/**
+ * Restore a remote snapshot whose owner changed (or whose final acknowledgement
+ * was interrupted). Unknown journal shapes fail closed into the localStorage
+ * fallback rather than exposing a possibly cross-account snapshot.
+ */
+async function recoverRemoteWrite(): Promise<boolean> {
+  const rows = await readAll(SETTINGS_STORE);
+  if (rows === null) return false;
+  const value = rows.find(([key]) => key === REMOTE_ROLLBACK)?.[1];
+  if (value === undefined) return true;
+  const stores = new Set<string>([...COLLECTIONS, MAPS_STORE, SETTINGS_STORE]);
+  if (!Array.isArray(value)) return false;
+  const inverse: Write[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') return false;
+    const candidate = entry as Partial<Write>;
+    if (typeof candidate.store !== 'string' || !stores.has(candidate.store) ||
+      typeof candidate.key !== 'string' || !('value' in candidate)) return false;
+    inverse.push(candidate as Write);
+  }
+  return write([
+    ...inverse,
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
 }
 
 /**
@@ -144,8 +194,13 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
   // reimplementing any of it would be a second definition of what a stored
   // account means.
   const state = loadPersisted();
+  // A note localStorage refused while reading it rides in the same move. The
+  // database is empty, so it holds no note, whatever an earlier load said.
+  heldWritten = '';
+  const held = heldWrite();
   const ok = await write([
     ...writesFor(DEFAULT_PERSISTED, state),
+    ...(held.write ? [held.write] : []),
     {
       store: SETTINGS_STORE,
       key: MIGRATED,
@@ -171,6 +226,7 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
     { store: SETTINGS_STORE, key: 'schemaVersion', value: state.schemaVersion },
   ]);
   // The old copy stays. It is the way back for one release.
+  if (held.write) heldLanded(held.want, ok);
   return ok ? { kind: 'moved', state } : { kind: 'incomplete' };
 }
 
@@ -198,6 +254,11 @@ export async function load(): Promise<Persisted | null> {
     ready = false;
     return null;
   };
+
+  if (!(await recoverRemoteWrite())) {
+    ready = false;
+    throw new OfflineRecoveryRequired();
+  }
 
   const empty = await isEmpty();
   if (empty === null) return lost();
@@ -253,8 +314,15 @@ export async function load(): Promise<Persisted | null> {
   // before the reducer's initialiser runs, so its field rules are not in the
   // way. The third door, through the same reader as the other two. See
   // `lib/stored.ts`.
-  const moved = await forward(found);
-  return { ...DEFAULT_PERSISTED, ...readIncoming(moved as Record<string, unknown>) } as Persisted;
+  // A note a refused localStorage write left in the database (`heldWrite`):
+  // read here, never part of the state.
+  const { [HELD_KEY]: carriedNote, ...stored } = found as Partial<Persisted> & { [HELD_KEY]?: unknown };
+  const moved = await forward(stored);
+  const read = readIncoming(moved as Record<string, unknown>);
+  // Rows the reader could not keep, noted the same way as on the
+  // localStorage path. See `ingressDrops` in `lib/deletions.ts`.
+  noteIngressDrops([...droppedOnRead(moved as Record<string, unknown>, read), ...heldInSaved({ [HELD_KEY]: carriedNote })]);
+  return { ...DEFAULT_PERSISTED, ...read } as Persisted;
 }
 
 /**
@@ -354,6 +422,38 @@ export function writesFor(prev: Partial<Persisted>, next: Partial<Persisted>): W
   return out;
 }
 
+/**
+ * A note localStorage refused (`unstoredIngressDrops`), written beside the
+ * state in the same transaction, because that write can be the one that makes
+ * a lost row's gap durable. `heldWritten` is what the database holds for it.
+ */
+let heldWritten = '';
+
+/** What `heldWritten` says after a write that failed: the next write sends the note whatever it holds. */
+const UNKNOWN = '?';
+
+/**
+ * The note's row, if the database does not already hold it, and what to
+ * record once the write carrying it lands (`heldLanded`). Never recorded
+ * before: a refused write must not count the note as written.
+ */
+function heldWrite(): { write: Write | null; want: string } {
+  const held = unstoredIngressDrops();
+  const want = held.length > 0 ? JSON.stringify(held) : '';
+  if (want === heldWritten) return { write: null, want };
+  return { write: { store: SETTINGS_STORE, key: HELD_KEY, value: held.length > 0 ? held : null }, want };
+}
+
+function heldLanded(want: string, ok: boolean): void {
+  heldWritten = ok ? want : UNKNOWN;
+}
+
+/** After a heal: takes a carried note out of the database, if it holds one. */
+export async function releaseHeldNote(): Promise<void> {
+  const { write: note, want } = heldWrite();
+  if (note) heldLanded(want, await write([note]));
+}
+
 /** How long after the last change the writes go out. */
 export const SETTLE_MS = 250;
 
@@ -402,21 +502,36 @@ export function whileWriting(fn: ((failing: boolean) => void) | null): void {
   watching = fn;
 }
 
-async function flush(): Promise<void> {
-  const next = pending;
-  const nextSeq = pendingSeq;
-  const tell = told;
-  pending = null;
-  told = null;
-  if (!next || !last) return;
+async function flushValue(
+  next: Partial<Persisted> | null,
+  nextSeq: number,
+  tell: (() => void) | null,
+  exact = false,
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
+): Promise<boolean> {
+  if (!next || !last) return true;
   const before = last;
   const beforeSeq = lastSeq;
-  const writes = writesFor(last, next);
+  /*
+   * Ordinary coalesced writes follow `last`, the state the preceding write is
+   * expected to leave behind. An explicit flush is a durability boundary, so
+   * expectation is not enough: build it from `confirmed`, which moves only
+   * after IndexedDB completes successfully. `flushOnLeave()` can advance
+   * `last` while its out-of-queue transaction is still able to abort.
+   */
+  const base = exact ? (confirmed ?? last) : last;
+  const writes = writesFor(base, next);
+  const held = heldWrite();
+  if (held.write) writes.push(held.write);
   last = next;
   lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
-  if (writes.length === 0) return;
+  if (writes.length === 0) {
+    if (exact) confirmed = next;
+    return true;
+  }
   /*
    * `write` reports a failure by answering false, not by throwing.
    *
@@ -437,11 +552,20 @@ async function flush(): Promise<void> {
    * none afterwards, and nothing in the console.
    */
   let ok = false;
+  const inverse = exact && signal && rollbackTo ? writesFor(next, rollbackTo) : [];
+  const journal = { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: inverse };
   try {
-    ok = await write(writes);
+    /*
+     * The journal deliberately survives each successful iteration. A remote
+     * merge may be rewritten when an authored edit arrives during its first
+     * transaction; acknowledging either iteration separately would strand
+     * the earlier account rows if identity changed during the next one.
+     */
+    ok = await write(exact && signal && rollbackTo ? [...writes, journal] : writes, signal);
   } catch {
     ok = false;
   }
+  if (held.write) heldLanded(held.want, ok);
 
   if (!ok) {
     /*
@@ -467,7 +591,7 @@ async function flush(): Promise<void> {
     last = before;
     lastSeq = beforeSeq;
     watching?.(true);
-    return;
+    return false;
   }
 
   /*
@@ -478,7 +602,7 @@ async function flush(): Promise<void> {
    * missing. Then nothing is confirmed and the journal stays; the failure
    * already put `last` back, so the next write carries it again.
    */
-  if (before === confirmed) {
+  if (exact || before === confirmed) {
     confirmed = next;
     // Everything the leaving journal held has now landed, or something newer
     // has. Replaying it next load would put an older value over a newer one.
@@ -489,6 +613,16 @@ async function flush(): Promise<void> {
   // has since passed — a browser that made room, or a transaction that lost a
   // race and won the next one.
   watching?.(false);
+  return true;
+}
+
+async function flush(): Promise<void> {
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  await flushValue(next, nextSeq, tell);
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */
@@ -546,14 +680,69 @@ export function stopWriting(): void {
   }
 }
 
-/** Write whatever is owing right now. For a tab closing, and for tests. */
-export async function flushNow(): Promise<void> {
+/**
+ * Write whatever is owing right now against what is confirmed on disk.
+ * False means the transaction did not land.
+ */
+export async function flushNow(
+  signal?: AbortSignal,
+  rollbackTo?: Partial<Persisted>,
+): Promise<boolean> {
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
-  inFlight = inFlight.then(flush);
+  /*
+   * Capture the exact owed value before waiting behind an earlier write.
+   *
+   * Calling `inFlight.then(flush)` used to defer reading `pending` until the
+   * earlier transaction finished. A render during that wait could call
+   * `persist()` again and replace the value the caller explicitly asked to
+   * flush. Account adoption hit exactly that race: the accepted remote copy
+   * was queued, a stale pre-adoption render replaced it, and `flushNow()`
+   * resolved even though the remote task had never reached IndexedDB.
+   *
+   * A later call remains pending for its own turn. This one writes the value
+   * that was owing at the instant `flushNow()` was called, in order behind
+   * any transaction already in flight.
+   */
+  const next = pending;
+  const nextSeq = pendingSeq;
+  const tell = told;
+  pending = null;
+  told = null;
+  let landed = false;
+  inFlight = inFlight.then(async () => {
+    landed = await flushValue(next, nextSeq, tell, true, signal, rollbackTo);
+  });
   await inFlight;
+  return landed;
+}
+
+/**
+ * Acknowledge the complete, quiescent remote operation. Auth delivery remains
+ * fenced until this durable marker removal lands.
+ */
+export async function acknowledgeRemoteWrite(): Promise<boolean> {
+  return write([{ store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null }]);
+}
+
+/**
+ * Restore the current device-authored snapshot before releasing a queued
+ * identity. The restore and journal acknowledgement are one transaction.
+ */
+export async function rollbackRemoteWrite(target: Partial<Persisted>): Promise<boolean> {
+  const base = confirmed ?? last;
+  if (!base) return false;
+  const ok = await write([
+    ...writesFor(base, target),
+    { store: SETTINGS_STORE, key: REMOTE_ROLLBACK, value: null },
+  ]);
+  if (ok) {
+    last = target;
+    confirmed = target;
+  }
+  return ok;
 }
 
 /**

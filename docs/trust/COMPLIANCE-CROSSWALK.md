@@ -57,7 +57,7 @@ Statuses were read at main commit 7476aca on 28 September 2026. 26 domains:
 | **Security program** | 1 | High | Security Practices Rubric | Collaborative cybersecurity | GOV-1 (1), SEC-001 (1), SEC-002 (1), SEC-011 (1) |
 | **Asset inventory** | 1 | High | Security Practices Rubric | Data foundations and governance | PRG-006 (1), EX-01 (2), DV-06 (0), SEC-010 (1) |
 | **Cloud infrastructure** | 1 | High | Security Practices Rubric | Resilient digital services | CRYPTO-1 (1), MON-1 (1), SRE-002 (1), EX-03 (1), EX-04 (1), DR-01 (1) |
-| **Identity and access** | 2 | High | Security Practices Rubric | Collaborative cybersecurity | IAM-1 (2), IAM-2 (2), IAM-3 (0), IAM-003 (1), IAM-004 (2), IAM-005 (1), IAM-006 (2), IAM-010 (2), IAM-011 (1) |
+| **Identity and access** | 2 | High | Security Practices Rubric | Collaborative cybersecurity | IAM-1 (2), IAM-2 (2), IAM-3 (0), IAM-003 (1), IAM-004 (2), IAM-005 (2), IAM-006 (2), IAM-010 (2), IAM-011 (1) |
 | **Secure development** | 1 | High | Security Practices Rubric | Collaborative cybersecurity | SDLC-1 (2), SDLC-2 (2), SEC-002 (1), SEC-003 (1), SRE-008 (1) |
 | **Encryption and secrets** | 1 | High | Security Practices Rubric | Student trust and data agency | CRYPTO-1 (1), SDLC-2 (2), IAM-009 (2), DR-04 (0) |
 | **Multi-tenant separation** | 2 | High | Security Practices Rubric | Connected technology ecosystem | TEN-1 (1), IAM-007 (2), IAM-008 (2), UOS-009 (2), FERPA-8 (1) |
@@ -125,9 +125,9 @@ master rows at P0 not yet tested. Per register, over every row this page names:
 | --- | ---: | ---: | ---: | ---: | ---: |
 | [`docs/market-readiness/HECVAT_READINESS.md`](../market-readiness/HECVAT_READINESS.md) | 33 | 11 of 33 | 0 of 33 | 11 of 33 | 0 |
 | [`docs/FERPA-COPPA-1EDTECH-READINESS.md`](../FERPA-COPPA-1EDTECH-READINESS.md) | 21 | 12 of 21 | 0 of 21 | 10 of 21 | 0 |
-| [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 24 of 80 | 1 of 80 | 24 of 80 | 52 |
+| [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](../MASTER-LAUNCH-READINESS-REGISTER.md) | 80 | 25 of 80 | 1 of 80 | 25 of 80 | 51 |
 | [`docs/operating-model/OPERATIONAL-MATURITY.md`](../operating-model/OPERATIONAL-MATURITY.md) | 28 | 2 of 28 | 0 of 28 | 3 of 28 | 0 |
-| **All** | 162 | 49 of 162 | 1 of 162 | 48 of 162 | 52 |
+| **All** | 162 | 50 of 162 | 1 of 162 | 49 of 162 | 51 |
 
 ## The TrustEd Apps rubrics, item by item
 

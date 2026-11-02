@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 #
-# The productivity repository adapter, run against a throwaway Postgres with every
-# migration applied — the database `check.sh` builds, handed over through
+# The Postgres adapters, run against a throwaway Postgres with every migration
+# applied — the database `check.sh` builds, handed over through
 # SEMESTER_CHECK_THEN, so there is one setup and it cannot drift (the way `load.sh`
 # does it).
 #
-# What it answers: whether `app/server/productivity/postgres.ts` does with the real
-# functions in `20261004123000_productivity_commands.sql` and
+# What it answers. For `app/server/productivity/postgres.ts`: whether it does with
+# the real functions in `20261004123000_productivity_commands.sql` and
 # `20261004180000_productivity_reads.sql` what the service's safety arguments assume
 # — the repository contract, the same script of commands giving the same results in
 # memory and in Postgres, and two processes that share nothing racing each other
-# through the compare-and-swap and the retry.
+# through the compare-and-swap and the retry. For
+# `app/server/institution/postgres-access-saga.ts`: the crash rehearsals of the
+# access saga runner over `20261006180000_access_saga_store.sql` — a worker that
+# dies holding the lease and the successor that takes over when it expires, the
+# dead worker's late save fenced off, five workers claiming at once, a signal
+# landing under a held lease, and the same operation key reaching the participant
+# from both workers.
 #
 #     supabase/adapter.sh
 #

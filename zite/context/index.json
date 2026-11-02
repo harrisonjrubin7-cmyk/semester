@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "context/semester.md",
+      "title": "Semester",
+      "description": "Defines Semester\u2019s unified multi-tenant platform scope, native ownership, and governed operator outcomes",
+      "source": "written"
+    },
+    {
+      "path": "context/00-how-to-use.md",
+      "title": "How to use this context",
+      "description": "Start here: what each context file is, precedence, and the rules that always apply (claims, AI no-egress, no deploy without approval).",
+      "source": "written"
+    },
+    {
+      "path": "context/01-semester-complete-context.md",
+      "title": "Semester \u2014 Complete Product, Company, and Architecture Context",
+      "description": "Governing brief: identity, three operating layers, users, student product, institution OS, Company OS, design/voice, privacy/AI, Zite execution rules.",
+      "source": "upload"
+    },
+    {
+      "path": "context/02-logical-schema.md",
+      "title": "Logical schema (proposed)",
+      "description": "Proposed logical schema for the shared platform, education, institution, company and billing layers. Map onto existing tables.",
+      "source": "upload"
+    },
+    {
+      "path": "context/03-api-contracts.md",
+      "title": "API contracts (proposed)",
+      "description": "Proposed API contract standard, endpoint inventory, example responses and errors.",
+      "source": "upload"
+    },
+    {
+      "path": "context/04-student-app-prompts.md",
+      "title": "Student app build prompts",
+      "description": "Ten ordered build prompts for the student app, from foundation to acceptance and hardening.",
+      "source": "upload"
+    },
+    {
+      "path": "context/05-implementation-blueprint.md",
+      "title": "Implementation blueprint and prompts",
+      "description": "Architecture, component inventory, build order, master prompt, Prompts 1-8 and safety rules.",
+      "source": "upload"
+    },
+    {
+      "path": "context/06-system-design.md",
+      "title": "SaaS system design document",
+      "description": "Tenant/workspace/membership definitions, the authorization decision, billing (payer vs beneficiary, entitlements, metering, collections), API middleware order, data flows, deployment gates.",
+      "source": "upload"
+    },
+    {
+      "path": "context/07-fullstack-reference-mapping.md",
+      "title": "Full-stack reference \u2192 Zite mapping",
+      "description": "Maps the PostgreSQL/Vite/YAML full-stack registrar & tuition brief onto what is actually built in Zite, with gaps (no RLS, no atomic seat lock).",
+      "source": "written"
+    },
+    {
+      "path": "context/08-existing-to-proposed-map.md",
+      "title": "Existing-to-proposed map",
+      "description": "Contract step 1 inventory: every app, route set and table mapped to its proposed role, with gaps, parallel-system risks and open decisions.",
+      "source": "written"
+    },
+    {
+      "path": "context/09-app-portfolio.md",
+      "title": "App portfolio (32 workspaces)",
+      "description": "The 32 proposed workspaces by group, developer tiers T0-T2, per-app boundaries, institutional activation order and the company record chain.",
+      "source": "written"
+    }
+  ]
+}

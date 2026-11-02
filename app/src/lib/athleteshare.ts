@@ -200,9 +200,13 @@ export async function mySupportShares(): Promise<MySupportShare[]> {
 }
 
 /** Stop a share. Takes effect at the staff member's next look. */
-export async function revokeSupportShare(id: string): Promise<void> {
-  const { error } = await (await cloud()).from('support_shares').update({ revoked_at: new Date().toISOString() }).eq('id', id);
+export async function revokeSupportShare(id: string, now = Date.now()): Promise<void> {
+  const revokedAt = new Date(now).toISOString();
+  const { data, error } = await (await cloud()).from('support_shares').update({ revoked_at: revokedAt }).select('id, revoked_at').eq('id', id);
   if (error) throw new Error(error.message);
+  if (!(data ?? []).some((row) => row.id === id && typeof row.revoked_at === 'string' && Date.parse(row.revoked_at) === Date.parse(revokedAt))) {
+    throw new Error('The share was not stopped. It may already be unavailable or you may no longer have access. Refresh your shares, then try again.');
+  }
 }
 
 // ── The staff side ──────────────────────────────────────────────────────

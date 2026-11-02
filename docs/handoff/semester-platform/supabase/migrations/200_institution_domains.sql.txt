@@ -1,0 +1,253 @@
+-- 200 · Institution and education domains still proposed in the capability registry:
+-- iam (memberships, invitations, org units, campuses, access reviews), acad extras (programs, rooms, degree evaluations),
+-- adm, svc (services, cases, restricted cases, accommodations), instfin (student accounts), integ, impl, cred, career,
+-- learn.study_artifacts, gov. Not applied or tested. Reconcile with the repo first.
+create schema if not exists iam; create schema if not exists adm; create schema if not exists svc; create schema if not exists instfin;
+create schema if not exists integ; create schema if not exists impl; create schema if not exists cred; create schema if not exists career; create schema if not exists gov;
+
+-- ---------- iam: global identity, scoped membership (a person can belong to several institutions; permissions never merge)
+create table if not exists iam.organization_units(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, parent_id uuid references iam.organization_units, kind text not null check (kind in ('college','department','office','program','campus_unit')), name text not null, unique (id, institution_id));
+create table if not exists iam.campuses(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, name text not null, timezone text not null default 'America/Chicago');
+create table if not exists iam.memberships(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, person_id uuid not null references auth.users,
+  affiliation text not null check (affiliation in ('student','faculty','staff','advisor','alumni','guest')), status text not null default 'active' check (status in ('invited','active','suspended','ended')),
+  verified_by text, effective_from date not null default current_date, effective_until date, unique (institution_id, person_id, affiliation));
+create table if not exists iam.invitations(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, email text not null, affiliation text not null,
+  token_hash text not null unique, invited_by uuid not null default auth.uid(), expires_at timestamptz not null default now() + interval '14 days',
+  state text not null default 'pending' check (state in ('pending','accepted','revoked','expired')), accepted_by uuid references auth.users, created_at timestamptz not null default now(),
+  check (expires_at <= created_at + interval '30 days'));
+create unique index if not exists inv_one_pending on iam.invitations(institution_id, lower(email), affiliation) where state = 'pending';
+create table if not exists iam.access_reviews(
+  id uuid primary key default gen_random_uuid(), institution_id uuid references core.institutions, scope text not null, reviewer_id uuid not null references auth.users,
+  grant_id uuid references ctl.grants, decision text check (decision in ('keep','revoke','reduce')), reason text, due_on date not null, decided_at timestamptz);
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'iam' loop execute format('alter table iam.%I enable row level security', t); end loop; end $$;
+create policy ou_read on iam.organization_units for select using (institution_id = core.my_institution());
+create policy cam_read on iam.campuses for select using (institution_id = core.my_institution());
+create policy mem_self on iam.memberships for select using (person_id = auth.uid());
+create policy mem_admin on iam.memberships for select using (ctl.can('membership.invite', institution_id));
+create policy inv_admin on iam.invitations for select using (ctl.can('membership.invite', institution_id));
+create policy ar_reviewer on iam.access_reviews for select using (reviewer_id = auth.uid() or ctl.can('access_review.run', coalesce(institution_id, '00000000-0000-0000-0000-000000000000')));
+create or replace function api.issue_invitation(p_institution uuid, p_email text, p_affiliation text, p_token_hash text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare i uuid; begin
+  if not ctl.can('membership.invite', p_institution) then raise exception 'FORBIDDEN'; end if;
+  if p_email !~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'INVALID_REQUEST' using detail = 'email'; end if;
+  select id into i from iam.invitations where institution_id = p_institution and lower(email) = lower(p_email) and affiliation = p_affiliation and state = 'pending';
+  if i is not null then return i; end if;                                                                       -- duplicate handling
+  insert into iam.invitations(institution_id, email, affiliation, token_hash) values (p_institution, lower(p_email), p_affiliation, p_token_hash) returning id into i;
+  perform audit.log('invitation.issued', i::text, null, jsonb_build_object('affiliation', p_affiliation));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('invitation.issued', p_institution, jsonb_build_object('invitation', i)); return i; end $$;
+create or replace function api.accept_invitation(p_token_hash text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare v iam.invitations; m uuid; begin
+  select * into v from iam.invitations where token_hash = p_token_hash for update;
+  if v.id is null or v.state <> 'pending' then raise exception 'NOT_FOUND'; end if;
+  if v.expires_at < now() then update iam.invitations set state = 'expired' where id = v.id; raise exception 'EXPIRED'; end if;
+  if lower((select email from auth.users where id = auth.uid())) <> v.email then raise exception 'FORBIDDEN' using detail = 'signed-in email does not match invitation'; end if;
+  insert into iam.memberships(institution_id, person_id, affiliation, verified_by) values (v.institution_id, auth.uid(), v.affiliation, 'invitation')
+    on conflict (institution_id, person_id, affiliation) do update set status = 'active' returning id into m;
+  update iam.invitations set state = 'accepted', accepted_by = auth.uid() where id = v.id;
+  perform audit.log('invitation.accepted', v.id::text, null, null); return m; end $$;
+create or replace function api.revoke_invitation(p_invitation uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare v iam.invitations; begin select * into v from iam.invitations where id = p_invitation for update;
+  if v.id is null or not ctl.can('membership.invite', v.institution_id) then raise exception 'FORBIDDEN'; end if;
+  update iam.invitations set state = 'revoked' where id = p_invitation and state = 'pending'; perform audit.log('invitation.revoked', p_invitation::text, null, null); end $$;
+grant execute on function api.issue_invitation(uuid,text,text,text), api.accept_invitation(text), api.revoke_invitation(uuid) to authenticated;
+
+-- ---------- acad extras
+create table if not exists acad.programs(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, code text not null, name text not null, kind text not null check (kind in ('degree','certificate','minor')), status text not null default 'active', unique (institution_id, code));
+create table if not exists acad.rooms(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, campus_id uuid references iam.campuses, name text not null, capacity int check (capacity > 0), accessible boolean not null default true);
+create table if not exists acad.degree_evaluations(id uuid primary key default gen_random_uuid(), student_id uuid not null references core.profiles on delete cascade, program_id uuid not null references acad.programs, result jsonb not null, kind text not null default 'official' check (kind in ('official','scenario')), source text not null default 'sis', evaluated_at timestamptz not null default now());
+alter table acad.programs enable row level security; alter table acad.rooms enable row level security; alter table acad.degree_evaluations enable row level security;
+create policy prog_read on acad.programs for select using (institution_id = core.my_institution());
+create policy room_read on acad.rooms for select using (institution_id = core.my_institution());
+create policy de_self on acad.degree_evaluations for select using (student_id = auth.uid());
+create policy de_advise on acad.degree_evaluations for select using (acad.advises(student_id));
+
+-- ---------- adm
+create table if not exists adm.applications(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, applicant_email text not null, program_id uuid references acad.programs, term_id uuid references acad.terms, state text not null default 'submitted' check (state in ('submitted','in_review','decided','withdrawn')), submitted_at timestamptz not null default now());
+create table if not exists adm.decisions(application_id uuid primary key references adm.applications on delete cascade, decision text not null check (decision in ('admit','deny','waitlist','defer')), decided_by uuid not null default auth.uid(), reason_internal text, decided_at timestamptz not null default now());
+alter table adm.applications enable row level security; alter table adm.decisions enable row level security;
+create policy app_review on adm.applications for select using (ctl.can('application.review', institution_id));
+create policy dec_review on adm.decisions for select using (exists (select 1 from adm.applications a where a.id = application_id and ctl.can('application.review', a.institution_id)));
+
+-- ---------- svc: services and cases. Restricted cases are a separate table with their own audience, never inherited.
+create table if not exists svc.service_definitions(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, office text not null, name text not null, description text, sla interval, restricted boolean not null default false, active boolean not null default true);
+create table if not exists svc.service_requests(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, service_id uuid not null references svc.service_definitions, requester_id uuid not null references core.profiles default auth.uid(), state text not null default 'submitted' check (state in ('submitted','assigned','in_progress','waiting_on_requester','resolved','closed')), assignee_id uuid references core.profiles, summary text not null check (length(summary) <= 500), sla_due timestamptz, created_at timestamptz not null default now(), resolved_at timestamptz);
+create table if not exists svc.cases(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, owner_id uuid not null references core.profiles, kind text not null check (kind in ('success','outreach','referral')), state text not null default 'open' check (state in ('open','monitoring','closed')), opened_at timestamptz not null default now());
+create table if not exists svc.restricted_cases(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, office text not null check (office in ('counseling','disability_services','title_ix','conduct','health')), state text not null default 'intake', created_at timestamptz not null default now());
+create table if not exists svc.restricted_case_staff(case_id uuid not null references svc.restricted_cases on delete cascade, person_id uuid not null references core.profiles, purpose text not null, until timestamptz, primary key (case_id, person_id));
+create table if not exists svc.accommodation_plans(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, case_id uuid references svc.restricted_cases, instructions_for_faculty text not null check (length(instructions_for_faculty) <= 1000), extra_time_pct int check (extra_time_pct between 0 and 200), effective_from date not null, effective_until date, approved_by uuid not null);
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'svc' loop execute format('alter table svc.%I enable row level security', t); end loop; end $$;
+create policy sd_read on svc.service_definitions for select using (institution_id = core.my_institution() and active);
+create policy sr_self on svc.service_requests for select using (requester_id = auth.uid());
+create policy sr_office on svc.service_requests for select using (exists (select 1 from svc.service_definitions d where d.id = service_id and ctl.can('request.assign', institution_id, null, 'office', d.office)));
+create policy case_owner on svc.cases for select using (owner_id = auth.uid() or acad.advises(student_id));
+create policy rc_self on svc.restricted_cases for select using (student_id = auth.uid());
+create policy rc_staff on svc.restricted_cases for select using (exists (select 1 from svc.restricted_case_staff s where s.case_id = id and s.person_id = auth.uid() and (s.until is null or s.until > now())));
+create policy rcs_staff on svc.restricted_case_staff for select using (person_id = auth.uid());
+-- Faculty see only the instructions for students enrolled in a section they teach, never the case.
+create policy ap_self on svc.accommodation_plans for select using (student_id = auth.uid());
+create policy ap_faculty on svc.accommodation_plans for select using (exists (select 1 from acad.enrollments e join acad.teaching_assignments t on t.section_id = e.section_id where e.person_id = svc.accommodation_plans.student_id and e.status = 'enrolled' and t.person_id = auth.uid()) and (effective_until is null or effective_until >= current_date));
+
+-- ---------- instfin: institution student accounts (separate from Semester company finance)
+create table if not exists instfin.student_accounts(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, balance_cents bigint not null default 0, source text not null default 'sis', synced_at timestamptz not null default now(), unique (institution_id, student_id));
+create table if not exists instfin.charges(id uuid primary key default gen_random_uuid(), account_id uuid not null references instfin.student_accounts on delete cascade, description text not null, amount_cents bigint not null, posted_on date not null, due_on date, source text not null default 'sis', source_ref text);
+create table if not exists instfin.awards(id uuid primary key default gen_random_uuid(), account_id uuid not null references instfin.student_accounts on delete cascade, term_id uuid references acad.terms, kind text not null, amount_cents bigint not null check (amount_cents >= 0), state text not null check (state in ('offered','accepted','disbursed','cancelled')), source text not null default 'sis');
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'instfin' loop execute format('alter table instfin.%I enable row level security', t); end loop; end $$;
+create policy sa_self on instfin.student_accounts for select using (student_id = auth.uid());
+create policy sa_staff on instfin.student_accounts for select using (ctl.can('charge.adjust', institution_id));
+create policy ch_read on instfin.charges for select using (exists (select 1 from instfin.student_accounts a where a.id = account_id and (a.student_id = auth.uid() or ctl.can('charge.adjust', a.institution_id))));
+create policy aw_read on instfin.awards for select using (exists (select 1 from instfin.student_accounts a where a.id = account_id and (a.student_id = auth.uid() or ctl.can('award.review', a.institution_id))));
+
+-- ---------- integ, impl
+create table if not exists integ.mappings(id uuid primary key default gen_random_uuid(), integration_id uuid not null references opsx.integrations on delete cascade, local_table text not null, local_field text not null, remote_field text not null, transform text, unique (integration_id, local_table, local_field));
+create table if not exists integ.sync_errors(id bigserial primary key, sync_run_id bigint not null references opsx.sync_runs on delete cascade, record_ref text, code text not null, message text not null, resolved_at timestamptz);
+create table if not exists impl.projects(id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, institution_id uuid references core.institutions, pilot_id uuid references biz.pilots, state text not null default 'kickoff' check (state in ('kickoff','configuring','migrating','validating','training','live','closed')), owner_id uuid references auth.users, go_live_on date);
+create table if not exists impl.milestones(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, name text not null, due_on date, done_on date, evidence_ref text, check (done_on is null or evidence_ref is not null));
+create table if not exists impl.migration_batches(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, kind text not null, records int not null default 0, failed int not null default 0, state text not null default 'pending' check (state in ('pending','running','validated','failed','rolled_back')), report_ref text);
+create table if not exists impl.acceptance_records(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, deliverable text not null, accepted_by_name text not null, accepted_on date not null, evidence_ref text not null);
+do $$ declare s text; t text; begin foreach s in array array['integ','impl'] loop for t in select tablename from pg_tables where schemaname = s loop execute format('alter table %I.%I enable row level security', s, t); end loop; end loop; end $$;
+create policy map_view on integ.mappings for select using (exists (select 1 from opsx.integrations i where i.id = integration_id and ctl.can('integration:view', i.institution_id)));
+create policy se_view on integ.sync_errors for select using (exists (select 1 from opsx.sync_runs r join opsx.integrations i on i.id = r.integration_id where r.id = sync_run_id and ctl.can('integration:view', i.institution_id)));
+create policy ip_read on impl.projects for select using (biz.staff('biz:read') or (institution_id is not null and ctl.can('rollout.approve', institution_id)));
+create policy im_read on impl.milestones for select using (exists (select 1 from impl.projects p where p.id = project_id and (biz.staff('biz:read') or ctl.can('rollout.approve', p.institution_id))));
+create policy mb_read on impl.migration_batches for select using (biz.staff('biz:read'));
+create policy ar_read on impl.acceptance_records for select using (exists (select 1 from impl.projects p where p.id = project_id and (biz.staff('biz:read') or ctl.can('rollout.approve', p.institution_id))));
+
+-- ---------- cred, career, study, gov
+create table if not exists cred.credentials(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, subject_id uuid not null references core.profiles, title text not null, issued_on date not null, evidence_ref text, revoked_at timestamptz, share_token_hash text unique);
+create table if not exists cred.verification_records(id bigserial primary key, credential_id uuid not null references cred.credentials on delete cascade, verifier text, verified_at timestamptz not null default now(), result text not null check (result in ('valid','revoked','not_found')));
+create table if not exists career.positions(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, employer text not null, title text not null, closes_on date, url text);
+create table if not exists career.applications(id uuid primary key default gen_random_uuid(), position_id uuid not null references career.positions on delete cascade, student_id uuid not null references core.profiles default auth.uid(), state text not null default 'saved' check (state in ('saved','applied','interviewing','offer','closed')), unique (position_id, student_id));
+create table if not exists career.artifacts(id uuid primary key default gen_random_uuid(), owner_id uuid not null references core.profiles default auth.uid(), title text not null, file_id uuid references comms.files, visibility text not null default 'private' check (visibility in ('private','link','public')));
+create table if not exists learn.study_artifacts(id uuid primary key default gen_random_uuid(), workspace_id uuid not null references core.workspaces, kind text not null check (kind in ('note','deck','card','practice_session')), title text not null, body jsonb not null default '{}'::jsonb check (pg_column_size(body) < 65536), source_ids uuid[] not null default '{}', updated_at timestamptz not null default now());
+create table if not exists gov.proposals(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, kind text not null, title text not null, state text not null default 'draft' check (state in ('draft','in_committee','approved','rejected','withdrawn')), document_id uuid references docs.documents, submitted_by uuid not null default auth.uid());
+create table if not exists gov.votes(proposal_id uuid not null references gov.proposals on delete cascade, voter_id uuid not null references core.profiles default auth.uid(), vote text not null check (vote in ('approve','reject','abstain')), at timestamptz not null default now(), primary key (proposal_id, voter_id));
+create table if not exists gov.retention_policies(id uuid primary key default gen_random_uuid(), institution_id uuid references core.institutions, record_class text not null, keep_for interval not null, basis text not null);
+create table if not exists gov.evidence(id uuid primary key default gen_random_uuid(), control text not null, title text not null, document_id uuid references docs.documents, collected_on date not null, expires_on date, public_summary text);
+do $$ declare s text; t text; begin foreach s in array array['cred','career','gov'] loop for t in select tablename from pg_tables where schemaname = s loop execute format('alter table %I.%I enable row level security', s, t); end loop; end loop; end $$;
+alter table learn.study_artifacts enable row level security;
+create policy cr_self on cred.credentials for select using (subject_id = auth.uid());
+create policy vr_self on cred.verification_records for select using (exists (select 1 from cred.credentials c where c.id = credential_id and c.subject_id = auth.uid()));
+create policy pos_read on career.positions for select using (institution_id = core.my_institution());
+create policy capp_self on career.applications for all using (student_id = auth.uid()) with check (student_id = auth.uid());
+create policy art_self on career.artifacts for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy sa_owner on learn.study_artifacts for all using (exists (select 1 from core.workspaces w where w.id = workspace_id and w.kind = 'personal' and w.owner_user_id = auth.uid())) with check (exists (select 1 from core.workspaces w where w.id = workspace_id and w.kind = 'personal' and w.owner_user_id = auth.uid()));
+create policy gp_read on gov.proposals for select using (institution_id = core.my_institution() and (submitted_by = auth.uid() or ctl.can('proposal.review', institution_id)));
+create policy gv_read on gov.votes for select using (voter_id = auth.uid() or exists (select 1 from gov.proposals p where p.id = proposal_id and ctl.can('proposal.review', p.institution_id)));
+create policy rp_read on gov.retention_policies for select using (institution_id is null or institution_id = core.my_institution());
+create policy ev_public on gov.evidence for select using (public_summary is not null);
+do $$ declare s text; begin foreach s in array array['iam','adm','svc','instfin','integ','impl','cred','career','gov'] loop
+  execute format('revoke insert, update, delete on all tables in schema %I from anon, authenticated', s);
+  execute format('grant usage on schema %I to authenticated', s); execute format('grant select on all tables in schema %I to authenticated', s); end loop; end $$;
+grant insert, update, delete on career.applications, career.artifacts, learn.study_artifacts to authenticated;
+ then raise exception 'INVALID_REQUEST' using detail = 'email'; end if;
+  select id into i from iam.invitations where institution_id = p_institution and lower(email) = lower(p_email) and affiliation = p_affiliation and state = 'pending';
+  if i is not null then return i; end if;                                                                       -- duplicate handling
+  insert into iam.invitations(institution_id, email, affiliation, token_hash) values (p_institution, lower(p_email), p_affiliation, p_token_hash) returning id into i;
+  perform audit.log('invitation.issued', i::text, null, jsonb_build_object('affiliation', p_affiliation));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('invitation.issued', p_institution, jsonb_build_object('invitation', i)); return i; end $$;
+create or replace function api.accept_invitation(p_token_hash text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare v iam.invitations; m uuid; begin
+  select * into v from iam.invitations where token_hash = p_token_hash for update;
+  if v.id is null or v.state <> 'pending' then raise exception 'NOT_FOUND'; end if;
+  if v.expires_at < now() then update iam.invitations set state = 'expired' where id = v.id; raise exception 'EXPIRED'; end if;
+  if lower((select email from auth.users where id = auth.uid())) <> v.email then raise exception 'FORBIDDEN' using detail = 'signed-in email does not match invitation'; end if;
+  insert into iam.memberships(institution_id, person_id, affiliation, verified_by) values (v.institution_id, auth.uid(), v.affiliation, 'invitation')
+    on conflict (institution_id, person_id, affiliation) do update set status = 'active' returning id into m;
+  update iam.invitations set state = 'accepted', accepted_by = auth.uid() where id = v.id;
+  perform audit.log('invitation.accepted', v.id::text, null, null); return m; end $$;
+create or replace function api.revoke_invitation(p_invitation uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare v iam.invitations; begin select * into v from iam.invitations where id = p_invitation for update;
+  if v.id is null or not ctl.can('membership.invite', v.institution_id) then raise exception 'FORBIDDEN'; end if;
+  update iam.invitations set state = 'revoked' where id = p_invitation and state = 'pending'; perform audit.log('invitation.revoked', p_invitation::text, null, null); end $$;
+grant execute on function api.issue_invitation(uuid,text,text,text), api.accept_invitation(text), api.revoke_invitation(uuid) to authenticated;
+
+-- ---------- acad extras
+create table if not exists acad.programs(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, code text not null, name text not null, kind text not null check (kind in ('degree','certificate','minor')), status text not null default 'active', unique (institution_id, code));
+create table if not exists acad.rooms(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, campus_id uuid references iam.campuses, name text not null, capacity int check (capacity > 0), accessible boolean not null default true);
+create table if not exists acad.degree_evaluations(id uuid primary key default gen_random_uuid(), student_id uuid not null references core.profiles on delete cascade, program_id uuid not null references acad.programs, result jsonb not null, kind text not null default 'official' check (kind in ('official','scenario')), source text not null default 'sis', evaluated_at timestamptz not null default now());
+alter table acad.programs enable row level security; alter table acad.rooms enable row level security; alter table acad.degree_evaluations enable row level security;
+create policy prog_read on acad.programs for select using (institution_id = core.my_institution());
+create policy room_read on acad.rooms for select using (institution_id = core.my_institution());
+create policy de_self on acad.degree_evaluations for select using (student_id = auth.uid());
+create policy de_advise on acad.degree_evaluations for select using (acad.advises(student_id));
+
+-- ---------- adm
+create table if not exists adm.applications(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, applicant_email text not null, program_id uuid references acad.programs, term_id uuid references acad.terms, state text not null default 'submitted' check (state in ('submitted','in_review','decided','withdrawn')), submitted_at timestamptz not null default now());
+create table if not exists adm.decisions(application_id uuid primary key references adm.applications on delete cascade, decision text not null check (decision in ('admit','deny','waitlist','defer')), decided_by uuid not null default auth.uid(), reason_internal text, decided_at timestamptz not null default now());
+alter table adm.applications enable row level security; alter table adm.decisions enable row level security;
+create policy app_review on adm.applications for select using (ctl.can('application.review', institution_id));
+create policy dec_review on adm.decisions for select using (exists (select 1 from adm.applications a where a.id = application_id and ctl.can('application.review', a.institution_id)));
+
+-- ---------- svc: services and cases. Restricted cases are a separate table with their own audience, never inherited.
+create table if not exists svc.service_definitions(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, office text not null, name text not null, description text, sla interval, restricted boolean not null default false, active boolean not null default true);
+create table if not exists svc.service_requests(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, service_id uuid not null references svc.service_definitions, requester_id uuid not null references core.profiles default auth.uid(), state text not null default 'submitted' check (state in ('submitted','assigned','in_progress','waiting_on_requester','resolved','closed')), assignee_id uuid references core.profiles, summary text not null check (length(summary) <= 500), sla_due timestamptz, created_at timestamptz not null default now(), resolved_at timestamptz);
+create table if not exists svc.cases(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, owner_id uuid not null references core.profiles, kind text not null check (kind in ('success','outreach','referral')), state text not null default 'open' check (state in ('open','monitoring','closed')), opened_at timestamptz not null default now());
+create table if not exists svc.restricted_cases(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, office text not null check (office in ('counseling','disability_services','title_ix','conduct','health')), state text not null default 'intake', created_at timestamptz not null default now());
+create table if not exists svc.restricted_case_staff(case_id uuid not null references svc.restricted_cases on delete cascade, person_id uuid not null references core.profiles, purpose text not null, until timestamptz, primary key (case_id, person_id));
+create table if not exists svc.accommodation_plans(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, case_id uuid references svc.restricted_cases, instructions_for_faculty text not null check (length(instructions_for_faculty) <= 1000), extra_time_pct int check (extra_time_pct between 0 and 200), effective_from date not null, effective_until date, approved_by uuid not null);
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'svc' loop execute format('alter table svc.%I enable row level security', t); end loop; end $$;
+create policy sd_read on svc.service_definitions for select using (institution_id = core.my_institution() and active);
+create policy sr_self on svc.service_requests for select using (requester_id = auth.uid());
+create policy sr_office on svc.service_requests for select using (exists (select 1 from svc.service_definitions d where d.id = service_id and ctl.can('request.assign', institution_id, null, 'office', d.office)));
+create policy case_owner on svc.cases for select using (owner_id = auth.uid() or acad.advises(student_id));
+create policy rc_self on svc.restricted_cases for select using (student_id = auth.uid());
+create policy rc_staff on svc.restricted_cases for select using (exists (select 1 from svc.restricted_case_staff s where s.case_id = id and s.person_id = auth.uid() and (s.until is null or s.until > now())));
+create policy rcs_staff on svc.restricted_case_staff for select using (person_id = auth.uid());
+-- Faculty see only the instructions for students enrolled in a section they teach, never the case.
+create policy ap_self on svc.accommodation_plans for select using (student_id = auth.uid());
+create policy ap_faculty on svc.accommodation_plans for select using (exists (select 1 from acad.enrollments e join acad.teaching_assignments t on t.section_id = e.section_id where e.person_id = svc.accommodation_plans.student_id and e.status = 'enrolled' and t.person_id = auth.uid()) and (effective_until is null or effective_until >= current_date));
+
+-- ---------- instfin: institution student accounts (separate from Semester company finance)
+create table if not exists instfin.student_accounts(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, student_id uuid not null references core.profiles, balance_cents bigint not null default 0, source text not null default 'sis', synced_at timestamptz not null default now(), unique (institution_id, student_id));
+create table if not exists instfin.charges(id uuid primary key default gen_random_uuid(), account_id uuid not null references instfin.student_accounts on delete cascade, description text not null, amount_cents bigint not null, posted_on date not null, due_on date, source text not null default 'sis', source_ref text);
+create table if not exists instfin.awards(id uuid primary key default gen_random_uuid(), account_id uuid not null references instfin.student_accounts on delete cascade, term_id uuid references acad.terms, kind text not null, amount_cents bigint not null check (amount_cents >= 0), state text not null check (state in ('offered','accepted','disbursed','cancelled')), source text not null default 'sis');
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'instfin' loop execute format('alter table instfin.%I enable row level security', t); end loop; end $$;
+create policy sa_self on instfin.student_accounts for select using (student_id = auth.uid());
+create policy sa_staff on instfin.student_accounts for select using (ctl.can('charge.adjust', institution_id));
+create policy ch_read on instfin.charges for select using (exists (select 1 from instfin.student_accounts a where a.id = account_id and (a.student_id = auth.uid() or ctl.can('charge.adjust', a.institution_id))));
+create policy aw_read on instfin.awards for select using (exists (select 1 from instfin.student_accounts a where a.id = account_id and (a.student_id = auth.uid() or ctl.can('award.review', a.institution_id))));
+
+-- ---------- integ, impl
+create table if not exists integ.mappings(id uuid primary key default gen_random_uuid(), integration_id uuid not null references opsx.integrations on delete cascade, local_table text not null, local_field text not null, remote_field text not null, transform text, unique (integration_id, local_table, local_field));
+create table if not exists integ.sync_errors(id bigserial primary key, sync_run_id bigint not null references opsx.sync_runs on delete cascade, record_ref text, code text not null, message text not null, resolved_at timestamptz);
+create table if not exists impl.projects(id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, institution_id uuid references core.institutions, pilot_id uuid references biz.pilots, state text not null default 'kickoff' check (state in ('kickoff','configuring','migrating','validating','training','live','closed')), owner_id uuid references auth.users, go_live_on date);
+create table if not exists impl.milestones(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, name text not null, due_on date, done_on date, evidence_ref text, check (done_on is null or evidence_ref is not null));
+create table if not exists impl.migration_batches(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, kind text not null, records int not null default 0, failed int not null default 0, state text not null default 'pending' check (state in ('pending','running','validated','failed','rolled_back')), report_ref text);
+create table if not exists impl.acceptance_records(id uuid primary key default gen_random_uuid(), project_id uuid not null references impl.projects on delete cascade, deliverable text not null, accepted_by_name text not null, accepted_on date not null, evidence_ref text not null);
+do $$ declare s text; t text; begin foreach s in array array['integ','impl'] loop for t in select tablename from pg_tables where schemaname = s loop execute format('alter table %I.%I enable row level security', s, t); end loop; end loop; end $$;
+create policy map_view on integ.mappings for select using (exists (select 1 from opsx.integrations i where i.id = integration_id and ctl.can('integration:view', i.institution_id)));
+create policy se_view on integ.sync_errors for select using (exists (select 1 from opsx.sync_runs r join opsx.integrations i on i.id = r.integration_id where r.id = sync_run_id and ctl.can('integration:view', i.institution_id)));
+create policy ip_read on impl.projects for select using (biz.staff('biz:read') or (institution_id is not null and ctl.can('rollout.approve', institution_id)));
+create policy im_read on impl.milestones for select using (exists (select 1 from impl.projects p where p.id = project_id and (biz.staff('biz:read') or ctl.can('rollout.approve', p.institution_id))));
+create policy mb_read on impl.migration_batches for select using (biz.staff('biz:read'));
+create policy ar_read on impl.acceptance_records for select using (exists (select 1 from impl.projects p where p.id = project_id and (biz.staff('biz:read') or ctl.can('rollout.approve', p.institution_id))));
+
+-- ---------- cred, career, study, gov
+create table if not exists cred.credentials(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, subject_id uuid not null references core.profiles, title text not null, issued_on date not null, evidence_ref text, revoked_at timestamptz, share_token_hash text unique);
+create table if not exists cred.verification_records(id bigserial primary key, credential_id uuid not null references cred.credentials on delete cascade, verifier text, verified_at timestamptz not null default now(), result text not null check (result in ('valid','revoked','not_found')));
+create table if not exists career.positions(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, employer text not null, title text not null, closes_on date, url text);
+create table if not exists career.applications(id uuid primary key default gen_random_uuid(), position_id uuid not null references career.positions on delete cascade, student_id uuid not null references core.profiles default auth.uid(), state text not null default 'saved' check (state in ('saved','applied','interviewing','offer','closed')), unique (position_id, student_id));
+create table if not exists career.artifacts(id uuid primary key default gen_random_uuid(), owner_id uuid not null references core.profiles default auth.uid(), title text not null, file_id uuid references comms.files, visibility text not null default 'private' check (visibility in ('private','link','public')));
+create table if not exists learn.study_artifacts(id uuid primary key default gen_random_uuid(), workspace_id uuid not null references core.workspaces, kind text not null check (kind in ('note','deck','card','practice_session')), title text not null, body jsonb not null default '{}'::jsonb check (pg_column_size(body) < 65536), source_ids uuid[] not null default '{}', updated_at timestamptz not null default now());
+create table if not exists gov.proposals(id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, kind text not null, title text not null, state text not null default 'draft' check (state in ('draft','in_committee','approved','rejected','withdrawn')), document_id uuid references docs.documents, submitted_by uuid not null default auth.uid());
+create table if not exists gov.votes(proposal_id uuid not null references gov.proposals on delete cascade, voter_id uuid not null references core.profiles default auth.uid(), vote text not null check (vote in ('approve','reject','abstain')), at timestamptz not null default now(), primary key (proposal_id, voter_id));
+create table if not exists gov.retention_policies(id uuid primary key default gen_random_uuid(), institution_id uuid references core.institutions, record_class text not null, keep_for interval not null, basis text not null);
+create table if not exists gov.evidence(id uuid primary key default gen_random_uuid(), control text not null, title text not null, document_id uuid references docs.documents, collected_on date not null, expires_on date, public_summary text);
+do $$ declare s text; t text; begin foreach s in array array['cred','career','gov'] loop for t in select tablename from pg_tables where schemaname = s loop execute format('alter table %I.%I enable row level security', s, t); end loop; end loop; end $$;
+alter table learn.study_artifacts enable row level security;
+create policy cr_self on cred.credentials for select using (subject_id = auth.uid());
+create policy vr_self on cred.verification_records for select using (exists (select 1 from cred.credentials c where c.id = credential_id and c.subject_id = auth.uid()));
+create policy pos_read on career.positions for select using (institution_id = core.my_institution());
+create policy capp_self on career.applications for all using (student_id = auth.uid()) with check (student_id = auth.uid());
+create policy art_self on career.artifacts for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy sa_owner on learn.study_artifacts for all using (exists (select 1 from core.workspaces w where w.id = workspace_id and w.kind = 'personal' and w.owner_user_id = auth.uid())) with check (exists (select 1 from core.workspaces w where w.id = workspace_id and w.kind = 'personal' and w.owner_user_id = auth.uid()));
+create policy gp_read on gov.proposals for select using (institution_id = core.my_institution() and (submitted_by = auth.uid() or ctl.can('proposal.review', institution_id)));
+create policy gv_read on gov.votes for select using (voter_id = auth.uid() or exists (select 1 from gov.proposals p where p.id = proposal_id and ctl.can('proposal.review', p.institution_id)));
+create policy rp_read on gov.retention_policies for select using (institution_id is null or institution_id = core.my_institution());
+create policy ev_public on gov.evidence for select using (public_summary is not null);
+do $$ declare s text; begin foreach s in array array['iam','adm','svc','instfin','integ','impl','cred','career','gov'] loop
+  execute format('revoke insert, update, delete on all tables in schema %I from anon, authenticated', s);
+  execute format('grant usage on schema %I to authenticated', s); execute format('grant select on all tables in schema %I to authenticated', s); end loop; end $$;
+grant insert, update, delete on career.applications, career.artifacts, learn.study_artifacts to authenticated;

@@ -110,7 +110,7 @@ External authority remains:
   - Stale readiness fact
   - SIS request uncertainty
   - Reconciliation backlog
-- Runbook: `docs/runbooks/registration.md (required before activation)`
+- Runbook: `docs/runbooks/registration.md`
 - Rollback: Disable the exposure gate, stop writes, preserve receipts and reconcile to the last authoritative state.
 - Feature flags: `system.registration.enabled`
 

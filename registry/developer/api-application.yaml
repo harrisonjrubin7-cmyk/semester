@@ -1,0 +1,43 @@
+# ILLUSTRATIVE FIXTURE, NOT REGISTERABLE. It follows the application manifest in
+# docs/PARTNER-AND-DEVELOPER-PROGRAM.md ("Application manifest") and cannot grant
+# access. A real application must first satisfy the contract-lab intake
+# (docs/engineering/contract-lab.yaml), including owner, authority, policy,
+# freshness, failure, audit, retention, tests and safe-off.
+# Scope names are proposals until reconciled with API-PLATFORM.md §1.3.
+registerable: false
+
+application:
+  id: APP-PARTNER-001
+  name: illustrative-partner-application
+  owner_organization: PARTNER-001
+  environment: sandbox           # sandbox | production
+  declared_purpose: illustrative
+
+  requested_scopes:
+    - readiness.receipt.read
+    - support.handoff.create
+
+  prohibited_scopes:             # refused at registration and not addable later
+    # Partner-wide bans from the manifest template (never grantable to a partner).
+    - student.record.export
+    - student.grade.write
+    - enrollment.write
+    # Fixture-specific bans.
+    - student.record.read.all
+    - institution.policy.write
+    - delegation.manage
+    - payment.execute
+
+  data_handling:
+    retention_period: pending
+    subprocessors: pending
+    AI_use: prohibited_unless_separately_approved
+    training_use: prohibited
+
+  controls:
+    token_expiry: required
+    token_rotation: required
+    revocation_webhook: required
+    audit_events: required
+    rate_limits: required
+    incident_contact: required

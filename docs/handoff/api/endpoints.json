@@ -1,0 +1,2273 @@
+{
+  "generated": "2026-10-06",
+  "from": "handoff/registry/capabilities.json",
+  "note": "implementationStatus starts at specified for every endpoint; only repository tests may raise it.",
+  "count": 237,
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v1/me/identity/signin",
+      "capability": "shared.identity.signin",
+      "permission": "session.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "auth.users",
+        "onboard.devices"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/identity/signin/sign-in",
+      "capability": "shared.identity.signin",
+      "permission": "session.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/identity/signin/verify-mfa",
+      "capability": "shared.identity.signin",
+      "permission": "session.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/identity/sessions",
+      "capability": "shared.identity.sessions",
+      "permission": "session.revoke",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "onboard.devices",
+        "onboard.push_tokens"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/identity/sessions/revoke-device",
+      "capability": "shared.identity.sessions",
+      "permission": "session.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.revoke_device"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/org/memberships",
+      "capability": "shared.org.memberships",
+      "permission": "membership.invite",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.profiles"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/org/memberships/issue-invitation",
+      "capability": "shared.org.memberships",
+      "permission": "membership.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/org/memberships/revoke-invitation",
+      "capability": "shared.org.memberships",
+      "permission": "membership.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/authz/grants",
+      "capability": "shared.authz.grants",
+      "permission": "grant.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.capabilities",
+        "ctl.grants"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/authz/grants/grant-capability",
+      "capability": "shared.authz.grants",
+      "permission": "grant.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/authz/grants/revoke-grant",
+      "capability": "shared.authz.grants",
+      "permission": "grant.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/authz/approvals",
+      "capability": "shared.authz.approvals",
+      "permission": "action.request",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.action_requests",
+        "ctl.action_approvals"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/authz/approvals/request-action",
+      "capability": "shared.authz.approvals",
+      "permission": "action.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.request_action"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/authz/approvals/decide-action",
+      "capability": "shared.authz.approvals",
+      "permission": "action.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.decide_action"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/authz/approvals/execute-action",
+      "capability": "shared.authz.approvals",
+      "permission": "action.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.execute_action"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/delegation",
+      "capability": "shared.delegation",
+      "permission": "delegation.grant",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.delegations"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/delegation/grant-delegation",
+      "capability": "shared.delegation",
+      "permission": "delegation.grant",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.grant_delegation"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/delegation/revoke-delegation",
+      "capability": "shared.delegation",
+      "permission": "delegation.grant",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.revoke_delegation"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/notifications",
+      "capability": "shared.notifications",
+      "permission": "notification.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "comms.notifications",
+        "comms.preferences"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/notifications/mark-read",
+      "capability": "shared.notifications",
+      "permission": "preference.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/notifications/set-preferences",
+      "capability": "shared.notifications",
+      "permission": "preference.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/search",
+      "capability": "shared.search",
+      "permission": "search.query",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/search/search",
+      "capability": "shared.search",
+      "permission": "search.query",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/files",
+      "capability": "shared.files",
+      "permission": "file.upload",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "comms.files"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/files/upload-file",
+      "capability": "shared.files",
+      "permission": "file.read",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/files/delete-file",
+      "capability": "shared.files",
+      "permission": "file.read",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/audit",
+      "capability": "shared.audit",
+      "permission": "audit.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "audit.events"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/documents",
+      "capability": "shared.documents",
+      "permission": "document.submit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "docs.documents",
+        "docs.document_versions",
+        "docs.version_states",
+        "docs.review_tasks",
+        "docs.transition_events",
+        "docs.contract_documents",
+        "docs.signature_requests",
+        "docs.acknowledgments"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/documents/transition-document",
+      "capability": "shared.documents",
+      "permission": "document.archive",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.transition_document"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/documents/acknowledge",
+      "capability": "shared.documents",
+      "permission": "document.archive",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/ai/gateway",
+      "capability": "shared.ai.gateway",
+      "permission": "ai.use",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.ai_policy",
+        "core.course_ai_rules",
+        "core.sources",
+        "audit.ai_usage"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/ai/gateway/ai-policy",
+      "capability": "shared.ai.gateway",
+      "permission": "ai.use",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.ai_policy"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/ai/gateway/ai-context",
+      "capability": "shared.ai.gateway",
+      "permission": "ai.use",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.ai_context"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/ai/gateway/ai-log",
+      "capability": "shared.ai.gateway",
+      "permission": "ai.use",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.ai_log"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/events/outbox",
+      "capability": "shared.events.outbox",
+      "permission": "event.publish",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.outbox"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/today",
+      "capability": "edu.today",
+      "permission": "self.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "work.tasks",
+        "comms.calendar_events",
+        "acad.readiness_items",
+        "comms.notifications"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/profile",
+      "capability": "edu.profile",
+      "permission": "profile.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.profiles",
+        "growth.consent_records"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/profile/update-profile",
+      "capability": "edu.profile",
+      "permission": "profile.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/courses",
+      "capability": "edu.courses",
+      "permission": "course.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.terms",
+        "acad.courses",
+        "acad.sections",
+        "acad.enrollments"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/calendar",
+      "capability": "edu.calendar",
+      "permission": "calendar.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "comms.calendar_events",
+        "acad.advising_slots",
+        "work.assignments"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/calendar/create-event",
+      "capability": "edu.calendar",
+      "permission": "calendar.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/tasks",
+      "capability": "edu.tasks",
+      "permission": "task.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "work.tasks"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/tasks/create-task",
+      "capability": "edu.tasks",
+      "permission": "task.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/tasks/complete-task",
+      "capability": "edu.tasks",
+      "permission": "task.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/content",
+      "capability": "edu.content",
+      "permission": "content.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "learn.modules",
+        "learn.content_items",
+        "comms.files"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/content/publish-module",
+      "capability": "edu.content",
+      "permission": "content.publish",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.publish_module"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/assignments",
+      "capability": "edu.assignments",
+      "permission": "submission.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "work.assignments",
+        "learn.submissions",
+        "learn.submission_files"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assignments/submit-work",
+      "capability": "edu.assignments",
+      "permission": "extension.request",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.submit_work"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assignments/request-extension",
+      "capability": "edu.assignments",
+      "permission": "extension.request",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/assessment",
+      "capability": "edu.assessment",
+      "permission": "attempt.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "learn.assessments",
+        "learn.assessment_attempts",
+        "learn.rubrics"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assessment/start-attempt",
+      "capability": "edu.assessment",
+      "permission": "assessment.author",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assessment/submit-attempt",
+      "capability": "edu.assessment",
+      "permission": "assessment.author",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/grading",
+      "capability": "edu.grading",
+      "permission": "grade.provisional",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "work.grades",
+        "learn.grade_entries",
+        "learn.grade_revisions",
+        "learn.feedback"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/grading/record-grade",
+      "capability": "edu.grading",
+      "permission": "grade.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.record_grade"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/grading/submit-grades-for-approval",
+      "capability": "edu.grading",
+      "permission": "grade.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.submit_grades_for_approval"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/study",
+      "capability": "edu.study",
+      "permission": "study.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.sources"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/study/create-deck",
+      "capability": "edu.study",
+      "permission": "study.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/study/practice",
+      "capability": "edu.study",
+      "permission": "study.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/assistant",
+      "capability": "edu.assistant",
+      "permission": "ai.use",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.sources",
+        "audit.ai_usage",
+        "core.course_ai_rules"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assistant/ai-context",
+      "capability": "edu.assistant",
+      "permission": "ai.use",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.ai_context"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/assistant/ai-log",
+      "capability": "edu.assistant",
+      "permission": "ai.use",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.ai_log"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/groups",
+      "capability": "edu.groups",
+      "permission": "post.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "community.groups",
+        "community.members",
+        "community.posts",
+        "community.reports"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/groups/create-post",
+      "capability": "edu.groups",
+      "permission": "report.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.create_post"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/groups/report",
+      "capability": "edu.groups",
+      "permission": "report.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.report"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/inbox",
+      "capability": "edu.inbox",
+      "permission": "message.send",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "comms.threads",
+        "comms.participants",
+        "comms.messages"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/inbox/send-message",
+      "capability": "edu.inbox",
+      "permission": "message.send",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.send_message"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/advising",
+      "capability": "edu.advising",
+      "permission": "appointment.book",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.advising_assignments",
+        "acad.advising_slots",
+        "acad.advising_notes"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/advising/book-advising",
+      "capability": "edu.advising",
+      "permission": "note.write",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.book_advising"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/degree",
+      "capability": "edu.degree",
+      "permission": "plan.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.requirements"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/degree/run-scenario",
+      "capability": "edu.degree",
+      "permission": "plan.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/registration",
+      "capability": "edu.registration",
+      "permission": "readiness.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.readiness_items",
+        "acad.holds",
+        "acad.office_handoffs",
+        "acad.terms"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/registration/route-blocker",
+      "capability": "edu.registration",
+      "permission": "blocker.route",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.route_blocker"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/student-account",
+      "capability": "edu.student_account",
+      "permission": "self.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.holds"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/services",
+      "capability": "edu.services",
+      "permission": "service_request.create",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/services/submit-request",
+      "capability": "edu.services",
+      "permission": "service_request.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/careers",
+      "capability": "edu.careers",
+      "permission": "application.submit",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/careers/apply",
+      "capability": "edu.careers",
+      "permission": "application.submit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/wellbeing",
+      "capability": "edu.wellbeing",
+      "permission": "restricted_case.create",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/wellbeing/request-support",
+      "capability": "edu.wellbeing",
+      "permission": "restricted_case.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/credentials",
+      "capability": "edu.credentials",
+      "permission": "credential.share",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/credentials/share-credential",
+      "capability": "edu.credentials",
+      "permission": "credential.share",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/privacy",
+      "capability": "edu.privacy",
+      "permission": "privacy_request.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.privacy_requests",
+        "growth.consent_records"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/privacy/submit-privacy-request",
+      "capability": "edu.privacy",
+      "permission": "privacy_request.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/marketplace",
+      "capability": "edu.marketplace",
+      "permission": "listing.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "market.listings",
+        "market.offers",
+        "market.drops",
+        "market.bids"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/marketplace/create-listing",
+      "capability": "edu.marketplace",
+      "permission": "offer.make",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.create_listing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/marketplace/make-offer",
+      "capability": "edu.marketplace",
+      "permission": "offer.make",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.make_offer"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/me/support-access",
+      "capability": "edu.support_access",
+      "permission": "support_access.approve",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.support_access_windows",
+        "opsx.support_cases"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/support-access/approve-support-access",
+      "capability": "edu.support_access",
+      "permission": "support_access.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.approve_support_access"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/me/support-access/revoke-support-access",
+      "capability": "edu.support_access",
+      "permission": "support_access.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.revoke_support_access"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/setup",
+      "capability": "inst.setup",
+      "permission": "org.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.institutions"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/setup/update-structure",
+      "capability": "inst.setup",
+      "permission": "org.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/people",
+      "capability": "inst.people",
+      "permission": "membership.invite",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.profiles"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/people/issue-invitation",
+      "capability": "inst.people",
+      "permission": "membership.invite",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/catalog",
+      "capability": "inst.catalog",
+      "permission": "catalog.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.courses",
+        "acad.requirements"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/catalog/propose-course-change",
+      "capability": "inst.catalog",
+      "permission": "catalog.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/sections",
+      "capability": "inst.sections",
+      "permission": "section.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.terms",
+        "acad.sections"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/sections/sync-sections",
+      "capability": "inst.sections",
+      "permission": "section.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/scheduling",
+      "capability": "inst.scheduling",
+      "permission": "schedule.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.sections"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/scheduling/check-conflicts",
+      "capability": "inst.scheduling",
+      "permission": "schedule.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/admissions",
+      "capability": "inst.admissions",
+      "permission": "application.review",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/admissions/review-application",
+      "capability": "inst.admissions",
+      "permission": "application.decide",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/admissions/record-decision",
+      "capability": "inst.admissions",
+      "permission": "application.decide",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/registrar",
+      "capability": "inst.registrar",
+      "permission": "records.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.enrollments",
+        "ctl.action_requests"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/registrar/request-action",
+      "capability": "inst.registrar",
+      "permission": "change.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.request_action"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/governance",
+      "capability": "inst.governance",
+      "permission": "proposal.review",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/governance/submit-proposal",
+      "capability": "inst.governance",
+      "permission": "proposal.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/governance/record-vote",
+      "capability": "inst.governance",
+      "permission": "proposal.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/success",
+      "capability": "inst.success",
+      "permission": "case.work",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.readiness_items",
+        "acad.advising_assignments"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/success/open-case",
+      "capability": "inst.success",
+      "permission": "case.work",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/success/refer",
+      "capability": "inst.success",
+      "permission": "case.work",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/handoffs",
+      "capability": "inst.handoffs",
+      "permission": "handoffs.work",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "acad.office_handoffs",
+        "acad.holds"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/handoffs/resolve-handoff",
+      "capability": "inst.handoffs",
+      "permission": "handoffs.work",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.resolve_handoff"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/billing",
+      "capability": "inst.billing",
+      "permission": "charge.adjust",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "fin.refund_requests",
+        "fin.refund_approvals"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/billing/approve-refund",
+      "capability": "inst.billing",
+      "permission": "refund.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.approve_refund"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/aid",
+      "capability": "inst.aid",
+      "permission": "award.review",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/aid/review-award",
+      "capability": "inst.aid",
+      "permission": "award.review",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/services",
+      "capability": "inst.services",
+      "permission": "request.assign",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/services/assign-request",
+      "capability": "inst.services",
+      "permission": "request.assign",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/services/resolve-request",
+      "capability": "inst.services",
+      "permission": "request.assign",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/accommodations",
+      "capability": "inst.accommodations",
+      "permission": "accommodation.decide",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/accommodations/decide-accommodation",
+      "capability": "inst.accommodations",
+      "permission": "accommodation.decide",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/reporting",
+      "capability": "inst.reporting",
+      "permission": "report.run",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/reporting/run-report",
+      "capability": "inst.reporting",
+      "permission": "report.export",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/security",
+      "capability": "inst.security",
+      "permission": "sso.configure",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.integrations",
+        "ctl.grants"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/security/configure-sso",
+      "capability": "inst.security",
+      "permission": "access_review.run",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/security/run-access-review",
+      "capability": "inst.security",
+      "permission": "access_review.run",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/data-governance",
+      "capability": "inst.data_governance",
+      "permission": "retention.edit",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/data-governance/set-retention",
+      "capability": "inst.data_governance",
+      "permission": "retention.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/integrations",
+      "capability": "inst.integrations",
+      "permission": "integration.configure",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.integrations",
+        "opsx.sync_runs"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/integrations/configure-integration",
+      "capability": "inst.integrations",
+      "permission": "integration.configure",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/integrations/run-sync",
+      "capability": "inst.integrations",
+      "permission": "integration.configure",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/account",
+      "capability": "inst.account",
+      "permission": "account.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.contracts",
+        "commerce.subscriptions"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/rollout",
+      "capability": "inst.rollout",
+      "permission": "rollout.approve",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/rollout/approve-rollout",
+      "capability": "inst.rollout",
+      "permission": "rollout.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/overview",
+      "capability": "acct.overview",
+      "permission": "account.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.accounts",
+        "commerce.subscriptions",
+        "commerce.entitlements"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/invoices",
+      "capability": "acct.invoices",
+      "permission": "invoice.read",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/invoices/pay-invoice",
+      "capability": "acct.invoices",
+      "permission": "invoice.pay",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/contracts",
+      "capability": "acct.contracts",
+      "permission": "contract.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.contracts",
+        "docs.documents"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/contracts/sign-contract",
+      "capability": "acct.contracts",
+      "permission": "contract.sign",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/support",
+      "capability": "acct.support",
+      "permission": "case.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.support_cases",
+        "opsx.case_events"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/support/open-case",
+      "capability": "acct.support",
+      "permission": "case.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/exec",
+      "capability": "company.exec",
+      "permission": "metrics.read",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/exec/record-decision",
+      "capability": "company.exec",
+      "permission": "decision.record",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/marketing",
+      "capability": "company.marketing",
+      "permission": "campaign.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "growth.entry_contexts"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/marketing/publish-content",
+      "capability": "company.marketing",
+      "permission": "content.publish",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/crm",
+      "capability": "company.crm",
+      "permission": "opportunity.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.accounts",
+        "biz.contacts",
+        "biz.opportunities",
+        "growth.leads"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/crm/update-opportunity",
+      "capability": "company.crm",
+      "permission": "opportunity.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/sales-eng",
+      "capability": "company.sales_eng",
+      "permission": "evaluation.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.opportunities"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/sales-eng/record-requirement",
+      "capability": "company.sales_eng",
+      "permission": "evaluation.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/quotes",
+      "capability": "company.quotes",
+      "permission": "quote.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "commerce.price_versions",
+        "ctl.action_requests"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/quotes/create-quote",
+      "capability": "company.quotes",
+      "permission": "quote.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/quotes/approve-quote",
+      "capability": "company.quotes",
+      "permission": "quote.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/contracts/record-signature",
+      "capability": "company.contracts",
+      "permission": "contracts:sign",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/onboarding",
+      "capability": "company.onboarding",
+      "permission": "project.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.pilots"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/onboarding/open-project",
+      "capability": "company.onboarding",
+      "permission": "project.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/implementation",
+      "capability": "company.implementation",
+      "permission": "migration.run",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.sync_runs"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/implementation/run-migration",
+      "capability": "company.implementation",
+      "permission": "acceptance.record",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/implementation/record-acceptance",
+      "capability": "company.implementation",
+      "permission": "acceptance.record",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/success/record-measure",
+      "capability": "company.success",
+      "permission": "renewal.plan",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/support/assign-case",
+      "capability": "company.support",
+      "permission": "support:ticket",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/support/reply-case",
+      "capability": "company.support",
+      "permission": "support:ticket",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/product",
+      "capability": "company.product",
+      "permission": "feedback.triage",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/product/triage-feedback",
+      "capability": "company.product",
+      "permission": "feedback.triage",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/subscriptions",
+      "capability": "company.subscriptions",
+      "permission": "subscription.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "commerce.subscriptions",
+        "commerce.subscription_items",
+        "commerce.entitlements",
+        "commerce.account_organization_links"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/subscriptions/update-subscription",
+      "capability": "company.subscriptions",
+      "permission": "subscription.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/billing/issue-invoice",
+      "capability": "company.billing",
+      "permission": "credit.issue",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/billing/issue-credit",
+      "capability": "company.billing",
+      "permission": "credit.issue",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/accounting",
+      "capability": "company.accounting",
+      "permission": "journal.post",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "fin.ledger_accounts",
+        "fin.ledger_journals",
+        "fin.ledger_lines"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/accounting/post-journal",
+      "capability": "company.accounting",
+      "permission": "close.run",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": "api.post_journal"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/treasury",
+      "capability": "company.treasury",
+      "permission": "payment.approve",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "fin.payment_rails",
+        "fin.payment_attempts",
+        "fin.settlement_batches"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/treasury/approve-payment",
+      "capability": "company.treasury",
+      "permission": "payment.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/expenses",
+      "capability": "company.expenses",
+      "permission": "expense.submit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "comms.files"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/expenses/submit-claim",
+      "capability": "company.expenses",
+      "permission": "expense.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/expenses/approve-claim",
+      "capability": "company.expenses",
+      "permission": "expense.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/procurement",
+      "capability": "company.procurement",
+      "permission": "purchase.request",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/procurement/request-purchase",
+      "capability": "company.procurement",
+      "permission": "purchase.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/procurement/approve-purchase",
+      "capability": "company.procurement",
+      "permission": "purchase.approve",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/vendors",
+      "capability": "company.vendors",
+      "permission": "vendor.review",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.subprocessors"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/vendors/review-vendor",
+      "capability": "company.vendors",
+      "permission": "vendor.review",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/people/make-offer",
+      "capability": "company.people",
+      "permission": "candidate.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/people/onboard-employee",
+      "capability": "company.people",
+      "permission": "candidate.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/people/offboard-employee",
+      "capability": "company.people",
+      "permission": "candidate.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/compensation",
+      "capability": "company.compensation",
+      "permission": "compensation.read",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/compensation/approve-compensation",
+      "capability": "company.compensation",
+      "permission": "compensation.read",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/legal",
+      "capability": "company.legal",
+      "permission": "matter.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "docs.documents"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/legal/open-matter",
+      "capability": "company.legal",
+      "permission": "matter.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/partners",
+      "capability": "company.partners",
+      "permission": "partner.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.accounts",
+        "biz.partner_apps",
+        "biz.app_installs"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/partners/review-app",
+      "capability": "company.partners",
+      "permission": "app.review",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/it",
+      "capability": "company.it",
+      "permission": "asset.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.grants"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/it/request-access",
+      "capability": "company.it",
+      "permission": "access.request",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/knowledge",
+      "capability": "company.knowledge",
+      "permission": "document.acknowledge",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "docs.documents",
+        "docs.acknowledgments"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/knowledge/acknowledge",
+      "capability": "company.knowledge",
+      "permission": "document.acknowledge",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/research",
+      "capability": "company.research",
+      "permission": "experiment.edit",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/research/record-experiment",
+      "capability": "company.research",
+      "permission": "experiment.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/command",
+      "capability": "ops.command",
+      "permission": "console:operate",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.incidents"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/tenants",
+      "capability": "ops.tenants",
+      "permission": "tenant:implement",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.institutions"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/tenants/provision-tenant",
+      "capability": "ops.tenants",
+      "permission": "tenant.suspend",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/tenants/suspend-tenant",
+      "capability": "ops.tenants",
+      "permission": "tenant.suspend",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/tenants/offboard-tenant",
+      "capability": "ops.tenants",
+      "permission": "tenant.suspend",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/config",
+      "capability": "ops.config",
+      "permission": "flag.edit",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.institutions",
+        "commerce.entitlements"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/config/set-flag",
+      "capability": "ops.config",
+      "permission": "flag.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/releases",
+      "capability": "ops.releases",
+      "permission": "deploy.approve",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/releases/approve-deploy",
+      "capability": "ops.releases",
+      "permission": "deploy.rollback",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/releases/rollback",
+      "capability": "ops.releases",
+      "permission": "deploy.rollback",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/reliability",
+      "capability": "ops.reliability",
+      "permission": "telemetry.read",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/incidents",
+      "capability": "ops.incidents",
+      "permission": "incident:communicate",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.incidents",
+        "opsx.incident_updates"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/incidents/open-incident",
+      "capability": "ops.incidents",
+      "permission": "incident:communicate",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/incidents/publish-update",
+      "capability": "ops.incidents",
+      "permission": "incident:communicate",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/jobs",
+      "capability": "ops.jobs",
+      "permission": "job.replay",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.outbox",
+        "opsx.access_jobs"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/jobs/replay-job",
+      "capability": "ops.jobs",
+      "permission": "job.replay",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/integrations/retry-sync",
+      "capability": "ops.integrations",
+      "permission": "integration:view",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/database",
+      "capability": "ops.database",
+      "permission": "repair.request",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/database/request-repair",
+      "capability": "ops.database",
+      "permission": "repair.request",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/recovery",
+      "capability": "ops.recovery",
+      "permission": "restore.test",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/recovery/record-restore-test",
+      "capability": "ops.recovery",
+      "permission": "restore.test",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/security/open-finding",
+      "capability": "ops.security",
+      "permission": "finding.edit",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/access",
+      "capability": "ops.access",
+      "permission": "grant.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "ctl.grants"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/access/grant-capability",
+      "capability": "ops.access",
+      "permission": "grant.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/access/revoke-grant",
+      "capability": "ops.access",
+      "permission": "grant.revoke",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/privacy",
+      "capability": "ops.privacy",
+      "permission": "data_request:handle",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.privacy_requests"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/privacy/verify-identity",
+      "capability": "ops.privacy",
+      "permission": "data_request:handle",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/privacy/fulfil-request",
+      "capability": "ops.privacy",
+      "permission": "data_request:handle",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/audit",
+      "capability": "ops.audit",
+      "permission": "audit.read",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "audit.events"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/ai",
+      "capability": "ops.ai",
+      "permission": "ai.configure",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.ai_policy",
+        "audit.ai_usage"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/ai/publish-prompt",
+      "capability": "ops.ai",
+      "permission": "ai.configure",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/ai/run-evaluation",
+      "capability": "ops.ai",
+      "permission": "ai.configure",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/costs",
+      "capability": "ops.costs",
+      "permission": "usage.read",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/moderation",
+      "capability": "ops.moderation",
+      "permission": "report.decide",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "community.reports",
+        "community.posts"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/moderation/decide-report",
+      "capability": "ops.moderation",
+      "permission": "report.decide",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/support-session",
+      "capability": "ops.support_session",
+      "permission": "support_session.open",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "opsx.support_access_windows"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/support-session/open-support-session",
+      "capability": "ops.support_session",
+      "permission": "support_session.open",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/apps",
+      "capability": "dev.apps",
+      "permission": "app.register",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "biz.partner_apps"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/apps/register-app",
+      "capability": "dev.apps",
+      "permission": "app.register",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/keys",
+      "capability": "dev.keys",
+      "permission": "credential.rotate",
+      "implementationStatus": "specified",
+      "backedBy": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/keys/rotate-key",
+      "capability": "dev.keys",
+      "permission": "credential.rotate",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tenants/:tenantId/sandbox",
+      "capability": "dev.sandbox",
+      "permission": "sandbox.create",
+      "implementationStatus": "specified",
+      "backedBy": [
+        "core.institutions"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tenants/:tenantId/sandbox/create-sandbox",
+      "capability": "dev.sandbox",
+      "permission": "sandbox.create",
+      "idempotencyKey": true,
+      "implementationStatus": "specified",
+      "rpc": null
+    }
+  ]
+}

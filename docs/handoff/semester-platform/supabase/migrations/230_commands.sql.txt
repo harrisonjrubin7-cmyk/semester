@@ -1,0 +1,214 @@
+-- 230 · Commands for the capabilities that still had none. Each: authorize (ctl.can / ownership) → validate → write → audit.log → ctl.outbox.
+-- Personal writes (tasks, calendar, preferences, study artifacts, career) stay direct table writes under RLS from 140/200 and need no function.
+-- Not applied or tested. P = platform tenant.
+create or replace function api._emit(p_topic text, p_tenant uuid, p_target text, p_payload jsonb) returns void language sql security definer set search_path = '' as $$
+  select audit.log(p_topic, p_target, null, p_payload); insert into ctl.outbox(topic, tenant_id, payload) values (p_topic, p_tenant, p_payload) $$;
+revoke all on function api._emit(text,uuid,text,jsonb) from public, anon, authenticated;
+create or replace function api._need(p_cap text, p_tenant uuid) returns void language plpgsql stable security definer set search_path = '' as $$
+  begin if not ctl.can(p_cap, coalesce(p_tenant, '00000000-0000-0000-0000-000000000000')) then raise exception 'FORBIDDEN'; end if; end $$;
+revoke all on function api._need(text,uuid) from public, anon, authenticated;
+
+-- ---------- Access
+create or replace function api.grant_capability(p_person uuid, p_cap text, p_tenant uuid, p_reason text, p_until timestamptz, p_resource_type text default null, p_resource_id text default null) returns uuid language plpgsql security definer set search_path = '' as $$
+declare g uuid; hi boolean; begin perform api._need('grant.create', p_tenant);
+  if p_person = auth.uid() then raise exception 'SELF_GRANT_FORBIDDEN'; end if;
+  select high_impact into hi from ctl.capabilities where key = p_cap; if hi is null then raise exception 'NOT_FOUND'; end if;
+  if hi and (p_until is null or p_until > now() + interval '90 days') then raise exception 'INVALID_REQUEST' using detail = 'high-impact grants expire within 90 days'; end if;
+  insert into ctl.grants(person_id, capability, tenant_id, resource_type, resource_id, granted_by, reason, expires_at) values (p_person, p_cap, p_tenant, p_resource_type, p_resource_id, auth.uid(), p_reason, p_until) returning id into g;
+  perform api._emit('grant.created', p_tenant, g::text, jsonb_build_object('person', p_person, 'cap', p_cap, 'until', p_until)); return g; end $$;
+create or replace function api.revoke_grant(p_grant uuid, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+declare g ctl.grants; begin select * into g from ctl.grants where id = p_grant for update; if g.id is null then raise exception 'NOT_FOUND'; end if;
+  perform api._need('grant.revoke', g.tenant_id); update ctl.grants set revoked_at = now() where id = p_grant and revoked_at is null;
+  perform api._emit('grant.revoked', g.tenant_id, p_grant::text, jsonb_build_object('reason', p_reason)); end $$;
+create or replace function api.run_access_review(p_review uuid, p_decision text, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+declare r iam.access_reviews; begin select * into r from iam.access_reviews where id = p_review for update;
+  if r.id is null or r.reviewer_id <> auth.uid() then raise exception 'FORBIDDEN'; end if; if p_decision not in ('keep','revoke','reduce') then raise exception 'INVALID_REQUEST'; end if;
+  update iam.access_reviews set decision = p_decision, reason = p_reason, decided_at = now() where id = p_review;
+  if p_decision = 'revoke' and r.grant_id is not null then update ctl.grants set revoked_at = now() where id = r.grant_id and revoked_at is null; end if;
+  perform api._emit('access_review.decided', r.institution_id, p_review::text, jsonb_build_object('decision', p_decision)); end $$;
+
+-- ---------- Education and student services
+create or replace function api.request_extension(p_assignment uuid, p_days int, p_reason text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare a work.assignments; r uuid; begin select * into a from work.assignments where id = p_assignment;
+  if a.id is null or not acad.enrolled(a.section_id) then raise exception 'NOT_FOUND'; end if; if p_days not between 1 and 14 then raise exception 'INVALID_REQUEST'; end if;
+  insert into ctl.action_requests(capability, tenant_id, requested_by, reason, payload, idempotency_key) values ('extension.decide', a.institution_id, auth.uid(), p_reason, jsonb_build_object('assignment', p_assignment, 'days', p_days), 'ext:' || auth.uid() || ':' || p_assignment) on conflict do nothing returning id into r;
+  perform api._emit('extension.requested', a.institution_id, p_assignment::text, jsonb_build_object('days', p_days)); return r; end $$;
+create or replace function api.start_attempt(p_assessment uuid) returns uuid language plpgsql security definer set search_path = '' as $$
+declare s learn.assessments; t uuid; extra int; begin select * into s from learn.assessments where id = p_assessment;
+  if s.id is null or not acad.enrolled(s.section_id) then raise exception 'NOT_FOUND'; end if;
+  if (s.opens_at is not null and now() < s.opens_at) or (s.closes_at is not null and now() > s.closes_at) then raise exception 'NOT_OPEN'; end if;
+  select id into t from learn.assessment_attempts where assessment_id = p_assessment and student_id = auth.uid() and state = 'in_progress'; if t is not null then return t; end if;
+  select coalesce(max(round(60 * extra_time_pct / 100.0)), 0) into extra from svc.accommodation_plans where student_id = auth.uid() and (effective_until is null or effective_until >= current_date);
+  insert into learn.assessment_attempts(assessment_id, student_id, accommodation_minutes) values (p_assessment, auth.uid(), extra) returning id into t; return t; end $$;
+create or replace function api.submit_attempt(p_attempt uuid) returns void language plpgsql security definer set search_path = '' as $$
+begin update learn.assessment_attempts set state = 'submitted', submitted_at = now() where id = p_attempt and student_id = auth.uid() and state = 'in_progress';
+  if not found then raise exception 'INVALID_TRANSITION'; end if; end $$;
+create or replace function api.submit_request(p_service uuid, p_summary text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare d svc.service_definitions; r uuid; begin select * into d from svc.service_definitions where id = p_service and active;
+  if d.id is null or d.institution_id <> core.my_institution() then raise exception 'NOT_FOUND'; end if;
+  if not core.rate_ok('service_request', 10, interval '1 hour') then raise exception 'RATE_LIMITED'; end if;
+  insert into svc.service_requests(institution_id, service_id, summary, sla_due) values (d.institution_id, p_service, p_summary, now() + coalesce(d.sla, interval '3 days')) returning id into r;
+  perform api._emit('request.submitted', d.institution_id, r::text, jsonb_build_object('office', d.office)); return r; end $$;
+create or replace function api.assign_request(p_request uuid, p_assignee uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare r svc.service_requests; o text; begin select * into r from svc.service_requests where id = p_request for update;
+  select d.office into o from svc.service_definitions d where d.id = r.service_id;
+  if r.id is null or not ctl.can('request.assign', r.institution_id, null, 'office', o) then raise exception 'FORBIDDEN'; end if;
+  update svc.service_requests set assignee_id = p_assignee, state = 'assigned' where id = p_request; perform api._emit('request.assigned', r.institution_id, p_request::text, '{}'); end $$;
+create or replace function api.resolve_request(p_request uuid, p_note text) returns void language plpgsql security definer set search_path = '' as $$
+declare r svc.service_requests; begin select * into r from svc.service_requests where id = p_request for update;
+  if r.id is null or r.assignee_id <> auth.uid() then raise exception 'FORBIDDEN'; end if;
+  update svc.service_requests set state = 'resolved', resolved_at = now() where id = p_request; perform api._emit('request.resolved', r.institution_id, p_request::text, jsonb_build_object('note', left(p_note, 200))); end $$;
+create or replace function api.request_support(p_office text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare c uuid; begin if p_office not in ('counseling','disability_services','title_ix','conduct','health') then raise exception 'INVALID_REQUEST'; end if;
+  insert into svc.restricted_cases(institution_id, student_id, office) values (core.my_institution(), auth.uid(), p_office) returning id into c;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('restricted_case.opened', core.my_institution(), jsonb_build_object('case', c, 'office', p_office)); return c; end $$;   -- no audit body: the office learns details directly
+create or replace function api.submit_privacy_request(p_kind text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare r uuid; begin if p_kind not in ('access','amend','delete','export','restrict') then raise exception 'INVALID_REQUEST'; end if;
+  insert into opsx.privacy_requests(institution_id, subject_id, kind, received_via, due_at) values (core.my_institution(), auth.uid(), p_kind, 'in_app', now() + interval '30 days') returning id into r;
+  perform api._emit('privacy.requested', core.my_institution(), r::text, jsonb_build_object('kind', p_kind)); return r; end $$;
+create or replace function api.share_credential(p_credential uuid, p_token_hash text) returns void language plpgsql security definer set search_path = '' as $$
+begin update cred.credentials set share_token_hash = p_token_hash where id = p_credential and subject_id = auth.uid() and revoked_at is null; if not found then raise exception 'NOT_FOUND'; end if; end $$;
+create or replace function api.decide_accommodation(p_case uuid, p_instructions text, p_extra int, p_from date, p_until date) returns uuid language plpgsql security definer set search_path = '' as $$
+declare c svc.restricted_cases; p uuid; begin select * into c from svc.restricted_cases where id = p_case;
+  if c.id is null or c.office <> 'disability_services' or not exists (select 1 from svc.restricted_case_staff s where s.case_id = p_case and s.person_id = auth.uid()) then raise exception 'FORBIDDEN'; end if;
+  insert into svc.accommodation_plans(institution_id, student_id, case_id, instructions_for_faculty, extra_time_pct, effective_from, effective_until, approved_by) values (c.institution_id, c.student_id, p_case, p_instructions, p_extra, p_from, p_until, auth.uid()) returning id into p;
+  perform api._emit('accommodation.decided', c.institution_id, p::text, '{}'); return p; end $$;
+
+-- ---------- Institution administration
+create or replace function api.review_application(p_app uuid, p_decision text, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+declare a adm.applications; begin select * into a from adm.applications where id = p_app for update; if a.id is null then raise exception 'NOT_FOUND'; end if;
+  perform api._need('application.review', a.institution_id); if p_decision not in ('admit','deny','waitlist','defer') then raise exception 'INVALID_REQUEST'; end if;
+  insert into adm.decisions(application_id, decision, reason_internal) values (p_app, p_decision, p_reason); update adm.applications set state = 'decided' where id = p_app;
+  perform api._emit('decision.recorded', a.institution_id, p_app::text, jsonb_build_object('decision', p_decision)); end $$;
+create or replace function api.submit_proposal(p_kind text, p_title text, p_document uuid) returns uuid language plpgsql security definer set search_path = '' as $$
+declare g uuid; begin insert into gov.proposals(institution_id, kind, title, state, document_id) values (core.my_institution(), p_kind, p_title, 'in_committee', p_document) returning id into g;
+  perform api._emit('proposal.submitted', core.my_institution(), g::text, '{}'); return g; end $$;
+create or replace function api.record_vote(p_proposal uuid, p_vote text) returns void language plpgsql security definer set search_path = '' as $$
+declare p gov.proposals; begin select * into p from gov.proposals where id = p_proposal; if p.id is null or p.state <> 'in_committee' then raise exception 'INVALID_TRANSITION'; end if;
+  perform api._need('proposal.review', p.institution_id); if p.submitted_by = auth.uid() then raise exception 'SELF_REVIEW_FORBIDDEN'; end if;
+  insert into gov.votes(proposal_id, vote) values (p_proposal, p_vote) on conflict (proposal_id, voter_id) do update set vote = excluded.vote, at = now(); end $$;
+create or replace function api.open_case(p_student uuid, p_kind text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare c uuid; begin if not acad.advises(p_student) then raise exception 'FORBIDDEN'; end if;
+  insert into svc.cases(institution_id, student_id, owner_id, kind) values (core.my_institution(), p_student, auth.uid(), p_kind) returning id into c; perform api._emit('case.opened', core.my_institution(), c::text, '{}'); return c; end $$;
+create or replace function api.run_sync(p_integration uuid) returns bigint language plpgsql security definer set search_path = '' as $$
+declare i opsx.integrations; r bigint; begin select * into i from opsx.integrations where id = p_integration; if i.id is null then raise exception 'NOT_FOUND'; end if;
+  perform api._need('integration.configure', i.institution_id);
+  if exists (select 1 from opsx.sync_runs where integration_id = p_integration and state = 'running') then raise exception 'STATE_CONFLICT' using detail = 'sync already running'; end if;
+  insert into opsx.sync_runs(integration_id) values (p_integration) returning id into r; insert into ctl.outbox(topic, tenant_id, payload) values ('sync.requested', i.institution_id, jsonb_build_object('run', r)); return r; end $$;
+create or replace function api.approve_rollout(p_milestone uuid, p_evidence text) returns void language plpgsql security definer set search_path = '' as $$
+declare m impl.milestones; p impl.projects; begin select * into m from impl.milestones where id = p_milestone for update; select * into p from impl.projects where id = m.project_id;
+  perform api._need('rollout.approve', p.institution_id); if coalesce(length(p_evidence), 0) < 3 then raise exception 'INVALID_REQUEST' using detail = 'evidence required'; end if;
+  update impl.milestones set done_on = current_date, evidence_ref = p_evidence where id = p_milestone; perform api._emit('rollout.approved', p.institution_id, p_milestone::text, '{}'); end $$;
+
+-- ---------- Company
+create or replace function api.update_opportunity(p_opp uuid, p_stage text, p_lost_reason text default null) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('crm.manage', null); if p_stage = 'lost' and coalesce(p_lost_reason, '') = '' then raise exception 'INVALID_REQUEST' using detail = 'lost reason required'; end if;
+  update biz.opportunities set stage = p_stage, lost_reason = p_lost_reason where id = p_opp; if not found then raise exception 'NOT_FOUND'; end if;
+  perform api._emit('opportunity.stage_changed', null, p_opp::text, jsonb_build_object('stage', p_stage)); end $$;
+create or replace function api.create_quote(p_opp uuid, p_price uuid, p_qty int, p_discount numeric) returns uuid language plpgsql security definer set search_path = '' as $$
+declare q uuid; ar uuid; begin perform api._need('crm.manage', null);
+  insert into sales.quotes(opportunity_id, price_version_id, quantity, discount_pct, state, expires_on) values (p_opp, p_price, p_qty, p_discount, case when p_discount > 15 then 'pending_approval' else 'approved' end, current_date + 30) returning id into q;
+  if p_discount > 15 then insert into ctl.action_requests(capability, tenant_id, requested_by, reason, payload, idempotency_key) values ('quote.approve', '00000000-0000-0000-0000-000000000000', auth.uid(), 'discount ' || p_discount || '%', jsonb_build_object('quote', q), 'quote:' || q) returning id into ar; update sales.quotes set approval_request_id = ar where id = q; end if;
+  perform api._emit('quote.created', null, q::text, jsonb_build_object('discount', p_discount)); return q; end $$;
+create or replace function api.record_measure(p_measure uuid, p_result numeric, p_state text) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('biz:read', null); if p_state not in ('measured','not_measured') then raise exception 'INVALID_REQUEST'; end if;
+  update biz.pilot_measures set result = case when p_state = 'measured' then p_result end, result_state = p_state where id = p_measure; if not found then raise exception 'NOT_FOUND'; end if; end $$;
+create or replace function api.assign_case(p_case uuid, p_agent uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare c opsx.support_cases; begin select * into c from opsx.support_cases where id = p_case for update; perform api._need('support:ticket', c.institution_id);
+  update opsx.support_cases set assignee_id = p_agent, state = case when state = 'new' then 'triaged' else state end, updated_at = now() where id = p_case;
+  insert into opsx.case_events(case_id, actor, kind, meta) values (p_case, auth.uid(), 'assign', jsonb_build_object('to', p_agent)); end $$;
+create or replace function api.reply_case(p_case uuid, p_body text, p_public boolean) returns void language plpgsql security definer set search_path = '' as $$
+declare c opsx.support_cases; begin select * into c from opsx.support_cases where id = p_case; perform api._need('support:ticket', c.institution_id);
+  insert into opsx.case_events(case_id, actor, kind, body) values (p_case, auth.uid(), case when p_public then 'public_reply' else 'note' end, p_body);
+  update opsx.support_cases set updated_at = now() where id = p_case; if p_public then perform api._emit('case.replied', c.institution_id, p_case::text, '{}'); end if; end $$;
+create or replace function api.issue_invoice(p_invoice uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare t bigint; begin perform api._need('invoice.issue', null); select coalesce(sum(amount_cents), 0) into t from cofin.invoice_lines where invoice_id = p_invoice;
+  if t <= 0 then raise exception 'INVALID_REQUEST' using detail = 'no lines'; end if;
+  update cofin.invoices set state = 'issued', issued_on = current_date, due_on = current_date + 30, total_cents = t where id = p_invoice and state = 'draft'; if not found then raise exception 'INVALID_TRANSITION'; end if;
+  perform api._emit('invoice.issued', null, p_invoice::text, jsonb_build_object('total', t)); end $$;
+create or replace function api.submit_claim(p_amount bigint, p_category text, p_receipt uuid) returns uuid language plpgsql security definer set search_path = '' as $$
+declare e uuid; begin if p_receipt is null then raise exception 'INVALID_REQUEST' using detail = 'receipt required'; end if;
+  insert into cofin.expense_claims(amount_cents, category, receipt_file_id) values (p_amount, p_category, p_receipt) returning id into e; perform api._emit('claim.submitted', null, e::text, '{}'); return e; end $$;
+create or replace function api.approve_claim(p_claim uuid, p_approve boolean) returns void language plpgsql security definer set search_path = '' as $$
+declare c cofin.expense_claims; begin select * into c from cofin.expense_claims where id = p_claim for update; perform api._need('expense.approve', null);
+  if c.employee_id = auth.uid() then raise exception 'SELF_REVIEW_FORBIDDEN'; end if;
+  update cofin.expense_claims set state = case when p_approve then 'approved' else 'rejected' end, approver_id = auth.uid() where id = p_claim and state = 'submitted'; if not found then raise exception 'INVALID_TRANSITION'; end if; end $$;
+create or replace function api.request_purchase(p_vendor uuid, p_amount bigint, p_purpose text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare v vend.vendors; po uuid; begin select * into v from vend.vendors where id = p_vendor; if v.id is null then raise exception 'NOT_FOUND'; end if;
+  if v.touches_student_data and not exists (select 1 from vend.vendor_reviews r where r.vendor_id = p_vendor and r.decision <> 'rejected' and r.next_review_on >= current_date) then raise exception 'VENDOR_REVIEW_REQUIRED'; end if;
+  insert into vend.purchase_orders(vendor_id, amount_cents, purpose) values (p_vendor, p_amount, p_purpose) returning id into po; return po; end $$;
+create or replace function api.approve_purchase(p_po uuid, p_approve boolean) returns void language plpgsql security definer set search_path = '' as $$
+declare p vend.purchase_orders; begin select * into p from vend.purchase_orders where id = p_po for update; perform api._need('purchase.approve', null);
+  if p.requester_id = auth.uid() then raise exception 'SELF_REVIEW_FORBIDDEN'; end if;
+  update vend.purchase_orders set state = case when p_approve then 'approved' else 'rejected' end, approver_id = auth.uid() where id = p_po and state = 'requested'; if not found then raise exception 'INVALID_TRANSITION'; end if; end $$;
+create or replace function api.offboard_employee(p_employee uuid, p_end date) returns int language plpgsql security definer set search_path = '' as $$
+declare e people.employees; n int; begin perform api._need('people:admin', null); select * into e from people.employees where id = p_employee for update;
+  update people.employees set state = 'offboarding', end_on = p_end where id = p_employee;
+  update ctl.grants set revoked_at = now() where person_id = e.person_id and revoked_at is null; get diagnostics n = row_count;      -- timely revocation
+  perform api._emit('employee.offboarded', null, p_employee::text, jsonb_build_object('grants_revoked', n)); return n; end $$;
+
+-- ---------- Application operations (high impact → controlled actions where noted)
+create or replace function api.request_tenant_action(p_institution uuid, p_action text, p_reason text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare r uuid; ar uuid; begin perform api._need('tenant:implement', p_institution);
+  insert into ctl.action_requests(capability, tenant_id, requested_by, reason, payload, idempotency_key) values ('tenant.' || p_action, p_institution, auth.uid(), p_reason, jsonb_build_object('action', p_action), 'tenant:' || p_institution || ':' || p_action || ':' || current_date) returning id into ar;
+  insert into ops.tenant_lifecycle_requests(institution_id, action, reason, action_request_id) values (p_institution, p_action, p_reason, ar) returning id into r;
+  perform api._emit('tenant.' || p_action || '_requested', p_institution, r::text, '{}'); return r; end $$;   -- executes only after api.decide_action approval
+create or replace function api.set_flag(p_key text, p_tenant uuid, p_on boolean) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('flag.edit', null);
+  update ops.feature_flags set per_tenant = case when p_tenant is null then per_tenant else jsonb_set(per_tenant, array[p_tenant::text], to_jsonb(p_on)) end, default_on = case when p_tenant is null then p_on else default_on end where key = p_key;
+  if not found then raise exception 'NOT_FOUND'; end if; perform api._emit('flag.changed', p_tenant, p_key, jsonb_build_object('on', p_on)); end $$;
+create or replace function api.approve_deploy(p_deploy uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare d ops.deployments; b ops.builds; begin select * into d from ops.deployments where id = p_deploy for update; select * into b from ops.builds where id = d.build_id;
+  perform api._need('deploy.approve', null); if b.state <> 'passed' then raise exception 'INVALID_REQUEST' using detail = 'build not passed'; end if;
+  if exists (select 1 from ai.evaluations e join ai.model_configs m on m.id = e.model_config_id where m.active and e.blocks_release and e.run_at > now() - interval '7 days') then raise exception 'AI_EVALUATION_BLOCKS_RELEASE'; end if;
+  update ops.deployments set approved_by = auth.uid(), state = 'deploying' where id = p_deploy and state = 'pending_approval'; if not found then raise exception 'INVALID_TRANSITION'; end if;
+  perform api._emit('deploy.approved', null, p_deploy::text, jsonb_build_object('env', d.environment)); end $$;
+create or replace function api.rollback(p_deploy uuid, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('deploy.rollback', null); update ops.deployments set state = 'rolled_back' where id = p_deploy and state = 'live'; if not found then raise exception 'INVALID_TRANSITION'; end if;
+  perform api._emit('deploy.rolled_back', null, p_deploy::text, jsonb_build_object('reason', p_reason)); end $$;
+create or replace function api.open_incident(p_severity text, p_title text, p_student_data boolean, p_tenants uuid[]) returns uuid language plpgsql security definer set search_path = '' as $$
+declare i uuid; begin perform api._need('incident:communicate', null);
+  insert into opsx.incidents(severity, title, affects_student_data, tenants, commander_id, notice_due_at) values (p_severity, p_title, p_student_data, p_tenants, auth.uid(), case when p_student_data then now() + interval '72 hours' end) returning id into i;
+  perform api._emit('incident.opened', null, i::text, jsonb_build_object('severity', p_severity, 'student_data', p_student_data)); return i; end $$;
+create or replace function api.publish_update(p_incident uuid, p_audience text, p_body text) returns bigint language plpgsql security definer set search_path = '' as $$
+declare u bigint; begin perform api._need('incident:communicate', null);
+  insert into opsx.incident_updates(incident_id, audience, body, approved_by, published_at) values (p_incident, p_audience, p_body, auth.uid(), now()) returning id into u;
+  perform api._emit('incident.updated', null, p_incident::text, jsonb_build_object('audience', p_audience)); return u; end $$;
+create or replace function api.replay_job(p_job uuid, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('job.replay', null); update ops.jobs set state = 'queued', next_run_at = now() where id = p_job and state in ('failed','dead'); if not found then raise exception 'INVALID_TRANSITION'; end if;
+  perform audit.log('job.replayed', p_job::text, null, jsonb_build_object('reason', p_reason)); end $$;
+create or replace function api.request_repair(p_desc text, p_sql_ref text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare r uuid; ar uuid; begin perform api._need('repair.request', null);
+  insert into ctl.action_requests(capability, tenant_id, requested_by, reason, payload, idempotency_key) values ('repair.execute', '00000000-0000-0000-0000-000000000000', auth.uid(), p_desc, jsonb_build_object('sql_ref', p_sql_ref), 'repair:' || md5(p_sql_ref)) returning id into ar;
+  insert into ops.repair_requests(description, sql_ref, action_request_id) values (p_desc, p_sql_ref, ar) returning id into r; return r; end $$;
+create or replace function api.record_restore_test(p_backup uuid, p_rto int, p_rpo int, p_passed boolean, p_report text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare r uuid; begin perform api._need('console:operate', null); insert into ops.restore_exercises(backup_id, performed_on, rto_minutes, rpo_minutes, passed, report_ref) values (p_backup, current_date, p_rto, p_rpo, p_passed, p_report) returning id into r;
+  update ops.backups set verified = p_passed where id = p_backup; return r; end $$;
+create or replace function api.open_finding(p_source text, p_sev text, p_title text, p_due date) returns uuid language plpgsql security definer set search_path = '' as $$
+declare f uuid; begin perform api._need('security:read', null); insert into sec.findings(source, severity, title, owner_id, due_on) values (p_source, p_sev, p_title, auth.uid(), p_due) returning id into f; return f; end $$;
+create or replace function api.fulfil_privacy_request(p_request uuid, p_evidence text) returns void language plpgsql security definer set search_path = '' as $$
+declare r opsx.privacy_requests; begin select * into r from opsx.privacy_requests where id = p_request for update; perform api._need('data_request:handle', r.institution_id);
+  if r.state not in ('identity_verified','in_progress','with_institution') then raise exception 'INVALID_TRANSITION' using detail = 'verify identity first'; end if;
+  update opsx.privacy_requests set state = 'fulfilled', evidence_ref = p_evidence, decided_by = auth.uid(), closed_at = now() where id = p_request; perform api._emit('privacy.fulfilled', r.institution_id, p_request::text, '{}'); end $$;
+create or replace function api.verify_privacy_identity(p_request uuid, p_method text) returns void language plpgsql security definer set search_path = '' as $$
+declare r opsx.privacy_requests; begin select * into r from opsx.privacy_requests where id = p_request for update; perform api._need('data_request:handle', r.institution_id);
+  update opsx.privacy_requests set state = 'identity_verified', legal_basis = coalesce(legal_basis, '') || ' identity:' || p_method where id = p_request and state = 'received'; if not found then raise exception 'INVALID_TRANSITION'; end if; end $$;
+create or replace function api.decide_report(p_report uuid, p_action text) returns void language plpgsql security definer set search_path = '' as $$
+begin perform api._need('report.decide', core.my_institution()); if p_action not in ('dismiss','remove_content','warn','suspend') then raise exception 'INVALID_REQUEST'; end if;
+  perform api._emit('report.decided', core.my_institution(), p_report::text, jsonb_build_object('action', p_action)); end $$;
+create or replace function api.rotate_key(p_app uuid, p_prefix text, p_hash text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare k uuid; begin if not exists (select 1 from biz.partner_apps a join biz.accounts ac on ac.id = a.account_id where a.id = p_app and a.state = 'approved') then raise exception 'NOT_FOUND'; end if;
+  perform api._need('app.review', null);
+  update dev.credentials set revoked_at = now() + interval '24 hours' where app_id = p_app and revoked_at is null;   -- 24 h overlap for rollout
+  insert into dev.credentials(app_id, key_prefix, key_hash, scopes) select p_app, p_prefix, p_hash, scopes from biz.partner_apps where id = p_app returning id into k;
+  perform api._emit('key.rotated', null, p_app::text, '{}'); return k; end $$;
+
+do $$ declare f text; begin for f in select p.oid::regprocedure::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'api' and p.proname not like '\_%' loop execute 'grant execute on function ' || f || ' to authenticated'; end loop; end $$;
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+  ('grant.create','Grant capabilities', true, '{}', 0), ('grant.revoke','Revoke capabilities', false, '{}', 0), ('extension.decide','Decide extension requests', false, '{}', 0),
+  ('integration.configure','Configure and run integrations', true, '{}', 0), ('crm.manage','Manage CRM records', false, '{}', 0), ('quote.approve','Approve discounted quotes', true, '{}', 1),
+  ('invoice.issue','Issue invoices', true, '{}', 0), ('expense.approve','Approve expenses', false, '{}', 0), ('purchase.approve','Approve purchases', true, '{}', 0), ('people:admin','Administer employment lifecycle', true, '{}', 0),
+  ('flag.edit','Change feature flags', true, '{}', 0), ('deploy.approve','Approve deployments', true, '{}', 0), ('deploy.rollback','Roll back deployments', true, '{}', 0),
+  ('repair.request','Request controlled data repairs', true, '{repair.execute}', 1), ('report.decide','Decide moderation reports', false, '{}', 0), ('app.review','Review partner apps', false, '{}', 0),
+  ('tenant.provision','Provision tenant', true, '{tenant:implement}', 1), ('tenant.suspend','Suspend tenant', true, '{tenant:implement}', 1), ('tenant.offboard','Offboard tenant', true, '{tenant:implement}', 2)
+on conflict (key) do nothing;

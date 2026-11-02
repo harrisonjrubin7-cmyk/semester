@@ -294,6 +294,9 @@ export function made(state: State, action: Action): State | null {
     case 'dropPlot':
       return { ...state, plots: state.plots.filter((p) => p.id !== action.id) };
 
+    case 'clearPlots':
+      return { ...state, plots: [] };
+
     case 'writeMaths':
       return {
         ...state,

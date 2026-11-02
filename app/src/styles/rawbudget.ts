@@ -25,7 +25,7 @@ export const RAW_BUDGET: Ledger = {
   'screens/call/Tile.tsx': { color: 1 },
   'screens/settings/Assistant.tsx': { color: 1 },
   'site/site.css': { color: 2, layer: 2, space: 75, type: 3 },
-  'styles/app.css': { color: 55, layer: 28, elevation: 27, motion: 6, space: 6, type: 30 },
+  'styles/app.css': { color: 54, layer: 28, elevation: 27, motion: 6, space: 6, type: 30 },
   'styles/features.css': { elevation: 3, type: 16 },
   'styles/industry.css': { elevation: 1, type: 4 },
   'styles/operating-rhythm.css': { color: 1 },

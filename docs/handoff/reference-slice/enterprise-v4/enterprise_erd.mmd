@@ -1,0 +1,392 @@
+erDiagram
+  sx_tenants {
+    uuid id PK
+  }
+  sx_private_memberships {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_memberships : owns
+  sx_private_roles {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_roles : owns
+  sx_private_permissions {
+    uuid id PK
+  }
+  sx_private_role_permissions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_role_permissions : owns
+  sx_units {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_units : owns
+  sx_terms {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_terms : owns
+  sx_courses {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_courses : owns
+  sx_course_versions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_course_versions : owns
+  sx_courses ||--o{ sx_course_versions : course_id
+  sx_sections {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_sections : owns
+  sx_course_versions ||--o{ sx_sections : course_version_id
+  sx_terms ||--o{ sx_sections : term_id
+  sx_private_role_assignments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_role_assignments : owns
+  sx_enrollments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_enrollments : owns
+  sx_sections ||--o{ sx_enrollments : section_id
+  sx_modules {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_modules : owns
+  sx_sections ||--o{ sx_modules : section_id
+  sx_content_items {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_content_items : owns
+  sx_sections ||--o{ sx_content_items : section_id
+  sx_assignments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_assignments : owns
+  sx_sections ||--o{ sx_assignments : section_id
+  sx_submissions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_submissions : owns
+  sx_grades {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_grades : owns
+  sx_grade_revisions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_grade_revisions : owns
+  sx_announcements {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_announcements : owns
+  sx_sections ||--o{ sx_announcements : section_id
+  sx_personal_notes {
+    uuid id PK
+  }
+  sx_personal_tasks {
+    uuid id PK
+  }
+  sx_personal_calendar_events {
+    uuid id PK
+  }
+  sx_service_definitions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_service_definitions : owns
+  sx_service_cases {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_service_cases : owns
+  sx_service_definitions ||--o{ sx_service_cases : service_id
+  sx_appointments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_appointments : owns
+  sx_service_cases ||--o{ sx_appointments : case_id
+  sx_accounts {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_accounts : owns
+  sx_contacts {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_contacts : owns
+  sx_accounts ||--o{ sx_contacts : account_id
+  sx_opportunities {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_opportunities : owns
+  sx_accounts ||--o{ sx_opportunities : account_id
+  sx_implementation_projects {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_implementation_projects : owns
+  sx_accounts ||--o{ sx_implementation_projects : account_id
+  sx_support_cases {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_support_cases : owns
+  sx_accounts ||--o{ sx_support_cases : account_id
+  sx_documents {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_documents : owns
+  sx_private_document_audiences {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_document_audiences : owns
+  sx_document_versions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_document_versions : owns
+  sx_documents ||--o{ sx_document_versions : document_id
+  sx_review_tasks {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_review_tasks : owns
+  sx_document_versions ||--o{ sx_review_tasks : version_id
+  sx_signature_requests {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_signature_requests : owns
+  sx_document_versions ||--o{ sx_signature_requests : version_id
+  sx_document_transitions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_document_transitions : owns
+  sx_document_versions ||--o{ sx_document_transitions : version_id
+  sx_signature_evidence {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_signature_evidence : owns
+  sx_signature_requests ||--o{ sx_signature_evidence : request_id
+  sx_legal_holds {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_legal_holds : owns
+  sx_documents ||--o{ sx_legal_holds : document_id
+  sx_products {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_products : owns
+  sx_plans {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_plans : owns
+  sx_products ||--o{ sx_plans : product_id
+  sx_price_versions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_price_versions : owns
+  sx_plans ||--o{ sx_price_versions : plan_id
+  sx_billing_accounts {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_billing_accounts : owns
+  sx_accounts ||--o{ sx_billing_accounts : customer_account_id
+  sx_billing_account_tenants {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_billing_account_tenants : owns
+  sx_billing_accounts ||--o{ sx_billing_account_tenants : billing_account_id
+  sx_private_billing_access {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_billing_access : owns
+  sx_contracts {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_contracts : owns
+  sx_billing_accounts ||--o{ sx_contracts : billing_account_id
+  sx_document_versions ||--o{ sx_contracts : agreement_version_id
+  sx_subscriptions {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_subscriptions : owns
+  sx_billing_accounts ||--o{ sx_subscriptions : billing_account_id
+  sx_subscription_items {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_subscription_items : owns
+  sx_price_versions ||--o{ sx_subscription_items : price_version_id
+  sx_entitlements {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_entitlements : owns
+  sx_invoices {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_invoices : owns
+  sx_billing_accounts ||--o{ sx_invoices : billing_account_id
+  sx_invoice_lines {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_invoice_lines : owns
+  sx_private_payment_methods {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_payment_methods : owns
+  sx_payment_intents {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_payment_intents : owns
+  sx_payments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_payments : owns
+  sx_payment_allocations {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_payment_allocations : owns
+  sx_refunds {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_refunds : owns
+  sx_credits {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_credits : owns
+  sx_ledger_accounts {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_ledger_accounts : owns
+  sx_journal_entries {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_journal_entries : owns
+  sx_journal_lines {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_journal_lines : owns
+  sx_ledger_accounts ||--o{ sx_journal_lines : ledger_account_id
+  sx_employees {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_employees : owns
+  sx_employment_records {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_employment_records : owns
+  sx_employees ||--o{ sx_employment_records : employee_id
+  sx_vendors {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_vendors : owns
+  sx_purchase_orders {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_purchase_orders : owns
+  sx_vendors ||--o{ sx_purchase_orders : vendor_id
+  sx_services {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_services : owns
+  sx_deployments {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_deployments : owns
+  sx_services ||--o{ sx_deployments : service_id
+  sx_incidents {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_incidents : owns
+  sx_services ||--o{ sx_incidents : service_id
+  sx_api_endpoints {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_api_endpoints : owns
+  sx_private_outbox {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_outbox : owns
+  sx_private_inbox {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_inbox : owns
+  sx_private_audit_events {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_audit_events : owns
+  sx_private_webhook_deliveries {
+    uuid id PK
+    uuid tenant_id FK
+  }
+  sx_tenants ||--o{ sx_private_webhook_deliveries : owns
+  sx_private_memberships ||--o{ sx_private_role_assignments : membership
+  sx_private_roles ||--o{ sx_private_role_assignments : role
+  sx_assignments ||--o{ sx_submissions : assignment
+  sx_enrollments ||--o{ sx_submissions : enrollment
+  sx_billing_account_tenants ||--o{ sx_subscriptions : licensed_tenant
+  sx_subscriptions ||--o{ sx_entitlements : subscription
+  sx_invoices ||--o{ sx_payment_intents : invoice
+  sx_payment_intents ||--o{ sx_payments : intent
+  sx_payments ||--o{ sx_payment_allocations : payment
+  sx_invoices ||--o{ sx_payment_allocations : invoice
+  sx_payments ||--o{ sx_refunds : payment
+  sx_journal_entries ||--o{ sx_journal_lines : entry

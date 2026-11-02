@@ -71,6 +71,13 @@ export const WRITES: readonly Write[] = [
     why: 'Changes what the school shows this student. Tiny and instant when online, and a late apply could undo a later choice, so it waits for a connection rather than for a queue.',
   },
   {
+    file: 'lib/student-actions-remote.ts',
+    kind: 'send',
+    class: 'online-only',
+    does: 'Mark released feedback done or not relevant, or bring it back',
+    why: 'Changes what the school shows this student, against the version they read. A late apply would be refused as stale anyway, so it waits for a connection rather than for a queue.',
+  },
+  {
     file: 'lib/office-actions-remote.ts',
     kind: 'publish',
     class: 'never-queued',

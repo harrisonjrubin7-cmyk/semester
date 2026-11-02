@@ -154,6 +154,8 @@ export interface MigrationProject {
   parallel_runs_required: number;
   stage: Stage;
   stage_entered_at: string;
+  /** Why it was last sent back; cleared by a move forward. Server-stamped, never written without a move back. */
+  stage_back_reason: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -314,6 +316,19 @@ export function gateFailures(
 export function nextStage(s: Stage): Stage | null {
   const i = STAGES.indexOf(s);
   return i < STAGES.length - 1 ? STAGES[i + 1] : null;
+}
+
+/** The words a person gives for sending a migration back: what the database accepts. */
+export const BACK_REASON_MIN = 10;
+export const BACK_REASON_MAX = 500;
+
+/** What is wrong with the reason for going back, or null. The database refuses the same cases. */
+export function backReasonProblem(text: string): string | null {
+  const n = text.trim().length;
+  if (n === 0) return 'Say why this migration is going back.';
+  if (n < BACK_REASON_MIN) return `Use at least ${BACK_REASON_MIN} characters: say what went wrong.`;
+  if (n > BACK_REASON_MAX) return `Use at most ${BACK_REASON_MAX} characters; ${n - BACK_REASON_MAX} too many.`;
+  return null;
 }
 
 /** Whether a migration may go back to an earlier stage: until cutover has happened. */

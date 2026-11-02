@@ -18,6 +18,7 @@ import { holdsConsole } from '../lib/console/capability';
 
 import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
+import { readTerm } from '../lib/term';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { You } from './me/You';
 import { MeControls } from '../components/MeControls';
@@ -50,6 +51,9 @@ const SemesterWrapped = lazy(() => import('../components/SemesterWrapped').then(
  * The row owns its own asking state rather than `Me` owning a "which course is
  * being confirmed" field, because a row is exactly the scope the question has.
  */
+const courseRemovalName = (c: CourseModule) =>
+  `Remove ${c.course.code}: ${c.course.name || 'untitled course'} · ${readTerm(c.course.term).label} · from ${c.course.source || 'no source recorded'}`;
+
 export function CourseRow({ module: c }: { module: CourseModule }) {
   const { state, dispatch } = useStore();
   const rowThirteen = useRowStyle(13);
@@ -79,6 +83,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
       <button
         type="button"
         className="bare"
+        aria-label={courseRemovalName(c)}
         onClick={() => setAsking(true)}
         style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
       >
@@ -87,7 +92,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 
       {asking && (
         <TypeToConfirm
-          title={`Remove ${c.course.code}`}
+          title={courseRemovalName(c)}
           what={[
             `${c.guide.units.length} units and ${cards} cards go with it.`,
             `${c.items.length} deadlines from this syllabus go with it.`,

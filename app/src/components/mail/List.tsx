@@ -4,6 +4,7 @@ import { CourseTag } from '../CourseTag';
 import {
   CATEGORIES,
   buckets,
+  fullStamp,
   initials,
   participants,
   shown,
@@ -67,6 +68,7 @@ export function List({
     now,
   );
   const byId = new Map(threads.map((t) => [t.last.id, t]));
+  const positionById = new Map(threads.map((thread, index) => [thread.id, index + 1]));
 
   return (
     <div className="mb-list">
@@ -93,6 +95,8 @@ export function List({
               <Row
                 key={thread.id}
                 thread={thread}
+                position={positionById.get(thread.id) ?? 1}
+                total={threads.length}
                 open={open === thread.id}
                 picked={picked.includes(thread.id)}
                 now={now}
@@ -114,6 +118,8 @@ export function List({
 
 function Row({
   thread,
+  position,
+  total,
   open,
   picked,
   now,
@@ -126,6 +132,8 @@ function Row({
   onSnooze,
 }: {
   thread: Thread;
+  position: number;
+  total: number;
   open: boolean;
   picked: boolean;
   now: Date;
@@ -146,6 +154,7 @@ function Row({
       ? `To: ${last.to.map(shown).join(', ')}`
       : 'To: nobody yet'
     : participants(thread.mails);
+  const identity = `conversation ${position} of ${total}, ${who}, ${last.subject}, ${fullStamp(last.at)}`;
 
   const classes = ['mb-row'];
   if (thread.unread) classes.push('is-unread');
@@ -157,7 +166,7 @@ function Row({
       <button
         type="button"
         className="mb-ico"
-        aria-label={picked ? `Deselect ${last.subject}` : `Select ${last.subject}`}
+        aria-label={picked ? `Deselect ${identity}` : `Select ${identity}`}
         aria-pressed={picked}
         onClick={onPick}
       >
@@ -167,7 +176,7 @@ function Row({
       <button
         type="button"
         className={thread.starred ? 'mb-ico is-on' : 'mb-ico'}
-        aria-label={thread.starred ? `Unstar ${last.subject}` : `Star ${last.subject}`}
+        aria-label={thread.starred ? `Unstar ${identity}` : `Star ${identity}`}
         aria-pressed={thread.starred}
         onClick={onStar}
       >
@@ -178,7 +187,7 @@ function Row({
         type="button"
         className="mb-lines"
         onClick={onOpen}
-        aria-label={`${who}. ${last.subject}. ${stamp(last.at, now)}${thread.unread ? '. Unread' : ''}`}
+        aria-label={`Open ${identity}${thread.unread ? ', unread' : ''}`}
       >
         <div className="mb-line">
           <span className="mb-who">{who}</span>
@@ -200,10 +209,10 @@ function Row({
       {/* Where the date was. Hidden on a touch device by the stylesheet — the
           same four are in the toolbar and in the message itself. */}
       <div className="mb-hover">
-        <button type="button" className="mb-ico" aria-label={`Archive ${last.subject}`} onClick={onArchive}>
+        <button type="button" className="mb-ico" aria-label={`Archive ${identity} here`} onClick={onArchive}>
           <ArchiveIcon size={17} />
         </button>
-        <button type="button" className="mb-ico" aria-label={`Delete ${last.subject}`} onClick={onTrash}>
+        <button type="button" className="mb-ico" aria-label={`Move ${identity} to trash here`} onClick={onTrash}>
           <TrashIcon size={17} />
         </button>
         {/* The row's own snooze is the one-press one — tomorrow morning, which
@@ -212,7 +221,7 @@ function Row({
         <button
           type="button"
           className="mb-ico"
-          aria-label={`Snooze ${last.subject} until tomorrow morning`}
+          aria-label={`Snooze ${identity} until tomorrow morning`}
           title="Snooze until tomorrow morning"
           onClick={onSnooze}
         >
@@ -221,7 +230,7 @@ function Row({
         <button
           type="button"
           className="mb-ico"
-          aria-label={thread.unread ? `Mark ${last.subject} read` : `Mark ${last.subject} unread`}
+          aria-label={thread.unread ? `Mark ${identity} read` : `Mark ${identity} unread`}
           onClick={onRead}
         >
           <OpenedIcon size={17} />

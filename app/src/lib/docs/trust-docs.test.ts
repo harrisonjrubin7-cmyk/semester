@@ -212,10 +212,14 @@ export function render(): string {
 
   // 2. check.sql
   const checks = readdirSync(at('supabase')).filter((f) => f.endsWith('.check.sql')).sort();
-  const runsAll = /for c in "\$here"\/\*\.check\.sql/.test(read('supabase/check.sh'));
+  const script = read('supabase/check.sh');
+  const manifest = read('supabase/check-suites.txt').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  const runsAll =
+    script.includes('check-suites.txt') &&
+    JSON.stringify([...manifest].sort()) === JSON.stringify(checks.map((f) => f.slice(0, -'.check.sql'.length)).sort());
   h('## Policy and invariant suites (`supabase/*.check.sql`)');
   out.push(
-    `${checks.length} files. \`supabase/check.sh\` ${runsAll ? 'runs every `*.check.sql` file by glob' : 'does NOT run every file by glob'}, and \`.github/workflows/ci.yml\` runs it as the step "Check the database policies".`,
+    `${checks.length} files. \`supabase/check.sh\` ${runsAll ? 'runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree' : 'does NOT run every file: `supabase/check-suites.txt` and the files disagree'}, and \`.github/workflows/ci.yml\` runs it as the step "Check the database policies".`,
     '',
     ...table(
       ['Suite', 'What it proves (first sentence of its opening comment, verbatim)'],

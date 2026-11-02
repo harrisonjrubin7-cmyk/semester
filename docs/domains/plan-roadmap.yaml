@@ -1,0 +1,22 @@
+# Source: "Plan and academic path" section of the Semester continuation brief.
+plan_roadmap:
+  phase_1:
+    - registration_readiness
+    - official_system_handoff
+    - advisor_referral
+    - term_calendar
+  phase_2:
+    - degree_information_view
+    - student_entered_course_scenarios
+    - advisor_shared_plan
+    - requirement_question_handoff
+  phase_3:
+    - institution_approved_degree_audit_connection
+    - approved_what_if_scenarios
+    - registration_plan_export
+    - proactive_milestone_reminders
+  hard_boundaries:
+    - "Semester does not certify degree completion."
+    - "Semester does not approve substitutions or overrides."
+    - "Semester does not claim enrollment unless an institution-approved authoritative source confirms it."
+    # TRUNCATED IN SOURCE PDF after "authoritativ": confirm the exact wording before release.

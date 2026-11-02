@@ -4,7 +4,7 @@ import {
   type UniversityIdentity,
   type UniversityRole,
 } from '../../../packages/institution/src/index.ts';
-import type { MembershipResolver, VerifiedAuthUser } from './membership.ts';
+import type { MembershipResolver, VerifiedAuthUser, VerifiedMembershipIdentity } from './membership.ts';
 
 /**
  * Who the gateway believes is asking, and why it believes it.
@@ -13,11 +13,11 @@ import type { MembershipResolver, VerifiedAuthUser } from './membership.ts';
  *
  * ## The token is validated over the network
  *
- * Not decoded. A JWT read locally tells you what somebody put in a JWT, and
- * verifying its signature only proves it was issued — not that it has not
- * since been revoked, that the account still exists, or that the session was
- * not signed out an hour ago. `getUser` asks the auth service, every time, and
- * that round trip is the price of the answer being current.
+ * Identity and authorization are never decoded from the token. `getUser` asks
+ * the auth service, every time, so a revoked token, deleted account or signed-
+ * out session stops working at once. Only after that service validates the
+ * exact token do we decode its signed `exp` claim, solely to cap the active
+ * context at the same session boundary.
  *
  * ## Institutional roles come from current membership records
  *
@@ -83,19 +83,39 @@ export function verifiedAuthUser(user: {
   id: string;
   email?: string;
   app_metadata?: Record<string, unknown>;
-}): VerifiedAuthUser | null {
+}, sessionExpiresAt: string): VerifiedAuthUser | null {
   const provider = user.app_metadata?.provider;
   const userName = user.email?.trim().toLowerCase();
   return typeof provider === 'string' && provider.startsWith('sso:') && userName
-    ? { id: user.id, providerIdentifier: provider, userName }
+    ? { id: user.id, providerIdentifier: provider, userName, sessionExpiresAt }
     : null;
 }
 
-export function identityFromSupabaseClient(client: SupabaseAuthClient, resolve: MembershipResolver) {
-  return async (token: string): Promise<UniversityIdentity | null> => {
+const sessionExpiry = (token: string, nowMs: number): string | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as { exp?: unknown };
+    if (!Number.isSafeInteger(payload.exp)) return null;
+    const expiresMs = (payload.exp as number) * 1000;
+    if (!Number.isSafeInteger(expiresMs) || expiresMs <= nowMs || expiresMs > 8_640_000_000_000_000) return null;
+    return new Date(expiresMs).toISOString();
+  } catch {
+    return null;
+  }
+};
+
+export function identityFromSupabaseClient(
+  client: SupabaseAuthClient,
+  resolve: MembershipResolver,
+  nowMs: () => number = Date.now,
+) {
+  return async (token: string): Promise<VerifiedMembershipIdentity | null> => {
     const { data, error } = await client.auth.getUser(token);
     if (error || !data.user) return null;
-    const user = verifiedAuthUser(data.user);
+    const expiresAt = sessionExpiry(token, nowMs());
+    if (!expiresAt) return null;
+    const user = verifiedAuthUser(data.user, expiresAt);
     return user ? resolve(user) : null;
   };
 }

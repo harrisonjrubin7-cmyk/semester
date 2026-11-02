@@ -1,0 +1,85 @@
+# PEP participant's perspective: receives install / inspect / remove commands, emits results.
+# Removal can use saga/generation identity to handle unknown grant IDs. PA prepares and revokes grants; the PEP never invents its own.
+# Application messages only: add broker bindings, producer identities, channel ACLs, encryption, retention, size limits and dead-letter procedures before deployment.
+asyncapi: 3.0.0
+info:
+  title: Semester Policy Enforcement Point
+  version: 0.1.0
+channels:
+  commands:
+    address: semester.zta.pep.commands.v1
+    messages:
+      command: {$ref: '#/components/messages/EnforcementCommand'}
+  results:
+    address: semester.zta.pep.results.v1
+    messages:
+      result: {$ref: '#/components/messages/EnforcementResult'}
+operations:
+  receiveEnforcement:
+    action: receive
+    channel: {$ref: '#/channels/commands'}
+    messages: [{$ref: '#/channels/commands/messages/command'}]
+  publishEnforcement:
+    action: send
+    channel: {$ref: '#/channels/results'}
+    messages: [{$ref: '#/channels/results/messages/result'}]
+components:
+  messages:
+    EnforcementCommand:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/EnforcementCommand'}
+    EnforcementResult:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/sagaId'}
+      payload: {$ref: '#/components/schemas/EnforcementResult'}
+  schemas:
+    EnforcementCommand:
+      type: object
+      additionalProperties: false
+      required: [messageId, commandId, sagaId, tenantId, generation, operation, idempotencyKey, occurredAt]
+      properties:
+        messageId: {type: string}
+        commandId: {type: string}
+        sagaId: {type: string}
+        tenantId: {type: string}
+        generation: {type: integer, minimum: 1}
+        operation: {enum: [install, inspect, remove]}
+        idempotencyKey: {type: string}
+        occurredAt: {type: string, format: date-time}
+        grantId: {type: string}
+      oneOf:
+        - properties:
+            operation: {const: install}
+          required: [grantId]
+        - properties:
+            operation: {enum: [inspect, remove]}
+    EnforcementResult:
+      type: object
+      additionalProperties: false
+      required: [messageId, commandId, sagaId, tenantId, generation, operation, status, occurredAt]
+      properties:
+        messageId: {type: string}
+        commandId: {type: string}
+        sagaId: {type: string}
+        tenantId: {type: string}
+        generation: {type: integer, minimum: 1}
+        operation: {enum: [install, inspect, remove]}
+        occurredAt: {type: string, format: date-time}
+        status: {enum: [installed, absent, conflict, unknown, rejected]}
+        grantId: {type: string}
+        errorCode: {type: string}
+x-semester-runtime:
+  delivery: at_least_once
+  deduplication: [consumerId, messageId]
+  logical_operation_key: [sagaId, generation, operation]
+  enforcement:
+    resolve_grants_from_trusted_pa: true
+    reject_expired_grants: true
+    reject_revoked_generations: true
+    revalidate_current_policy: true
+  result_handling:
+    match_command_id: true
+    match_tenant_and_generation: true
+    verify_authenticated_producer: true
+    reject_unexpected_operation: true

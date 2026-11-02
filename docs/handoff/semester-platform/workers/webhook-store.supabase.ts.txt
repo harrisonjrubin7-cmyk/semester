@@ -1,0 +1,34 @@
+// workers/webhook-store.supabase.ts — DeliveryStore + EndpointRegistry for workers/webhook-delivery.ts, backed by migration 220.
+// Service role, server only. Strip .txt when copying.
+import { createClient } from '@supabase/supabase-js';
+import type { Delivery, DeliveryStore, Endpoint, EndpointRegistry } from './webhook-delivery';
+
+const db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+
+export const store: DeliveryStore = {
+  async claimDue() {
+    const { data, error } = await db.schema('opsx').rpc('claim_webhook', { p_lease_seconds: 60 });
+    if (error) throw error;
+    if (!data || !data.id) return null;
+    return { id: data.id, tenantId: data.institution_id, eventId: String(data.event_id), endpointId: data.endpoint_id, body: data.body, attempt: data.attempt, leaseToken: data.lease_token } as Delivery;
+  },
+  async delivered(job, status) { await complete(job, 'delivered', status, null, null); },
+  async retry(job, next, diag) { await complete(job, 'retry', null, next, diag); },
+  async deadLetter(job, diag) { await complete(job, 'dead_letter', null, null, diag); },
+};
+
+async function complete(job: Delivery, outcome: string, status: number | null, next: Date | null, diag: string | null) {
+  const { error } = await db.schema('opsx').rpc('complete_webhook', { p_id: job.id, p_lease: job.leaseToken, p_outcome: outcome, p_status: status, p_next: next?.toISOString() ?? null, p_diag: diag });
+  if (error) throw error;      // STALE_LEASE propagates: another worker owns the job now
+}
+
+// Secrets come from the vault by reference; never from the table or the caller.
+export const registry: EndpointRegistry = {
+  async resolve(tenantId, endpointId): Promise<Endpoint> {
+    const { data, error } = await db.schema('opsx').from('webhook_endpoints').select('url, allowed_host, secret_ref, active').eq('id', endpointId).eq('institution_id', tenantId).single();
+    if (error || !data || !data.active) throw new Error('ENDPOINT_NOT_FOUND');
+    const { data: secret, error: e2 } = await db.rpc('vault_read_secret', { p_ref: data.secret_ref });   // implement with Supabase Vault
+    if (e2 || !secret) throw new Error('SECRET_UNAVAILABLE');
+    return { url: data.url, secret: String(secret), allowedHosts: [data.allowed_host] };
+  },
+};

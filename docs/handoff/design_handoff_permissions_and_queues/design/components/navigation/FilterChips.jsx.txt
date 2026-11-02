@@ -1,0 +1,11 @@
+import React from 'react';
+/** Toggleable filters above a list or table. Selected state uses ✓ + weight, not colour alone. */
+export function FilterChips({ options = [], selected = [], onToggle, label = 'Filters', onClear }) {
+  return (
+    <div className="filters" role="group" aria-label={label}>
+      {options.map((o) => { const id = typeof o === 'string' ? o : o.id; const text = typeof o === 'string' ? o : o.label; const on = selected.includes(id);
+        return <button key={id} type="button" className="filter-chip" aria-pressed={on} onClick={() => onToggle && onToggle(id)}>{on && <span aria-hidden="true">✓</span>}{text}{o.count != null && <span className="tab-count">{o.count}</span>}</button>; })}
+      {onClear && selected.length > 0 && <button type="button" className="link-quiet" onClick={onClear}>Clear</button>}
+    </div>
+  );
+}

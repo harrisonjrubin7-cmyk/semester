@@ -1,0 +1,42 @@
+# Release gates: pointer manifest. The gate definitions and evidence live in the docs below.
+# Decision authority stays with the named owners; this file records no approval.
+version: 0
+status: pointer
+sources:
+  release_gates: docs/RELEASE-GATES.md
+  master_register: docs/MASTER-LAUNCH-READINESS-REGISTER.md
+  go_no_go: GO-NO-GO-DECISION.md
+  launch_checklist: LAUNCH-READINESS-CHECKLIST.md
+current_recommendation:
+  decided: "2026-10-03"
+  individual_student_acquisition: "CONDITIONAL GO / YELLOW"
+  design_partner_pilot: "GO / GREEN for non-activation engagement only"
+  paid_institutional_pilot: "NO-GO / RED"
+  broad_institutional_sale: "NO-GO / RED"
+# Blocking conditions, copied as identifiers from GO-NO-GO-DECISION.md; each one needs a named authority.
+blocking_conditions:
+  - id: C1
+    item: authorized published candidate and current hosted release matrix
+    category: technical
+  - id: C2
+    item: HawkScan and independent security assessment
+    category: security
+  - id: C3
+    item: qualified accessibility review
+    category: design_accessibility_legal
+  - id: C4
+    item: public and institutional legal authority
+    category: legal
+  - id: C5
+    item: entity, signing, price, tax, payment and insurance authority
+    category: commercial_legal_operations
+  - id: C6
+    item: staffed support, monitoring and incident coverage
+    category: operations
+  - id: C7
+    item: recovery, rollback, rights and offboarding operation on an authorized target
+    category: reliability_privacy_security
+  - id: C8
+    item: named customer scope and acceptance
+    category: customer_product_legal
+gap_matrix: docs/PDF-EVIDENCE-GAP-MATRIX.md

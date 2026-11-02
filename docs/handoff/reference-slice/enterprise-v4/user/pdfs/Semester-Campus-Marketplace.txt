@@ -1,0 +1,311 @@
+Semester can extend beyond coursework into a verified campus opportunity marketplace: one
+place for students to discover programs, jobs, services, events, and communities. Existing
+student-engagement platforms commonly centralize organizations, events, opportunities,
+communications, and participation records, which supports this direction.
+Category Student capabilities Organization capabilities
+Campus jobs Search openings, save roles, upload a résumé,
+apply, track status
+Post roles, screen applications, message
+candidates, schedule interviews
+Internships Filter by career area, location, pay, credit eligibility,
+remote/hybrid options
+Employers and career staff publish verified
+listings, manage application pipelines
+Study abroad Explore programs, compare costs and terms,
+bookmark options, begin applications
+Global-learning office manages programs,
+eligibility, deadlines, documents, decisions
+Clubs and
+organizations
+Discover communities, attend events, apply to join,
+follow updates
+Leaders manage membership, applications, roles,
+posts, and events
+Events and tickets Browse campus events, RSVP, join waitlists, check
+in, add to calendar
+Hosts publish events, manage capacity,
+attendance, reminders, feedback
+Student services Find tutoring, advising, wellness, financial aid,
+accessibility, housing, and career help
+Service teams publish availability, intake forms,
+appointments, and resources
+Peer marketplace Find tutors, study groups, project collaborators,
+mentors, or approved student services
+Moderated matching, verified profiles, availability,
+reporting controls
+Housing and local
+deals
+Browse approved housing, sublets, textbooks,
+transport, and partner discounts
+Institution-approved listings, expiration,
+reporting, verification
+The marketplace should distinguish institution-verified, partner-verified, student-posted, and
+unverified external-link listings. Do not make every posting appear university-endorsed.
+Draft
+→ Submitted for review
+→ Approved / Returned for edits / Rejected
+→ Published
+→ Paused / Filled / Expired
+→ Archived
+Semester Campus Marketplace
+[1] [2]
+Marketplace categories
+Listing lifecycle
+Each listing should support:
+Title, summary, media, tags, category, location, and accessibility details.
+Eligibility rules such as major, year, visa/work authorization constraints, GPA, or program
+requirements.
+Application or registration deadlines in the studentʼs time zone.
+Contact method, privacy settings, and reporting route.
+Employer, office, or club verification status.
+Required disclosures: compensation, fees, credit options, risk/travel notices, and external-
+site handling.
+Saved searches and personalized alerts.
+View, click, application-start, and conversion analytics.
+Study-abroad discovery should feel like a guided comparison and application workspace—not
+just a directory. Education-abroad platforms commonly centralize program discovery,
+applications, and communications.
+Student features
+Search by destination, language, term, discipline, budget, housing, accessibility, internship
+availability, and credit options.
+Compare programs side by side.
+View estimated costs with clear “estimate” labels.
+Save programs and receive deadline reminders.
+Check preliminary eligibility without presenting it as a final admission decision.
+Ask questions in an approved program discussion space.
+Start one application dashboard with a checklist.
+Upload documents, request recommendations, track approvals, and receive decisions.
+Complete pre-departure learning, safety acknowledgments, and travel documents.
+Connect with approved peer ambassadors or returning participants.
+Access emergency contacts and support resources while abroad.
+Staff features
+Build program catalogs and term availability.
+Configure eligibility, capacity, nomination, and deadline rules.
+Create application forms, review queues, decision letters, and document checklists.
+Study abroad and internships
+Study abroad experience
+[3]
+Track incomplete applications and send targeted reminders.
+Manage advising appointments.
+Export approved data for institutional systems.
+Publish only aggregate, policy-approved program analytics.
+Internship listings should make the opportunity practical: location, compensation, work
+arrangement, schedule, skills, supervisor, eligibility, application process, and academic-credit
+options. International internship providers commonly combine internship searching with
+location and industry filtering.
+Key student functions:
+Career-interest profile and résumé vault.
+Job matching that explains why a role may fit.
+Saved applications and deadline tracker.
+Employer messaging only aer the student opts in or applies.
+Interview scheduling and preparation resources.
+Offer comparison: pay, hours, location, course credit, visa needs, and benefits.
+Reflection and supervisor evaluation aer completion.
+Optional co-curricular record or portfolio artifact.
+Key safety controls:
+Employer verification and reporting.
+Scam/risk warnings for requests involving money, personal financial details, or off-
+platform communication.
+Clear difference between a campus-approved opportunity and an external listing.
+Human review for sensitive or high-risk categories.
+No automated eligibility rejection without a visible appeal or staff-review route.
+A clubs system should support discovery, membership, governance, events, communication,
+and continuity when student leaders graduate. Digital homes for student groups, membership
+management, and event tools are common engagement-platform capabilities.
+Students can:
+Search by interest, identity/affinity, academic area, service, sport, culture, faith, arts,
+activism, entrepreneurship, and location.
+Internship experience
+[4]
+Clubs and student organizations
+[5] [1]
+Club directory and discovery
+Browse featured, new, active, and “beginner-friendly” clubs.
+View purpose, leadership, meeting times, dues, accessibility, and open roles.
+Follow a club without immediately joining.
+Request membership or apply for selective organizations.
+See approved upcoming events and peer connections.
+Report inaccurate, unsafe, or inappropriate content.
+Leaders can:
+Create and edit public club profiles.
+Maintain officer roles and leadership transitions.
+Build membership forms and approval rules.
+Create member-only spaces.
+Publish announcements, files, polls, and event updates.
+Manage RSVP, waitlist, QR check-in, attendance, and post-event feedback.
+Track budgets, requests, and institutional approvals where enabled.
+Create officer handoff checklists and archive materials.
+View aggregate engagement, not unnecessary student surveillance.
+A configurable application builder should support:
+Short and long responses.
+Multiple-choice and ranking questions.
+Portfolio or file uploads.
+Eligibility acknowledgments.
+Recommendation requests.
+Interview-slot selection.
+Blind-review options where appropriate.
+Reviewer assignment and scoring rubric.
+Decision, waitlist, and appeal workflows.
+Student-facing status: draed, submitted, under review, accepted, waitlisted, declined,
+withdrawn.
+Avoid exposing applicant rankings, reviewer notes, or private demographic information to club
+officers unless institutionally approved.
+Club leader portal
+Club applications
+Semesterʼs social layer should be a campus community product, not a copy of a broad public
+social network. It should help students find people, activities, and support while providing
+strong controls against harassment, misinformation, doxxing, and unwanted contact.
+The home feed can combine:
+Course-relevant announcements.
+Club and event updates.
+Internship and study-abroad deadlines.
+Campus service reminders.
+Followed topics and organizations.
+Study-group requests.
+Peer milestones, if the student elects to share them.
+Curated institutional announcements.
+“For you” opportunities based on explicit interests and enrolled-campus context.
+Students should control:
+Whether profile activity appears in feeds.
+Who can comment, message, tag, or follow them.
+Which clubs/topics can notify them.
+Whether their attendance, club membership, or application activity is visible.
+Feed personalization and sensitive-topic recommendations.
+Chronological versus recommended feed views.
+Academic grades, assignment submissions, accommodation information, counseling/wellness
+activity, and private application details must never appear in a social feed.
+Support:
+Text, image, video, link, poll, and event posts.
+Comments, reactions, saves, reposts, and topic tags.
+Content warnings and alt text.
+Accessibility-first captions and transcript support.
+Post editing and deletion.
+Student-controlled visibility: private, direct group, club, course cohort, campus, or public
+external sharing where allowed.
+In-app social features
+Daily feed
+Posts and interactions
+Reporting, blocking, muting, and keyword filters.
+Moderator review queue with evidence preservation.
+Rate limits and anti-spam protections.
+Space Membership model Appropriate use
+Club space Officer-approved or open Club updates, files, events, member
+discussions
+Course study group Instructor-created or student-created with
+safeguards Peer study coordination; no grade disclosure
+Residence/housing
+group Verified eligibility Building/community information
+Interest community Open, moderated, or approval-based Hobbies, identity, professional interests
+Program cohort Staff-managed Study abroad, orientation, internships,
+mentoring
+Project team Membership from course/team system Files, tasks, discussions, milestones
+Private groups still require reporting and safety pathways. “Private” should mean limited
+membership—not immunity from platform rules or legal obligations.
+Include:
+Direct messages with consent-based message requests.
+Group chat and event chat.
+Scheduled or auto-expiring event threads.
+Mentorship matching and structured introductions.
+Availability and office-hour booking.
+Optional professional profile: interests, skills, projects, résumé link, and portfolio.
+Contact controls: no messages, message requests only, connections only, organization
+members only.
+Block, restrict, report, and safety escalation.
+Default messaging should be conservative for new students and minors. Never expose a
+studentʼs personal phone number, personal email, class schedule, real-time location, or private
+enrollment data by default.
+Communities and group spaces
+Messaging and networking
+Semester should use a transparent ranking system:
+1. Always prioritize urgent institutional safety messages.
+2. Show followed organizations and explicit subscriptions.
+3. Recommend opportunities from stated interests and saved searches.
+4. Limit repetitive posts and low-quality engagement bait.
+5. Explain recommendations: “Shown because you follow Environmental Science” or
+“Matches your saved internship preferences.”
+6. Offer “not interested,” mute, and reset-personalization controls.
+7. Never use grades, disciplinary records, disability accommodations, health data, or private
+messages for social recommendations.
+Moderation tools need:
+Clear community standards.
+Reporting categories: harassment, threat, hate, impersonation, self-harm concern, scam,
+privacy violation, sexual content, and misinformation.
+Emergency escalation instructions.
+Temporary content limits for repeated abuse.
+Appeals and audit logs.
+Moderator roles with least-privilege access.
+Evidence retention schedules.
+Human review for serious safety actions.
+Institution-controlled policy configuration.
+FERPA gives eligible students rights concerning education records and restricts certain
+disclosures of personally identifiable information; this means Semester must carefully separate
+social data from protected academic records and enforce institution-specific policies. Public
+student content should not expose instructor feedback or grades.
+Feed, trust, and moderation
+Feed-ranking rules
+Moderation system
+[6] [7] [8]
+Data model and integrations
+Domain Essential entities
+Marketplace Listing, provider, verification, category, eligibility rule, application, saved listing
+Clubs Organization, officer role, member, membership request, club application, event
+Study abroad Program, term, provider, application, document, checklist item, decision
+Internships Employer, listing, application, résumé, interview, offer, supervisor evaluation
+Social Profile, privacy setting, follow, topic, post, media asset, comment, reaction, report, moderation case
+Messaging Conversation, participant, message, message request, block, notification
+Trust Verification, policy version, consent, audit event, content action, appeal
+SIS/SSO: verified identity, active enrollment, campus eligibility.
+LMS: optional course cohort and study-group context; never import grades into social
+surfaces.
+Career systems: approved internship feeds, applications, appointment scheduling.
+Study-abroad systems: program inventory, application status, document workflows.
+Calendar: event RSVP and reminders.
+Payments: optional club dues or tickets through institution-approved payment workflows.
+Accessibility tools: captions, alt text, transcripts, keyboard support.
+Safety systems: trusted reporting, escalation, and institutional case management.
+Verified profiles and privacy defaults.
+Clubs directory and public pages.
+Event discovery, RSVP, calendar sync, and check-in.
+Marketplace listings for jobs, internships, programs, and campus services.
+Save, follow, search, filters, alerts, and report controls.
+Staff approval and listing moderation.
+Club membership and application workflows.
+Internship and study-abroad application trackers.
+Club spaces, announcements, comments, and controlled messaging.
+Core entities
+Essential integrations
+Build order
+Phase 1: Safe discovery
+Phase 2: Applications and communities
+Student profile/portfolio controls.
+Event chat and study-group matching.
+Moderation queue, blocking, appeals, and audit logs.
+Personalized daily feed with explanations and controls.
+Peer mentorship and networking.
+Study-abroad pre-departure and alumni community spaces.
+Internship reflection and co-curricular records.
+Organization analytics and leadership-transition tools.
+Institution-approved payments and external-partner workflows.
+The key outcome is a unified Semester Campus Life experience: students discover meaningful
+opportunities, apply and participate without losing track of deadlines, build community safely,
+and maintain control over their identity and data.
+What part should be designed first in more detail: the marketplace discovery experience, the
+clubs application workflow, or the daily social feed?
+⁂
+1. https://www.suitable.co/
+2. https://about.lounge.live/blog/top-student-engagement-platforms-how-they-compare
+3. https://campuscommunity.io/
+4. https://www.ciee.org/go-abroad/college-study-abroad/internships
+5. https://vistingo.com/student-engagement-platforms/
+6. https://studentprivacy.ed.gov/ferpa
+7. https://studentprivacy.ed.gov/
+8. https://www.facultyfocus.com/articles/teaching-with-technology-articles/ferpa-and-social-media/
+9. https://icommunify.com/blog/best-student-engagement-platforms-for-universities-in-2026
+10. https://fpf.org/resource/educators-guide-to-student-privacy/
+11. https://moderncampus.com/products/student-engagement-and-learning-platform
+12. https://studentprivacymatters.org/ferpa_ppra_coppa/
+13. https://www.readyeducation.com/articles/student-engagement-in-higher-education-the-ultimate-guide/
+14. https://www.dickinsonbradshaw.com/blogs-articles/2020/09/01/ferpa-and-online-learning-tools-protecting-student-d
+ata-when-using-online-learning-applications
+15. https://www.iesabroad.org/intern-abroad
+Phase 3: Connected student life

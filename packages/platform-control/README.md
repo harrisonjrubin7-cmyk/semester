@@ -4,7 +4,9 @@ This package is the repository-owned implementation control plane. It turns a bo
 
 The root manifest also fixes the canonical product domain at `semesterintel.tech` and maps the 13 grouped workspace families to 17 independently governed pilot release scopes. Every scope declares its required operational loop, but remains blocked and activation-disabled until route, capability, workflow, code, test, deployment, and approval evidence is present. A reachable shell is never operational-readiness evidence.
 
-The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers.
+The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers. The derived `execution-plan.json` identifies ready work, active work, sequencing debt, dependency waits, and explicit blocks without treating partial implementation as verified.
+
+Verified work must link retained evidence, have only verified dependencies, and carry no open blockers. P0-001's bounded repository/CI evidence is recorded in `docs/operating-model/evidence/P0-001-repository-ci.md`; it does not promote any deployment or institutional gate.
 
 It deliberately separates repository implementation evidence from deployment, activation, and observed operation. A stage may be `true` only when that exact stage has evidence, and stages cannot skip an earlier false gate.
 
@@ -23,3 +25,7 @@ npm run tenant:create -- --key demo-campus --name "Demo Campus" --owner platform
 `tenant:create` creates only a new, unactivated synthetic registry record and refuses production provisioning. It does not create credentials, deploy infrastructure, or activate a tenant.
 
 The first implemented registry slice is `registration.readiness`. Extend the registry one real job loop at a time; do not bulk-mark the larger ecosystem roster as implemented.
+
+Tenant activation for that slice is gated by `registry/activation-gates/registration.readiness.json`: the 20 items of the pilot brief (product, authority and policy, operations, trust), each `passed` with cited repository evidence or `not_verified` with a stated gap. The gate's `status` is derived, not set: it is `ready` only when every item passed and `decision.record` names a recorded decision by the three approvers. Today it is `not_ready` (one item passed: policy tests, 55 passing on 2026-10-13). A capability marked `tenant_activated` without a ready gate fails `registry:validate`.
+
+Release also requires a current support-and-recovery record in `registry/operations-readiness/`. It names the primary and backup operators, staffed hours, published escalation contacts, synthetic checks, a restore drill, and an incident exercise. Passed operated proof must cite the governed `docs/evidence/operations/` or `docs/evidence/restore/` area, name the target environment and exact 40-character revision, record a non-future observation time, and carry a future expiry. Missing, stale, local, CI-only, repository-only, or generically documented proof keeps both registry status and `release:check` fail-closed. Existing runbooks and historical artifacts are useful references, but they do not become current operational evidence by being checked into the repository.

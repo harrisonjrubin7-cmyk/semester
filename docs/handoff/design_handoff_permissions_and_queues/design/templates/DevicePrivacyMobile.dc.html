@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Device & privacy (mobile)" description="Phone screen for Privacy › Device: capability rows, two-stage permission ask, sessions with sign-out, shared access with expiry; labelled tab bar, dark" -->
+<helmet><script src="./ds-base.js"></script><style>html,body{margin:0;background:#d9d5cc}a{color:var(--text-link)}a:hover{color:var(--text-primary)}</style></helmet>
+<div style="min-height:100vh;display:grid;place-items:center;padding:24px 12px;box-sizing:border-box">
+<div data-theme="{{ theme }}" style="width:100%;max-width:390px;height:800px;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:var(--surface-canvas);color:var(--text-primary);font-family:var(--font-body);border:1px solid var(--border-strong);position:relative">
+<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border-subtle)"><span style="font-size:20px;color:var(--text-secondary)">‹</span><div><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Me › Privacy</div><h1 style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:-.015em">Device and sharing</h1></div></div>
+<div style="flex:1;overflow:auto;padding:12px 16px 24px;display:grid;gap:18px;align-content:start">
+<section><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">This device</div>
+<sc-for list="{{ caps }}" as="c" hint-placeholder-count="4"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.PermissionRow" capability="{{ c.capability }}" use="{{ c.use }}" state="{{ c.state }}" detail="{{ c.detail }}" on-change="{{ c.change }}" hint-size="100%,64px"></x-import></sc-for>
+<p style="margin:8px 0 0;font-size:12.5px;color:var(--text-secondary)">Semester asks only when you use a feature that needs it. Saying no never stops the task; there is always another way.</p></section>
+<section><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Signed in</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SessionRow" device="iPhone 15 · Semester app" place="Nashville, TN" last-active="Now" current="{{ true }}" hint-size="100%,56px"></x-import>
+<sc-for list="{{ sessions }}" as="s" hint-placeholder-count="1"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.SessionRow" device="{{ s.device }}" place="{{ s.place }}" last-active="{{ s.last }}" method="Vanderbilt SSO" on-sign-out="{{ s.out }}" hint-size="100%,56px"></x-import></sc-for></section>
+<section><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)">Shared with people</div>
+<sc-for list="{{ shares }}" as="d" hint-placeholder-count="2"><x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.DelegationRow" who="{{ d.who }}" role="{{ d.role }}" scope="{{ d.scope }}" expires="{{ d.expires }}" state="{{ d.state }}" on-revoke="{{ d.revoke }}" hint-size="100%,84px"></x-import></sc-for></section>
+</div>
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.TabBar" items="{{ tabItems }}" current="me" hint-size="100%,64px"></x-import>
+<sc-if value="{{ asking }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(9,10,14,.5);display:flex;align-items:flex-end"><div style="width:100%;padding:12px;box-sizing:border-box;display:grid;gap:8px">
+<x-import component-from-global-scope="SemesterDesignSystem_e9f3ba.PermissionPrompt" capability="{{ ask.capability }}" glyph="{{ ask.glyph }}" why="{{ ask.why }}" when="{{ ask.when }}" fallback="{{ ask.fallback }}" kept="{{ ask.kept }}" state="{{ ask.state }}" on-allow="{{ allow }}" on-not-now="{{ notNow }}" hint-size="100%,300px"></x-import>
+<sc-if value="{{ askDone }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ closeAsk }}" style="all:unset;cursor:pointer;text-align:center;padding:12px;border-radius:6px;background:var(--surface-base);color:var(--text-primary);font-weight:500">Done</button></sc-if>
+</div></div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;micBlocked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { caps: { Camera: 'off', Microphone: 'ask', Location: 'limited', Notifications: 'on' }, ask: null, askState: 'ask', signedOut: [], revoked: [] };
+  renderVals() {
+    const INFO = {
+      Camera: { glyph: '◉', use: 'ISBN scan, listing photos', why: 'Scan a textbook ISBN to fill in your listing.', when: 'Only while the scanner is open.', fallback: 'Type the ISBN instead.', kept: 'Nothing. The image stays on your device.' },
+      Microphone: { glyph: '◍', use: 'Dictation, voice questions', why: 'Dictate in Write or ask Ask Semester out loud.', when: 'Only while you hold the mic button.', fallback: 'Type instead.', kept: 'Transcribed on your device; audio isn’t stored.' },
+      Location: { glyph: '◎', use: 'Campus map, event check-in', why: 'Show where you are on the campus map and check you in to events.', when: 'Only while you’re using the app.', fallback: 'Pick a building from the list.', kept: 'Never stored after check-in. Never sold.' },
+      Notifications: { glyph: '◔', use: 'Deadlines and holds', why: 'Tell you when a deadline moves or a hold is added.', when: 'Only for the channels you choose.', fallback: 'Check Today; nothing is hidden there.', kept: 'Delivery receipts for 30 days.' },
+    };
+    const deviceBlocked = this.props.micBlocked ?? true;
+    const st = { ...this.state.caps, ...(deviceBlocked ? { Microphone: 'blocked' } : {}) };
+    const a = this.state.ask;
+    const set = (k, v) => this.setState((s) => ({ caps: { ...s.caps, [k]: v } }));
+    return {
+      theme: this.props.dark ? 'dark' : 'light',
+      caps: Object.keys(INFO).map((k) => ({ capability: k, use: INFO[k].use, state: st[k], detail: k === 'Location' && st[k] === 'limited' ? 'Approximate · only while using the app' : undefined, change: () => (st[k] === 'off' || st[k] === 'ask' || st[k] === 'blocked') ? this.setState({ ask: k, askState: st[k] === 'blocked' ? 'blocked' : 'ask' }) : set(k, 'off') })),
+      asking: !!a, askDone: this.state.askState !== 'ask',
+      ask: a ? { capability: a.toLowerCase(), ...INFO[a], state: this.state.askState } : {},
+      allow: () => { set(a, 'on'); this.setState({ askState: 'granted' }); },
+      notNow: () => this.setState({ ask: null }),
+      closeAsk: () => this.setState({ ask: null }),
+      sessions: [{ device: 'MacBook Air · Safari', place: 'Nashville, TN', last: '2 h ago' }, { device: 'iPad · Semester app', place: 'Atlanta, GA', last: '9 days ago' }].filter((s) => !this.state.signedOut.includes(s.device)).map((s) => ({ ...s, out: () => this.setState((x) => ({ signedOut: [...x.signedOut, s.device] })) })),
+      shares: [{ who: 'Maria Reyes', role: 'Parent', scope: ['Billing balance', 'Holds'], expires: '31 May 2027' }, { who: 'Advisor K. Lee', role: 'Advisor', scope: ['Study plan'], expires: 'Fri 12 Dec', s: 'expiring' }].map((d) => ({ ...d, state: this.state.revoked.includes(d.who) ? 'revoked' : (d.s || 'active'), revoke: () => this.setState((x) => ({ revoked: [...x.revoked, d.who] })) })),
+      tabItems: [{ id: 'today', label: 'Today', icon: 'today' }, { id: 'path', label: 'My Path', icon: 'pathway' }, { id: 'search', label: 'Search', icon: 'search' }, { id: 'plan', label: 'Plan', icon: 'calendar' }, { id: 'me', label: 'Me', icon: 'person' }],
+    };
+  }
+}
+</script>
+</body>
+</html>

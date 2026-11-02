@@ -22,6 +22,7 @@ components existed before this work; the rest were added beside them in
 | Determinate progress | `Progress` | `unity/States.tsx` | New | Update and Import (reading several files); Travel pack download |
 | Named steps (AI generation) | `StepStatus` | `unity/States.tsx` | New | Study Studio generation; Update reading one file |
 | Permission changed | `PermissionNotice` | `unity/States.tsx` | New | Support access created and revoked; Family permission plan and item saved; Share course after sending |
+| Permission denied | `PermissionState` | `unity/States.tsx` | New | Read-envelope routes; Registration and Gradebook module gates |
 | Offline | `OfflineStrip` | `unity/States.tsx` | New | Not placed: #860's `SyncStrip` under the header says offline on every screen |
 | Save / sync | `SaveState`, `SyncState` | `unity/Status.tsx` | New | `SaveState` in Write, Mine's note editor, Settings → Assistant, the Capture sheet, and context bars that pass `save` |
 
@@ -145,6 +146,20 @@ revoke it) and when it is revoked (with no control, since there is nowhere to
 go); Family when a permission plan or an item is saved (what changed, why it
 is safe, and the preview); Share course after sending (what the file
 carries).
+
+### Permission denied — `PermissionState`
+
+A stable replacement for a protected region: what is unavailable, a
+non-leaking explanation, who controls access and at most one governed recovery
+action. It is a polite `role="status"`, not an error alert, and carries
+`data-state="permission-denied"` for route-level parity tests. Do not pass
+protected content into it and do not invent a request action when the server
+did not provide one.
+
+Where it is used: `ReadState` for fail-closed read envelopes on Today,
+Calendar, Me and Mine; and `ModuleGateState` for Registration and Gradebook
+when a school pauses the module, the person is signed out or the account has
+no linked school.
 
 ### Offline — `OfflineStrip`
 

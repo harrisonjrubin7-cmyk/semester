@@ -1,0 +1,66 @@
+# Events emitted by the access-control system. Transport intentionally unspecified:
+# define broker auth, channel ACLs, tenant routing, schema validation, dead-letter handling and retention before deployment.
+# Evidence events carry references, never unrestricted assessment reports.
+asyncapi: 3.0.0
+info:
+  title: Semester Access Control Events
+  version: 0.1.0
+channels:
+  accessEvents:
+    address: semester.access.lifecycle.v1
+    messages:
+      accessEvent: {$ref: '#/components/messages/AccessEvent'}
+  evidenceEvents:
+    address: semester.assurance.observations.v1
+    messages:
+      evidenceEvent: {$ref: '#/components/messages/EvidenceEvent'}
+operations:
+  emitAccessLifecycle:
+    action: send
+    channel: {$ref: '#/channels/accessEvents'}
+    messages:
+      - $ref: '#/channels/accessEvents/messages/accessEvent'
+  emitEvidenceObservation:
+    action: send
+    channel: {$ref: '#/channels/evidenceEvents'}
+    messages:
+      - $ref: '#/channels/evidenceEvents/messages/evidenceEvent'
+components:
+  messages:
+    AccessEvent:
+      name: AccessEvent
+      contentType: application/json
+      correlationId: {location: '$message.payload#/correlationId'}
+      payload: {$ref: '#/components/schemas/AccessEventPayload'}
+    EvidenceEvent:
+      name: EvidenceEvent
+      contentType: application/json
+      correlationId: {location: '$message.payload#/correlationId'}
+      payload: {$ref: '#/components/schemas/EvidenceEventPayload'}
+  schemas:
+    AccessEventPayload:
+      type: object
+      additionalProperties: false
+      required: [eventId, type, schemaVersion, occurredAt, tenantId, requestId, aggregateRevision, correlationId]
+      properties:
+        eventId: {type: string}
+        type: {enum: [access.requested, access.decision.recorded, access.grant.prepared, access.grant.installed, access.grant.active, access.grant.revocation_requested, access.grant.revoked, access.recovery_required, access.reconciliation.completed]}
+        schemaVersion: {type: string}
+        occurredAt: {type: string, format: date-time}
+        tenantId: {type: string}
+        requestId: {type: string}
+        grantId: {type: string}
+        decisionId: {type: string}
+        aggregateRevision: {type: integer, minimum: 0}
+        correlationId: {type: string}
+        reasonCode: {type: string}
+    EvidenceEventPayload:
+      type: object
+      additionalProperties: false
+      required: [eventId, schemaVersion, occurredAt, observationId, correlationId]
+      properties:
+        eventId: {type: string}
+        schemaVersion: {type: string}
+        occurredAt: {type: string, format: date-time}
+        observationId: {type: string}
+        correlationId: {type: string}

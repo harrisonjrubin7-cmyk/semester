@@ -1,0 +1,71 @@
+-- 160 · Company: CRM (institutions as customers), contracts register, pilots and measures, partners and apps.
+-- Company data lives in schema biz and is visible only to Semester staff with business capabilities (platform tenant).
+-- Contract documents themselves live in restricted storage; this is the register, not the paper.
+create schema if not exists biz;
+
+create table if not exists biz.accounts(
+  id uuid primary key default gen_random_uuid(), name text not null, kind text not null check (kind in ('institution','partner','vendor','developer')),
+  segment text, country text not null default 'US', state_region text, institution_id uuid references core.institutions, owner_id uuid references auth.users,
+  stage text not null default 'prospect' check (stage in ('prospect','discovery','pilot','customer','renewal_risk','churned','partner','vendor')), created_at timestamptz not null default now());
+create table if not exists biz.contacts(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts on delete cascade, name text not null, title text,
+  email text, role text check (role in ('sponsor','champion','it','registrar','procurement','legal','security','other')), consent_follow_up boolean not null default false);
+create table if not exists biz.opportunities(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts on delete cascade, name text not null,
+  stage text not null default 'discovery' check (stage in ('discovery','security_review','pilot_scoping','pilot_running','proposal','won','lost')),
+  amount_cents bigint check (amount_cents >= 0), close_by date, lost_reason text, owner_id uuid references auth.users, created_at timestamptz not null default now());
+
+create table if not exists biz.contracts(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts on delete restrict,
+  template text not null check (template in ('msa','order_form','pilot','sow','sla','dpa','student_privacy','security','nda','partner','developer','vendor_dpa','research_dua','offer','ciia','contractor','advisor','board_consent')),
+  version text not null, state text not null default 'draft' check (state in ('draft','in_review','sent','signed','active','expired','terminated')),
+  non_standard jsonb not null default '[]'::jsonb, signed_at date, effective_on date, ends_on date, auto_renews boolean not null default false,
+  notice_days int, renewal_notice_on date generated always as (ends_on - coalesce(notice_days, 90)) stored,
+  document_ref text, owner_id uuid references auth.users, approved_by uuid references auth.users, created_at timestamptz not null default now(),
+  check (state not in ('signed','active') or signed_at is not null));
+create index if not exists contracts_renewal on biz.contracts(renewal_notice_on) where state = 'active';
+
+create table if not exists biz.pilots(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, contract_id uuid references biz.contracts,
+  institution_id uuid references core.institutions, cohort_desc text not null, modules text[] not null, starts_on date not null, ends_on date not null,
+  state text not null default 'scoping' check (state in ('scoping','setup','running','reporting','converted','exited')), results_due date generated always as (ends_on + 30) stored);
+create table if not exists biz.pilot_measures(
+  id uuid primary key default gen_random_uuid(), pilot_id uuid not null references biz.pilots on delete cascade, name text not null,
+  baseline numeric, target numeric, unit text, data_source text not null, signed_off_by text,
+  result numeric, result_state text not null default 'pending' check (result_state in ('pending','measured','not_measured')),
+  check (result_state <> 'measured' or result is not null));
+
+create table if not exists biz.partner_apps(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, name text not null, scopes text[] not null,
+  state text not null default 'in_review' check (state in ('in_review','approved','suspended','retired')), reviewed_by uuid references auth.users, reviewed_at timestamptz);
+create table if not exists biz.app_installs(
+  app_id uuid not null references biz.partner_apps on delete cascade, institution_id uuid not null references core.institutions,
+  approved_by uuid not null references auth.users, approved_at timestamptz not null default now(), revoked_at timestamptz, primary key (app_id, institution_id));
+
+create table if not exists biz.subprocessors(
+  id uuid primary key default gen_random_uuid(), vendor_account_id uuid references biz.accounts, name text not null, purpose text not null, location text not null,
+  touches_student_data boolean not null, dpa_contract_id uuid references biz.contracts, added_on date not null default current_date, notice_sent_on date, removed_on date,
+  check (not touches_student_data or dpa_contract_id is not null));
+
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'biz' loop execute format('alter table biz.%I enable row level security', t); end loop; end $$;
+create or replace function biz.staff(p_cap text) returns boolean language sql stable security definer set search_path = '' as $$ select ctl.can(p_cap, '00000000-0000-0000-0000-000000000000') $$;
+create policy acc_read on biz.accounts for select using (biz.staff('biz:read'));
+create policy con_read on biz.contacts for select using (biz.staff('biz:read'));
+create policy opp_read on biz.opportunities for select using (biz.staff('biz:read'));
+create policy ctr_read on biz.contracts for select using (biz.staff('contracts:read'));
+create policy pil_read on biz.pilots for select using (biz.staff('biz:read'));
+create policy pm_read on biz.pilot_measures for select using (biz.staff('biz:read'));
+create policy pa_read on biz.partner_apps for select using (biz.staff('biz:read'));
+create policy ai_read on biz.app_installs for select using (biz.staff('biz:read') or ctl.can('integration:view', institution_id));
+create policy sp_public on biz.subprocessors for select using (removed_on is null);   -- the public subprocessor list
+revoke insert, update, delete on all tables in schema biz from anon, authenticated;
+grant usage on schema biz to authenticated; grant select on all tables in schema biz to authenticated;
+
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+  ('biz:read','Read company CRM and pilots', false, '{}', 0),
+  ('contracts:read','Read the contracts register', false, '{}', 0),
+  ('contracts:sign','Record a signature within signing authority', true, '{contracts:approve}', 1),
+  ('records:read','Read official enrollment mirrors for a tenant', true, '{}', 0),
+  ('holds:read','Read holds for one office', false, '{}', 0),
+  ('handoffs:work','Work office handoffs for one office', false, '{}', 0)
+on conflict (key) do nothing;

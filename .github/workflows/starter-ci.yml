@@ -1,0 +1,68 @@
+name: starter-ci
+
+on:
+  pull_request:
+    paths: ["starter/**", ".github/workflows/starter-ci.yml"]
+  push:
+    branches: [main, claude/blissful-franklin-ixpmdc]
+    paths: ["starter/**", ".github/workflows/starter-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: starter
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/semester_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/semester_test
+      OPA_BASE_URL: http://127.0.0.1:8181
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2
+        with:
+          version: 1.4.2
+
+      # Version comes from starter/package.json (packageManager); do not also set it here.
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          package_json_file: starter/package.json
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: starter/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm policy:test
+
+      - name: Create test database
+        run: psql "postgres://postgres:postgres@localhost:5432/postgres" -c "create database semester_test"
+        env:
+          PGPASSWORD: postgres
+
+      - name: Start OPA
+        run: opa run -s -a 127.0.0.1:8181 policies/access.rego &
+
+      - name: Migrations and RLS SQL tests
+        run: pnpm db:test
+        env:
+          PGPASSWORD: postgres
+
+      - name: Unit and integration tests
+        run: pnpm test

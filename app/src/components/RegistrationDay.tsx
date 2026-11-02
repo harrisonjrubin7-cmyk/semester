@@ -32,6 +32,15 @@ import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { ConfirmDialog } from './ConfirmDialog';
 import { HANDOFF_STATUSES, WORDS, describe as describeHandoff, isStatus, report, startHandoff } from '../lib/handoff-status';
 
+const backupActionName = (
+  action: 'Move up' | 'Move down' | 'Remove',
+  backup: CatalogCourse,
+  primary: CatalogCourse,
+  index: number,
+  count: number,
+) =>
+  `${action} backup ${index + 1} of ${count}, ${backup.code} section ${backup.section}: ${backup.title} · ${backup.term}, for ${primary.code} section ${primary.section}: ${primary.title}`;
+
 /**
  * The registration-day tab of the registration workspace.
  *
@@ -349,20 +358,20 @@ export function RegistrationDay({
                         <span className="portal-actions">
                           <button
                             disabled={i === 0}
-                            aria-label={`Move ${b.code} section ${b.section} up`}
+                            aria-label={backupActionName('Move up', b, primary, i, chosen.length)}
                             onClick={() => library.update((d) => moveBackup(d, primary.id, id, -1))}
                           >
                             Up
                           </button>
                           <button
                             disabled={i === chosen.length - 1}
-                            aria-label={`Move ${b.code} section ${b.section} down`}
+                            aria-label={backupActionName('Move down', b, primary, i, chosen.length)}
                             onClick={() => library.update((d) => moveBackup(d, primary.id, id, 1))}
                           >
                             Down
                           </button>
                           <button
-                            aria-label={`Remove backup ${b.code} section ${b.section}`}
+                            aria-label={backupActionName('Remove', b, primary, i, chosen.length)}
                             onClick={() => library.update((d) => removeBackup(d, primary.id, id))}
                           >
                             Remove

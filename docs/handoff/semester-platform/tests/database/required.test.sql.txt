@@ -1,0 +1,143 @@
+-- tests/database/required.test.sql — pgTAP. Strip .txt. Run: supabase test db
+-- Implements tests/REQUIRED.md. Each test asserts the allowed case AND the denied case.
+-- Seeds two institutions (A, B), people S, T (students A), I (instructor A, section X), V (advisor of S), O (outsider B).
+-- Not run yet: fix ids/columns against the applied schema before trusting a pass.
+begin;
+create extension if not exists pgtap;
+select plan(40);
+
+-- ---------- helpers
+create or replace function pg_temp.as_user(uid uuid) returns void language sql as $$
+  select set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true), set_config('role', 'authenticated', true) $$;
+create or replace function pg_temp.as_admin() returns void language sql as $$ select set_config('role', 'postgres', true) $$;
+
+-- ---------- seed (as owner)
+insert into auth.users(id, email) values
+ ('00000000-0000-0000-0000-0000000000a1','s@a.edu'),('00000000-0000-0000-0000-0000000000a2','t@a.edu'),('00000000-0000-0000-0000-0000000000a3','i@a.edu'),
+ ('00000000-0000-0000-0000-0000000000a4','v@a.edu'),('00000000-0000-0000-0000-0000000000b1','o@b.edu');
+insert into core.institutions(id, name) values ('10000000-0000-0000-0000-00000000000a','A'),('10000000-0000-0000-0000-00000000000b','B');
+insert into core.profiles(id, institution_id, display_name, role) values
+ ('00000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-00000000000a','S','student'),('00000000-0000-0000-0000-0000000000a2','10000000-0000-0000-0000-00000000000a','T','student'),
+ ('00000000-0000-0000-0000-0000000000a3','10000000-0000-0000-0000-00000000000a','I','faculty'),('00000000-0000-0000-0000-0000000000a4','10000000-0000-0000-0000-00000000000a','V','advisor'),
+ ('00000000-0000-0000-0000-0000000000b1','10000000-0000-0000-0000-00000000000b','O','student');
+insert into acad.terms(id, institution_id, code, name, starts_on, ends_on) values ('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','2027SP','Spring 2027','2027-01-11','2027-05-07');
+insert into acad.courses(id, institution_id, subject, number, title, credits) values ('30000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','CHEM','210','Organic Chemistry',4);
+insert into acad.sections(id, institution_id, course_id, term_id, code) values
+ ('40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','02'),
+ ('40000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001','03');
+insert into acad.teaching_assignments(section_id, institution_id, person_id, responsibility) values ('40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a3','instructor_of_record');
+insert into acad.enrollments(section_id, person_id, institution_id, role, status) values
+ ('40000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-00000000000a','student','enrolled'),
+ ('40000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-0000000000a2','10000000-0000-0000-0000-00000000000a','student','enrolled');
+insert into acad.advising_assignments(advisor_id, student_id, institution_id) values ('00000000-0000-0000-0000-0000000000a4','00000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-00000000000a');
+insert into work.assignments(id, institution_id, section_id, title, state) values ('50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000002','Lab 3','published');
+insert into learn.modules(id, section_id, institution_id, title, position, state) values
+ ('60000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-00000000000a','Week 1',1,'published'),
+ ('60000000-0000-0000-0000-000000000002','40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-00000000000a','Week 2 (draft)',2,'draft');
+insert into learn.submissions(id, assignment_id, institution_id, student_id, state, submitted_at, receipt_code, idempotency_key) values
+ ('70000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a1','submitted',now(),'SUB-AAAAAA','k1');
+insert into acad.readiness_items(id, institution_id, person_id, term_id, item, state, source, freshness) values
+ ('80000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a1','20000000-0000-0000-0000-000000000001','hold','blocked','Banner SIS','fresh');
+
+-- 1 Tenant isolation
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b1');
+select is((select count(*) from acad.sections)::int, 0, '1a outsider sees no sections of A');
+select is((select count(*) from acad.readiness_items)::int, 0, '1b outsider sees no readiness of A');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select ok((select count(*) from acad.sections) > 0, '1c member sees own institution sections');
+
+-- 2 Section scope
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select is((select count(*) from learn.submissions)::int, 1, '2a instructor reads submissions of taught section');
+select is((select count(*) from learn.modules where section_id = '40000000-0000-0000-0000-000000000003')::int, 0, '2b instructor reads nothing of untaught section');
+
+-- 3 Own submission
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select is((select count(*) from learn.submissions)::int, 1, '3a student reads own submission');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select is((select count(*) from learn.submissions)::int, 0, '3b classmate reads none');
+
+-- 4 Draft invisibility
+select is((select count(*) from learn.modules where state = 'draft')::int, 0, '4a student sees no draft module');
+select is((select count(*) from learn.modules)::int, 1, '4b student sees published module');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select is((select count(*) from learn.modules)::int, 2, '4c instructor sees drafts');
+
+-- 5 Client writes denied
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select throws_ok($$ insert into learn.submissions(assignment_id, institution_id, student_id) values ('50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a1') $$, '42501', null, '5a direct insert into submissions denied');
+select throws_ok($$ update acad.readiness_items set state = 'ready_as_of' $$, '42501', null, '5b direct update of readiness denied');
+select lives_ok($$ insert into work.tasks(title) values ('Read chapter 4') $$, '5c personal task insert allowed');
+
+-- 6 Cross-tenant FK
+select pg_temp.as_admin();
+select throws_ok($$ insert into learn.modules(section_id, institution_id, title, position) values ('40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-00000000000b','x',9) $$, '23503', null, '6 module with other tenant id on A section rejected');
+
+-- 11 Idempotent submission (same key → same receipt)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select is(api.submit_work('50000000-0000-0000-0000-000000000001', '{}'::uuid[], 'k1'), 'SUB-AAAAAA', '11a same key returns the original receipt');
+select is((select count(*) from learn.submissions where student_id = '00000000-0000-0000-0000-0000000000a1')::int, 1, '11b no duplicate submission');
+
+-- 15 Ready needs evidence
+select pg_temp.as_admin();
+select throws_ok($$ update acad.readiness_items set state = 'ready_as_of', as_of = null where id = '80000000-0000-0000-0000-000000000001' $$, '23514', null, '15a ready without time rejected');
+select lives_ok($$ update acad.readiness_items set state = 'ready_as_of', as_of = now(), freshness = 'fresh' where id = '80000000-0000-0000-0000-000000000001' $$, '15b ready with fresh time allowed');
+update acad.readiness_items set state = 'blocked', as_of = null where id = '80000000-0000-0000-0000-000000000001';
+
+-- 16 Route then resolve → stale, never ready
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select lives_ok($$ select api.route_blocker('80000000-0000-0000-0000-000000000001', 'bursar', array['name','student_id','hold_reference']) $$, '16a student routes own blocker');
+select throws_ok($$ select api.route_blocker('80000000-0000-0000-0000-000000000001', 'bursar', array['transcript']) $$, 'P0001', 'FIELDS_NOT_ALLOWED', '16b disallowed shared field refused');
+select is((select state from acad.readiness_items where id = '80000000-0000-0000-0000-000000000001'), 'handoff_pending', '16c item is handoff_pending');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select throws_ok($$ select api.route_blocker('80000000-0000-0000-0000-000000000001', 'bursar', array['name']) $$, 'P0001', 'NOT_FOUND', '16d classmate cannot route another student''s blocker');
+
+-- 17 Support window ≤ 4 h
+select pg_temp.as_admin();
+insert into opsx.support_cases(id, institution_id, requester_id, channel, category, subject, assignee_id) values ('90000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a1','in_app','login','Cannot see schedule','00000000-0000-0000-0000-0000000000a4');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select throws_ok($$ select api.approve_support_access('90000000-0000-0000-0000-000000000001', array['schedule'], 241) $$, 'P0001', 'INVALID_DURATION', '17a 241 minutes refused');
+select lives_ok($$ select api.approve_support_access('90000000-0000-0000-0000-000000000001', array['schedule'], 60) $$, '17b 60 minutes approved');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select throws_ok($$ select api.approve_support_access('90000000-0000-0000-0000-000000000001', array['schedule'], 60) $$, 'P0001', 'NOT_FOUND', '17c only the requester can approve');
+
+-- 18 AI grade review
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select lives_ok($$ select api.record_grade('50000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000a1', 32, null, true) $$, '18a AI-suggested draft grade recorded');
+select throws_ok($$ select api.submit_grades_for_approval('50000000-0000-0000-0000-000000000001') $$, 'P0001', 'UNREVIEWED_AI_SUGGESTIONS', '18b unreviewed AI grade blocks submission');
+select lives_ok($$ select api.record_grade('50000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000a1', 33, 'reviewed', false) $$, '18c human review clears it');
+select is(api.submit_grades_for_approval('50000000-0000-0000-0000-000000000001'), 1, '18d one grade submitted for approval');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select throws_ok($$ select api.record_grade('50000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000a1', 50, 'x', false) $$, 'P0001', 'FORBIDDEN', '18e student cannot grade');
+
+-- 21 Separation of duties
+select pg_temp.as_admin();
+select throws_ok($$ insert into cofin.expense_claims(employee_id, amount_cents, category, approver_id) values ('00000000-0000-0000-0000-0000000000a3', 100, 'travel', '00000000-0000-0000-0000-0000000000a3') $$, '23514', null, '21a self-approved expense rejected');
+select throws_ok($$ insert into ops.repair_requests(description, sql_ref, requested_by, approved_by) values ('x','y','00000000-0000-0000-0000-0000000000a3','00000000-0000-0000-0000-0000000000a3') $$, '23514', null, '21b self-approved repair rejected');
+
+-- 22 Production deploy approval
+insert into ops.builds(id, commit_sha, branch, state) values ('a0000000-0000-0000-0000-000000000001','abc','main','passed');
+select throws_ok($$ insert into ops.deployments(build_id, environment, state) values ('a0000000-0000-0000-0000-000000000001','production','live') $$, '23514', null, '22a production live without approver rejected');
+select lives_ok($$ insert into ops.deployments(build_id, environment, state) values ('a0000000-0000-0000-0000-000000000001','staging','live') $$, '22b staging needs no approver');
+
+-- 23 Invitation (requires a membership.invite grant for V at A)
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values ('membership.invite','x',false,'{}',0) on conflict do nothing;
+insert into ctl.grants(person_id, capability, tenant_id, granted_by, reason) values ('00000000-0000-0000-0000-0000000000a4','membership.invite','10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a4','test');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a4');
+select is(api.issue_invitation('10000000-0000-0000-0000-00000000000a','new@a.edu','student','h1'), api.issue_invitation('10000000-0000-0000-0000-00000000000a','NEW@a.edu','student','h2'), '23a duplicate invitation returns the same id');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select throws_ok($$ select api.issue_invitation('10000000-0000-0000-0000-00000000000a','x@a.edu','student','h3') $$, 'P0001', 'FORBIDDEN', '23b student cannot invite');
+select throws_ok($$ select api.accept_invitation('h1') $$, 'P0001', 'FORBIDDEN', '23c wrong signed-in email cannot accept');
+
+-- 24 Accommodation visibility
+select pg_temp.as_admin();
+insert into svc.accommodation_plans(institution_id, student_id, instructions_for_faculty, extra_time_pct, effective_from, approved_by) values ('10000000-0000-0000-0000-00000000000a','00000000-0000-0000-0000-0000000000a1','Extended time 50% on timed assessments',50,current_date,'00000000-0000-0000-0000-0000000000a4');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select is((select count(*) from svc.accommodation_plans)::int, 1, '24a instructor sees plan for enrolled student');
+select is((select count(*) from svc.restricted_cases)::int, 0, '24b instructor sees no restricted case');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select is((select count(*) from svc.accommodation_plans)::int, 0, '24c classmate sees no plan');
+
+-- 7–10, 12–14, 19, 20: document, signature, retention, file, outbox and sensitivity tests live in documents.test.sql.txt (next file).
+select * from finish();
+rollback;

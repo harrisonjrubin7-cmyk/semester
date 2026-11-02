@@ -1,0 +1,22 @@
+{
+  "status": "DRAFT_UNRESOLVED",
+  "commit_sha": null,
+  "deployment_id": null,
+  "hosting_provider": null,
+  "database_project": null,
+  "schema_fingerprint": null,
+  "migration_checksums": {},
+  "edge_function_versions": {},
+  "worker_versions": {},
+  "build_environment_fingerprint": null,
+  "runtime_policy_version": null,
+  "flag_snapshot_version": null,
+  "security_scope": null,
+  "cohort": null,
+  "allowed_operations": [],
+  "predecessor_manifest": null,
+  "rollback_compatibility_report": null,
+  "evidence_references": [],
+  "approvers": [],
+  "activation_expires_at": null
+}

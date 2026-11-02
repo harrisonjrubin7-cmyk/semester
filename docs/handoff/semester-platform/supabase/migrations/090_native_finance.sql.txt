@@ -1,0 +1,143 @@
+-- 090_native_finance.sql — native ledger, payment rails, attempts, events, settlement, refunds with approval.
+-- RECONCILE FIRST: the production repo already has commercial_products/plans/prices, billing_accounts, quotes, contracts,
+-- subscriptions, invoices, payment_events, credits_refunds, dunning_cases, student_account_entries, student_payment_plans.
+-- Phase 0 must map these tables onto the existing ones; extend, never duplicate. Everything here is `if not exists` and in schema fin.
+-- Ledger design, tax and revenue recognition need review by a qualified accountant before production use.
+create schema if not exists fin;
+
+create table if not exists fin.ledger_accounts(
+  code text primary key, name text not null,
+  type text not null check (type in ('asset','liability','revenue','contra_revenue','expense','equity')),
+  scope text not null default 'company' check (scope in ('company','student_account')));
+insert into fin.ledger_accounts(code,name,type,scope) values
+ ('AR','Accounts Receivable','asset','company'),('DEF','Deferred Revenue','liability','company'),('REV','Recognized Revenue','revenue','company'),
+ ('CASH','Cash Clearing','asset','company'),('REFUND','Refunds & Credits','contra_revenue','company'),('WO','Bad Debt / Write-offs','expense','company'),
+ ('DISP','Disputed Funds','asset','company'),('FEES','Processor Fees','expense','company'),
+ ('SREC','Student Receivable','asset','student_account'),('ICHG','Institution Charge','liability','student_account'),('SCHOL','Scholarship Funding','liability','student_account')
+on conflict do nothing;
+
+create table if not exists fin.ledger_journals(
+  id uuid primary key default gen_random_uuid(),
+  memo text not null, source_event text not null, idempotency_key text not null unique,
+  effective_date date not null default current_date, created_at timestamptz not null default now(), created_by uuid default auth.uid(),
+  currency char(3) not null default 'USD',
+  institution_id uuid, customer_ref text, person_id uuid,           -- scope: exactly what the entry belongs to
+  reversal_of uuid references fin.ledger_journals, approval_ref uuid, external_payment_ref text,
+  reconciliation_status text not null default 'unmatched' check (reconciliation_status in ('unmatched','matched','exception')),
+  legal_hold boolean not null default false);
+
+create table if not exists fin.ledger_lines(
+  id bigserial primary key, journal_id uuid not null references fin.ledger_journals on delete restrict,
+  account text not null references fin.ledger_accounts,
+  debit_cents bigint not null default 0 check (debit_cents >= 0), credit_cents bigint not null default 0 check (credit_cents >= 0),
+  check ((debit_cents = 0) <> (credit_cents = 0)));
+
+-- Balanced journals: checked at commit so lines can be inserted one by one inside the posting function.
+create or replace function fin.assert_balanced() returns trigger language plpgsql as $$
+declare d bigint; c bigint; begin
+  select coalesce(sum(debit_cents),0), coalesce(sum(credit_cents),0) into d, c from fin.ledger_lines where journal_id = new.journal_id;
+  if d <> c then raise exception 'unbalanced journal % (debits % credits %)', new.journal_id, d, c; end if; return null; end $$;
+drop trigger if exists ledger_balanced on fin.ledger_lines;
+create constraint trigger ledger_balanced after insert on fin.ledger_lines deferrable initially deferred for each row execute function fin.assert_balanced();
+
+-- Immutable: no updates or deletes on ledger rows. Corrections are reversal journals.
+create or replace function fin.deny_mutation() returns trigger language plpgsql as $$ begin raise exception 'ledger is append-only; post a reversal'; end $$;
+drop trigger if exists ledger_lines_immutable on fin.ledger_lines;
+create trigger ledger_lines_immutable before update or delete on fin.ledger_lines for each row execute function fin.deny_mutation();
+drop trigger if exists ledger_journals_immutable on fin.ledger_journals;
+create trigger ledger_journals_immutable before delete on fin.ledger_journals for each row execute function fin.deny_mutation();
+create or replace function fin.journal_update_guard() returns trigger language plpgsql as $$ begin
+  if (new.memo, new.source_event, new.idempotency_key, new.effective_date, new.currency, new.reversal_of) is distinct from (old.memo, old.source_event, old.idempotency_key, old.effective_date, old.currency, old.reversal_of)
+  then raise exception 'journal fields are immutable; only reconciliation_status and legal_hold may change'; end if; return new; end $$;
+drop trigger if exists ledger_journals_guard on fin.ledger_journals;
+create trigger ledger_journals_guard before update on fin.ledger_journals for each row execute function fin.journal_update_guard();
+
+create table if not exists fin.payment_rails(
+  id text primary key, kind text not null check (kind in ('card','ach','bank_transfer','wire','wallet','institution_po','invoice_terms','campus_card','financial_aid')),
+  provider text not null, status text not null default 'draft' check (status in ('draft','enabled','paused','retired')),
+  supported_currencies text[] not null default '{USD}', capabilities jsonb not null default '{}');
+
+create table if not exists fin.payment_attempts(
+  id uuid primary key default gen_random_uuid(), rail_id text not null references fin.payment_rails,
+  idempotency_key text not null unique, amount_cents bigint not null check (amount_cents > 0), currency char(3) not null default 'USD',
+  payment_method_token text,                       -- provider token only; raw card data never stored
+  status text not null default 'draft' check (status in ('draft','method_collected','auth_pending','requires_action','authorized','captured','processing','settled','reconciled','entitlement_active','failed','cancelled','refunded','partially_refunded','disputed','chargeback','written_off','collections')),
+  institution_id uuid, customer_ref text, person_id uuid, entitlement_key text, created_at timestamptz not null default now());
+
+create table if not exists fin.payment_transitions(
+  id bigserial primary key, attempt_id uuid not null references fin.payment_attempts, from_status text not null, to_status text not null,
+  idempotency_key text not null unique, provider_event_id text, journal_id uuid references fin.ledger_journals,
+  entitlement_effect text, notification_rule text, reconciliation_status text, actor uuid default auth.uid(), at timestamptz not null default now());
+
+create table if not exists fin.provider_events(
+  provider text not null, provider_event_id text not null, type text not null, payload_hash text not null,
+  verified boolean not null, received_at timestamptz not null default now(), processed_at timestamptz,
+  primary key (provider, provider_event_id));     -- replayed webhooks are no-ops
+
+create table if not exists fin.settlement_batches(id text primary key, rail_id text references fin.payment_rails, settled_on date not null, total_cents bigint not null);
+create table if not exists fin.settlement_lines(id bigserial primary key, batch_id text references fin.settlement_batches, attempt_id uuid references fin.payment_attempts, amount_cents bigint not null, fee_cents bigint not null default 0, matched boolean not null default false);
+
+create table if not exists fin.refund_requests(
+  id uuid primary key default gen_random_uuid(), attempt_id uuid not null references fin.payment_attempts, amount_cents bigint not null check (amount_cents > 0),
+  reason text not null, requested_by uuid not null default auth.uid(), required_approvals int not null,
+  status text not null default 'pending' check (status in ('pending','approved','rejected','executed')), created_at timestamptz not null default now());
+create table if not exists fin.refund_approvals(request_id uuid references fin.refund_requests, approver uuid not null default auth.uid(), at timestamptz not null default now(), primary key (request_id, approver));
+
+-- Thresholds (planning values; finance policy owns them): <= $100 auto, <= $5,000 one approver, above that two.
+create or replace function fin.required_approvals(cents bigint) returns int language sql immutable as $$ select case when cents <= 10000 then 0 when cents <= 500000 then 1 else 2 end $$;
+
+-- Valid transitions — the server is the authority, never the client.
+create or replace function fin.allowed_transition(f text, t text) returns boolean language sql immutable as $$
+ select (f,t) in (('draft','method_collected'),('method_collected','auth_pending'),('auth_pending','authorized'),('auth_pending','failed'),('auth_pending','requires_action'),
+  ('requires_action','auth_pending'),('requires_action','cancelled'),('authorized','captured'),('authorized','cancelled'),('captured','processing'),('processing','settled'),('processing','failed'),
+  ('settled','reconciled'),('reconciled','entitlement_active'),('entitlement_active','refunded'),('entitlement_active','partially_refunded'),('entitlement_active','disputed'),
+  ('partially_refunded','refunded'),('partially_refunded','disputed'),('disputed','entitlement_active'),('disputed','chargeback'),('chargeback','written_off'),('chargeback','collections'),
+  ('collections','entitlement_active'),('collections','written_off')) $$;
+
+create or replace function fin.is_finance() returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from ops.staff where id = auth.uid() and role in ('ceo','cfo','finance')) $$;
+
+-- Command: post a balanced journal (service role or finance staff only).
+create or replace function api.post_journal(p_memo text, p_source text, p_idem text, p_lines jsonb, p_customer text default null, p_person uuid default null)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare j uuid; l jsonb; begin
+  if not fin.is_finance() and coalesce(auth.role(),'') <> 'service_role' then raise exception 'not permitted'; end if;
+  select id into j from fin.ledger_journals where idempotency_key = p_idem; if j is not null then return j; end if;   -- idempotent
+  insert into fin.ledger_journals(memo, source_event, idempotency_key, customer_ref, person_id) values (p_memo, p_source, p_idem, p_customer, p_person) returning id into j;
+  for l in select * from jsonb_array_elements(p_lines) loop
+    insert into fin.ledger_lines(journal_id, account, debit_cents, credit_cents) values (j, l->>'account', coalesce((l->>'debit')::bigint,0), coalesce((l->>'credit')::bigint,0));
+  end loop;
+  insert into audit.events(actor, action, target, after) values (auth.uid(), 'ledger.posted', j::text, jsonb_build_object('memo', p_memo, 'source', p_source));
+  return j; end $$;
+
+-- Command: approve a refund (two-person rule: requester cannot approve).
+create or replace function api.approve_refund(p_request uuid) returns text language plpgsql security definer set search_path = '' as $$
+declare r fin.refund_requests; n int; begin
+  if not fin.is_finance() then raise exception 'not permitted'; end if;
+  select * into r from fin.refund_requests where id = p_request for update;
+  if r.requested_by = auth.uid() then raise exception 'requester cannot approve own refund'; end if;
+  insert into fin.refund_approvals(request_id) values (p_request) on conflict do nothing;
+  select count(*) into n from fin.refund_approvals where request_id = p_request;
+  if n >= r.required_approvals then update fin.refund_requests set status = 'approved' where id = p_request; end if;
+  insert into audit.events(actor, action, target) values (auth.uid(), 'refund.approved', p_request::text);
+  return (select status from fin.refund_requests where id = p_request); end $$;
+
+alter table fin.ledger_journals enable row level security; alter table fin.ledger_lines enable row level security;
+alter table fin.payment_rails enable row level security; alter table fin.payment_attempts enable row level security;
+alter table fin.payment_transitions enable row level security; alter table fin.provider_events enable row level security;
+alter table fin.settlement_batches enable row level security; alter table fin.settlement_lines enable row level security;
+alter table fin.refund_requests enable row level security; alter table fin.refund_approvals enable row level security;
+create policy fin_read_j on fin.ledger_journals for select using (fin.is_finance() or person_id = auth.uid());
+create policy fin_read_l on fin.ledger_lines for select using (exists(select 1 from fin.ledger_journals j where j.id = journal_id and (fin.is_finance() or j.person_id = auth.uid())));
+create policy fin_read_r on fin.payment_rails for select using (fin.is_finance());
+create policy fin_read_a on fin.payment_attempts for select using (fin.is_finance() or person_id = auth.uid());
+create policy fin_read_t on fin.payment_transitions for select using (fin.is_finance());
+create policy fin_read_e on fin.provider_events for select using (fin.is_finance());
+create policy fin_read_sb on fin.settlement_batches for select using (fin.is_finance());
+create policy fin_read_sl on fin.settlement_lines for select using (fin.is_finance());
+create policy fin_read_rr on fin.refund_requests for select using (fin.is_finance());
+create policy fin_read_ra on fin.refund_approvals for select using (fin.is_finance());
+-- No insert/update/delete policies: all writes go through api.* commands or the service-role webhook worker.
+revoke insert, update, delete on all tables in schema fin from anon, authenticated;
+grant usage on schema fin to authenticated; grant select on all tables in schema fin to authenticated;
+grant execute on function api.post_journal(text,text,text,jsonb,text,uuid), api.approve_refund(uuid) to authenticated;

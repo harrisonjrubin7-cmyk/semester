@@ -60,6 +60,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER },
   { fn: 'fetchcal', guards: ['user-token'], evidence: USER },
   { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/] },
+  { fn: 'access-saga-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/, /access_saga_tick_authorized/] },
   { fn: 'ops-projector', guards: ['shared-secret'], evidence: [/OPS_PROJECTOR_SECRET/, /serveOpsProjector\(/] },
   {
     fn: 'lead-intake',

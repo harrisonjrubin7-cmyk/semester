@@ -1,0 +1,17 @@
+flowchart TD
+  UI[One Semester shell / Action Center / Search / Workspace] --> API[Authenticated domain APIs]
+  API --> PDP[Membership + capabilities + consent + classification]
+  PDP --> Gate[Existing release + activation + flag evaluators]
+  Gate --> Domain[Domain command services]
+  Domain --> DB[Canonical data + revisions + provenance + audit]
+  Domain --> Outbox[Transactional outbox]
+  Outbox --> Worker[Idempotent workers / retry / DLQ]
+  Worker --> Gate
+  Worker --> Adapter[Approved SIS / LMS / campus / payment adapters]
+  Adapter --> Recon[Authoritative receipts + reconciliation]
+  Recon --> DB
+  PDP --> AI[Policy-controlled AI gateway]
+  AI --> Source[Authorized source retrieval]
+  AI --> Broker[Bounded tools / exact confirmation / human authority]
+  Broker --> Gate
+  Domain --> Obs[Sanitized telemetry / alert / staffed support]

@@ -175,7 +175,7 @@ function Kept() {
     <>
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What you keep for yourself</SectionLabel>
 
-      {rest.map((r) => (
+      {rest.map((r, index) => (
         <div key={r.id} style={{ marginBottom: 'var(--sp-5)' }}>
           <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
             <input
@@ -191,7 +191,7 @@ function Kept() {
             <button
               type="button"
               className="bare"
-              aria-label={`Remove ${r.label || 'this block'}`}
+              aria-label={`Remove protected time ${index + 1} of ${rest.length}, ${r.label || 'Unnamed block'}: ${DAYS.filter((day) => r.days.includes(day.day)).map((day) => day.name).join(', ') || 'no days selected'} · ${clock(r.from)}–${clock(r.to)}`}
               onClick={() => dispatch({ type: 'dropRest', id: r.id })}
               style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >

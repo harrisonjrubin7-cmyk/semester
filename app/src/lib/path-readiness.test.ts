@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEETINGS, namedAgendaText, type Meeting } from './advisor-meeting';
 import { CHECKLIST, EMPTY_REGISTRATION_DAY } from './registration-day';
-import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
+import { CATALOG_FRESH_DAYS, namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
 
 const course = (id: string, start: number, end: number): CatalogCourse => ({
@@ -140,6 +140,27 @@ describe('overall readiness', () => {
     return overallReadiness(pathReadiness(input), readinessFacts(input));
   };
 
+  it('will not say Ready on a catalog imported longer ago than it stays fresh', () => {
+    // Phase 3, domain B: stale data cannot produce a false "ready". The steps
+    // are all done; only the import's age stands between them and Ready.
+    const now = new Date('2026-10-12T12:00:00Z');
+    const fresh = base({ catalog: [a], cart: [a], importedAt: '2026-10-01T00:00:00Z', now });
+    const stale = base({ catalog: [a], cart: [a], importedAt: '2026-08-01T00:00:00Z', now });
+    const done = pathReadiness(fresh).map((item) => ({ ...item, state: 'ready' as const }));
+    expect(overallReadiness(done, readinessFacts(fresh)).state).toBe('ready');
+    const old = overallReadiness(done, readinessFacts(stale));
+    expect(old.state).toBe('unavailable');
+    expect(old.why).toContain('72 days');
+    expect(old.why).toContain(`${CATALOG_FRESH_DAYS} days`);
+    // Exactly at the limit is still fresh; one day past it is not.
+    const edge = (days: number) => readinessFacts(base({ catalog: [a], cart: [a], now, importedAt: new Date(now.getTime() - days * 86_400_000).toISOString() }));
+    expect(overallReadiness(done, edge(CATALOG_FRESH_DAYS)).state).toBe('ready');
+    expect(overallReadiness(done, edge(CATALOG_FRESH_DAYS + 1)).state).toBe('unavailable');
+    // No import date (a catalog that was never imported, or an old record) says nothing about age.
+    expect(readinessFacts(base({ catalog: [a], cart: [a], now })).catalogAgeDays).toBeNull();
+    expect(readinessFacts(base({ catalog: [a], cart: [a], now, importedAt: 'not a date' })).catalogAgeDays).toBeNull();
+  });
+
   it('says information is unavailable, not "not started", when there is no catalog to check against', () => {
     expect(overall({}).state).toBe('unavailable');
     expect(overall({}).why).toContain('cannot be checked');
@@ -159,7 +180,7 @@ describe('overall readiness', () => {
 
   it('counts steps: getting ready, then almost ready, then ready', () => {
     const items = pathReadiness(base({ catalog: [a, b, c] }));
-    const facts = { catalogSize: 3, conflicts: 0, unchecked: 0 };
+    const facts = { catalogSize: 3, conflicts: 0, unchecked: 0, catalogAgeDays: null };
     const withReady = (n: number) => items.map((item, i) => ({ ...item, state: i < n ? ('ready' as const) : ('not_started' as const) }));
     expect(overallReadiness(withReady(2), facts)).toMatchObject({ state: 'getting_ready' });
     expect(overallReadiness(withReady(7), facts)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('Two steps left') });
@@ -192,7 +213,7 @@ describe('overall readiness', () => {
 
   it('ready still says the official system decides', () => {
     const items = pathReadiness(base({ catalog: [a] })).map((item) => ({ ...item, state: 'ready' as const }));
-    expect(overallReadiness(items, { catalogSize: 1, conflicts: 0, unchecked: 0 }).why).toContain('official system still decide');
+    expect(overallReadiness(items, { catalogSize: 1, conflicts: 0, unchecked: 0, catalogAgeDays: null }).why).toContain('official system still decide');
   });
 
   it('is unavailable, not ready, when a selected section has no meeting times to check', () => {
@@ -218,5 +239,69 @@ describe('overall readiness', () => {
   it('a real conflict still blocks even when another section has no times', () => {
     const noTimes: CatalogCourse = { ...course('d', 0, 0), meetings: [] };
     expect(overall({ cart: [a, b, noTimes], catalog: [a, b, noTimes] }).state).toBe('blocked');
+  });
+});
+
+describe('named courses against an imported catalog', () => {
+  const base: PathReadinessInput = {
+    pathConfigured: false, requirementTotal: 0, cart: [], catalog: [],
+    registration: EMPTY_REGISTRATION_DAY, meetings: EMPTY_MEETINGS, institution: 'Northstar University',
+  };
+
+  it('says which named codes have no section in the imported catalog, and keeps them listed', () => {
+    const items = pathReadiness({
+      ...base,
+      namedCourses: [{ code: 'ECON 1020', term: 'Fall 2026' }, { code: 'A', term: null }],
+      catalog: [course('a', 540, 600)],
+    });
+    const named = items.find((item) => item.id === 'named');
+    expect(named?.unmatched).toEqual(['ECON 1020']);
+    expect(named?.detail).toMatch(/ECON 1020/);
+    expect(named?.detail).toMatch(/not in the imported catalog/i);
+    expect(named?.detail).toMatch(/Northstar University/);
+    // Still a course the student named, still not a seat.
+    expect(named?.detail).toMatch(/not an enrollment, a section, or a seat/i);
+    expect(items.find((item) => item.id === 'courses')?.state).toBe('not_started');
+  });
+
+  it('matches a code regardless of case and spacing, and never claims a match with no catalog', () => {
+    const matched = pathReadiness({ ...base, namedCourses: [{ code: 'a', term: null }], catalog: [course('a', 540, 600)] })
+      .find((item) => item.id === 'named');
+    expect(matched?.unmatched).toEqual([]);
+    expect(matched?.detail).not.toMatch(/not in the imported catalog/i);
+
+    const noCatalog = pathReadiness({ ...base, namedCourses: [{ code: 'ECON 1020', term: null }], catalog: [] })
+      .find((item) => item.id === 'named');
+    expect(noCatalog?.unmatched).toEqual([]);
+    expect(noCatalog?.detail).not.toMatch(/catalog/i);
+  });
+
+  it('stays unmatched until a later import carries the code, without inventing a cart section', () => {
+    const named = [{ code: 'ECON 1020', term: 'Fall 2026' }];
+    const before = pathReadiness({ ...base, namedCourses: named, catalog: [course('a', 540, 600)] });
+    const after = pathReadiness({ ...base, namedCourses: named, catalog: [course('a', 540, 600), course('econ 1020', 600, 660)] });
+    expect(before.find((item) => item.id === 'named')?.unmatched).toEqual(['ECON 1020']);
+    expect(after.find((item) => item.id === 'named')?.unmatched).toEqual([]);
+    // The cart is the student's choice. An import matching a named code adds nothing to it.
+    expect(after.find((item) => item.id === 'courses')?.state).toBe('not_started');
+  });
+
+  it('an unmatched code does not move the agenda state: on the agenda is still ready, and still not a seat', () => {
+    const named = [{ code: 'ECON 1020', term: 'Fall 2026' }];
+    const items = pathReadiness({
+      ...base,
+      namedCourses: named,
+      catalog: [course('a', 540, 600)],
+      meetings: { version: 1, meetings: [{ id: 'm', title: 'Plan', date: null, agenda: [{ id: 'a', text: namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' }) }], questions: [], attach: { scenario: null, courses: [], followUps: false }, followUps: [], notes: '', created: 1 }] },
+    });
+    const row = items.find((item) => item.id === 'named');
+    expect(row?.state).toBe('ready');
+    expect(row?.unmatched).toEqual(['ECON 1020']);
+    expect(row?.detail).toMatch(/not in the imported catalog/i);
+  });
+
+  it('every other row carries an empty unmatched list, so a renderer can read it without a guard', () => {
+    const items = pathReadiness(base);
+    expect(items.every((item) => Array.isArray(item.unmatched) && item.unmatched.length === 0)).toBe(true);
   });
 });

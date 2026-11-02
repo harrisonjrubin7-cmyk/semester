@@ -198,6 +198,7 @@ export type Outcome =
   | 'withdrawn'
   | 'override_granted'
   | 'denied'
+  | 'hold_resolved'
   | 'refused';
 
 export interface Answer {
@@ -270,6 +271,10 @@ export function explain(reason: string, where: string, serverMessage: string): s
       return 'That request is no longer waiting for a decision.';
     case 'bad_override':
       return 'An override needs at least one thing to waive and a reason. A hold cannot be waived here.';
+    case 'unknown_hold':
+      return 'That hold is not at your school. Nothing was changed.';
+    case 'stale_hold':
+      return 'Someone released this hold since you looked at it, so nothing was changed. Load the list again to see where it stands.';
     case 'idempotency_conflict':
       return 'That request was already used for something else. Nothing was changed. Try again.';
     default:
@@ -446,6 +451,83 @@ export async function putSection(s: SectionInput): Promise<string> {
   if (error) throw serviceError(error, 'The section was not saved.');
   return text(data);
 }
+
+// ── Holds, for the office that placed them ────────────────────────────────
+
+/** Held over one office scope, `<school>/<office>`, it lets that office resolve the holds it placed. */
+export const HOLD_RESOLVE_CAPABILITY = 'registration_hold:resolve';
+
+/**
+ * The office scopes at this school where these grants can resolve holds. Only
+ * an office grant counts: `private.has_capability` matches scope exactly, so
+ * a school-wide registrar grant does not reach an office's holds.
+ */
+export function holdOffices(grants: readonly Grant[], school: string): string[] {
+  if (!school) return [];
+  return [
+    ...new Set(
+      grants
+        .filter((g) => g.capability === HOLD_RESOLVE_CAPABILITY && g.scopeKind === 'office' && g.scopeId.startsWith(`${school}/`) && g.scopeId.length > school.length + 1)
+        .map((g) => g.scopeId),
+    ),
+  ].sort();
+}
+
+/** "hr-u/student-accounts" → "student-accounts": the office's own part of its scope. */
+export const officeName = (scope: string): string => scope.slice(scope.indexOf('/') + 1) || scope;
+
+export interface OfficeHold {
+  holdId: string;
+  /** The student's account id. The hold's reason is never read. */
+  student: string;
+  placedAt: string;
+}
+
+/** `registration_holds_for_office(office)`: this office's open holds, oldest first. Raises for any other office. */
+export async function loadOfficeHolds(office: string): Promise<OfficeHold[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('registration_holds_for_office', { want_office: office });
+  if (error) throw serviceError(error, 'Could not load this office’s holds.');
+  return rows(data).map((r) => ({ holdId: text(r.hold_id), student: text(r.student), placedAt: text(r.placed_at) }));
+}
+
+export interface HoldResolution extends Answer {
+  /** When the hold was released, from the server; the same on a replay. */
+  resolvedAt: string | null;
+}
+
+/**
+ * Resolve one hold, as the office that placed it. `expect` is what the office
+ * saw — the hold still held — so a hold a colleague or the SIS already
+ * released answers `stale_hold` and nothing is written.
+ */
+export async function resolveHold(holdId: string, key: string, expect: 'held' = 'held'): Promise<HoldResolution> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('registration_hold_resolve', { want_hold: holdId, want_key: key, want_expect: expect });
+  if (error) throw serviceError(error, 'The hold was not resolved.');
+  const r = object(data);
+  return { ...readAnswer(data, ''), resolvedAt: r.resolved_at ? text(r.resolved_at) : null };
+}
+
+/** One of the caller's own readiness evaluations, as the server answers for it now. */
+export interface ReadinessStanding {
+  term: string;
+  /** The store's state; `stale` once something it had read changed, such as a hold being resolved. */
+  state: string;
+  updatedAt: string;
+}
+
+/** `my_registration_readiness()`: the caller's own evaluations at their school, newest first. */
+export async function loadMyReadiness(): Promise<ReadinessStanding[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('my_registration_readiness');
+  if (error) throw serviceError(error, 'Could not check your registration readiness.');
+  return rows(data).map((r) => ({ term: text(r.term), state: text(r.state), updatedAt: text(r.updated_at) }));
+}
+
+/** The terms whose readiness the server no longer counts as current. */
+export const staleTerms = (standing: readonly ReadinessStanding[]): string[] =>
+  [...new Set(standing.filter((s) => s.state === 'stale').map((s) => s.term))].sort();
 
 // ── Small readings the screen shares ──────────────────────────────────────
 

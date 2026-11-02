@@ -1,0 +1,69 @@
+import {randomUUID} from 'node:crypto';
+import {z} from 'zod';
+import {transition,WorkflowError,type Snapshot} from './transition.js';
+import {tx,permissions,requirePermission,enqueue} from './db.js';
+const uuid=z.string().uuid();
+const state=z.enum(['draft','in_review','changes_requested','approved','awaiting_signature','effective','rejected','superseded','archived']);
+export const CommandSchema=z.object({action:z.enum(['submit','approve','request_changes','reject','request_signatures','activate','archive']),expectedState:state,reason:z.string().trim().min(1).max(2000),participants:z.array(uuid).max(20).optional()}).strict();
+export const CreateSchema=z.object({title:z.string().trim().min(1).max(300),documentType:z.string().trim().min(1).max(100),storageKey:z.string().min(1).max(1000),contentHash:z.string().regex(/^[0-9a-f]{64}$/),requiresSignature:z.boolean(),documentId:uuid.optional()}).strict();
+export async function executeTransition(tenant:string,user:string,version:string,key:string,input:unknown){
+ const command=CommandSchema.parse(input);
+ return tx(async db=>{
+  const perms=await permissions(db,tenant,user);
+  // Authorize BEFORE looking up a stored receipt, including replayed requests.
+  const actionPermission={submit:'document.submit',approve:'document.review',request_changes:'document.review',reject:'document.review',request_signatures:'document.sign_request',activate:'document.activate',archive:'document.archive'}[command.action];
+  requirePermission(perms,actionPermission);
+  const request={versionId:version,command};
+  await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`${tenant}:${user}:${key}`]);
+  const receipt=await db.query(`SELECT response,payload=$4::jsonb AS same FROM semester_live_private.receipts WHERE tenant_id=$1 AND actor_id=$2 AND request_key=$3`,[tenant,user,key,JSON.stringify(request)]);
+  if(receipt.rowCount){if(!receipt.rows[0].same)throw new WorkflowError('IDEMPOTENCY_CONFLICT','Key already used for different input');return receipt.rows[0].response;}
+  const link=await db.query(`SELECT document_id FROM semester_live.versions WHERE tenant_id=$1 AND id=$2`,[tenant,version]);
+  if(!link.rowCount)throw new WorkflowError('NOT_FOUND','Version unavailable');
+  const parent=await db.query(`SELECT legal_hold FROM semester_live.documents WHERE tenant_id=$1 AND id=$2 FOR UPDATE`,[tenant,link.rows[0].document_id]);
+  const row=await db.query(`SELECT * FROM semester_live.versions WHERE tenant_id=$1 AND id=$2 FOR UPDATE`,[tenant,version]);
+  const old:Snapshot={...row.rows[0].snapshot,legalHold:parent.rows[0].legal_hold};
+  // Never trust a client-supplied signature flag. Rebuild from verified DB evidence.
+  const signatures=await db.query(`SELECT signer_id FROM semester_live_private.signatures WHERE tenant_id=$1 AND version_id=$2 AND content_hash=$3`,[tenant,version,row.rows[0].content_hash]);
+  old.signedIds=signatures.rows.map(r=>r.signer_id);
+  if(command.action==='submit'||command.action==='request_signatures'){
+   for(const participant of command.participants??[]){const participantPerms=await permissions(db,tenant,participant);if(command.action==='submit')requirePermission(participantPerms,'document.review');}
+  }
+  const next=transition(old,command,{userId:user,permissions:perms});
+  if(next.state==='effective'){
+   const previous=await db.query(`SELECT id FROM semester_live.versions WHERE tenant_id=$1 AND document_id=$2 AND state='effective' AND id<>$3 FOR UPDATE`,[tenant,link.rows[0].document_id,version]);
+   for(const prior of previous.rows){
+    await db.query(`UPDATE semester_live.versions SET state='superseded',snapshot=jsonb_set(snapshot,'{state}','"superseded"'::jsonb) WHERE tenant_id=$1 AND id=$2`,[tenant,prior.id]);
+    await db.query(`INSERT INTO semester_live.events(tenant_id,version_id,actor_id,action,from_state,to_state,reason) VALUES($1,$2,$3,'supersede','effective','superseded','Replacement activated')`,[tenant,prior.id,user]);
+    await enqueue(db,tenant,randomUUID(),'document.superseded',{versionId:prior.id,replacementVersionId:version});
+   }
+  }
+  await db.query(`UPDATE semester_live.versions SET state=$3,snapshot=$4::jsonb WHERE tenant_id=$1 AND id=$2`,[tenant,version,next.state,JSON.stringify(next)]);
+  const eventId=randomUUID();
+  await db.query(`INSERT INTO semester_live.events(id,tenant_id,version_id,actor_id,action,from_state,to_state,reason) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[eventId,tenant,version,user,command.action,old.state,next.state,command.reason]);
+  await enqueue(db,tenant,eventId,`document.${command.action}`,{versionId:version,fromState:old.state,state:next.state});
+  const result={versionId:version,state:next.state,snapshot:next,eventId};
+  await db.query(`INSERT INTO semester_live_private.receipts(tenant_id,actor_id,request_key,payload,response) VALUES($1,$2,$3,$4::jsonb,$5::jsonb)`,[tenant,user,key,JSON.stringify(request),JSON.stringify(result)]);
+  return result;
+ });
+}
+export async function createVersion(tenant:string,user:string,input:unknown){
+ const body=CreateSchema.parse(input);
+ // Storage bytes/ownership MUST be validated by an upload service before invoking this.
+ return tx(async db=>{
+  requirePermission(await permissions(db,tenant,user),body.documentId?'document.revise':'document.create');
+  let documentId=body.documentId;
+  if(documentId){
+   const existing=await db.query(`SELECT id FROM semester_live.documents WHERE tenant_id=$1 AND id=$2 FOR UPDATE`,[tenant,documentId]);
+   if(!existing.rowCount)throw new WorkflowError('NOT_FOUND','Document unavailable');
+   const pending=await db.query(`SELECT 1 FROM semester_live.versions WHERE tenant_id=$1 AND document_id=$2 AND state IN ('draft','in_review','approved','awaiting_signature')`,[tenant,documentId]);
+   if(pending.rowCount)throw new WorkflowError('STATE_CONFLICT','An unfinished candidate already exists');
+  }else{const inserted=await db.query(`INSERT INTO semester_live.documents(tenant_id,title,document_type,created_by) VALUES($1,$2,$3,$4) RETURNING id`,[tenant,body.title,body.documentType,user]);documentId=inserted.rows[0].id;}
+  const number=await db.query(`SELECT coalesce(max(version_number),0)+1 AS n FROM semester_live.versions WHERE tenant_id=$1 AND document_id=$2`,[tenant,documentId]);
+  const snapshot:Snapshot={state:'draft',authorId:user,reviewerIds:[],approvalIds:[],requiresSignature:body.requiresSignature,signerIds:[],signedIds:[],legalHold:false};
+  const versionId=randomUUID();
+  await db.query(`INSERT INTO semester_live.versions(id,tenant_id,document_id,version_number,state,snapshot,storage_key,content_hash) VALUES($1,$2,$3,$4,'draft',$5::jsonb,$6,$7)`,[versionId,tenant,documentId,number.rows[0].n,JSON.stringify(snapshot),body.storageKey,body.contentHash]);
+  await enqueue(db,tenant,randomUUID(),'document.version_created',{documentId,versionId});
+  return {documentId,versionId,versionNumber:number.rows[0].n,snapshot};
+ });
+}
+export async function loadVersion(tenant:string,user:string,version:string){return tx(async db=>{requirePermission(await permissions(db,tenant,user),'document.read');const row=await db.query(`SELECT v.id,v.document_id,v.version_number,v.snapshot,d.title,d.legal_hold FROM semester_live.versions v JOIN semester_live.documents d ON d.tenant_id=v.tenant_id AND d.id=v.document_id WHERE v.tenant_id=$1 AND v.id=$2`,[tenant,version]);if(!row.rowCount)throw new WorkflowError('NOT_FOUND','Version unavailable');const r=row.rows[0];const evidence=await db.query(`SELECT s.signer_id FROM semester_live_private.signatures s JOIN semester_live.versions v ON v.tenant_id=s.tenant_id AND v.id=s.version_id WHERE s.tenant_id=$1 AND s.version_id=$2 AND s.content_hash=v.content_hash`,[tenant,version]);return {versionId:r.id,documentId:r.document_id,versionNumber:r.version_number,title:r.title,snapshot:{...r.snapshot,legalHold:r.legal_hold,signedIds:evidence.rows.map(s=>s.signer_id)}};});}

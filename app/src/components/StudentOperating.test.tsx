@@ -16,7 +16,7 @@ vi.mock('../state/store', () => ({
 let root: Root;
 let host: HTMLDivElement;
 beforeEach(() => {
-  stored = { ...DEFAULT_PERSISTED, ...initialEphemeral(), operatingWorkspace: JSON.stringify({ ...emptyOperating(), entries: [1,2,3,4].map(n => ({ ...emptyEntry('plan'), title: `Outcome ${n}` })) }) };
+  stored = { ...DEFAULT_PERSISTED, ...initialEphemeral(), operatingWorkspace: JSON.stringify({ ...emptyOperating(), manual: { style: 'daily', minutes: 10, format: 'checklist', stuck: 'smaller_step', notifications: 'none', quiet: false, noOpportunities: true, noAnalytics: true, noStudyBlocks: true, planningTime: '18:00', breaks: 'After 25 minutes', expires: '2026-12-15' }, entries: [1,2,3,4].map(n => ({ ...emptyEntry('plan'), title: `Outcome ${n}` })) }) };
   host = document.createElement('div'); document.body.append(host); root = createRoot(host);
   act(() => root.render(<StudentOperating />));
 });
@@ -51,6 +51,67 @@ describe('student-owned operating workflow', () => {
     act(() => button('Delete workspace').click());
     expect(stored.operatingWorkspace).toBeNull();
     expect(host.querySelectorAll('article')).toHaveLength(0);
+  });
+  it('previews one saved item before deleting it', () => {
+    act(() => button('Delete this item').click());
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog!.textContent).toContain('Outcome 1');
+    expect(dialog!.textContent).toContain('Deletes this saved workflow item from your private Semester workspace.');
+    expect(dialog!.textContent).toContain('Other workflow items, saved preferences, downloaded exports and official records do not change.');
+    expect(dialog!.textContent).toContain('A Semester data backup made before deletion can restore the earlier workspace.');
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
+    act(() => button('Cancel').click());
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
+    act(() => button('Delete this item').click());
+    act(() => button('Delete item').click());
+    expect(readOperating(stored.operatingWorkspace).entries.map((entry) => entry.title)).toEqual([
+      'Outcome 2',
+      'Outcome 3',
+      'Outcome 4',
+    ]);
+  });
+  it('distinguishes repeated saved items and deletes only the selected id', () => {
+    act(() => root.unmount());
+    const repeated = [
+      { ...emptyEntry('plan'), id: 'same-1', title: 'Prepare review', status: 'planned' as const },
+      { ...emptyEntry('plan'), id: 'same-2', title: 'Prepare review', status: 'waiting' as const, deadline: '2026-10-15' },
+    ];
+    stored = {
+      ...DEFAULT_PERSISTED,
+      ...initialEphemeral(),
+      operatingWorkspace: JSON.stringify({ ...emptyOperating(), entries: repeated }),
+    };
+    root = createRoot(host);
+    act(() => root.render(<StudentOperating />));
+
+    const first = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete saved item 1 of 2, Prepare review: Daily plan · planned · no deadline selected"]',
+    );
+    const second = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Delete saved item 2 of 2, Prepare review: Daily plan · waiting · deadline 2026-10-15"]',
+    );
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+
+    act(() => second!.click());
+    act(() => button('Delete item').click());
+    expect(readOperating(stored.operatingWorkspace).entries.map((item) => item.id)).toEqual(['same-1']);
+  });
+  it('previews saved preferences before deleting only the manual', () => {
+    act(() => button('Delete preferences').click());
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog!.textContent).toContain('Deletes your saved planning style, starter minutes, representation, help, reminder, planning-time and break preferences.');
+    expect(dialog!.textContent).toContain('Your 4 saved workflow items, downloaded exports and official records do not change.');
+    expect(dialog!.textContent).toContain('A Semester data backup made before deletion can restore the earlier workspace.');
+    expect(readOperating(stored.operatingWorkspace).manual?.planningTime).toBe('18:00');
+    act(() => button('Cancel').click());
+    expect(readOperating(stored.operatingWorkspace).manual?.planningTime).toBe('18:00');
+    act(() => button('Delete preferences').click());
+    act(() => button('Delete saved preferences').click());
+    expect(readOperating(stored.operatingWorkspace).manual).toBeNull();
+    expect(readOperating(stored.operatingWorkspace).entries).toHaveLength(4);
   });
   it('makes human handoff a reviewed draft with no send capability', () => {
     act(() => button('Review blind spots and context').click());

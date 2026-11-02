@@ -24,6 +24,78 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
+
+Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. An approved extension on an assignment now moves that student's due date for it (see below). Nobody else will notice anything.
+
+### Gradebook assignments have due dates, and an approved extension moves yours
+
+Same school and same not-yet-applied database change. In the **Gradebook**, each course now lists **Due dates**. A student sees when each assignment is due, and once the instructor approves an extension on one, the line reads **Extended to** the granted day, with the original date under it. Instructors see each assignment's date and which students have an extension. Whoever adds assignments can set, change or clear a date, at a time in their own time zone. Teaching assistants can read the dates but not change them. If a colleague changed the date first, the screen says so and offers to reload. A granted day lasts until the end of that day anywhere in the world, and an extension never makes a date earlier.
+
+### School administrators get a Roster tab for binding roster people to accounts
+
+Only for university and integration administrators, and only once the database change is applied (it is not yet). On **University**, a **Roster** tab lists the people on your school's roster who have no Semester account bound, with the courses a binding would give them. **Bind** asks you to search for the person's account by part of its handle or school address — only accounts at your school that are not bound yet are searched, at most 20 come back, and the address is shown masked (`m•••@school.edu`) — then previews exactly what they will get and shows the receipt; your own account and a second account for the same person are refused. Below it, **People with an account** lists who is bound; **Unbind** removes a binding and, in the same step, ends the course access the roster gave that account (access an administrator, an LTI launch or SCIM gave is kept). If someone bound the person to a different account since you loaded the tab, nothing changes. Binding the same account again brings the same access back. The same tab shows whether **absence-means-removal** is on; turning it on says how many roster-given course grants would end and asks you to confirm. Nobody else will notice anything.
+
+### An office resolves the registration holds it placed, and readiness says when something changed
+
+Only at a school that runs registration through Semester, and only once the database change is applied (it is not yet). On **Registration**, staff whose office can resolve holds get a **Holds** tab listing that office's open holds by student account — never the reason. **Resolve the hold** opens a preview that says plainly this is not enrollment, then shows the receipt; another office's hold is refused. Students see **Your school’s record** in the readiness view: a hold names its office; after an office resolves it, readiness worked out while it stood shows **Something changed — check again**; and a clear check is a dated receipt that says it is not enrollment. Nobody else will notice anything.
+
+### Mine names the exact action, step or event before removing it
+
+In **Mine**, screen readers now distinguish removal controls for repeated step text, same-title actions and same-title events. A step says its position, action and completion state; an action says its personal/course scope, date, time, repeat and step progress; and an event says its date, time, kind, location, length and repeat. Removal still changes only the exact device-workspace record and keeps the existing eight-second **Undo**.
+
+### Removing a degree requirement now explains the planning consequence first
+
+On **My Path → Requirements**, **Remove** now opens the standard consequence preview before changing the plan. It names the programme, rule, count and accepted courses; says Semester will recalculate its planning-only “what is left” result; and confirms that recorded courses, other rules, scenarios and the registrar's official audit stay unchanged. Cancel starts focused and changes nothing. Removing the rule cannot be undone in Semester; copy it again from the current official audit if you need it back.
+
+### Operators can inspect Semester as one connected ecosystem
+
+For operators holding the console grant, **Semester Operations** now has a read-only **Connected ecosystem** tab after **Finance model**. It maps the supplied Personal Education OS, Institution Operating OS and Semester Company OS into one platform view, and lets an operator inspect all 26 workspace, 281 screen and 122 capability contracts. The view labels the handoff as specification evidence and does not claim that a provider, institution, data connection or privileged operation is authorized or enabled. Students and school administrators will notice nothing.
+
+### Volunteer post-removal votes show their consequence before submission
+
+Student volunteer moderators now see the reported post, their selected reason and the possible outcome before submitting **Remove it**. Because practice cases stay deliberately hidden among real reports, the preview distinguishes their effects: onboarding answers help decide whether the volunteer advances to active status and starts receiving real cases, while recent post-onboarding practice accuracy can move standing among active, probation and paused, including pausing queue access. For a real report, a second independent removal vote can remove the post immediately, a first vote waits and a disagreement goes to a professional reviewer. Cancel submits nothing. It also says the answer cannot be withdrawn or edited, while the author’s account, other posts and retained review evidence stay unchanged by a real-report vote. Keeping a post or adding a label still follows the existing review flow.
+
+### Housing keeps track of repairs you reported
+
+**Housing** now has a **Repairs you reported** section on the **My housing** tab. After you report something to housing (their portal, front desk or phone line), choose **Record a repair** and note what is wrong, where, how urgent it is, how you reported it and the reference number housing gave you. Pick when to check back: Semester suggests a time, or use the one housing gave you. When that time passes, the repair appears on **Today** as something to follow up. Update it with **Visit scheduled**, **It is fixed**, **Still not fixed** or **No longer needed**; **Remove** can be undone. Choosing **Emergency** first tells you to call housing or campus safety. Semester does not send anything to housing, and nothing you need to do changes.
+
+### Revoking volunteer access shows the consequences first
+
+Senior Trust & Safety reviewers now see a preview before revoking a student volunteer. It names the volunteer, says their moderation access ends immediately, identifies the unanswered review actions that will leave their queue, shows the reason that will be kept in programme history, and says the action cannot be undone by sending them back to calibration. The reviewer must type the volunteer handle before **Revoke access** is available. Cancel changes nothing; other volunteers, moderation cases, completed reviews and school settings are unchanged.
+
+### Workspace links now open the connected tools that already exist
+
+The app directory now has **Your workspaces** with direct links to Teaching and University services while preserving the current account and university. Server-reported grants add **Semester Operations** only for platform operators and **External listings** only for the current university. Permission checks show loading, empty, failed and retry states separately; changing accounts discards old capability and course-policy results. Company, investor and developer workflows remain explicitly unavailable rather than appearing as placeholder workspaces.
+
+### Toolkit work can travel in a device workspace backup
+
+Device workspace backups now include the signed-in account's Toolkit work: assignment workspaces, Research Studio projects, AI-use declarations and the separate Data Studio projects with their original imported data. Restoring checks the entire backup before writing anything and restores those records into the account doing the restore, not the account name from the old device. Research Studio's source, claim and project removal previews now say to create a device workspace backup first if you may need to restore the removed work; without one, it must still be re-entered from the originals.
+
+### Research Studio now explains claim removal before changing a project
+
+In **Research Studio**, **Remove claim** now opens the standard consequence preview before changing the device workspace. It names the claim's current evidence status and linked-source count, says that the claim and its source links will be removed, and keeps the sources, research question, search plan and other claims unchanged. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the claim and its source links must be re-entered.
+
+### Research Studio now explains source removal before changing a project
+
+In **Research Studio**, **Remove source** now opens the standard consequence preview before changing the device workspace. It says that the evidence row will be removed from the project and detached from every linked claim, while the claim text, research question, search plan, other sources and original files remain. Cancel starts focused and changes nothing. The preview says a device workspace backup created before removal can restore it; without one, the source must be re-entered from the original.
+
+### Stopping a claimed family share now shows the full consequence and waits for receipts
+
+On **Family**, **Stop sharing** now opens the standard consequence preview before changing the account. It says which person's selected family items lose access, that Semester's stored copies are removed, and that the family plan, other people's shares, unused codes and read history remain. It also says copies already saved outside Semester cannot be recalled and that sharing again requires a new confirmed share. Cancel starts focused and writes nothing. Semester reports success only after the account returns the exact revoked grants and removed copies; if access ends but copy cleanup fails, the dialog stays open and says that partial result instead of claiming sharing did not stop.
+
+### Calling off an unused family share code now asks first
+
+On **Family**, calling off an unused share code now shows what will happen before the account is changed. The preview says the code stops working immediately, claimed family access is unaffected, the family plan and other codes stay unchanged, and a new code can be made later. Cancel starts focused and changes nothing. If the account does not return the exact revoked code, Semester keeps the choice open for retry instead of claiming the code was called off.
+
+### Revoking an advisor share waits for the account to confirm it
+
+In **Advisor meeting** and **Your data**, revoking a live advisor share now keeps the confirmation open until the account returns the exact updated share. If the share is stale, unavailable or refused, Semester leaves the choice open and says to refresh and retry instead of claiming the advisor lost access. The preview also says that the share and access log stay in the account, meeting preparation and official advising records do not change, and revocation cannot be undone; you can make a new share later.
+
+### Privileged platform accounts verify MFA before Semester opens staff tools
+
+An account with a live `platform_admin` or `support_agent` grant now verifies a second factor before Semester mounts any capability-backed tool, including tools outside **Semester Operations**. An enrolled authenticator-app or phone-code factor can be challenged; if neither exists, the step offers authenticator-app enrolment. A failed factor lookup has its own retry. The database also keeps those two grants dormant at `aal1` for capability checks and role-based approval requests. Accounts without either privileged role are unchanged. Production authentication configuration and recovery still require separate operational verification.
+
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
 On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.

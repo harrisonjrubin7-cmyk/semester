@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1",
+  "events": [
+    {
+      "eventId": "00000000-0000-4000-8000-000000000001",
+      "tenantId": "00000000-0000-4000-8000-000000000002",
+      "connectionId": "00000000-0000-4000-8000-000000000003",
+      "sourceObjectId": "synthetic-student-1",
+      "sourceRevision": 1,
+      "occurredAt": "2026-10-08T03:00:00Z",
+      "observedAt": "2026-10-08T03:00:01Z",
+      "purposeCode": "academic.lifecycle.sync",
+      "accessBasisId": "00000000-0000-4000-8000-000000000004",
+      "policyVersion": "synthetic-policy-1",
+      "eventType": "lifecycle.snapshot",
+      "payload": {
+        "institutionPersonId": "synthetic-person-1",
+        "state": "active",
+        "effectiveAt": "2026-10-08T03:00:00Z",
+        "authorityReceiptId": "synthetic-receipt-1"
+      }
+    }
+  ]
+}

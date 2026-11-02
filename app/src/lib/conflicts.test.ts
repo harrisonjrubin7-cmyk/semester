@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { strategyFor } from './merge';
+import { ingressDrops, noteIngressDrops } from './deletions';
 import { DEFAULT_PERSISTED, forgetSyncMemory } from '../state/shape';
 import { reducer } from '../state/reducer';
 import type { State } from '../state/shape';
@@ -332,5 +333,11 @@ describe('forgetSyncMemory', () => {
     forgetSyncMemory();
     expect(localStorage.getItem(BASE_KEY)).toBeNull();
     expect(localStorage.getItem(REVIEW_KEY)).toBeNull();
+  });
+
+  it("forgets the lists one account's boot lost, in memory as well as in storage", () => {
+    noteIngressDrops(['notes']);
+    forgetSyncMemory();
+    expect(ingressDrops(), 'the next account would hold back its own deletions').toEqual([]);
   });
 });

@@ -13,14 +13,18 @@ const mock = vi.hoisted(() => ({
   factors: vi.fn(),
   enroll: vi.fn(),
   challenge: vi.fn(),
+  clear: vi.fn(),
+  pending: vi.fn(),
   verify: vi.fn(),
 }));
 
 vi.mock('../lib/console/client', () => ({
-  totpFactors: mock.factors,
+  mfaFactors: mock.factors,
   enrollTotp: mock.enroll,
-  challengeTotp: mock.challenge,
-  verifyTotp: mock.verify,
+  challengeMfa: mock.challenge,
+  clearUnverifiedMfaFactors: mock.clear,
+  unverifiedMfaFactorIds: mock.pending,
+  verifyMfa: mock.verify,
 }));
 
 import { MfaStep } from './MfaStep';
@@ -37,6 +41,8 @@ beforeEach(() => {
   mock.factors.mockResolvedValue([]);
   mock.enroll.mockResolvedValue({ factorId: 'f-new', qrCode: 'data:image/svg+xml;utf-8,<svg/>', secret: 'JBSWY3DP', uri: 'otpauth://totp/x' });
   mock.challenge.mockResolvedValue('ch-1');
+  mock.clear.mockResolvedValue(undefined);
+  mock.pending.mockResolvedValue([]);
   mock.verify.mockResolvedValue(undefined);
   host = document.createElement('div');
   document.body.append(host);
@@ -74,6 +80,7 @@ describe('MfaStep', () => {
   it('enrols an authenticator when the account has none, showing the QR code and the secret', async () => {
     await render();
     expect(mock.enroll).toHaveBeenCalledTimes(1);
+    expect(mock.clear).not.toHaveBeenCalled();
     expect(host.querySelector('img')?.getAttribute('src')).toBe('data:image/svg+xml;utf-8,<svg/>');
     expect(host.textContent).toContain('JBSWY3DP');
     expect(button('Enrol and verify')).toBeTruthy();
@@ -81,26 +88,40 @@ describe('MfaStep', () => {
     typeCode('123456');
     expect(button('Enrol and verify').disabled).toBe(false);
     await submit();
-    expect(mock.challenge).toHaveBeenCalledWith('f-new');
+    expect(mock.challenge).toHaveBeenCalledWith('f-new', 'totp');
     expect(mock.verify).toHaveBeenCalledWith('f-new', 'ch-1', '123456');
     expect(onVerified).toHaveBeenCalledTimes(1);
   });
 
+  it('does not delete an unfinished setup in another tab without an explicit restart', async () => {
+    mock.pending.mockResolvedValueOnce(['pending-other-tab']).mockResolvedValueOnce([]);
+    await render();
+    expect(host.textContent).toContain('possibly in another tab');
+    expect(mock.clear).not.toHaveBeenCalled();
+    expect(mock.enroll).not.toHaveBeenCalled();
+
+    await act(async () => button('Restart authenticator setup').click());
+    expect(mock.clear).toHaveBeenCalledWith(['pending-other-tab']);
+    expect(mock.enroll).toHaveBeenCalledTimes(1);
+    expect(host.querySelector('img')).not.toBeNull();
+  });
+
   it('challenges the existing authenticator without enrolling another', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     expect(mock.enroll).not.toHaveBeenCalled();
+    expect(mock.clear).not.toHaveBeenCalled();
     expect(host.querySelector('img')).toBeNull();
     expect(button('Verify')).toBeTruthy();
     typeCode('654321');
     await submit();
-    expect(mock.challenge).toHaveBeenCalledWith('f-old');
+    expect(mock.challenge).toHaveBeenCalledWith('f-old', 'totp');
     expect(mock.verify).toHaveBeenCalledWith('f-old', 'ch-1', '654321');
     expect(onVerified).toHaveBeenCalledTimes(1);
   });
 
   it('does not call back on a refused code, and says why', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     mock.verify.mockRejectedValue(new Error('Invalid TOTP code entered'));
     await render();
     typeCode('000000');
@@ -110,7 +131,7 @@ describe('MfaStep', () => {
   });
 
   it('gives every control a name and offers a way out', async () => {
-    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Phone' }]);
+    mock.factors.mockResolvedValue([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     const input = host.querySelector('input') as HTMLInputElement;
     expect(input.closest('label')?.textContent).toContain('Code from your authenticator');
@@ -120,9 +141,60 @@ describe('MfaStep', () => {
   });
 
   it('says so when the auth service cannot start the step', async () => {
-    mock.factors.mockRejectedValue(new Error('Could not list your authenticators.'));
+    mock.factors.mockRejectedValueOnce(new Error('Could not list your authenticators.')).mockResolvedValueOnce([{ id: 'f-old', name: 'Authenticator', type: 'totp' }]);
     await render();
     expect(host.querySelector('[role=alert]')?.textContent).toContain('Could not list your authenticators.');
     expect(host.querySelector('form')).toBeNull();
+    await act(async () => button('Try MFA setup again').click());
+    expect(host.querySelector('form')).toBeTruthy();
+  });
+
+  it('challenges an existing phone factor instead of forcing TOTP enrolment', async () => {
+    mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
+    await render();
+    expect(mock.enroll).not.toHaveBeenCalled();
+    expect(mock.challenge).toHaveBeenCalledWith('phone-1', 'phone');
+    expect(host.textContent).toContain('verification code sent to your phone');
+    expect((host.querySelector('input') as HTMLInputElement).closest('label')?.textContent).toContain('Code sent to your phone');
+    typeCode('246810');
+    await submit();
+    expect(mock.challenge).toHaveBeenCalledTimes(1);
+    expect(mock.verify).toHaveBeenCalledWith('phone-1', 'ch-1', '246810');
+  });
+
+  it('lets an operator switch to another enrolled factor', async () => {
+    mock.factors.mockResolvedValue([
+      { id: 'totp-lost', name: 'Old phone', type: 'totp' },
+      { id: 'phone-2', name: 'Recovery mobile', type: 'phone' },
+    ]);
+    await render();
+    const select = host.querySelector('select') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    expect(select.options).toHaveLength(2);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(select, 'phone-2');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(mock.challenge).toHaveBeenCalledWith('phone-2', 'phone');
+    expect(host.textContent).toContain('verification code sent to your phone');
+    typeCode('135790');
+    await submit();
+    expect(mock.verify).toHaveBeenCalledWith('phone-2', 'ch-1', '135790');
+  });
+
+  it('can replace an expired phone challenge without reloading the app', async () => {
+    mock.factors.mockResolvedValue([{ id: 'phone-1', name: 'Mobile', type: 'phone' }]);
+    mock.challenge.mockResolvedValueOnce('expired-challenge').mockResolvedValueOnce('fresh-challenge');
+    mock.verify.mockRejectedValueOnce(new Error('Challenge expired')).mockResolvedValueOnce(undefined);
+    await render();
+    typeCode('246810');
+    await submit();
+    expect(host.querySelector('[role=alert]')?.textContent).toContain('Challenge expired');
+    await act(async () => button('Send a new code').click());
+    expect(mock.challenge).toHaveBeenCalledTimes(2);
+    typeCode('135790');
+    await submit();
+    expect(mock.verify).toHaveBeenLastCalledWith('phone-1', 'fresh-challenge', '135790');
+    expect(onVerified).toHaveBeenCalledTimes(1);
   });
 });

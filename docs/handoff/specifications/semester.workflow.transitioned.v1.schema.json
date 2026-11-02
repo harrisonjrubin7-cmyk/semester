@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semester.example/schemas/semester.workflow.transitioned.v1.json",
+  "title": "semester.workflow.transitioned.v1",
+  "description": "Proposed CloudEvents-style envelope for a workflow state transition. Domain payloads are versioned separately; data carries protected references, not record contents. Status: proposed contract, not deployed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specversion", "id", "type", "source", "time", "tenant_id", "aggregate", "correlation_id", "command_id", "transition", "authority", "data", "integrity"],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "id": { "type": "string", "format": "uuid" },
+    "type": { "const": "semester.workflow.transitioned.v1" },
+    "source": { "type": "string", "pattern": "^semester/[a-z0-9_-]+/[a-z0-9_-]+$" },
+    "time": { "type": "string", "format": "date-time" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "aggregate": {
+      "type": "object", "additionalProperties": false, "required": ["type", "id", "version"],
+      "properties": { "type": { "type": "string" }, "id": { "type": "string", "format": "uuid" }, "version": { "type": "integer", "minimum": 1, "description": "Monotonic; ordering uses this, not time." } }
+    },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "causation_id": { "type": ["string", "null"], "format": "uuid" },
+    "command_id": { "type": "string", "format": "uuid" },
+    "transition": {
+      "type": "object", "additionalProperties": false, "required": ["from", "to", "reason_code"],
+      "properties": {
+        "from": { "$ref": "#/$defs/state" },
+        "to": { "$ref": "#/$defs/state" },
+        "reason_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" }
+      }
+    },
+    "authority": {
+      "type": "object", "additionalProperties": false, "required": ["decision_id", "policy_version", "assignment_version", "actor_ref", "approval_ids"],
+      "properties": {
+        "decision_id": { "type": "string" },
+        "policy_version": { "type": "string" },
+        "assignment_version": { "type": "integer", "minimum": 1, "description": "Authority epoch the command executed under." },
+        "actor_ref": { "type": "string", "pattern": "^(account|service):" },
+        "approval_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "data": {
+      "type": "object", "additionalProperties": false, "required": ["record_ref", "classification", "authority_mode"],
+      "properties": {
+        "record_ref": { "type": "string", "description": "Protected reference, never record contents." },
+        "classification": { "enum": ["public", "internal", "confidential", "restricted"] },
+        "authority_mode": { "enum": ["read_only", "bridged_write", "native_authoritative", "external_authoritative"] },
+        "external_result_ref": { "type": ["string", "null"] }
+      }
+    },
+    "integrity": {
+      "type": "object", "additionalProperties": false, "required": ["status", "attestation_ref"],
+      "properties": {
+        "status": { "enum": ["pending", "attested", "failed"], "description": "pending = async attestation not finished; it does not mean the transaction is unconfirmed." },
+        "attestation_ref": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "state": { "enum": ["received", "evaluating", "awaiting_approval", "ready", "executing", "confirmed", "failed", "rejected", "outcome_unknown", "reconciling", "manual_review"] }
+  }
+}

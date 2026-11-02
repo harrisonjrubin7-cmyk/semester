@@ -1,0 +1,14 @@
+import React from 'react';
+/** Access someone has because the student granted it: who, exactly what, until when, revoke. */
+export function DelegationRow({ who, role, scope = [], expires, state = 'active', onRevoke }) {
+  const L = { active: ['⇄', 'Active'], expiring: ['!', 'Expires soon'], expired: ['⊘', 'Expired'], revoked: ['⊘', 'Revoked'], pending: ['…', 'Waiting for them to accept'] };
+  const [g, t] = L[state] || L.active;
+  return (
+    <div className="perm-row" data-state={state}>
+      <div className="perm-row-main"><div className="perm-row-name">{who}{role && <span className="perm-row-role"> · {role}</span>}</div>
+      <ul className="perm-scope">{scope.map((s) => <li key={s}>{s}</li>)}</ul>
+      <div className="perm-row-detail"><span aria-hidden="true">{g}</span> {t}{expires && (state === 'active' || state === 'expiring') ? ' · until ' + expires : ''}</div></div>
+      {onRevoke && (state === 'active' || state === 'expiring' || state === 'pending') && <button type="button" className="btn btn-sm btn-danger" onClick={onRevoke}><span>Revoke</span></button>}
+    </div>
+  );
+}

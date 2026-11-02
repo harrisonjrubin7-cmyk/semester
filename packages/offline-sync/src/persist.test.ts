@@ -45,11 +45,55 @@ describe('write-through store', () => {
     expect(seen).toEqual([1, 2])
   })
 
-  it('reports a failed write on flush instead of throwing into the engine', async () => {
+  it('reports a failed write on flush and keeps retrying the dirty snapshot', async () => {
     const s = memoryStore({ onCommit: async () => { throw new Error('disk full') } })
     await s.outbox.put(row())
     await expect(s.flush()).rejects.toThrow('disk full')
+    await expect(s.flush()).rejects.toThrow('disk full')
+  })
+
+  it('retries a failed durable snapshot on the next flush and survives restart', async () => {
+    let disk: StoreSnapshot = { outbox: [], entities: [], cursors: {} }
+    let attempts = 0
+    const s = memoryStore({ onCommit: async (x) => {
+      if (attempts++ === 0) throw new Error('temporary disk failure')
+      disk = structuredClone(x)
+    } })
+    await s.outbox.put(row())
+    await expect(s.flush()).rejects.toThrow('temporary disk failure')
+    expect(disk.outbox).toHaveLength(0)
     await expect(s.flush()).resolves.toBeUndefined()
+    const restarted = memoryStore({ initial: disk })
+    expect((await restarted.outbox.all()).map((x) => x.id)).toEqual(['c1'])
+  })
+
+  it('serializes overlapping transactions instead of treating them as nested', async () => {
+    const s = memoryStore()
+    let releaseFirst!: () => void
+    let firstEntered!: () => void
+    const entered = new Promise<void>((resolve) => { firstEntered = resolve })
+    const release = new Promise<void>((resolve) => { releaseFirst = resolve })
+    const order: string[] = []
+    const first = s.transaction(async () => {
+      order.push('first:read')
+      firstEntered()
+      await release
+      await s.cursors.set('policy-purge-journal', '["g"]')
+      order.push('first:write')
+    })
+    await entered
+    const second = s.transaction(async () => {
+      order.push('second:read')
+      expect(await s.cursors.get('policy-purge-journal')).toBe('["g"]')
+      await s.cursors.set('policy-purge-journal', '["g","a"]')
+      order.push('second:write')
+    })
+    await Promise.resolve()
+    expect(order).toEqual(['first:read'])
+    releaseFirst()
+    await Promise.all([first, second])
+    expect(order).toEqual(['first:read', 'first:write', 'second:read', 'second:write'])
+    expect(await s.cursors.get('policy-purge-journal')).toBe('["g","a"]')
   })
 
   it('survives a restart: a queued command is still there, unsent, with the same key', async () => {

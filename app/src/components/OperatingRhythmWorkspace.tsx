@@ -636,7 +636,12 @@ export function RhythmWorkspace({
                       }
                     />
                   </label>
-                  <button className="btn" type="button" onClick={() => setTasks(tasks.filter((_, j) => i !== j))}>
+                  <button
+                    className="btn"
+                    type="button"
+                    aria-label={`Remove commitment ${i + 1} of ${tasks.length}, ${t.title.trim() || 'Untitled commitment'}: ${t.context} · ${t.minutes} ${t.minutes === 1 ? 'minute' : 'minutes'}`}
+                    onClick={() => setTasks(tasks.filter((_, j) => i !== j))}
+                  >
                     Remove commitment {i + 1}
                   </button>
                 </fieldset>

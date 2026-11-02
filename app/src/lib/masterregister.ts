@@ -275,9 +275,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'MFA required for privileged/admin roles and supported for configured users',
     validation: 'MFA policy/config export',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/trust/SOC2-READINESS.md', shows: 'CC6-02: app has no MFA for admins; MFA enforcement export Absent' }, { path: 'docs/trust/SECURITY-WHITEPAPER.md', shows: 'States MFA is not yet enforced' }, { path: 'app/src/lib/governance/rollout.ts', shows: 'Rollout checklist item \'Session and MFA policy configured\' (text only)' }],
-    gap: 'No MFA enrollment or aal2 enforcement in app or database; console MFA not evidenced. Needs MFA enforcement for privileged roles, user opt-in, and exported config/screenshots.',
+    status: 'tested',
+    evidence: [{ path: 'supabase/migrations/20261008223000_privileged_role_mfa.sql', shows: 'platform_admin and support_agent grants require an aal2 JWT for capability listings/checks and role-based approval requests, and auth-js phone verification counts as fresh MFA' }, { path: 'supabase/privileged-mfa.check.sql', shows: 'aal1 denials, app-gate status and aal2 success for both privileged roles' }, { path: 'supabase/my-capabilities.check.sql', shows: 'the client projection omits dormant privileged grants at aal1 and restores them at aal2' }, { path: 'app/src/components/PrivilegedMfaBoundary.test.tsx', shows: 'The boundary keeps ordinary offline-first content mounted during status lookup, gates confirmed privileged sessions, and rechecks session changes' }, { path: 'app/src/screens/console.test.tsx', shows: 'Ordinary console roles retain aal1 access while sensitive actions still step up' }, { path: 'app/src/components/MfaStep.test.tsx', shows: 'TOTP enrolment, pre-sent and resendable phone challenges, enrolled-factor choice, and factor-discovery retry paths' }],
+    gap: 'Product aal2 is enforced for platform_admin and support_agent capabilities and role-based approval requests, with an app-level elevation gate and fresh MFA on sensitive console actions. Other staff roles, student opt-in/passkeys, recovery tests, production Auth configuration and provider-console exports remain open.',
   },
   {
     id: 'IAM-006',

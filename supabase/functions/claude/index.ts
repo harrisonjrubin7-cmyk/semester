@@ -65,6 +65,7 @@ import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_sh
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
 
 import { chooseUpstream } from '../_shared/upstream.ts';
+import { edgeJsonBody, identifierHeaders, requestIdentifiers } from '../_shared/error-envelope.ts';
 
 /** Calls per account per calendar month. Raise it in the dashboard, not here. */
 const MONTHLY_CALLS = Number(Deno.env.get('MONTHLY_CALL_LIMIT') ?? '60');
@@ -77,11 +78,15 @@ Deno.serve(async (req) => {
    * the request came from — see `../_shared/cors.ts`, which carries the
    * incident this shape exists because of.
    */
+  const ids = requestIdentifiers(req.headers);
   const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'), Deno.env.get('CORS_ALLOW_DEV'));
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), {
+  cors['Access-Control-Allow-Headers'] += ', x-correlation-id';
+  cors['Access-Control-Expose-Headers'] = 'X-Request-Id, X-Correlation-Id, X-Calls-Remaining';
+  Object.assign(cors, identifierHeaders(ids));
+  const json = (body: unknown, status = 200, extraHeaders: Record<string, string> = {}) =>
+    new Response(JSON.stringify(edgeJsonBody(body, status, ids.correlationId)), {
       status,
-      headers: { ...cors, 'Content-Type': 'application/json' },
+      headers: { ...cors, ...extraHeaders, 'Content-Type': 'application/json' },
     });
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -409,7 +414,20 @@ Deno.serve(async (req) => {
   // (`flush` never runs): both err towards the owner.
   if (!upstream.ok) {
     await release(reserve, `upstream ${upstream.status}`);
-    return new Response(upstream.body, { status: upstream.status, headers });
+    await upstream.body?.cancel();
+    const status = upstream.status === 429 ? 429 : upstream.status >= 500 ? 503 : upstream.status;
+    return json(
+      {
+        error: {
+          code: status === 429 ? 'rate_limited' : status === 503 ? 'unavailable' : 'provider_refused',
+          message: status === 429
+            ? 'The AI provider is busy. Try again in a moment.'
+            : 'The AI provider did not accept this request.',
+        },
+      },
+      status,
+      { 'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used)) },
+    );
   }
   const settle = async (actual: number | null, usage?: Usage) => {
     await tenant?.settle(actual, usage);

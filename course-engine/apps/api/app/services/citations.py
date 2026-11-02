@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from app.schemas import Flashcard, GuideContent
+from app.schemas import Flashcard, GuideContent, ReadingBriefContent
 
 
 class UnsupportedCitationError(ValueError):
@@ -55,6 +55,16 @@ def validate_study_asset_content(
         normalized_cards = [card.model_dump(mode="json") for card in validated_cards]
         if len(deduplicate_flashcards(normalized_cards)) != len(validated_cards):
             raise UnsupportedCitationError("Duplicate flashcards are not approvable")
+        return
+
+    if asset_type == "reading_brief":
+        try:
+            brief = ReadingBriefContent.model_validate(content)
+        except ValidationError as exc:
+            raise UnsupportedCitationError("Reading brief content is invalid") from exc
+        validate_guide(brief, allowed_citation_ids)
+        for case_study in brief.cases:
+            validate_citation_ids(case_study.citation_ids, allowed_citation_ids)
         return
 
     if not content.get("sections"):

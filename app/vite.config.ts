@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, ftruncateSync, mkdirSync, openSync, readFileSync, writeFileSync, writeSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
@@ -586,13 +586,22 @@ const csp = (serving: boolean) => {
     closeBundle() {
       if (serving) return
       const file = join(outDir, '_headers')
-      if (!existsSync(file)) return
-      const text = readFileSync(file, 'utf8')
-      if (!text.includes(EXTRA_CONNECT)) return
-      writeFileSync(
-        file,
-        text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? ''),
-      )
+      let descriptor: number
+      try {
+        descriptor = openSync(file, 'r+')
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return
+        throw error
+      }
+      try {
+        const text = readFileSync(descriptor, 'utf8')
+        if (!text.includes(EXTRA_CONNECT)) return
+        const policy = text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? '')
+        ftruncateSync(descriptor, 0)
+        writeSync(descriptor, policy, 0, 'utf8')
+      } finally {
+        closeSync(descriptor)
+      }
     },
   }
 }
@@ -703,6 +712,11 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/AboutMe.test.tsx',
+  'src/components/SchoolPicker.removal-labels.test.tsx',
+  'src/components/ListingDesk.moderation-preview.test.tsx',
+  'src/components/MyRules.test.tsx',
+  'src/components/ProductivityCloud.test.tsx',
   'src/components/TodayActionCenter.shadow.sources.test.tsx',
   'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
@@ -714,16 +728,20 @@ const MOCKS_MODULES = [
   'src/screens/whatsnew.feedback.test.tsx',
   'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
+  'src/lib/courserules.account.test.tsx',
   'src/components/CourseStudio.test.tsx',
   'src/components/MembershipPanel.live.test.tsx',
   'src/components/PlusPrompt.test.tsx',
   'src/components/institutional/ModulesPanel.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
   'src/components/PushTop.regday.test.tsx',
+  'src/components/ScanIsbn.test.tsx',
   'src/components/OfflineBanner.reconnect.test.tsx',
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/screens/mine/Drive.delete-file.test.tsx',
+  'src/screens/mine/Drive.delete-folder.test.tsx',
   'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
@@ -748,6 +766,7 @@ const MOCKS_MODULES = [
   'src/components/rework.test.tsx',
   'src/components/room/Talk.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
+  'src/components/Grapher.clear.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/QuizFeedback.test.tsx',
   'src/components/TeachBack.test.tsx',
@@ -756,7 +775,11 @@ const MOCKS_MODULES = [
   'src/components/FamilyInvite.test.tsx',
   'src/lib/familyshare.test.ts',
   'src/components/SharedWithYou.test.tsx',
+  'src/components/GuardianProjection.test.tsx',
+  'src/lib/guardianprojection.test.ts',
   'src/components/AthleteShare.test.tsx',
+  'src/components/CaraLog.test.tsx',
+  'src/components/EligibilityCheck.test.tsx',
   'src/components/SupportAccess.test.tsx',
   'src/components/GetHelp.test.tsx',
   'src/components/HelpInbox.test.tsx',
@@ -768,6 +791,7 @@ const MOCKS_MODULES = [
   'src/screens/Moderation.test.tsx',
   'src/screens/console.test.tsx',
   'src/components/MfaStep.test.tsx',
+  'src/components/PrivilegedMfaBoundary.test.tsx',
   'src/lib/console/client.test.ts',
   'src/lib/console/workspaces.test.ts',
   'src/lib/support-case-client.test.ts',
@@ -776,10 +800,24 @@ const MOCKS_MODULES = [
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
+  'src/components/enrollment/HoldDesk.test.tsx',
+  'src/components/RegistrationReadiness.hold.test.tsx',
+  'src/lib/gradebook/submissions.test.ts',
+  'src/components/gradebook/HandIn.test.tsx',
+  'src/lib/gradebook/requests.test.ts',
+  'src/components/gradebook/CourseRequests.test.tsx',
+  'src/lib/gradebook/duedates.test.ts',
+  'src/components/gradebook/DueDates.test.tsx',
+  'src/components/TodayActionCenter.feedback.test.tsx',
+  'src/lib/workspace/objects.test.ts',
+  'src/lib/workspace/evidence.test.ts',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
   'src/lib/governance/activation.test.ts',
+  'src/state/account-refresh.test.tsx',
+  // This test reads this list and must not inherit filesystem doubles from a shared worker.
+  'src/isolation.test.ts',
   'src/state/readonly.test.tsx',
   'src/screens/Volunteer.test.tsx',
   'src/screens/Agreements.test.tsx',
@@ -792,6 +830,8 @@ const MOCKS_MODULES = [
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',
   'src/components/institutional/RecordLedger.test.tsx',
+  'src/components/institutional/RosterDesk.test.tsx',
+  'src/lib/roster/admin.test.ts',
   'src/components/institutional/StudentAccounts.test.tsx',
   'src/components/MyStudentAccount.test.tsx',
   'src/components/nav/institutional-nav.test.tsx',
@@ -803,15 +843,21 @@ const MOCKS_MODULES = [
   'src/lib/presence.test.ts',
   'src/screens/call/leaving.test.tsx',
   'src/screens/call/consent.ui.test.tsx',
+  'src/screens/activities.removal-labels.test.tsx',
   'src/screens/addmaterial.test.tsx',
+  'src/screens/groupwork.part-removal.test.tsx',
   'src/screens/pathway.test.tsx',
   'src/screens/pathwaygrid.test.tsx',
   'src/screens/solvephoto.test.tsx',
   'src/screens/trustroom.test.tsx',
   'src/screens/university.test.tsx',
+  'src/screens/directory.workspaces.test.tsx',
+  'src/screens/directory.test.tsx',
+  'src/shell.workspaces.test.tsx',
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/ingress.test.ts',
   'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/pushlater.test.tsx',
@@ -930,6 +976,9 @@ export default defineConfig(({ command, mode }) => {
         '@semester/contract': fileURLToPath(
           new URL('../packages/contract/src/index.ts', import.meta.url),
         ),
+        '@semester/domain-core': fileURLToPath(
+          new URL('../packages/domain-core/src/index.ts', import.meta.url),
+        ),
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
@@ -1010,6 +1059,7 @@ export default defineConfig(({ command, mode }) => {
             isolate: false,
             include: [
               ...configDefaults.include,
+              '../packages/domain-core/src/**/*.test.ts',
               '../packages/institution/src/**/*.test.ts',
               '../packages/offline-sync/src/**/*.test.ts',
               '../packages/platform/src/**/*.test.ts',

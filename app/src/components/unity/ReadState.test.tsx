@@ -59,10 +59,21 @@ describe('ReadState', () => {
     expect(host.textContent).toContain('You put everything away');
   });
 
-  it('denied: names the boundary and leaks no data, even if the server sent some', () => {
-    draw(make({ permission: { canRead: false, allowedActions: [] }, data: ['secret'] }));
+  it('denied: names the boundary, offers only the governed recovery, and leaks no data', () => {
+    const run = vi.fn();
+    draw(
+      make({
+        permission: { canRead: false, allowedActions: [] },
+        data: ['secret'],
+        recovery: [{ action: 'request-access', label: 'Request access' }],
+      }),
+      run,
+    );
+    expect(host.querySelector('[data-state="permission-denied"]')).not.toBeNull();
     expect(host.textContent).toContain('You can’t see your reminders here.');
     expect(host.textContent).not.toContain('secret');
+    act(() => host.querySelector<HTMLButtonElement>('button')!.click());
+    expect(run).toHaveBeenCalledWith('request-access');
   });
 
   it('offline: keeps the list beside a strip', () => {

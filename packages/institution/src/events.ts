@@ -91,6 +91,10 @@ export const EVENT_TYPES = {
   'agenda.shared': spec(1, 'student_private', 'audit'),
   'share.revoked': spec(1, 'student_private', 'audit'),
   // LMS
+  // `course_request.*` (20261021120000) is a student's request to a course's instructor — an extension, an
+  // excused absence, an incomplete — and its decision. No type before it named one, and `action.*` is the
+  // student's own plan, below the education-record floor a decision about coursework is. Payloads carry the
+  // request, course, term, kind and outcome word: never the student, the reason or the note.
   'course.published': spec(1, 'internal', 'operational'),
   'assignment.created': spec(1, 'internal', 'operational'),
   'submission.draft_saved': spec(1, 'education_record', 'student_record'),
@@ -101,6 +105,8 @@ export const EVENT_TYPES = {
   'grade.posted': spec(1, 'education_record', 'student_record'),
   'grade.passback_requested': spec(1, 'education_record', 'audit'),
   'grade.passback_reconciled': spec(1, 'education_record', 'audit'),
+  'course_request.filed': spec(1, 'education_record', 'student_record'),
+  'course_request.decided': spec(1, 'education_record', 'student_record'),
   // Integration
   'connector.sync_started': spec(1, 'internal', 'operational'),
   'connector.sync_completed': spec(1, 'internal', 'operational'),
@@ -117,12 +123,15 @@ export const EVENT_TYPES = {
   'ai.incident_detected': spec(1, 'internal', 'audit'),
   'ai.kill_switch_changed': spec(1, 'internal', 'audit'),
   // Registration. Payloads carry ids and versions, not the checklist or the reason.
+  // `hold_resolved` (20261020120000) is its own type: nothing else names a hold, and `source.updated` is
+  // `internal`, below the education-record floor a student's hold is. Its payload is the hold and its office.
   'registration.readiness_viewed': spec(1, 'education_record', 'audit'),
   'registration.readiness_requested': spec(1, 'education_record', 'audit'),
   'registration.readiness_evaluated': spec(1, 'education_record', 'student_record'),
   'registration.readiness_reconciliation_requested': spec(1, 'education_record', 'audit'),
   'registration.override_requested': spec(1, 'education_record', 'audit'),
   'registration.override_granted': spec(1, 'education_record', 'audit'),
+  'registration.hold_resolved': spec(1, 'education_record', 'audit'),
   // Support and security
   'support.ticket_created': spec(1, 'student_private', 'operational'),
   'support.access_granted': spec(1, 'student_private', 'audit'),

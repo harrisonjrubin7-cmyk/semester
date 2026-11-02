@@ -1,0 +1,16 @@
+test,expected,actual,passed
+valid registration example,accept,accept,True
+unknown property,reject,reject,True
+institution without tenant,reject,reject,True
+high risk without human authority,reject,reject,True
+official write without idempotency,reject,reject,True
+hybrid without visible surface,reject,reject,True
+hybrid without executor,reject,reject,True
+verified gate without evidence,reject,reject,True
+AI with consequential decision authority,reject,reject,True
+undefined transition state,reject,reject,True
+undefined recovery test,reject,reject,True
+failure without recovery,reject,reject,True
+official write in shadow mode,reject,reject,True
+duplicate step ID,reject,reject,True
+unreachable state,reject,reject,True

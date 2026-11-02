@@ -355,7 +355,7 @@ Every row the compliance playbook marks P0 — a blocker before institutional da
 | SEC-01 | Security governance | `security` (vacant) | designed | `SECURITY.md` | The security seat accepted. |
 | SEC-02 | Secure SDLC | `engineering` | tested | `app/src/lib/branchprotection.test.ts` | CI screenshots kept as evidence. |
 | SEC-03 | Secrets management | `engineering` | tested | `app/src/lib/security.test.ts` | A rotation runbook exercised. |
-| SEC-04 | Authentication and admin MFA | `security` (vacant) | tested | `supabase/console-control-plane.check.sql` | Fresh MFA is held for the operations console only; the claims register still says planned (IAM-005) for every other privileged role. |
+| SEC-04 | Authentication and admin MFA | `security` (vacant) | tested | `supabase/privileged-mfa.check.sql` | Extend the tested aal2 boundary beyond platform_admin and support_agent, add student/passkey enrolment and recovery coverage, and file production Auth and provider-console proof. |
 | SEC-05 | Authorisation and tenant isolation | `security` (vacant) | tested | `supabase/rls-coverage.check.sql` | An external review. |
 | SEC-06 | SECURITY DEFINER review | `security` (vacant) | tested | `app/src/lib/definerregister.test.ts` | Kept current as functions are added. |
 | SEC-07 | Database RLS | `security` (vacant) | tested | `supabase/rls-coverage.check.sql` | A linter baseline kept. |

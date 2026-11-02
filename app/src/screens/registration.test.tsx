@@ -142,6 +142,7 @@ const answer = (patch: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   vi.resetAllMocks();
   mock.configured = true;
   mock.user = 'stu-1';
@@ -190,6 +191,13 @@ async function press(label: string) {
 }
 
 describe('when the school has not turned it on', () => {
+  it('names the offline state before attempting account or registration reads', async () => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+    await render();
+    expect(host.querySelector('[role="status"]')?.textContent).toMatch(/offline/i);
+    expect(mock.terms).not.toHaveBeenCalled();
+  });
+
   it('says so in one sentence, reads nothing, and offers the plan', async () => {
     mock.flag = 'off';
     await render();
@@ -215,7 +223,7 @@ describe('when the school has not turned it on', () => {
   it('says it is paused, and by which switch, when a kill switch is engaged', async () => {
     mock.switches = [{ switch_key: 'kill.writeback', tenant_id: null, engaged: true }];
     await render();
-    expect(host.querySelector('[role="alert"]')?.textContent).toMatch(/paused registration.*kill\.writeback/);
+    expect(host.querySelector('[data-state="permission-denied"]')?.textContent).toMatch(/paused registration.*kill\.writeback/);
     expect(mock.sections).not.toHaveBeenCalled();
   });
 });
@@ -233,6 +241,8 @@ describe('who may see it', () => {
     mock.school = null;
     await render();
     expect(text()).toMatch(/not linked to a school yet.*your school decides whether registration is turned on/);
+    await press('Open your profile');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'profile' });
   });
 
   it('offers the registrar’s half only to registration:administer at this school', async () => {
@@ -256,6 +266,25 @@ describe('who may see it', () => {
     expect(text()).toContain('Requests waiting for approval');
     expect(text()).toContain('Student account stu-2-ab…');
     expect(buttons().filter((b) => b.classList.contains('btn-primary')).map((b) => b.textContent)).toEqual(['Grant override']);
+  });
+
+  it('offers an office its holds only for an office grant at this school, and not the registrar’s half', async () => {
+    mock.caps.mockResolvedValue([
+      { capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'other/bursar' },
+      { capability: 'registration_hold:resolve', scopeKind: 'school', scopeId: 'vu' },
+    ]);
+    await render();
+    expect(host.querySelector('[role="tablist"]')).toBeNull();
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    mock.caps.mockResolvedValue([{ capability: 'registration_hold:resolve', scopeKind: 'office', scopeId: 'vu/bursar' }]);
+    await render();
+    const tabs = [...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
+    expect(tabs).toEqual(['Your registration', 'Holds']);
+    const tab = [...host.querySelectorAll('[role="tab"]')].find((t) => t.textContent === 'Holds') as HTMLElement;
+    await act(async () => tab.click());
+    await flush();
+    expect(text()).toContain('Holds placed by bursar');
   });
 
   it('says so when the permission check fails, keeps the student’s half, and checks again on request', async () => {

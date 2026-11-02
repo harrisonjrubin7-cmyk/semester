@@ -1,0 +1,15 @@
+{
+  "semester": {
+    "policy_revision": "pilot-1",
+    "actions": {
+      "registration.readiness.view": {
+        "capability": "registration.readiness.view",
+        "authentication_level": 1,
+        "relationships": [
+          "student_self",
+          "assigned_advisor"
+        ]
+      }
+    }
+  }
+}

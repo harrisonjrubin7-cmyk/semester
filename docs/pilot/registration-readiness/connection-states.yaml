@@ -1,0 +1,42 @@
+# Connection-state contract (artifact 3). Vocabulary is fixed: confirmed,
+# pending, updating, stale, blocked, degraded, reconcile, resolved.
+connection_states:
+  confirmed:
+    meaning: "The source is reachable and within its required freshness window."
+    student_action: "None."
+    staff_action: "Monitor normally."
+
+  pending:
+    meaning: "A connection setup or authorization step is incomplete."
+    student_action: "Complete the requested connection step if offered."
+    staff_action: "Follow setup workflow."
+
+  updating:
+    meaning: "A refresh is in progress; displayed data may change."
+    student_action: "Wait or check again shortly."
+    staff_action: "Monitor job completion."
+
+  stale:
+    meaning: "The last successful source update exceeds the freshness policy."
+    student_action: "Do not treat this as a final result."
+    staff_action: "Start refresh or route a review."
+
+  blocked:
+    meaning: "An authorization, policy, or provider condition prevents sync."
+    student_action: "Use the stated support or office path."
+    staff_action: "Resolve blocker; do not bypass controls."
+
+  degraded:
+    meaning: "The source works partially but fails a defined quality threshold."
+    student_action: "Review affected details carefully."
+    staff_action: "Open reconciliation work."
+
+  reconcile:
+    meaning: "Two sources or projections disagree and require comparison."
+    student_action: "No action unless contacted."
+    staff_action: "Follow reconciliation procedure."
+
+  resolved:
+    meaning: "The identified connection issue is corrected and verified."
+    student_action: "Review the refreshed result."
+    staff_action: "Close only after verification evidence is attached."

@@ -1,0 +1,14 @@
+import React from 'react';
+/** One device capability in Privacy › Device: current state, what it's used for, and how to change it. */
+export function PermissionRow({ capability, use, state = 'off', detail, onChange }) {
+  const L = { on: ['✓', 'On'], off: ['○', 'Off'], ask: ['?', 'Ask each time'], blocked: ['⊘', 'Blocked on device'], limited: ['◐', 'Limited'] };
+  const [g, t] = L[state] || L.off;
+  const label = state === 'blocked' ? 'How to change' : state === 'on' || state === 'limited' ? 'Turn off' : 'Turn on';
+  return (
+    <div className="perm-row" data-state={state}>
+      <div className="perm-row-main"><div className="perm-row-name">{capability}</div><div className="perm-row-use">{use}</div>{detail && <div className="perm-row-detail">{detail}</div>}</div>
+      <span className="perm-state"><span aria-hidden="true">{g}</span> {t}</span>
+      {onChange && <button type="button" className="btn btn-sm" onClick={onChange}><span>{label}</span></button>}
+    </div>
+  );
+}

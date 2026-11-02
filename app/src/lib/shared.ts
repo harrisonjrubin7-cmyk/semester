@@ -47,13 +47,13 @@ export function arrivedByShare(): boolean {
  * importer ran. That is still a file somebody else handed this device, and
  * "Erase from this device" was leaving it behind.
  */
-export async function clearShared(): Promise<void> {
-  if (typeof caches === 'undefined') return;
+export async function clearShared(): Promise<boolean> {
+  if (typeof caches === 'undefined') return true;
   try {
     await caches.delete(SHARE_CACHE);
+    return true;
   } catch {
-    // A browser with no Cache API, or a private window. Nothing was stored,
-    // so nothing is left.
+    return false;
   }
 }
 

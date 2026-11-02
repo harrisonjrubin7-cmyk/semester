@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS tenants (id TEXT PRIMARY KEY, name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS memberships (tenant_id TEXT NOT NULL REFERENCES tenants(id), user_id TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('faculty','student','viewer')), PRIMARY KEY(tenant_id,user_id));
+CREATE TABLE IF NOT EXISTS courses (tenant_id TEXT NOT NULL REFERENCES tenants(id), id TEXT NOT NULL, owner_id TEXT NOT NULL, title TEXT NOT NULL, assignment TEXT NOT NULL, ai_policy TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published')), version INTEGER NOT NULL DEFAULT 1 CHECK(version>0), PRIMARY KEY(tenant_id,id), FOREIGN KEY(tenant_id,owner_id) REFERENCES memberships(tenant_id,user_id));
+CREATE TABLE IF NOT EXISTS publications (tenant_id TEXT NOT NULL, course_id TEXT NOT NULL, version INTEGER NOT NULL, content_json TEXT NOT NULL, occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(tenant_id,course_id,version), FOREIGN KEY(tenant_id,course_id) REFERENCES courses(tenant_id,id));
+CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY,tenant_id TEXT NOT NULL,user_id TEXT NOT NULL,action TEXT NOT NULL,course_id TEXT NOT NULL,occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TRIGGER IF NOT EXISTS publications_no_update BEFORE UPDATE ON publications BEGIN SELECT RAISE(ABORT,'immutable publication'); END;
+CREATE TRIGGER IF NOT EXISTS publications_no_delete BEFORE DELETE ON publications BEGIN SELECT RAISE(ABORT,'immutable publication'); END;

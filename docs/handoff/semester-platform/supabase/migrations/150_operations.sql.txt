@@ -1,0 +1,93 @@
+-- 150 · Operations: support cases, privacy requests, integrations and sync runs, incidents, access jobs; hardening.
+-- Console workspaces at #/console read these through capability-checked RPCs. Staff never browse raw tables.
+create schema if not exists opsx;
+
+-- Hardening: fin.ledger_accounts had no RLS in 090.
+alter table fin.ledger_accounts enable row level security;
+drop policy if exists la_finance on fin.ledger_accounts;
+create policy la_finance on fin.ledger_accounts for select using (fin.is_finance());
+
+create table if not exists opsx.support_cases(
+  id uuid primary key default gen_random_uuid(), institution_id uuid references core.institutions, requester_id uuid references core.profiles,
+  channel text not null check (channel in ('in_app','email','phone','institution_admin')), category text not null,
+  priority text not null default 'p3' check (priority in ('p1','p2','p3','p4')),
+  state text not null default 'new' check (state in ('new','triaged','waiting_on_requester','waiting_on_institution','in_progress','resolved','closed')),
+  assignee_id uuid references auth.users, subject text not null check (length(subject) <= 200), sla_due timestamptz,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now(), resolved_at timestamptz);
+create table if not exists opsx.case_events(
+  id bigserial primary key, case_id uuid not null references opsx.support_cases on delete cascade, actor uuid, kind text not null check (kind in ('note','public_reply','state','assign','access_window')),
+  body text check (length(body) <= 8000), meta jsonb not null default '{}'::jsonb, at timestamptz not null default now());
+
+-- Student-approved, time-limited support access. Never longer than 4 hours.
+create table if not exists opsx.support_access_windows(
+  id uuid primary key default gen_random_uuid(), case_id uuid not null references opsx.support_cases on delete cascade,
+  student_id uuid not null references core.profiles, agent_id uuid not null references auth.users, scope text[] not null,
+  approved_at timestamptz not null default now(), expires_at timestamptz not null, revoked_at timestamptz,
+  check (expires_at <= approved_at + interval '4 hours'));
+
+create table if not exists opsx.privacy_requests(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, subject_id uuid references core.profiles,
+  kind text not null check (kind in ('access','amend','delete','export','restrict')), received_via text not null,
+  state text not null default 'received' check (state in ('received','identity_verified','with_institution','in_progress','fulfilled','refused')),
+  due_at timestamptz not null, legal_basis text, decided_by uuid references auth.users, evidence_ref text, created_at timestamptz not null default now(), closed_at timestamptz);
+
+create table if not exists opsx.integrations(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  kind text not null check (kind in ('sso_saml','sso_oidc','sis','lms','calendar','payments','email')), vendor text not null,
+  direction text not null default 'read' check (direction in ('read','write','both')), state text not null default 'configuring' check (state in ('configuring','healthy','degraded','failing','paused')),
+  freshness_limit interval not null default interval '1 hour', secret_ref text, last_success_at timestamptz, created_at timestamptz not null default now(),
+  check (direction = 'read' or kind in ('calendar','email','payments')));   -- SIS/LMS are read-only by design
+create table if not exists opsx.sync_runs(
+  id bigserial primary key, integration_id uuid not null references opsx.integrations on delete cascade, started_at timestamptz not null default now(), finished_at timestamptz,
+  state text not null default 'running' check (state in ('running','succeeded','partial','failed')), records_read int not null default 0, records_changed int not null default 0,
+  errors jsonb not null default '[]'::jsonb, watermark text);
+
+create table if not exists opsx.incidents(
+  id uuid primary key default gen_random_uuid(), severity text not null check (severity in ('sev1','sev2','sev3','sev4')), title text not null,
+  state text not null default 'investigating' check (state in ('investigating','identified','monitoring','resolved','postmortem_done')),
+  affects_student_data boolean not null default false, tenants uuid[] not null default '{}', commander_id uuid references auth.users,
+  started_at timestamptz not null default now(), resolved_at timestamptz, notice_due_at timestamptz);
+create table if not exists opsx.incident_updates(id bigserial primary key, incident_id uuid not null references opsx.incidents on delete cascade, audience text not null check (audience in ('internal','institutions','public')), body text not null, approved_by uuid references auth.users, published_at timestamptz);
+
+-- Access saga jobs (control-plane baseline). Fenced, revisioned; revocation is terminal intent.
+create table if not exists opsx.access_jobs(
+  id uuid primary key default gen_random_uuid(), tenant_id uuid not null references core.institutions, subject_id uuid not null references auth.users,
+  resource text not null, action text not null, state text not null default 'EVALUATING', revision int not null default 0, generation int not null default 1,
+  decision_id text, grant_id text, cancellation_requested boolean not null default false, lease_owner text, lease_until timestamptz, fencing_token bigint not null default 0,
+  next_attempt_at timestamptz not null default now(), attempts int not null default 0, request_digest text not null, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create index if not exists aj_due on opsx.access_jobs(next_attempt_at) where state not in ('DENIED','CLOSED');
+
+alter table opsx.support_cases enable row level security; alter table opsx.case_events enable row level security; alter table opsx.support_access_windows enable row level security;
+alter table opsx.privacy_requests enable row level security; alter table opsx.integrations enable row level security; alter table opsx.sync_runs enable row level security;
+alter table opsx.incidents enable row level security; alter table opsx.incident_updates enable row level security; alter table opsx.access_jobs enable row level security;
+create policy sc_requester on opsx.support_cases for select using (requester_id = auth.uid());
+create policy sc_staff on opsx.support_cases for select using (ctl.can('support:ticket', coalesce(institution_id, '00000000-0000-0000-0000-000000000000')));
+create policy ce_staff on opsx.case_events for select using (exists (select 1 from opsx.support_cases c where c.id = case_id and ctl.can('support:ticket', coalesce(c.institution_id, '00000000-0000-0000-0000-000000000000'))));
+create policy ce_requester on opsx.case_events for select using (kind = 'public_reply' and exists (select 1 from opsx.support_cases c where c.id = case_id and c.requester_id = auth.uid()));
+create policy saw_student on opsx.support_access_windows for select using (student_id = auth.uid());
+create policy pr_handler on opsx.privacy_requests for select using (ctl.can('data_request:handle', institution_id));
+create policy pr_subject on opsx.privacy_requests for select using (subject_id = auth.uid());
+create policy int_view on opsx.integrations for select using (ctl.can('integration:view', institution_id));
+create policy sr_view on opsx.sync_runs for select using (exists (select 1 from opsx.integrations i where i.id = integration_id and ctl.can('integration:view', i.institution_id)));
+create policy inc_view on opsx.incidents for select using (ctl.can('incident:communicate', '00000000-0000-0000-0000-000000000000'));
+create policy iu_view on opsx.incident_updates for select using (ctl.can('incident:communicate', '00000000-0000-0000-0000-000000000000') or audience = 'public' and published_at is not null);
+-- access_jobs: no authenticated policy at all. Workers use the service role.
+revoke all on all tables in schema opsx from anon, authenticated;
+grant usage on schema opsx to authenticated;
+grant select on opsx.support_cases, opsx.case_events, opsx.support_access_windows, opsx.privacy_requests, opsx.integrations, opsx.sync_runs, opsx.incidents, opsx.incident_updates to authenticated;
+
+create or replace function api.approve_support_access(p_case uuid, p_scope text[], p_minutes int) returns uuid language plpgsql security definer set search_path = '' as $$
+declare c opsx.support_cases; w uuid; begin
+  select * into c from opsx.support_cases where id = p_case;
+  if c.id is null or c.requester_id <> auth.uid() then raise exception 'NOT_FOUND'; end if;
+  if c.assignee_id is null then raise exception 'NO_ASSIGNEE'; end if;
+  if p_minutes not between 15 and 240 then raise exception 'INVALID_DURATION'; end if;
+  insert into opsx.support_access_windows(case_id, student_id, agent_id, scope, expires_at) values (p_case, auth.uid(), c.assignee_id, p_scope, now() + make_interval(mins => p_minutes)) returning id into w;
+  insert into opsx.case_events(case_id, actor, kind, meta) values (p_case, auth.uid(), 'access_window', jsonb_build_object('window', w, 'scope', p_scope, 'minutes', p_minutes));
+  perform audit.log('support.access_approved', p_case::text, null, jsonb_build_object('window', w));
+  return w; end $$;
+create or replace function api.revoke_support_access(p_window uuid) returns void language plpgsql security definer set search_path = '' as $$ begin
+  update opsx.support_access_windows set revoked_at = now() where id = p_window and student_id = auth.uid() and revoked_at is null;
+  if not found then raise exception 'NOT_FOUND'; end if;
+  perform audit.log('support.access_revoked', p_window::text, null, null); end $$;
+grant execute on function api.approve_support_access(uuid,text[],int), api.revoke_support_access(uuid) to authenticated;

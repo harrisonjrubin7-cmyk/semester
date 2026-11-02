@@ -1,0 +1,239 @@
+-- 170 · Ownership, teaching authority, learning, documents, workflow, commerce.
+-- From "Unified enterprise architecture map". Proposed design: reconcile with the repo before applying.
+-- Principles: three explicit record scopes (personal / institutional / company) via core.workspaces;
+-- course access needs a course relationship (teaching_assignments, enrollments), not an institution-wide role;
+-- working grades are separate from institution-authoritative final grades; composite tenant-aware FKs;
+-- signatures and approvals reference an exact immutable document version.
+create schema if not exists learn; create schema if not exists docs; create schema if not exists workflow; create schema if not exists commerce;
+
+-- ---------- Ownership
+create table if not exists core.workspaces(
+  id uuid primary key default gen_random_uuid(), kind text not null check (kind in ('personal','institution','company')),
+  organization_id uuid references core.institutions, owner_user_id uuid references auth.users, created_at timestamptz not null default now(),
+  constraint ws_shape check ((kind = 'personal' and owner_user_id is not null and organization_id is null) or (kind <> 'personal' and organization_id is not null and owner_user_id is null)));
+create unique index if not exists ws_one_personal on core.workspaces(owner_user_id) where kind = 'personal';
+create unique index if not exists ws_one_org on core.workspaces(organization_id, kind) where kind <> 'personal';
+alter table core.workspaces enable row level security;
+create policy ws_personal on core.workspaces for select using (kind = 'personal' and owner_user_id = auth.uid());
+create policy ws_org on core.workspaces for select using (kind = 'institution' and organization_id = core.my_institution());
+
+-- ---------- Academic authority (extends 130)
+-- Composite keys let child rows carry institution_id and be forced into the same tenant.
+alter table acad.sections drop constraint if exists sections_tenant_uq; alter table acad.sections add constraint sections_tenant_uq unique (id, institution_id);
+create table if not exists acad.course_versions(
+  id uuid primary key default gen_random_uuid(), course_id uuid not null references acad.courses on delete cascade,
+  title text not null, credits numeric(4,1) not null, effective_from date not null, effective_until date,
+  unique (course_id, effective_from), check (effective_until is null or effective_until > effective_from));
+create table if not exists acad.teaching_assignments(
+  section_id uuid not null, institution_id uuid not null, person_id uuid not null references core.profiles on delete cascade,
+  responsibility text not null check (responsibility in ('instructor_of_record','co_instructor','ta','grader','designer')),
+  starts_on date not null default current_date, ends_on date, source text not null default 'sis',
+  primary key (section_id, person_id, responsibility), foreign key (section_id, institution_id) references acad.sections(id, institution_id) on delete cascade);
+alter table acad.course_versions enable row level security; alter table acad.teaching_assignments enable row level security;
+create policy cv_read on acad.course_versions for select using (exists (select 1 from acad.courses c where c.id = course_id and c.institution_id = core.my_institution()));
+create policy ta_read on acad.teaching_assignments for select using (institution_id = core.my_institution());
+create or replace function acad.can_teach(p_section uuid, p_resp text[] default array['instructor_of_record','co_instructor','ta','grader','designer']) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from acad.teaching_assignments t where t.section_id = p_section and t.person_id = auth.uid() and t.responsibility = any(p_resp) and (t.ends_on is null or t.ends_on >= current_date)) $$;
+create or replace function acad.enrolled(p_section uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from acad.enrollments e where e.section_id = p_section and e.person_id = auth.uid() and e.role = 'student' and e.status = 'enrolled') $$;
+
+-- ---------- Learning
+create table if not exists learn.modules(
+  id uuid primary key default gen_random_uuid(), section_id uuid not null, institution_id uuid not null, title text not null, position int not null,
+  state text not null default 'draft' check (state in ('draft','scheduled','published','archived')), publish_at timestamptz,
+  foreign key (section_id, institution_id) references acad.sections(id, institution_id) on delete cascade, unique (id, institution_id));
+create table if not exists learn.content_items(
+  id uuid primary key default gen_random_uuid(), module_id uuid not null, institution_id uuid not null,
+  kind text not null check (kind in ('page','file','video','link','reading')), title text not null, body text, file_id uuid references comms.files, url text,
+  state text not null default 'draft' check (state in ('draft','published','archived')), position int not null,
+  foreign key (module_id, institution_id) references learn.modules(id, institution_id) on delete cascade);
+create table if not exists learn.rubrics(
+  id uuid primary key default gen_random_uuid(), section_id uuid not null, institution_id uuid not null, version int not null default 1,
+  criteria jsonb not null check (jsonb_typeof(criteria) = 'array'), foreign key (section_id, institution_id) references acad.sections(id, institution_id) on delete cascade, unique (id, institution_id));
+alter table work.assignments add column if not exists rubric_id uuid references learn.rubrics;
+alter table work.assignments add column if not exists state text not null default 'published' check (state in ('draft','scheduled','published','closed'));
+create table if not exists learn.submissions(
+  id uuid primary key default gen_random_uuid(), assignment_id uuid not null references work.assignments on delete cascade, institution_id uuid not null,
+  student_id uuid not null references core.profiles on delete cascade, attempt int not null default 1,
+  state text not null default 'draft' check (state in ('draft','submitted','returned','resubmission_requested')),
+  submitted_at timestamptz, receipt_code text unique, idempotency_key text, unique (assignment_id, student_id, attempt), unique (student_id, idempotency_key));
+create table if not exists learn.submission_files(submission_id uuid not null references learn.submissions on delete cascade, file_id uuid not null references comms.files, primary key (submission_id, file_id));
+create table if not exists learn.assessments(
+  id uuid primary key default gen_random_uuid(), section_id uuid not null, institution_id uuid not null, title text not null, config jsonb not null default '{}'::jsonb, version int not null default 1,
+  opens_at timestamptz, closes_at timestamptz, foreign key (section_id, institution_id) references acad.sections(id, institution_id) on delete cascade);
+create table if not exists learn.assessment_attempts(
+  id uuid primary key default gen_random_uuid(), assessment_id uuid not null references learn.assessments on delete cascade, student_id uuid not null references core.profiles,
+  state text not null default 'in_progress' check (state in ('in_progress','submitted','graded','voided')), started_at timestamptz not null default now(), submitted_at timestamptz,
+  accommodation_minutes int not null default 0 check (accommodation_minutes >= 0));
+-- Working grades. Final, institution-authoritative grades stay in the SIS (work.grades mirror).
+create table if not exists learn.grade_entries(
+  id uuid primary key default gen_random_uuid(), assignment_id uuid not null references work.assignments on delete cascade, student_id uuid not null references core.profiles,
+  score numeric(6,2), state text not null default 'draft' check (state in ('draft','returned','submitted_for_approval','approved','synced')),
+  ai_suggested boolean not null default false, reviewed_by uuid references core.profiles, updated_at timestamptz not null default now(), unique (assignment_id, student_id),
+  check (not ai_suggested or state = 'draft' or reviewed_by is not null));          -- AI suggestions never leave draft without a human reviewer
+create table if not exists learn.grade_revisions(
+  id bigserial primary key, grade_entry_id uuid not null references learn.grade_entries on delete cascade, prior_score numeric(6,2), new_score numeric(6,2),
+  reason text not null check (length(reason) between 3 and 1000), actor uuid not null default auth.uid(), at timestamptz not null default now());
+create table if not exists learn.feedback(
+  id uuid primary key default gen_random_uuid(), submission_id uuid not null references learn.submissions on delete cascade, author_id uuid not null references core.profiles default auth.uid(),
+  body text not null check (length(body) <= 8000), visibility text not null default 'draft' check (visibility in ('draft','returned')), ai_suggested boolean not null default false, created_at timestamptz not null default now());
+create table if not exists learn.announcements(
+  id uuid primary key default gen_random_uuid(), section_id uuid not null, institution_id uuid not null, author_id uuid not null references core.profiles default auth.uid(),
+  title text not null, body text not null, state text not null default 'draft' check (state in ('draft','scheduled','published')), publish_at timestamptz,
+  foreign key (section_id, institution_id) references acad.sections(id, institution_id) on delete cascade);
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'learn' loop execute format('alter table learn.%I enable row level security', t); end loop; end $$;
+create policy mod_student on learn.modules for select using (state = 'published' and acad.enrolled(section_id));
+create policy mod_teacher on learn.modules for select using (acad.can_teach(section_id));
+create policy ci_student on learn.content_items for select using (state = 'published' and exists (select 1 from learn.modules m where m.id = module_id and m.state = 'published' and acad.enrolled(m.section_id)));
+create policy ci_teacher on learn.content_items for select using (exists (select 1 from learn.modules m where m.id = module_id and acad.can_teach(m.section_id)));
+create policy rub_read on learn.rubrics for select using (acad.enrolled(section_id) or acad.can_teach(section_id));
+create policy sub_self on learn.submissions for select using (student_id = auth.uid());
+create policy sub_teacher on learn.submissions for select using (acad.can_teach((select section_id from work.assignments a where a.id = assignment_id), array['instructor_of_record','co_instructor','ta','grader']));
+create policy sf_read on learn.submission_files for select using (exists (select 1 from learn.submissions s where s.id = submission_id and (s.student_id = auth.uid() or acad.can_teach((select section_id from work.assignments a where a.id = s.assignment_id)))));
+create policy as_read on learn.assessments for select using (acad.enrolled(section_id) or acad.can_teach(section_id));
+create policy at_self on learn.assessment_attempts for select using (student_id = auth.uid());
+create policy at_teacher on learn.assessment_attempts for select using (exists (select 1 from learn.assessments a where a.id = assessment_id and acad.can_teach(a.section_id)));
+create policy ge_self on learn.grade_entries for select using (student_id = auth.uid() and state in ('returned','approved','synced'));
+create policy ge_teacher on learn.grade_entries for select using (acad.can_teach((select section_id from work.assignments a where a.id = assignment_id), array['instructor_of_record','co_instructor','ta','grader']));
+create policy gr_teacher on learn.grade_revisions for select using (exists (select 1 from learn.grade_entries g join work.assignments a on a.id = g.assignment_id where g.id = grade_entry_id and acad.can_teach(a.section_id)));
+create policy fb_self on learn.feedback for select using (visibility = 'returned' and exists (select 1 from learn.submissions s where s.id = submission_id and s.student_id = auth.uid()));
+create policy fb_teacher on learn.feedback for select using (exists (select 1 from learn.submissions s join work.assignments a on a.id = s.assignment_id where s.id = submission_id and acad.can_teach(a.section_id)));
+create policy an_student on learn.announcements for select using (state = 'published' and acad.enrolled(section_id));
+create policy an_teacher on learn.announcements for select using (acad.can_teach(section_id));
+revoke insert, update, delete on all tables in schema learn from anon, authenticated;
+grant usage on schema learn to authenticated; grant select on all tables in schema learn to authenticated;
+
+create or replace function api.submit_work(p_assignment uuid, p_files uuid[], p_idem text) returns text language plpgsql security definer set search_path = '' as $$
+declare a work.assignments; s learn.submissions; n int; code text; begin
+  select * into s from learn.submissions where student_id = auth.uid() and idempotency_key = p_idem;
+  if s.id is not null then return s.receipt_code; end if;                                   -- safe retry: never a duplicate submission
+  select * into a from work.assignments where id = p_assignment;
+  if a.id is null or not acad.enrolled(a.section_id) then raise exception 'NOT_FOUND'; end if;
+  if a.state <> 'published' then raise exception 'NOT_OPEN'; end if;
+  if exists (select 1 from unnest(p_files) f where not exists (select 1 from comms.files cf where cf.id = f and cf.owner_id = auth.uid() and cf.scan_state = 'clean')) then raise exception 'FILE_NOT_ALLOWED'; end if;
+  select coalesce(max(attempt), 0) + 1 into n from learn.submissions where assignment_id = p_assignment and student_id = auth.uid();
+  code := 'SUB-' || upper(substr(encode(extensions.gen_random_bytes(4),'hex'),1,6));
+  insert into learn.submissions(assignment_id, institution_id, student_id, attempt, state, submitted_at, receipt_code, idempotency_key)
+    values (p_assignment, a.institution_id, auth.uid(), n, 'submitted', now(), code, p_idem) returning * into s;
+  insert into learn.submission_files(submission_id, file_id) select s.id, unnest(p_files);
+  perform audit.log('submission.created', s.id::text, null, jsonb_build_object('attempt', n, 'receipt', code));
+  insert into ctl.outbox(topic, tenant_id, payload) values ('submission.created', a.institution_id, jsonb_build_object('submission', s.id));
+  return code; end $$;
+
+create or replace function api.publish_module(p_module uuid) returns void language plpgsql security definer set search_path = '' as $$
+declare m learn.modules; begin
+  select * into m from learn.modules where id = p_module for update;
+  if m.id is null or not acad.can_teach(m.section_id, array['instructor_of_record','co_instructor','designer']) then raise exception 'FORBIDDEN'; end if;
+  update learn.modules set state = 'published' where id = p_module;
+  perform audit.log('module.published', p_module::text, to_jsonb(m.state), '"published"');
+  insert into ctl.outbox(topic, tenant_id, payload) values ('module.published', m.institution_id, jsonb_build_object('module', p_module)); end $$;
+
+create or replace function api.record_grade(p_assignment uuid, p_student uuid, p_score numeric, p_reason text, p_from_ai boolean default false) returns uuid language plpgsql security definer set search_path = '' as $$
+declare a work.assignments; g learn.grade_entries; begin
+  select * into a from work.assignments where id = p_assignment;
+  if a.id is null or not acad.can_teach(a.section_id, array['instructor_of_record','co_instructor','ta','grader']) then raise exception 'FORBIDDEN'; end if;
+  select * into g from learn.grade_entries where assignment_id = p_assignment and student_id = p_student for update;
+  if g.id is null then
+    insert into learn.grade_entries(assignment_id, student_id, score, ai_suggested) values (p_assignment, p_student, p_score, p_from_ai) returning * into g;
+  else
+    if g.state in ('approved','synced') then raise exception 'USE_REVISION_REQUEST'; end if;
+    insert into learn.grade_revisions(grade_entry_id, prior_score, new_score, reason) values (g.id, g.score, p_score, coalesce(p_reason, 'edit'));
+    update learn.grade_entries set score = p_score, ai_suggested = p_from_ai, reviewed_by = case when p_from_ai then null else auth.uid() end, updated_at = now() where id = g.id;
+  end if;
+  perform audit.log('grade.recorded', g.id::text, null, jsonb_build_object('score', p_score, 'ai', p_from_ai)); return g.id; end $$;
+
+create or replace function api.submit_grades_for_approval(p_assignment uuid) returns int language plpgsql security definer set search_path = '' as $$
+declare a work.assignments; n int; begin
+  select * into a from work.assignments where id = p_assignment;
+  if a.id is null or not acad.can_teach(a.section_id, array['instructor_of_record']) then raise exception 'FORBIDDEN'; end if;
+  if exists (select 1 from learn.grade_entries where assignment_id = p_assignment and ai_suggested and reviewed_by is null) then raise exception 'UNREVIEWED_AI_SUGGESTIONS'; end if;
+  update learn.grade_entries set state = 'submitted_for_approval', updated_at = now() where assignment_id = p_assignment and state in ('draft','returned');
+  get diagnostics n = row_count;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('grades.submitted', a.institution_id, jsonb_build_object('assignment', p_assignment, 'count', n));
+  perform audit.log('grades.submitted', p_assignment::text, null, jsonb_build_object('count', n)); return n; end $$;
+grant execute on function api.submit_work(uuid,uuid[],text), api.publish_module(uuid), api.record_grade(uuid,uuid,numeric,text,boolean), api.submit_grades_for_approval(uuid) to authenticated;
+
+-- ---------- Documents (managed records, not PDFs in a folder)
+create table if not exists docs.documents(
+  id uuid primary key default gen_random_uuid(), workspace_id uuid not null references core.workspaces, title text not null, type text not null,
+  owner_id uuid not null references auth.users, department text, classification text not null default 'internal' check (classification in ('public','internal','confidential','restricted')),
+  status text not null default 'draft' check (status in ('draft','in_review','approved','effective','superseded','retired')),
+  effective_on date, review_on date, expires_on date, retention_rule_id uuid, legal_hold boolean not null default false, created_at timestamptz not null default now());
+create table if not exists docs.document_versions(
+  id uuid primary key default gen_random_uuid(), document_id uuid not null references docs.documents on delete restrict, version int not null,
+  checksum text not null, storage_ref text not null, created_by uuid not null default auth.uid(), created_at timestamptz not null default now(), unique (document_id, version));
+create table if not exists docs.templates(id uuid primary key default gen_random_uuid(), code text not null, version int not null, body_ref text not null, unique (code, version));
+-- Explicit join tables per resource type: real foreign keys, no free-form entity_type/entity_id.
+create table if not exists docs.contract_documents(contract_id uuid not null references biz.contracts on delete cascade, document_id uuid not null references docs.documents, primary key (contract_id, document_id));
+create table if not exists docs.pilot_documents(pilot_id uuid not null references biz.pilots on delete cascade, document_id uuid not null references docs.documents, primary key (pilot_id, document_id));
+create table if not exists docs.case_documents(case_id uuid not null references opsx.support_cases on delete cascade, document_id uuid not null references docs.documents, primary key (case_id, document_id));
+create table if not exists docs.signature_requests(
+  id uuid primary key default gen_random_uuid(), document_version_id uuid not null references docs.document_versions, signer_email text not null, signer_name text,
+  sign_order int not null default 1, state text not null default 'pending' check (state in ('pending','sent','signed','declined','expired')), requested_by uuid not null default auth.uid(), requested_at timestamptz not null default now());
+create table if not exists docs.signature_evidence(
+  id uuid primary key default gen_random_uuid(), signature_request_id uuid not null references docs.signature_requests, document_version_id uuid not null references docs.document_versions,
+  provider text not null, provider_ref text not null, signed_at timestamptz not null, ip_hash text, certificate_ref text);
+create table if not exists docs.retention_rules(id uuid primary key default gen_random_uuid(), code text unique not null, keep_for interval not null, basis text not null);
+create table if not exists docs.legal_holds(id uuid primary key default gen_random_uuid(), document_id uuid not null references docs.documents, reason text not null, placed_by uuid not null default auth.uid(), placed_at timestamptz not null default now(), released_at timestamptz);
+create table if not exists docs.acknowledgments(document_version_id uuid not null references docs.document_versions, person_id uuid not null references auth.users default auth.uid(), at timestamptz not null default now(), primary key (document_version_id, person_id));
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'docs' loop execute format('alter table docs.%I enable row level security', t); end loop; end $$;
+create or replace function docs.can_read(p_doc uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from docs.documents d join core.workspaces w on w.id = d.workspace_id where d.id = p_doc and (
+    d.classification = 'public' or (w.kind = 'personal' and w.owner_user_id = auth.uid()) or
+    (w.kind = 'company' and ctl.can(case when d.classification = 'restricted' then 'docs:restricted' else 'docs:read' end, w.organization_id)) or
+    (w.kind = 'institution' and w.organization_id = core.my_institution() and ctl.can('docs:read', w.organization_id)))) $$;
+create policy doc_read on docs.documents for select using (docs.can_read(id));
+create policy dv_read on docs.document_versions for select using (docs.can_read(document_id));
+create policy ack_self on docs.acknowledgments for select using (person_id = auth.uid());
+revoke insert, update, delete on all tables in schema docs from anon, authenticated;
+grant usage on schema docs to authenticated; grant select on docs.documents, docs.document_versions, docs.acknowledgments to authenticated;
+-- Versions are immutable; superseding creates a new version.
+create or replace function docs.deny_version_mutation() returns trigger language plpgsql as $$ begin raise exception 'DOCUMENT_VERSIONS_ARE_IMMUTABLE'; end $$;
+drop trigger if exists dv_immutable on docs.document_versions;
+create trigger dv_immutable before update or delete on docs.document_versions for each row execute function docs.deny_version_mutation();
+
+-- ---------- Workflow engine
+create table if not exists workflow.definitions(id uuid primary key default gen_random_uuid(), code text not null, version int not null, states text[] not null, transitions jsonb not null, published_at timestamptz, unique (code, version));
+create table if not exists workflow.instances(
+  id uuid primary key default gen_random_uuid(), definition_id uuid not null references workflow.definitions, workspace_id uuid not null references core.workspaces,
+  source_table text not null, source_id uuid not null, state text not null, revision int not null default 0, started_by uuid not null default auth.uid(), started_at timestamptz not null default now(), closed_at timestamptz);
+create table if not exists workflow.step_instances(id uuid primary key default gen_random_uuid(), instance_id uuid not null references workflow.instances on delete cascade, step text not null, assignee_cap text, assignee_id uuid references auth.users, due_at timestamptz, outcome text, completed_at timestamptz);
+create table if not exists workflow.approvals(id uuid primary key default gen_random_uuid(), step_id uuid not null references workflow.step_instances on delete cascade, approver_id uuid not null default auth.uid(), decision text not null check (decision in ('approve','reject','request_changes')), reason text, document_version_id uuid references docs.document_versions, at timestamptz not null default now());
+create table if not exists workflow.transition_history(id bigserial primary key, instance_id uuid not null references workflow.instances on delete cascade, from_state text, to_state text not null, actor uuid, reason text, at timestamptz not null default now());
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'workflow' loop execute format('alter table workflow.%I enable row level security', t); end loop; end $$;
+create policy wd_read on workflow.definitions for select using (published_at is not null);
+create policy wi_part on workflow.instances for select using (started_by = auth.uid() or exists (select 1 from workflow.step_instances s where s.instance_id = id and (s.assignee_id = auth.uid() or (s.assignee_cap is not null and ctl.can(s.assignee_cap, core.my_institution())))));
+create policy ws_part on workflow.step_instances for select using (assignee_id = auth.uid() or (assignee_cap is not null and ctl.can(assignee_cap, core.my_institution())));
+create policy wt_part on workflow.transition_history for select using (exists (select 1 from workflow.instances i where i.id = instance_id and i.started_by = auth.uid()));
+revoke insert, update, delete on all tables in schema workflow from anon, authenticated;
+grant usage on schema workflow to authenticated; grant select on all tables in schema workflow to authenticated;
+
+-- ---------- Commerce (customer account ≠ institution)
+create table if not exists commerce.products(id uuid primary key default gen_random_uuid(), code text unique not null, name text not null);
+create table if not exists commerce.plans(id uuid primary key default gen_random_uuid(), product_id uuid not null references commerce.products, code text not null, unique (product_id, code));
+create table if not exists commerce.price_versions(id uuid primary key default gen_random_uuid(), plan_id uuid not null references commerce.plans, unit text not null check (unit in ('student_fte','seat','flat')), unit_price_cents bigint not null check (unit_price_cents >= 0), effective_from date not null, effective_until date, unique (plan_id, effective_from));
+create table if not exists commerce.account_organization_links(account_id uuid not null references biz.accounts on delete cascade, institution_id uuid not null references core.institutions, relation text not null default 'covered' check (relation in ('covered','billing_only','pilot')), primary key (account_id, institution_id));
+create table if not exists commerce.subscriptions(
+  id uuid primary key default gen_random_uuid(), account_id uuid not null references biz.accounts, contract_id uuid references biz.contracts,
+  state text not null default 'pending_activation' check (state in ('trial','pending_activation','active','past_due','cancelled','ended')),
+  starts_on date not null, ends_on date, activation_conditions jsonb not null default '[]'::jsonb, activated_at timestamptz,
+  check (state not in ('active','past_due') or contract_id is not null));        -- no active subscription without a contract
+create table if not exists commerce.subscription_items(id uuid primary key default gen_random_uuid(), subscription_id uuid not null references commerce.subscriptions on delete cascade, price_version_id uuid not null references commerce.price_versions, quantity int not null check (quantity > 0));
+create table if not exists commerce.entitlements(
+  id uuid primary key default gen_random_uuid(), subscription_id uuid not null references commerce.subscriptions on delete cascade, institution_id uuid not null references core.institutions,
+  feature text not null, quota int, effective_from date not null, effective_until date, unique (subscription_id, institution_id, feature, effective_from));
+do $$ declare t text; begin for t in select tablename from pg_tables where schemaname = 'commerce' loop execute format('alter table commerce.%I enable row level security', t); end loop; end $$;
+create policy cp_read on commerce.products for select using (true);
+create policy cpl_read on commerce.plans for select using (true);
+create policy cpv_read on commerce.price_versions for select using (biz.staff('biz:read'));
+create policy aol_read on commerce.account_organization_links for select using (biz.staff('biz:read'));
+create policy sub_staff on commerce.subscriptions for select using (biz.staff('biz:read'));
+create policy si_staff on commerce.subscription_items for select using (biz.staff('biz:read'));
+create policy ent_staff on commerce.entitlements for select using (biz.staff('biz:read') or institution_id = core.my_institution());
+revoke insert, update, delete on all tables in schema commerce from anon, authenticated;
+grant usage on schema commerce to authenticated; grant select on all tables in schema commerce to authenticated;
+-- Failed payment does not automatically block academic access: enforcement follows the contract (see SERVER.md).
+
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values
+  ('docs:read','Read internal documents in a workspace', false, '{}', 0), ('docs:restricted','Read restricted company documents', true, '{}', 0)
+on conflict (key) do nothing;

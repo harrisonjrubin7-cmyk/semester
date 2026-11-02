@@ -1,0 +1,115 @@
+# v2 · Semester access saga orchestrator. State definitions are referenced from OpenAPI.
+# x-semester-execution is descriptive metadata: AsyncAPI tooling will NOT execute these handlers.
+# The outbox adapter must map access-saga.ts internal events to StateChanged (schemaVersion, correlationId, status). Test that mapping automatically.
+asyncapi: 3.0.0
+info:
+  title: Semester Access Saga Orchestrator
+  version: 0.1.0
+channels:
+  lifecycle:
+    address: semester.access.lifecycle.v1
+    messages:
+      stateChanged: {$ref: '#/components/messages/StateChanged'}
+  signals:
+    address: semester.access.signals.v1
+    messages:
+      signal: {$ref: '#/components/messages/Signal'}
+  evidence:
+    address: semester.access.evidence.v1
+    messages:
+      observation: {$ref: '#/components/messages/Observation'}
+operations:
+  publishLifecycle:
+    action: send
+    channel: {$ref: '#/channels/lifecycle'}
+    messages:
+      - $ref: '#/channels/lifecycle/messages/stateChanged'
+  receiveSignals:
+    action: receive
+    channel: {$ref: '#/channels/signals'}
+    messages:
+      - $ref: '#/channels/signals/messages/signal'
+  publishObservation:
+    action: send
+    channel: {$ref: '#/channels/evidence'}
+    messages:
+      - $ref: '#/channels/evidence/messages/observation'
+components:
+  messages:
+    StateChanged:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/correlationId'}
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, schemaVersion, type, occurredAt, tenantId, correlationId, status]
+        properties:
+          eventId: {type: string}
+          schemaVersion: {const: "1"}
+          type: {const: access.state.changed}
+          occurredAt: {type: string, format: date-time}
+          tenantId: {type: string}
+          correlationId: {type: string}
+          status: {$ref: './access.openapi.yaml#/components/schemas/SagaStatus'}
+          reasonCode: {type: string}
+    Signal:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/correlationId'}
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, schemaVersion, sagaId, tenantId, correlationId, kind, occurredAt]
+        properties:
+          eventId: {type: string}
+          schemaVersion: {const: "1"}
+          sagaId: {type: string}
+          tenantId: {type: string}
+          correlationId: {type: string}
+          kind: {enum: [requirements_changed, revoke, recover]}
+          occurredAt: {type: string, format: date-time}
+          evidenceRef: {type: string}
+    Observation:
+      contentType: application/json
+      correlationId: {location: '$message.payload#/correlationId'}
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, observationId, sagaId, tenantId, correlationId, requirementVersion, implementationRevision, environment, result, observedAt, artifactRefs]
+        properties:
+          eventId: {type: string}
+          observationId: {type: string}
+          sagaId: {type: string}
+          tenantId: {type: string}
+          correlationId: {type: string}
+          requirementVersion: {type: string}
+          implementationRevision: {type: string}
+          environment: {type: string}
+          result: {enum: [pass, fail, inconclusive]}
+          observedAt: {type: string, format: date-time}
+          artifactRefs: {type: array, items: {type: string}}
+x-semester-execution:
+  delivery: at_least_once
+  ordering_key: sagaId
+  deduplication_key: eventId
+  state_version: revision
+  handlers:
+    requirements_changed:
+      allowed_states: [WAITING_STEP_UP, WAITING_APPROVAL]
+      action: rebuild_context_and_revalidate
+      authoritative_evidence_required: true
+    revoke:
+      action: durably_request_revocation
+      preserve_terminal_states: true
+    recover:
+      allowed_states: [RECOVERY_REQUIRED]
+      action: reconcile_and_retry_revocation
+  failures:
+    install_timeout:
+      transition: RECONCILING
+      action: inspect_actual_pep_state
+    enforcement_conflict:
+      transition: REVOKING
+      action: remove_unapproved_access
+    revoke_unconfirmed:
+      transition: RECOVERY_REQUIRED
+      action: retry_reconcile_and_escalate

@@ -258,7 +258,7 @@ export const prepareInstitutionAction = (input: ActionInput) => gateway<Review>(
 
 /** Step two: do it, against a review the person has explicitly confirmed. */
 export const commitInstitutionAction = (reviewId: string) =>
-  gateway<Receipt>('/actions/commit', { reviewId, confirmed: true }, { retryOnNetwork: false });
+  gateway<Receipt>('/actions/commit', { reviewId, confirmed: true });
 
 /**
  * Ask again about an action whose outcome was never seen.

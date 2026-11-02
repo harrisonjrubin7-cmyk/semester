@@ -48,7 +48,7 @@ export function WorkWindows() {
         true — the week ahead, the exam runway, what is left over.
       </div>
 
-      {windows.map((w) => (
+      {windows.map((w, index) => (
         <div
           key={w.id}
           style={{
@@ -69,7 +69,7 @@ export function WorkWindows() {
             <button
               type="button"
               className="bare"
-              aria-label={`Remove ${w.label || 'this window'}`}
+              aria-label={`Remove work window ${index + 1} of ${windows.length}, ${w.label || 'Unnamed window'}: ${daysLine(w.days)} · ${spanLine(w)} · ${hoursAWeek([w])} hours a week`}
               onClick={() => dispatch({ type: 'dropWindow', id: w.id })}
               style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >

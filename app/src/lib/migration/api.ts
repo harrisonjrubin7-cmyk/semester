@@ -23,7 +23,8 @@ export interface MigrationApi {
   list(tenantId: string): Promise<MigrationProject[]>;
   create(tenantId: string, name: string, domain: MigrationDomain): Promise<string>;
   save(id: string, patch: ProjectPatch): Promise<void>;
-  move(id: string, to: Stage): Promise<void>;
+  /** Forward moves send no reason; a move back sends the one a person gave, and the database refuses a move back without it. */
+  move(id: string, to: Stage, reason?: string): Promise<void>;
   maps(id: string): Promise<FieldMap[]>;
   addMap(p: MigrationProject, map: FieldMap): Promise<void>;
   removeMap(mapId: string): Promise<void>;
@@ -74,8 +75,9 @@ export function migrationApi(db: SupabaseClient): MigrationApi {
       if (error) throw refusal(error, 'Could not save.');
       if (!data || data.length === 0) throw new Error('Your account cannot change this migration.');
     },
-    async move(id, to) {
-      const { data, error } = await db.from('migration_projects').update({ stage: to }).eq('id', id).select('id');
+    async move(id, to, reason) {
+      const patch = reason === undefined ? { stage: to } : { stage: to, stage_back_reason: reason.trim() };
+      const { data, error } = await db.from('migration_projects').update(patch).eq('id', id).select('id');
       if (error) throw refusal(error, 'Could not move the migration.');
       if (!data || data.length === 0) throw new Error('Your account cannot move this migration.');
     },

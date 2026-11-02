@@ -115,8 +115,17 @@ export async function listInvites(): Promise<InviteRow[]> {
 
 /** Call off a code that has not been claimed. The one write a student makes to this table. */
 export async function revokeInvite(code: string): Promise<void> {
-  const { error } = await (await cloud()).from('family_invites').update({ revoked_at: new Date().toISOString() }).eq('code', code);
+  const revokedAt = new Date().toISOString();
+  const { data, error } = await (await cloud())
+    .from('family_invites')
+    .update({ revoked_at: revokedAt })
+    .select('code, revoked_at')
+    .eq('code', code);
   if (error) throw new Error(error.message);
+  const received = (data as { code?: unknown; revoked_at?: unknown }[] | null) ?? [];
+  if (!received.some((row) => row.code === code && typeof row.revoked_at === 'string' && Date.parse(row.revoked_at) === Date.parse(revokedAt))) {
+    throw new Error('The code was not called off. It may have changed or no longer be available.');
+  }
 }
 
 /** Where a code stands, in the student's words. */

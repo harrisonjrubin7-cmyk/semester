@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Blueprint } from './Blueprint';
 import { Plus } from './Icons';
 import { FilePick } from './ui';
@@ -31,16 +31,26 @@ export function Capture({
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const livePreviews = useRef(new Set<string>());
 
-  // Thumbnails are object URLs; letting them accumulate leaks memory on a
-  // screen somebody keeps adding to.
+  // Release only previews that actually left the batch. An effect cleanup
+  // tied directly to `shots` would also revoke retained thumbnails whenever
+  // one photo was added or removed, leaving broken previews on screen.
+  useEffect(() => {
+    const next = new Set(shots.map((shot) => shot.preview).filter((preview) => preview.startsWith('blob:')));
+    for (const preview of livePreviews.current) {
+      if (!next.has(preview)) URL.revokeObjectURL(preview);
+    }
+    livePreviews.current = next;
+  }, [shots]);
+
+  // Anything still represented belongs to this picker until it unmounts.
   useEffect(() => {
     return () => {
-      for (const s of shots) {
-        if (s.preview.startsWith('blob:')) URL.revokeObjectURL(s.preview);
-      }
+      for (const preview of livePreviews.current) URL.revokeObjectURL(preview);
+      livePreviews.current.clear();
     };
-  }, [shots]);
+  }, []);
 
   const take = async (list: File[]) => {
     if (list.length === 0) return;
@@ -114,14 +124,15 @@ export function Capture({
               marginTop: 'var(--sp-6)',
             }}
           >
-            {shots.map((s, i) => (
-              <button
+            {shots.map((s, i) => {
+              const removalName = `Remove photo ${i + 1} of ${shots.length}, ${s.name}: about ${s.kb} KB`;
+              return <button
                 key={`${s.name}-${i}`}
                 type="button"
                 className="bare"
                 onClick={() => drop(i)}
-                title={`${s.name} — tap to remove`}
-                aria-label={`Remove ${s.name}`}
+                title={removalName}
+                aria-label={removalName}
                 style={{
                   position: 'relative',
                   aspectRatio: '1',
@@ -150,8 +161,8 @@ export function Capture({
                 >
                   Remove
                 </span>
-              </button>
-            ))}
+              </button>;
+            })}
           </div>
           <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
             {shots.length} of {MAX_SHOTS} · about {weigh(shots)} KB after resizing

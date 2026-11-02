@@ -42,6 +42,10 @@ export function SchoolPicker() {
   // A hint, never a filter. The list below is the whole list either way.
   const hint = useMemo(() => hintFor(account?.email, all), [account?.email, all]);
   const found = useMemo(() => search(query, all), [query, all]);
+  const foundMine = useMemo(
+    () => found.filter((candidate) => state.mySchools.some((mine) => mine.id === candidate.id)),
+    [found, state.mySchools],
+  );
   const dupes = useMemo(() => nearDuplicates(name, all), [name, all]);
 
   const set = (id: string, v: string) => setAnswers({ ...answers, [id]: v });
@@ -225,6 +229,8 @@ export function SchoolPicker() {
                 ? () => dispatch({ type: 'forgetSchool', id: s.id })
                 : undefined
             }
+            forgetPosition={foundMine.findIndex((mine) => mine.id === s.id) + 1}
+            forgetTotal={foundMine.length}
           />
         ))}
         {found.length === 0 && (
@@ -279,11 +285,15 @@ function Row({
   on,
   onPick,
   onForget,
+  forgetPosition,
+  forgetTotal,
 }: {
   school: School;
   on: boolean;
   onPick: () => void;
   onForget?: () => void;
+  forgetPosition: number;
+  forgetTotal: number;
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
@@ -314,7 +324,7 @@ function Row({
           type="button"
           className="bare tappable"
           onClick={onForget}
-          aria-label={`Forget ${school.name}`}
+          aria-label={`Forget custom school ${forgetPosition} of ${forgetTotal}, ${school.name} · ${on ? 'currently selected' : 'not selected'}`}
           style={{
             width: 'auto',
             paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',

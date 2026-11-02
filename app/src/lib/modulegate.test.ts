@@ -20,7 +20,10 @@ const mock = vi.hoisted(() => ({
   narrowing: { data: [] as unknown, error: null as { message: string } | null },
   /** What `my_capabilities` answers. */
   caps: { data: [] as unknown, error: null as { message: string } | null },
+  offline: false,
 }));
+
+vi.mock('./offline', () => ({ offline: () => mock.offline }));
 
 function chain(table: string) {
   const self: Record<string, unknown> = {};
@@ -65,6 +68,7 @@ beforeEach(() => {
   mock.asked = [];
   mock.narrowing = { data: [], error: null };
   mock.caps = { data: [], error: null };
+  mock.offline = false;
 });
 
 describe('the decision', () => {
@@ -109,6 +113,12 @@ describe('reading it', () => {
   it('is off with no account service, without asking anything', async () => {
     mock.configured = false;
     expect(await readModuleGate(FLAG)).toEqual({ status: 'off' });
+    expect(mock.asked).toEqual([]);
+  });
+
+  it('is explicitly offline before it attempts account or policy reads', async () => {
+    mock.offline = true;
+    expect(await readModuleGate(FLAG)).toEqual({ status: 'offline' });
     expect(mock.asked).toEqual([]);
   });
 

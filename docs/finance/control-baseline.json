@@ -1,0 +1,43 @@
+{
+  "$source": "Semester delivery-management specification, 'Financial-control baseline'. Reserved now so later billing, ledger, refund, and payment workflows are not retrofitted. Status records what exists in the repository: 'present' means the evidence path exists and the artifact has not been reviewed or approved.",
+  "principles": [
+    "No financial state transitions without an immutable ledger entry.",
+    "Payment-provider events are idempotent and reconciled.",
+    "Refunds, credits, write-offs, and plan changes require policy checks.",
+    "No actor approves their own payment exception.",
+    "A financial dashboard distinguishes pending, settled, reversed, disputed, and re[...] states. The source text is cut off at this point; complete it from the original document before relying on it."
+  ],
+  "minimum_artifacts": [
+    {
+      "id": "finance_component_passport",
+      "status": "not_started"
+    },
+    {
+      "id": "payment_event_contract",
+      "status": "present",
+      "evidence": "app/src/lib/payments/contract.ts"
+    },
+    {
+      "id": "ledger_schema",
+      "status": "present",
+      "evidence": "supabase/migrations/20260929220000_student_accounts.sql"
+    },
+    {
+      "id": "reconciliation_runbook",
+      "status": "not_started"
+    },
+    {
+      "id": "refund_approval_policy",
+      "status": "present",
+      "evidence": "supabase/migrations/20260929220000_student_accounts.sql"
+    },
+    {
+      "id": "month_end_close_checklist",
+      "status": "not_started"
+    },
+    {
+      "id": "financial_access_review",
+      "status": "not_started"
+    }
+  ]
+}

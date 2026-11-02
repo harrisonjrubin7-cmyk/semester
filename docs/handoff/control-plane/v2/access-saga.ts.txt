@@ -1,0 +1,382 @@
+// Semester access saga coordinator (reference design). From uploads/NIST Zero Trust saga state machine_ step-by-step c.pdf.
+// NOT compiled or executed. Persistence and service adapters must be implemented and tested against the real repository.
+// Requires a runtime with crypto.randomUUID().
+
+export type State =
+  | "RECEIVED"
+  | "VALIDATING"
+  | "EVALUATING"
+  | "WAITING_STEP_UP"
+  | "WAITING_APPROVAL"
+  | "PREPARING"
+  | "INSTALLING"
+  | "VERIFYING"
+  | "RECONCILING"
+  | "ACTIVE"
+  | "DENIED"
+  | "EXPIRED"
+  | "REVOKING"
+  | "RECOVERY_REQUIRED"
+  | "REVOKED";
+export interface AccessIntent {
+  resourceId: string;
+  action: string;
+}
+export interface Saga {
+  id: string;
+  tenantId: string;
+  subjectId: string;
+  intent: AccessIntent;
+  requestDigest: string;
+  definitionVersion: string;
+  state: State;
+  revision: number;
+  generation: number;
+  attempts: number;
+  deadlineAt: number;
+  nextAttemptAt: number;
+  decisionId?: string;
+  grantId?: string;
+  grantExpiresAt?: number;
+  lastError?: string;
+}
+export interface Decision {
+  id: string;
+  outcome:
+  | "allow"
+  | "deny"
+  | "require_step_up"
+  | "require_approval";
+}
+export interface Grant {
+  id: string;
+  expiresAt: number;
+}
+export type Inspection = {
+  status: "absent" | "installed" | "conflict" | "unknown";
+};
+export interface Event {
+  eventId: string;
+  type: string;
+  sagaId: string;
+  tenantId: string;
+  revision: number;
+  occurredAt: string;
+  reasonCode?: string;
+}
+export interface Lease {
+  token: string;
+  saga: Saga;
+}
+/**
+ * Production requirements:
+ * - claim uses an expiring exclusive lease and fencing token.
+ * - save atomically checks lease/revision and writes saga + audit + outbox.
+ * - wake verifies authorization and deduplicates eventId transactionally.
+ */
+export interface Store {
+  claim(id: string): Promise<Lease | null>;
+  save(
+    lease: Lease,
+    expectedRevision: number,
+    next: Saga,
+    event: Event
+  ): Promise<void>;
+  release(lease: Lease): Promise<void>;
+  wake(
+    id: string,
+    eventId: string,
+    kind: "requirements_changed" | "revoke" | "recover"
+  ): Promise<void>;
+}
+/**
+ * These adapters must authenticate workloads, validate tenant scope,
+ * enforce current policy, and persist idempotent operation results.
+ *
+ * install must enforce grant expiry and revocation generation.
+ * inspect must compare actual PEP state with the intended grant scope.
+ * revoke returns absent only after required enforcement is confirmed.
+ */
+export interface Services {
+  validate(saga: Saga, key: string): Promise<void>;
+  evaluate(saga: Saga, key: string): Promise<Decision>;
+  prepare(saga: Saga, key: string): Promise<Grant>;
+  install(saga: Saga, key: string): Promise<void>;
+  inspect(saga: Saga): Promise<Inspection>;
+  revoke(saga: Saga, key: string): Promise<"absent" | "unknown">;
+}
+export class Fault extends Error {
+  constructor(
+    public code: string,
+    public retryable: boolean,
+    message = code
+  ) {
+    super(message);
+  }
+}
+const terminal = new Set<State>(["DENIED", "EXPIRED", "REVOKED"]);
+const graph: Record<State, State[]> = {
+  RECEIVED: ["VALIDATING", "EXPIRED"],
+  VALIDATING: ["EVALUATING", "DENIED", "EXPIRED"],
+  EVALUATING: [
+    "WAITING_STEP_UP",
+    "WAITING_APPROVAL",
+    "PREPARING",
+    "DENIED",
+    "EXPIRED"
+  ],
+  WAITING_STEP_UP: ["VALIDATING", "EXPIRED", "REVOKING"],
+  WAITING_APPROVAL: ["VALIDATING", "EXPIRED", "REVOKING"],
+  PREPARING: ["INSTALLING", "DENIED", "EXPIRED", "REVOKING"],
+  INSTALLING: ["VERIFYING", "RECONCILING", "REVOKING"],
+  VERIFYING: ["ACTIVE", "RECONCILING", "REVOKING"],
+  RECONCILING: ["VERIFYING", "EVALUATING", "REVOKING"],
+  ACTIVE: ["REVOKING"],
+  DENIED: [],
+  EXPIRED: [],
+  REVOKING: ["REVOKED", "RECOVERY_REQUIRED"],
+  RECOVERY_REQUIRED: ["REVOKING"],
+  REVOKED: []
+};
+function operationKey(s: Saga, step: string): string {
+  return [
+    s.id,
+    s.definitionVersion,
+    s.generation,
+    step
+  ].join(":");
+}
+function backoff(attempt: number): number {
+  const ceiling = Math.min(60_000, 500 * 2 ** Math.min(attempt, 7));
+  return Math.floor(Math.random() * ceiling);
+}
+function classify(error: unknown): Fault {
+  return error instanceof Fault
+  ? error
+  : new Fault("UNEXPECTED_FAILURE", true);
+}
+export class AccessSagaRunner {
+  constructor(
+    private store: Store,
+    private services: Services,
+    private now: () => number = Date.now
+  ) {}
+  async tick(id: string): Promise<void> {
+    const lease = await this.store.claim(id);
+    if (!lease) return;
+    const s = lease.saga;
+    try {
+      if (terminal.has(s.state) || s.nextAttemptAt > this.now()) return;
+      const move = async (
+        state: State,
+        patch: Partial<Saga> = {},
+        reasonCode?: string
+      ) => {
+        if (state !== s.state && !graph[s.state].includes(state)) {
+          throw new Fault("INVALID_TRANSITION", false);
+        }
+        const next: Saga = {
+          ...s,
+          ...patch,
+          state,
+          revision: s.revision + 1
+        };
+        await this.store.save(lease, s.revision, next, {
+            eventId: crypto.randomUUID(),
+            type: "access.state.changed",
+            sagaId: s.id,
+            tenantId: s.tenantId,
+            revision: next.revision,
+            occurredAt: new Date(this.now()).toISOString(),
+            reasonCode
+        });
+      };
+      const retry = async (code: string) => {
+        await move(s.state, {
+            attempts: s.attempts + 1,
+            nextAttemptAt: this.now() + backoff(s.attempts + 1),
+            lastError: code
+          }, code);
+      };
+      const accessExpired =
+      s.grantExpiresAt !== undefined &&
+      this.now() >= s.grantExpiresAt;
+      const provisioningExpired =
+      s.state !== "ACTIVE" &&
+      this.now() >= s.deadlineAt;
+      if (
+        s.state !== "REVOKING" &&
+        s.state !== "RECOVERY_REQUIRED" &&
+        (accessExpired || provisioningExpired)
+      ) {
+        await move(
+          s.grantId ? "REVOKING" : "EXPIRED",
+          {nextAttemptAt: 0},
+          "DEADLINE_EXCEEDED"
+        );
+        return;
+      }
+      try {
+        switch (s.state) {
+          case "RECEIVED":
+          await move("VALIDATING");
+          return;
+          case "VALIDATING":
+          await this.services.validate(
+            s, operationKey(s, "validate")
+          );
+          await move("EVALUATING", {
+              attempts: 0,
+              nextAttemptAt: 0
+          });
+          return;
+          case "EVALUATING": {
+            const d = await this.services.evaluate(
+              s, operationKey(s, "evaluate")
+            );
+            const target: Record<Decision["outcome"], State> = {
+              allow: "PREPARING",
+              deny: "DENIED",
+              require_step_up: "WAITING_STEP_UP",
+              require_approval: "WAITING_APPROVAL"
+            };
+            await move(target[d.outcome], {
+                decisionId: d.id,
+                attempts: 0,
+                nextAttemptAt: 0
+            });
+            return;
+          }
+          case "WAITING_STEP_UP":
+          case "WAITING_APPROVAL":
+          return;
+          case "PREPARING": {
+            const grant = await this.services.prepare(
+              s, operationKey(s, "prepare")
+            );
+            await move("INSTALLING", {
+                grantId: grant.id,
+                grantExpiresAt: grant.expiresAt,
+                attempts: 0,
+                nextAttemptAt: 0
+            });
+            return;
+          }
+          case "INSTALLING":
+          await this.services.install(
+            s, operationKey(s, "install")
+          );
+          await move("VERIFYING", {
+              attempts: 0,
+              nextAttemptAt: 0
+          });
+          return;
+          case "VERIFYING": {
+            const observed = await this.services.inspect(s);
+            if (observed.status === "installed") {
+              await move("ACTIVE", {
+                  attempts: 0,
+                  nextAttemptAt: 0
+              });
+            } else {
+              await move(
+                observed.status === "conflict"
+                ? "REVOKING"
+                : "RECONCILING",
+                {nextAttemptAt: 0}
+              );
+            }
+            return;
+          }
+          case "RECONCILING": {
+            const observed = await this.services.inspect(s);
+            if (observed.status === "installed") {
+              await move("VERIFYING", {nextAttemptAt: 0});
+            } else if (observed.status === "absent") {
+              // New evaluation generation: do not reuse stale decisions.
+              await move("EVALUATING", {
+                  generation: s.generation + 1,
+                  decisionId: undefined,
+                  grantId: undefined,
+                  grantExpiresAt: undefined,
+                  attempts: 0,
+                  nextAttemptAt: 0
+              });
+            } else if (observed.status === "conflict") {
+              await move("REVOKING", {nextAttemptAt: 0});
+            } else {
+              await retry("ENFORCEMENT_UNKNOWN");
+            }
+            return;
+          }
+          case "ACTIVE":
+          // Per-request enforcement and periodic reconciliation
+          // happen at the PEP and scheduled control-plane workers.
+          return;
+          case "REVOKING":
+          if (!s.grantId) {
+            await move("REVOKED");
+            return;
+          }
+          if (
+            await this.services.revoke(
+              s, operationKey(s, "revoke")
+            ) === "absent"
+          ) {
+            await move("REVOKED", {nextAttemptAt: 0});
+          } else {
+            await move("RECOVERY_REQUIRED", {
+                attempts: s.attempts + 1,
+                nextAttemptAt: this.now() + backoff(s.attempts + 1)
+              }, "REVOCATION_UNCONFIRMED");
+          }
+          return;
+          case "RECOVERY_REQUIRED":
+          await move("REVOKING", {nextAttemptAt: 0});
+          return;
+          default:
+          return;
+        }
+      } catch (error) {
+        const fault = classify(error);
+        if (s.state === "INSTALLING") {
+          await move("RECONCILING", {
+              lastError: fault.code,
+              nextAttemptAt: this.now() + backoff(s.attempts + 1)
+            }, fault.code);
+          return;
+        }
+        if (s.state === "REVOKING") {
+          await move("RECOVERY_REQUIRED", {
+              attempts: s.attempts + 1,
+              lastError: fault.code,
+              nextAttemptAt: this.now() + backoff(s.attempts + 1)
+            }, fault.code);
+          return;
+        }
+        if (
+          fault.code === "STALE_DECISION" &&
+          s.state === "PREPARING"
+        ) {
+          // The adapter must not create a grant from a stale decision.
+          await move("DENIED", {
+              lastError: fault.code
+            }, fault.code);
+          return;
+        }
+        if (fault.retryable) {
+          await retry(fault.code);
+          return;
+        }
+        await move(
+          s.grantId ? "REVOKING" : "DENIED",
+          {lastError: fault.code, nextAttemptAt: 0},
+          fault.code
+        );
+      }
+    } finally {
+      await this.store.release(lease);
+    }
+  }
+}
+

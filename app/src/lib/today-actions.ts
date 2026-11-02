@@ -2,6 +2,8 @@ import type { Action } from './actions';
 import { toHash } from './route';
 import type { PathSnapshot } from './today-decision';
 import type { DatedItem } from './types';
+import type { MaintenanceRequest } from './maintenance';
+import { maintenanceActions } from './maintenance-actions';
 
 /**
  * The actions Today proposes, worked out from what Today already reads.
@@ -35,6 +37,12 @@ export interface TodayActionInput {
   done: Record<string, boolean>;
   reviewDue: number;
   catalogEmpty: boolean;
+  /**
+   * Repairs reported to housing, and the clock to read them against. Optional
+   * so the callers that only want the deadline and path candidates
+   * (`nextTodayDecision`'s inputs) need not pass it.
+   */
+  maintenance?: { requests: MaintenanceRequest[]; now: number };
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -180,6 +188,8 @@ export function todayActions(input: TodayActionInput): Action[] {
       primary: { label: 'Add a course', kind: 'navigate', target: toHash({ screen: 'import', id: '' }), requiresConfirmation: false },
     });
   }
+
+  if (input.maintenance) out.push(...maintenanceActions(input.maintenance.requests, input.maintenance.now));
 
   return out;
 }

@@ -87,6 +87,16 @@ import {
  * The app never asks for a password to any of these, and there is no server to
  * send one to.
  */
+function feedRemovalLabel(feed: FeedSource, index: number, total: number): string {
+  const source = feed.kind === 'canvas'
+    ? 'Canvas account pull'
+    : feed.url
+      ? 'calendar subscription'
+      : 'one-time calendar import';
+  const events = `${feed.count} ${feed.count === 1 ? 'event' : 'events'}`;
+  return `Remove connected source ${index + 1} of ${total}, ${feed.name}: ${source} · ${events} · ${feed.status || 'no read result recorded'}`;
+}
+
 export function Connect() {
   const { state, dispatch, catalog, account, school } = useStore();
   const now = useNow();
@@ -1295,7 +1305,7 @@ export function Connect() {
       {state.feeds.length > 0 && (
         <>
           <SectionLabel>Connected calendars</SectionLabel>
-          {state.feeds.map((f) => (
+          {state.feeds.map((f, index) => (
             <div
               key={f.id}
               style={{
@@ -1379,7 +1389,7 @@ export function Connect() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removeFeed', id: f.id })}
-                aria-label={`Remove ${f.name} and its calendar events`}
+                aria-label={feedRemovalLabel(f, index, state.feeds.length)}
                 style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE

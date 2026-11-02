@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 228 |
-| Tables created in `public` and not later dropped | 342 |
-| … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 43 |
-| … of which enable row-level security in a migration | 43 |
+| Migration files | 264 |
+| Tables created in `public` and not later dropped | 360 |
+| … of which enable row-level security in a migration | 360 |
+| Tables created in `private` and not later dropped | 59 |
+| … of which enable row-level security in a migration | 59 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 109 |
+| Tables named by at least one literal `create policy` statement | 291 |
+| Tables with RLS found and no literal policy statement | 128 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,12 +28,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-149 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+166 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
 | `supabase/academic-record.check.sql` | The academic-record ledger (D-145): who may propose, decide and read; that nobody writes the ledger but the approval of someone other than the proposer; that each entry names the entry and value it r… |
-| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store). |
+| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store, 20261011200000 review fixes, 20261012030000 'access_saga_due'). |
+| `supabase/access-saga-tick-auth.check.sql` | The scheduler's token check for the access-saga-tick Edge Function, run as the roles that will and must not call it. |
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |
 | `supabase/activity.check.sql` | The pilot's three figures: what the ping may write, and what it may not. |
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
@@ -48,6 +49,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/calendar.check.sql` | The one table in this schema a stranger is meant to be able to read. |
 | `supabase/canonical-display.check.sql` | What an imported fact may say, and who may take a student's away. |
 | `supabase/capabilities.check.sql` | The permission matrix, and the four things that make it a matrix rather than a ladder. |
+| `supabase/career-evidence.check.sql` | a student picks exact versions of their work as portfolio evidence, and an employer reads them only through a grant the student made to them, scoped to those items, while it is live. |
 | `supabase/classmates.check.sql` | Two people in one room, without needing two people. |
 | `supabase/client-privileges.check.sql` | The browser's roles hold no table privilege that row-level security does not govern. |
 | `supabase/commercial-automation.check.sql` | The commercial core's moving parts (20260929080000_commercial_automation): checkout, the webhook's writes, the dunning worker, contract → tenant, site lead intake and the nightly account-health job. |
@@ -67,6 +69,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/course-material-metadata.check.sql` | shared course-material metadata, exact policy/grant binding, lifecycle, idempotency and audit rollback proof. |
 | `supabase/course-material-retention-policy.check.sql` | approved, immutable, tenant-bound retention authority for shared course material. |
+| `supabase/course-requests.check.sql` | who asks an instructor for an extension, an excused absence or an incomplete, who reads it, who decides it, and that a decision cannot be made twice or on a closed request. |
 | `supabase/course-source-conflict-resolutions.check.sql` | Durable, private, student-controlled evidence for re-import conflict choices. |
 | `supabase/course-source-derived-snapshots.check.sql` | hash-only extraction receipts and fail-closed re-import binding. |
 | `supabase/course-source-persistence.check.sql` | Private, tenant-bound course-source metadata, correction and recovery proof. |
@@ -81,6 +84,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/dining.check.sql` | who may order, give, move and read, in dining. |
 | `supabase/emit-domain-event.check.sql` | The outbox's one SQL writer (backlog P1-02): what it refuses, what it makes idempotent, who may call it, and that an event leaves with the transaction that wrote it. |
 | `supabase/erasure-clears-consent-snapshots.check.sql` | Erasing an account must not leave its consent history behind in a copy. |
+| `supabase/event-relay.check.sql` | a grade release reaches the student's Action Center through the outbox, once. |
 | `supabase/evidence-graphs.check.sql` | Learning, skill and capture evidence must stay inside both its tenant and its person boundary. |
 | `supabase/expansion.check.sql` | Expansion roles and features: every new permission walked as the account it is about, and every refusal attempted as the account that should be refused. |
 | `supabase/export-withholds-guardian-restrictions.check.sql` | An account export must not carry a guardian restriction. |
@@ -93,6 +97,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/forms.check.sql` | The second table in this schema a stranger is meant to be able to reach, and the first one they are meant to be able to *write* to. |
 | `supabase/gateway-journal.check.sql` | Shared action state must remain tenant-scoped, atomic and conservative. |
 | `supabase/governance.check.sql` | Governance registries: every rule 20260927235000_governance_registries.sql claims, walked as the account it is about, and every refusal attempted as the account that should be refused. |
+| `supabase/gradebook-due-dates.check.sql` | who sets a gradebook item's due date, and which date each student's work is due once an extension is approved. |
 | `supabase/gradebook.check.sql` | who enters, moderates, releases and reads a grade, and that no grade is ever rewritten. |
 | `supabase/grants.check.sql` | Which functions a client may call at all. |
 | `supabase/groups.check.sql` | Four people and two groups, without needing four people. |
@@ -104,6 +109,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/hold-gated-sweeps.check.sql` | The AI-runtime and Community sweeps behind a platform-wide legal hold: that each runs when there is no hold, is skipped (and says so) while one is live, runs again once it is released, and that a sch… |
 | `supabase/human-overrides.check.sql` | The shared override log: that a correction of a grade already on the record is logged by the ledger itself, whatever a client does; that the log says what was decided, what replaced it and why; that… |
 | `supabase/identity-provisioning.check.sql` | Institutional identity and SCIM lifecycle checks. |
+| `supabase/incident-evidence-custody.check.sql` | Protected incident-evidence custody. |
 | `supabase/indexes.check.sql` | Every foreign key has an index that covers it. |
 | `supabase/institutional-foundation.check.sql` | Institutional foundation: two synthetic campuses, one exact-scope grant, and no client-selected shortcut around either boundary. |
 | `supabase/integration-control-plane.check.sql` | Integration control plane: every boundary the migration claims, walked as the account it is about, and every refusal attempted as the account that should be refused. |
@@ -114,12 +120,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/intelligence-policy.check.sql` | Semester Intelligence tenant policy: real school-scoped grants are the boundary. |
 | `supabase/invites.check.sql` | The gate that decides whether an account can exist at all. |
 | `supabase/k12-guardians.check.sql` | K–12 guardian links (K12-002): who may record a guardian, who may read the link, and when the link stops counting. |
+| `supabase/killswitch-release.check.sql` | Releasing a platform kill switch needs two approvers (F-1). |
+| `supabase/learning-submissions.check.sql` | who hands in work, who reads it, that a hand-in never changes, and that a grade names the copy it graded. |
 | `supabase/ledger-chains.check.sql` | The hash chain over the academic-record and student-account ledgers: that a normal flow builds a chain the verifier accepts; that each kind of tampering it claims to catch is caught, and reported as… |
 | `supabase/ledger-seals.check.sql` | Signing the ledger chains: that a day is sealed once, per ledger and school, under a key no API role can read; that the seal check catches the attacker the link check cannot (one who rewrites an entr… |
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
 | `supabase/listings.check.sql` | Verified listings: who drafts, who publishes, who reads, and https only. |
 | `supabase/lti-capability.check.sql` | Whether an LTI launch's account holds lti:launch at the school, as the launch facts report it. |
-| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walked one gate at a time, the pre-binding behaviour kept, and the launch's context recorded only when every condition holds. |
+| `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walks one gate at a time, unbound passback fails closed, and the launch's context is recorded only when every condition holds. |
 | `supabase/lti-membership.check.sql` | Joining an LTI launch to an institutional membership. |
 | `supabase/lti.check.sql` | The two tables an LTI launch runs on, and the four ways they are meant to refuse. |
 | `supabase/ltiags.check.sql` | The table a grade finds its way back through, and the ways it refuses. |
@@ -131,15 +139,19 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/module_mode.check.sql` | The per-school, per-module Connect / Core switch (20260930010000). |
 | `supabase/my-capabilities.check.sql` | Who the app is told holds which capability — 'public.my_capabilities()'. |
 | `supabase/my-sessions.check.sql` | Where a student is signed in (stream 02): 'my_sessions()' lists the caller's own live sessions and 'end_my_session()' ends one of them. |
+| `supabase/notification-inbox.check.sql` | Durable notification inbox, preference, retry, and audit boundaries. |
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
+| `supabase/ops-projection-dashboard.check.sql` | ops_projection_dashboard (20261012000000). |
 | `supabase/ops-projector-worker.check.sql` | Bounded, manually invoked ops-projector worker boundary (P1-04). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
 | `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
+| `supabase/privileged-access-review.check.sql` | Privileged role-grant review. |
+| `supabase/privileged-mfa.check.sql` | Platform administrators and support agents do not carry capabilities until the current JWT proves MFA. |
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/projection-foundation.check.sql` | The projection tables and the outbox's claim columns (backlog P1-01). |
@@ -148,7 +160,9 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |
+| `supabase/registration-hold-resolution.check.sql` | the office that placed a registration hold resolves it, nobody else does, and readiness that was worked out while it stood stops counting as current. |
 | `supabase/registration-readiness-store.check.sql` | The registration-readiness durable store (20261009160000). |
+| `supabase/registration_swap.check.sql` | the atomic swap (REG-6.3). |
 | `supabase/registration_transaction.check.sql` | the official registration transaction. |
 | `supabase/reports.check.sql` | Who may read a report, and the four states one can be in. |
 | `supabase/retention-sweeps.check.sql` | The three retention sweeps from 20260929030000_retention_sweeps.sql. |
@@ -156,7 +170,9 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/role-grant-audit.check.sql` | Role changes must be append-only, metadata-minimized and tenant-isolated. |
 | `supabase/rolegrants.check.sql` | The role grants, and the two locks that make them mean something. |
 | `supabase/rooms.check.sql` | Reactions, with the second person a reaction needs. |
+| `supabase/roster-admin-desk.check.sql` | a school administrator finds, binds and unbinds roster people's accounts and decides whether absence ends access; nobody else does. |
 | `supabase/roster-import.check.sql` | Roster import staging: staged not written, manifest-checked, held on a large removal, idempotent, reversible, per school, and closed to every client. |
+| `supabase/roster-projection.check.sql` | a roster becomes course-and-term access, and the ways a roster sync goes wrong at scale do not. |
 | `supabase/school-membership.check.sql` | Course rooms limited to one university at a time (full-beta G-03). |
 | `supabase/school-offboarding.check.sql` | A school leaves in steps (full-beta gate G3, 20260930200000). |
 | `supabase/schools.check.sql` | What removing a university does to the people who studied there. |
@@ -181,6 +197,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/tenant-sso-policy.check.sql` | Whether a school requires campus SSO (tenant_sso_policy), its history, and the launch facts that read it. |
 | `supabase/trust-room.check.sql` | The procurement room: an NDA-gated, expiring, logged link to exact versions of the trust packet. |
 | `supabase/workflow-builder.check.sql` | The Workflow Builder (D-1018): who may draft and who may publish a school's workflow definition, that whoever drafted it does not publish it, that a published version is never edited or deleted, that… |
+| `supabase/workspace-objects.check.sql` | who may make, save, read and share a workspace object, that a saved version never changes, and that a grant pinned to one version never reaches the live object. |
 
 **How counted.** Files in `supabase/` whose names end in .check.sql. The text is the first comment paragraph of the file up to its first full stop, with a leading `supabase/<name> —` path removed, cut at 200 characters.
 
@@ -243,15 +260,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 65 |
+| All | 68 |
 | retention `operational` | 13 |
-| retention `student_record` | 17 |
-| retention `audit` | 30 |
+| retention `student_record` | 19 |
+| retention `audit` | 31 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
 | classification `internal` | 23 |
 | classification `student_private` | 27 |
-| classification `education_record` | 15 |
+| classification `education_record` | 18 |
 
 **How counted.** The two constant arrays are imported and printed; event types are counted from the `EVENT_TYPES` catalogue by the retention class and classification floor each declares.
 
@@ -261,6 +278,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Function | `verify_jwt` in `supabase/config.toml` | `getUser` in its entry file | Comment above its config block |
 | --- | --- | --- | --- |
+| `access-saga-tick` | false | no | (none) |
 | `billing-cancel` | false | yes | Stripe has no Supabase token; the Stripe-Signature over the raw body is the credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is s… |
 | `billing-checkout` | false | yes | (none) |
 | `billing-portal` | false | yes | (none) |
@@ -279,7 +297,7 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | `support-reply-notify` | false | yes | A support agent's browser records the in-app reply first, then this function sends a generic email hint. It checks the caller's token and support gra… |
 | `trust-room` | false | no | The caller is a reviewer at a university with no Semester account; the link token in the POST body is the credential. See DEPLOY.md → trust-room. |
 
-17 function directories; 17 set `verify_jwt = false`; 0 set it to true.
+18 function directories; 18 set `verify_jwt = false`; 0 set it to true.
 
 **How counted.** Directories of `supabase/functions/` other than `_shared`, joined to the `[functions.<name>]` blocks of `supabase/config.toml`. The comment is the lines directly above the block.
 
@@ -289,19 +307,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 231 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 231 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 279 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 279 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 65 |
-| Register rows in category `sharing` | 23 |
-| Register rows in category `admin` | 88 |
-| Register rows in category `integration` | 6 |
+| Register rows in category `self-service` | 79 |
+| Register rows in category `sharing` | 30 |
+| Register rows in category `admin` | 107 |
+| Register rows in category `integration` | 8 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 31 |
+| Register rows in category `read-helper` | 37 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 

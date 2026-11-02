@@ -1,0 +1,21 @@
+{
+  "task_id": null,
+  "manifest_version": null,
+  "security_scope": null,
+  "mode": "observe",
+  "input_reference": null,
+  "input_digest": null,
+  "allowed_handoff_routes": [],
+  "maximum_depth": 3,
+  "maximum_total_handoffs": 3,
+  "retry_policy": {
+    "retryable_classes": [
+      "external_transient"
+    ],
+    "maximum_attempts": null,
+    "deadline": null,
+    "cost_budget": null
+  },
+  "human_owner": null,
+  "status": "HELD_UNTIL_CONFIGURED"
+}

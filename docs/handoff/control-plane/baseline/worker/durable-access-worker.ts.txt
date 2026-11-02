@@ -1,0 +1,175 @@
+// PostgreSQL-backed job worker: executes queued operations and records verified receipts + outbox in one transaction.
+// A separate state consumer applies results to the saga through OPA. From uploads/NIST Zero Trust Saga Runbook_ Build a state machin.pdf.
+// NOT compiled. Correction: result.rows[^0] (PDF artifact) → result.rows[0]. Strip .txt when copying.
+
+import {randomUUID} from "node:crypto";
+import type {Pool} from "pg";
+type Job = {
+  id: string;
+  saga_id: string;
+  tenant_id: string;
+  generation: string;
+  operation: string;
+  operation_key: string;
+  request_digest: string;
+  payload: unknown;
+  attempts: number;
+  lease_token: string;
+};
+type VerifiedResult = {
+  producerVerified: true;
+  operationKey: string;
+  requestDigest: string;
+  sagaId: string;
+  tenantId: string;
+  generation: string;
+  body: unknown;
+};
+interface Participant {
+  /**
+  * Must validate input and current authority, use scoped workload identity,
+  * and recover idempotent results by operationKey.
+  */
+  execute(job: Job): Promise<VerifiedResult>;
+}
+export class DurableAccessWorker {
+  constructor(
+    private db: Pool,
+    private participant: Participant
+  ) {}
+  async claim(): Promise<Job | undefined> {
+    const token = randomUUID();
+    const result = await this.db.query<Job>(`
+        WITH candidate AS (
+        SELECT id
+        FROM access_jobs
+        WHERE available_at <= now()
+        AND (
+        status = 'queued'
+        OR (
+        status = 'running'
+        AND lease_until < now()
+        )
+        )
+        ORDER BY available_at, id
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+        )
+        UPDATE access_jobs j
+        SET status = 'running',
+        lease_token = $1,
+        lease_until = now() + interval '30 seconds',
+        attempts = attempts + 1
+        FROM candidate
+        WHERE j.id = candidate.id
+        RETURNING j.*
+        `, [token]);
+      return result.rows[0];
+    }
+    async tick(): Promise<boolean> {
+      const job = await this.claim();
+      if (!job) return false;
+      let result: VerifiedResult;
+      try {
+        // Adapter must impose its own bounded request timeout.
+        result = await this.participant.execute(job);
+      } catch {
+        // Remote effect may have happened. Reuse the SAME operation key.
+        // The participant must recover/query the original effect.
+        await this.db.query(`
+            UPDATE access_jobs
+            SET status = 'queued',
+            available_at = now() + interval '5 seconds',
+            lease_token = NULL,
+            lease_until = NULL,
+            last_error = 'REMOTE_OUTCOME_UNCONFIRMED'
+            WHERE id = $1 AND lease_token = $2
+            AND lease_until > now()
+            `, [job.id, job.lease_token]);
+          return true;
+        }
+        const matches =
+        result.producerVerified === true &&
+        result.operationKey === job.operation_key &&
+        result.requestDigest === job.request_digest &&
+        result.sagaId === job.saga_id &&
+        result.tenantId === job.tenant_id &&
+        result.generation === String(job.generation);
+        if (!matches) {
+          await this.db.query(`
+              UPDATE access_jobs
+              SET status = 'quarantined',
+              last_error = 'RESULT_BINDING_MISMATCH',
+              lease_token = NULL,
+              lease_until = NULL
+              WHERE id = $1 AND lease_token = $2
+              AND lease_until > now()
+              `, [job.id, job.lease_token]);
+            // Supervisor must alert and reconcile uncertain remote access.
+            return true;
+          }
+          const client = await this.db.connect();
+          try {
+            await client.query("BEGIN");
+            const current = await client.query(`
+                SELECT id
+                FROM access_jobs
+                WHERE id = $1 AND lease_token = $2
+                AND status = 'running'
+                AND lease_until > now()
+                FOR UPDATE
+                `, [job.id, job.lease_token]);
+              if (current.rowCount !== 1) {
+                await client.query("ROLLBACK");
+                // Lease lost. Do not commit a stale owner's result.
+                return true;
+              }
+              const inserted = await client.query(`
+                  INSERT INTO access_operation_receipts
+                  (job_id, operation_key, request_digest, result)
+                  VALUES ($1, $2, $3, $4::jsonb)
+                  ON CONFLICT (job_id) DO NOTHING
+                  RETURNING job_id
+                  `, [
+                job.id,
+                job.operation_key,
+                job.request_digest,
+                JSON.stringify(result.body)
+            ]);
+            if (inserted.rowCount === 1) {
+              await client.query(`
+                  INSERT INTO access_outbox
+                  (id, event_type, tenant_id, payload)
+                  VALUES ($1, $2, $3, $4::jsonb)
+                  `, [
+                randomUUID(),
+                "access.operation.result",
+                job.tenant_id,
+                JSON.stringify({
+                    jobId: job.id,
+                    sagaId: job.saga_id,
+                    generation: String(job.generation),
+                    operation: job.operation,
+                    receiptRef: job.id
+                })
+            ]);
+          }
+          await client.query(`
+              UPDATE access_jobs
+              SET status = 'completed',
+              lease_token = NULL,
+              lease_until = NULL
+              WHERE id = $1
+              `, [job.id]);
+            await client.query("COMMIT");
+            return true;
+          } catch (error) {
+            await client.query("ROLLBACK");
+            // Do not reinterpret database failure as participant failure.
+            throw error;
+          } finally {
+            client.release();
+          }
+        }
+      }
+

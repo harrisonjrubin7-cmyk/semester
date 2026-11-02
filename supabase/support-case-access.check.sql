@@ -7,7 +7,7 @@ create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -23,6 +23,14 @@ begin
         'method', 'totp', 'timestamp', extract(epoch from now())
       ))
     )::text, true);
+  execute 'set local role authenticated';
+end $$;
+
+create or replace function pg_temp.become_aal1(who uuid)
+returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -194,6 +202,16 @@ begin
   perform pg_temp.counted(
     'case, scope and consent are structurally linked to the grant', n, 1
   );
+
+  perform pg_temp.become_aal1(dual_agent);
+  select count(*) into n from public.support_access_windows() w where w.grant_id = case_grant_id;
+  reset role;
+  perform pg_temp.counted('aal1 hides supporter window metadata from a privileged agent', n, 0);
+
+  perform pg_temp.become_aal1(dual_agent);
+  select count(*) into n from public.support_access_grant g where g.id = case_grant_id;
+  reset role;
+  perform pg_temp.counted('aal1 cannot bypass the case boundary through the grant table', n, 0);
 
   perform pg_temp.become(dual_agent);
   select count(*) into n from public.support_access_windows() w where w.grant_id = case_grant_id;

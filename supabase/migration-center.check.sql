@@ -107,6 +107,13 @@ begin
   raise notice 'ok  %', what;
 end $$;
 
+-- Send a migration back to an earlier stage with the reason a person gave.
+create or replace function pg_temp.move_back(who uuid, id uuid, stage text, why text)
+returns text language plpgsql as $$
+begin
+  return pg_temp.error_as(who, format('update public.migration_projects set stage = %L, stage_back_reason = %L where id = %L', stage, why, id));
+end $$;
+
 -- Move a migration to a stage, as someone. Returns the error, or null.
 create or replace function pg_temp.move(who uuid, id uuid, stage text)
 returns text language plpgsql as $$
@@ -140,6 +147,7 @@ declare
   lead uuid; lead2 uuid; registrar uuid; admin uuid; researcher uuid; student uuid; far_lead uuid;
   m uuid; gone uuid;
   audits bigint;
+  held bigint;
 begin
   insert into public.schools (id, name, email_domains) values
     ('mc-u', 'Migration Center University', array['mc-u.example']),
@@ -247,10 +255,26 @@ begin
   perform pg_temp.says('missing records block reconciliation', pg_temp.move(lead, m, 'parallel_run'), 'reconciliation_passed');
 
   -- ── going back restarts the evidence ───────────────────────────────────
-  perform pg_temp.runs_clean('it may go back to validation', pg_temp.move(lead, m, 'validation'));
+  perform pg_temp.says('going back needs a reason', pg_temp.move(lead, m, 'validation'), 'needs a reason');
+  perform pg_temp.says('a reason of a few letters is not one', pg_temp.move_back(lead, m, 'validation', 'oops'), 'at least 10 characters');
+  perform pg_temp.says('nor is a page of one', pg_temp.move_back(lead, m, 'validation', repeat('x', 501)), 'at most 500 characters');
+  perform pg_temp.counted('a refused move leaves the migration where it was',
+    (select count(*) from public.migration_projects where id = m and stage = 'reconciliation' and stage_back_reason is null), 1);
+  perform pg_temp.runs_clean('with a reason it may go back to validation',
+    pg_temp.move_back(lead, m, 'validation', 'The validation sample was drawn from the wrong export.'));
+  perform pg_temp.counted('and the reason is kept with the migration',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason = 'The validation sample was drawn from the wrong export.'), 1);
+  perform pg_temp.says('the same words do not explain a second move',
+    pg_temp.move_back(lead, m, 'sample_import', 'The validation sample was drawn from the wrong export.'), 'new reason');
   perform pg_temp.says('the clean validation from before no longer counts', pg_temp.move(lead, m, 'reconciliation'), 'validation_passed');
   perform pg_temp.runs_clean('validated again', pg_temp.run(lead, m, 'validation', 4814));
   perform pg_temp.runs_clean('and forward to reconciliation', pg_temp.move(lead, m, 'reconciliation'));
+  perform pg_temp.counted('going forward clears the reason',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason is null), 1);
+  perform pg_temp.runs_clean('a plain edit that tries to write a reason',
+    pg_temp.error_as(lead, format($q$update public.migration_projects set stage_back_reason = 'Written without moving anywhere.' where id = %L$q$, m)));
+  perform pg_temp.counted('does not leave one behind',
+    (select count(*) from public.migration_projects where id = m and stage_back_reason is null), 1);
   perform pg_temp.runs_clean('a reconciliation where every record matches', pg_temp.run(lead, m, 'reconciliation', 4814));
   perform pg_temp.runs_clean('reconciled, it moves to the parallel run', pg_temp.move(lead, m, 'parallel_run'));
 
@@ -277,10 +301,18 @@ begin
   perform pg_temp.says('the creator cannot approve their own migration, whatever they hold',
     pg_temp.decide(lead, m, 'data_owner', 'approved'), 'does not approve its cutover');
   perform pg_temp.runs_clean('the registrar approves as data owner', pg_temp.decide(registrar, m, 'data_owner', 'approved'));
+  perform pg_temp.says('the same person cannot approve the second area too: two areas need two people',
+    pg_temp.decide(registrar, m, 'it', 'approved'), 'does not approve two areas');
   perform pg_temp.says('one of two areas is not enough', pg_temp.move(lead, m, 'archive'), 'approvals');
   perform pg_temp.runs_clean('the administrator rejects for IT', pg_temp.decide(admin, m, 'it', 'rejected'));
   perform pg_temp.says('a rejection is named', pg_temp.move(lead, m, 'archive'), 'rejected');
+  -- Two approvals by one person on two areas, sent at once, each read the
+  -- other's absence and both passed. The trigger now serialises one approver's
+  -- approvals on a transaction lock; this watches it being taken.
+  select count(*) into held from pg_locks where locktype = 'advisory' and pid = pg_backend_pid();
   perform pg_temp.runs_clean('the administrator approves for IT', pg_temp.decide(admin, m, 'it', 'approved'));
+  perform pg_temp.counted('an approval takes its approver''s lock, so two sent at once are checked one after the other',
+    (select count(*) from pg_locks where locktype = 'advisory' and pid = pg_backend_pid()) - held, 1);
   perform pg_temp.counted('the approval is stamped with its approver',
     (select count(*) from public.migration_approvals where project_id = m and approver_id = admin), 2);
   perform pg_temp.says('one area named twice is one area',
@@ -325,6 +357,30 @@ begin
       join public.role_grants g on g.id = e.actor_grant_id
      where e.entity_type = 'migration_projects' and e.entity_id = m::text and e.action = 'update'
        and e.new_data ->> 'stage' = 'monitoring' and g.subject = lead), 1);
+
+  -- ── a stage move is told to the rest of the platform ───────────────────
+  -- One event per move that succeeded (P5-R6): the audit row says who and
+  -- when, the event says it to whatever drains the outbox, in the same
+  -- transaction. A refused move writes neither: thirteen moves above (twelve
+  -- forward, one back), thirteen events.
+  perform pg_temp.counted('every stage move leaves one domain event, and nothing else does',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_type = 'migration_project' and o.aggregate_id = m::text
+        and o.event_type = 'migration.stage_changed' and o.tenant_id = 'mc-u'), 13);
+  perform pg_temp.counted('as many as the audit trail shows moves',
+    (select count(*) from public.tenant_policy_audit_event e
+      where e.entity_type = 'migration_projects' and e.entity_id = m::text and e.action = 'update'
+        and e.old_data ->> 'stage' is distinct from e.new_data ->> 'stage'), 13);
+  perform pg_temp.counted('the last one says archive to monitoring, forward, and carries no name',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_id = m::text and o.event_type = 'migration.stage_changed'
+        and o.payload ->> 'from' = 'archive' and o.payload ->> 'to' = 'monitoring'
+        and o.payload ->> 'direction' = 'forward' and o.payload ->> 'project' = m::text
+        and not (o.payload ? 'name')), 1);
+  perform pg_temp.counted('the one back-move is told as a back-move',
+    (select count(*) from private.domain_outbox_events o
+      where o.aggregate_id = m::text and o.event_type = 'migration.stage_changed'
+        and o.payload ->> 'direction' = 'back'), 1);
 
   -- ── an account goes; the school's migration stays ──────────────────────
   gone := lead;

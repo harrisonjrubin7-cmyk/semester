@@ -24,11 +24,11 @@
 
 begin;
 
-create or replace function pg_temp.become(who uuid)
+create or replace function pg_temp.become(who uuid, assurance text default 'aal1')
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-                     json_build_object('sub', who::text, 'role', 'authenticated')::text,
+                     json_build_object('sub', who::text, 'role', 'authenticated', 'aal', assurance)::text,
                      true);
   execute 'set local role authenticated';
 end $$;
@@ -72,6 +72,7 @@ end $$;
 do $$
 declare
   mod      uuid;
+  admin    uuid;
   lapsed   uuid;
   revoked  uuid;
   student  uuid;
@@ -81,8 +82,10 @@ declare
   req      uuid;
   n        bigint;
   want     bigint;
+  admin_want bigint;
 begin
   mod     := pg_temp.newuser('mod@example.com');
+  admin   := pg_temp.newuser('admin@example.com');
   lapsed  := pg_temp.newuser('lapsed@example.com');
   revoked := pg_temp.newuser('revoked@example.com');
   student := pg_temp.newuser('student@vanderbilt.edu');
@@ -109,13 +112,15 @@ begin
           now() - interval '3 days', now() - interval '3 days' + interval '2 hours', now() - interval '1 day');
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
-    (mod, 'moderator', 'platform', '', 'platform');
+    (mod, 'moderator', 'platform', '', 'platform'),
+    (admin, 'platform_admin', 'platform', '', 'platform');
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance, expires_at) values
     (lapsed, 'moderator', 'platform', '', 'platform', now() - interval '1 day');
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance, revoked_at) values
     (revoked, 'moderator', 'platform', '', 'platform', now() - interval '1 hour');
 
   select count(*) into want from public.role_capabilities where role = 'moderator';
+  select count(*) into admin_want from public.role_capabilities where role = 'platform_admin';
 
   -- ── The control ─────────────────────────────────────────────────────────
   perform pg_temp.become(mod);
@@ -127,6 +132,17 @@ begin
   perform pg_temp.counted('and they are exactly those, over the platform', n, want);
   select count(*) into n from public.my_capabilities() where capability = 'report:read';
   perform pg_temp.counted('including report:read, which the report queue gates on', n, 1);
+
+  perform pg_temp.become(admin, 'aal1');
+  select count(*) into n from public.my_capabilities();
+  perform pg_temp.counted('an aal1 platform_admin is told none of its dormant capabilities', n, 0);
+  perform pg_temp.counted('and private.has_capability refuses the same dormant grant',
+    (private.has_capability('platform:configure'))::int, 0);
+  perform pg_temp.become(admin, 'aal2');
+  select count(*) into n from public.my_capabilities();
+  perform pg_temp.counted('an aal2 platform_admin is told exactly its matrix capabilities', n, admin_want);
+  perform pg_temp.counted('and private.has_capability honours the same elevated grant',
+    (private.has_capability('platform:configure'))::int, 1);
 
   -- ── The ways a grant stops counting ─────────────────────────────────────
   perform pg_temp.become(lapsed);

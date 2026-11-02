@@ -448,7 +448,8 @@ export async function sendReset(email: string): Promise<string> {
 }
 
 export async function signOut(): Promise<void> {
-  await (await cloud()).auth.signOut();
+  const { error } = await (await cloud()).auth.signOut();
+  if (error) throw new Error(error.message);
 }
 
 /**
@@ -646,7 +647,12 @@ function canon(value: unknown): string {
 const ackKey = (userId: string, id: string) => `${userId}/${id}`;
 
 export async function pull(userId: string): Promise<Snapshot> {
-  const db = (await cloud());
+  const db = await cloud();
+  const identity = await db.auth.getUser();
+  if (identity.error) throw new Error(identity.error.message);
+  if (identity.data.user?.id !== userId) {
+    throw new Error('The signed-in account changed before its semester could be read.');
+  }
   const [stateRow, courseRows] = await Promise.all([
     db.from('state').select('data, updated_at').eq('user_id', userId).maybeSingle(),
     db.from('courses').select('id, data, updated_at').eq('user_id', userId),
@@ -1338,8 +1344,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'dining_orders', column: 'student' },
 
   // ── The official registration ledger and gradebook ──────────────────────
-  // Your enrollments (`lib/enrollment/client.ts`), and every version of your
-  // grades and your regrade requests (`lib/gradebook/client.ts`). Each names
+  // Your enrollments (`lib/enrollment/client.ts`), every version of your
+  // grades and your regrade requests (`lib/gradebook/client.ts`), and the work
+  // you handed in (`lib/gradebook/submissions.ts`,
+  // `20261019120000_learning_submissions.sql`). Each names
   // you by a column that references `auth.users` with `on delete cascade`
   // (`20260929300000_registration_transaction.sql`,
   // `20260929310000_gradebook.sql`), so they go with the account; a regrade's
@@ -1348,6 +1356,40 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+  { table: 'learning_submissions', column: 'student_id' },
+
+  // Your requests to a course's instructor — an extension, an excused absence,
+  // an incomplete — and every act on them (`lib/gradebook/requests.ts`,
+  // `20261021120000_course_requests.sql`). The request names you by
+  // `student_id` with `on delete cascade`, and its history goes with it.
+  { table: 'course_requests', column: 'student_id' },
+  { table: 'course_request_actions', column: null, cascadesFrom: 'course_requests' },
+
+  // The Action Center items released grades made for you
+  // (`20261022090000_grade_release_student_actions.sql`): named by
+  // `student_id` with `on delete cascade`, and gone with a grade version too.
+  { table: 'student_actions', column: 'student_id' },
+
+  // ── Your documents in Semester ──────────────────────────────────────────
+  // Objects you keep on the server, every version you saved, who you shared
+  // them with, and the keys your saves spent (`lib/workspace/objects.ts`,
+  // `20261022120000_workspace_objects.sql`). Your personal workspace names you
+  // by `owner_id`, which cascades from `auth.users`; every other table names
+  // the workspace and cascades from it. A grant somebody gave you goes with
+  // your account too.
+  { table: 'workspaces', column: 'owner_id' },
+  { table: 'workspace_objects', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_versions', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_grants', column: null, cascadesFrom: 'workspaces' },
+  { table: 'workspace_object_operations', column: null, cascadesFrom: 'workspaces' },
+  // Portfolio evidence chosen from those versions, and the employers it was
+  // shared with (`lib/workspace/evidence.ts`, `20261023120000_career_evidence.sql`).
+  // All of it names your workspace and cascades from it; a share made to you
+  // as an employer goes with your account through `grantee`.
+  { table: 'career_portfolios', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence_grants', column: null, cascadesFrom: 'workspaces' },
+  { table: 'career_evidence_grant_items', column: null, cascadesFrom: 'workspaces' },
 ];
 
 /**

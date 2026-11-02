@@ -162,11 +162,16 @@ export async function addFile(
  */
 export async function allFiles(): Promise<Settled[]> {
   try {
-    const all = await tx<StoredFile[]>('readonly', (s) => s.getAll() as IDBRequest<StoredFile[]>);
+    const all = await storedFiles();
     return all.map(({ blob: _blob, ...meta }) => settled(meta)).sort((a, b) => b.added - a.added);
   } catch {
     return [];
   }
+}
+
+/** Read every stored record without turning a refused database into an empty one. */
+function storedFiles(): Promise<StoredFile[]> {
+  return tx<StoredFile[]>('readonly', (s) => s.getAll() as IDBRequest<StoredFile[]>);
 }
 
 /**
@@ -287,10 +292,34 @@ export async function deleteFile(id: string): Promise<void> {
  */
 export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
   const cutoff = now - days * 86_400_000;
-  const old = (await listTrash()).filter((f) => (f.trashedAt ?? 0) <= cutoff);
+  /*
+   * This read must fail closed rather than use `listTrash`. File-list reads
+   * deliberately turn a refused IndexedDB into an empty screen so the rest of
+   * Semester remains usable. Doing that here made a failed retention sweep
+   * indistinguishable from a successful sweep with nothing due, and Drive
+   * could give no recovery guidance. Cleanup is a write boundary, so it keeps
+   * the storage error and lets the caller report it.
+   */
+  const old = (await storedFiles()).filter((f) => f.trashedAt !== null && f.trashedAt !== undefined && f.trashedAt <= cutoff);
+  return purgeBinned(old.map((file) => file.id), cutoff);
+}
+
+/**
+ * Permanently delete exactly the records shown in a bulk-deletion preview.
+ *
+ * The ids are captured when the preview opens. A file binned in another tab
+ * after that point therefore cannot be swept into a consequence the student
+ * never saw. `deleteIfStillBinned` supplies the other half of the boundary: a
+ * previewed file restored before confirmation is preserved.
+ */
+export async function purgeTrash(ids: readonly string[]): Promise<number> {
+  return purgeBinned(ids, Number.POSITIVE_INFINITY);
+}
+
+async function purgeBinned(ids: readonly string[], cutoff: number): Promise<number> {
   let gone = 0;
-  for (const f of old) {
-    const took = await deleteIfStillBinned(f.id, cutoff);
+  for (const id of new Set(ids)) {
+    const took = await deleteIfStillBinned(id, cutoff);
     if (took) gone += 1;
   }
   // Once for the whole sweep rather than once per file: emptying a bin of
@@ -326,11 +355,7 @@ function deleteIfStillBinned(id: string, cutoff: number): Promise<boolean> {
  * looking at the bin anyway.
  */
 export async function sweepTrash(now = Date.now()): Promise<number> {
-  try {
-    return await emptyTrash(TRASH_DAYS, now);
-  } catch {
-    return 0;
-  }
+  return emptyTrash(TRASH_DAYS, now);
 }
 
 /** Note the moment a file was opened, so the recents list has something to sort by. */

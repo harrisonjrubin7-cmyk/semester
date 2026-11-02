@@ -1,0 +1,61 @@
+-- 220 · Outbound webhooks: durable store behind workers/webhook-delivery.ts (uploaded DeliveryStore / EndpointRegistry).
+-- Endpoints are tenant-owned configuration; secrets live in a vault, only a reference here. Leases are fenced:
+-- every completion must present the current lease token, so a stale worker can't overwrite a newer attempt.
+create table if not exists opsx.webhook_endpoints(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, url text not null check (url like 'https://%'),
+  allowed_host text not null, secret_ref text not null, topics text[] not null, active boolean not null default true,
+  created_by uuid not null default auth.uid(), created_at timestamptz not null default now(), unique (institution_id, url));
+create table if not exists opsx.webhook_deliveries(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, endpoint_id uuid not null references opsx.webhook_endpoints on delete cascade,
+  event_id bigint not null references ctl.outbox(id), body text not null check (length(body) <= 262144),
+  state text not null default 'pending' check (state in ('pending','leased','retry_wait','delivered','dead_letter')),
+  attempt int not null default 0, next_attempt_at timestamptz not null default now(), lease_token uuid, lease_until timestamptz,
+  last_status int, last_diagnostic text check (length(last_diagnostic) <= 300), delivered_at timestamptz, unique (endpoint_id, event_id));
+create index if not exists whd_due on opsx.webhook_deliveries(next_attempt_at) where state in ('pending','retry_wait');
+alter table opsx.webhook_endpoints enable row level security; alter table opsx.webhook_deliveries enable row level security;
+create policy whe_view on opsx.webhook_endpoints for select using (ctl.can('integration:view', institution_id));
+create policy whd_view on opsx.webhook_deliveries for select using (ctl.can('integration:view', institution_id));
+grant select on opsx.webhook_endpoints, opsx.webhook_deliveries to authenticated;   -- never secret values; secret_ref only
+
+-- Fan-out: one delivery per active endpoint subscribed to the outbox topic (run by outbox.publish).
+create or replace function opsx.enqueue_webhooks(p_event bigint) returns int language plpgsql security definer set search_path = '' as $$
+declare e ctl.outbox; n int; begin
+  select * into e from ctl.outbox where id = p_event; if e.id is null or e.tenant_id is null then return 0; end if;
+  insert into opsx.webhook_deliveries(institution_id, endpoint_id, event_id, body)
+    select e.tenant_id, w.id, e.id, jsonb_build_object('id', e.id, 'type', e.topic, 'created_at', e.created_at, 'data', e.payload)::text
+    from opsx.webhook_endpoints w where w.institution_id = e.tenant_id and w.active and e.topic = any(w.topics)
+    on conflict (endpoint_id, event_id) do nothing;
+  get diagnostics n = row_count; return n; end $$;
+
+-- claimDue(): atomic claim with SKIP LOCKED; also reclaims expired leases (lease-recovery).
+create or replace function opsx.claim_webhook(p_lease_seconds int default 60) returns opsx.webhook_deliveries language plpgsql security definer set search_path = '' as $$
+declare d opsx.webhook_deliveries; begin
+  select * into d from opsx.webhook_deliveries
+    where (state in ('pending','retry_wait') and next_attempt_at <= now()) or (state = 'leased' and lease_until < now())
+    order by next_attempt_at for update skip locked limit 1;
+  if d.id is null then return null; end if;
+  update opsx.webhook_deliveries set state = 'leased', attempt = attempt + 1, lease_token = gen_random_uuid(), lease_until = now() + make_interval(secs => p_lease_seconds)
+    where id = d.id returning * into d;
+  return d; end $$;
+
+-- delivered / retry / deadLetter: every write must match the lease token.
+create or replace function opsx.complete_webhook(p_id uuid, p_lease uuid, p_outcome text, p_status int, p_next timestamptz, p_diag text) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if p_outcome not in ('delivered','retry','dead_letter') then raise exception 'INVALID_REQUEST'; end if;
+  update opsx.webhook_deliveries set
+    state = case p_outcome when 'delivered' then 'delivered' when 'retry' then 'retry_wait' else 'dead_letter' end,
+    last_status = p_status, last_diagnostic = left(p_diag, 300), next_attempt_at = coalesce(p_next, next_attempt_at),
+    delivered_at = case when p_outcome = 'delivered' then now() end, lease_token = null, lease_until = null
+  where id = p_id and lease_token = p_lease and state = 'leased';
+  if not found then raise exception 'STALE_LEASE'; end if; end $$;
+-- Operator replay of a dead letter: a new attempt with a fresh lease cycle, recorded in audit.
+create or replace function api.replay_webhook(p_id uuid, p_reason text) returns void language plpgsql security definer set search_path = '' as $$
+declare d opsx.webhook_deliveries; begin
+  select * into d from opsx.webhook_deliveries where id = p_id for update;
+  if d.id is null or not ctl.can('job.replay', d.institution_id) then raise exception 'FORBIDDEN'; end if;
+  if d.state <> 'dead_letter' then raise exception 'INVALID_TRANSITION'; end if;
+  update opsx.webhook_deliveries set state = 'pending', attempt = 0, next_attempt_at = now() where id = p_id;
+  perform audit.log('webhook.replayed', p_id::text, null, jsonb_build_object('reason', p_reason)); end $$;
+revoke all on function opsx.enqueue_webhooks(bigint), opsx.claim_webhook(int), opsx.complete_webhook(uuid,uuid,text,int,timestamptz,text) from public, anon, authenticated;
+grant execute on function api.replay_webhook(uuid,text) to authenticated;
+insert into ctl.capabilities(key, description, high_impact, required_approver_caps, min_approvals) values ('job.replay','Replay dead-lettered jobs and webhooks', true, '{}', 0) on conflict (key) do nothing;

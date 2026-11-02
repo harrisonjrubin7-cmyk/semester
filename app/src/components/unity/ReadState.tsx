@@ -3,7 +3,7 @@ import { present, type ReadEnvelope } from '../../lib/read/envelope';
 import { isSourceLabel } from '../../lib/source';
 import { EmptyState } from '../ui';
 import { SourceBadge } from '../SourceBadge';
-import { ErrorState, LoadingState, OfflineStrip, PermissionNotice } from './States';
+import { ErrorState, LoadingState, OfflineStrip, PermissionNotice, PermissionState } from './States';
 
 /**
  * Draws a `ReadEnvelope` — the one place a data-backed screen turns a state
@@ -64,10 +64,11 @@ export function ReadState<T>({
       return <LoadingState what={what} />;
     case 'denied':
       return (
-        <PermissionNotice
-          changed={`You can’t see ${what} here.`}
-          why="Your access to this has changed or was never granted. Nothing about it is shown."
-          control={recover}
+        <PermissionState
+          title={`You can’t see ${what} here.`}
+          body="Your access has changed or was never granted. Nothing about the protected information is shown."
+          owner="the organization that manages this information"
+          recover={recover}
         />
       );
     case 'failed':

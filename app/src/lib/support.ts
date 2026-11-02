@@ -270,6 +270,8 @@ export interface SupportLibrary {
   commute: { travel: number; buffer: number };
 }
 
+export const SUPPORT_PREFIX = 'semester.support.v1';
+
 export const ROUTINE_IDEAS = [
   'A break every 90 minutes of study',
   'A regular bedtime on weeknights',
@@ -304,4 +306,16 @@ export function readSupport(v: unknown): SupportLibrary {
     ) as Record<string, boolean>,
     commute: { travel: n(c.travel, EMPTY_SUPPORT.commute.travel), buffer: n(c.buffer, EMPTY_SUPPORT.commute.buffer) },
   };
+}
+
+/** Keep sensitive contact details and access notes on the device that created them. */
+export function withoutPrivateSupport(value: SupportLibrary): SupportLibrary {
+  return { ...value, contacts: [], accessNotes: '' };
+}
+
+/** Apply portable planning while retaining this device's private support details. */
+export function keepPrivateSupport(incoming: unknown, existing: unknown): SupportLibrary {
+  const portable = withoutPrivateSupport(readSupport(incoming));
+  const local = readSupport(existing);
+  return { ...portable, contacts: local.contacts, accessNotes: local.accessNotes };
 }

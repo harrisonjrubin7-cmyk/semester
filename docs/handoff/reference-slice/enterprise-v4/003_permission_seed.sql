@@ -1,0 +1,22 @@
+BEGIN;
+INSERT INTO sx_private.permissions(code) VALUES ('section.read');
+INSERT INTO sx_private.permissions(code) VALUES ('roster.read');
+INSERT INTO sx_private.permissions(code) VALUES ('course.manage');
+INSERT INTO sx_private.permissions(code) VALUES ('assignment.manage');
+INSERT INTO sx_private.permissions(code) VALUES ('submission.read');
+INSERT INTO sx_private.permissions(code) VALUES ('grade.read');
+INSERT INTO sx_private.permissions(code) VALUES ('grade.audit');
+INSERT INTO sx_private.permissions(code) VALUES ('crm.read');
+INSERT INTO sx_private.permissions(code) VALUES ('implementation.read');
+INSERT INTO sx_private.permissions(code) VALUES ('support.read');
+INSERT INTO sx_private.permissions(code) VALUES ('document.read');
+INSERT INTO sx_private.permissions(code) VALUES ('catalog.read');
+INSERT INTO sx_private.permissions(code) VALUES ('billing.read');
+INSERT INTO sx_private.permissions(code) VALUES ('entitlement.read');
+INSERT INTO sx_private.permissions(code) VALUES ('ledger.read');
+INSERT INTO sx_private.permissions(code) VALUES ('people.read');
+INSERT INTO sx_private.permissions(code) VALUES ('people.restricted.read');
+INSERT INTO sx_private.permissions(code) VALUES ('vendor.read');
+INSERT INTO sx_private.permissions(code) VALUES ('ops.read');
+-- Define approved tenant roles and assignments through trusted administrative tooling.
+COMMIT;

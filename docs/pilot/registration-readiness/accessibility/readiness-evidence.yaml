@@ -1,0 +1,55 @@
+# Accessibility evidence pack (artifact 13). This is an evidence track, not a
+# design claim. Status is stated per check; no certification is claimed.
+# Status values: not_started | in_progress | passed | failed | blocked.
+scope:
+  routes:
+    - /app/registration
+    - /registrar/readiness
+    - /registrar/readiness/:caseId
+  states:
+    - ready
+    - loading
+    - empty
+    - stale
+    - blocked
+    - needs_review
+    - error
+    - forbidden
+    - offline
+
+checks:
+  semantic_structure:
+    - one_h1_per_screen
+    - programmatic_label_for_every_control
+    - table_headers_associated
+    - live_region_for_async_state_changes
+  keyboard:
+    - no_keyboard_trap
+    - visible_focus
+    - logical_tab_order
+    - sheet_focus_return
+  visual:
+    - text_and_nontext_contrast
+    - state_not_conveyed_by_color_alone
+    - reduced_motion_support
+    - responsive_reflow
+  assistive_technology:
+    - source_label_announced
+    - stale_warning_announced
+    - decision_receipt_announced
+    - error_and_safe_next_action_announced
+
+evidence:
+  - automated_scan_output
+  - manual_keyboard_script
+  - screen_reader_notes
+  - contrast_results
+  - issue_register
+  - remediation_signoff
+
+status:
+  overall: not_started
+  note: >
+    No scan, keyboard script, or screen-reader session has been run for these
+    routes as part of this package. Existing repo accessibility tests are not
+    evidence for this pilot scope until mapped to the checks above.

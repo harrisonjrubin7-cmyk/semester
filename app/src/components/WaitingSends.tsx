@@ -29,8 +29,16 @@ export function WaitingSends() {
         {o.durable ? '' : ' This browser would not keep them, so they will be lost if you close the app.'}
       </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {o.rows.map((r) => (
-          <Item key={r.entry.id} row={r} online={o.online} onSend={(confirmed) => settle(() => o.sendOne(r.entry.id, confirmed))()} onDrop={settle(() => o.drop(r.entry.id))} />
+        {o.rows.map((r, index) => (
+          <Item
+            key={r.entry.id}
+            row={r}
+            position={index + 1}
+            total={o.rows.length}
+            online={o.online}
+            onSend={(confirmed) => settle(() => o.sendOne(r.entry.id, confirmed))()}
+            onDrop={settle(() => o.drop(r.entry.id))}
+          />
         ))}
       </ul>
       <div role="status" aria-live="polite" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
@@ -59,7 +67,7 @@ function statusLine(r: Row): string {
   }
 }
 
-function Item({ row, online, onSend, onDrop }: { row: Row; online: boolean; onSend: (confirmed: boolean) => void; onDrop: () => void }) {
+function Item({ row, position, total, online, onSend, onDrop }: { row: Row; position: number; total: number; online: boolean; onSend: (confirmed: boolean) => void; onDrop: () => void }) {
   const [sure, setSure] = useState(false);
   const e = row.entry;
   const whyId = `why-${e.id}`;
@@ -68,6 +76,7 @@ function Item({ row, online, onSend, onDrop }: { row: Row; online: boolean; onSe
   // A share that may have already gone is checked, then sent again on purpose.
   const risky = row.needsConfirm;
   const can = risky ? sure && row.can.ok : row.can.ok;
+  const identity = `request ${position} of ${total}, ${KINDS[e.kind as Kind].label}, ${e.summary}`;
   return (
     <li style={{ marginTop: 'var(--sp-5)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--app-line)' }}>
       <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>{KINDS[e.kind as Kind].label}</div>
@@ -91,14 +100,14 @@ function Item({ row, online, onSend, onDrop }: { row: Row; online: boolean; onSe
             className="btn btn-primary"
             disabled={!can || !online}
             aria-describedby={!row.can.ok && !risky ? whyId : undefined}
-            aria-label={`Send: ${e.summary}`}
+            aria-label={`Send: ${identity}`}
             onClick={() => onSend(risky)}
             style={{ minHeight: 44 }}
           >
             {risky ? 'Send again' : 'Send'}
           </button>
         )}
-        <button type="button" className="btn btn-secondary" aria-label={`${sent ? 'Remove from the list' : 'Discard'}: ${e.summary}`} onClick={onDrop} style={{ minHeight: 44 }}>
+        <button type="button" className="btn btn-secondary" aria-label={`${sent ? 'Remove from the list' : 'Discard'}: ${identity}`} onClick={onDrop} style={{ minHeight: 44 }}>
           {sent ? 'Remove from the list' : 'Discard'}
         </button>
       </div>

@@ -53,11 +53,16 @@ export interface ActiveContext {
 
 const liveExpiry = (directory: ContextDirectory, membership: ContextMembership, nowMs: number): number => {
   const sessionExpiry = Date.parse(directory.sessionExpiresAt);
-  const membershipExpiry = membership.expiresAt === undefined ? Number.POSITIVE_INFINITY : Date.parse(membership.expiresAt);
+  const hasMembershipExpiry = membership.expiresAt !== undefined;
+  const membershipExpiry = hasMembershipExpiry ? Date.parse(membership.expiresAt as string) : Number.POSITIVE_INFINITY;
   if (!Number.isFinite(sessionExpiry) || sessionExpiry <= nowMs) {
     throw new PlatformError('expired', 'Your session expired. Sign in again to choose a workspace.');
   }
-  if (membership.status !== 'active' || !Number.isFinite(membershipExpiry) || membershipExpiry <= nowMs || membership.personId !== directory.personId) {
+  if (
+    membership.status !== 'active'
+    || (hasMembershipExpiry && (!Number.isFinite(membershipExpiry) || membershipExpiry <= nowMs))
+    || membership.personId !== directory.personId
+  ) {
     throw new PlatformError('expired', 'That membership is no longer available. Choose another workspace.');
   }
   return Math.min(sessionExpiry, membershipExpiry);

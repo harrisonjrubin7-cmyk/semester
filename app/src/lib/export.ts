@@ -818,6 +818,7 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'payments', label: 'recorded payments', array: true },
   { key: 'balances', label: 'meal balances', array: true },
   { key: 'residences', label: 'housing records', array: true },
+  { key: 'maintenance', label: 'repair requests', array: true },
   { key: 'mySchools', label: 'school profiles', array: true },
   { key: 'archivedTerms', label: 'archived terms', array: true },
   { key: 'gradeSystems', label: 'grade systems', array: false },
@@ -931,6 +932,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   registered: 'whether this device registered for reminders',
   schemaVersion: 'the shape the file is in, written by the backup itself',
   seenOnboarding: 'whether onboarding has run here',
+  onb: 'which onboarding step had been reached, if it was interrupted',
   visited: 'which screens have been opened here',
 
   // Held back for a reason of its own, one each.
@@ -1092,6 +1094,7 @@ export function backupOf(state: State) {
     payments: state.payments,
     balances: state.balances,
     residences: state.residences,
+    maintenance: state.maintenance,
     mySchools: state.mySchools,
     schoolPack: state.schoolPack,
     archivedTerms: state.archivedTerms,

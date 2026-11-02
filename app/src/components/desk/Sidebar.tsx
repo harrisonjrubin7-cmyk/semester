@@ -43,9 +43,9 @@ import { currentLook } from '../../state/shape';
 import { readFavourites } from '../../lib/desk';
 import { rootOf, saysFor, screenName } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
-import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { AppsIcon, ConnectIcon } from '../Icons';
+import { currentWorkspaceRoot, WorkspaceEntry } from '../shell/WorkspaceNavigation';
 
 export function Sidebar() {
   const { state, dispatch, school, catalog } = useStore();
@@ -63,7 +63,9 @@ export function Sidebar() {
    * anybody opened the course list — two rows saying "you are here" in a
    * column of six.
    */
-  const lit = (screen: Screen) => state.screen === screen || rootOf(state.screen) === screen;
+  const claimedByWorkspace = currentWorkspaceRoot(state.screen, state.workspaceView);
+  const lit = (screen: Screen) => screen !== claimedByWorkspace
+    && (state.screen === screen || rootOf(state.screen) === screen);
 
   const row = (
     screen: Screen,
@@ -105,9 +107,11 @@ export function Sidebar() {
       */}
       {row('directory', 'App directory', AppsIcon)}
 
+      <WorkspaceEntry placement="navigation" />
+
       {favourites.length > 0 && (
         <>
-          <div className="desk-side-label" style={secondLine()}>
+          <div className="desk-side-label">
             Your favourites
           </div>
           {favourites.map((d) => row(d.screen, saysFor(d, caps).label, glyphFor(d.screen)))}
@@ -118,7 +122,7 @@ export function Sidebar() {
 
       {row('connect', screenName('connect'), ConnectIcon)}
 
-      <div className="desk-side-foot" style={secondLine()}>
+      <div className="desk-side-foot">
         {where && <div>{where}</div>}
         <div>{courses === 1 ? '1 course' : `${courses} courses`}</div>
       </div>

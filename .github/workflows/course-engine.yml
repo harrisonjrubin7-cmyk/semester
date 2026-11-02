@@ -22,7 +22,7 @@ permissions:
 jobs:
   api:
     name: API (${{ matrix.database }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -49,6 +49,9 @@ jobs:
         working-directory: course-engine/apps/api
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - name: Create Python 3.12 environment
         run: |
           python3 --version | grep '^Python 3\.12\.'
@@ -62,7 +65,7 @@ jobs:
         run: pytest -q
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: course-engine/apps/web
@@ -81,3 +84,18 @@ jobs:
         run: pnpm run typecheck
       - name: Build
         run: pnpm run build
+      - name: Install Chromium
+        timeout-minutes: 10
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser acceptance
+        run: pnpm run test:e2e
+      - name: Keep browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        with:
+          name: course-engine-browser-${{ github.sha }}
+          path: |
+            course-engine/apps/web/playwright-report
+            course-engine/apps/web/test-results
+          if-no-files-found: ignore
+          retention-days: 14

@@ -170,6 +170,34 @@ class ObjectStorage:
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 
+    def read_bytes(self, key: str, *, max_bytes: int) -> bytes:
+        if self.local:
+            path = self.path(key)
+            if not path.is_file():
+                raise ObjectInspectionError("Stored object is missing")
+            if path.stat().st_size > max_bytes:
+                raise ObjectInspectionError("Stored object exceeds the preview limit")
+            return path.read_bytes()
+        if not settings.s3_expected_bucket_owner:
+            raise ObjectInspectionError("S3 expected bucket owner is not configured")
+        try:
+            response = self.client.get_object(
+                Bucket=settings.s3_bucket,
+                Key=key,
+                ExpectedBucketOwner=settings.s3_expected_bucket_owner,
+            )
+            size_bytes = int(response["ContentLength"])
+            if size_bytes > max_bytes:
+                raise ObjectInspectionError("Stored object exceeds the preview limit")
+            payload = response["Body"].read(max_bytes + 1)
+            if len(payload) > max_bytes:
+                raise ObjectInspectionError("Stored object exceeds the preview limit")
+            return payload
+        except ObjectInspectionError:
+            raise
+        except (BotoCoreError, ClientError, KeyError, TypeError, ValueError) as exc:
+            raise ObjectInspectionError("Stored object could not be read") from exc
+
     def delete(self, key: str) -> None:
         if self.local:
             self.path(key).unlink(missing_ok=True)

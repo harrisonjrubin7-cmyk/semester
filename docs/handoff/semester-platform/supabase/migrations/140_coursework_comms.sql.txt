@@ -1,0 +1,89 @@
+-- 140 · Coursework, messaging, notifications, files, calendar.
+-- Grades are read-only mirrors from the LMS/SIS. Semester stores submissions only where the institution enables it.
+create schema if not exists work; create schema if not exists comms;
+
+create table if not exists work.assignments(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  section_id uuid not null references acad.sections on delete cascade, title text not null check (length(title) <= 200),
+  due_at timestamptz, points numeric(6,2), ai_rule text not null default 'course_default' check (ai_rule in ('course_default','allowed','allowed_with_citation','not_allowed')),
+  source text not null default 'lms', source_ref text, synced_at timestamptz not null default now());
+create index if not exists asg_section_due on work.assignments(section_id, due_at);
+
+create table if not exists work.grades(
+  assignment_id uuid not null references work.assignments on delete cascade, person_id uuid not null references core.profiles on delete cascade,
+  institution_id uuid not null references core.institutions, score numeric(6,2), letter text, posted_at timestamptz,
+  source text not null default 'lms', synced_at timestamptz not null default now(), primary key (assignment_id, person_id));
+
+create table if not exists work.tasks(
+  id uuid primary key default gen_random_uuid(), person_id uuid not null references core.profiles on delete cascade default auth.uid(),
+  title text not null check (length(title) <= 200), due_at timestamptz, assignment_id uuid references work.assignments on delete set null,
+  done_at timestamptz, created_at timestamptz not null default now());
+
+create table if not exists comms.threads(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions,
+  kind text not null check (kind in ('direct','section','office','advising')), section_id uuid references acad.sections, office text,
+  subject text check (length(subject) <= 200), created_by uuid not null references core.profiles default auth.uid(), created_at timestamptz not null default now());
+create table if not exists comms.participants(
+  thread_id uuid not null references comms.threads on delete cascade, person_id uuid not null references core.profiles on delete cascade,
+  role text not null default 'member' check (role in ('member','owner','office_staff')), last_read_at timestamptz, muted boolean not null default false,
+  primary key (thread_id, person_id));
+create table if not exists comms.messages(
+  id uuid primary key default gen_random_uuid(), thread_id uuid not null references comms.threads on delete cascade,
+  author_id uuid not null references core.profiles default auth.uid(), body text not null check (length(body) between 1 and 8000),
+  attachments uuid[] not null default '{}', created_at timestamptz not null default now(), edited_at timestamptz, deleted_at timestamptz);
+create index if not exists msg_thread_time on comms.messages(thread_id, created_at desc);
+
+-- Notifications: what, why, and the quiet-hours/preferences that decided the channel.
+create table if not exists comms.notifications(
+  id uuid primary key default gen_random_uuid(), person_id uuid not null references core.profiles on delete cascade,
+  kind text not null, title text not null check (length(title) <= 140), body text check (length(body) <= 500), link text,
+  priority text not null default 'normal' check (priority in ('low','normal','time_sensitive','safety')),
+  channels text[] not null default '{in_app}', created_at timestamptz not null default now(), read_at timestamptz, expires_at timestamptz);
+create index if not exists notif_unread on comms.notifications(person_id) where read_at is null;
+create table if not exists comms.preferences(
+  person_id uuid primary key references core.profiles on delete cascade default auth.uid(), quiet_from time, quiet_to time, timezone text not null default 'UTC',
+  digest text not null default 'daily' check (digest in ('off','daily','weekly')), per_kind jsonb not null default '{}'::jsonb);
+
+create table if not exists comms.files(
+  id uuid primary key default gen_random_uuid(), institution_id uuid not null references core.institutions, owner_id uuid not null references core.profiles default auth.uid(),
+  bucket text not null check (bucket in ('private','submissions','listing_photos','office_documents')), path text not null,
+  mime text not null, bytes bigint not null check (bytes between 1 and 52428800), scan_state text not null default 'pending' check (scan_state in ('pending','clean','blocked')),
+  created_at timestamptz not null default now(), deleted_at timestamptz, unique (bucket, path));
+
+create table if not exists comms.calendar_events(
+  id uuid primary key default gen_random_uuid(), person_id uuid not null references core.profiles on delete cascade default auth.uid(),
+  title text not null, starts_at timestamptz not null, ends_at timestamptz not null, origin text not null check (origin in ('personal','section','advising','deadline','community')),
+  origin_ref text, check (ends_at >= starts_at));
+
+alter table work.assignments enable row level security; alter table work.grades enable row level security; alter table work.tasks enable row level security;
+alter table comms.threads enable row level security; alter table comms.participants enable row level security; alter table comms.messages enable row level security;
+alter table comms.notifications enable row level security; alter table comms.preferences enable row level security; alter table comms.files enable row level security;
+alter table comms.calendar_events enable row level security;
+
+create or replace function comms.in_thread(p uuid) returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from comms.participants where thread_id = p and person_id = auth.uid()) $$;
+create policy asg_enrolled on work.assignments for select using (exists (select 1 from acad.enrollments e where e.section_id = work.assignments.section_id and e.person_id = auth.uid() and e.status = 'enrolled'));
+create policy grades_self on work.grades for select using (person_id = auth.uid());
+create policy grades_teach on work.grades for select using (acad.teaches((select section_id from work.assignments a where a.id = assignment_id)));
+create policy tasks_own on work.tasks for all using (person_id = auth.uid()) with check (person_id = auth.uid());
+create policy th_member on comms.threads for select using (comms.in_thread(id));
+create policy pt_member on comms.participants for select using (comms.in_thread(thread_id));
+create policy pt_self_update on comms.participants for update using (person_id = auth.uid()) with check (person_id = auth.uid());
+create policy msg_member on comms.messages for select using (comms.in_thread(thread_id) and deleted_at is null);
+create policy notif_self on comms.notifications for select using (person_id = auth.uid());
+create policy notif_mark on comms.notifications for update using (person_id = auth.uid()) with check (person_id = auth.uid());
+create policy pref_self on comms.preferences for all using (person_id = auth.uid()) with check (person_id = auth.uid());
+create policy files_owner on comms.files for select using (owner_id = auth.uid() and deleted_at is null);
+create policy cal_self on comms.calendar_events for all using (person_id = auth.uid()) with check (person_id = auth.uid() and origin = 'personal');
+revoke insert, update, delete on work.assignments, work.grades, comms.threads, comms.participants, comms.messages, comms.notifications, comms.files from anon, authenticated;
+grant usage on schema work, comms to authenticated; grant select on all tables in schema work, comms to authenticated;
+grant insert, update, delete on work.tasks, comms.preferences, comms.calendar_events to authenticated; grant update (last_read_at, muted) on comms.participants to authenticated; grant update (read_at) on comms.notifications to authenticated;
+
+create or replace function api.send_message(p_thread uuid, p_body text, p_idem text) returns uuid language plpgsql security definer set search_path = '' as $$
+declare m uuid; begin
+  if not comms.in_thread(p_thread) then raise exception 'FORBIDDEN'; end if;
+  if not core.rate_ok('message', 30, interval '1 minute') then raise exception 'RATE_LIMITED'; end if;
+  insert into comms.messages(thread_id, body) values (p_thread, p_body) returning id into m;
+  insert into ctl.outbox(topic, tenant_id, payload) values ('message.sent', core.my_institution(), jsonb_build_object('thread', p_thread, 'message', m));
+  return m; end $$;
+grant execute on function api.send_message(uuid,text,text) to authenticated;

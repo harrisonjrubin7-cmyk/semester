@@ -6,9 +6,13 @@ import { ModuleGateState } from '../components/ModuleGateState';
 import { Field, Row } from '../components/academic/Form';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
 import { StudentGrades } from '../components/gradebook/StudentGrades';
+import { AskInstructor } from '../components/gradebook/AskInstructor';
+import { RequestQueue } from '../components/gradebook/RequestQueue';
+import { DueDates } from '../components/gradebook/DueDates';
 import { useModuleGate } from '../lib/modulegate';
 import { loadMyCapabilities, type Grant } from '../lib/capabilities';
 import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
+import { requestCaps } from '../lib/gradebook/requests';
 
 /**
  * The gradebook of record: an instructor's official grades for a course, and
@@ -129,6 +133,8 @@ function Book({ school, me }: { school: string; me: string }) {
     offerings.find((o) => offeringKey(o) === picked) ?? offerings.find((o) => o.term === now) ?? offerings[0];
   const key = offeringKey(chosen);
   const caps = teaching.find((c) => offeringKey(c) === key)?.capabilities ?? [];
+  // Students' requests to the instructor (20261021120000): who may ask, read and decide, on this course and term.
+  const asks = requestCaps(grants, school, chosen.course, chosen.term);
 
   return (
     <>
@@ -157,9 +163,18 @@ function Book({ school, me }: { school: string; me: string }) {
         </Field>
       </Row>
       {showing === 'teaching' ? (
-        <InstructorBook key={key} course={chosen.course} term={chosen.term} caps={caps} me={me} />
+        <>
+          <InstructorBook key={key} course={chosen.course} term={chosen.term} caps={caps} me={me} />
+          {/* Item due dates and who holds an extension (20261021130000); setting one is grades:release, like adding the item. */}
+          <DueDates key={`due:${key}`} course={chosen.course} term={chosen.term} side="teaching" canSet={caps.includes('grades:release')} me={me} />
+          <RequestQueue key={`requests:${key}`} course={chosen.course} term={chosen.term} caps={asks} />
+        </>
       ) : (
-        <StudentGrades key={key} course={chosen.course} term={chosen.term} me={me} />
+        <>
+          <StudentGrades key={key} course={chosen.course} term={chosen.term} me={me} />
+          <DueDates key={`due:${key}`} course={chosen.course} term={chosen.term} side="mine" canSet={false} me={me} />
+          <AskInstructor key={`requests:${key}`} course={chosen.course} term={chosen.term} caps={asks} />
+        </>
       )}
     </>
   );

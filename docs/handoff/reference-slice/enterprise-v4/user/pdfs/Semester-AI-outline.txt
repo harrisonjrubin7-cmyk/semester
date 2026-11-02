@@ -1,0 +1,174 @@
+Semester AI is a student-focused Android app from Bawano Technologies that combines AI-
+assisted PDF reading, document organization, course communities, and tutoring. Its Google
+Play listing calls it “Semester AI – Reader, Tutors”; below is a breakdown of its publicly
+documented capabilities—not a claim that I have tested every feature.
+Semester AIʼs central feature is a PDF reader with an AI reading companion. The developer
+describes the following functions.
+Function What it does How you would use it
+Open and browse
+PDFs Provides an in-app PDF viewer. Read lecture notes, assigned readings, or
+other PDF course materials.
+Create PDFs The listing says you can create PDF documents, but
+does not explain the creation options.
+Prepare documents for reading within the
+app.
+Ask questions about
+content
+Lets you ask the AI about material you do not
+understand.
+Ask for an explanation of a difficult passage
+while reading.
+Summarize PDFs Uses the reading companion to summarize document
+content.
+Request a condensed explanation of a
+reading.
+Convert Word to PDF Converts Word documents into PDFs for viewing and AI
+interaction.
+Bring Word-based class materials into the
+PDF workflow.
+All five functions are described in the developerʼs listing. It does not specify supported file
+sizes, Word formats, scanned-PDF recognition accuracy, or whether AI answers include page-
+level citations.
+Example: For a soware-engineering reading, a possible question would be: “Explain the
+difference between coupling and cohesion in this document, then summarize the authorʼs main
+points.” This illustrates how the advertised question-answering and summarization features
+could be used; it is not a tested result.
+show me Semester AI outline descibe and go through
+and explain and detail all semester AI cappblties and
+functions
+[1]
+1. AI reading and documents
+[1]
+[1]
+Beyond reading, Semester AI advertises tools for turning notes into digital materials, editing
+them, and keeping them accessible.
+Function Documented capability Important distinction
+Note scanning Capture notes using the app’s scanning
+feature. The listing does not specify handwriting accuracy.
+AI-assisted digitization Transform captured notes into organized
+digital content.
+The exact organization and extraction methods
+are not explained.
+Note enhancement and
+editing
+Enhance and edit notes digitally with AI-
+generated insights. Specific editing commands are not listed.
+Annotation Annotate digital notes. Available annotation types are not specified.
+Document backup Back up documents. Storage quotas and retention policies are not
+stated in the description.
+Cross-device
+synchronization Synchronize documents across devices. This does not establish that native iOS or desktop
+apps exist.
+Document sharing Share documents and classwork with other
+Semester AI users.
+Sharing permissions and public-link options are
+not described.
+These are advertised functions, rather than independently verified performance claims.
+A possible workflow is to scan class notes, review the resulting digital content, annotate it, and
+share it with classmates. Those individual steps are supported by the listing, but automatic
+execution of the entire workflow is not documented.
+Semester AI also presents itself as a learning community organized around universities and
+courses—not just a standalone chatbot.
+University catalog: Browse an “ever-growing” catalog of universities and their courses; the
+listing gives no institution count or coverage list.
+University and course membership: Join your university and course to connect with other
+learners.
+Course-material sharing: Exchange notes and documents with classmates and read
+together.
+Cross-university connections: Meet coursemates from different universities for
+collaboration.
+In-app chat: Discuss material and communicate with other users.
+Study groups: Initiate study groups, share resources, and work through challenges
+together. The description does not explain whether groups have dedicated administration
+tools.
+2. Notes and file management
+[1]
+[1]
+[1]
+3. Courses and collaboration
+[1]
+[1]
+[1]
+[1]
+[1]
+[1]
+[1]
+The distinction matters: joining a course community is not the same as integrating with an
+official university system. The listing does not establish enrollment verification, automatic
+course imports, grade access, or connections to Canvas, Blackboard, Moodle, or other learning-
+management systems.
+The developer advertises an expanding catalog of course-specific AI and human tutors,
+described as available for consultation and questions “24/7.” However, the listing does not
+explain how that availability works or guarantee immediate access to a human tutor.
+Tutor capability What is documented What remains unclear
+Course-specific AI
+tutoring AI tutors associated with courses. Which subjects are covered, how tutors use course materials,
+and how answers are checked.
+Human tutoring Access to a catalog that includes
+human tutors. Tutor qualifications, scheduling, fees, and response times.
+Question-based help Consult tutors and ask questions. Whether sessions support video, audio, screen sharing, or only
+text.
+Ongoing availability The catalog is marketed as
+available 24/7.
+Whether this refers to AI access, browsing the catalog, or live
+human service.
+The description supports tutoring as a product category, but not detailed claims about adaptive
+teaching, mastery tracking, automated grading, or personalized study plans.
+The public description supports an AI-assisted study app. It does not establish an autonomous
+agent that plans and executes multi-step tasks across external services. There is no documented
+ability to send emails, manage your calendar, submit assignments, run code, operate a browser,
+or connect to GitHub, Google Drive, Supabase, or Vercel. “Not documented” does not
+necessarily mean absent—it means those abilities cannot be confirmed from this listing.
+The search result preview mentioned quizzes, flashcards, and learning games, but the retrieved
+full store description did not include those features. I would treat them as unconfirmed, rather
+than promise they are currently available. Audio listening is likewise not explained in the
+retrieved description.
+Other details not established by the listing include:
+The underlying AI model, context limits, and answer accuracy.
+Offline AI operation and supported languages.
+Pricing tiers, AI usage allowances, and storage limits.
+[1]
+4. AI and human tutors
+[1]
+[1]
+5. Limits and practical details
+Is it an agentic AI?
+[1]
+Features not firmly established
+[1]
+APIs, third-party integrations, or developer automation features.
+Exam scheduling, grade tracking, and assignment submission.
+The retrieved Google Play page shows 1K+ downloads, ads, in-app purchases, and a last-update
+date of April 18, 2025. It does not provide a detailed subscription price list in the retrieved
+content.
+In its developer-provided data-safety disclosures, the app says it may collect location, personal
+information, and seven other data categories; it declares no third-party data sharing,
+encryption in transit, and the ability to request deletion. These are developer declarations, not
+an independent privacy audit.
+The two most distinctive documented capabilities are document-grounded reading help and
+course-based collaboration: the first helps you work through your materials, while the second
+connects those materials to classmates and tutors. Neither should be confused with a general-
+purpose autonomous AI agent.
+⁂
+1. https://play.google.com/store/apps/details?id=tech.bawano.semester&hl=en_US
+2. https://www.reddit.com/r/ProgrammingBuddies/comments/1ptwmao/suggest_ai_model_for_study_for_semester_su
+bjects/
+3. https://www.einpresswire.com/article/944180713/team-turing-expands-gpai-beyond-stem-launching-three-new-featu
+res-for-college-students
+4. https://builtin.com/artificial-intelligence/ai-apps
+5. https://www.remnote.com/blog/best-ai-study-tools
+6. https://www.androidpolice.com/gemini-study-tricks-mid-semester/
+7. https://windowsforum.com/news/manchester-microso-365-copilot-student-access-moves-to-semester-two.445647/
+8. https://link.springer.com/article/10.1007/s11528-026-01191-4
+9. https://www.purdueglobal.edu/blog/online-learning/ai-study-tools/
+10. https://grow.google/students
+11. https://news.arizona.edu/employee-news/guide-ai-tools-u
+12. https://appinventor.mit.edu/explore/ai-with-mit-app-inventor
+13. https://seesaw.com/features/ai-enhanced-instruction/
+14. https://apps.apple.com/sa/app/student-ai-study-companion/id6502636287
+15. https://www.learnwise.ai/es/news-insights/5-ai-features-to-support-your-campus-better-in-the-new-semester
+[1]
+Availability and privacy
+[1]
+[1]
+[1]

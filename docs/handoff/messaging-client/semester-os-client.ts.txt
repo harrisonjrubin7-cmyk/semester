@@ -1,0 +1,134 @@
+/** Draft stubs: endpoint paths must be supplied after repository reconciliation.
+ * No automatic retries, credential storage, actor impersonation, or event publishing.
+ */
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+export type Decoder<T> = (value: unknown) => T;
+export type Receipt = { commandId: string; status: "accepted" | "completed" | "rejected";
+  resourceVersion?: number; correlationId: string };
+export type MessageInput = { threadId: string; text: string; attachmentIds: string[] };
+export type ReferralInput = { caseId: string; destinationServiceId: string;
+  sharedItemIds: string[]; purpose: string };
+export type GradeInput = { sectionId: string; studentId: string; assessmentId: string;
+  value: string; gradingSchemeVersion: string; purpose: string };
+export type GradeReleaseInput = { gradeId: string; reason: string; purpose: string };
+export type WorkflowInput = { instanceId: string; action: string; reason: string; purpose: string };
+export type MutationOptions = { idempotencyKey: string; expectedVersion: number;
+  signal?: AbortSignal };
+export type SessionAuth = { kind: "session"; csrfToken: () => Promise<string> };
+export type BearerAuth = { kind: "bearer"; token: () => Promise<string> };
+export type Endpoints = {
+  sendMessage: (schoolId: string) => string;
+  referCase: (schoolId: string) => string;
+  proposeGrade: (schoolId: string) => string;
+  releaseGrade: (schoolId: string) => string;
+  transition: (schoolId: string) => string;
+  commandStatus: (schoolId: string, commandId: string) => string;
+};
+export class OsClientError extends Error {
+  constructor(public code: string, public status: number,
+    public retryAfter: string | null = null, public outcomeUnknown = false) {
+    super(code); this.name = "OsClientError";
+  }
+}
+export type ClientConfig = {
+  baseUrl: string; auth: SessionAuth | BearerAuth; endpoints: Endpoints;
+  decodeReceipt: Decoder<Receipt>; fetchImpl?: typeof fetch;
+  timeoutMs?: number; maxRequestBytes?: number; maxResponseBytes?: number;
+};
+export function receiptDecoder(value: unknown): Receipt {
+  if (!value || typeof value !== "object") throw new Error("INVALID_RECEIPT");
+  const v=value as Record<string, unknown>;
+  if (typeof v.commandId!=="string" || typeof v.correlationId!=="string" ||
+      !["accepted","completed","rejected"].includes(String(v.status)) ||
+      (v.resourceVersion!==undefined && (!Number.isSafeInteger(v.resourceVersion) || Number(v.resourceVersion)<1)))
+    throw new Error("INVALID_RECEIPT");
+  return {commandId:v.commandId,status:v.status as Receipt["status"],
+    correlationId:v.correlationId,resourceVersion:v.resourceVersion as number|undefined};
+}
+export class SemesterOsClient {
+  private readonly base: URL;
+  private readonly fetcher: typeof fetch;
+  private readonly timeout: number;
+  private readonly requestLimit: number;
+  private readonly responseLimit: number;
+  constructor(private readonly cfg: ClientConfig) {
+    this.base=new URL(cfg.baseUrl);
+    if(this.base.protocol!=="https:" || this.base.username || this.base.password ||
+       this.base.search || this.base.hash || this.base.pathname!=="/") throw new Error("HTTPS_ORIGIN_REQUIRED");
+    this.fetcher=cfg.fetchImpl ?? fetch;
+    this.timeout=cfg.timeoutMs ?? 15_000;
+    this.requestLimit=cfg.maxRequestBytes ?? 64*1024;
+    this.responseLimit=cfg.maxResponseBytes ?? 256*1024;
+    for(const n of [this.timeout,this.requestLimit,this.responseLimit])
+      if(!Number.isSafeInteger(n) || n<=0) throw new Error("INVALID_LIMIT");
+  }
+  private url(path:string):URL {
+    if(!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) throw new Error("INVALID_ENDPOINT");
+    const url=new URL(path,this.base);
+    if(url.origin!==this.base.origin || url.hash) throw new Error("INVALID_ENDPOINT");
+    return url;
+  }
+  private async request<T>(method:"GET"|"POST",path:string,decode:Decoder<T>,
+      payload?:unknown,options?:MutationOptions,signal?:AbortSignal):Promise<T> {
+    const url=this.url(path);
+    if(method==="POST" && (!options || !/^[A-Za-z0-9_-]{16,128}$/.test(options.idempotencyKey) ||
+      !Number.isSafeInteger(options.expectedVersion) || options.expectedVersion<1)) throw new Error("INVALID_PRECONDITION");
+    const body=payload===undefined?undefined:JSON.stringify(payload);
+    if(body!==undefined && new TextEncoder().encode(body).byteLength>this.requestLimit) throw new Error("REQUEST_TOO_LARGE");
+    const headers=new Headers({Accept:"application/json"});
+    if(body!==undefined) headers.set("Content-Type","application/json");
+    if(options){headers.set("Idempotency-Key",options.idempotencyKey);headers.set("If-Match",`"${options.expectedVersion}"`);}
+    if(this.cfg.auth.kind==="bearer") headers.set("Authorization",`Bearer ${await this.cfg.auth.token()}`);
+    else if(method==="POST") headers.set("X-CSRF-Token",await this.cfg.auth.csrfToken());
+    const external=options?.signal ?? signal;
+    const controller=new AbortController();
+    const abort=()=>controller.abort(external?.reason);
+    if(external?.aborted) throw new OsClientError("ABORTED",0);
+    external?.addEventListener("abort",abort,{once:true});
+    const timer=setTimeout(()=>controller.abort(),this.timeout);
+    let dispatched=false;
+    try {
+      dispatched=true;
+      const response=await this.fetcher(url,{method,headers,body,signal:controller.signal,
+        credentials:this.cfg.auth.kind==="session"?"include":"omit",redirect:"error",cache:"no-store"});
+      if(!response.ok){await response.body?.cancel();throw new OsClientError(`HTTP_${response.status}`,response.status,response.headers.get("Retry-After"),method==="POST"&&response.status>=500);}
+      if(!(response.headers.get("Content-Type")??"").toLowerCase().includes("application/json")){
+        await response.body?.cancel();throw new OsClientError("INVALID_CONTENT_TYPE",response.status,null,method==="POST");
+      }
+      const reader=response.body?.getReader();
+      if(!reader) throw new OsClientError("EMPTY_RESPONSE",response.status,null,method==="POST");
+      const chunks:Uint8Array[]=[]; let size=0;
+      try {
+        while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;
+          if(size>this.responseLimit){await reader.cancel();throw new OsClientError("RESPONSE_TOO_LARGE",response.status,null,method==="POST");}
+          chunks.push(part.value);
+        }
+      } finally {reader.releaseLock();}
+      const all=new Uint8Array(size);let offset=0;
+      for(const chunk of chunks){all.set(chunk,offset);offset+=chunk.length;}
+      try{return decode(JSON.parse(new TextDecoder().decode(all)));}
+      catch{throw new OsClientError("INVALID_RESPONSE",response.status,null,method==="POST");}
+    } catch(error) {
+      if(error instanceof OsClientError) throw error;
+      throw new OsClientError(controller.signal.aborted?"ABORTED_OR_TIMEOUT":"TRANSPORT_FAILURE",0,null,method==="POST"&&dispatched);
+    } finally {clearTimeout(timer);external?.removeEventListener("abort",abort);}
+  }
+  sendMessage(schoolId:string,input:MessageInput,o:MutationOptions){
+    return this.request("POST",this.cfg.endpoints.sendMessage(schoolId),this.cfg.decodeReceipt,input,o);
+  }
+  referCase(schoolId:string,input:ReferralInput,o:MutationOptions){
+    return this.request("POST",this.cfg.endpoints.referCase(schoolId),this.cfg.decodeReceipt,input,o);
+  }
+  proposeGrade(schoolId:string,input:GradeInput,o:MutationOptions){
+    return this.request("POST",this.cfg.endpoints.proposeGrade(schoolId),this.cfg.decodeReceipt,input,o);
+  }
+  releaseGrade(schoolId:string,input:GradeReleaseInput,o:MutationOptions){
+    return this.request("POST",this.cfg.endpoints.releaseGrade(schoolId),this.cfg.decodeReceipt,input,o);
+  }
+  transition(schoolId:string,input:WorkflowInput,o:MutationOptions){
+    return this.request("POST",this.cfg.endpoints.transition(schoolId),this.cfg.decodeReceipt,input,o);
+  }
+  commandStatus(schoolId:string,commandId:string,signal?:AbortSignal){
+    return this.request("GET",this.cfg.endpoints.commandStatus(schoolId,commandId),this.cfg.decodeReceipt,undefined,undefined,signal);
+  }
+}

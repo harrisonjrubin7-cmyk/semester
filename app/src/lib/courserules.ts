@@ -139,25 +139,31 @@ export async function loadPublications(codes: string[], term: string): Promise<R
  */
 const NONE: Record<string, CoursePublication> = {};
 
-export function useCoursePublications(codes: string[], term: string, signedIn: boolean, on = moduleOn(MODULE_FLAGS.course_studio)) {
+export function useCoursePublications(
+  codes: string[],
+  term: string,
+  accountId: string,
+  on = moduleOn(MODULE_FLAGS.course_studio),
+  load: (codes: string[], term: string) => Promise<Record<string, CoursePublication>> = loadPublications,
+) {
   const key = [...new Set(codes.map(courseCode).filter(Boolean))].sort().join('|');
   // What is being asked for, or '' when nothing should be read. The answer is
   // kept against the question, so a stale answer is never shown for a new one
   // and "nothing to read" needs no state change at all.
-  const want = on && signedIn && cloudConfigured && key ? `${term}:${key}` : '';
+  const want = on && accountId && cloudConfigured && key ? JSON.stringify([accountId, term, key]) : '';
   const [got, setGot] = useState<{ want: string; value: Record<string, CoursePublication> }>({ want: '', value: NONE });
   useEffect(() => {
     if (!want) return;
     let alive = true;
-    const [t, codes] = [want.slice(0, want.indexOf(':')), want.slice(want.indexOf(':') + 1).split('|')];
-    void loadPublications(codes, t).then(
+    const [, t, joined] = JSON.parse(want) as [string, string, string];
+    void load(joined.split('|'), t).then(
       (value) => alive && setGot({ want, value }),
       () => alive && setGot({ want, value: NONE }),
     );
     return () => {
       alive = false;
     };
-  }, [want]);
+  }, [load, want]);
   return want && got.want === want ? got.value : NONE;
 }
 

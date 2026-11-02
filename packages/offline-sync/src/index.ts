@@ -1,5 +1,6 @@
 export * from './status.ts'
 export * from './policy.ts'
+export * from './storage-policy.ts'
 export * from './backoff.ts'
 export * from './hlc.ts'
 export * from './types.ts'

@@ -1,0 +1,54 @@
+# Operating plan object 7: student journey and next-step mapping.
+# Copy marked "draft" is not approved. Approval is first-two-weeks step 6.
+# "not_specified_in_source" means the brief gives no copy for that state.
+student_journey:
+  copy_status: draft_pending_approval
+  steps:
+    entry:
+      student_sees: [institution_context, term_context, clear_pilot_boundary, privacy_or_source_explanation]
+      student_can: [begin_readiness_check, leave_and_return_later]
+    request:
+      student_sees: [selected_term_and_goal, request_explanation, not_enrollment_notice]
+      student_can: [submit_one_scoped_evaluation]
+    evaluation:
+      student_sees: [checking_status, source_status_when_available, expected_next_step]
+
+  outcomes:
+    ready:
+      next_step: review_official_registration_process
+      copy: >
+        (draft) The available institution information supports the next step shown here.
+        This is not enrollment or confirmation of a seat.
+        Review the institution's registration process before taking action.
+    blocked:
+      next_step: view_blocker_and_route_to_correct_office
+      copy: not_specified_in_source
+    needs_review:
+      next_step: confirm_handoff_or_wait_for_review
+      copy: >
+        (draft) We could not safely determine this result from the available information.
+        Your request can be reviewed by the appropriate office.
+    unknown:
+      next_step: retry_or_request_support
+      copy: not_specified_in_source
+    stale:
+      next_step: retry_or_check_institution_source
+      copy: >
+        (draft) The source has not updated within its expected window.
+        Try the evaluation again later, check the institution's official page, or request support.
+    failed:
+      next_step: retry_or_request_support
+      copy: not_specified_in_source
+    cancelled:
+      next_step: restart_when_ready
+      copy: not_specified_in_source
+
+  receipt:
+    includes:
+      - request_identifier
+      - term_and_goal
+      - outcome
+      - source_and_freshness_context
+      - timestamp
+      - next_step
+      - clear_not_enrollment_statement

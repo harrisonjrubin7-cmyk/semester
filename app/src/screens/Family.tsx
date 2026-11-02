@@ -10,6 +10,7 @@ import { secondLine } from '../lib/dim';
 import { endProblem } from '../lib/sharing';
 import { ClaimFamilyCode, FamilyInvite } from '../components/FamilyInvite';
 import { SharedWithYou } from '../components/SharedWithYou';
+import { GuardianProjectionAccessHistory } from '../components/GuardianProjection';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
@@ -79,10 +80,10 @@ const ITEM_KIND_LABELS: Record<FamilyItem['kind'], string> = {
 
 export function Family() {
   const { account } = useStore();
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.family.v1:${account?.id || 'device'}`} />;
+  return <Workspace key={account?.id || 'device'} accountId={account?.id ?? null} storageKey={`semester.family.v1:${account?.id || 'device'}`} />;
 }
 
-function Workspace({ storageKey }: { storageKey: string }) {
+function Workspace({ storageKey, accountId }: { storageKey: string; accountId: string | null }) {
   const now = useNow();
   const { dispatch } = useStore();
   const lib = useDeviceLibrary(storageKey, readFamily, EMPTY_FAMILY);
@@ -622,10 +623,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'history' && (
         <>
+          <GuardianProjectionAccessHistory actorId={accountId} />
           <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>On this device</SectionLabel>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
-            What you changed here. Not a record of what anybody else saw — there is no server to have such a
-            record.
+            What you changed in this private plan. The guardian calendar history above is a separate server
+            record of bounded access decisions; this backup never includes it.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
             <ActionButton

@@ -46,6 +46,7 @@
  */
 
 import type { CourseModule, Course } from './types';
+import { readMaintenance } from './maintenance';
 import type { Window } from './windows';
 import type { Folder } from './folders';
 import type { StoredDeck } from './decks';
@@ -309,6 +310,11 @@ export function readIncoming<T extends Record<string, unknown>>(blob: T): T {
   }
   if ('windows' in out) {
     (out as Record<string, unknown>).windows = readList(out.windows, readWindow);
+  }
+  // Repairs carry text the screen and Today read without checking, so a
+  // damaged synced or restored row is dropped here rather than thrown on there.
+  if ('maintenance' in out) {
+    (out as Record<string, unknown>).maintenance = readList(out.maintenance, readMaintenance);
   }
   /*
    * The three small settings whose bad values are worse than their absence.

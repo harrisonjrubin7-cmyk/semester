@@ -4222,7 +4222,7 @@ function RuleStrip({
 
   return (
     <div className="fx fx-wrap" aria-label="Colour rules">
-      {rules.map((rule) => (
+      {rules.map((rule, index) => (
         <span
           key={rule.id}
           style={{
@@ -4296,7 +4296,7 @@ function RuleStrip({
           <button
             type="button"
             className="rib-btn"
-            aria-label={`Remove the rule on ${rule.range}`}
+            aria-label={`Remove colour rule ${index + 1} of ${rules.length}, ${saysCond(rule)} · ${INK_NAMES[rule.ink].toLowerCase()} ${rule.as === 'wash' ? 'behind it' : 'on the type'}`}
             onClick={() => onRules(rules.filter((r) => r.id !== rule.id))}
           >
             ✕
@@ -4349,7 +4349,7 @@ function CheckStrip({
 
   return (
     <div className="fx fx-wrap" aria-label="What cells may hold">
-      {checks.map((rule) => {
+      {checks.map((rule, index) => {
         const wrong = brokenFor(rule);
         return (
           <span
@@ -4442,7 +4442,7 @@ function CheckStrip({
             <button
               type="button"
               className="rib-btn"
-              aria-label={`Remove the rule on ${rule.range}`}
+              aria-label={`Remove cell rule ${index + 1} of ${checks.length}, ${saysCheck(rule)} · ${rule.blankOk ? 'empty cells allowed' : 'empty cells not allowed'}`}
               onClick={() => onChecks(checks.filter((c) => c.id !== rule.id))}
             >
               ✕

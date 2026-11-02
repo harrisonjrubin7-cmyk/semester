@@ -133,6 +133,26 @@ export interface ReadEvent {
   readAt: string;
 }
 
+export interface StopSharingReceipt {
+  revokedGrants: number;
+  removedCopies: number;
+}
+
+/**
+ * A stopped grant already denies the recipient, even when removing its stored
+ * copies fails afterwards. Callers must not turn that partial result into the
+ * false sentence "sharing did not stop".
+ */
+export class StopSharingError extends Error {
+  readonly accessEnded: boolean;
+
+  constructor(message: string, accessEnded: boolean) {
+    super(message);
+    this.name = 'StopSharingError';
+    this.accessEnded = accessEnded;
+  }
+}
+
 /** The student's read log, newest first. RLS returns only their own. */
 export async function readLog(): Promise<ReadEvent[]> {
   const { data, error } = await (await cloud())
@@ -167,15 +187,50 @@ export function readsOf(log: ReadEvent[], itemIds: string[]): ReadEvent[] {
  * any of them is revoked, and the copies are removed. Takes effect at the
  * supporter's next read, which then shows "This share has ended".
  */
-export async function stopSharing(itemIds: string[]): Promise<void> {
-  if (!itemIds.length) return;
+export async function stopSharing(itemIds: string[]): Promise<StopSharingReceipt> {
+  if (!itemIds.length) return { revokedGrants: 0, removedCopies: 0 };
   const db = await cloud();
+  const revokedAt = new Date().toISOString();
   const revoked = await db
     .from('family_grants')
-    .update({ revoked_at: new Date().toISOString() })
+    .update({ revoked_at: revokedAt })
+    .select('id, revoked_at')
     .overlaps('resource_ids', itemIds)
     .is('revoked_at', null);
   if (revoked.error) throw new Error(revoked.error.message);
-  const removed = await db.from('family_shared_items').delete().in('item_id', itemIds);
-  if (removed.error) throw new Error(removed.error.message);
+  const revokedRows = (revoked.data as { id?: unknown; revoked_at?: unknown }[] | null) ?? [];
+  if (
+    revokedRows.length === 0 ||
+    revokedRows.some(
+      (row) =>
+        typeof row.id !== 'string' ||
+        typeof row.revoked_at !== 'string' ||
+        Date.parse(row.revoked_at) !== Date.parse(revokedAt),
+    )
+  ) {
+    throw new StopSharingError(
+      'Semester did not receive a complete account receipt. Refresh to verify whether access ended before trying again.',
+      false,
+    );
+  }
+
+  const removed = await db
+    .from('family_shared_items')
+    .delete()
+    .select('code, item_id')
+    .in('item_id', itemIds);
+  if (removed.error) {
+    throw new StopSharingError(
+      `Access ended, but Semester could not remove the stored copies: ${removed.error.message}`,
+      true,
+    );
+  }
+  const removedRows = (removed.data as { code?: unknown; item_id?: unknown }[] | null) ?? [];
+  if (removedRows.some((row) => typeof row.code !== 'string' || typeof row.item_id !== 'string')) {
+    throw new StopSharingError(
+      'Access ended, but Semester did not receive a complete receipt for the stored-copy removal. Refresh before trying again.',
+      true,
+    );
+  }
+  return { revokedGrants: revokedRows.length, removedCopies: removedRows.length };
 }

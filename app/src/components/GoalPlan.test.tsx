@@ -70,17 +70,34 @@ describe('GoalPlan', () => {
     expect(named('Milestone 1 title').value).toBe('Collect the past papers');
     await type(named('Milestone 1 date'), '2026-10-12');
     expect(named('Milestone 1 date').value).toBe('2026-10-12');
-    await click(button('Remove milestone 3'));
+    await click(button('Remove milestone 3 of 3, Review and finish: due Thu, Nov 5'));
     expect(host.querySelectorAll('[aria-label$="title"]')).toHaveLength(2);
-    await click(button('Remove action List the assignments or topics involved'));
+    await click(button('Remove action 1 of 6, List the assignments or topics involved: not done · under Collect the past papers'));
     expect(text()).not.toContain('List the assignments or topics involved');
-    await click(button('Remove block 1'));
+    await click(button('Remove proposed block 1 of 6, Work on: Do well on the chemistry midterm: Thu, Oct 8 · 90 minutes'));
     expect(named('Block 1 day')).toBeTruthy();
     await type(labelled('Add an action'), 'Email the TA');
     await click(button('Add action'));
     expect(text()).toContain('Email the TA');
     await type(labelled('Look at how it is going on'), '2026-10-20');
     expect(labelled('Look at how it is going on').value).toBe('2026-10-20');
+  });
+
+  it('distinguishes repeated milestone, action and proposed-block removal controls', async () => {
+    await render(<GoalPlan now={NOW} />);
+    await draft('Do well on the chemistry midterm', '2026-11-05');
+
+    await type(named('Milestone 1 title'), 'Review');
+    await type(named('Milestone 1 date'), '2026-10-12');
+    await type(named('Milestone 2 title'), 'Review');
+    await type(named('Milestone 2 date'), '2026-10-20');
+
+    expect(button('Remove milestone 1 of 3, Review: due Mon, Oct 12')).toBeTruthy();
+    expect(button('Remove milestone 2 of 3, Review: due Tue, Oct 20')).toBeTruthy();
+    expect(button('Remove action 1 of 6, List the assignments or topics involved: not done · under Review')).toBeTruthy();
+    expect(button('Remove action 3 of 6, Work through the main material once: not done · under Review')).toBeTruthy();
+    expect(button('Remove proposed block 1 of 6, Work on: Do well on the chemistry midterm: Thu, Oct 8 · 90 minutes')).toBeTruthy();
+    expect(button('Remove proposed block 2 of 6, Work on: Do well on the chemistry midterm: Sun, Oct 11 · 90 minutes')).toBeTruthy();
   });
 
   it('is not a dead end for a goal no rule recognises', async () => {

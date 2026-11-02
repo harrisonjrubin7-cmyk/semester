@@ -329,8 +329,11 @@ begin
 end $$;
 
 -- ── Reports ───────────────────────────────────────────────────────────────
--- Write-only on purpose: anybody verified may file one, and nobody at all can
--- read them back, including the person who filed it.
+-- Write-only for students: anybody verified may file one, and a student reads
+-- none back, including the person who filed it. Whoever holds `report:read`
+-- reads the queue (`20260922012000_capabilities.sql` replaced the admin-only
+-- policy of `20260921214500_report_status.sql`), and the block after this one
+-- proves that and the two refusals beside it.
 
 do $$
 declare n bigint;
@@ -342,6 +345,60 @@ begin
 
   select count(*) into n from public.reports;
   perform pg_temp.counted('a report cannot be read back, even by its author', n, 0);
+end $$;
+
+-- The queue. An administrator reads every report; a verified student who did
+-- not file one reads none; a signed-out visitor reads none. The first of these
+-- is the one that would fail silently if the admin policy were ever dropped,
+-- since the other two would still pass.
+create or replace function pg_temp.become_anon()
+returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '', true);
+  execute 'set local role anon';
+end $$;
+
+do $$
+declare
+  admin uuid := '66666666-6666-6666-6666-666666666666';
+  cara  uuid := '33333333-3333-3333-3333-333333333333';
+  total bigint;
+  n     bigint;
+begin
+  insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at,
+                          created_at, updated_at)
+  values (admin, '00000000-0000-0000-0000-000000000000', 'authenticated',
+          'authenticated', 'admin.test@vanderbilt.edu', now(), now(), now())
+  on conflict (id) do nothing;
+
+  -- The operator is the grant, not the app_admins list: is_app_admin() asks
+  -- for platform:configure (admins.check.sql says the same).
+  set local role postgres;
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (admin, 'platform_admin', 'platform', '', 'platform');
+  select count(*) into total from public.reports;
+  perform pg_temp.check('the queue has a report for the administrator to read', total > 0, true);
+
+  -- A platform_admin grant only counts on an aal2 session (has_capability).
+  perform set_config('request.jwt.claims',
+                     json_build_object('sub', admin::text, 'role', 'authenticated',
+                                       'aal', 'aal2')::text, true);
+  execute 'set local role authenticated';
+  select count(*) into n from public.reports;
+  perform pg_temp.counted('an administrator reads every report', n, total);
+
+  perform pg_temp.become(cara);
+  select count(*) into n from public.reports;
+  perform pg_temp.counted('a verified student who did not file one reads no reports', n, 0);
+
+  -- Not zero rows: the table is not granted to anon at all, so the read is refused.
+  perform pg_temp.become_anon();
+  begin
+    select count(*) into n from public.reports;
+    raise exception 'FAILED: a signed-out visitor could read the report queue (% rows)', n;
+  exception when insufficient_privilege then
+    raise notice 'ok  a signed-out visitor is refused the report queue outright';
+  end;
 end $$;
 
 -- ── Leaving ───────────────────────────────────────────────────────────────

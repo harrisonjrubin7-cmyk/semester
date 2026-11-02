@@ -1,0 +1,20 @@
+{
+  "semester": {
+    "policy_revision": "registration-pilot-1",
+    "actions": {
+      "registration.readiness.view": {
+        "capability": "registration.readiness.view",
+        "relationships": [
+          "student_self",
+          "assigned_advisor",
+          "authorized_registrar"
+        ],
+        "risk_model": "semester-access-risk-1",
+        "minimum_score": 60,
+        "authentication_level": 1,
+        "sharing_required": false,
+        "approval_required": false
+      }
+    }
+  }
+}

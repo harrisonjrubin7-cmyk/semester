@@ -151,6 +151,7 @@ export function Registrar({
             <button
               type="button"
               className="btn btn-ghost"
+              aria-label={`Clear ${d.label}`}
               onClick={() => dispatch({ type: 'dropTermDate', id: d.id })}
               style={{ flex: 'none', height: 36, fontSize: 'var(--type-sm)' }}
             >

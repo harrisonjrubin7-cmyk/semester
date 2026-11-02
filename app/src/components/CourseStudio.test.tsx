@@ -2,6 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 /**
  * Faculty Course Studio on screen (D-100 slice 3): offered only to someone
@@ -57,9 +58,37 @@ it('is not offered to an account the server does not say may publish', async () 
   expect(host.textContent).toBe('');
 });
 
+it('explains the explicit Teaching destination when there is no signed-in account', async () => {
+  mock.account = null;
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.textContent).toContain('Sign in to check connected teaching access for this account.');
+});
+
+it('distinguishes no assigned course from a failed access check when explicitly requested', async () => {
+  mock.rpc.mockResolvedValueOnce({ data: [], error: null });
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.textContent).toContain('No connected teaching course was found for this account.');
+
+  mock.rpc.mockRejectedValueOnce(new Error('offline'));
+  await act(async () => root.render(<CourseStudioEntry key="retry-state" on requested />));
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Could not check connected teaching access.');
+  expect(button(/Try again/)).toBeTruthy();
+});
+
+it('is explicitly requested only by the typed Teaching destination on Account', () => {
+  const account = readFileSync('src/screens/Account.tsx', 'utf8');
+  expect(account).toContain("<CourseStudioEntry requested={state.workspaceView === 'course-studio'} />");
+});
+
 it('is not offered with the module off, and does not even ask', async () => {
   await act(async () => root.render(<CourseStudioEntry on={false} />));
   expect(host.textContent).toBe('');
+  expect(mock.rpc).not.toHaveBeenCalled();
+});
+
+it('explains an explicitly requested Teaching destination when the module is off', async () => {
+  await act(async () => root.render(<CourseStudioEntry on={false} requested />));
+  expect(host.textContent).toContain('Teaching workspace is not enabled');
   expect(mock.rpc).not.toHaveBeenCalled();
 });
 

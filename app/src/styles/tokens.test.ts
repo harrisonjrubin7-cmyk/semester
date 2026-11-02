@@ -123,6 +123,12 @@ describe('the semantic token layer', () => {
     expect(APP).toContain('max(100%, 44px)');
   });
 
+  it('paints the rail wordmark with the semantic navigation text', () => {
+    const wordmark = /\.rail \.rail-mark\s*\{([^}]*)\}/.exec(APP)?.[1] ?? '';
+    expect(wordmark).toContain('color: var(--shell-navigation-text)');
+    expect(wordmark).toContain('-webkit-text-fill-color: currentColor');
+  });
+
   it('stills every motion role for reduced motion and for the app’s own setting', () => {
     const roles = [...defs.keys()].filter((k) => k.startsWith('--motion-'));
     expect(roles.length).toBeGreaterThanOrEqual(5);

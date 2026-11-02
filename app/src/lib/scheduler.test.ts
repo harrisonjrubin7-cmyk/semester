@@ -32,7 +32,7 @@ import { join } from 'node:path';
  *     below with what calls them, and that caller is checked too.
  *   - **Cron-invoked Edge Functions.** A function directory whose code checks
  *     a cron bearer token (`CRON_SECRET`, or the database's
- *     `integration_tick_authorized`) is called by a job, so a job must post to
+ *     `integration_tick_authorized` / `access_saga_tick_authorized`) is called by a job, so a job must post to
  *     it. A `*_CRON_SECRET` in a shared module whose function is not deployed
  *     yet must still have its Vault secret and its (parked) job.
  *
@@ -123,7 +123,7 @@ function functionCode(dir: string): string {
 const deployable = () =>
   readdirSync(FUNCTIONS).filter((d) => !d.startsWith('_') && existsSync(join(FUNCTIONS, d, 'index.ts')));
 
-const CRON_INVOKED = /Deno\.env\.get\('[A-Z_]*CRON_SECRET'\)|integration_tick_authorized/;
+const CRON_INVOKED = /Deno\.env\.get\('[A-Z_]*CRON_SECRET'\)|(?:integration|access_saga)_tick_authorized/;
 
 /** The jobs `health.sql` block 6 expects, with their parked flag. */
 function healthExpected(): Map<string, boolean> {
@@ -140,7 +140,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBeGreaterThan(8);
     expect(names).toEqual(expect.arrayContaining(['push', 'tombstones', 'integration-sync']));
-    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
+    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify', 'access-saga-worker']));
   });
 
   it('parks vendor-gated support email and reactivates the credential-free retention clock', () => {
@@ -233,7 +233,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
 
   it('finds the cron-invoked Edge Functions', () => {
     const invoked = deployable().filter((d) => CRON_INVOKED.test(functionCode(d)));
-    expect(invoked.sort()).toEqual(['integration-tick', 'push', 'support-reply-notify']);
+    expect(invoked.sort()).toEqual(['access-saga-tick', 'integration-tick', 'push', 'support-reply-notify']);
   });
 });
 

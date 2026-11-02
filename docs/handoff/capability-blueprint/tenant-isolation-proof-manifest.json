@@ -1,0 +1,47 @@
+{
+  "status": "Illustrative manifest shape; discover real database objects before populating",
+  "objects": [],
+  "required_object_fields": [
+    "object_identifier",
+    "object_type",
+    "data_classification",
+    "scope_type",
+    "tenant_key_or_approved_global_rationale",
+    "allowed_roles",
+    "owner",
+    "policy_version",
+    "expected_operation_matrix",
+    "test_run_evidence"
+  ],
+  "operation_matrix": [
+    "SELECT",
+    "INSERT",
+    "UPDATE",
+    "DELETE"
+  ],
+  "identities": [
+    "tenant_A_student",
+    "tenant_B_student",
+    "tenant_A_faculty_scoped",
+    "company_support",
+    "anonymous",
+    "authorized_job_worker"
+  ],
+  "ci_fail_conditions": [
+    "discovered object missing from manifest",
+    "sensitive object lacks approved policy",
+    "cross-tenant operation succeeds",
+    "company role reads student record",
+    "mutable tenant/role creates privilege escalation",
+    "test result absent for required object-operation"
+  ],
+  "beyond_database_checks": [
+    "RPC/definer",
+    "storage/signed URLs",
+    "search",
+    "cache",
+    "exports",
+    "jobs/outbox",
+    "provider egress"
+  ]
+}

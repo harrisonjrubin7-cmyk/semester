@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
-import { ActionButton, Notice, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 import { NotOfficial } from '../components/NotOfficial';
 import { NilExplainer } from '../components/NilExplainer';
 import { secondLine } from '../lib/dim';
@@ -26,6 +28,7 @@ import {
   years,
   type Associated,
   type NilDeal,
+  type NilLibrary,
 } from '../lib/nil';
 
 /**
@@ -60,9 +63,10 @@ import {
  * ## Nothing leaves the device
  *
  * A device library, like Athletics and Family. Not in `state/shape.ts`, so it
- * does not sync, is not in a backup, and leaves only by the export button
- * below. A record of what somebody was paid is not something to put in an
- * account without being asked.
+ * does not sync or enter the general workspace backup. It leaves only through
+ * the explicit private export below, and returns only when the student chooses
+ * that file and confirms replacement. A record of what somebody was paid is
+ * not something to put in an account without being asked.
  */
 export function Nil() {
   const { account } = useStore();
@@ -97,6 +101,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [associated, setAssociated] = useState<Associated>('no');
   const [chosen, setChosen] = useState('');
   const [said, setSaid] = useState('');
+  const [restore, setRestore] = useState<NilLibrary | null>(null);
 
   const deals = useMemo(
     () => [...lib.value.deals].sort((a, b) => b.date.localeCompare(a.date)),
@@ -439,6 +444,26 @@ function Workspace({ storageKey }: { storageKey: string }) {
             >
               Export your record
             </ActionButton>
+            <FilePick
+              accept=".json,application/json"
+              multiple={false}
+              block={false}
+              onPick={async (files) => {
+                const file = files[0];
+                if (!file) return;
+                try {
+                  if (file.size > 3_000_000) throw new Error('Choose a NIL record smaller than 3 MB.');
+                  setRestore(readNil(JSON.parse(await file.text())));
+                  setSaid('');
+                } catch (error) {
+                  setRestore(null);
+                  setSaid(error instanceof Error ? error.message : 'That NIL record could not be read.');
+                }
+              }}
+              style={{ flex: '1 1 auto' }}
+            >
+              Restore a private record
+            </FilePick>
             {lib.blocked && (
               <ActionButton
                 onClick={() => download({ name: 'NIL recovery.json', body: lib.recovery(), mime: 'application/json' })}
@@ -448,6 +473,35 @@ function Workspace({ storageKey }: { storageKey: string }) {
               </ActionButton>
             )}
           </div>
+          <p style={{ ...line, marginBlock: 'var(--sp-3) 0' }}>
+            Private exports contain payment amounts, payer names and descriptions. Keep them somewhere you trust.
+          </p>
+          {restore && (
+            <ConfirmDialog
+              title="Replace this private NIL record?"
+              preview={
+                <ActionPreview
+                  subject="NIL record for this account on this device"
+                  says={`Semester will replace ${lib.value.deals.length} saved ${lib.value.deals.length === 1 ? 'deal' : 'deals'} with ${restore.deals.length} ${restore.deals.length === 1 ? 'deal' : 'deals'} from the selected file.`}
+                  exactly="The dates, payer names, amounts, descriptions, school-association choices and reported marks in this private NIL notebook."
+                  doesNotChange="Downloaded exports, reminders already added to Actions, official NIL Go submissions and compliance-office records stay unchanged."
+                  recovery={{
+                    kind: 'none',
+                    how: 'The current record can be restored only from a separate private export made before replacement.',
+                  }}
+                />
+              }
+              confirmLabel="Replace record"
+              onCancel={() => setRestore(null)}
+              onConfirm={() => {
+                if (lib.update(restore)) {
+                  setRestore(null);
+                  setChosen('');
+                  setSaid('Private NIL record restored on this device.');
+                }
+              }}
+            />
+          )}
         </>
       )}
     </Page>

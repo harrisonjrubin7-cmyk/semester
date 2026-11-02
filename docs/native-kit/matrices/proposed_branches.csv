@@ -1,0 +1,13 @@
+branch,purpose,status,merge_gate
+feat/ops-tenant-capability-foundation,Reuse grants and scoped discovery,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-audit-policy-source,Audit/source/policy metadata,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-controlled-actions,Extend approved command executor,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-inbox-work-approvals,Shared work and approvals,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-tenant-customer-360,Canonical read models,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-support-escalation,Queues/access/coverage,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-release-incident,Kills/alerts/rollback,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-integration-visibility,Outbox/adapters/reconcile,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/inst-registration-readiness-console,Accepted registrar feed,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-billing-entitlements,Finance sandbox/native billing,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-reporting-portal,Immutable reporting,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance
+feat/ops-agents-observe,Bounded observe runners,PROPOSED; NOT CREATED,Reviewed diff/current tests/scope acceptance

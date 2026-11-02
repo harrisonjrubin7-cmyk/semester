@@ -1,0 +1,29 @@
+id,requirement (Book 2 pilot workflow),source,implementation,status,evidence,blocker,next action
+W01,Join institution,Book 2 protoW,apps/semester api/onboard.ts (invite code; join pending until admin approves),implemented_unverified,Prior session notes only; not re-run 22 Oct,,Run end-to-end with two test accounts
+W02,Connect SSO,Book 2 protoW,none,not_started,,SAML support on Zite not verified (capability #2),Verify Zite SSO or plan external IdP
+W03,Complete onboarding,Book 2 protoW,pages/Onboarding.tsx; api/onboard.ts,implemented_unverified,Feature Status records PASS for consent per step and skip (prior session),,Re-run with fresh account
+W04,Review Today,Book 2 protoW,api/getToday.ts; pages/Today.tsx,implemented_unverified,Approval count now tenant-scoped (e9c1fd4); preview runs succeed in logs,,
+W05,Complete first meaningful action,Book 2 protoW,api/manageTask.ts,implemented_unverified,Completion audit + parent notification (8545a34); live probe of sibling query 22 Oct,,Exercise through UI
+W06,Build term plan,Book 2 protoW,api/registration.ts add/remove; pages/Registration.tsx,implemented_unverified,Catalog tenant-scoped (12ef715),,
+W07,Review registration readiness,Book 2 protoW,lib/readiness.ts; api/registration.ts get,verified_in_test,tests/readiness.test.ts 9/9 (rules); live probe of Requested status 22 Oct,Official holds need an authorized SIS connection,Fixture SIS adapter (blueprint Prompt 4)
+W08,Resolve hold through official handoff,Book 2 protoW,Readiness links to Help; staff.ts requestHoldRelease → two-person approval,implemented_unverified,Hold release tenant-scoped (e9c1fd4),,
+W09,Enroll or request registration,Book 2 protoW,api/registration.ts submit/withdrawRequest; staff.ts setEnrollment,implemented_unverified,Readiness re-checked server-side; live probe of status filter 22 Oct,SIS write-back out of pilot scope,Two-account end-to-end run
+W10,Use AI copilot,Book 2 protoW,api/ask.ts,implemented_unverified,Answers only from catalog sources; gate unit-tested,OpenAI connection live but answers not evaluated,Evaluation fixtures (blueprint Prompt 7)
+W11,Follow course AI rules,Book 2 protoW,lib/aiGate.ts gate(),verified_in_test,tests/aiGate.test.ts 11/11 + mutation check,,
+W12,Share with advisor,Book 2 protoW,api/advisorShare.ts share; components/AdvisorShare.tsx,verified_in_test,tests/shares.test.ts 10/10 (rules); live probe of consent lookup,,Two-account end-to-end run
+W13,Share with family,Book 2 protoW,api/privacy.ts shareFamily; semester-family app,implemented_unverified,Prior build; Family prefix excluded from advisor view (tested),,
+W14,Export personal data,Book 2 protoW,api/privacy.ts export,implemented_unverified,,,Check export contents against data inventory
+W15,Adjust privacy/AI settings,Book 2 protoW,api/privacy.ts setConsent,implemented_unverified,,,
+W16,Release grade,Book 2 protoW,api/learn.ts; staff.ts setFinal,implemented_unverified,Feature Status: grade release audit UNTESTED (prior),,Test release audit
+W17,Resolve regrade,Book 2 protoW,api/regrade.ts; pages/RegradeQueue.tsx; RegradeButton,verified_in_test,tests/regrade.test.ts 12/12 (rules); live data-path probe 22 Oct,,Two-account end-to-end run
+W18,Publish course AI policy,Book 2 protoW,api/learn.ts setPolicy (instructor),implemented_unverified,Policy now enforced by gate (W11),,
+W19,Review consented share,Book 2 protoW,api/advisorShare.ts students/view; pages/SharedWithMe.tsx,verified_in_test,Rules tested; every view audited before data returned,,
+W20,Grant override,Book 2 protoW,api/approvals.ts decide (two-person rule),implemented_unverified,Cross-tenant decide now refused (e9c1fd4),,Negative test with two institutions and two users
+W21,User asks,Book 2 protoW (AI flow),api/ask.ts,implemented_unverified,Audit row per question,,
+W22,Course/tenant AI policy checked,Book 2 protoW (AI flow),lib/aiGate.ts,verified_in_test,tests/aiGate.test.ts,,
+W23,Sources and limits shown,Book 2 protoW (AI flow),pages/Ask.tsx,implemented_unverified,Sources numbered; not-sent-to-AI marked,,
+W24,Data classification checked,Book 2 protoW (AI flow),lib/aiGate.ts classify/sendableToAI,verified_in_test,tests/aiGate.test.ts (no-egress cases),,
+W25,Opens support request,Book 2 protoW,api/help.ts request,implemented_unverified,Caseload tenant-scoped (e9c1fd4),,
+W26,Approve/deny exception,Book 2 protoW,api/approvals.ts,implemented_unverified,Tenant-scoped (e9c1fd4),,
+S01,Public site pilot screens (13),Book 2 proto A,apps/semester-site,implemented_unverified,check_app clean; request write path probed,Not published (C6),Visual review + publish approval
+S02,Tenant isolation across endpoints,Brief 1.2; design doc 2.4,lib/server.ts tenantScope/inSet,verified_in_test,Live probe with second institution (A excludes B; control passes),No DB-level RLS (capability #5),Structural check that every endpoint scopes

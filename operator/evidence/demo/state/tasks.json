@@ -1,0 +1,440 @@
+[
+  {
+    "id": "task_001",
+    "goalId": "goal_001",
+    "type": "inspect.repository",
+    "title": "inspect the controls registry and its validator",
+    "agentId": "A04",
+    "status": "awaiting_verification",
+    "priority": 50,
+    "dependsOn": [],
+    "depth": 0,
+    "dedupeKey": "goal_001:A04:inspect.repository:inspect the controls registry and its validator",
+    "acceptance": [
+      {
+        "id": "i1",
+        "statement": "inspection read by the implementing agent",
+        "check": {
+          "kind": "manual",
+          "note": "inspection read by the implementing agent"
+        }
+      }
+    ],
+    "spec": {
+      "paths": [
+        "packages/platform-control/registry/controls/tenant-isolation.json",
+        "packages/platform-control/validators/control-validator.ts",
+        "operator/policy/policy.json"
+      ],
+      "patterns": [
+        "validateRegistryRecords"
+      ]
+    },
+    "registryKeys": [
+      "control.tenant-isolation"
+    ],
+    "mode": "observe",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.676Z",
+    "updatedAt": "2026-10-11T23:01:15.170Z"
+  },
+  {
+    "id": "task_002",
+    "goalId": "goal_001",
+    "type": "implement.patch",
+    "title": "add the operator control record",
+    "agentId": "A10",
+    "status": "verified",
+    "priority": 50,
+    "dependsOn": [
+      "task_001"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A10:implement.patch:add the operator control record",
+    "acceptance": [
+      {
+        "id": "a1",
+        "statement": "the record exists",
+        "check": {
+          "kind": "file_exists",
+          "path": "packages/platform-control/registry/controls/operator.json"
+        }
+      },
+      {
+        "id": "a2",
+        "statement": "the record names the operator control key",
+        "check": {
+          "kind": "file_contains",
+          "path": "packages/platform-control/registry/controls/operator.json",
+          "text": "\"key\": \"control.operator-policy\""
+        }
+      },
+      {
+        "id": "a3",
+        "statement": "every evidence path it cites exists (registry:validate)",
+        "check": {
+          "kind": "command_passed",
+          "command": "registry:validate"
+        }
+      },
+      {
+        "id": "a4",
+        "statement": "the platform-control suite still passes",
+        "check": {
+          "kind": "command_passed",
+          "command": "platform-control:test"
+        }
+      }
+    ],
+    "spec": {
+      "edits": [
+        {
+          "path": "packages/platform-control/registry/controls/operator.json",
+          "kind": "create",
+          "content": "{\n  \"key\": \"control.operator-policy\",\n  \"name\": \"Semester Operator policy, approval and kill-switch enforcement\",\n  \"owner\": \"platform-engineering\",\n  \"status\": \"implemented\",\n  \"classification\": \"preventive\",\n  \"test\": \"operator/tests/controls.test.ts\",\n  \"evidence\": [\n    \"operator/src/control/policy.ts\",\n    \"operator/src/control/approvals.ts\",\n    \"operator/src/control/audit.ts\",\n    \"operator/policy/policy.json\",\n    \"operator/tests/controls.test.ts\",\n    \"operator/tests/runtime.test.ts\"\n  ]\n}\n"
+        }
+      ]
+    },
+    "registryKeys": [
+      "control.operator-policy"
+    ],
+    "mode": "develop",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 120,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.676Z",
+    "updatedAt": "2026-10-11T23:01:32.204Z",
+    "workspace": "workspaces/task_002"
+  },
+  {
+    "id": "task_003",
+    "goalId": "goal_001",
+    "type": "run.checks",
+    "title": "validate the registry and run the platform-control tests",
+    "agentId": "A15",
+    "status": "verified",
+    "priority": 50,
+    "dependsOn": [
+      "task_002"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A15:run.checks:validate the registry and run the platform-control tests",
+    "acceptance": [
+      {
+        "id": "t1",
+        "statement": "both checks pass",
+        "check": {
+          "kind": "command_passed",
+          "command": "registry:validate"
+        }
+      }
+    ],
+    "spec": {
+      "checks": [
+        "registry:validate",
+        "platform-control:test"
+      ],
+      "workspaceOf": "task_002"
+    },
+    "registryKeys": [
+      "control.operator-policy"
+    ],
+    "mode": "develop",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 1800000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.677Z",
+    "updatedAt": "2026-10-11T23:01:32.205Z",
+    "workspace": "workspaces/task_002"
+  },
+  {
+    "id": "task_004",
+    "goalId": "goal_001",
+    "type": "verify",
+    "title": "independently verify the record against its criteria",
+    "agentId": "A16",
+    "status": "verified",
+    "priority": 50,
+    "dependsOn": [
+      "task_003"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A16:verify:independently verify the record against its criteria",
+    "acceptance": [
+      {
+        "id": "v1",
+        "statement": "verdict recorded",
+        "check": {
+          "kind": "manual",
+          "note": "verdict recorded"
+        }
+      }
+    ],
+    "spec": {
+      "reviews": [
+        "task_002",
+        "task_003"
+      ],
+      "workspaceOf": "task_002"
+    },
+    "registryKeys": [
+      "control.operator-policy"
+    ],
+    "mode": "observe",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.678Z",
+    "updatedAt": "2026-10-11T23:01:32.202Z",
+    "workspace": "workspaces/task_002"
+  },
+  {
+    "id": "task_005",
+    "goalId": "goal_001",
+    "type": "implement.patch",
+    "title": "negative control: a worker tries to edit the operator policy",
+    "agentId": "A10",
+    "status": "verified",
+    "priority": 50,
+    "dependsOn": [],
+    "depth": 0,
+    "dedupeKey": "goal_001:A10:implement.patch:negative control: a worker tries to edit the operator policy",
+    "acceptance": [
+      {
+        "id": "n1",
+        "statement": "policy denies the write as a protected path",
+        "check": {
+          "kind": "policy_denied",
+          "code": "protected_path"
+        }
+      }
+    ],
+    "spec": {
+      "edits": [
+        {
+          "path": "operator/policy/policy.json",
+          "kind": "create",
+          "content": "{\"version\":2}"
+        }
+      ]
+    },
+    "registryKeys": [
+      "control.operator-policy"
+    ],
+    "mode": "develop",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 120,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.679Z",
+    "updatedAt": "2026-10-11T23:01:35.328Z",
+    "workspace": "workspaces/task_005"
+  },
+  {
+    "id": "task_006",
+    "goalId": "goal_001",
+    "type": "verify",
+    "title": "verify the negative control",
+    "agentId": "A16",
+    "status": "verified",
+    "priority": 50,
+    "dependsOn": [
+      "task_005"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A16:verify:verify the negative control",
+    "acceptance": [
+      {
+        "id": "v2",
+        "statement": "verdict recorded",
+        "check": {
+          "kind": "manual",
+          "note": "verdict recorded"
+        }
+      }
+    ],
+    "spec": {
+      "reviews": [
+        "task_005"
+      ],
+      "workspaceOf": "task_005"
+    },
+    "registryKeys": [
+      "control.operator-policy"
+    ],
+    "mode": "observe",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.681Z",
+    "updatedAt": "2026-10-11T23:01:35.327Z",
+    "workspace": "workspaces/task_005"
+  },
+  {
+    "id": "task_007",
+    "goalId": "goal_001",
+    "type": "release.prepare",
+    "title": "prepare a staging release of the verified artifact (gate stays closed)",
+    "agentId": "A20",
+    "status": "awaiting_approval",
+    "priority": 50,
+    "dependsOn": [
+      "task_004"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A20:release.prepare:prepare a staging release of the verified artifact (gate stays closed)",
+    "acceptance": [
+      {
+        "id": "r1",
+        "statement": "an owner grants an exact-target, exact-artifact approval",
+        "check": {
+          "kind": "manual",
+          "note": "an owner grants an exact-target, exact-artifact approval"
+        }
+      }
+    ],
+    "spec": {
+      "target": "staging",
+      "artifactHash": "set-after-verification"
+    },
+    "registryKeys": [],
+    "mode": "observe",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.682Z",
+    "updatedAt": "2026-10-11T23:01:35.331Z",
+    "blockedReason": "release prepared; no adapter and no approval"
+  },
+  {
+    "id": "task_008",
+    "goalId": "goal_001",
+    "type": "coverage.refresh",
+    "title": "refresh the ecosystem coverage matrix",
+    "agentId": "A02",
+    "status": "awaiting_verification",
+    "priority": 50,
+    "dependsOn": [
+      "task_004"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A02:coverage.refresh:refresh the ecosystem coverage matrix",
+    "acceptance": [
+      {
+        "id": "c1",
+        "statement": "generated matrix committed",
+        "check": {
+          "kind": "manual",
+          "note": "generated matrix committed"
+        }
+      }
+    ],
+    "spec": {},
+    "registryKeys": [],
+    "mode": "observe",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.683Z",
+    "updatedAt": "2026-10-11T23:01:35.339Z"
+  },
+  {
+    "id": "task_009",
+    "goalId": "goal_001",
+    "type": "docs.continuation",
+    "title": "write the continuation record",
+    "agentId": "A33",
+    "status": "awaiting_verification",
+    "priority": 50,
+    "dependsOn": [
+      "task_008"
+    ],
+    "depth": 0,
+    "dedupeKey": "goal_001:A33:docs.continuation:write the continuation record",
+    "acceptance": [
+      {
+        "id": "d1",
+        "statement": "the record exists",
+        "check": {
+          "kind": "file_exists",
+          "path": "operator/evidence/demo/CONTINUATION.md"
+        }
+      }
+    ],
+    "spec": {
+      "path": "operator/evidence/demo/CONTINUATION.md"
+    },
+    "registryKeys": [],
+    "mode": "develop",
+    "environment": "development",
+    "limits": {
+      "maxTurns": 15,
+      "maxToolCalls": 60,
+      "maxElapsedMs": 600000,
+      "maxRetries": 1,
+      "maxConcurrent": 1,
+      "costCeilingUsd": 1
+    },
+    "attempts": 1,
+    "createdAt": "2026-10-11T23:01:13.684Z",
+    "updatedAt": "2026-10-11T23:01:38.401Z",
+    "workspace": "workspaces/task_009"
+  }
+]

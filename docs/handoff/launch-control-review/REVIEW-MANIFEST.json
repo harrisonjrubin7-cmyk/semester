@@ -1,0 +1,20 @@
+{
+  "baseline": "4b4f8ca742242132f5b2dd254d23422ae70eaa7a",
+  "remote_changes": false,
+  "new_files": [
+    "docs/launch-control-guide/README.md",
+    "docs/launch-control-guide/DIFF-REVIEW.md",
+    "docs/launch-control-guide/TEMPLATE-ENDPOINT-MAP.md",
+    "docs/launch-control-guide/run_integration.py",
+    "docs/launch-control-guide/test_run_integration.py",
+    "docs/launch-control-guide/api-catalog.json"
+  ],
+  "runtime_changes": false,
+  "DDL_changes": false,
+  "observed_routes": 14,
+  "orchestrator_unit_tests": 15,
+  "app_e2e_run": false,
+  "patch_check": "clean temporary repository only",
+  "source_read_limit": "gateway excerpt truncated; not a full audit",
+  "patch_sha256": "67c21a78c3a42952b7e39bb3c786aec47b76e879d58de9f652839c7a2c1fd2ab"
+}

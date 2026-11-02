@@ -77,7 +77,18 @@ function makeDb() {
     return b;
   };
 
-  return { tables, refuse, db: { from } };
+  const identity = { id: 'u' };
+  return {
+    tables,
+    refuse,
+    identity,
+    db: {
+      from,
+      auth: {
+        getUser: async () => ({ data: { user: { id: identity.id } }, error: null }),
+      },
+    },
+  };
 }
 
 let harness: ReturnType<typeof makeDb>;
@@ -104,6 +115,17 @@ afterEach(() => {
 const econ = (note: string) => ({ id: 'econ', data: { code: 'ECON', note } });
 const stateData = () => harness.tables.state[0]?.data;
 const courseData = (id: string) => harness.tables.courses.find((r) => r.id === id)?.data;
+
+describe('an account read before authenticated identity is ready', () => {
+  it('refuses an empty-looking pull when the client proves a different account', async () => {
+    const { push, pull } = await load();
+    await push('u', { tasks: [{ id: 'remote', title: 'From the account' }] }, []);
+    harness.identity.id = 'another-account';
+
+    await expect(pull('u')).rejects.toThrow(/signed-in account changed/i);
+    expect(stateData()).toEqual({ tasks: [{ id: 'remote', title: 'From the account' }] });
+  });
+});
 
 describe('a push over a copy this device has read', () => {
   it('lands, and reports the stamp the database wrote', async () => {

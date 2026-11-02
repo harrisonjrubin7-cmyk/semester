@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatExtractionConfidence, formatSourceLocation } from "./source-viewer";
+import { formatExtractionConfidence, formatSourceLocation, normalizedBoundingBoxStyle } from "./source-viewer";
 import type { SourceChunk } from "./workspace-types";
 
 const chunk = (overrides: Partial<SourceChunk>): SourceChunk => ({
@@ -25,5 +25,22 @@ describe("source locations", () => {
 
   it("labels unmeasured extraction confidence without inventing a percentage", () => {
     expect(formatExtractionConfidence(null)).toBe("Extraction confidence not measured");
+  });
+
+  it("converts normalized source bounds to a contained percentage overlay", () => {
+    expect(normalizedBoundingBoxStyle({
+      coordinate_space: "normalized",
+      x: 0.2,
+      y: 0.25,
+      width: 0.4,
+      height: 0.1,
+    })).toEqual({ left: "20%", top: "25%", width: "40%", height: "10%" });
+    expect(normalizedBoundingBoxStyle({
+      coordinate_space: "normalized",
+      x: 0.9,
+      y: 0.95,
+      width: 0.5,
+      height: 0.5,
+    })).toEqual({ left: "90%", top: "95%", width: "10%", height: "5%" });
   });
 });

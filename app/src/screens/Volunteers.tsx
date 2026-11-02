@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { TypeToConfirm } from '../components/TypeToConfirm';
 import { Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { ReasonHint, REASON_MIN } from '../components/community/Escalation';
@@ -177,9 +178,11 @@ function Manager() {
 }
 
 function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: VolunteerEvent[]; onDone: (said: string) => Promise<void> }) {
+  const card = useRef<HTMLElement>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
   const stage = volunteerStage(v);
   const revoked = v.status === 'revoked';
 
@@ -197,7 +200,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
   const ready = !busy && reason.trim().length >= REASON_MIN;
 
   return (
-    <article className="portal-panel" aria-label={`Volunteer ${v.handle}`} style={{ display: 'grid', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
+    <article ref={card} tabIndex={-1} className="portal-panel" aria-label={`Volunteer ${v.handle}`} style={{ display: 'grid', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
       <strong>{v.handle}</strong>
       <span style={{ color: 'var(--app-dim)' }}>
         {stage.text} · applied {day(v.appliedAt)}
@@ -248,7 +251,7 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
                 Send back to calibration
               </button>
             )}
-            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => act('revoke', `${v.handle}’s access is revoked.`)}>
+            <button type="button" className="btn btn-secondary" disabled={!ready} onClick={() => { setConfirmRevoke(true); }}>
               Revoke
             </button>
           </div>
@@ -259,6 +262,32 @@ function VolunteerCard({ v, history, onDone }: { v: RosterEntry; history: Volunt
           )}
         </>
       )}
+
+      {confirmRevoke ? (
+        <TypeToConfirm
+          title={`Revoke ${v.handle}’s volunteer access?`}
+          what={[
+            'Their volunteer moderation access ends immediately and every unanswered review action currently assigned to them is removed from their queue.',
+            `The reason “${reason.trim()}” is kept with the revocation event in the volunteer programme history.`,
+            'Their answered reviews and programme history remain. Other volunteers, moderation cases, and school settings stay unchanged.',
+            'A revoked volunteer cannot be sent back to calibration.',
+          ]}
+          want={v.handle}
+          describe="the volunteer handle"
+          confirmLabel="Revoke access"
+          onCancel={() => { setConfirmRevoke(false); }}
+          onConfirm={() => {
+            setConfirmRevoke(false);
+            // Let the dialog return focus to its still-enabled opener first.
+            // The stable card then takes focus before the async write disables
+            // and eventually removes that opener.
+            window.setTimeout(() => {
+              act('revoke', `${v.handle}’s access is revoked.`);
+              card.current?.focus({ preventScroll: true });
+            }, 0);
+          }}
+        />
+      ) : null}
 
       {history.length > 0 && (
         <details>

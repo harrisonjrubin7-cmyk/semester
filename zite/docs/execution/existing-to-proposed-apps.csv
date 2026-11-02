@@ -1,0 +1,33 @@
+app_id,plane,workspace,existing_location,designed,implemented,tested,deployed,institution_authorized,production_enabled,evidence,next_gap
+APP-001,Experience,Student,Zite Semester: /today /plan /learn /progress /you,yes (registry + books),yes (preview),partial,no,no,no,unit tests aiGate/readiness/shares; tenant probes (7 leaks fixed),run published-login A/B tests with real sessions
+APP-002,Experience,Faculty and teaching,"Zite Semester: /staff/gradebook, /learn/:sectionId, /staff/regrades",yes (registry + books),yes (preview),partial,no,no,no,regrade.test (12); teach scoped to tenant (22 Oct),grade release/correction chain
+APP-003,Experience,Advising and tutoring,"Zite Semester: /help/advising, /staff/shared, /staff/mentoring",yes (registry + books),yes (preview),partial,no,no,no,shares.test (10); every shared view audited,caseload assignment model
+APP-004,Experience,Applicant and admissions,Zite Applicants app + Semester /staff/admissions,yes (registry + books),yes (preview),no,no,no,no,decide refuses other tenants and self-decisions (code review),upload warning added; private files needed before real documents
+APP-005,Experience,Registrar,"Zite Semester: /staff/registrar, /plan/registration; verified Postgres layer",yes (registry + books),"Zite: yes, no capacity; Postgres: command",Postgres: yes,no,no,no,"registrar.test 10, registrar-doc.test 10, 40-way concurrency","waitlists, overrides, holds/prereqs in the command"
+APP-006,Experience,Campus services,Zite Semester: /campus/places only; GitHub repo has Housing/Dining screens,yes (registry + books),partial,no,no,no,no,none,housing allocation needs transactional seat-style command
+APP-007,Experience,Campus community,Zite Semester: /campus/community,yes (registry + books),yes (preview),no,no,no,no,report-to-moderation path exists,moderation queue + appeals
+APP-008,Experience,Career and alumni,Zite Semester: /plan/career; alumni.ts,yes (registry + books),yes (preview),no,no,no,no,none,credential verification
+APP-009,Experience,Employer and partner,Zite Employers app,yes (registry + books),yes (preview),no,no,no,no,none,organization verification
+APP-010,Experience,Family and delegates,Zite Family app + advisor/family shares,yes (registry + books),yes (preview),partial,no,no,no,shares.test covers expiry/categories,delegate identity is separate (done); invite flow review
+APP-011,Institution,Institution administration,Zite Semester: /console,yes (registry + books),partial,no,no,no,no,sample-data removal scoped to tenant,"module enablement, delegated admin"
+APP-012,Institution,Institution IT,none,yes (registry + books),no,no,no,no,no,SSO untested; no SIS connector,blocked on university IdP + SIS sandbox
+APP-013,Institution,Institution trust,Zite Semester: /you (privacy export/delete),yes (registry + books),partial,no,no,no,no,audit log append-only only in Postgres layer,"access review, privacy request queue"
+APP-014,Institution,Institution analytics,none,yes (registry + books),no,no,no,no,no,none,metric definitions + aggregate-only exports
+APP-015,Institution,Student accounts,Zite Semester: /staff/accounts; verified Postgres tuition layer,yes (registry + books),Zite: display; Postgres: webhook+ledger,Postgres: yes,no,no,no,"tuition.test 12 (forged, duplicate, reorder, refund)",real payment provider sandbox; finance review
+APP-016,Developer,Developer portal,"Zite Semester: Console > Developer apps (devApps, sandboxApi); Neon dev_*",yes (registry + books),yes (preview),partial,no,no,no,"devAuth.test (8); dev_install/review/request_scopes checked on Neon in a rolled-back batch (23 Oct); audit + call log append-only",webhooks; OAuth/OIDC; credential vault refs; versioned manifests
+APP-017,Developer,App review and marketplace,"Zite Company OS: /app-review (appReview); Neon dev_review()",yes (registry + books),yes (preview),partial,no,no,no,"reviewer != developer; decision bound to shown scopes; scope change voids review; other-institution install needs approval (rolled-back Neon test, 23 Oct)",listing/marketplace page; versioned review; reviewer grants need founder approval
+APP-018,Company,Executive and strategy,Zite Company OS: /overview,yes (registry + books),partial,partial,no,no,no,costModel/scenario tests,"decision log, objectives"
+APP-019,Company,Sales and revenue operations,Zite Company OS: /requests (pilot requests); editor CRM app is in trash,yes (registry + books),partial,no,no,no,no,trashed app had owner self-approval + delete defects (not live),contract step 3 slice
+APP-020,Company,Company finance,"Zite Company OS: /simulator (billingSim, simulation only)",yes (registry + books),simulation only,simulation,no,no,no,billingSim.test 11,contract step 3: invoice/approval/reconciliation slice in backend
+APP-021,Company,Marketing and growth,none (public site pages only),yes (registry + books),no,no,no,no,no,none,contract step 6: drafts/review with sending disabled
+APP-022,Company,Content and media,none,yes (registry + books),no,no,no,no,no,none,with APP-021
+APP-023,Company,Customer success,none (editor projects app in trash),yes (registry + books),no,no,no,no,no,none,onboarding gates
+APP-024,Company,Implementation delivery,none (editor projects app in trash),yes (registry + books),no,no,no,no,no,none,mapping/dual-run tooling
+APP-025,Company,Support operations,none (editor tickets app in trash),yes (registry + books),no,no,no,no,no,none,safe diagnostics; no default student access
+APP-026,Company,People operations,none,yes (registry + books),no,no,no,no,no,none,
+APP-027,Company,Legal and procurement,none,yes (registry + books),no,no,no,no,no,none,
+APP-028,Company,Trust and governance,Zite Company OS /risks /evidence; Security Lab,yes (registry + books),partial,partial,no,no,no,Security Lab gates refuse simulation evidence,incident coordination
+APP-029,Company,Engineering and product,Zite Security Lab (gates); GitHub repo,yes (registry + books),partial,partial,no,no,no,release gates need non-simulation evidence,release record
+APP-030,Company,Platform operations,none,yes (registry + books),no,no,no,no,no,none,jobs/outbox worker monitoring
+APP-031,Company,Board and investor,none,yes (registry + books),no,no,no,no,no,none,
+APP-032,Public,Public site and trust center,Zite Site (public),yes (registry + books),yes,rendered in headless browser,yes: qd1fxwimuc.zite.so,no,no,Trust page states verified-in-test only,docs + approved trust materials

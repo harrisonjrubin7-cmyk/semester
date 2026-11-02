@@ -25,6 +25,12 @@ describe('writing an address', () => {
     expect(toHash({ screen: 'course', id: 'econ', mode: 'slides' })).toBe('#/course/econ');
   });
 
+  it('carries only an allowlisted workspace view on its owning screen', () => {
+    expect(toHash({ screen: 'account', id: '', view: 'course-studio' })).toBe('#/account?view=course-studio');
+    expect(toHash({ screen: 'university', id: '', view: 'drafts' })).toBe('#/university?view=drafts');
+    expect(toHash({ screen: 'account', id: '', view: 'drafts' })).toBe('#/account');
+  });
+
   it('escapes an id somebody’s own data produced', () => {
     // A note id is generated, but a course id is a slug of a code and an
     // imported one has been anything.
@@ -65,6 +71,13 @@ describe('reading one back', () => {
     expect(fromHash('#/study/econ')?.id).toBe('');
   });
 
+  it('reads only known workspace views for the screen that owns them', () => {
+    expect(fromHash('#/account?view=course-studio')?.view).toBe('course-studio');
+    expect(fromHash('#/university?view=drafts')?.view).toBe('drafts');
+    expect(fromHash('#/account?view=drafts')?.view).toBeUndefined();
+    expect(fromHash('#/console?view=made-up')?.view).toBeUndefined();
+  });
+
   it('has an entry in the table for every named screen it reads', () => {
     // A screen routable in one direction only is a link that opens the right
     // screen showing the wrong thing.
@@ -89,6 +102,15 @@ describe('whether it is a new place', () => {
     expect(replaces({ screen: 'guide', id: 'econ' }, { screen: 'study', id: '' })).toBe(false);
   });
 
+  it('pushes when a workspace link changes the intended subview', () => {
+    expect(
+      replaces(
+        { screen: 'university', id: '', view: 'overview' },
+        { screen: 'university', id: '', view: 'drafts' },
+      ),
+    ).toBe(false);
+  });
+
   it('replaces the first entry, because there is nothing to go back to', () => {
     expect(replaces(null, { screen: 'home', id: '' })).toBe(true);
   });
@@ -104,6 +126,12 @@ describe('comparing two', () => {
     expect(same({ screen: 'study', id: '' }, { screen: 'home', id: '' })).toBe(false);
     expect(same(null, { screen: 'home', id: '' })).toBe(false);
     expect(same(null, null)).toBe(true);
+    expect(
+      same(
+        { screen: 'university', id: '', view: 'overview' },
+        { screen: 'university', id: '', view: 'drafts' },
+      ),
+    ).toBe(false);
   });
 });
 

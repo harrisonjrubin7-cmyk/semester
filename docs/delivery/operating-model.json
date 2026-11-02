@@ -1,0 +1,148 @@
+{
+  "$source": "Semester delivery-management specification (continue_5, sections 'Delivery operating model', 'Release train structure', 'Definition of ready', 'Definition of done', 'Artifact status rules').",
+  "unit_of_delivery": "capability_increment",
+  "every_increment_requires": [
+    "capability_key",
+    "problem_statement",
+    "accountable_owner",
+    "institutional_authority_statement",
+    "user_roles",
+    "workflow_definition",
+    "source_authority_record",
+    "data_contract",
+    "access_policy",
+    "UI_states",
+    "acceptance_tests",
+    "operational_runbook",
+    "release_evidence",
+    "rollout_and_rollback_plan"
+  ],
+  "delivery_states": [
+    "proposed",
+    "shaped",
+    "approved_for_build",
+    "in_build",
+    "integration_ready",
+    "evidence_ready",
+    "approved_for_release",
+    "enabled",
+    "monitored",
+    "retired"
+  ],
+  "hard_dependency_minimum_state": {
+    "approved_for_build": "approved_for_build",
+    "in_build": "approved_for_build",
+    "integration_ready": "integration_ready",
+    "evidence_ready": "integration_ready",
+    "approved_for_release": "integration_ready",
+    "enabled": "integration_ready",
+    "monitored": "integration_ready"
+  },
+  "prohibited_states": [
+    "Deployed without an approved release decision.",
+    "Enabled without a safe-off behavior.",
+    "Marked complete with untested policy or missing source authority."
+  ],
+  "release_trains": [
+    {
+      "id": "foundation",
+      "objective": "Establish tenant, identity, source authority, policy, audit",
+      "entry": "Accountable owners and scope approved",
+      "exit": "RLS, policy, audit, and revocation tests"
+    },
+    {
+      "id": "readiness",
+      "objective": "Deliver source-aware student and registrar workflows",
+      "entry": "Sources and workflow contracts implemented",
+      "exit": "State, source-freshness, and accessibility tests"
+    },
+    {
+      "id": "operations",
+      "objective": "Establish queues, alerts, reconciliation, support, incident response",
+      "entry": "Workflow events observable",
+      "exit": "Drill records, support macros, alert tests"
+    },
+    {
+      "id": "pilot_launch",
+      "objective": "Activate a bounded cohort safely",
+      "entry": "Release gate fully accepted",
+      "exit": "Go/no-go decision, first-live-journey verification"
+    },
+    {
+      "id": "learning",
+      "objective": "Measure value and repair operational gaps",
+      "entry": "Hypercare operating",
+      "exit": "Pilot review, prioritized remediation, renewal recommendation"
+    },
+    {
+      "id": "expansion",
+      "objective": "Add cohorts, sources, or workflow depth",
+      "entry": "No unresolved expansion blockers",
+      "exit": "Revised scope, evidence, training, and tenant approval"
+    }
+  ],
+  "definition_of_ready": {
+    "product": [
+      "problem_and_actor_defined",
+      "first_meaningful_action_defined",
+      "official_vs_derived_boundary_written",
+      "success_and_failure_outcomes_written"
+    ],
+    "design": [
+      "all_required_states_specified",
+      "source_status_and_freshness_behavior_specified",
+      "consequence_copy_written",
+      "accessibility_behavior_specified",
+      "mobile_behavior_specified"
+    ],
+    "engineering": [
+      "command_and_event_contracts_defined",
+      "data_and_authority_model_defined",
+      "policy_rule_defined",
+      "test_fixture_defined",
+      "observability_fields_defined"
+    ],
+    "operations": [
+      "owning_queue_defined",
+      "support_handoff_defined",
+      "incident_trigger_defined",
+      "rollback_or_safe_off_behavior_defined"
+    ]
+  },
+  "definition_of_done": {
+    "build": [
+      "implementation_merged",
+      "schema_and_contract_checks_pass",
+      "policies_and_RLS_enforced",
+      "audit_events_recorded",
+      "idempotency_or_duplicate_behavior_proven"
+    ],
+    "experience": [
+      "required_states_rendered",
+      "sources_and_freshness_explained",
+      "accessibility_evidence_accepted",
+      "support_path_present",
+      "no_prohibited_claims_present"
+    ],
+    "operations": [
+      "dashboards_and_alerts_operational",
+      "runbook_and_recovery_steps_approved",
+      "reconciliation_path_tested",
+      "drill_completed_when_required"
+    ],
+    "release": [
+      "evidence_bundle_accepted",
+      "feature_flag_configured",
+      "rollout_and_rollback_plan_approved",
+      "accountable_owner_accepts_handoff"
+    ]
+  },
+  "artifact_status_rules": {
+    "draft": "Work exists but has not passed review.",
+    "in_review": "A named reviewer is evaluating it.",
+    "approved": "It is current, owned, and usable for its intended scope.",
+    "superseded": "A newer approved artifact replaces it; retain history.",
+    "expired": "Its review or validity date passed; it cannot support a release.",
+    "missing": "The capability references a required artifact that does not exist."
+  }
+}

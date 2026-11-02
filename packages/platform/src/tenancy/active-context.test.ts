@@ -62,6 +62,19 @@ describe('active context', () => {
     expect(Object.isFrozen(context.roleGrantIds)).toBe(true);
   });
 
+  it('uses the session boundary when an active membership has no separate expiry', () => {
+    const memberships = directory().memberships.map((membership) => ({
+      ...membership,
+      expiresAt: undefined,
+    }));
+
+    expect(activateContext(
+      directory({ memberships }),
+      { membershipId: 'membership-student', workspace: 'student' },
+      NOW,
+    ).expiresAt).toBe('2026-10-09T14:00:00.000Z');
+  });
+
   it('refuses a membership that is not in the server-verified directory', () => {
     expect(errorCode(() => activateContext(directory(), { membershipId: 'membership-elsewhere', workspace: 'student' }, NOW))).toBe('forbidden');
   });

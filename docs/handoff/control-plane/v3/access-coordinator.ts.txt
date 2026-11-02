@@ -1,0 +1,251 @@
+// Semester access saga coordinator v3: pure applyResult() reducer + durable Coordinator.tick().
+// From uploads/Map NIST Zero Trust saga flows into a complete Asy.pdf. NOT compiled or executed.
+
+export type State =
+  | "EVALUATING"
+  | "WAITING"
+  | "PREPARING"
+  | "INSTALLING"
+  | "INSPECTING"
+  | "ACTIVE"
+  | "REVOKING"
+  | "RECOVERY"
+  | "DENIED"
+  | "CLOSED";
+export type Step =
+  | "evaluate"
+  | "prepare"
+  | "install"
+  | "inspect"
+  | "revoke";
+export interface Saga {
+  id: string;
+  tenantId: string;
+  requestDigest: string;
+  state: State;
+  revision: number;
+  generation: number;
+  decisionId?: string;
+  grantId?: string;
+  deadlineAt: number;
+  grantExpiresAt?: number;
+  // A terminal intention: subsequent late results cannot reactivate access.
+  revokeRequested: boolean;
+}
+export type Result =
+  | {
+  step: "evaluate";
+  outcome: "allow" | "deny" | "wait";
+  decisionId: string;
+}
+  | {
+  step: "prepare";
+  grantId: string;
+  expiresAt: number;
+}
+  | {step: "install"}
+  | {
+  step: "inspect";
+  status: "installed" | "absent" | "conflict" | "unknown";
+}
+  | {
+  step: "revoke";
+  status: "absent" | "unknown";
+};
+export interface Transition {
+  saga: Saga;
+  reason: string;
+}
+const expected: Partial<Record<State, Step>> = {
+  EVALUATING: "evaluate",
+  PREPARING: "prepare",
+  INSTALLING: "install",
+  INSPECTING: "inspect",
+  REVOKING: "revoke"
+};
+export function applyResult(s: Saga, r: Result): Transition {
+  if (expected[s.state] !== r.step) {
+    throw new Error("UNEXPECTED_STEP_RESULT");
+  }
+  const next = {...s, revision: s.revision + 1};
+  switch (r.step) {
+    case "evaluate":
+    next.decisionId = r.decisionId;
+    next.state = r.outcome === "allow"
+    ? "PREPARING"
+    : r.outcome === "deny"
+    ? "DENIED"
+    : "WAITING";
+    break;
+    case "prepare":
+    next.grantId = r.grantId;
+    next.grantExpiresAt = r.expiresAt;
+    next.state = "INSTALLING";
+    break;
+    case "install":
+    next.state = "INSPECTING";
+    break;
+    case "inspect":
+    if (r.status === "installed") {
+      next.state = "ACTIVE";
+    } else if (r.status === "absent") {
+      // Avoid leaking a prepared grant before restarting provisioning.
+      next.revokeRequested = true;
+      next.state = "REVOKING";
+    } else if (r.status === "conflict") {
+      next.revokeRequested = true;
+      next.state = "REVOKING";
+    } else {
+      next.state = "RECOVERY";
+    }
+    break;
+    case "revoke":
+    next.state = r.status === "absent" ? "CLOSED" : "RECOVERY";
+    break;
+  }
+  if (next.revokeRequested && next.state !== "CLOSED") {
+    next.state = next.grantId ? "REVOKING" : "CLOSED";
+  }
+  return {saga: next, reason: `RESULT_${r.step.toUpperCase()}`};
+}
+export interface Claim {
+  saga: Saga;
+  fence: string;
+}
+export interface DurableStore {
+  claim(id: string): Promise<Claim | null>;
+  /**
+   * Atomic:
+   * - validate lease/fencing token and expected revision
+   * - persist state
+   * - append audit record
+   * - append outbox event
+   */
+  commit(
+    claim: Claim,
+    expectedRevision: number,
+    transition: Transition
+  ): Promise<void>;
+  /**
+   * Stores a future attempt durably without changing logical operation key.
+   */
+  scheduleRetry(
+    claim: Claim,
+    step: Step,
+    reason: string
+  ): Promise<void>;
+  release(claim: Claim): Promise<void>;
+}
+export interface Participants {
+  /**
+   * Persist receipts by key. Same key/different input must conflict.
+   * Resolve authorization context from trusted stores.
+   */
+  execute(step: Step, saga: Saga, key: string): Promise<Result>;
+}
+export class OperationError extends Error {
+  constructor(
+    public code: string,
+    public retryable: boolean,
+    public outcomeUnknown: boolean
+  ) {
+    super(code);
+  }
+}
+function key(s: Saga, step: Step): string {
+  return `${s.id}:${s.generation}:${step}`;
+}
+export class Coordinator {
+  constructor(
+    private store: DurableStore,
+    private participants: Participants,
+    private now: () => number = Date.now
+  ) {}
+  async tick(id: string): Promise<void> {
+    const claim = await this.store.claim(id);
+    if (!claim) return;
+    const s = claim.saga;
+    try {
+      if (s.state === "CLOSED" || s.state === "DENIED") return;
+      const expired =
+      this.now() >= s.deadlineAt && s.state !== "ACTIVE" ||
+      s.grantExpiresAt !== undefined &&
+      this.now() >= s.grantExpiresAt;
+      if (
+        (expired || s.revokeRequested) &&
+        s.state !== "REVOKING"
+      ) {
+        await this.store.commit(claim, s.revision, {
+            saga: {
+              ...s,
+              revokeRequested: true,
+              state: s.grantId ? "REVOKING" : "CLOSED",
+              revision: s.revision + 1
+            },
+            reason: expired ? "EXPIRED" : "REVOCATION_REQUESTED"
+        });
+        return;
+      }
+      if (s.state === "WAITING" || s.state === "ACTIVE") return;
+      if (s.state === "RECOVERY") {
+        await this.store.commit(claim, s.revision, {
+            saga: {
+              ...s,
+              state: s.revokeRequested ? "REVOKING" : "INSPECTING",
+              revision: s.revision + 1
+            },
+            reason: "RECOVERY_INSPECTION"
+        });
+        return;
+      }
+      const step = expected[s.state];
+      if (!step) throw new Error("INVALID_EXECUTION_STATE");
+      let result: Result;
+      try {
+        result = await this.participants.execute(step, s, key(s, step));
+      } catch (error) {
+        const failure = error instanceof OperationError
+        ? error
+        : new OperationError("UNEXPECTED_ERROR", true, true);
+        if (
+          step === "install" &&
+          failure.outcomeUnknown
+        ) {
+          await this.store.commit(claim, s.revision, {
+              saga: {
+                ...s,
+                state: "INSPECTING",
+                revision: s.revision + 1
+              },
+              reason: "INSTALL_OUTCOME_UNKNOWN"
+          });
+          return;
+        }
+        if (failure.retryable || failure.outcomeUnknown) {
+          await this.store.scheduleRetry(claim, step, failure.code);
+          return;
+        }
+        await this.store.commit(claim, s.revision, {
+            saga: {
+              ...s,
+              revokeRequested: true,
+              state: s.grantId ? "REVOKING" : "CLOSED",
+              revision: s.revision + 1
+            },
+            reason: failure.code
+        });
+        return;
+      }
+      // Storage failures propagate: never reinterpret a commit failure
+      // as a participant failure or overwrite a concurrent revision.
+      await this.store.commit(
+        claim,
+        s.revision,
+        applyResult(s, result)
+      );
+    } finally {
+      await this.store.release(claim);
+    }
+  }
+}
+

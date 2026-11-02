@@ -1,0 +1,72 @@
+schema,table,ownership,client_read_policy,client_write
+sx,tenants,global/reference,sx_private.member(id),denied; server command required
+sx_private,memberships,tenant,default deny,denied; server command required
+sx_private,roles,tenant,default deny,denied; server command required
+sx_private,permissions,global/reference,default deny,denied; server command required
+sx_private,role_permissions,tenant,default deny,denied; server command required
+sx,units,tenant,sx_private.member(tenant_id),denied; server command required
+sx,terms,tenant,sx_private.member(tenant_id),denied; server command required
+sx,courses,tenant,sx_private.member(tenant_id),denied; server command required
+sx,course_versions,tenant,sx_private.member(tenant_id),denied; server command required
+sx,sections,tenant,"sx_private.section_read(tenant_id,id)",denied; server command required
+sx_private,role_assignments,tenant,default deny,denied; server command required
+sx,enrollments,tenant,"sx_private.member(tenant_id) AND (student_id=auth.uid() OR sx_private.can(tenant_id,'roster.read',section_id))",denied; server command required
+sx,modules,tenant,"sx_private.can(tenant_id,'course.manage',section_id) OR (published AND sx_private.enrolled(tenant_id,section_id))",denied; server command required
+sx,content_items,tenant,"sx_private.can(tenant_id,'course.manage',section_id) OR (published AND sx_private.enrolled(tenant_id,section_id) AND EXISTS(SELECT 1 FROM sx.modules m WHERE m.tenant_id=content_items.tenant_id AND m.id=content_items.module_id AND m.published))",denied; server command required
+sx,assignments,tenant,"sx_private.can(tenant_id,'assignment.manage',section_id) OR (published AND sx_private.enrolled(tenant_id,section_id))",denied; server command required
+sx,submissions,tenant,"sx_private.own_enrollment(tenant_id,enrollment_id) OR sx_private.can(tenant_id,'submission.read',section_id)",denied; server command required
+sx,grades,tenant,"sx_private.can(tenant_id,'grade.read',section_id) OR (published AND sx_private.own_enrollment(tenant_id,enrollment_id))",denied; server command required
+sx,grade_revisions,tenant,"sx_private.can(tenant_id,'grade.audit',section_id)",denied; server command required
+sx,announcements,tenant,"sx_private.can(tenant_id,'course.manage',section_id) OR (published AND sx_private.enrolled(tenant_id,section_id))",denied; server command required
+sx_personal,notes,owner,owner_id=auth.uid(),denied; server command required
+sx_personal,tasks,owner,owner_id=auth.uid(),denied; server command required
+sx_personal,calendar_events,owner,owner_id=auth.uid(),denied; server command required
+sx,service_definitions,tenant,sx_private.member(tenant_id),denied; server command required
+sx,service_cases,tenant,sx_private.member(tenant_id) AND (requester_id=auth.uid() OR assignee_id=auth.uid()),denied; server command required
+sx,appointments,tenant,EXISTS(SELECT 1 FROM sx.service_cases c WHERE c.tenant_id=appointments.tenant_id AND c.id=appointments.case_id),denied; server command required
+sx,accounts,tenant,"sx_private.can(tenant_id,'crm.read')",denied; server command required
+sx,contacts,tenant,"sx_private.can(tenant_id,'crm.read')",denied; server command required
+sx,opportunities,tenant,"sx_private.can(tenant_id,'crm.read')",denied; server command required
+sx,implementation_projects,tenant,"sx_private.can(tenant_id,'implementation.read')",denied; server command required
+sx,support_cases,tenant,"sx_private.can(tenant_id,'support.read')",denied; server command required
+sx,documents,tenant,"sx_private.document_read(tenant_id,id)",denied; server command required
+sx_private,document_audiences,tenant,default deny,denied; server command required
+sx,document_versions,tenant,"sx_private.document_read(tenant_id,document_id)",denied; server command required
+sx,review_tasks,tenant,EXISTS(SELECT 1 FROM sx.document_versions v WHERE v.tenant_id=review_tasks.tenant_id AND v.id=review_tasks.version_id),denied; server command required
+sx,signature_requests,tenant,EXISTS(SELECT 1 FROM sx.document_versions v WHERE v.tenant_id=signature_requests.tenant_id AND v.id=signature_requests.version_id),denied; server command required
+sx,document_transitions,tenant,EXISTS(SELECT 1 FROM sx.document_versions v WHERE v.tenant_id=document_transitions.tenant_id AND v.id=document_transitions.version_id),denied; server command required
+sx,signature_evidence,tenant,EXISTS(SELECT 1 FROM sx.signature_requests r WHERE r.tenant_id=signature_evidence.tenant_id AND r.id=signature_evidence.request_id),denied; server command required
+sx,legal_holds,tenant,default deny,denied; server command required
+sx,products,tenant,"sx_private.can(tenant_id,'catalog.read')",denied; server command required
+sx,plans,tenant,"sx_private.can(tenant_id,'catalog.read')",denied; server command required
+sx,price_versions,tenant,"sx_private.can(tenant_id,'catalog.read')",denied; server command required
+sx,billing_accounts,tenant,"sx_private.billing_read(tenant_id,id)",denied; server command required
+sx,billing_account_tenants,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx_private,billing_access,tenant,default deny,denied; server command required
+sx,contracts,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,subscriptions,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,subscription_items,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,entitlements,tenant,"sx_private.billing_read(tenant_id,billing_account_id) OR sx_private.can(licensed_tenant_id,'entitlement.read')",denied; server command required
+sx,invoices,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,invoice_lines,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx_private,payment_methods,tenant,default deny,denied; server command required
+sx,payment_intents,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,payments,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,payment_allocations,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,refunds,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,credits,tenant,"sx_private.billing_read(tenant_id,billing_account_id)",denied; server command required
+sx,ledger_accounts,tenant,"sx_private.can(tenant_id,'ledger.read')",denied; server command required
+sx,journal_entries,tenant,"sx_private.can(tenant_id,'ledger.read')",denied; server command required
+sx,journal_lines,tenant,"sx_private.can(tenant_id,'ledger.read')",denied; server command required
+sx,employees,tenant,"sx_private.can(tenant_id,'people.read')",denied; server command required
+sx,employment_records,tenant,"sx_private.can(tenant_id,'people.restricted.read')",denied; server command required
+sx,vendors,tenant,"sx_private.can(tenant_id,'vendor.read')",denied; server command required
+sx,purchase_orders,tenant,"sx_private.can(tenant_id,'vendor.read')",denied; server command required
+sx,services,tenant,"sx_private.can(tenant_id,'ops.read')",denied; server command required
+sx,deployments,tenant,"sx_private.can(tenant_id,'ops.read')",denied; server command required
+sx,incidents,tenant,"sx_private.can(tenant_id,'ops.read')",denied; server command required
+sx,api_endpoints,tenant,"sx_private.can(tenant_id,'ops.read')",denied; server command required
+sx_private,outbox,tenant,default deny,denied; server command required
+sx_private,inbox,tenant,default deny,denied; server command required
+sx_private,audit_events,tenant,default deny,denied; server command required
+sx_private,webhook_deliveries,tenant,default deny,denied; server command required

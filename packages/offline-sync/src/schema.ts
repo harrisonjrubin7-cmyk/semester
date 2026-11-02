@@ -30,7 +30,7 @@ export function openSequence(rawKeyHex: string): string[] {
   ]
 }
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const DDL: readonly string[] = [
   `CREATE TABLE IF NOT EXISTS schema_meta (
@@ -100,7 +100,7 @@ export const DDL: readonly string[] = [
 
   // Cached files: ciphertext lives in the files directory; only the wrapped key and facts live here.
   `CREATE TABLE IF NOT EXISTS attachments (
-     id TEXT PRIMARY KEY,
+     id TEXT NOT NULL,
      tenant_id TEXT NOT NULL,
      data_class TEXT NOT NULL,
      owner_entity_id TEXT NOT NULL,
@@ -113,7 +113,8 @@ export const DDL: readonly string[] = [
      last_read_at INTEGER NOT NULL,
      pinned INTEGER NOT NULL DEFAULT 0,
      wrapped_key BLOB NOT NULL,
-     blob_name TEXT NOT NULL
+     blob_name TEXT PRIMARY KEY,
+     retired INTEGER NOT NULL DEFAULT 0
    ) WITHOUT ROWID`,
   `CREATE INDEX IF NOT EXISTS attachments_owner ON attachments (owner_entity_id)`,
 
@@ -126,4 +127,37 @@ export const DDL: readonly string[] = [
  * failed migration therefore must leave the old schema intact, and the queue
  * must be drained or carried across: no command may be lost to an upgrade.
  */
-export const MIGRATIONS: Record<number, readonly string[]> = {}
+export const MIGRATIONS: Record<number, readonly string[]> = {
+  2: [
+    `ALTER TABLE attachments RENAME TO attachments_v1`,
+    `CREATE TABLE attachments (
+       id TEXT NOT NULL,
+       tenant_id TEXT NOT NULL,
+       data_class TEXT NOT NULL,
+       owner_entity_id TEXT NOT NULL,
+       mime TEXT NOT NULL,
+       size INTEGER NOT NULL,
+       content_sha256 TEXT NOT NULL,
+       scan TEXT NOT NULL CHECK (scan IN ('clean','pending','infected','unscannable')),
+       acl_epoch INTEGER NOT NULL,
+       fetched_at INTEGER NOT NULL,
+       last_read_at INTEGER NOT NULL,
+       pinned INTEGER NOT NULL DEFAULT 0,
+       wrapped_key BLOB NOT NULL,
+       blob_name TEXT PRIMARY KEY,
+       retired INTEGER NOT NULL DEFAULT 0
+     ) WITHOUT ROWID`,
+    `INSERT INTO attachments (
+       id, tenant_id, data_class, owner_entity_id, mime, size,
+       content_sha256, scan, acl_epoch, fetched_at, last_read_at,
+       pinned, wrapped_key, blob_name, retired
+     )
+     SELECT id, tenant_id, data_class, owner_entity_id, mime, size,
+       content_sha256, scan, acl_epoch, fetched_at, last_read_at,
+       pinned, wrapped_key, blob_name, 0
+     FROM attachments_v1`,
+    `DROP TABLE attachments_v1`,
+    `CREATE INDEX IF NOT EXISTS attachments_owner ON attachments (owner_entity_id)`,
+    `UPDATE schema_meta SET v = '2' WHERE k = 'schema_version'`,
+  ],
+}

@@ -1,0 +1,80 @@
+-- 120_handoff_preview_devices.sql — single-use handoff transactions (not tokens), deferred-signup preview drafts,
+-- step versions on progress, device registry and push tokens kept separate from identity, session lifecycle hooks.
+-- RECONCILE FIRST with any existing session/device tables. Extend, never duplicate.
+create table if not exists onboard.handoff_transactions(
+  id uuid primary key default gen_random_uuid(), nonce text not null default encode(extensions.gen_random_bytes(16), 'hex'),
+  route text not null check (route in ('student_today','student_plan','student_registration','course_home','advisor_caseload','institution_setup','pilot_workspace','developer_sandbox')),
+  resource_id text check (resource_id ~ '^[a-z0-9-]{1,40}$'), tenant_hint text check (tenant_hint ~ '^[a-z0-9-]{1,40}$'),
+  entry_context jsonb not null default '{}' check (pg_column_size(entry_context) < 512),   -- source/campaign/referral/intended role only
+  expires_at timestamptz not null default now() + interval '10 minutes', consumed_at timestamptz, consumed_by uuid references auth.users,
+  status text not null default 'created' check (status in ('created','consumed','expired','revoked')), created_at timestamptz not null default now());
+
+-- Anonymous: create a transaction for an allowlisted route. Returns id + nonce only. Grants nothing.
+create or replace function api.create_handoff(p_route text, p_resource text default null, p_tenant_hint text default null, p_ctx jsonb default '{}')
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare t onboard.handoff_transactions; begin
+  if p_ctx ?| array['role','roles','tenant_id','entitlements','token','access_token','capabilities'] then raise exception 'privileged fields are not allowed in entry context'; end if;
+  insert into onboard.handoff_transactions(route, resource_id, tenant_hint, entry_context) values (p_route, p_resource, p_tenant_hint, p_ctx) returning * into t;
+  return jsonb_build_object('id', t.id, 'nonce', t.nonce, 'expires_at', t.expires_at); end $$;
+
+-- Authenticated: consume once, then the server authorizes the final route. Unauthorized → safe generic route.
+create or replace function api.consume_handoff(p_id uuid, p_nonce text) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare t onboard.handoff_transactions; r text; dest text; allowed boolean; a onboard.assignments; begin
+  if auth.uid() is null then raise exception 'sign in required'; end if;
+  select * into t from onboard.handoff_transactions where id = p_id for update;
+  if t is null or t.nonce <> p_nonce then raise exception 'invalid handoff'; end if;
+  if t.status <> 'created' then raise exception 'handoff already %', t.status; end if;
+  if t.expires_at < now() then update onboard.handoff_transactions set status = 'expired' where id = p_id; raise exception 'handoff expired'; end if;
+  update onboard.handoff_transactions set status = 'consumed', consumed_at = now(), consumed_by = auth.uid() where id = p_id;
+  r := core.my_role();
+  allowed := case t.route
+    when 'student_today' then true when 'student_plan' then true when 'student_registration' then true
+    when 'course_home' then r = 'faculty' when 'advisor_caseload' then r = 'advisor'
+    when 'institution_setup' then r in ('it_admin','institution_admin')
+    when 'pilot_workspace' then true when 'developer_sandbox' then true else false end;
+  dest := case t.route when 'student_today' then '/app/today' when 'student_plan' then '/app/plan' when 'student_registration' then '/app/today'
+    when 'course_home' then '/app/studio' when 'advisor_caseload' then '/app/caseload' when 'institution_setup' then '/app/console'
+    when 'pilot_workspace' then '/app/pilot' when 'developer_sandbox' then '/app/sandbox' end;
+  select * into a from onboard.assignments where person_id = auth.uid() and state not in ('activation_achieved','expanded_adoption','completed') order by assigned_at desc limit 1;
+  insert into onboard.events(person_id, name, props) values (auth.uid(), 'deep_link_restored', jsonb_build_object('route', t.route, 'allowed', allowed));
+  if not allowed then return jsonb_build_object('route', '/app', 'reason', 'not_authorized'); end if;
+  if a is not null then return jsonb_build_object('route', '/onboarding', 'then', dest, 'journey', a.journey_id, 'step', a.current_step); end if;
+  return jsonb_build_object('route', dest); end $$;
+
+-- Deferred signup: a preview made before sign-up becomes an authenticated draft. Only non-sensitive fields; size-capped.
+create table if not exists onboard.preview_drafts(person_id uuid primary key references auth.users, goal text check (length(goal) <= 60), term text check (length(term) <= 40),
+  items jsonb not null default '[]' check (jsonb_typeof(items) = 'array' and jsonb_array_length(items) <= 12 and pg_column_size(items) < 2048),
+  claimed_at timestamptz not null default now(), label text not null default 'preview');
+create or replace function api.claim_preview(p_goal text, p_term text, p_items jsonb) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'sign in required'; end if;
+  insert into onboard.preview_drafts(person_id, goal, term, items) values (auth.uid(), p_goal, p_term, p_items)
+    on conflict (person_id) do update set goal = excluded.goal, term = excluded.term, items = excluded.items, claimed_at = now();
+  insert into onboard.events(person_id, name) values (auth.uid(), 'preview_claimed'); end $$;
+
+-- Step versions: completion is recorded against journey version AND step version.
+alter table onboard.progress add column if not exists step_version int not null default 1;
+alter table onboard.progress add column if not exists source_device_id uuid;
+alter table onboard.progress add column if not exists idempotency_key text unique;
+
+-- Devices and push tokens: revocable, audited, never the identity.
+create table if not exists onboard.devices(id uuid primary key default gen_random_uuid(), person_id uuid not null references auth.users default auth.uid(),
+  kind text not null check (kind in ('browser','pwa','ios','android','desktop')), label text check (length(label) <= 60), app_version text,
+  created_at timestamptz not null default now(), last_seen_at timestamptz not null default now(), revoked_at timestamptz);
+create table if not exists onboard.push_tokens(device_id uuid primary key references onboard.devices on delete cascade, token text not null, channel text not null check (channel in ('web_push','apns','fcm')),
+  permission_granted_at timestamptz not null default now(), revoked_at timestamptz);
+create or replace function api.revoke_device(p_device uuid) returns void language plpgsql security definer set search_path = '' as $$
+begin
+  update onboard.devices set revoked_at = now() where id = p_device and person_id = auth.uid();
+  update onboard.push_tokens set revoked_at = now() where device_id = p_device;
+  insert into audit.events(actor, action, target) values (auth.uid(), 'device.revoked', p_device::text); end $$;
+
+alter table onboard.handoff_transactions enable row level security; alter table onboard.preview_drafts enable row level security;
+alter table onboard.devices enable row level security; alter table onboard.push_tokens enable row level security;
+create policy pd_self on onboard.preview_drafts for select using (person_id = auth.uid());
+create policy dev_self on onboard.devices for select using (person_id = auth.uid());
+create policy dev_insert on onboard.devices for insert with check (person_id = auth.uid());
+-- handoff_transactions and push_tokens: no client read policies (functions + service role only).
+grant execute on function api.create_handoff(text,text,text,jsonb) to anon, authenticated;
+grant execute on function api.consume_handoff(uuid,text), api.claim_preview(text,text,jsonb), api.revoke_device(uuid) to authenticated;
+grant select on onboard.preview_drafts, onboard.devices to authenticated; grant insert on onboard.devices to authenticated;

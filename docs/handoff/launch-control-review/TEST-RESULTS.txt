@@ -1,0 +1,20 @@
+test_account_key_forwarded (test_run_integration.Tests.test_account_key_forwarded) ... ok
+test_account_preview (test_run_integration.Tests.test_account_preview) ... ok
+test_assertion (test_run_integration.Tests.test_assertion) ... ok
+test_baseline (test_run_integration.Tests.test_baseline) ... ok
+test_credentials (test_run_integration.Tests.test_credentials) ... ok
+test_key_not_forwarded (test_run_integration.Tests.test_key_not_forwarded) ... ok
+test_launch_error (test_run_integration.Tests.test_launch_error) ... ok
+test_port (test_run_integration.Tests.test_port) ... ok
+test_public (test_run_integration.Tests.test_public) ... ok
+test_query (test_run_integration.Tests.test_query) ... ok
+test_report (test_run_integration.Tests.test_report) ... ok
+test_scopes (test_run_integration.Tests.test_scopes) ... ok
+test_success_not_production (test_run_integration.Tests.test_success_not_production) ... ok
+test_timeout (test_run_integration.Tests.test_timeout) ... ok
+test_unavailable (test_run_integration.Tests.test_unavailable) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.004s
+
+OK

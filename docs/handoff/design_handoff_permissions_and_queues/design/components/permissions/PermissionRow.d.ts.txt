@@ -1,0 +1,3 @@
+import * as React from 'react';
+export interface PermissionRowProps { capability: string; use: React.ReactNode; state?: "on" | "off" | "ask" | "blocked" | "limited"; detail?: React.ReactNode; onChange?: () => void; }
+export declare function PermissionRow(props: PermissionRowProps): JSX.Element;

@@ -1,0 +1,9 @@
+import React from 'react';
+/** In-page tabs for switching views of one object. Count is optional; current tab gets a 2px underline + weight. */
+export function Tabs({ items = [], current, onChange, label = 'Views' }) {
+  return (
+    <div className="tabs" role="tablist" aria-label={label}>
+      {items.map((it) => <button key={it.id} type="button" role="tab" aria-selected={it.id === current} className="tab" onClick={() => onChange && onChange(it.id)}>{it.label}{it.count != null && <span className="tab-count">{it.count}</span>}</button>)}
+    </div>
+  );
+}

@@ -1,0 +1,29 @@
+# Source: "Campus and community" section of the brief.
+campus:
+  eligible_context:
+    - campus_affiliation_status
+    - student_selected_interests
+    - student_selected_location_preference
+    - public_or_approved_event_information
+    - campus_service_hours
+    - student_opt_in_profile_fields
+  prohibited_context:
+    - grades
+    - class_schedule_without_explicit_student_action
+    - academic_holds
+    - financial_aid_status
+    - advising_notes
+    - readiness_results
+    - accommodations
+    - conduct_records
+  native_first:
+    - campus_map
+    - service_directory
+    - event_discovery
+    - student_opt_in_groups
+    - safety_reporting
+  later_with_separate_controls:
+    - peer_mentoring
+    - marketplace
+    - direct_messaging
+    - live_drops

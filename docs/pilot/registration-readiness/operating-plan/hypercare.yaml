@@ -1,0 +1,28 @@
+# Operating plan object 9: hypercare cadence.
+# Duration is agreed with the institution. Attendee names are TBD.
+hypercare:
+  duration: institution_agreed_TBD
+
+  daily_review:
+    attendees:
+      - semester_operations_owner
+      - semester_engineering_owner
+      - semester_product_owner
+      - institution_operational_owner
+    agenda:
+      - availability_and_source_health
+      - authentication_and_access_anomalies
+      - readiness_outcome_distribution
+      - stale_unknown_failed_cases
+      - support_handoffs_and_SLA
+      - reconciliation_cases
+      - student_feedback
+      - open_incidents_and_changes
+      - next_24_hour_decisions
+
+  outputs:
+    - daily_pilot_health_record
+    - issue_log_updates
+    - evidence_links
+    - decision_log
+    - institution_status_update_when_needed

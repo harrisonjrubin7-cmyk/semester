@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import type { CatalogCourse } from '../lib/registration';
-import { REGISTRATION_DAY_KEY } from '../lib/registration-day';
+import { EMPTY_REGISTRATION_DAY, REGISTRATION_DAY_KEY } from '../lib/registration-day';
 import { RegistrationDay } from './RegistrationDay';
 
 /**
@@ -46,9 +46,9 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const mount = (cart: CatalogCourse[]) =>
+const mount = (cart: CatalogCourse[], catalog = [cs1, cs2]) =>
   act(() =>
-    root.render(<RegistrationDay catalog={[cs1, cs2]} cart={cart} institution="Example University" onOpenCart={() => {}} />),
+    root.render(<RegistrationDay catalog={catalog} cart={cart} institution="Example University" onOpenCart={() => {}} />),
   );
 
 it('asks for a cart first when there is nothing in it', () => {
@@ -67,6 +67,31 @@ it('adds a backup from the offered sections and saves it on the device', () => {
   });
   expect(host.querySelector('ol[aria-label="Backups for CS 101 section 01"]')?.textContent).toContain('CS 101 · Section 02');
   expect(JSON.parse(localStorage.getItem(REGISTRATION_DAY_KEY)!).backups).toEqual({ cs1: ['cs2'] });
+});
+
+it('distinguishes the same backup under two primary courses and removes only the represented one', () => {
+  const math = course('math', { code: 'MATH 201', title: 'Discrete mathematics', meetings: [] });
+  const writing = course('writing', { code: 'WRIT 110', title: 'Academic writing', meetings: [] });
+  const backup = course('backup', { code: 'DATA 120', section: '03', title: 'Data reasoning', meetings: [] });
+  localStorage.setItem(
+    REGISTRATION_DAY_KEY,
+    JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { math: ['backup'], writing: ['backup'] } }),
+  );
+
+  mount([math, writing], [math, writing, backup]);
+
+  const firstName =
+    'Remove backup 1 of 1, DATA 120 section 03: Data reasoning · Spring 2027, for MATH 201 section 01: Discrete mathematics';
+  const secondName =
+    'Remove backup 1 of 1, DATA 120 section 03: Data reasoning · Spring 2027, for WRIT 110 section 01: Academic writing';
+  expect(host.querySelector(`button[aria-label="${firstName}"]`)).toBeTruthy();
+  const second = host.querySelector<HTMLButtonElement>(`button[aria-label="${secondName}"]`)!;
+
+  act(() => second.click());
+
+  expect(JSON.parse(localStorage.getItem(REGISTRATION_DAY_KEY)!).backups).toEqual({ math: ['backup'] });
+  expect(host.querySelector(`button[aria-label="${firstName}"]`)).toBeTruthy();
+  expect(host.querySelector(`button[aria-label="${secondName}"]`)).toBeNull();
 });
 
 it('says plainly that it registers nobody, and names the seat source', () => {

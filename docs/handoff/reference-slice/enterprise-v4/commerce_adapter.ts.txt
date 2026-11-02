@@ -1,0 +1,187 @@
+// commerce-adapter.ts: the Commerce implementation that backend_routes.ts expects. With it mounted, these routes
+// stop returning 501: POST /checkout, POST /subscription/change, POST /institution-requests, GET /membership.
+// NOT compiled or run. Strip the .txt suffix when copying into the repo. Pin and test the stripe SDK version.
+//
+// Depends on: membership_stripe_migration.sql + 006_membership_completion.sql, stripe_membership_webhook.ts (receiver + worker).
+//
+// Design rules:
+//  * Every database call runs AS THE ACTOR (SET LOCAL ROLE authenticated + request.jwt.claims), so auth.uid(), RLS and the
+//    SQL commands' own checks apply. The service credential is used only for attach_stripe_session and Stripe-side calls.
+//  * The browser never sends an amount. start_checkout picks the approved price; Stripe is given that price_id only.
+//  * The Stripe customer is created here, by the server, for the authenticated payer, and mapped to the payer BEFORE checkout.
+//    The webhook worker refuses to act on customers it can't map, so metadata is never trusted to identify a person.
+//  * Returning from Stripe unlocks nothing. Only the worker, after re-reading the subscription and its paid invoice, sets the tier.
+//  * Every Stripe write carries an idempotency key derived from our own record id, so retries never double-charge.
+import Stripe from "stripe";
+import type { Pool, PoolClient } from "pg";
+import type { Commerce } from "./backend_routes";
+
+export class CommerceError extends Error { constructor(public status: number, public code: string) { super(code); } }
+
+const DOMAIN: Record<string, [number, string]> = {
+  PRICE_NOT_APPROVED: [409, "PRICE_NOT_APPROVED"], ALREADY_ON_TIER: [409, "ALREADY_ON_TIER"], USE_SCHEDULE_CHANGE: [409, "USE_SCHEDULE_CHANGE"],
+  NO_PAID_TIER: [409, "NO_PAID_TIER"], QUOTA_EXHAUSTED: [402, "QUOTA_EXHAUSTED"], COST_NOT_DISCLOSED: [400, "COST_NOT_DISCLOSED"], CHECKOUT_NOT_OPENABLE: [409, "CHECKOUT_EXPIRED"],
+};
+function mapPg(e: any): never {
+  if (e?.code === "42501") throw new CommerceError(403, "FORBIDDEN");
+  if (e?.code === "22023") throw new CommerceError(400, "INVALID_INPUT");
+  if (e?.code === "23505") throw new CommerceError(409, "IDEMPOTENCY_CONFLICT");
+  if (e?.code === "P0001" && DOMAIN[e.message]) { const [s, c] = DOMAIN[e.message]; throw new CommerceError(s, c); }
+  throw new CommerceError(503, "COMMERCE_UNAVAILABLE");     // never leak SQL or Stripe messages to the client
+}
+
+async function asActor<T>(pool: Pool, actorId: string, fn: (db: PoolClient) => Promise<T>): Promise<T> {
+  const db = await pool.connect();
+  try {
+    await db.query("BEGIN");
+    await db.query("SET LOCAL statement_timeout = '10s'");
+    await db.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: actorId, role: "authenticated" })]);
+    await db.query("SET LOCAL ROLE authenticated");
+    const out = await fn(db);
+    await db.query("COMMIT");
+    return out;
+  } catch (e) { await db.query("ROLLBACK").catch(() => {}); if (e instanceof CommerceError) throw e; mapPg(e); }
+  finally { db.release(); }
+}
+
+export interface CommerceConfig {
+  stripe: Stripe;
+  pool: Pool;                       // server credential; owner of sx_private functions
+  livemode: boolean;
+  appOrigin: string;                // e.g. https://app.semester.co (approved, from config, never from the request)
+}
+
+export function makeCommerce(cfg: CommerceConfig): Commerce {
+  const { stripe, pool, livemode, appOrigin } = cfg;
+  const cadence = (c: "monthly" | "yearly") => (c === "monthly" ? "month" : "year");
+
+  async function ensureCustomer(payerId: string): Promise<string> {
+    // Serialized per payer so two tabs can't create two Stripe customers.
+    const db = await pool.connect();
+    try {
+      await db.query("BEGIN");
+      await db.query("SELECT pg_advisory_xact_lock(hashtextextended('stripe-customer:' || $1, 0))", [payerId]);
+      const row = await db.query("SELECT stripe_customer_id FROM sx_private.personal_memberships WHERE user_id = $1 FOR UPDATE", [payerId]);
+      if (row.rows[0]?.stripe_customer_id) { await db.query("COMMIT"); return row.rows[0].stripe_customer_id; }
+      const u = await db.query("SELECT email FROM auth.users WHERE id = $1", [payerId]);
+      const customer = await stripe.customers.create({ email: u.rows[0]?.email ?? undefined, metadata: { semester_user: payerId } }, { idempotencyKey: "customer:" + payerId });
+      await db.query(
+        `INSERT INTO sx_private.personal_memberships(user_id, stripe_customer_id) VALUES ($1, $2)
+         ON CONFLICT (user_id) DO UPDATE SET stripe_customer_id = EXCLUDED.stripe_customer_id, updated_at = now()
+         WHERE sx_private.personal_memberships.stripe_customer_id IS NULL`, [payerId, customer.id]);
+      await db.query("COMMIT");
+      return customer.id;
+    } catch (e) { await db.query("ROLLBACK").catch(() => {}); throw new CommerceError(503, "COMMERCE_UNAVAILABLE"); }
+    finally { db.release(); }
+  }
+
+  return {
+    async createCheckout({ actorId, key, plan, cadence: cad, returnPath }) {
+      const s = await asActor(pool, actorId, async (db) =>
+        (await db.query("SELECT sx_private.start_checkout($1, $2, $3, $4, $5) AS r", [key, plan, cadence(cad), returnPath, livemode])).rows[0].r);
+      if (s.state === "open") {                                    // idempotent replay: reuse the Stripe session
+        const row = await pool.query("SELECT stripe_checkout_session_id FROM sx_private.checkout_sessions WHERE id = $1", [s.checkoutId]);
+        const existing = await stripe.checkout.sessions.retrieve(row.rows[0].stripe_checkout_session_id);
+        if (existing.url) return { checkoutId: s.checkoutId, checkoutUrl: existing.url, state: "pending" };
+      }
+      const customer = await ensureCustomer(actorId);
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer,
+        client_reference_id: s.checkoutId,
+        line_items: [{ price: s.priceId, quantity: 1 }],
+        automatic_tax: { enabled: true },
+        success_url: appOrigin + returnPath + "?checkout=" + s.checkoutId,   // the page then polls GET /membership; the URL itself unlocks nothing
+        cancel_url: appOrigin + "/account/subscription?checkout=canceled",
+        subscription_data: { metadata: { semester_checkout: s.checkoutId } }, // for support lookup only; the worker never trusts it
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      }, { idempotencyKey: "checkout:" + s.checkoutId });
+      await pool.query("SELECT sx_private.attach_stripe_session($1, $2)", [s.checkoutId, session.id]).catch(mapPg);
+      return { checkoutId: s.checkoutId, checkoutUrl: session.url!, state: "pending" };
+    },
+
+    async scheduleChange({ actorId, key, plan, cadence: cad }) {
+      const r = await asActor(pool, actorId, async (db) =>
+        (await db.query("SELECT sx_private.schedule_change($1, $2, $3) AS r", [key, plan, cad ? cadence(cad) : null])).rows[0].r);
+      // Mirrored to Stripe by mirrorScheduledChanges(); effective date is the paid-through date.
+      return { changeId: r.changeId, effectiveAt: r.effectiveAt, paymentRequired: r.paymentRequired };
+    },
+
+    async institutionRequest({ actorId, key, institutionName, contactEmail, enrolledStudents, requestedModules }) {
+      const r = await asActor(pool, actorId, async (db) =>
+        (await db.query("SELECT sx_private.request_institution_offer($1, $2, $3, $4, $5) AS r", [key, institutionName, contactEmail, enrolledStudents, requestedModules])).rows[0].r);
+      return { requestId: r.requestId, state: "submitted" };
+    },
+
+    async membership(actorId) {
+      const m = await asActor(pool, actorId, async (db) => (await db.query("SELECT sx_private.my_membership() AS m")).rows[0].m);
+      return { personalPlan: m.personalPlan, subscriptions: m.membership ? [m.membership] : [], sponsorships: m.sponsorships, entitlements: m.allowances };
+    },
+  };
+}
+
+// ------------------------------------------------------------------ background jobs (service credential)
+
+// Mirror requested downgrades / cadence changes / cancels to Stripe, at period end. Run every minute.
+export async function mirrorScheduledChanges(stripe: Stripe, pool: Pool, livemode: boolean): Promise<number> {
+  const db = await pool.connect(); let n = 0;
+  try {
+    await db.query("BEGIN");
+    const due = await db.query(
+      `SELECT c.*, pm.stripe_subscription_id FROM sx_private.membership_changes c JOIN sx_private.personal_memberships pm ON pm.user_id = c.owner_id
+       WHERE c.status = 'requested' ORDER BY c.created_at FOR UPDATE OF c SKIP LOCKED LIMIT 20`);
+    for (const c of due.rows) {
+      try {
+        if (!c.stripe_subscription_id) throw new Error("no subscription");
+        if (c.kind === "cancel") {
+          await stripe.subscriptions.update(c.stripe_subscription_id, { cancel_at_period_end: true }, { idempotencyKey: "change:" + c.id });
+        } else {
+          const p = await db.query("SELECT price_id FROM sx_private.stripe_prices WHERE tier = $1 AND cadence = $2 AND livemode = $3 AND enabled AND approved_at IS NOT NULL", [c.to_tier, c.to_cadence, livemode]);
+          if (p.rows.length !== 1) throw new Error("price not approved");
+          const sched = await stripe.subscriptionSchedules.create({ from_subscription: c.stripe_subscription_id }, { idempotencyKey: "sched:" + c.id });
+          const cur = sched.phases[0];
+          await stripe.subscriptionSchedules.update(sched.id, {
+            end_behavior: "release",
+            phases: [
+              { items: cur.items.map((i) => ({ price: typeof i.price === "string" ? i.price : i.price.id, quantity: 1 })), start_date: cur.start_date, end_date: cur.end_date },
+              { items: [{ price: p.rows[0].price_id, quantity: 1 }] },
+            ],
+          }, { idempotencyKey: "sched-update:" + c.id });
+        }
+        await db.query("UPDATE sx_private.membership_changes SET status = 'scheduled_at_stripe' WHERE id = $1", [c.id]); n++;
+      } catch { await db.query("UPDATE sx_private.membership_changes SET status = 'failed' WHERE id = $1", [c.id]); }
+    }
+    // Withdrawn changes: undo at Stripe (cancel flag off, schedule released). Tier state still only changes via the webhook worker.
+    const withdrawn = await db.query(
+      `SELECT c.id, c.kind, pm.stripe_subscription_id FROM sx_private.membership_changes c JOIN sx_private.personal_memberships pm ON pm.user_id = c.owner_id
+       WHERE c.status = 'withdrawn' AND c.created_at > now() - interval '40 days' AND NOT EXISTS (SELECT 1 FROM sx_private.membership_changes x WHERE x.owner_id = c.owner_id AND x.status IN ('requested','scheduled_at_stripe'))
+       FOR UPDATE OF c SKIP LOCKED LIMIT 20`);
+    for (const w of withdrawn.rows) if (w.stripe_subscription_id && w.kind === "cancel") await stripe.subscriptions.update(w.stripe_subscription_id, { cancel_at_period_end: false }, { idempotencyKey: "undo:" + w.id }).catch(() => {});
+    await db.query("COMMIT"); return n;
+  } catch (e) { await db.query("ROLLBACK").catch(() => {}); throw e; } finally { db.release(); }
+}
+
+// Checkout bookkeeping from the queued, VERIFIED events. Add "checkout.session.completed" and "checkout.session.expired"
+// to the receiver's supported set. Completion marks our session only; the tier still comes from the subscription worker.
+export async function applyCheckoutEvent(pool: Pool, event: Stripe.Event): Promise<void> {
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.expired") return;
+  const s = event.data.object as Stripe.Checkout.Session;
+  await pool.query(
+    `UPDATE sx_private.checkout_sessions SET status = $2 WHERE stripe_checkout_session_id = $1 AND id::text = $3 AND status = 'open'`,
+    [s.id, event.type === "checkout.session.completed" ? "completed" : "expired", s.client_reference_id]);
+  // Person sponsorship: bind the sponsor's new Stripe subscription to the sponsorship row the session was created for.
+  if (event.type === "checkout.session.completed" && typeof s.subscription === "string") {
+    await pool.query(
+      `UPDATE sx_private.person_sponsorships ps SET stripe_subscription_id = $2
+       FROM sx_private.checkout_sessions cs WHERE cs.stripe_checkout_session_id = $1 AND cs.sponsorship_id = ps.id AND ps.stripe_subscription_id IS NULL`, [s.id, s.subscription]);
+  }
+}
+
+// Sponsor subscriptions: the webhook worker maps a customer to personal_memberships. When the subscription belongs to a
+// person sponsorship instead, call this from the worker (before the personal branch) to set the beneficiary's access.
+export async function applySponsorSubscription(db: PoolClient, sub: Stripe.Subscription, paidThrough: Date | null): Promise<boolean> {
+  const r = await db.query(
+    `UPDATE sx_private.person_sponsorships SET access_until = $2, status = CASE WHEN $2 IS NULL AND status = 'accepted' THEN 'ended' ELSE status END
+     WHERE stripe_subscription_id = $1 RETURNING id`, [sub.id, paidThrough]);
+  return (r.rowCount ?? 0) > 0;
+}

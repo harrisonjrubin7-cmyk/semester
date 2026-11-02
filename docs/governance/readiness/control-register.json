@@ -1,0 +1,54 @@
+{
+  "$comment": "Control register for registration readiness. Each control has an objective, an owner, a test frequency, and a failure response, and links to evidence in evidence-registry.json. This register covers access, source freshness, and workflow integrity. Audit, privacy, accessibility, and incident-response controls are not yet written. Validated by app/src/lib/governance/readiness-governance.test.ts.",
+  "required_fields": [
+    "id",
+    "name",
+    "objective",
+    "applies_to",
+    "control_type",
+    "implementation",
+    "evidence",
+    "owner",
+    "test_frequency",
+    "failure_response"
+  ],
+  "control_types": ["preventive", "detective", "preventive_and_detective"],
+  "controls": [
+    {
+      "id": "CTRL-ACCESS-001",
+      "name": "Tenant and subject isolation",
+      "objective": "An actor can read or write only records allowed by tenant, role, grant, record scope, and institutional policy.",
+      "applies_to": ["readiness_cases", "readiness_checks", "registration_receipts", "referrals"],
+      "control_type": "preventive",
+      "implementation": ["Supabase_RLS", "server_authorization", "policy_enforcement_point"],
+      "evidence": ["EVD-RDY-SEC-001", "EVD-RDY-SEC-002"],
+      "owner": "security_owner",
+      "test_frequency": "every_pull_request_and_release",
+      "failure_response": "disable_capability_and_investigate"
+    },
+    {
+      "id": "CTRL-SOURCE-002",
+      "name": "Stale-source disclosure",
+      "objective": "Semester does not show a definitive readiness result when authoritative input exceeds the agreed freshness threshold.",
+      "applies_to": ["readiness.evaluate", "student.readiness_summary", "registrar.readiness_case"],
+      "control_type": "preventive_and_detective",
+      "implementation": ["freshness_projection", "route_state_guard", "SourceBadge", "stale_source_alert"],
+      "evidence": ["EVD-RDY-SRC-001"],
+      "owner": "integration_owner",
+      "test_frequency": "every_release_and_incident_drill",
+      "failure_response": "mark_stale_pause_definitive_results_reconcile"
+    },
+    {
+      "id": "CTRL-WORKFLOW-003",
+      "name": "Controlled routing and overrides",
+      "objective": "A staff member cannot silently alter an official outcome or approve their own exceptional-action request.",
+      "applies_to": ["readiness.case.route", "override.request", "override.approve"],
+      "control_type": "preventive",
+      "implementation": ["state_transition_guard", "reason_required", "separation_of_duties", "immutable_decision_trail"],
+      "evidence": ["EVD-RDY-WF-001"],
+      "owner": "registrar_product_owner",
+      "test_frequency": "every_release",
+      "failure_response": "revoke_access_preserve_audit_escalate"
+    }
+  ]
+}

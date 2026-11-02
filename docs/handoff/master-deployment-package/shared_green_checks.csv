@@ -1,0 +1,21 @@
+check_id,green_status,procedure,expected,evidence,execution_status
+G-DES-01,Designed,Review every required journey and role against accepted scope,All required states/actions covered; omissions held,Journey/state matrix,NOT RUN
+G-DES-02,Designed,Review keyboard/focus/error/responsive/consequence designs,Accessible semantics and consequences accepted,Design review,NOT RUN
+G-IMP-01,Implemented,Trace mutations UI→authorization→durable store,Runtime connected; required mock substitute absent; audit/receipt wired,Route/service trace,NOT RUN
+G-IMP-02,Implemented,Forge tenant/owner/identity/scope on every entry point,Denied without protected metadata or mutation,Authorization negative report,NOT RUN
+G-IMP-03,Implemented,Restart/refresh and read committed entities across devices,Canonical state/version/provenance preserved,Persistence report,NOT RUN
+G-TST-01,Tested,Run all applicable cases against candidate and fixtures,All blocking cases pass; skipped/unbound not pass,Run IDs/logs,NOT RUN
+G-TST-02,Tested,Qualified AT/keyboard/reflow review of complete journeys,Applicable criteria accepted after retest,Accessibility report,NOT RUN
+G-TST-03,Tested,Independent security assessment and blocker rescan,No open launch-blocking finding,Assessor report,NOT RUN
+G-DEP-01,Deployed,Read actual build/commit/config/schema,Approved target and candidate match,Deployment manifest,NOT RUN
+G-DEP-02,Deployed,Exercise authorized/denied actual-target journeys,Persistence/denials/callbacks/queues correct,Target smoke report,NOT RUN
+G-DEP-03,Deployed,Test old/new app/functions with expanded database,N-1 rollback compatible,Compatibility report,NOT RUN
+G-AUT-01,Institution-authorized,Validate target/cohort/data/operation approval and reviewers,All authority current and scope-matched,Approval references,NOT RUN
+G-AUT-02,Institution-authorized,Withdraw/expire approval; attempt activation,Fail closed; no scope fallback,Gate negative report,NOT RUN
+G-AUT-03,Institution-authorized,Run customer UAT and inspect acceptance,Authorized approver accepts exact scope/limitations,Customer UAT,NOT RUN
+G-PRD-01,Production-enabled,Attempt use outside tenant/cohort/operation,Denied in server/direct API/worker,Eligibility report,NOT RUN
+G-PRD-02,Production-enabled,Kill active risk feature; attempt dispatch,Blocked within accepted measured bound,Kill drill,NOT RUN
+G-PRD-03,Production-enabled,Restore isolated DB plus matched objects/config,Checksums/policies/provenance/read pass; RTO/RPO measured,Recovery record,NOT RUN
+G-PRD-04,Production-enabled,Page unavailable primary and backup,Acknowledgement/escalation meets accepted policy,Operated drill,NOT RUN
+G-PRD-05,Production-enabled,Export/delete/revoke/offboard including holds,Complete policy-correct result; caches/queues handled,Privacy drill,NOT RUN
+G-PRD-06,Production-enabled,Observe approved operating window/outcome denominators,SLO/error-budget/outcome/stop criteria accepted,Pilot closeout,NOT RUN

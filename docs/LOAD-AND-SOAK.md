@@ -21,7 +21,9 @@ the drift check fails, failing only if the drift persists over the eight (D-1280
 
 After every window it checks the invariants and the number of other sessions open in
 the database (a count that keeps rising is a connection someone leaked: more than two
-above the starting count fails). After the last, `drift.sh` compares each scenario's
+above the starting count fails). It also prints read-only diagnostic snapshots after
+each soak window; those snapshots never change a budget or verdict. After the last,
+`drift.sh` compares each scenario's
 **best** p95 in the first quarter of the windows (at least two) with its best in the
 last quarter. A leak lifts the floor: the scenario is never again as fast as it was.
 A noisy neighbour or one slow window lifts a ceiling and leaves the floor alone, so a
@@ -63,6 +65,18 @@ budget and no verdict. It exists because
 `docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md` could not say what a stall was, and its
 second step was to record that rather than to raise a cap.
 
+After each completed soak window, `diagnostics.sh` also records cumulative aggregate
+statistics for two fixed write-path relations: live and dead tuple estimates, table
+and index bytes, and manual/automatic vacuum and analyze counts for
+`term_plan_courses` and `demand_consents`. A second line records PostgreSQL read,
+write, writeback, extend and fsync counters, checkpoint counts/times/buffers, and the
+Linux runner's cumulative I/O-wait and total CPU ticks. The collectors select no
+application row or value. PostgreSQL versions without `pg_stat_io` or the relevant
+checkpointer view, and hosts without `/proc/stat`, print `unsupported` instead of
+failing the load run. PostgreSQL read/write times can be zero when I/O timing is not
+enabled. These are correlation clues: rising dead tuples beside rising latency may
+justify a bloat investigation, but the snapshot does not prove causation.
+
 ## What was shown
 
 - **A planted leak.** A scenario that appended 3000 rows to a table and then scanned it
@@ -94,9 +108,10 @@ second step was to record that rather than to raise a cap.
 - **It is this machine's latency.** Budgets catch a regression of an order of magnitude.
   A load test against production needs the owner's approval and a staging project and is
   not this.
-- **No disk, bloat or memory reading.** It does not measure table or index growth, dead
-  tuples, or the database server's memory. A leak that does not slow a scenario within
-  the run is invisible to it.
+- **No disk or bloat diagnosis, and no memory reading.** It now records relation-size,
+  dead-tuple, maintenance and I/O-counter snapshots, but it does not inspect storage,
+  attribute a stall, or measure database-server memory. A leak outside the two fixed
+  relations, or one that does not move a captured counter, remains invisible.
 - **No browser soak.** Nothing here runs the app for hours.
 - **Not built:** a large-tenant scenario, a many-small-tenants scenario, concurrent
   file-processing and OCR uploads, and AI cost and quota load. The memo asks for each;

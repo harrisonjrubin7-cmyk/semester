@@ -153,7 +153,7 @@ function fakeIndexedDB(
    * which is the Mobile WebKit stall `TRANSACTION_LIMIT_MS` exists for. Zero
    * is a browser that answers.
    */
-  const knob = { stall: 0, aborted: 0 };
+  const knob = { stall: 0, aborted: 0, holdCompletion: 0, commit: null as null | (() => void) };
 
   const database = {
     get version() {
@@ -173,19 +173,33 @@ function fakeIndexedDB(
       for (const name of wanted) {
         if (!state.stores.has(name)) throw new DOMException('no such store', 'NotFoundError');
       }
+      const changes: (() => void)[] = [];
+      let aborted = false;
+      let finished = false;
+      const commit = () => {
+        if (aborted || finished) return;
+        for (const change of changes) change();
+        finished = true;
+      };
+      const complete = () => {
+        commit();
+        if (!aborted) (t.oncomplete as (() => void) | undefined)?.();
+      };
       const t: Record<string, unknown> = {
         objectStore: (name: string) => {
           const store = rows.get(name) ?? new Map<string, unknown>();
           rows.set(name, store);
           return {
-            put: (value: unknown, key: string) => store.set(key, value),
-            delete: (key: string) => store.delete(key),
+            put: (value: unknown, key: string) => changes.push(() => store.set(key, value)),
+            delete: (key: string) => changes.push(() => store.delete(key)),
             // Answered on `oncomplete`, the way the real requests are read.
             getAllKeys: () => ({ get result() { return [...store.keys()]; } }),
             getAll: () => ({ get result() { return [...store.values()]; } }),
           };
         },
         abort: () => {
+          if (finished) throw new DOMException('already committed', 'InvalidStateError');
+          aborted = true;
           knob.aborted += 1;
           setTimeout(() => (t.onabort as (() => void) | undefined)?.(), 0);
         },
@@ -194,7 +208,15 @@ function fakeIndexedDB(
         knob.stall -= 1;
         return t;
       }
-      setTimeout(() => (t.oncomplete as (() => void) | undefined)?.(), 0);
+      if (knob.holdCompletion > 0) {
+        knob.holdCompletion -= 1;
+        knob.commit = () => {
+          commit();
+          setTimeout(complete, 0);
+        };
+        return t;
+      }
+      setTimeout(complete, 0);
       return t;
     },
   };
@@ -300,6 +322,139 @@ describe('a transaction that never settles', () => {
   });
 });
 
+describe('an abort requested after IndexedDB committed', () => {
+  it('reports the commit so the persistence layer can roll its journal back', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, write } = await fresh();
+    await settled(open(['courses']));
+    fake.knob.holdCompletion = 1;
+    const controller = new AbortController();
+    const saving = write(
+      [{ store: 'settings', key: 'account-row', value: 'account-a' }],
+      controller.signal,
+    );
+
+    fake.knob.commit?.();
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(await saving).toBe(true);
+    expect(fake.rows.get('settings')?.get('account-row')).toBe('account-a');
+    expect(fake.knob.aborted, 'a finished transaction cannot be reported as aborted').toBe(0);
+  });
+});
+
+describe('a committed remote snapshot interrupted before acknowledgement', () => {
+  it('restores the previous authored rows from the durable journal on restart', async () => {
+    const { COLLECTIONS } = await import('./shape');
+    const { DEFAULT_PERSISTED } = await import('../shape');
+    const fake = fakeIndexedDB({
+      version: 1,
+      stores: ['maps', 'settings', ...COLLECTIONS],
+    });
+    let db = await fresh();
+    await settled(db.open(COLLECTIONS as string[]));
+    const local = {
+      id: 'local-task', title: 'Authored locally', date: null, time: '',
+      note: '', courseId: null, done: false, created: 1,
+    };
+    const accountA = {
+      id: 'a-task', title: 'Account A', date: null, time: '',
+      note: '', courseId: null, done: false, created: 2,
+    };
+    expect(await settled(db.write([
+      { store: 'tasks', key: local.id, value: local },
+      {
+        store: 'settings',
+        key: 'schemaVersion',
+        value: DEFAULT_PERSISTED.schemaVersion,
+      },
+    ]))).toBe(true);
+    expect(await settled(db.write([
+      { store: 'tasks', key: local.id, value: null },
+      { store: 'tasks', key: accountA.id, value: accountA },
+      {
+        store: 'settings',
+        key: 'remoteWriteRollback',
+        value: [
+          { store: 'tasks', key: accountA.id, value: null },
+          { store: 'tasks', key: local.id, value: local },
+        ],
+      },
+    ]))).toBe(true);
+
+    vi.resetModules();
+    const persistence = await import('./index');
+    const loading = persistence.load();
+    for (let turn = 0; turn < 50; turn += 1) {
+      await vi.advanceTimersByTimeAsync(10);
+    }
+    const restored = await loading;
+
+    expect(restored?.tasks.map((task) => task.id)).toContain(local.id);
+    expect(restored?.tasks.map((task) => task.id)).not.toContain(accountA.id);
+    db = await import('./db');
+    expect(await settled(db.readAll('settings'))).not.toContainEqual([
+      'remoteWriteRollback',
+      expect.anything(),
+    ]);
+    expect(fake.rows.get('tasks')?.has(accountA.id)).toBe(false);
+  });
+});
+
+describe('an unsafe rollback journal', () => {
+  it('blocks activation instead of opening a writable fallback copy', async () => {
+    const { COLLECTIONS } = await import('./shape');
+    const fake = fakeIndexedDB({
+      version: 1,
+      stores: ['maps', 'settings', ...COLLECTIONS],
+    });
+    const db = await fresh();
+    await settled(db.open(COLLECTIONS as string[]));
+    expect(await settled(db.write([
+      { store: 'settings', key: 'remoteWriteRollback', value: { malformed: true } },
+    ]))).toBe(true);
+
+    vi.resetModules();
+    const persistence = await import('./index');
+    const loading = persistence.load();
+    // Attach the rejection observer before advancing the fake transaction.
+    // Otherwise the expected failure is briefly unhandled and Vitest reports
+    // it after this test has already completed.
+    const blocked = expect(loading).rejects.toBeInstanceOf(persistence.OfflineRecoveryRequired);
+    for (let turn = 0; turn < 20; turn += 1) {
+      await vi.advanceTimersByTimeAsync(10);
+    }
+
+    await blocked;
+    expect(fake.rows.get('settings')?.has('remoteWriteRollback')).toBe(true);
+  });
+});
+
+describe('an account-scoped write that loses ownership', () => {
+  it('aborts atomically before any row becomes visible', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, write } = await fresh();
+    await settled(open(['courses']));
+    const controller = new AbortController();
+    const abortable = write as unknown as (
+      writes: { store: string; key: string; value: unknown }[],
+      signal: AbortSignal,
+    ) => Promise<boolean>;
+
+    const saving = abortable(
+      [{ store: 'settings', key: 'account-row', value: 'account-a' }],
+      controller.signal,
+    );
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(await saving).toBe(false);
+    expect(fake.rows.get('settings')?.has('account-row')).toBe(false);
+    expect(fake.knob.aborted).toBe(1);
+  });
+});
+
 describe('a store this build needs that the database has never had', () => {
   it('makes it, by opening once more a version higher', async () => {
     // The account of somebody who has used the app since before Sheets: the
@@ -358,23 +513,30 @@ describe('a store this build needs that the database has never had', () => {
 });
 
 describe('a write with nowhere to land says so', () => {
-  it('answers false rather than reporting a row it dropped as saved', async () => {
-    // The upgrade could not run — another tab holding the old version, or a
-    // browser refusing it. The rest of the batch is still written; the answer
-    // is about the part that was not.
+  it('refuses the whole batch before deleting a rollback journal', async () => {
+    // A database whose upgrade was blocked must not partially restore the
+    // stores it still has and then remove the only durable retry identity.
+    // The next boot needs the journal intact so it can hold safely and retry.
     const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
     const { open, write } = await fresh();
     const waiting = open(['courses']);
     await vi.advanceTimersByTimeAsync(10);
     await waiting;
+    fake.rows.set('settings', new Map([['remoteWriteRollback', [
+      { store: 'courses', key: 'c1', value: null },
+      { store: 'sheets', key: 's1', value: null },
+    ]]]));
 
     const saving = write([
       { store: 'courses', key: 'c1', value: { id: 'c1' } },
       { store: 'sheets', key: 's1', value: { id: 's1' } },
+      { store: 'settings', key: 'remoteWriteRollback', value: null },
     ]);
     await vi.advanceTimersByTimeAsync(10);
-    expect(await saving, 'a sheet with no store is a sheet not saved').toBe(false);
-    expect(fake.rows.get('courses')?.get('c1'), 'and the rest still landed').toEqual({ id: 'c1' });
+
+    expect(await saving, 'an incomplete schema cannot commit any requested row').toBe(false);
+    expect(fake.rows.get('courses')?.has('c1') ?? false, 'no partial inverse row landed').toBe(false);
+    expect(fake.rows.get('settings')?.has('remoteWriteRollback'), 'restart can retry').toBe(true);
   });
 });
 

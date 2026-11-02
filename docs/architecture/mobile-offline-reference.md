@@ -120,7 +120,7 @@ Channels, fastest first: silent push → the next sync response (`device_revoked
 | idle 5 minutes | `locked` | biometric/passkey to continue |
 | clock earlier than the latest time ever seen | `reauth` | a clock set back cannot stretch any limit above |
 
-Tenants may tighten these (a registrar's device gets a shorter lease than a student's); they may not loosen them past the defaults without a recorded exception. Per-class freshness (`policy.ts`) applies on top: a cached grade is not shown past 24 hours whatever the lease says.
+Tenants may tighten these (a registrar's device gets a shorter lease than a student's); they may not loosen them past the defaults without a recorded exception. Per-class freshness (`policy.ts`) applies on top. Grades, transcripts, financial aid and guardian projections are online-only and cannot be enabled by tenant opt-in.
 
 **Lost or stolen device runbook** (to live in `docs/operations/`): the person (or support under JIT access) revokes the installation → server sets `revoked` and queues the push → the next time the phone sees the network it wipes; until then the data is protected by hardware-wrapped keys, the biometric gate and the offline ceiling above. Revocation latency (p50/p95 from revoke to wipe-observed) is an SLO.
 
@@ -193,12 +193,13 @@ Encoded in `policy.ts`; the table in the audit and the contract is the source, t
 | Assignment drafts, support drafts, AI drafts | local draft only | field merge | ask |
 | Submissions, support cases | draft; **held send** | server-authoritative | receipt only after server acceptance |
 | Assignment metadata, course content | read cache, short expiry | source wins | none; authoritative fields overwritten |
-| Grades, transcripts, billing summary, accommodations, registration (read) | **denied by default**; tenant opt-in gives an expiring read cache | server-authoritative | none; never written offline |
+| Grades, transcripts, financial aid, guardian projections | **never persisted**; tenant opt-in cannot override | server-authoritative | none; online only |
+| Billing summary, accommodations, registration (read) | **denied by default**; tenant opt-in gives an expiring read cache | server-authoritative | none; never written offline |
 | Case notes, wellness, conduct | never in the database | online only | — |
 | Payments, ledger, permissions, consent, approvals, grade changes, record amendments | **never queued** | server-authoritative | — |
 | Audit events | never from a device | append-only, server-written | — |
 
-Notes on the table: the audit's "Grades — read cache with freshness status" is **narrowed** by the repository contract ("denied by default") to a tenant opt-in with a 24-hour ceiling (12 hours for accommodations); this is a deliberate stricter reading, recorded in the decision. A tenant may shorten any limit and may not lengthen it.
+Notes on the table: the launch boundary supersedes the earlier proposed grade cache. Source-issued grades, transcripts, financial aid and guardian projections are now unconditionally online-only. Tenant opt-in cannot admit them. A tenant may opt in only the remaining `tenant-opt-in` classes, shorten their limits and never lengthen them.
 
 **Clock honesty.** HLC ordering (`hlc.ts`) is used only where losing a field is cheap to see and cheap to undo. The server clamps a client clock to the moment the command *arrived*, so a phone set a year ahead cannot beat an edit that reaches the server after its own, and a clock set back only hurts its owner. No scheme can stop a device that simply syncs last without trusted time; that is why anything a person would mind losing asks instead. (`engine.test.ts` covers both skew directions.)
 
@@ -227,10 +228,11 @@ The device may **ask**, **read an expiring copy where the tenant allows**, and *
 | Flow | Offline | Online path | Server authority already in the repo |
 | --- | --- | --- | --- |
 | Registration / enrolment | search/browse cache only; **no** queued request (D-056) | submit → server checks eligibility, holds, capacity, policy → confirmation | `20260929300000_registration_transaction.sql`, `private.registration_gate` |
-| Grades | read cache only on tenant opt-in, ≤24 h | instructor workflow → dual-control change | `20260929310000_gradebook.sql` (append-only `grade_entries`); final-grade change needs approval |
+| Grades | online only; never persisted offline | instructor workflow → dual-control change | `20260929310000_gradebook.sql` (append-only `grade_entries`); final-grade change needs approval |
 | Student account, payments, refunds | summary read (opt-in); **no** payment data ever stored | secure processor flow online | `20260929220000_student_accounts.sql`, `ledger_chains` |
 | Permissions, consent, guardian sharing | never cached, never queued | policy decision + audit | `packages/institution/src/policy.ts` `decide()` fails closed |
-| Academic record | read cache only on opt-in | propose → approve → append | `academic_record_change_guard`, append-only entries |
+| Academic record / transcript | online only; never persisted offline | propose → approve → append | `academic_record_change_guard`, append-only entries |
+| Financial aid | online only; never persisted offline | authoritative provider workflow | activation remains unverified |
 | Approvals / break-glass / console actions | never | four-eyes, fresh MFA ≤15 min | `console_act`, `has_capability` |
 | Submissions | local draft, **held send** | tap → server acceptance → receipt | — (to be built; today's held kinds are share/contribute) |
 
@@ -316,7 +318,8 @@ Applies to **server-sourced** files a person is allowed to read offline (course 
 | File | Role |
 | --- | --- |
 | `status.ts` | the five states, queue phases, transitions, copy |
-| `policy.ts` | the data-class table, tenant opt-in, freshness, assertions |
+| `policy.ts` | the central data-class allow/deny classifier, tenant opt-in, freshness, assertions |
+| `storage-policy.ts` | startup/policy-change purge and content-free cleanup hook for dependent caches |
 | `engine.ts` | `SyncEngine`: write, confirm, sync, resolve, retry, discard |
 | `hlc.ts` | hybrid logical clock and the server clamp |
 | `backoff.ts` | full-jitter backoff with `Retry-After` |
@@ -397,14 +400,14 @@ Status: **built, default off, behind a registered module flag and a per-device o
 1. **Platform choice (§1) is a recommendation**, not a decision; Capacitor SQLCipher plugin maturity is unverified.
 2. Whether a biometric re-enrolment forces device re-registration.
 3. Lease defaults (7/30/90 days, 5-minute idle) are proposals; they need the threat model and the institution's device policy.
-4. The audit's "grades read cache" is intentionally narrowed to tenant opt-in (§5).
+4. The earlier proposed grade read cache is closed: grades, transcripts, aid and guardian projections are online-only (§5).
 5. CRDT engine selection and the benchmark.
 6. Edit-vs-delete conflict test is missing.
 7. **Counsel:** biometric-data statutes and notice/consent for any server-side biometric handling (this design stores none — the server sees passkey assertions — but that must be confirmed); FERPA treatment of cached education records on personal devices and of a lost device; SQLCipher licence terms; encryption-export classification for store submission; retention periods for command receipts and update logs; guardian/minor rules for a shared family device. No legal conclusion is made here.
 
 ## 12. The preamble's required outputs
 
-**Assumptions.** Capacitor shell with native modules (§1); lease defaults (§3); receipt retention 14 days; command lifetime 3 days; a tenant can opt in official classes to a read cache and can only shorten limits.
+**Assumptions.** Capacitor shell with native modules (§1); lease defaults (§3); receipt retention 14 days; command lifetime 3 days; a tenant can opt in only classes marked `tenant-opt-in` and can only shorten limits.
 
 **Risks.** Passing for done: the core is tested against its own reference gateway, so the protocol is only as right as that gateway's reading of the contract. The web store is weaker than native and must be labelled so. Remote wipe cannot reach an offline device (bounded exposure only). A WebView may fail assistive-technology testing. Tombstone and snapshot growth in the CRDT. The idle lock can lock out a person with a motor or cognitive disability if not configurable with a passcode fallback.
 

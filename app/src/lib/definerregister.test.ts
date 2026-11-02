@@ -95,6 +95,9 @@ describe('the Security Definer and RLS remediation register', () => {
     // separately, each held to the file it is said to come from.
     const since = SINCE_READING.flatMap((s) => s.functions);
     const afterSecond = AFTER_SECOND_READING.flatMap((s) => s.functions);
+    // A later file that redefines a function production already runs adds no
+    // function to production's count; it only moves where the row is held.
+    const afterSecondNew = AFTER_SECOND_READING.filter((s) => !s.redefines).flatMap((s) => s.functions);
     expect(READ_COUNT).toBe(151);
     expect(exposedDefiners().length).toBe(READ_COUNT + since.length + afterSecond.length);
     expect(FUNCTIONS.length).toBe(READ_COUNT + since.length + afterSecond.length);
@@ -103,7 +106,7 @@ describe('the Security Definer and RLS remediation register', () => {
     // the 180 the advisor listed.
     const unapplied = SINCE_READING.filter((s) => NOT_YET_APPLIED.includes(s.file)).flatMap((s) => s.functions);
     expect(NOT_YET_APPLIED.every((f) => SINCE_READING.some((s) => s.file === f)), 'every unapplied file is a since-reading file').toBe(true);
-    expect(FUNCTIONS.length - unapplied.length - afterSecond.length).toBe(SECOND_READING.functions);
+    expect(FUNCTIONS.length - unapplied.length - afterSecondNew.length).toBe(SECOND_READING.functions);
     for (const s of [...SINCE_READING, ...AFTER_SECOND_READING]) {
       for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(s.file);
     }

@@ -1,0 +1,305 @@
+# v2 · aligned with access-saga.ts state names. Application-specific Zero Trust contracts; not a NIST-standard API.
+# A generic bearer scheme documents transport only — it does not replace endpoint-specific workload authorization, token audience validation or tenant enforcement.
+openapi: 3.1.0
+info:
+  title: Semester Native Access Services
+  version: 0.1.0
+  description: |
+    Semester-specific PE, PA, and PEP contracts.
+    Not a NIST-standard API. Internal endpoints require scoped workload identity.
+security:
+  - bearerAuth: []
+paths:
+  /pep/access-requests:
+    post:
+      operationId: createAccessRequest
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './access-request.schema.json'}
+      responses:
+        '202':
+          description: Persisted request, not an access grant
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SagaStatus'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /pep/access-requests/{requestId}:
+    get:
+      operationId: getAccessRequest
+      parameters:
+        - {name: requestId, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Authorized view of request state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SagaStatus'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /pe/evaluations:
+    post:
+      operationId: evaluatePolicy
+      description: |
+        Internal. Trusted context is assembled server-side.
+        Caller-supplied claims do not establish authority.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EvaluationInput'}
+      responses:
+        '200':
+          description: Policy evaluated; denial is a valid decision
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Decision'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /pa/grants:
+    post:
+      operationId: prepareGrant
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestId, decisionId, generation]
+              properties:
+                requestId: {type: string}
+                decisionId: {type: string}
+                generation: {type: integer, minimum: 1}
+      responses:
+        '201':
+          description: Bounded grant prepared from validated allow decision
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Grant'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /pep/grants/{grantId}:
+    parameters:
+      - {name: grantId, in: path, required: true, schema: {type: string}}
+    put:
+      operationId: installGrant
+      description: Internal; PEP independently validates the grant reference.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [generation]
+              properties:
+                generation: {type: integer, minimum: 1}
+      responses:
+        '200':
+          description: Installation state
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Grant'}
+        default:
+          $ref: '#/components/responses/Failure'
+    get:
+      operationId: inspectEnforcement
+      responses:
+        '200':
+          description: Actual PEP state for reconciliation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Grant'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /pa/grants/{grantId}/revocations:
+    post:
+      operationId: revokeGrant
+      parameters:
+        - {name: grantId, in: path, required: true, schema: {type: string}}
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reasonCode]
+              properties:
+                reasonCode: {type: string}
+      responses:
+        '202':
+          description: Revocation durably requested; not yet proven enforced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Grant'}
+        default:
+          $ref: '#/components/responses/Failure'
+  /evidence/observations:
+    post:
+      operationId: recordObservation
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/EvidenceObservation'}
+      responses:
+        '201':
+          description: Observation recorded
+        default:
+          $ref: '#/components/responses/Failure'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Validated user or workload credentials, depending on endpoint.
+        Endpoint-specific capabilities must be enforced server-side.
+        User credentials must never be sufficient to call PE evaluation, install grants, or submit trusted evidence.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 16, maxLength: 200}
+  responses:
+    Failure:
+      description: |
+        400 invalid input; 401 authentication failure; 403 forbidden;
+        404 unavailable or undisclosed resource; 409 conflict;
+        429 rate limit; 503 dependency unavailable.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+  schemas:
+    AccessIntent:
+      type: object
+      additionalProperties: false
+      required: [resourceId, action]
+      properties:
+        resourceId: {type: string, minLength: 1}
+        action: {type: string, minLength: 1}
+    EvaluationInput:
+      type: object
+      additionalProperties: false
+      required: [requestId, contextRef, requestDigest]
+      properties:
+        requestId: {type: string}
+        contextRef: {type: string, description: Reference to trusted, fresh server-resolved context.}
+        requestDigest: {type: string}
+    TrustAssessment:
+      type: object
+      additionalProperties: false
+      required: [modelVersion, status, assessedAt, expiresAt, signals]
+      properties:
+        modelVersion: {type: string}
+        status: {enum: [valid, insufficient, invalid]}
+        assessedAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: |
+            Optional Semester-specific access-risk signal.
+            Never overrides mandatory authorization constraints.
+        signals:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, status, provenanceRef, observedAt]
+            properties:
+              key: {type: string}
+              status: {enum: [pass, fail, unknown]}
+              provenanceRef: {type: string}
+              observedAt: {type: string, format: date-time}
+    Decision:
+      type: object
+      additionalProperties: false
+      required: [decisionId, requestId, subjectId, tenantId, resourceId, action, requestDigest, outcome, policyRevision, accessRevision, expiresAt, reasons, obligations]
+      properties:
+        decisionId: {type: string}
+        requestId: {type: string}
+        subjectId: {type: string}
+        tenantId: {type: string}
+        resourceId: {type: string}
+        action: {type: string}
+        requestDigest: {type: string}
+        outcome: {enum: [allow, deny, require_step_up, require_approval]}
+        policyRevision: {type: string}
+        accessRevision: {type: string}
+        resourceVersion: {type: string}
+        expiresAt: {type: string, format: date-time}
+        reasons: {type: array, items: {type: string}}
+        obligations:
+          type: object
+          additionalProperties: false
+          required: [auditRequired]
+          properties:
+            auditRequired: {type: boolean}
+            permittedFields: {type: array, items: {type: string}}
+            maximumRows: {type: integer, minimum: 0}
+            approvalRuleId: {type: string}
+            authenticationLevel: {type: integer, minimum: 1}
+        trust: {$ref: '#/components/schemas/TrustAssessment'}
+    Grant:
+      type: object
+      additionalProperties: false
+      required: [grantId, decisionId, generation, status, expiresAt]
+      properties:
+        grantId: {type: string}
+        decisionId: {type: string}
+        generation: {type: integer, minimum: 1}
+        status: {enum: [prepared, installed, active, absent, conflict, unknown, revocation_pending, revoked, expired]}
+        expiresAt: {type: string, format: date-time}
+    SagaStatus:
+      type: object
+      additionalProperties: false
+      required: [requestId, state, revision]
+      properties:
+        requestId: {type: string}
+        revision: {type: integer, minimum: 0}
+        state: {enum: [RECEIVED, VALIDATING, EVALUATING, WAITING_STEP_UP, WAITING_APPROVAL, PREPARING, INSTALLING, VERIFYING, RECONCILING, ACTIVE, DENIED, EXPIRED, REVOKING, RECOVERY_REQUIRED, REVOKED]}
+        nextAction: {type: string}
+        grantId: {type: string}
+    EvidenceObservation:
+      type: object
+      additionalProperties: false
+      required: [observationId, requestId, requirementVersion, environment, implementationRevision, observedAt, producerId, result, artifactRefs]
+      properties:
+        observationId: {type: string}
+        requestId: {type: string}
+        requirementVersion: {type: string}
+        environment: {type: string}
+        implementationRevision: {type: string}
+        observedAt: {type: string, format: date-time}
+        producerId: {type: string}
+        result: {enum: [pass, fail, inconclusive]}
+        artifactRefs: {type: array, items: {type: string}}
+        classification: {type: string}
+        policyDecisionId: {type: string}
+        correlationId: {type: string}
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [status, code, title, correlationId, retryable]
+      properties:
+        status: {type: integer, minimum: 400, maximum: 599}
+        code: {enum: [INVALID_REQUEST, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, IDEMPOTENCY_CONFLICT, STALE_DECISION, STALE_APPROVAL, INVALID_TRANSITION, OBLIGATION_UNSUPPORTED, RATE_LIMITED, DEPENDENCY_UNAVAILABLE, ENFORCEMENT_UNKNOWN]}
+        title: {type: string}
+        correlationId: {type: string}
+        retryable: {type: boolean}

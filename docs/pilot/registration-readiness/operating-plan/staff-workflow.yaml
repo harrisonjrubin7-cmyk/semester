@@ -1,0 +1,38 @@
+# Operating plan object 8: staff queue item, allowed actions, and completion rules.
+# The pilot activates only the staff portions that the approved scope supports.
+staff_workflow:
+  queue_item:
+    includes:
+      - case_id
+      - student_identifier_as_authorized
+      - cohort_and_term
+      - evaluation_state
+      - source_and_freshness_status
+      - blocker_category_when_available
+      - prior_student_actions
+      - required_next_decision
+      - SLA_or_review_target
+      - triaged_at_audit_event   # recorded at first triage action; source of time_to_triage
+      - audit_history
+
+  staff_actions:
+    allow:
+      - review
+      - route
+      - request_information
+      - record_institutional_resolution_reference
+      - mark_reconciled_when_authorized
+    do_not_allow:
+      - impersonate_student
+      - execute_enrollment
+      - change_official_record
+      - bypass_scope
+      - close_without_reason
+      - publish_unreviewed_outreach
+
+  completion_requires:
+    - reason_or_resolution_code
+    - next_step_for_student
+    - actor_and_timestamp
+    - linked_official_reference_when_available
+    - audit_receipt

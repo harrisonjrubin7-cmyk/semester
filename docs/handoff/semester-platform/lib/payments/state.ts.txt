@@ -1,0 +1,39 @@
+// lib/payments/state.ts — the payment state machine. Mirrors fin.allowed_transition() in 090; the database is the final authority.
+export const HAPPY = ['draft', 'method_collected', 'auth_pending', 'authorized', 'captured', 'processing', 'settled', 'reconciled', 'entitlement_active'] as const;
+export const FAILURE = ['failed', 'requires_action', 'cancelled', 'refunded', 'partially_refunded', 'disputed', 'chargeback', 'written_off', 'collections'] as const;
+export type PaymentStatus = (typeof HAPPY)[number] | (typeof FAILURE)[number];
+export const NEXT: Record<PaymentStatus, PaymentStatus[]> = {
+  draft: ['method_collected'], method_collected: ['auth_pending'], auth_pending: ['authorized', 'failed', 'requires_action'],
+  requires_action: ['auth_pending', 'cancelled'], authorized: ['captured', 'cancelled'], captured: ['processing'], processing: ['settled', 'failed'],
+  settled: ['reconciled'], reconciled: ['entitlement_active'], entitlement_active: ['refunded', 'partially_refunded', 'disputed'],
+  partially_refunded: ['refunded', 'disputed'], disputed: ['entitlement_active', 'chargeback'], chargeback: ['written_off', 'collections'],
+  collections: ['entitlement_active', 'written_off'], failed: [], cancelled: [], refunded: [], written_off: [],
+};
+export function assertTransition(from: PaymentStatus, to: PaymentStatus): void {
+  if (!NEXT[from]?.includes(to)) throw new Error(`illegal payment transition ${from} -> ${to}`);
+}
+type Line = { account: string; debit?: number; credit?: number };
+// Ledger effect per transition (cents). Deferred = subscription billed ahead of delivery.
+export function ledgerFor(to: PaymentStatus, from: PaymentStatus, amount: number, opts: { deferred: boolean; feeCents?: number; refundCents?: number }): Line[] | null {
+  switch (to) {
+    case 'captured': return [{ account: 'CASH', debit: amount }, { account: opts.deferred ? 'DEF' : 'AR', credit: amount }];
+    case 'settled': return opts.feeCents ? [{ account: 'FEES', debit: opts.feeCents }, { account: 'CASH', credit: opts.feeCents }] : null;
+    case 'refunded': case 'partially_refunded': { const r = opts.refundCents ?? amount; return [{ account: 'REFUND', debit: r }, { account: 'CASH', credit: r }]; }
+    case 'disputed': return [{ account: 'DISP', debit: amount }, { account: 'CASH', credit: amount }];
+    case 'chargeback': return [{ account: 'REFUND', debit: amount }, { account: 'DISP', credit: amount }];
+    case 'written_off': return [{ account: 'WO', debit: amount }, { account: 'REFUND', credit: amount }];
+    case 'entitlement_active':
+      if (from === 'disputed') return [{ account: 'CASH', debit: amount }, { account: 'DISP', credit: amount }];
+      if (from === 'collections') return [{ account: 'CASH', debit: amount }, { account: 'REFUND', credit: amount }];
+      return null;
+    default: return null;
+  }
+}
+export function isBalanced(lines: Line[]): boolean {
+  const d = lines.reduce((a, l) => a + (l.debit ?? 0), 0), c = lines.reduce((a, l) => a + (l.credit ?? 0), 0);
+  return d === c && d > 0;
+}
+export function entitlementEffect(to: PaymentStatus): 'activate' | 'revoke' | 'suspend' | 'end' | 'none' {
+  return to === 'entitlement_active' ? 'activate' : to === 'refunded' ? 'revoke' : to === 'chargeback' ? 'suspend' : to === 'written_off' ? 'end' : 'none';
+}
+export function requiredApprovals(cents: number): 0 | 1 | 2 { return cents <= 10_000 ? 0 : cents <= 500_000 ? 1 : 2; }

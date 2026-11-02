@@ -15,6 +15,7 @@ class ExtractedChunk:
     cell_range: str | None = None
     start_seconds: float | None = None
     end_seconds: float | None = None
+    bounding_box: dict[str, float | str] | None = None
     confidence: float | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 

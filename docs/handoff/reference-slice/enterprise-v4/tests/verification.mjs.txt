@@ -1,0 +1,372 @@
+// Extracted from "Show the remaining verification logic" PDF (6 Oct). PDF text: indentation lost; prose between blocks may remain.
+// NOT compiled or run. Strip .txt and reformat (e.g. prettier) before use. Depends on node-jose; ESM.
+
+import jose from "node-jose";
+import {
+createHash,
+timingSafeEqual
+} from "node:crypto";
+export const LTI =
+"https://purl.imsglobal.org/spec/lti/claim/";
+export const DL =
+"https://purl.imsglobal.org/spec/lti-dl/claim/";
+export const AGS =
+"https://purl.imsglobal.org/spec/lti-ags/claim/endpoint";
+function assert(condition, code) {
+if (!condition) throw new Error(code);
+}
+function nonempty(value) {
+return typeof value === "string" && value.length > 0;
+
+
+}
+function object(value) {
+return value !== null &&
+typeof value === "object" &&
+!Array.isArray(value);
+}
+function strings(value) {
+return Array.isArray(value) &&
+value.every(nonempty);
+}
+function digest(value) {
+return createHash("sha256").update(value).digest();
+}
+function matchesHash(value, expectedHex) {
+if (
+!nonempty(value) ||
+typeof expectedHex !== "string" ||
+!/^[a-f0-9]{64}$/.test(expectedHex)
+) {
+return false;
+}
+return timingSafeEqual(
+digest(value),
+Buffer.from(expectedHex, "hex")
+);
+}
+export function trustedUrl(value, allowedOrigins) {
+const url = new URL(value);
+assert(
+url.protocol === "https:" &&
+!url.username &&
+!url.password &&
+!url.hash &&
+allowedOrigins.includes(url.origin),
+"URL_NOT_TRUSTED"
+);
+return url;
+}
+function validateMessage(claims, registration) {
+const message = claims[LTI + "message_type"];
+assert(
+message === "LtiResourceLinkRequest" ||
+message === "LtiDeepLinkingRequest",
+"MESSAGE_UNSUPPORTED"
+);
+
+
+const context = claims[LTI + "context"];
+const roles = claims[LTI + "roles"];
+if (context !== undefined) {
+assert(
+object(context) && nonempty(context.id),
+"CONTEXT_INVALID"
+);
+}
+if (claims.sub !== undefined) {
+assert(nonempty(claims.sub), "SUBJECT_INVALID");
+}
+if (message === "LtiResourceLinkRequest") {
+const link = claims[LTI + "resource_link"];
+assert(
+object(link) && nonempty(link.id),
+"RESOURCE_LINK_INVALID"
+);
+assert(strings(roles), "ROLES_INVALID");
+}
+if (message === "LtiDeepLinkingRequest") {
+const settings = claims[
+DL + "deep_linking_settings"
+];
+assert(
+object(settings) &&
+nonempty(settings.deep_link_return_url) &&
+strings(settings.accept_types) &&
+settings.accept_types.length > 0 &&
+strings(
+settings.accept_presentation_document_targets
+) &&
+settings.accept_presentation_document_targets
+.length > 0,
+"DEEP_LINKING_SETTINGS_INVALID"
+);
+trustedUrl(
+settings.deep_link_return_url,
+registration.returnOrigins
+);
+for (const field of [
+"accept_multiple",
+"accept_lineitem",
+"auto_create"
+]) {
+assert(
+settings[field] === undefined ||
+typeof settings[field] === "boolean",
+
+
+"DEEP_LINKING_FLAG_INVALID"
+);
+}
+assert(
+settings.data === undefined ||
+typeof settings.data === "string",
+"DEEP_LINKING_DATA_INVALID"
+);
+if (roles !== undefined) {
+assert(strings(roles), "ROLES_INVALID");
+}
+}
+const endpoint = claims[AGS];
+if (endpoint !== undefined) {
+assert(
+object(endpoint) && strings(endpoint.scope),
+"AGS_CLAIM_INVALID"
+);
+for (const field of ["lineitem", "lineitems"]) {
+if (
+endpoint[field] !== undefined &&
+endpoint[field] !== ""
+) {
+assert(
+nonempty(endpoint[field]),
+"AGS_ENDPOINT_INVALID"
+);
+trustedUrl(
+endpoint[field],
+registration.serviceOrigins
+);
+}
+}
+}
+return message;
+}
+export async function verifyLaunch({
+token,
+state,
+browserBinding,
+store,
+resolveRegistration,
+getTrustedJwks,
+authorize
+}) {
+assert(
+nonempty(state) &&
+state.length <= 512 &&
+
+
+nonempty(token) &&
+token.length <= 65_536,
+"INPUT_INVALID"
+);
+const stateKey = digest(state).toString("hex");
+const transaction = await store.get(stateKey);
+assert(
+transaction &&
+transaction.expiresAt > Date.now(),
+"STATE_INVALID_OR_EXPIRED"
+);
+assert(
+matchesHash(
+browserBinding,
+transaction.browserBindingHash
+),
+"BROWSER_BINDING_INVALID"
+);
+// Registration comes from stored state—not token claims.
+const registration = await resolveRegistration(
+transaction.registrationId
+);
+assert(registration?.active, "REGISTRATION_INACTIVE");
+const parts = token.split(".");
+assert(
+parts.length === 3 &&
+parts.every(part =>
+/^[A-Za-z0-9_-]+$/.test(part)
+),
+"COMPACT_JWT_REQUIRED"
+);
+// Unverified header is used only to reject unsupported
+// inputs and select from the trusted platform key set.
+const header = JSON.parse(
+Buffer.from(parts[^0], "base64url").toString("utf8")
+);
+assert(
+object(header) &&
+header.alg === "RS256" &&
+nonempty(header.kid) &&
+header.crit === undefined &&
+header.b64 === undefined,
+"JWT_HEADER_INVALID"
+);
+const jwks = await getTrustedJwks(registration);
+
+
+assert(
+object(jwks) && Array.isArray(jwks.keys),
+"JWKS_INVALID"
+);
+const matches = jwks.keys.filter(key =>
+object(key) &&
+key.kid === header.kid &&
+key.kty === "RSA" &&
+(!key.alg || key.alg === "RS256") &&
+(!key.use || key.use === "sig") &&
+(
+key.key_ops === undefined ||
+(
+Array.isArray(key.key_ops) &&
+key.key_ops.includes("verify")
+)
+)
+);
+assert(matches.length === 1, "SIGNING_KEY_AMBIGUOUS");
+const key = matches[^0];
+assert(
+!["d", "p", "q", "dp", "dq", "qi", "oth"]
+.some(field => field in key),
+"PRIVATE_KEY_NOT_ALLOWED"
+);
+const keystore = await jose.JWK.asKeyStore({
+keys: [key]
+});
+const verified = await jose.JWS.createVerify(
+keystore,
+{
+algorithms: ["RS256"],
+allowEmbeddedKey: false
+}
+).verify(token);
+const claims = JSON.parse(
+verified.payload.toString("utf8")
+);
+assert(object(claims), "JWT_PAYLOAD_INVALID");
+const now = Date.now() / 1000;
+const skew = 30;
+assert(
+claims.iss === registration.issuer,
+"ISSUER_INVALID"
+);
+
+
+assert(
+nonempty(claims.aud) ||
+(
+strings(claims.aud) &&
+claims.aud.length > 0
+),
+"AUDIENCE_FORMAT_INVALID"
+);
+const audiences = Array.isArray(claims.aud)
+? claims.aud
+: [claims.aud];
+assert(
+audiences.includes(registration.clientId),
+"AUDIENCE_INVALID"
+);
+assert(
+(
+audiences.length < 2 ||
+claims.azp === registration.clientId
+) &&
+(
+claims.azp === undefined ||
+claims.azp === registration.clientId
+),
+"AUTHORIZED_PARTY_INVALID"
+);
+assert(
+Number.isFinite(claims.exp) &&
+claims.exp > now - skew,
+"TOKEN_EXPIRED"
+);
+assert(
+Number.isFinite(claims.iat) &&
+claims.iat <= now + skew &&
+claims.iat >= now - 600 &&
+claims.exp > claims.iat,
+"ISSUED_AT_INVALID"
+);
+assert(
+claims.nbf === undefined ||
+(
+Number.isFinite(claims.nbf) &&
+claims.nbf <= now + skew
+),
+"TOKEN_NOT_ACTIVE"
+);
+assert(
+matchesHash(
+claims.nonce,
+
+
+transaction.nonceHash
+),
+"NONCE_INVALID"
+);
+assert(
+claims[LTI + "version"] === "1.3.0",
+"LTI_VERSION_INVALID"
+);
+const deployment = claims[LTI + "deployment_id"];
+assert(
+nonempty(deployment) &&
+registration.deployments.includes(deployment),
+"DEPLOYMENT_INVALID"
+);
+assert(
+!transaction.expectedDeploymentId ||
+deployment === transaction.expectedDeploymentId,
+"DEPLOYMENT_CHANGED"
+);
+assert(
+claims[LTI + "target_link_uri"] ===
+transaction.targetUri,
+"TARGET_INVALID"
+);
+trustedUrl(
+transaction.targetUri,
+registration.toolOrigins
+);
+const message = validateMessage(
+claims,
+registration
+);
+// Must be side-effect-free and resolve tenancy from
+// the verified deployment. Deny anonymous graded work.
+const access = await authorize({
+registration,
+deployment,
+message,
+claims
+});
+assert(access?.allowed === true, "ACCESS_DENIED");
+// Must recheck expiry and atomically consume the exact
+// transaction. Concurrent callbacks cannot both pass.
+assert(
+await store.consume(stateKey, transaction),
+"STATE_REPLAYED_OR_EXPIRED"
+
+
+);
+return {
+claims,
+access,
+registration,
+signingKeyId: key.kid
+};
+}
+The trusted-key restriction matters: node-jose documents that an allowed embedded key takes
+precedence over other verification keys. This implementation disables that path.
+The ten-minute maximum token age and origin allowlists are Semester policy choices. Add
+network-level SSRF/DNS protections; an origin check alone is insufficient.

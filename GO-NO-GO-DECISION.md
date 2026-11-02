@@ -64,3 +64,13 @@ Passing the evaluator records authority for its exact scope; it does not waive a
 | Broad institutional enterprise sale | **NO-GO / RED** | priorities 1–10 | Harrison Rubin coordinates; Founder, Product, Engineering, Implementation, Support, Finance, counsel, independent reviewers and authorized customer stakeholders must accept their domains | satisfy the paid-pilot package, complete multiple scoped deployments, and retain repeatability, capacity, isolation, recovery, implementation and support evidence plus claim-specific permission | product, technical, security, legal, commercial, operations, reliability/privacy and customer | last motion to reconsider, only after repeated successful deployments and independent assurance; GA, enterprise-readiness and system-replacement claims remain prohibited before that record exists |
 
 This table is the controlling motion-level reconciliation for Checkpoint F. Detailed owners and escalation paths remain in [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](OWNER-AND-ACCOUNTABILITY-MATRIX.md); evidence definitions remain in [`EVIDENCE-REGISTER.md`](EVIDENCE-REGISTER.md); claims remain governed by [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](PUBLIC-CLAIMS-APPROVAL-REGISTER.md). Any conflict resolves to the more conservative boundary until an authorized, dated decision supersedes it.
+
+## Evidence-bundle integrity prerequisite (proposed 2026-10-13)
+
+Engineering validates collected non-sensitive evidence against the exact release commit before any submission. This is an integrity check only: it never authorizes a release, and a passing result is not approval.
+
+- Paths: `scripts/release/evidence_bundle.py`, `scripts/release/test_evidence_bundle.py`, `scripts/release/deploy-vercel.sh` (gate hook required; not implemented).
+- Run: `python3 -m unittest discover -s scripts/release -p 'test_evidence_bundle.py' -v`, then `python3 scripts/release/evidence_bundle.py "$EVIDENCE_MANIFEST"`.
+- Status: the release-package PDF clipped several source lines. The validator was reconstructed from its visible logic; its 12 tests pass, and removing the path-escape guard makes `test_escape` fail.
+- Not done: no Vercel deployment, no database migration (`architecture/release-transport.PROPOSED.sql` is unapplied), no authenticated evaluator/gate integration, no hosted evidence retrieval.
+- Missing, modified, duplicate, unsafe or cross-target evidence blocks submission.

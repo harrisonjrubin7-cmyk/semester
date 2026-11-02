@@ -48,6 +48,8 @@ do $$
 declare
   north_user uuid;
   cedar_user uuid;
+  north_admin uuid;
+  cedar_admin uuid;
   north_provider uuid := gen_random_uuid();
   cedar_provider uuid := gen_random_uuid();
   north_credential uuid := gen_random_uuid();
@@ -152,6 +154,77 @@ begin
     (tenant_id, external_group_id, display_name, roles, active)
   values ('northstar-identity', 'vanderbilt-advisors', 'Advisors', array['advisor'], true);
 
+  -- The group → role mapping is the least-audited privilege path: a row here
+  -- decides which identity-provider group becomes which Semester role,
+  -- `admin` included. So who approved it is stamped by the server, every
+  -- change is kept, and another school's administrator can neither see nor
+  -- touch it. Phase 4 (P4-I5, P4-I6).
+  north_admin := pg_temp.newuser('idp-admin@northstar-identity.example', 'northstar-identity');
+  cedar_admin := pg_temp.newuser('idp-admin@cedar-identity.example', 'cedar-identity');
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (north_admin, 'university_admin', 'school', 'northstar-identity', 'institution'),
+    (cedar_admin, 'university_admin', 'school', 'cedar-identity', 'institution');
+
+  perform pg_temp.become(north_admin);
+  insert into public.scim_group_mapping
+    (tenant_id, external_group_id, display_name, roles, active, approved_by, approved_at)
+  values ('northstar-identity', 'vanderbilt-registrars', 'Registrars', array['staff'], true,
+          cedar_admin, '2001-01-01');
+  reset role;
+  select approved_by::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('a group mapping''s approver is stamped from the session, not the row',
+    state, north_admin::text);
+  select (approved_at > '2020-01-01')::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('and so is the time of approval', state, 'true');
+
+  perform pg_temp.become(north_admin);
+  update public.scim_group_mapping set roles = array['staff', 'admin']
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  reset role;
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.counted('every change to a group mapping is kept (insert, then the roles widened)', n, 2);
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars'
+     and changed_by = north_admin and 'admin' = any (roles);
+  perform pg_temp.counted('the history names who widened the mapping to admin', n, 1);
+  if not pg_temp.refused(format(
+    'update public.scim_group_mapping_history set roles = %L where tenant_id = %L',
+    '{student}', 'northstar-identity'
+  )) then
+    raise exception 'FAILED: group mapping history was mutable';
+  end if;
+  raise notice 'ok  group mapping history is immutable';
+
+  perform pg_temp.become(cedar_admin);
+  select count(*) into n from public.scim_group_mapping where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: cedar''s administrator reads none of north''s group mappings', n, 0);
+  select count(*) into n from public.institution_identity_provider where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s identity provider', n, 0);
+  select count(*) into n from public.provisioning_audit_event where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s provisioning events', n, 0);
+  select count(*) into n from public.scim_group_mapping_history where tenant_id = 'northstar-identity';
+  perform pg_temp.counted('CROSS-TENANT: nor north''s mapping history', n, 0);
+  update public.scim_group_mapping set roles = array['admin']
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-advisors';
+  get diagnostics n = row_count;
+  perform pg_temp.counted('CROSS-TENANT: cedar''s administrator changes none of north''s mappings', n, 0);
+  reset role;
+  if not pg_temp.refused(format(
+    'select pg_temp.become(%L); insert into public.scim_group_mapping '
+    '(tenant_id, external_group_id, display_name, roles) values (%L, %L, %L, %L)',
+    cedar_admin, 'northstar-identity', 'cedar-planted', 'Planted', '{admin}'
+  )) then
+    raise exception 'FAILED: another school''s administrator planted a group mapping at north';
+  end if;
+  reset role;
+  raise notice 'ok  CROSS-TENANT: cedar''s administrator cannot plant a mapping at north';
+  select roles[1] into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-advisors';
+  perform pg_temp.answered('north''s advisor mapping is as north left it', state, 'advisor');
+
   set local role service_role;
   select private.replace_scim_group_members(
     'northstar-identity', north_credential, 'request-group-unknown',
@@ -232,6 +305,64 @@ begin
   raise notice 'ok  a non-string attribute name is refused';
 
   raise notice 'identity provisioning: every check passed';
+end $$;
+
+-- An immutable history must still let its foreign keys do their work: a
+-- departed administrator's account is erasable (`changed_by` clears). Found by
+-- review on the first cut of 20261012055000, whose refusal trigger aborted the
+-- erasure. The same shape sat in tenant_sso_policy_history since
+-- 20260928011845, so it is proved here for both.
+do $$
+declare
+  north_admin uuid;
+  n bigint;
+  state text;
+  approved_before timestamptz;
+begin
+  select id into north_admin from auth.users where email = 'idp-admin@northstar-identity.example';
+  perform pg_temp.become(north_admin);
+  insert into public.tenant_sso_policy (tenant_id, require_sso, reason)
+  values ('northstar-identity', true, 'campus policy');
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.scim_group_mapping (tenant_id, external_group_id, display_name, roles)
+  values ('cedar-identity', 'cedar-staff', 'Staff', array['staff']);
+  select count(*) into n from public.tenant_sso_policy_history
+   where tenant_id = 'northstar-identity' and changed_by = north_admin;
+  perform pg_temp.counted('THE CONTROL: the SSO policy change is in its history, named', n, 1);
+
+  select approved_at into approved_before from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  delete from auth.users where id = north_admin;
+  -- Two rows cleared of their author, and a third recorded by the erasure
+  -- itself: the live mapping lost its approver, and that is a change.
+  select count(*) into n from public.scim_group_mapping_history
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars' and changed_by is null;
+  perform pg_temp.counted('a departed administrator leaves the mapping history in place, unnamed, plus the erasure itself', n, 3);
+  select (approved_at = approved_before)::text into state from public.scim_group_mapping
+   where tenant_id = 'northstar-identity' and external_group_id = 'vanderbilt-registrars';
+  perform pg_temp.answered('the erasure does not move the mapping''s approval time', state, 'true');
+  -- Likewise one cleared and one recorded: the live policy lost its author.
+  select count(*) into n from public.tenant_sso_policy_history
+   where tenant_id = 'northstar-identity' and changed_by is null;
+  perform pg_temp.counted('and the SSO policy history likewise', n, 2);
+
+  -- A school is never deleted here: the schools table refuses it, and disposal
+  -- goes through offboarding (docs/SCHOOL-OFFBOARDING.md), so the cascade half
+  -- of the review finding has no path to run. The refusal is the control.
+  if not pg_temp.refused('delete from public.schools where id = ''northstar-identity''') then
+    raise exception 'FAILED: a school was deleted outright';
+  end if;
+  raise notice 'ok  a school is offboarded, never deleted, so no cascade reaches its history';
+  select count(*) into n from public.scim_group_mapping_history where tenant_id = 'cedar-identity';
+  perform pg_temp.counted('CROSS-TENANT: cedar''s history is untouched by north''s erasures', n, 1);
+
+  if not pg_temp.refused(format(
+    'delete from public.scim_group_mapping_history where tenant_id = %L', 'cedar-identity'
+  )) then
+    raise exception 'FAILED: a direct delete of mapping history was accepted';
+  end if;
+  raise notice 'ok  a direct delete of mapping history is still refused';
 end $$;
 
 rollback;

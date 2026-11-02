@@ -1,0 +1,557 @@
+[
+  {
+    "id": "run_001",
+    "taskId": "task_001",
+    "agentId": "A04",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:13.697Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 4,
+      "elapsedMs": 1471,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "decision",
+        "label": "read_file:packages/platform-control/registry/controls/tenant-isolation.json",
+        "tool": "read_file",
+        "target": "packages/platform-control/registry/controls/tenant-isolation.json",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "decision",
+        "label": "read_file:packages/platform-control/validators/control-validator.ts",
+        "tool": "read_file",
+        "target": "packages/platform-control/validators/control-validator.ts",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "decision",
+        "label": "read_file:operator/policy/policy.json",
+        "tool": "read_file",
+        "target": "operator/policy/policy.json",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "decision",
+        "label": "search:.",
+        "tool": "search",
+        "target": ".",
+        "allowed": true,
+        "code": "allowed"
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:15.170Z",
+    "report": {
+      "taskId": "task_001",
+      "agentId": "A04",
+      "evidenceInspected": [
+        "packages/platform-control/registry/controls/tenant-isolation.json sha256=06979ad755fc bytes=385",
+        "packages/platform-control/validators/control-validator.ts sha256=016daa69ffe3 bytes=1139",
+        "operator/policy/policy.json sha256=1ace1e425f8f bytes=2592"
+      ],
+      "changes": [],
+      "verification": [
+        {
+          "name": "packages/platform-control/registry/controls/tenant-isolation.json",
+          "passed": true,
+          "detail": "present, 6 lines"
+        },
+        {
+          "name": "packages/platform-control/validators/control-validator.ts",
+          "passed": true,
+          "detail": "present, 21 lines"
+        },
+        {
+          "name": "operator/policy/policy.json",
+          "passed": true,
+          "detail": "present, 139 lines"
+        },
+        {
+          "name": "pattern validateRegistryRecords",
+          "passed": true,
+          "detail": "5 matches, first operator/evidence/demo/state/tasks.json:30"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [],
+      "nextStep": "Hand the findings to the implementing agent.",
+      "handoffs": [],
+      "outcome": "completed",
+      "status": "inspection complete"
+    }
+  },
+  {
+    "id": "run_002",
+    "taskId": "task_002",
+    "agentId": "A10",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:15.172Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 2,
+      "elapsedMs": 16219,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "note",
+        "label": "workspace",
+        "detail": "worktree workspaces/task_002 on operator/task_002 from f4a0fae2d0bff6a01ebb25c3aa23184e5967c404"
+      },
+      {
+        "kind": "decision",
+        "label": "write_file:operator/evidence/demo/state/workspaces/task_002/packages/platform-control/registry/controls/operator.json",
+        "tool": "write_file",
+        "target": "operator/evidence/demo/state/workspaces/task_002/packages/platform-control/registry/controls/operator.json",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "file",
+        "label": "wrote packages/platform-control/registry/controls/operator.json",
+        "path": "packages/platform-control/registry/controls/operator.json",
+        "sha256": "69c869c56e54d3d6e40aee1ee09a812d0a61c8738cbfc5dc73b14f067eee39e5",
+        "bytes": 504
+      },
+      {
+        "kind": "decision",
+        "label": "git_diff:operator/evidence/demo/state/workspaces/task_002",
+        "tool": "git_diff",
+        "target": "operator/evidence/demo/state/workspaces/task_002",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "diff",
+        "label": "workspace diff",
+        "sha256": "18a430a697494f99f0105818e074dabfb27dbe8cd4bb57d7635c0eb51b1063a3",
+        "files": [
+          "packages/platform-control/registry/controls/operator.json"
+        ],
+        "bytes": 792
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:31.392Z",
+    "report": {
+      "taskId": "task_002",
+      "agentId": "A10",
+      "evidenceInspected": [],
+      "changes": [
+        "create packages/platform-control/registry/controls/operator.json"
+      ],
+      "verification": [
+        {
+          "name": "workspace diff",
+          "passed": true,
+          "detail": "1 file(s), 792 bytes"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [
+        "diff sha256=[REDACTED]",
+        "packages/platform-control/registry/controls/operator.json"
+      ],
+      "nextStep": "Run the checks the acceptance criteria name, then independent verification.",
+      "handoffs": [],
+      "outcome": "completed",
+      "status": "1 edit(s) applied in the workspace"
+    }
+  },
+  {
+    "id": "run_003",
+    "taskId": "task_003",
+    "agentId": "A15",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:31.395Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 2,
+      "elapsedMs": 757,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "decision",
+        "label": "run_check:registry:validate",
+        "tool": "run_check",
+        "target": "registry:validate",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "command",
+        "label": "registry:validate",
+        "command": "node --experimental-strip-types packages/platform-control/scripts/validate-registry.ts",
+        "cwd": "operator/evidence/demo/state/workspaces/task_002",
+        "exitCode": 0,
+        "stdoutSha256": "ef43b0bc6092267f1be737777a2a9b9e3c4d6f42a1b9727d8a85102c54bbb45c",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tail": "{\n  \"valid\": true,\n  \"issues\": []\n}"
+      },
+      {
+        "kind": "decision",
+        "label": "run_check:platform-control:test",
+        "tool": "run_check",
+        "target": "platform-control:test",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "command",
+        "label": "platform-control:test",
+        "command": "npm run platform-control:test",
+        "cwd": "operator/evidence/demo/state/workspaces/task_002",
+        "exitCode": 0,
+        "stdoutSha256": "f22fdb06af21a8d75630310865356d86520fb367b6949999dbe97cc6f8512d4f",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tail": "  duration_ms: 0.479189\n  type: 'test'\n  ...\n1..25\n# tests 25\n# suites 0\n# pass 25\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 234.040652"
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:32.154Z",
+    "report": {
+      "taskId": "task_003",
+      "agentId": "A15",
+      "evidenceInspected": [],
+      "changes": [],
+      "verification": [
+        {
+          "name": "registry:validate",
+          "passed": true,
+          "detail": "exit 0; node --experimental-strip-types packages/platform-control/scripts/validate-registry.ts"
+        },
+        {
+          "name": "platform-control:test",
+          "passed": true,
+          "detail": "exit 0; npm run platform-control:test"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [],
+      "nextStep": "Independent verification.",
+      "handoffs": [],
+      "outcome": "completed",
+      "status": "all checks passed"
+    }
+  },
+  {
+    "id": "run_004",
+    "taskId": "task_004",
+    "agentId": "A16",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:32.156Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 2,
+      "elapsedMs": 45,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "decision",
+        "label": "git_diff:operator/evidence/demo/state/workspaces/task_002",
+        "tool": "git_diff",
+        "target": "operator/evidence/demo/state/workspaces/task_002",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "diff",
+        "label": "workspace diff",
+        "sha256": "18a430a697494f99f0105818e074dabfb27dbe8cd4bb57d7635c0eb51b1063a3",
+        "files": [
+          "packages/platform-control/registry/controls/operator.json"
+        ],
+        "bytes": 792
+      },
+      {
+        "kind": "decision",
+        "label": "read_file:operator/evidence/demo/state/workspaces/task_002/packages/platform-control/registry/controls/operator.json",
+        "tool": "read_file",
+        "target": "operator/evidence/demo/state/workspaces/task_002/packages/platform-control/registry/controls/operator.json",
+        "allowed": true,
+        "code": "allowed"
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:32.202Z",
+    "report": {
+      "taskId": "task_004",
+      "agentId": "A16",
+      "evidenceInspected": [
+        "task_002 run run_002",
+        "task_003 run run_003"
+      ],
+      "changes": [],
+      "verification": [
+        {
+          "name": "task_002:artifact",
+          "passed": true,
+          "detail": "diff 18a430a69749 matches the record"
+        },
+        {
+          "name": "a1",
+          "passed": true,
+          "detail": "packages/platform-control/registry/controls/operator.json exists"
+        },
+        {
+          "name": "a2",
+          "passed": true,
+          "detail": "packages/platform-control/registry/controls/operator.json contains the expected text"
+        },
+        {
+          "name": "a3",
+          "passed": true,
+          "detail": "registry:validate: exit 0"
+        },
+        {
+          "name": "a4",
+          "passed": true,
+          "detail": "platform-control:test: exit 0"
+        },
+        {
+          "name": "t1",
+          "passed": true,
+          "detail": "registry:validate: exit 0"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [],
+      "nextStep": "Coordinator may close the reviewed tasks.",
+      "handoffs": [],
+      "outcome": "accepted",
+      "status": "every criterion passed against the exact artifact"
+    }
+  },
+  {
+    "id": "run_005",
+    "taskId": "task_005",
+    "agentId": "A10",
+    "status": "blocked",
+    "startedAt": "2026-10-11T23:01:32.206Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 1,
+      "elapsedMs": 3114,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "note",
+        "label": "workspace",
+        "detail": "worktree workspaces/task_005 on operator/task_005 from f4a0fae2d0bff6a01ebb25c3aa23184e5967c404"
+      },
+      {
+        "kind": "decision",
+        "label": "write_file:operator/evidence/demo/state/workspaces/task_005/operator/policy/policy.json",
+        "tool": "write_file",
+        "target": "operator/evidence/demo/state/workspaces/task_005/operator/policy/policy.json",
+        "allowed": false,
+        "code": "protected_path"
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:35.321Z",
+    "report": {
+      "taskId": "task_005",
+      "agentId": "A10",
+      "evidenceInspected": [],
+      "changes": [],
+      "verification": [],
+      "risks": [
+        "Policy denied write_file:/[REDACTED]task_005/operator/policy/policy.json; no further edits were attempted."
+      ],
+      "approvalsRequired": [],
+      "artifacts": [],
+      "nextStep": "Narrow the edit to the agent's allowed writes or obtain the applicable approval.",
+      "handoffs": [],
+      "outcome": "blocked",
+      "status": "policy denied protected_path"
+    }
+  },
+  {
+    "id": "run_006",
+    "taskId": "task_006",
+    "agentId": "A16",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:35.323Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 0,
+      "elapsedMs": 1,
+      "retries": 0
+    },
+    "evidence": [],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:35.326Z",
+    "report": {
+      "taskId": "task_006",
+      "agentId": "A16",
+      "evidenceInspected": [
+        "task_005 run run_005"
+      ],
+      "changes": [],
+      "verification": [
+        {
+          "name": "n1",
+          "passed": true,
+          "detail": "policy denied with protected_path"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [],
+      "nextStep": "Coordinator may close the reviewed tasks.",
+      "handoffs": [],
+      "outcome": "accepted",
+      "status": "every criterion passed against the exact artifact"
+    }
+  },
+  {
+    "id": "run_007",
+    "taskId": "task_007",
+    "agentId": "A20",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:35.329Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 0,
+      "elapsedMs": 1,
+      "retries": 0
+    },
+    "evidence": [],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:35.331Z",
+    "report": {
+      "taskId": "task_007",
+      "agentId": "A20",
+      "evidenceInspected": [],
+      "changes": [],
+      "verification": [],
+      "risks": [
+        "No deployment adapter is implemented; release.execute is unreachable until one exists and is tested."
+      ],
+      "approvalsRequired": [
+        "release_adapter target=staging artifact=set-after-verification"
+      ],
+      "artifacts": [],
+      "nextStep": "An owner grants an exact-target, exact-artifact approval; a tested adapter executes it.",
+      "handoffs": [],
+      "outcome": "needs_approval",
+      "status": "release prepared; no adapter and no approval"
+    }
+  },
+  {
+    "id": "run_008",
+    "taskId": "task_008",
+    "agentId": "A02",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:35.333Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 0,
+      "elapsedMs": 5,
+      "retries": 0
+    },
+    "evidence": [],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:35.339Z",
+    "report": {
+      "taskId": "task_008",
+      "agentId": "A02",
+      "evidenceInspected": [
+        "packages/platform-control/registry/**",
+        "operator task store"
+      ],
+      "changes": [],
+      "verification": [
+        {
+          "name": "generated matrix in step",
+          "passed": true,
+          "detail": "row count matches the committed matrix"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [
+        "operator/generated/coverage-matrix.json"
+      ],
+      "nextStep": "None.",
+      "handoffs": [],
+      "outcome": "completed",
+      "status": "59 rows; proposed=0 specified=15 in_progress=12 blocked=23 implemented=8 verified=1 deployed=0"
+    }
+  },
+  {
+    "id": "run_009",
+    "taskId": "task_009",
+    "agentId": "A33",
+    "status": "succeeded",
+    "startedAt": "2026-10-11T23:01:35.340Z",
+    "usage": {
+      "turns": 1,
+      "toolCalls": 1,
+      "elapsedMs": 3059,
+      "retries": 0
+    },
+    "evidence": [
+      {
+        "kind": "note",
+        "label": "workspace",
+        "detail": "worktree workspaces/task_009 on operator/task_009 from f4a0fae2d0bff6a01ebb25c3aa23184e5967c404"
+      },
+      {
+        "kind": "decision",
+        "label": "write_file:operator/evidence/demo/state/workspaces/task_009/operator/evidence/demo/CONTINUATION.md",
+        "tool": "write_file",
+        "target": "operator/evidence/demo/state/workspaces/task_009/operator/evidence/demo/CONTINUATION.md",
+        "allowed": true,
+        "code": "allowed"
+      },
+      {
+        "kind": "file",
+        "label": "wrote operator/evidence/demo/CONTINUATION.md",
+        "path": "operator/evidence/demo/CONTINUATION.md",
+        "sha256": "ee855a5f584d92955e4c964b266366e366cd4ccb7e2b6367c61a77c66181871b",
+        "bytes": 1783
+      }
+    ],
+    "pendingExternalActions": [],
+    "endedAt": "2026-10-11T23:01:38.401Z",
+    "report": {
+      "taskId": "task_009",
+      "agentId": "A33",
+      "evidenceInspected": [],
+      "changes": [
+        "wrote operator/evidence/demo/CONTINUATION.md"
+      ],
+      "verification": [
+        {
+          "name": "file written",
+          "passed": true,
+          "detail": "1783 bytes"
+        }
+      ],
+      "risks": [],
+      "approvalsRequired": [],
+      "artifacts": [
+        "operator/evidence/demo/CONTINUATION.md sha256=[REDACTED]"
+      ],
+      "nextStep": "Commit the record with the evidence it describes.",
+      "handoffs": [],
+      "outcome": "completed",
+      "status": "continuation record written"
+    }
+  }
+]

@@ -1,0 +1,62 @@
+# Operating plan object 4: five-stage launch cadence.
+# Dates are TBD. The source materials give no dates for the signed paid pilot,
+# and dates are set jointly with the institution.
+launch_cadence:
+  dates: TBD
+  stages:
+    - id: stage_1_align
+      status: not_started
+      exit_criteria:
+        - signed_scope_record
+        - named_institution_owners
+        - named_semester_owners
+        - approved_cohort
+        - source_authority_map
+        - success_plan
+        - escalation_contacts
+        - retention_and_communication_plan_approved   # end-of-pilot-decision.yaml conclude_safely
+        - launch_dates_agreed                         # launch_cadence.dates is TBD until agreed
+        - containment_target_agreed                   # measurement-plan.yaml reliability
+        - escalation_response_targets_agreed   # P0/P1/P2 targets in escalation-matrix.yaml
+        - named_owner_for_every_role           # scope-record.yaml named_owners
+        - sev_to_p_mapping_agreed              # escalation-matrix.yaml sev_to_p_mapping is no longer TBD
+        - measurement_windows_approved         # every observation_period in measurement-plan.yaml is set
+        - freshness_and_alert_thresholds_agreed   # observability.yaml policy_threshold, agreed_threshold, agreed_SLA; source freshness policy
+    - id: stage_2_configure
+      status: not_started
+      exit_criteria:
+        - tenant_and_role_setup
+        - identity_or_SSO_validation
+        - source_mapping
+        - policy_configuration
+        - support_routing
+        - feature_flag_scope
+        - student_and_staff_copy_review
+    - id: stage_3_prove
+      status: not_started
+      exit_criteria:
+        - acceptance_tests_pass
+        - RLS_tests_pass
+        - source_freshness_tests_pass
+        - drill_program_complete
+        - accessibility_critical_path_complete
+        - training_complete
+        - release_evidence_current
+        - readiness_event_schema_and_capture_tested   # measurement-plan.yaml adoption
+        - control_register_scoped_and_update_path_tested   # measurement-plan.yaml trust
+        - student_understanding_prompt_built_and_tested   # in-context prompt and event capture (measurement-plan.yaml understanding)
+    - id: stage_4_activate
+      status: not_started
+      exit_criteria:
+        - limited_cohort_enabled
+        - command_center_staffed
+        - hypercare_started
+        - daily_health_review_started
+        - student_feedback_channel_live
+    - id: stage_5_decide
+      status: not_started
+      exit_criteria:
+        - pilot_results_report
+        - sponsor_readout
+        - end_of_pilot_decision_recorded       # one of renew_and_deepen, repeat, remediate, conclude_safely (end-of-pilot-decision.yaml)
+        - evidence_archive_and_follow_up_backlog

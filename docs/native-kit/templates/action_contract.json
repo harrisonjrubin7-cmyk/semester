@@ -1,0 +1,18 @@
+{
+  "type": "PROPOSED",
+  "actor_from_server": null,
+  "security_scope": null,
+  "capability": null,
+  "operation": null,
+  "target_id": null,
+  "expected_version": null,
+  "canonical_payload": {},
+  "payload_digest": null,
+  "idempotency_key": null,
+  "preview_expires_at": null,
+  "approval_refs": [],
+  "evidence_refs": [],
+  "release_target": null,
+  "audit_correlation": null,
+  "compensation_policy": null
+}

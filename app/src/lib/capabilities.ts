@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloud, cloudConfigured } from './cloud';
 
 /**
@@ -57,11 +57,16 @@ export async function loadMyCapabilities(): Promise<Grant[]> {
  * The same read, for a caller that must tell "holds nothing" from "could not
  * ask": a refused or failed request throws instead of reading as no grants.
  */
-export async function loadMyCapabilitiesOrThrow(): Promise<Grant[]> {
+export async function loadMyCapabilitiesOrThrow(expectedAccountId = ''): Promise<Grant[]> {
   if (!cloudConfigured) return [];
   const db = await cloud();
-  const { data: user } = await db.auth.getUser();
-  if (!user.user?.id) return [];
+  const { data: user, error: userError } = await db.auth.getUser();
+  if (userError) throw new Error('Could not verify your signed-in account.');
+  const actualAccountId = user.user?.id ?? '';
+  if (expectedAccountId && actualAccountId !== expectedAccountId) {
+    throw new Error('Your signed-in account changed while access was being checked.');
+  }
+  if (!actualAccountId) return [];
   const { data, error } = await db.rpc('my_capabilities');
   if (error) throw new Error('Could not check your staff permissions.');
   return readGrants(data);
@@ -76,4 +81,73 @@ export function useMyCapabilities(): Grant[] {
     return () => { live = false; };
   }, []);
   return grants;
+}
+
+export type CapabilityDiscoveryStatus = 'signed-out' | 'loading' | 'ready' | 'error';
+
+export interface CapabilityDiscovery {
+  status: CapabilityDiscoveryStatus;
+  grants: Grant[];
+  error: string;
+  retry(): void;
+}
+
+interface CapabilityDiscoveryResult extends Omit<CapabilityDiscovery, 'retry'> {
+  accountId: string;
+}
+
+const discoveryState = (
+  accountId: string,
+  status: CapabilityDiscoveryStatus,
+  grants: Grant[] = [],
+  error = '',
+): CapabilityDiscoveryResult => ({ accountId, status, grants, error });
+
+/**
+ * Account-keyed, fail-closed capability discovery for persistent navigation.
+ *
+ * Unlike `useMyCapabilities`, a failed read is not an empty grant set. The
+ * account id is carried with every result so a late answer for account A is
+ * never rendered while account B is active.
+ */
+export function useCapabilityDiscovery(
+  accountId: string,
+  load: (accountId: string) => Promise<Grant[]> = loadMyCapabilitiesOrThrow,
+): CapabilityDiscovery {
+  const revision = useRef(0);
+  const [attempt, setAttempt] = useState(0);
+  const [result, setResult] = useState<CapabilityDiscoveryResult>(() =>
+    discoveryState(accountId, accountId ? 'loading' : 'signed-out'),
+  );
+
+  useEffect(() => {
+    const request = ++revision.current;
+    if (!accountId) {
+      // oxlint-disable-next-line react/set-state-in-effect -- external account state resets this account-backed result
+      setResult(discoveryState('', 'signed-out'));
+      return;
+    }
+
+    // oxlint-disable-next-line react/set-state-in-effect -- loading must replace another account's result before the request starts
+    setResult(discoveryState(accountId, 'loading'));
+    load(accountId).then(
+      (grants) => {
+        if (revision.current === request) setResult(discoveryState(accountId, 'ready', grants));
+      },
+      () => {
+        if (revision.current === request) {
+          setResult(discoveryState(accountId, 'error', [], 'Could not check connected access.'));
+        }
+      },
+    );
+    return () => {
+      if (revision.current === request) revision.current += 1;
+    };
+  }, [accountId, attempt, load]);
+
+  const retry = useCallback(() => setAttempt((value) => value + 1), []);
+  const current = result.accountId === accountId
+    ? result
+    : discoveryState(accountId, accountId ? 'loading' : 'signed-out');
+  return { status: current.status, grants: current.grants, error: current.error, retry };
 }

@@ -1,10 +1,20 @@
 import { dollars } from '../lib/cost';
+import { formatDate } from '../lib/locale';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
 import { SourceBadge } from './SourceBadge';
 import { useNow } from '../state/store';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 const money = dollars;
+const removalName = (line: CostLine, index: number, total: number) => {
+  const cadence = line.per === 'term' ? 'fall or spring term' : 'summer term';
+  const source = line.source === 'imported'
+    ? `imported${line.from ? ` from ${line.from}` : ''}${line.on ? ` on ${formatDate(new Date(`${line.on}T12:00:00`), { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}`
+    : 'your own estimate';
+  return `Remove cost estimate ${index + 1} of ${total}, ${line.label}: ${money(line.amount)} each ${cadence} · ${source}`;
+};
 const num = (v: string) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(1_000_000, Math.max(0, n)) : 0;
@@ -28,12 +38,14 @@ export function CostPlanner({
   now: suppliedNow,
 }: {
   lines: CostLine[];
-  onChange: (next: CostLine[]) => void;
+  onChange: (next: CostLine[]) => boolean;
   now?: Date;
 }) {
   const currentTime = useNow();
   const now = suppliedNow ?? currentTime;
   const [kind, setKind] = useState<string>(LINE_KINDS[0]);
+  const [removing, setRemoving] = useState<CostLine | null>(null);
+  const [notice, setNotice] = useState('');
   const headingId = useId();
   const sum = totals(lines);
   const source = totalSource(lines);
@@ -49,7 +61,7 @@ export function CostPlanner({
 
       {lines.length ? (
         <ul className="cost-lines">
-          {lines.map((l) => {
+          {lines.map((l, index) => {
             const old = staleness(l, now);
             return (
               <li key={l.id} className="cost-line">
@@ -121,7 +133,7 @@ export function CostPlanner({
                   {l.source === 'imported' && l.from ? ` ${l.from}` : ''}
                   {old ? <span className="portal-warning"> {old}</span> : null}
                 </p>
-                <button type="button" aria-label={`Remove ${l.label}`} onClick={() => onChange(lines.filter((x) => x.id !== l.id))}>
+                <button type="button" aria-label={removalName(l, index, lines.length)} onClick={() => setRemoving(l)}>
                   Remove
                 </button>
               </li>
@@ -168,6 +180,40 @@ export function CostPlanner({
           Totals: <SourceBadge label={source} />{' '}
           {source === 'student_entered' ? 'At least one line is your own estimate.' : 'Every line copied from published costs.'}
         </p>
+      ) : null}
+      {notice ? <p role="status" className="portal-muted">{notice}</p> : null}
+      {removing ? (
+        <ConfirmDialog
+          title="Remove this cost estimate?"
+          preview={(
+            <ActionPreview
+              subject={`${removing.label} · ${money(removing.amount)} each ${removing.per === 'term' ? 'fall or spring term' : 'summer term'}`}
+              says="Removes this planning estimate from the graduation workspace on this device and recalculates its term and summer totals."
+              exactly={removing.source === 'imported'
+                ? `Imported estimate${removing.from ? ` copied from ${removing.from}` : ''}${removing.on ? ` on ${removing.on}` : ''}.`
+                : 'Your own estimate.'}
+              doesNotChange="The other cost lines, graduation scenarios, downloaded copies, financial-aid records and the registrar’s official degree audit stay unchanged."
+              recovery={{
+                kind: 'none',
+                how: 'A device-workspace backup created before removal can restore the graduation plan; otherwise add this estimate again.',
+              }}
+            />
+          )}
+          confirmLabel="Remove cost"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            const kept = lines.filter((line) => line.id !== removing.id);
+            if (!onChange(kept)) {
+              setNotice(`“${removing.label}” could not be removed from this device. Retry or cancel.`);
+              return;
+            }
+            const next = totals(kept);
+            setNotice(
+              `“${removing.label}” removed from this device. Your estimated ${removing.per === 'term' ? 'fall or spring' : 'summer'} total is now ${money(removing.per === 'term' ? next.perTerm : next.summer)}.`,
+            );
+            setRemoving(null);
+          }}
+        />
       ) : null}
     </section>
   );

@@ -145,6 +145,9 @@ declare
   ana uuid; ben uuid; cal uuid; dual uuid;
   next_prof uuid; untermed uuid; dan uuid; eve uuid;
   ps1 uuid; mid uuid; req uuid; req2 uuid; sp1 uuid; n bigint;
+  -- The longest key the ledger's contract accepts (8 to 200); the outbox's
+  -- correlation id stops at 128, and a release must not fall between them.
+  longkey text := rpad('release-ps1-key-', 200, 'k');
   scheme constant text := $q$select public.gradebook_set_scheme('econ 1020', '2026FA',
       '[{"key":"problem-sets","name":"Problem sets","weight":40,"drop_lowest":1},
         {"key":"exams","name":"Exams","weight":60}]'::jsonb,
@@ -277,10 +280,26 @@ begin
   -- ── Release ─────────────────────────────────────────────────────────────
   perform pg_temp.refused('the TA releasing', ta, format($q$select public.gradebook_release(%L, 'ta-release-key')$q$, ps1));
   perform pg_temp.refused('the chair releasing', chair, format($q$select public.gradebook_release(%L, 'chair-release-key')$q$, ps1));
-  perform pg_temp.said('the instructor releases: Ana''s moderated grade goes, Ben''s draft is held',
-    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
+  perform pg_temp.counted('a refused release writes no outbox event',
+    (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 0);
+  perform pg_temp.said('the instructor releases with a 200-character key: Ana''s moderated grade goes, Ben''s draft is held',
+    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, %L)::text$q$, ps1, longkey)), '{"held": 1, "released": 1}');
   perform pg_temp.said('and again with the key is the same answer, writing nothing',
-    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, 'release-ps1-key')::text$q$, ps1)), '{"held": 1, "released": 1}');
+    pg_temp.ask(prof, format($q$select public.gradebook_release(%L, %L)::text$q$, ps1, longkey)), '{"held": 1, "released": 1}');
+  -- Publication and its outbox event are one transaction (20261012010000):
+  -- the release that went through wrote exactly one event, keyed like the
+  -- release, and the replay above added none. The key is the contract's
+  -- longest, so the event's correlation id (8 to 128) had to be derived from
+  -- it rather than copied; the whole key rides as the idempotency key.
+  perform pg_temp.counted('the release wrote one outbox event, and the replay none',
+    (select count(*) from private.domain_outbox_events e where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'), 1);
+  perform pg_temp.counted('the event carries the counts, the item and the whole key under a short correlation id, and names no student',
+    (select count(*) from private.domain_outbox_events e
+      where e.aggregate_id = ps1::text and e.event_type = 'gradebook.grades_released'
+        and e.tenant_id = 'gb-u' and e.idempotency_key = longkey
+        and e.correlation_id ~ '^[A-Za-z0-9._:-]{8,128}$'
+        and e.payload->>'released' = '1' and e.payload->>'held' = '1'
+        and e.payload::text not like '%' || ana::text || '%'), 1);
   perform pg_temp.counted('Ana now sees exactly one row, released',
     pg_temp.seen(ana, $q$select * from public.grade_entries where status = 'released' and score = 9$q$), 1);
   perform pg_temp.counted('and nothing else, of hers or anybody''s', pg_temp.seen(ana, 'select * from public.grade_entries'), 1);
@@ -524,6 +543,27 @@ begin
     'Problem set 1=10.000');
   perform pg_temp.counted('Dan sees his released 81 and nothing of 2026FA',
     pg_temp.seen(dan, 'select * from public.grade_entries'), 1);
+
+  -- Revocation reaches the export (capability F02, the export surface). The
+  -- registrar's export of both terms just worked, which is the control; the
+  -- grant is then revoked, and the same call is refused for want of the grant,
+  -- not for any other reason. An instructor's grant that has expired is the
+  -- same: the export, and a grade entry, both refused. Nothing else about the
+  -- grade book changes — Dan still reads his released grade.
+  update public.role_grants set revoked_at = now() where subject = registrar and role = 'registrar';
+  perform pg_temp.denied('a registrar whose grant was revoked exporting 2026FA', registrar,
+    $q$select * from public.gradebook_export('ECON 1020', '2026FA')$q$);
+  perform pg_temp.denied('and 2027SP', registrar,
+    $q$select * from public.gradebook_export('ECON 1020', '2027SP')$q$);
+  perform pg_temp.counted('and reading no released row either',
+    pg_temp.seen(registrar, $q$select * from public.grade_entries where status = 'released'$q$), 0);
+  update public.role_grants set expires_at = now() - interval '1 minute'
+    where subject = next_prof and scope_id = 'gb-u/ECON 1020/2027SP';
+  perform pg_temp.denied('2027SP''s instructor exporting after the grant expired', next_prof,
+    $q$select * from public.gradebook_export('ECON 1020', '2027SP')$q$);
+  perform pg_temp.denied('or entering a grade', next_prof,
+    format($q$select public.gradebook_enter(%L, %L, 60, null, '', '', 'expired-dan-sp1-key')$q$, sp1, dan));
+  perform pg_temp.counted('Dan still sees his released 81', pg_temp.seen(dan, 'select * from public.grade_entries'), 1);
 end $$;
 
 rollback;

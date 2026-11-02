@@ -127,7 +127,7 @@ export function Study({
   const [studio, setStudio] = useState(false);
   const [toolkit, setToolkit] = useState(false);
   // What instructors published for these courses, when Course Studio is on (`lib/courserules.ts`); {} otherwise.
-  const published = useCoursePublications(catalog.courses.map((c) => c.code), state.term, !!account);
+  const published = useCoursePublications(catalog.courses.map((c) => c.code), state.term, account?.id ?? '');
   const [studioCourse, setStudioCourse] = useState(state.guideId);
   const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);

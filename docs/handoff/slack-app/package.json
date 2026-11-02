@@ -1,0 +1,9 @@
+{
+  "name": "semester-slack-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node app.js" },
+  "dependencies": { "@slack/bolt": "^4.1.0" },
+  "engines": { "node": ">=20" }
+}

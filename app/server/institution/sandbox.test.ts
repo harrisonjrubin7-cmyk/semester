@@ -1985,6 +1985,7 @@ describe('it is unmistakably a sandbox', () => {
  */
 describe('the vertical, through the gateway', () => {
   const journalKey = Buffer.alloc(32, 9);
+  let gatewayRequestNumber = 0;
 
   function wire(roles: UniversityRole[]) {
     const journal = new ActionJournal(join(dir, `journal-${roles.join('-')}.sqlite`), journalKey);
@@ -1998,6 +1999,7 @@ describe('the vertical, through the gateway', () => {
       }),
       adapters: four,
       journal,
+      idempotency: journal,
     });
     const call = (path: string, body?: unknown) =>
       gateway(
@@ -2007,6 +2009,7 @@ describe('the vertical, through the gateway', () => {
             origin: 'http://localhost:5173',
             authorization: 'Bearer sandbox',
             'content-type': 'application/json',
+            'idempotency-key': `sandbox-request-${String(++gatewayRequestNumber).padStart(4, '0')}`,
           },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         }),

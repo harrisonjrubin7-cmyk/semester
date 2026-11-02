@@ -45,7 +45,7 @@ beforeEach(() => {
     cart: ['econ'],
     plans: [
       { id: 'spring', name: 'Spring option', courses: [econ, math] },
-      { id: 'backup', name: 'Backup option', courses: [math] },
+      { id: 'backup', name: 'Spring option', courses: [math] },
     ],
   }));
   host = document.createElement('div');
@@ -68,17 +68,24 @@ const button = (name: RegExp, within: ParentNode = host) => {
 const plans = () => JSON.parse(localStorage.getItem(REG_KEY)!).plans as Array<{ id: string }>;
 
 describe('saved potential schedule deletion', () => {
-  it('previews the exact device-only consequence before deleting one schedule', async () => {
+  it('distinguishes repeated schedule names and previews the exact device-only consequence', async () => {
     await act(async () => {
       root.render(<StoreProvider><RegistrationPortal demandForecasting={false} /></StoreProvider>);
     });
     await act(async () => button(/^Potential schedules \(2\)$/).click());
-    await act(async () => button(/Delete potential schedule Spring option/).click());
+
+    const removals = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label^="Delete potential schedule"]')];
+    expect(removals.map((control) => control.getAttribute('aria-label'))).toEqual([
+      'Delete potential schedule 1 of 2, Spring option: 2 sections · 6 credits · 1 time conflict',
+      'Delete potential schedule 2 of 2, Spring option: 1 section · 3 credits · 0 time conflicts',
+    ]);
+    await act(async () => removals[1].click());
 
     const dialog = host.querySelector('[role="dialog"]')!;
     expect(dialog.querySelector('.action-preview')).toBeTruthy();
     expect(dialog.textContent).toContain('Spring option');
-    expect(dialog.textContent).toContain('ECON 1010 section 01 (Spring 2027), MATH 1300 section 01 (Spring 2027)');
+    expect(dialog.textContent).toContain('MATH 1300 section 01 (Spring 2027)');
+    expect(dialog.textContent).not.toContain('ECON 1010 section 01 (Spring 2027)');
     expect(dialog.textContent).toContain('Your current cart, imported catalog, other potential schedules and official registration stay unchanged.');
     expect(dialog.textContent).toContain('Restore only from a device workspace backup created before deletion.');
     expect(document.activeElement?.textContent).toBe('Cancel');
@@ -87,9 +94,9 @@ describe('saved potential schedule deletion', () => {
     await act(async () => button(/^Cancel$/, dialog).click());
     expect(plans().map((plan) => plan.id)).toEqual(['spring', 'backup']);
 
-    await act(async () => button(/Delete potential schedule Spring option/).click());
+    await act(async () => removals[1].click());
     await act(async () => button(/^Delete schedule$/, host.querySelector('[role="dialog"]')!).click());
-    expect(plans().map((plan) => plan.id)).toEqual(['backup']);
+    expect(plans().map((plan) => plan.id)).toEqual(['spring']);
     expect(host.textContent).toContain('Potential schedule deleted from this device. No registration was changed.');
   });
 });

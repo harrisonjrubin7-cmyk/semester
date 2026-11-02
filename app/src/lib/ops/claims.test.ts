@@ -106,9 +106,9 @@ describe('the checks', () => {
   });
 
   it('catch a word above what the register supports', () => {
-    // IAM-005 (MFA) is designed: below the floor for every word but planned.
-    expect(problems([{ ...sound, rows: ['IAM-005'] }], fixtureFacts)).toEqual(['fixture claims available, but IAM-005 is designed (needs tested).']);
-    expect(problems([{ ...sound, status: 'planned', rows: ['IAM-005'] }], { ...fixtureFacts, page: () => `<li data-claim="fixture"><span class="site-badge site-status site-status-planned">Planned</span> A fixture</li>` })).toEqual([]);
+    // IAM-003 (institution SSO) is building: below the floor for an available claim.
+    expect(problems([{ ...sound, rows: ['IAM-003'] }], fixtureFacts)).toEqual(['fixture claims available, but IAM-003 is building (needs tested).']);
+    expect(problems([{ ...sound, status: 'planned', rows: ['IAM-003'] }], { ...fixtureFacts, page: () => `<li data-claim="fixture"><span class="site-badge site-status site-status-planned">Planned</span> A fixture</li>` })).toEqual([]);
   });
 
   it('catch a row, a path, a proof or a page that does not exist', () => {
@@ -129,7 +129,7 @@ describe('the checks', () => {
     expect(problems([sound], facts)).toEqual(['fixture is available and rests on stale-record, which has expired.']);
     // The control: a claim that is not available may rest on it; the register says so in its own words.
     const planned = `<li data-claim="fixture"><span class="site-badge site-status site-status-planned">Planned</span> A fixture</li>`;
-    expect(problems([{ ...sound, status: 'planned', rows: ['IAM-005'] }], { ...facts, page: () => planned })).toEqual([]);
+    expect(problems([{ ...sound, status: 'planned', rows: ['IAM-003'] }], { ...facts, page: () => planned })).toEqual([]);
     // And a caller with no register is not told anything expired.
     expect(problems([sound], fixtureFacts)).toEqual([]);
   });

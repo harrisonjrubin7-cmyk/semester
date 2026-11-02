@@ -1,0 +1,17 @@
+-- PROPOSED correction to 100_controlled_actions.sql.txt · REFERENCE, not applied, not tested.
+-- Issue 1: api.execute_action sets status='executed' when it inserts the outbox row, before any worker confirms the effect.
+--          That is "accepted for execution", not confirmed execution.
+-- Issue 2: idempotency_key is globally unique and the lookup ignores caller, capability and request body.
+--          The same key with a different body silently returns the old request.
+alter table ctl.action_requests drop constraint if exists action_requests_status_check;
+alter table ctl.action_requests add constraint action_requests_status_check
+  check (status in ('pending','approved','rejected','accepted','executing','outcome_unknown','confirmed','failed','rolled_back','expired'));
+alter table ctl.action_requests add column if not exists request_hash text;            -- sha256 of canonical (capability, tenant, payload)
+alter table ctl.action_requests add column if not exists authoritative_receipt jsonb;  -- written only by the domain worker
+alter table ctl.action_requests add column if not exists confirmed_at timestamptz;
+alter table ctl.action_requests drop constraint if exists action_requests_idempotency_key_key;
+create unique index if not exists action_requests_idem_scoped on ctl.action_requests (requested_by, capability, idempotency_key);
+-- request_action: same (caller, capability, key) + same hash → return existing; different hash → raise 'IDEMPOTENCY_CONFLICT'.
+-- execute_action: approved → 'accepted' (+ audit + outbox). Never 'confirmed' here.
+-- worker: 'accepted' → 'executing' → 'confirmed' (with authoritative_receipt) | 'failed' (reason, retryable) | 'outcome_unknown' (→ reconciliation).
+-- A late success after revocation is recorded and routed to compensation; it does not resurrect authority.

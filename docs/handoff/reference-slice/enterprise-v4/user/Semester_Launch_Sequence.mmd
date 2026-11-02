@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant browser as Browser
+    participant lms as LMS
+    participant tool as Semester
+    participant store as Store
+    participant ags as AGS
+    lms->>tool: OIDC login initiation
+    tool->>store: Store browser-bound state and nonce hashes
+    tool->>lms: Authorize openid id_token form_post
+    lms-->>tool: Callback id_token and state
+    tool->>tool: Verify RS256 and message-specific claims
+    tool->>store: Atomically consume launch transaction
+    tool->>lms: Signed client assertion token request
+    lms-->>tool: Granted service token
+    tool->>ags: Discover or create bound line item
+    tool->>ags: POST exact approved score event
+    tool->>ags: GET results and compare normalized score

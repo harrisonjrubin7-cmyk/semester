@@ -133,6 +133,9 @@ describe('every database the app opens is one the sweep clears', () => {
     }
     // `state/persist/db.ts` is the one that does not go through `lib/idb.ts`.
     opened.add('semester-store');
+    // The multi-store offline attachment adapter uses raw IndexedDB so its
+    // generation metadata and ciphertext can share one versioned database.
+    opened.add('semester-offline-attachments');
     expect([...opened].sort()).toEqual([...DATABASES].sort());
   });
 
@@ -149,6 +152,7 @@ describe('every database the app opens is one the sweep clears', () => {
     const share = await import('./shared');
     const outbox = await import('./sync/outbox');
     const engine = await import('./sync/engine/persistent');
+    const offlineAttachments = await import('./sync/engine/attachments-idb');
     const hist = await import('./history/history');
     const db = await import('../state/persist/db');
     const persist = await import('../state/persist');
@@ -158,24 +162,32 @@ describe('every database the app opens is one the sweep clears', () => {
     vi.spyOn(persist, 'stopWriting').mockImplementation(() => undefined);
     vi.spyOn(db, 'wipe').mockImplementation(async () => {
       calls.push('semester-store');
+      return true;
     });
     vi.spyOn(files, 'clearFiles').mockImplementation(async () => {
       calls.push('semester-files');
     });
     vi.spyOn(snaps, 'clearSnapshots').mockImplementation(async () => {
       calls.push('semester-snapshots');
+      return true;
     });
     vi.spyOn(drafts, 'clearVersions').mockImplementation(async () => {
       calls.push('semester-drafts');
     });
     vi.spyOn(outbox, 'clearOutbox').mockImplementation(async () => {
       calls.push('semester-outbox');
+      return true;
     });
     vi.spyOn(vault, 'eraseVaults').mockImplementation(async () => {
       calls.push('semester-vault');
+      return true;
     });
     vi.spyOn(engine, 'clearEngineStore').mockImplementation(async () => {
       calls.push('semester-engine');
+      return true;
+    });
+    vi.spyOn(offlineAttachments, 'clearOfflineAttachmentPersistence').mockImplementation(async () => {
+      calls.push('semester-offline-attachments');
     });
     vi.spyOn(hist, 'clearHistory').mockImplementation(async () => {
       calls.push('semester-history');
@@ -183,6 +195,7 @@ describe('every database the app opens is one the sweep clears', () => {
     });
     vi.spyOn(share, 'clearShared').mockImplementation(async () => {
       calls.push('semester-shared');
+      return true;
     });
 
     const { eraseDevice } = await import('./erase');
@@ -192,5 +205,50 @@ describe('every database the app opens is one the sweep clears', () => {
     // Not a database, and swept for the same reason: a share that arrived and
     // was never collected is a file somebody else handed this device.
     expect(calls).toContain('semester-shared');
+  });
+
+  it('reports a refused store after still attempting every other store', async () => {
+    const drafts = await import('./docversions');
+    const files = await import('./files');
+    const snaps = await import('./snapshots');
+    const share = await import('./shared');
+    const outbox = await import('./sync/outbox');
+    const engine = await import('./sync/engine/persistent');
+    const offlineAttachments = await import('./sync/engine/attachments-idb');
+    const hist = await import('./history/history');
+    const db = await import('../state/persist/db');
+    const persist = await import('../state/persist');
+    const vault = await import('./vault/idb');
+
+    const afterFailure: string[] = [];
+    localStorage.setItem('semester.stuck', 'still here');
+    const removeItem = Storage.prototype.removeItem;
+    const refusedKey = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (this: Storage, key) {
+      if (key !== 'semester.stuck') removeItem.call(this, key);
+    });
+    vi.spyOn(persist, 'stopWriting').mockImplementation(() => undefined);
+    vi.spyOn(db, 'wipe').mockResolvedValue(true);
+    vi.spyOn(files, 'clearFiles').mockRejectedValue(new Error('files refused'));
+    vi.spyOn(snaps, 'clearSnapshots').mockImplementation(async () => {
+      afterFailure.push('semester-snapshots');
+      return false;
+    });
+    vi.spyOn(drafts, 'clearVersions').mockResolvedValue(undefined);
+    vi.spyOn(outbox, 'clearOutbox').mockResolvedValue(true);
+    vi.spyOn(vault, 'eraseVaults').mockResolvedValue(true);
+    vi.spyOn(engine, 'clearEngineStore').mockResolvedValue(true);
+    vi.spyOn(offlineAttachments, 'clearOfflineAttachmentPersistence').mockResolvedValue(undefined);
+    vi.spyOn(hist, 'clearHistory').mockResolvedValue(true);
+    vi.spyOn(share, 'clearShared').mockImplementation(async () => {
+      afterFailure.push('semester-shared');
+      return true;
+    });
+
+    const { DeviceEraseIncompleteError, eraseDevice } = await import('./erase');
+    const result = eraseDevice();
+    await expect(result).rejects.toBeInstanceOf(DeviceEraseIncompleteError);
+    await expect(result).rejects.toMatchObject({ failed: ['localStorage', 'semester-files', 'semester-snapshots'] });
+    expect(afterFailure).toEqual(['semester-snapshots', 'semester-shared']);
+    refusedKey.mockRestore();
   });
 });

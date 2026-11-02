@@ -1,6 +1,7 @@
 import { backoffDelay, DEFAULT_BACKOFF, retryAt, type BackoffOptions } from './backoff.ts'
 import { hlcNow, type Hlc } from './hlc.ts'
-import { assertQueueable, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { admittedDataClasses, assertQueueable, classifyPersistence, dataClasses, policyFor, type DataClass, type TenantOfflinePolicy } from './policy.ts'
+import { purgeDisallowedOfflineData, type PolicyPurgeRow, type PolicyPurgeResult } from './storage-policy.ts'
 import { PHASE_TO_STATE, TERMINAL_REASONS, type RejectReason, type SyncState } from './status.ts'
 import type { Change, Command, CommandResult, EntityRow, LocalStore, OutboxRow, PullResponse, SyncTransport } from './types.ts'
 
@@ -19,6 +20,8 @@ export interface EngineDeps {
   onWipe?: (reason: 'revoked' | 'access_expired') => Promise<void>
   /** Rows the caller lost access to: drop cached files that belonged to them. */
   onRevokedRows?: (rows: { dataClass: DataClass; id: string }[]) => Promise<void>
+  /** Policy-purged rows: erase matching attachments, previews and search indexes. */
+  onPolicyPurge?: (rows: readonly PolicyPurgeRow[]) => Promise<void>
   tenantPolicy?: TenantOfflinePolicy
   policyVersion?: () => string
   permissionEpoch?: () => number
@@ -79,12 +82,20 @@ export class SyncEngine {
   /** Crash recovery: a row left `sent` may or may not have arrived. It is ambiguous, not failed. */
   async recover(): Promise<void> {
     const { store } = this.d
+    await this.enforceStoragePolicy()
     await store.transaction(async () => {
       for (const r of await store.outbox.all()) {
         this.seq = Math.max(this.seq, r.seq)
         if (r.phase === 'sent') await store.outbox.put({ ...r, phase: 'pending_reconciliation' })
       }
     })
+  }
+
+  /** Safe at startup and after any tenant-policy change. */
+  async enforceStoragePolicy(): Promise<PolicyPurgeResult> {
+    const result = await purgeDisallowedOfflineData(this.d.store, this.d.tenantPolicy, this.d.onPolicyPurge)
+    await this.d.store.flush?.()
+    return result
   }
 
   // ---- writing ----------------------------------------------------------
@@ -185,6 +196,10 @@ export class SyncEngine {
     if (this.wiped) return { ...report, stopped: 'wiped' }
     const verdict = this.d.access?.() ?? 'ok'
     if (verdict === 'wipe') return this.wipe('access_expired', report)
+    // Cleanup is a storage invariant, not an authenticated-data operation, but
+    // a mandatory cryptographic wipe has precedence over fallible secondary
+    // cleanup hooks.
+    await this.enforceStoragePolicy()
     if (verdict === 'reauth') return { ...report, stopped: 'reauth' }
 
     await this.expireOld()
@@ -338,6 +353,22 @@ export class SyncEngine {
   private async pull(report: SyncReport): Promise<Partial<SyncReport> | null> {
     const { store, transport, identity } = this.d
     const scope = `${identity.tenantId}:${identity.userId}`
+    const admissionKey = `__offline_policy_admission__:${scope}`
+    const admitted = admittedDataClasses(this.d.tenantPolicy)
+    const priorRaw = await store.cursors.get(admissionKey)
+    let prior: string[] = []
+    try {
+      const parsed = priorRaw ? JSON.parse(priorRaw) as unknown : []
+      prior = Array.isArray(parsed) && parsed.every((value) => typeof value === 'string' && dataClasses.includes(value as DataClass)) ? parsed : []
+    } catch { prior = [] }
+    const expanded = admitted.some((dataClass) => !prior.includes(dataClass))
+    const encoded = JSON.stringify(admitted)
+    if (priorRaw !== encoded || expanded) {
+      await store.transaction(async () => {
+        if (expanded && await store.cursors.get(scope)) await store.cursors.set(scope, '')
+        await store.cursors.set(admissionKey, encoded)
+      })
+    }
     // While a snapshot is arriving: every record it names, so what is *not* named can be dropped at the end.
     let named: Set<string> | null = null
     for (let page = 0; page < 1000; page++) {
@@ -365,6 +396,10 @@ export class SyncEngine {
 
   private async applyChange(c: Change): Promise<void> {
     const { store, now } = this.d
+    // The server feed is not an authority to broaden device storage. Unknown,
+    // online-only and non-opted-in classes are consumed but never persisted.
+    const decision = classifyPersistence(c.dataClass, this.d.tenantPolicy)
+    if (!decision.allowed) return
     const e = await store.entities.get(c.dataClass, c.id)
     const mine = (await store.outbox.all()).filter((r) => r.dataClass === c.dataClass && r.entityId === c.id)
     if (e && e.version !== null && e.version >= c.version) {

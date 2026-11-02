@@ -10,6 +10,9 @@ import { StoreProvider } from '../state/store';
 
 const sent: { email: string; title: string; payload: SharePayload; days: number }[] = [];
 const revoked: string[] = [];
+const deleted: string[] = [];
+let deleteFailure: Error | null = null;
+let revokeFailure: Error | null = null;
 let listed: { shares: unknown[]; events: unknown[] } = { shares: [], events: [] };
 vi.mock('../lib/advisor-shares', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/advisor-shares')>();
@@ -21,9 +24,13 @@ vi.mock('../lib/advisor-shares', async (importOriginal) => {
     }),
     myShares: vi.fn(async () => listed),
     revokeShare: vi.fn(async (id: string) => {
+      if (revokeFailure) throw revokeFailure;
       revoked.push(id);
     }),
-    deleteShare: vi.fn(async () => {}),
+    deleteShare: vi.fn(async (id: string) => {
+      if (deleteFailure) throw deleteFailure;
+      deleted.push(id);
+    }),
     sharedWithMe: vi.fn(async () => [
       { id: 'in-1', title: 'Spring planning', shared_as: 'Riley', created_at: '2026-09-20T00:00:00Z', expires_at: '2026-10-20T00:00:00Z' },
     ]),
@@ -58,6 +65,9 @@ beforeEach(() => {
   window.location.hash = '';
   window.matchMedia = (() => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} })) as unknown as typeof window.matchMedia;
   localStorage.clear();
+  deleted.length = 0;
+  deleteFailure = null;
+  revokeFailure = null;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, seenOnboarding: true, sample: false, courses: [] }));
   localStorage.setItem(
     'semester.registration.v1',
@@ -184,6 +194,54 @@ describe('the Degree tab', () => {
 });
 
 describe('preparing and exporting', () => {
+  it('distinguishes repeated preparation lines and removes only the represented follow-up', async () => {
+    localStorage.setItem(
+      meetingKey(null),
+      JSON.stringify({
+        version: 1,
+        meetings: [{
+          id: 'meeting-1',
+          title: 'Planning check-in',
+          date: '2027-02-10',
+          agenda: [
+            { id: 'agenda-1', text: 'Course plan' },
+            { id: 'agenda-2', text: 'Course plan' },
+          ],
+          questions: [
+            { id: 'question-1', text: 'Can this count?', answer: 'Yes, as an elective.' },
+            { id: 'question-2', text: 'Can this count?', answer: '' },
+          ],
+          attach: { scenario: null, courses: [], followUps: false },
+          followUps: [
+            { id: 'follow-up-1', text: 'Email the department', done: false, due: '2027-02-12' },
+            { id: 'follow-up-2', text: 'Email the department', done: true, due: null },
+          ],
+          notes: '',
+          created: 1,
+        }],
+      }),
+    );
+
+    await mount(null);
+
+    expect(host.querySelector('button[aria-label="Remove agenda item 1 of 2, Course plan"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove agenda item 2 of 2, Course plan"]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove question 1 of 2, Can this count? · answer: Yes, as an elective."]')).toBeTruthy();
+    expect(host.querySelector('button[aria-label="Remove question 2 of 2, Can this count? · no answer recorded"]')).toBeTruthy();
+
+    const secondFollowUp = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Remove follow-up 2 of 2, Email the department · done · no due date"]',
+    )!;
+    expect(secondFollowUp).toBeTruthy();
+    await act(async () => secondFollowUp.click());
+
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings[0].followUps).toEqual([
+      { id: 'follow-up-1', text: 'Email the department', done: false, due: '2027-02-12' },
+    ]);
+    expect(host.querySelector('button[aria-label="Remove follow-up 1 of 1, Email the department · not done · due 2027-02-12"]')).toBeTruthy();
+  });
+
   it('keeps the meeting on the device, and exports only after a preview that leaves out private notes', async () => {
     const created = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
@@ -226,6 +284,24 @@ describe('preparing and exporting', () => {
     expect(() => button(/^Preview and share…$/)).toThrow();
     expect(text()).toContain('Sign in to share with an advisor.');
   });
+
+  it('previews the exact local meeting deletion and its partial backup boundary', async () => {
+    await mount(null);
+    await prepare();
+    await act(async () => button(/^Remove this meeting…$/).click());
+
+    const preview = text(dialog());
+    expect(preview).toContain('What happens');
+    expect(preview).toContain('agenda, questions, follow-ups and private notes');
+    expect(preview).toContain('What stays the same');
+    expect(preview).toContain('Shares already made stay available until you revoke or delete them');
+    expect(preview).toContain('Taking it back');
+    expect(preview).toContain('This can’t be undone.');
+    expect(preview).toContain('A device workspace backup can restore the meeting without its private notes');
+
+    await act(async () => button(/^Cancel$/).click());
+    expect(JSON.parse(localStorage.getItem(meetingKey(null))!).meetings).toHaveLength(1);
+  });
 });
 
 describe('sharing with an advisor', () => {
@@ -264,7 +340,7 @@ describe('sharing with an advisor', () => {
     expect(sent[0].payload.followUps).toEqual(['Email the department']);
   });
 
-  it('lists shares by state and reads, and revokes only after confirming', async () => {
+  it('lists shares by state and reads, and keeps a refused revocation available to retry', async () => {
     listed = {
       shares: [
       // 07:00 UTC is the same calendar day from UTC-5 to UTC+14, the range
@@ -286,10 +362,53 @@ describe('sharing with an advisor', () => {
     expect(text(rows[1])).toContain('Expired Aug 8, 2026.');
     expect(rows[1].textContent).not.toContain('Revoke');
     await act(async () => button(/^Revoke…$/, rows[0]).click());
-    expect(text(dialog())).toContain('stops opening for your advisor now');
+    expect(text(dialog())).toContain('Your advisor loses access to this shared meeting immediately.');
+    expect(text(dialog())).toContain('The share and its access log stay in your account');
+    expect(text(dialog())).toContain('This can’t be undone. You can make a new share later.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
     expect(revoked).toEqual([]);
+    revokeFailure = new Error('The share was not revoked. Refresh your shares, then try again.');
+    await act(async () => button(/^Revoke$/).click());
+    expect(revoked).toEqual([]);
+    expect(text(dialog())).toContain('The share was not revoked. Refresh your shares, then try again.');
+
+    revokeFailure = null;
     await act(async () => button(/^Revoke$/).click());
     expect(revoked).toEqual(['s-live']);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('previews account-share deletion and keeps the choice open when the server refuses it', async () => {
+    listed = {
+      shares: [
+        { id: 's-live', title: 'Spring planning', created_at: '2026-09-20T07:00:00Z', expires_at: '2099-01-01T07:00:00Z', revoked_at: null },
+      ],
+      events: [{ share_id: 's-live', read_at: '2026-09-22T07:00:00Z' }],
+    };
+    await mount('u1');
+    await act(async () => button(/^Prepare a meeting$/).click());
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    await act(async () => button(/^Delete…$/).click());
+    expect(text(dialog())).toContain('Deletes this advisor share and its access log from your account.');
+    expect(text(dialog())).toContain('Your meeting preparation on this device');
+    expect(text(dialog())).toContain('This can’t be undone.');
+    expect(document.activeElement?.textContent).toBe('Cancel');
+    expect(deleted).toEqual([]);
+
+    await act(async () => button(/^Cancel$/).click());
+    expect(deleted).toEqual([]);
+    await act(async () => button(/^Delete…$/).click());
+    deleteFailure = new Error('The share was not deleted. Try again.');
+    await act(async () => button(/^Delete$/).click());
+    expect(deleted).toEqual([]);
+    expect(text(dialog())).toContain('The share was not deleted. Try again.');
+
+    deleteFailure = null;
+    await act(async () => button(/^Delete$/).click());
+    expect(deleted).toEqual(['s-live']);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(text()).toContain('“Spring planning” and its access log are deleted.');
   });
 });
 

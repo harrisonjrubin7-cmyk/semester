@@ -31,6 +31,7 @@
      */
     "paths": {
       "@semester/contract": ["../packages/contract/src/index.ts"],
+      "@semester/domain-core": ["../packages/domain-core/src/index.ts"],
       /*
        * The gateway contract, on the same terms and for the same reason.
        *
@@ -57,5 +58,5 @@
       "@semester/platform-control": ["../packages/platform-control/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src", "../packages/platform-control/src"]
+  "include": ["src", "../packages/contract/src", "../packages/domain-core/src","../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src", "../packages/platform-control/src"]
 }

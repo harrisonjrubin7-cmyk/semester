@@ -65,13 +65,17 @@ export async function saveWorkspace(
   return readCloudWorkspace(result.data);
 }
 export async function deleteWorkspace(userId: string): Promise<void> {
-  const { error } = await (
+  const { data, error } = await (
     await cloud()
   )
     .from('productivity_workspace')
     .delete()
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .select('user_id');
   if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error('This cloud workspace could not be deleted. Reload it and try again.');
+  }
 }
 export async function productivityAggregate(tenantId: string): Promise<{
   state: string;

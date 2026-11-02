@@ -24,7 +24,7 @@ begin;
 create or replace function pg_temp.become(who uuid)
 returns void language plpgsql as $$
 begin
-  perform set_config('request.jwt.claims', jsonb_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', who::text, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   execute 'set local role authenticated';
 end $$;
 

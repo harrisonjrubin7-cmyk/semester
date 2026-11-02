@@ -284,7 +284,7 @@ do $$
 declare
   nonce constant text := 'n-0123456789abcdef0123456789abcdef';
   hash  text := encode(sha256(convert_to('n-0123456789abcdef0123456789abcdef', 'utf8')), 'hex');
-  hid uuid; got jsonb; n bigint; span interval;
+  hid uuid; got jsonb; n bigint; span interval; i integer;
 begin
   -- The service role creates it.
   set local role service_role;
@@ -357,6 +357,63 @@ begin
     and not exists (select 1 from public.handoff_transactions where status = 'created' and expires_at <= now()));
 end $$;
 
+-- ── Five guesses, and the revoker (N28) ──────────────────────────────────
+
+do $$
+declare
+  nonce constant text := 'n-0123456789abcdef0123456789abcdef';
+  hash  text := encode(sha256(convert_to('n-0123456789abcdef0123456789abcdef', 'utf8')), 'hex');
+  hid uuid; i integer;
+begin
+  -- A guesser who holds the id gets five wrong nonces, then the hand-off is revoked,
+  -- and even the right nonce is refused (N28).
+  set local role service_role;
+  hid := public.create_handoff('home', hash);
+  reset role;
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  for i in 1..6 loop
+    perform public.consume_handoff(hid, 'x');
+    perform public.consume_handoff(gen_random_uuid(), nonce);
+  end loop;
+  reset role;
+  perform pg_temp.ok('a nonce too short to be real counts against nothing',
+    (select attempts from public.handoff_transactions where id = hid) = 0);
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  for i in 1..4 loop
+    perform public.consume_handoff(hid, 'n-ffffffffffffffffffffffffffffff' || i);
+  end loop;
+  reset role;
+  perform pg_temp.ok('four wrong nonces leave the hand-off usable',
+    (select status from public.handoff_transactions where id = hid) = 'created');
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  perform public.consume_handoff(hid, 'n-ffffffffffffffffffffffffffffff5');
+  reset role;
+  perform pg_temp.ok('the fifth wrong nonce revokes it',
+    (select status from public.handoff_transactions where id = hid) = 'revoked');
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  perform pg_temp.ok('and the right nonce is then refused', public.consume_handoff(hid, nonce) is null);
+  reset role;
+
+  -- The revoker: the service role cancels a hand-off that has not been used.
+  set local role service_role;
+  hid := public.create_handoff('home', hash);
+  perform pg_temp.ok('the service role revokes a live hand-off', public.revoke_handoff(hid));
+  perform pg_temp.ok('revoking it again says there was nothing to revoke', not public.revoke_handoff(hid));
+  reset role;
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  perform pg_temp.ok('a revoked hand-off answers null to the right nonce', public.consume_handoff(hid, nonce) is null);
+  reset role;
+  set local role service_role;
+  hid := public.create_handoff('home', hash);
+  reset role;
+  perform pg_temp.become((select v from fx where k = 'b')::uuid);
+  perform public.consume_handoff(hid, nonce);
+  reset role;
+  set local role service_role;
+  perform pg_temp.ok('a used hand-off cannot be revoked', not public.revoke_handoff(hid));
+  reset role;
+end $$;
+
 -- ── The hand-off table is out of every client's reach ─────────────────────
 
 do $$
@@ -387,7 +444,8 @@ declare
     'public.consume_handoff(uuid, text)'];
   server_fns constant text[] := array[
     'public.create_handoff(text, text, jsonb, integer)',
-    'public.sweep_handoffs()'];
+    'public.sweep_handoffs()',
+    'public.revoke_handoff(uuid)'];
 begin
   foreach f in array client_fns loop
     if has_function_privilege('anon', f, 'execute') then raise exception 'FAILED: a visitor can call %', f; end if;
@@ -402,7 +460,7 @@ begin
      or has_function_privilege('authenticated', 'private.entry_context(jsonb)', 'execute') then
     raise exception 'FAILED: a client can call private.entry_context';
   end if;
-  raise notice 'ok  the four client functions are for signed-in accounts, the two server ones for the service role only';
+  raise notice 'ok  the four client functions are for signed-in accounts, the three server ones for the service role only';
 end $$;
 
 -- ── Leaving takes the rows with it ───────────────────────────────────────

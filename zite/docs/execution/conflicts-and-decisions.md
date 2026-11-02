@@ -1,0 +1,21 @@
+# Conflicts and decisions
+
+Each entry: the conflict, where it comes from, what the build does now, who decides, and whether it is resolved.
+
+| # | Conflict | Sources | What the build does now | Decision owner | State |
+|---|---|---|---|---|---|
+| C1 | AI access to student records: "never" vs "institution-controlled per data type" | Book 1 hosting fact and checklist #22; Book 2 prototype notes; context brief 1.8 | No student-record egress. Only public catalog text reaches OpenAI (`aiGate.sendableToAI`, unit-tested). | Founder + institution | **Default applied**. Widening needs a reconciled policy. |
+| C2 | Accessibility target: WCAG 2.1 AA (VPAT item) vs 2.2 AA (personas, brief) | Book 1 checklist #34; GTM personas; brief 1.7 | Site states 2.2 AA as a target, not conformance. | Founder + accessibility reviewer | Open |
+| C3 | Role count: 49 + 3 actors vs 51 | Book 2 catalog vs role pages | No dependency yet. | Founder | Open |
+| C4 | Screen count: 589 vs 673 (84 gap screens) | Book 2 catalog vs screens list | Pilot priority list (107 screens) used instead. | Founder | Open |
+| C5 | Hosting: Vercel + Supabase (books) vs Zite (this build) | Book 1 facts; this workspace | Built on Zite; capability gaps listed in `zite-capability-assessment.md`. | Founder | **Open: blocks production** |
+| C6 | Deploy now vs no production deploy without explicit approval | Founder request 22 Oct ("deploy verified release") vs blueprint Safety and context brief 1.9 | Committed and built; **not published**. Asking the founder. | Founder | **Pending** |
+| C7 | Source-label vocabulary: app uses Official, Connected, Made Here, Yours, Sample, AI Assisted; brief lists Official, Connected, Yours, AI-assisted, Estimated, Needs review, Sample | App tables; brief 1.7 | Existing labels kept. Registrar decisions recorded as Made Here (not Official) until the SIS is connected. | Founder (design) | Open |
+| C8 | Planning prices ($18/student/yr, $30k floor, Student Premium $8.99/mo) vs "publish no price without approval" | Book 1 GTM plan and finance model; brief 1.6 | Not published. Site says "Price on request". | Founder | Resolved for the site |
+| C9 | Pilot customer naming ("Vanderbilt is pilot #1", "paid pilot signed") vs claims rule | Book 1 facts; brief 1.6, 1.9 | No customer named, no pilot claimed. | Founder + customer permission | Resolved for the site |
+| C10 | Two database plans: Zite tables vs proposed Postgres schemas (context/02, 06) | Context docs | Existing Zite tables extended (Regrade Requests, Inbound Requests, Source Register); no parallel model. | Founder | Open (tied to C5) |
+| C11 | Sign-up is open on the Semester app vs "never let someone obtain a staff role by choosing it" | App auth config; brief 1.3 | Staff roles need an admin-approved request. Open sign-up only creates a personal workspace or a pending join. | Founder | Acceptable for synthetic data; review before real data |
+| C12 | Registration: "enroll" vs "request" | Book 2 workflow name; blueprint Prompt 4 | Student submits a request (status Requested). Registrar decisions are recorded in Semester with the SIS authoritative. | Registrar (institution) | Resolved for pilot |
+
+## Decision register: inputs needed (blueprint §10)
+Repository authority (Zite vs GitHub `semester` repo) · first launch cohort · institution-authorized data fields · authoritative system per record type · approved roles and delegation policy · approved AI use cases and providers · production platform and environments · support commitments · retention and deletion obligations · approved commercial plans · named security, legal, accounting and accessibility reviewers · budget and capacity.
