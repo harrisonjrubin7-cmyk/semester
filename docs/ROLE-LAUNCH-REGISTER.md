@@ -146,7 +146,7 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `account_executive` | provisionable | ✓ ✓ ✓ · ✓ · · | `account:manage`<br>`success:manage` | — | `gtm.check.sql`<br>`trust-room.check.sql` | — | `docs/gtm/EXECUTION-PLAN.md` | Manage a prospect account and send its procurement room | Any student data |
-| `trust_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `trust:publish`<br>`console:operate`<br>`access_review:manage` | — | `console-control-plane.check.sql`<br>`console-security-reads.check.sql`<br>`privileged-access-review.check.sql`<br>`trust-room.check.sql` | `docs/trust/README.md` | — | Publish documents to the trust room | Any student data |
+| `trust_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `trust:publish`<br>`console:operate`<br>`access_review:manage`<br>`ai:remedy-review` | — | `ai-answer-remedy.check.sql`<br>`console-control-plane.check.sql`<br>`console-security-reads.check.sql`<br>`privileged-access-review.check.sql`<br>`trust-room.check.sql` | `docs/trust/README.md` | — | Publish trust-room documents and review school-scoped AI answer remedy requests | Unrelated student records, cross-school reports, retaliation or an automated adverse decision |
 | `marketing_admin` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:manage`<br>`campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Manage and report on campaigns | Any student data; sending a campaign nobody reviewed |
 | `marketing_analyst` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Read campaign reports | Editing or sending campaigns; any student data |
 | `campaign_reviewer` | secure | ✓ ✓ ✓ ✓ ✓ · · | `campaign:review` | `app/src/components/institutional/CampaignManager.tsx` | `gtm.check.sql` | — | — | Review a campaign before it is sent | Authoring the campaign they review |
@@ -165,7 +165,7 @@ own records. A grant outside either list fails the build until somebody judges i
 
 | Internal roles may hold | Internal roles never hold |
 | --- | --- |
-| `access_review:manage`<br>`console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read`<br>`registration:administer` |
+| `access_review:manage`<br>`ai:remedy-review`<br>`console:operate`<br>`approval:decide`<br>`breakglass:request`<br>`beta:manage`<br>`beta:triage`<br>`platform:configure`<br>`support:ticket`<br>`incident:communicate`<br>`killswitch:engage`<br>`moderation:action`<br>`report:read`<br>`review:moderate`<br>`opportunity:moderate`<br>`community:review`<br>`community:review_senior`<br>`community:escalation_agreements`<br>`community:manage`<br>`account:manage`<br>`success:manage`<br>`billing:operate`<br>`compliance:manage`<br>`content:manage`<br>`campaign:manage`<br>`campaign:report`<br>`campaign:review`<br>`trust:publish` | `mentee:read`<br>`help_request:respond`<br>`accommodation:verify`<br>`skill:verify`<br>`support:read`<br>`data_request:handle`<br>`talent:search`<br>`lti:launch`<br>`audit:read`<br>`outcomes:read`<br>`demand:read`<br>`registration:administer` |
 
 ## Role × capability
 
@@ -371,6 +371,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `trust_officer` | `trust:publish` | — | — |
 | `trust_officer` | `console:operate` | — | `capabilities.check.sql`<br>`console-control-plane.check.sql`<br>`projection-foundation.check.sql` |
 | `trust_officer` | `access_review:manage` | — | `capabilities.check.sql`<br>`privileged-access-review.check.sql` |
+| `trust_officer` | `ai:remedy-review` | — | — |
 | `marketing_admin` | `campaign:manage` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_admin` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |
 | `marketing_analyst` | `campaign:report` | `app/src/components/institutional/CampaignManager.tsx` | — |

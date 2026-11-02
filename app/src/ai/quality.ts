@@ -1,6 +1,6 @@
-import type { Kind } from '../lib/feedback';
 import type { Read } from '../lib/mode';
 import type { HelpState } from './converse';
+import type { AiRemedyCategory } from '../lib/ai-remedy';
 
 /**
  * How to read an answer: source strength, policy state, and what it can and
@@ -19,18 +19,16 @@ import type { HelpState } from './converse';
  *   Confidence        what it can support, what it cannot determine, what
  *                     needs a person or an official record
  *
- * And the six reasons a reply can be marked: helpful, not helpful, incorrect,
- * a source problem, a policy problem, an accessibility problem. The first two
- * stay on the device, as before. The other four open the report the app
- * already sends, on the kind and with the first words the reason names, so a
- * student who says "the source is wrong" is not asked to classify it again.
+ * And seven reasons a reply can be marked: two local marks and five requests
+ * for human review, including a harmful-answer route. The review keeps an
+ * evidence fingerprint and quality snapshot instead of copying the answer.
  */
 
 export type SourceStrength = 'strong' | 'limited' | 'none';
 export type PolicyState = 'allowed' | 'limited' | 'unavailable';
 
 export interface Quality {
-  source: { level: SourceStrength; says: string };
+  source: { level: SourceStrength; says: string; count: number };
   policy: { level: PolicyState; says: string };
   /** What Semester can support, what it cannot determine, what needs confirming. */
   can: string;
@@ -54,7 +52,7 @@ export interface QualityInput {
  * “strong”.
  */
 export function sourcesRead(used: readonly string[], evidence: number): number {
-  return evidence + used.filter((u) => /study material$/.test(u)).length;
+  return evidence + used.filter((u) => u.endsWith('study material')).length;
 }
 
 export function sourceStrength(read: Read | null, sources: number): SourceStrength {
@@ -103,22 +101,23 @@ export function quality(input: QualityInput): Quality {
     policy === 'allowed'
       ? 'Anything about requirements, registration, aid or a deadline that matters: confirm with the official record or the office that owns it.'
       : 'Whether the course allows AI help with this: ask the instructor, and use the source itself meanwhile.';
-  return { source: { level: source, says: SOURCE_SAYS[source] }, policy: { level: policy, says: POLICY_SAYS[policy] }, can, cannot, confirm };
+  return { source: { level: source, says: SOURCE_SAYS[source], count: input.sources }, policy: { level: policy, says: POLICY_SAYS[policy] }, can, cannot, confirm };
 }
 
-/** The six reasons, in the order they are offered. */
+/** The seven reasons, in the order they are offered. */
 export interface Reason {
-  id: 'helpful' | 'not-helpful' | 'incorrect' | 'source' | 'policy' | 'accessibility';
+  id: 'helpful' | 'not-helpful' | AiRemedyCategory;
   label: string;
-  /** A report of this kind with these first words; absent for the two local marks. */
-  report?: { kind: Kind; note: string };
+  /** A tenant-scoped human review; absent for the two local marks. */
+  report?: { category: AiRemedyCategory };
 }
 
 export const REASONS: readonly Reason[] = [
   { id: 'helpful', label: 'Helpful' },
   { id: 'not-helpful', label: 'Not helpful' },
-  { id: 'incorrect', label: 'Incorrect', report: { kind: 'wrong', note: 'An answer from Ask Semester is incorrect: ' } },
-  { id: 'source', label: 'Source issue', report: { kind: 'wrong', note: 'An answer cited a source wrongly or missed one: ' } },
-  { id: 'policy', label: 'Policy issue', report: { kind: 'bug', note: 'An answer should not have been allowed, or was refused wrongly, under the AI policy: ' } },
-  { id: 'accessibility', label: 'Accessibility issue', report: { kind: 'bug', note: 'Accessibility barrier in an answer: ' } },
+  { id: 'incorrect', label: 'Incorrect', report: { category: 'incorrect' } },
+  { id: 'source', label: 'Source issue', report: { category: 'source' } },
+  { id: 'policy', label: 'Policy issue', report: { category: 'policy' } },
+  { id: 'accessibility', label: 'Accessibility issue', report: { category: 'accessibility' } },
+  { id: 'harmful', label: 'Harmful answer', report: { category: 'harmful' } },
 ];

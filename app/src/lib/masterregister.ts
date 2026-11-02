@@ -966,8 +966,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'UX/privacy UAT',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/intelligence/Disclosure.tsx', shows: 'Gateway answer receipt: mode, source origins, route' }, { path: 'app/src/ai/Threads.tsx', shows: 'Conversation history with per-thread delete and confirm' }, { path: 'app/src/ai/Turns.tsx', shows: 'Feedback pair is local only; nothing is sent' }, { path: 'app/src/ai/usingline.test.tsx', shows: 'Tests the \'Using\' line that shows what context an answer drew on' }],
-    gap: 'No report-an-answer control reaches anyone. Since #888 the Ask tab says what it uses and never sees, but limitations are not shown per answer, and the gateway disclosure is flagged. UX/privacy UAT has not been done.',
+    evidence: [{ path: 'app/src/intelligence/Disclosure.tsx', shows: 'Gateway answer receipt: mode, source origins, route' }, { path: 'app/src/ai/Threads.tsx', shows: 'Conversation history with per-thread delete and confirm' }, { path: 'app/src/ai/Turns.tsx', shows: 'Per-answer source/policy limits and the five human-review reasons' }, { path: 'app/src/ai/AiAnswerRemedy.tsx', shows: 'Accessible correction, source, policy, accessibility and harmful-answer review request and own-status read' }, { path: 'app/src/ai/aianswerremedy.test.tsx', shows: 'Synthetic keyboard-native, privacy-boundary, human-ownership and safe-fallback journey' }, { path: 'supabase/migrations/20261027120000_ai_answer_remedy.sql', shows: 'Tenant-derived intake, own-status read, and exact-school human claim/resolve path' }, { path: 'supabase/ai-answer-remedy.check.sql', shows: 'Immutable evidence binding, cross-tenant denials, SLA metadata and audit events' }],
+    gap: 'Source and synthetic checks cover the narrow intake/status path only. The answer fingerprint is a browser-produced evidence anchor, not independently verified truth. No target tenant has been activated; no reviewer staffing, operated SLA/escalation, hosted target migration, privacy/accessibility UAT, institutional acceptance or live remedy has been verified.',
   },
   {
     id: 'AI-014',

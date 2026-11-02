@@ -6,6 +6,7 @@ activity
 admins
 advisor
 advisor-reconciliation
+ai-answer-remedy
 ai-audit-content-free
 ai-spend
 answer-rights-requests

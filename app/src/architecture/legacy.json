@@ -7,7 +7,6 @@
     "ai/Composer.tsx -> components/Icons.tsx",
     "ai/Panel.tsx -> components/GuideOperatingContract.tsx",
     "ai/Panel.tsx -> components/Trouble.tsx",
-    "ai/Turns.tsx -> components/SaySomething.tsx",
     "community/flags.ts -> intelligence/contracts.ts",
     "components/institutional/ModulesPanel.tsx -> site/modules.ts",
     "intelligence/AgentPicker.tsx -> ai/live.ts",

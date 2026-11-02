@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { isKind } from '../lib/feedback';
 import { REASONS, policyState, quality, sourceStrength, sourcesRead } from './quality';
 
 const grounded = { mode: 'grounded' as const, says: 'Using: your courses', because: '', screens: [] };
@@ -35,12 +34,11 @@ describe('answer quality', () => {
     expect(banned.confirm).toContain('instructor');
   });
 
-  it('offers six reasons: two kept on the device, four that open a real report', () => {
-    expect(REASONS.map((r) => r.id)).toEqual(['helpful', 'not-helpful', 'incorrect', 'source', 'policy', 'accessibility']);
+  it('offers seven reasons: two kept on the device, five that open human review', () => {
+    expect(REASONS.map((r) => r.id)).toEqual(['helpful', 'not-helpful', 'incorrect', 'source', 'policy', 'accessibility', 'harmful']);
     expect(REASONS.filter((r) => !r.report)).toHaveLength(2);
     for (const r of REASONS.filter((r) => r.report)) {
-      expect(isKind(r.report!.kind), r.id).toBe(true);
-      expect(r.report!.note.endsWith(': '), r.id).toBe(true);
+      expect(r.report!.category).toBe(r.id);
     }
   });
 

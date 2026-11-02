@@ -161,6 +161,7 @@
    "access_saga_events",
    "access_saga_signals",
    "access_sagas",
+   "ai_answer_remedy",
    "app_admins",
    "beta_cohorts",
    "beta_exit_requests",

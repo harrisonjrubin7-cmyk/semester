@@ -4,7 +4,7 @@ import type { Read } from '../lib/mode';
 import { scrollKindly } from '../lib/prefers';
 import { Answer } from './Answer';
 import { REASONS, type Quality, type Reason } from './quality';
-import { SaySomething } from '../components/SaySomething';
+import { AiAnswerRemedy } from './AiAnswerRemedy';
 
 /**
  * How a turn looks, on both surfaces.
@@ -183,7 +183,7 @@ export function Reply({
       )}
       {extra}
       {quality && <HowToRead q={quality} />}
-      <Beneath text={text} onRetry={onRetry} />
+      <Beneath text={text} onRetry={onRetry} quality={quality} />
     </div>
   );
 }
@@ -227,11 +227,11 @@ export function HowToRead({ q }: { q: Quality }) {
  * to send it — and a thumb that quietly did nothing would be worse than none.
  * It marks the answer so it can be found again in the thread.
  */
-function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
+function Beneath({ text, onRetry, quality }: { text: string; onRetry?: () => void; quality?: Quality }) {
   const [copied, setCopied] = useState(false);
   const [mark, setMark] = useState<'' | Reason['id']>('');
   const [report, setReport] = useState<Reason | null>(null);
-  if (report?.report) {
+  if (report?.report && quality) {
     return (
       <div style={{ marginTop: 'var(--sp-3)' }}>
         <p style={{ margin: '0 0 var(--sp-2)', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
@@ -240,7 +240,7 @@ function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
             Back
           </button>
         </p>
-        <SaySomething key={report.id} initialKind={report.report.kind} initialNote={report.report.note} />
+        <AiAnswerRemedy key={report.id} answer={text} category={report.report.category} quality={quality} />
       </div>
     );
   }
@@ -264,13 +264,10 @@ function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
           ASK AGAIN
         </button>
       )}
-      {/*
-        The six reasons (`quality.ts`). Helpful and Not helpful stay on this
-        device, as the pair always did. The other four open the report the
-        app already sends, on the right kind with the right first words.
-      */}
+      {/* Helpful and Not helpful stay local. Review reasons are offered only
+          when the answer carries the source/policy evidence they must bind. */}
       {REASONS.map((r) =>
-        r.report ? (
+        r.report && quality ? (
           <button key={r.id} type="button" className="bare" onClick={() => setReport(r)} style={QUIET}>
             {r.label.toUpperCase()}
           </button>
