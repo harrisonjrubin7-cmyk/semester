@@ -106,6 +106,17 @@ describe('the master launch readiness register', () => {
       }
     });
 
+    it('keeps INT-013 tied to the tested receiver seam without claiming an endpoint', () => {
+      const row = REGISTER.find((r) => r.id === 'INT-013')!;
+      expect(row.status).toBe('building');
+      expect(row.evidence).toEqual(expect.arrayContaining([
+        expect.objectContaining({ path: 'app/server/integration/webhook.ts' }),
+        expect.objectContaining({ path: 'app/server/integration/webhook.test.ts' }),
+      ]));
+      expect(row.gap).toMatch(/no (provider-specific|deployed) endpoint/i);
+      expect(row.gap).toMatch(/durable|shared/i);
+    });
+
     it('lets nothing claim an outside event without an artifact under docs/evidence/', () => {
       for (const r of REGISTER) {
         if (NEEDS_EVIDENCE_DIR.includes(r.status)) {
