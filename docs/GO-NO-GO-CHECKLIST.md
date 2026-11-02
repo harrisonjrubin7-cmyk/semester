@@ -11,11 +11,13 @@ depends on is unticked.
 
 **Current verdict: `NO-GO`.** Audited against `origin/main` at `1dd79cd`,
 2026-09-27, and moved on 2026-09-28. One gate is met (`known-limitations`),
-nine are partial and two are unmet. Four council seats are held (founder, and
-product, engineering and customer success held by the founder, acting) and
-none has signed; eight are vacant, the `finance` and `operations` seats among them
-since 29 September (D-118, D-120). `decide()` gives 31 reasons: the
-met gate and four "is vacant" lines became four "has not signed" lines.
+nine are partial and two are unmet. Harrison Rubin is the interim accountable
+owner for all twelve council seats. The accepted-holder record is unchanged:
+seven held, five vacant and none signed. The interim assignment does not
+establish professional qualification, institutional representation,
+independent review, approval or permission. `decide()` still gives 31 reasons:
+eleven open gates, eight unsatisfied launch-condition parts, seven unsigned
+accepted holders and five accepted-holder vacancies.
 
 ## How this relates to the go-live checklist
 

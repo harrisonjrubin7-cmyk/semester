@@ -37,7 +37,7 @@ const seatTitle = (council: readonly SeatDefinition[], seat: string): string => 
 export function Launch({ filter, state = CURRENT }: Pick<ViewProps, 'filter'> & { state?: LaunchState }) {
   const verdict = decide(state);
   const gates = state.gates.filter((g) => matches(filter, g.id, g.requirement, STATUS_WORD[g.status], seatTitle(state.council, g.owner), g.gap));
-  const seats = state.council.filter((s) => matches(filter, s.seat, s.title, s.decides, s.holder ?? 'Vacant'));
+  const seats = state.council.filter((s) => matches(filter, s.seat, s.title, s.decides, s.interimOwner ?? 'None', s.holder ?? 'Vacant'));
   const met = state.gates.filter((g) => g.status === 'met').length;
 
   const gateColumns: Column<Gate>[] = [
@@ -71,7 +71,8 @@ export function Launch({ filter, state = CURRENT }: Pick<ViewProps, 'filter'> & 
   const seatColumns: Column<SeatDefinition>[] = [
     { id: 'seat', header: 'Seat', rowHeader: true, cell: (s) => s.title },
     { id: 'decides', header: 'Decides', cell: (s) => <Prose>{s.decides}</Prose> },
-    { id: 'holder', header: 'Held by', cell: (s) => s.holder ?? 'Vacant' },
+    { id: 'interim-owner', header: 'Interim accountable owner', cell: (s) => s.interimOwner ?? 'None' },
+    { id: 'holder', header: 'Accepted / appointed holder', cell: (s) => s.holder ?? 'Vacant' },
     { id: 'signed', header: 'Signed', cell: (s) => <strong>{state.signoffs.includes(s.seat) ? 'Signed' : 'Not signed'}</strong> },
   ];
 

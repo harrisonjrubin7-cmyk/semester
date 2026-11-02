@@ -33,14 +33,10 @@ import { Prose, matches, type ViewProps } from './Fields';
  * ## Why the descriptions are typed, not free
  *
  * `FLAG_LABELS` is a `Record` over every key of `ExperienceFlags`, so adding a
- * flag to the registry without naming it here is a compile error — the tab
- * cannot quietly fall behind the registry it reports on. `about` is written
- * only where the registry's own documentation says what the flag controls;
- * where it does not, the row says so rather than the tab inventing a sentence.
+ * flag to the registry without naming and describing it here is a compile
+ * error — the tab cannot quietly fall behind the registry it reports on.
+ * Descriptions follow the real consumers and their existing gates.
  */
-
-/** Said in the row, and searched by the filter, so a query taken from the table finds the row. */
-const UNDESCRIBED = 'Not described in the flag registry.';
 
 const STATE_WORD: Record<FeatureState, string> = {
   production: 'On in production',
@@ -52,14 +48,14 @@ const STATE_WORD: Record<FeatureState, string> = {
 /** Most live first, so what a build actually exposes is the top of the table. */
 const STATE_RANK: Record<FeatureState, number> = { production: 0, sandbox: 1, preview: 2, off: 3 };
 
-const FLAG_LABELS: Record<keyof ExperienceFlags, { label: string; about?: string }> = {
-  semesterIntelligence: { label: 'Semester Intelligence' },
-  journeyNavigation: { label: 'Journey navigation' },
-  adaptiveLearning: { label: 'Adaptive learning' },
-  careerSkillsGraph: { label: 'Career skills graph' },
-  multimodalCapture: { label: 'Multimodal capture' },
-  universityControlPlane: { label: 'University control plane' },
-  humanHelp: { label: 'Human help' },
+const FLAG_LABELS: Record<keyof ExperienceFlags, { label: string; about: string }> = {
+  semesterIntelligence: { label: 'Semester Intelligence', about: 'Gates governed Semester Intelligence responses in chat; the configured AI gateway and its policy checks still apply.' },
+  journeyNavigation: { label: 'Journey navigation', about: 'Switches student navigation to five destinations: Today, My Path, Search, Plan and Me. Off restores the legacy destinations.' },
+  adaptiveLearning: { label: 'Adaptive learning', about: 'Adds readiness ranges and learning evidence to Study and the course Study Studio.' },
+  careerSkillsGraph: { label: 'Career skills graph', about: 'Adds the Skills tab and the course-to-skill evidence graph in Career.' },
+  multimodalCapture: { label: 'Multimodal capture', about: 'Adds Course capture controls for bringing material into a course.' },
+  universityControlPlane: { label: 'University control plane', about: 'Adds Control and Trust views to University. Database capabilities still decide what an account may do.' },
+  humanHelp: { label: 'Human help', about: 'Adds Get help and contextual request handoffs. Existing account and support gates still apply.' },
   integrationDashboard: { label: 'Integration dashboard', about: 'The staff Integration Dashboard. Tenant flags and integration:view still apply.' },
   institutionalOperations: {
     label: 'Institutional operations',
@@ -86,20 +82,33 @@ const FLAG_LABELS: Record<keyof ExperienceFlags, { label: string; about?: string
 /**
  * The toolkit's flags, named. A `Record` over `ToolkitFlags`, so a new toolkit
  * flag is a compile error until it is named here, as with the experience flags.
- * What is said about a flag is only what `lib/toolkit/flags.ts` says of it.
+ * Descriptions follow the Toolkit consumer; unbuilt flags retain the registry's
+ * explicit hardcoded-off explanation.
  */
-const TOOLKIT_LABELS: Record<keyof ToolkitFlags, { label: string; about?: string }> = {
-  aiToolkit: { label: 'AI Toolkit', about: 'The master switch. With it off, every other toolkit flag reads off whatever it was set to.' },
-  researchStudio: { label: 'Toolkit: research studio' },
-  dataStudio: { label: 'Toolkit: data studio' },
-  dataUpload: { label: 'Toolkit: data upload' },
-  subjectWorkbenches: { label: 'Toolkit: subject workbenches' },
-  aiDisclosure: { label: 'Toolkit: AI disclosure' },
-  codeExecution: { label: 'Toolkit: code execution' },
-  externalConnectors: { label: 'Toolkit: external connectors' },
+const TOOLKIT_LABELS: Record<keyof ToolkitFlags, string> = {
+  aiToolkit: 'AI Toolkit',
+  researchStudio: 'Toolkit: research studio',
+  dataStudio: 'Toolkit: data studio',
+  dataUpload: 'Toolkit: data upload',
+  subjectWorkbenches: 'Toolkit: subject workbenches',
+  aiDisclosure: 'Toolkit: AI disclosure',
+  codeExecution: 'Toolkit: code execution',
+  externalConnectors: 'Toolkit: external connectors',
 };
 
 const UNBUILT_ABOUT = 'Cannot be switched on from this build: nothing is built behind it yet, so it reads off whatever the environment says.';
+type BuiltToolkitFlag = Exclude<keyof ToolkitFlags, (typeof UNBUILT)[number]>;
+const TOOLKIT_ABOUT: Record<BuiltToolkitFlag, string> = {
+  aiToolkit: 'The master switch. With it off, every other toolkit flag reads off whatever it was set to.',
+  researchStudio: 'Adds Research Studio for research questions, evidence screening and source verification.',
+  dataStudio: 'Adds Data Studio for data projects and interpretation.',
+  dataUpload: 'Allows file upload inside Data Studio. Data Studio and the toolkit master switch must also be on.',
+  subjectWorkbenches: 'Makes subject-specific workbenches reachable from All tools.',
+  aiDisclosure: 'Adds the AI-use disclosure builder beside the course policy.',
+};
+
+const toolkitAbout = (key: keyof ToolkitFlags): string =>
+  (UNBUILT as readonly string[]).includes(key) ? UNBUILT_ABOUT : TOOLKIT_ABOUT[key as BuiltToolkitFlag];
 
 /**
  * The flags that live on their own in the module they gate rather than in a
@@ -115,8 +124,8 @@ export const STANDALONE_FLAGS: StandaloneFlags = {
 };
 
 /** What each says of itself, from the module that holds it; nothing is added. */
-const STANDALONE_LABELS: Record<keyof StandaloneFlags, { label: string; about?: string }> = {
-  language: { label: 'Language' },
+const STANDALONE_LABELS: Record<keyof StandaloneFlags, { label: string; about: string }> = {
+  language: { label: 'Language', about: 'Honours the learner’s selected locale for date, time and number formatting. Interface copy remains English.' },
   lifeEvents: { label: 'Life events', about: 'Gates the life-events panel. Absent is off.' },
   momentFeedback: { label: 'Moment feedback', about: 'Gates the feedback prompts and the panel. Absent is off.' },
   learnerPathways: { label: 'Learner pathways', about: 'Absent is off, and does not follow the institutional preview.' },
@@ -141,9 +150,24 @@ export const FLAG_SOURCES = [
 /** `communityFeed` → `feed`, `moderationConsole` → `moderation console`: the words after the `Community:` prefix. */
 const communityWords = (key: string): string => key.replace(/([A-Z])/g, ' $1').toLowerCase().replace(/^community /, '');
 
-const MODULE_ABOUT: Partial<Record<ModuleFlag, string>> = {
+const MODULE_ABOUT: Record<ModuleFlag, string> = {
   today_action_center: 'The shared Action Center on Today. On by default; the variable is kept as a rollback.',
+  registration_day_mode: 'Adds the registration-day checklist, countdown and backup picks to the registration plan.',
+  graduation_simulator: 'Adds extra scenario presets, detailed comparisons, account draft controls and sharing to the degree-path graduation simulator.',
+  cost_planner: 'Adds itemised term-cost scenarios to the graduation simulator.',
+  academic_life_balance: 'Adds the weekly academic-life balance view in Plan and is required for the separately flagged heavy-week warning on Today.',
+  crunch_week_forecast: 'Adds heavy-week warnings when academic-life balance is also on.',
+  course_detail_v2: 'Adds the redesigned course detail experience in the registration workspace.',
+  advisor_meeting_mode: 'Adds an advisor-meeting agenda and sharing workflow to the degree path.',
+  study_readiness: 'Adds per-unit study readiness before an exam to each course workspace.',
+  source_locker: 'Adds a course Sources tab for locking which sources a study session may use.',
+  career_evidence: 'Adds coursework skill evidence to course overviews and Career.',
+  office_action_feed: 'Adds campus-office actions to Today and the registrar workspace; publishing permissions still apply.',
+  demand_forecasting: 'Adds staff course-demand counts in University; database scope and the minimum group size still apply.',
+  semester_wrapped: 'Adds the end-of-term Semester Wrapped summary in Me.',
+  offline_mode: 'Adds explicit offline working and sync-status surfaces; it does not change server confirmation rules.',
   offline_engine_tasks: 'Personal actions through the offline-sync engine. Actions only, on purpose.',
+  trust_center: 'Adds the in-app Trust Center to Privacy and Me.',
   course_studio: 'The faculty Course Studio and, for students, the instructor’s published rules and guidance.',
 };
 
@@ -160,7 +184,7 @@ interface Row {
   group: 'Experience' | 'Module' | 'Toolkit' | 'Community' | 'Standalone';
   label: string;
   state: FeatureState;
-  about?: string;
+  about: string;
 }
 
 export function flagRows(
@@ -188,9 +212,9 @@ export function flagRows(
     ...(Object.keys(TOOLKIT_LABELS) as (keyof ToolkitFlags)[]).map((key) => ({
       id: `toolkit.${key}`,
       group: 'Toolkit' as const,
-      label: TOOLKIT_LABELS[key].label,
+      label: TOOLKIT_LABELS[key],
       state: toolkit[key],
-      about: (UNBUILT as readonly string[]).includes(key) ? UNBUILT_ABOUT : TOOLKIT_LABELS[key].about,
+      about: toolkitAbout(key),
     })),
     ...(Object.keys(COMMUNITY_FLAG_SPECS) as CommunityFlag[]).map((key) => ({
       id: `community.${key}`,
@@ -216,7 +240,7 @@ const COLUMNS: Column<Row>[] = [
   { id: 'flag', header: 'Flag', rowHeader: true, cell: (r) => r.label },
   { id: 'state', header: 'State in this build', cell: (r) => <strong>{STATE_WORD[r.state]}</strong> },
   { id: 'group', header: 'Kind', cell: (r) => r.group },
-  { id: 'about', header: 'What it controls', cell: (r) => <Prose>{r.about ?? <span style={{ color: 'var(--app-dim)' }}>{UNDESCRIBED}</span>}</Prose> },
+  { id: 'about', header: 'What it controls', cell: (r) => <Prose>{r.about}</Prose> },
 ];
 
 export function Releases({
@@ -235,7 +259,7 @@ export function Releases({
   standalone?: StandaloneFlags;
 }) {
   const all = flagRows(experience, modules, toolkit, community, standalone);
-  const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about ?? UNDESCRIBED));
+  const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about));
   const live = all.filter((r) => r.state !== 'off').length;
 
   return (
