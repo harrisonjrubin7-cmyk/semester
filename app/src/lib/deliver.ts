@@ -40,10 +40,13 @@ export function blobOf(piece: Piece): Blob {
  * failed download with no error anywhere.
  */
 export function download(piece: Piece): void {
-  const url = URL.createObjectURL(blobOf(piece));
+  // createObjectURL returns a blob: URL, but the value still crosses a DOM URL
+  // sink below. Encode it at that boundary so text collected from the page and
+  // exported cannot be reinterpreted as markup by a browser or an embedder.
+  const url = encodeURI(URL.createObjectURL(blobOf(piece)));
   const a = document.createElement('a');
   a.href = url;
-  a.download = piece.name;
+  a.download = safeName(piece.name);
   document.body.appendChild(a);
   a.click();
   a.remove();
