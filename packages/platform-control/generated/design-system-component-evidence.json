@@ -1,0 +1,3200 @@
+{
+  "status": "incomplete",
+  "claim_ceiling": "Repository evidence census only; this report does not prove human accessibility review, visual approval, deployment, or institutional activation.",
+  "requirements": [
+    "typescript_api",
+    "accessibility_behavior",
+    "visual_states",
+    "story_or_test_fixture",
+    "light_and_dark_coverage",
+    "responsive_behavior",
+    "reduced_motion_behavior",
+    "usage_documentation"
+  ],
+  "summary": {
+    "total": 68,
+    "complete": 0,
+    "incomplete": 68
+  },
+  "missing_by_requirement": {
+    "typescript_api": [],
+    "accessibility_behavior": [
+      "ConnectionLine",
+      "ConnectionState",
+      "DelegationRow",
+      "FilterChips",
+      "PermissionPrompt",
+      "PermissionRow",
+      "ReadinessState",
+      "SemesterDesignSurface",
+      "SessionRow",
+      "SlaTimer",
+      "TabPanel",
+      "Tabs"
+    ],
+    "visual_states": [
+      "ConnectionLine",
+      "ConnectionState",
+      "DelegationRow",
+      "FilterChips",
+      "PermissionPrompt",
+      "PermissionRow",
+      "ReadinessState",
+      "SemesterDesignSurface",
+      "SessionRow",
+      "SlaTimer",
+      "TabPanel",
+      "Tabs"
+    ],
+    "story_or_test_fixture": [
+      "SemesterDesignSurface",
+      "SourceLine"
+    ],
+    "light_and_dark_coverage": [
+      "ActionPreview",
+      "AIResponse",
+      "ApprovalBanner",
+      "Avatar",
+      "Button",
+      "Choice",
+      "Combobox",
+      "CommandPalette",
+      "ConnectionLine",
+      "ConnectionState",
+      "ConsentBadge",
+      "ContextBar",
+      "DataTable",
+      "DateField",
+      "DecisionTrail",
+      "DelegationRow",
+      "Dialog",
+      "EmptyState",
+      "ErrorState",
+      "ErrorSummary",
+      "Fields",
+      "FilterChips",
+      "FocusBar",
+      "HealthBadge",
+      "Icon",
+      "IconButton",
+      "LoadingState",
+      "MetricTile",
+      "NextSteps",
+      "Notice",
+      "ObjectCard",
+      "OfflineStrip",
+      "OpenIn",
+      "PageHeader",
+      "PermissionNotice",
+      "PermissionPrompt",
+      "PermissionRow",
+      "PolicyBadge",
+      "ProgressState",
+      "ProvenanceChart",
+      "ProvenanceChips",
+      "QuickActions",
+      "ReadinessState",
+      "SaveState",
+      "ScreenGuide",
+      "SectionLabel",
+      "Segmented",
+      "Select",
+      "SemesterDesignSurface",
+      "SessionRow",
+      "Sheet",
+      "SideRail",
+      "SlaTimer",
+      "SourceBadge",
+      "SourceLine",
+      "StatusChip",
+      "StepStatus",
+      "SuccessState",
+      "SupportHandoff",
+      "Switch",
+      "SystemContextBar",
+      "TabBar",
+      "TabPanel",
+      "Tabs",
+      "TextField",
+      "UndoToast",
+      "VisibilityPicker",
+      "Wordmark"
+    ],
+    "responsive_behavior": [
+      "DelegationRow",
+      "PermissionPrompt",
+      "PermissionRow",
+      "SemesterDesignSurface",
+      "SessionRow"
+    ],
+    "reduced_motion_behavior": [],
+    "usage_documentation": [
+      "ConnectionLine",
+      "ConnectionState",
+      "DelegationRow",
+      "FilterChips",
+      "PermissionPrompt",
+      "PermissionRow",
+      "ReadinessState",
+      "SemesterDesignSurface",
+      "SessionRow",
+      "SlaTimer",
+      "TabPanel",
+      "Tabs"
+    ]
+  },
+  "components": [
+    {
+      "name": "ActionPreview",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/ActionPreview.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/ActionPreview.jsx",
+          "app/src/components/semester-design/surfaces/ActionPreview.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces.card.html",
+          "app/src/components/unity/ActionPreview.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "AIResponse",
+      "family": "trust",
+      "source": "app/src/components/semester-design/trust/AIResponse.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/trust/AIResponse.jsx",
+          "app/src/components/semester-design/trust/AIResponse.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/trust/trust.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ApprovalBanner",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/ApprovalBanner.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/ApprovalBanner.jsx",
+          "app/src/components/semester-design/governance/ApprovalBanner.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Avatar",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/Avatar.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/Avatar.jsx",
+          "app/src/components/semester-design/core/Avatar.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces-more.card.html",
+          "app/src/lib/header.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Button",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/Button.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/Button.jsx",
+          "app/src/components/semester-design/core/Button.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/core/core.card.html",
+          "app/src/lib/designsystem.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Choice",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/Choice.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/Choice.jsx",
+          "app/src/components/semester-design/forms/Choice.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms.card.html",
+          "app/src/composition/domains.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Combobox",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/Combobox.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/Combobox.jsx",
+          "app/src/components/semester-design/forms/Combobox.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms-advanced.card.html",
+          "app/src/components/unity/Combobox.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "CommandPalette",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/CommandPalette.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/CommandPalette.jsx",
+          "app/src/components/semester-design/navigation/CommandPalette.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/navigation.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ConnectionLine",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/ConnectionState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/ConnectionState.jsx",
+          "app/src/components/semester-design/data/ConnectionState.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/connection.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "ConnectionState",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/ConnectionState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/ConnectionState.jsx",
+          "app/src/components/semester-design/data/ConnectionState.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/connection.card.html",
+          "app/src/lib/integration/mock-campus.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "ConsentBadge",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/ConsentBadge.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/ConsentBadge.jsx",
+          "app/src/components/semester-design/governance/ConsentBadge.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ContextBar",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/ContextBar.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/ContextBar.jsx",
+          "app/src/components/semester-design/surfaces/ContextBar.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces.card.html",
+          "app/src/components/unity/rollout-b.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "DataTable",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/DataTable.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/DataTable.jsx",
+          "app/src/components/semester-design/data/DataTable.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "DateField",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/DateField.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/DateField.jsx",
+          "app/src/components/semester-design/forms/DateField.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms-advanced.card.html",
+          "app/src/components/unity/DateField.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "DecisionTrail",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/DecisionTrail.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/DecisionTrail.jsx",
+          "app/src/components/semester-design/data/DecisionTrail.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data.card.html",
+          "app/src/components/unity/DecisionTrail.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "DelegationRow",
+      "family": "permissions",
+      "source": "app/src/components/semester-design/permissions/DelegationRow.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/permissions/DelegationRow.jsx",
+          "app/src/components/semester-design/permissions/DelegationRow.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/permissions/permissions.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": false,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "responsive_behavior",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "Dialog",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/Dialog.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/Dialog.jsx",
+          "app/src/components/semester-design/surfaces/Dialog.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/overlays/overlays.card.html",
+          "app/src/a11y/scrim.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "EmptyState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/EmptyState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/EmptyState.jsx",
+          "app/src/components/semester-design/feedback/EmptyState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/screens/calendar-source.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ErrorState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/ErrorState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/ErrorState.jsx",
+          "app/src/components/semester-design/feedback/ErrorState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/a11y/tellings.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ErrorSummary",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/ErrorSummary.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/ErrorSummary.jsx",
+          "app/src/components/semester-design/governance/ErrorSummary.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html",
+          "app/src/components/FieldMessage.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Fields",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/Fields.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/Fields.jsx",
+          "app/src/components/semester-design/data/Fields.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data.card.html",
+          "app/src/components/console/PrivacyRequests.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "FilterChips",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/FilterChips.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/FilterChips.jsx",
+          "app/src/components/semester-design/navigation/FilterChips.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/queue-controls.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "FocusBar",
+      "family": "overlays",
+      "source": "app/src/components/semester-design/overlays/FocusBar.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/overlays/FocusBar.jsx",
+          "app/src/components/semester-design/overlays/FocusBar.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/overlays/overlays.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "HealthBadge",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/HealthBadge.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/HealthBadge.jsx",
+          "app/src/components/semester-design/governance/HealthBadge.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Icon",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/Icon.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/Icon.jsx",
+          "app/src/components/semester-design/core/Icon.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/core/core.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "IconButton",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/IconButton.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/IconButton.jsx",
+          "app/src/components/semester-design/core/IconButton.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/core/core.card.html",
+          "app/src/lib/designsystem.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "LoadingState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/LoadingState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/LoadingState.jsx",
+          "app/src/components/semester-design/feedback/LoadingState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/unity/unity.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "MetricTile",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/MetricTile.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/MetricTile.jsx",
+          "app/src/components/semester-design/data/MetricTile.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data-viz.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "NextSteps",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/NextSteps.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/NextSteps.jsx",
+          "app/src/components/semester-design/surfaces/NextSteps.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces.card.html",
+          "app/src/components/unity/rollout-b.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Notice",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/Notice.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/Notice.jsx",
+          "app/src/components/semester-design/feedback/Notice.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/a11y/tellings.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ObjectCard",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/ObjectCard.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/ObjectCard.jsx",
+          "app/src/components/semester-design/surfaces/ObjectCard.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces.card.html",
+          "app/src/components/unity/ProvenanceChips.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "OfflineStrip",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/OfflineStrip.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/OfflineStrip.jsx",
+          "app/src/components/semester-design/feedback/OfflineStrip.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/components/unity/honesty.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "OpenIn",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/OpenIn.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/OpenIn.jsx",
+          "app/src/components/semester-design/surfaces/OpenIn.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces-more.card.html",
+          "app/src/gallery/gallery.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "PageHeader",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/PageHeader.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/PageHeader.jsx",
+          "app/src/components/semester-design/governance/PageHeader.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "PermissionNotice",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/PermissionNotice.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/PermissionNotice.jsx",
+          "app/src/components/semester-design/feedback/PermissionNotice.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "PermissionPrompt",
+      "family": "permissions",
+      "source": "app/src/components/semester-design/permissions/PermissionPrompt.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/permissions/PermissionPrompt.jsx",
+          "app/src/components/semester-design/permissions/PermissionPrompt.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/permissions/permissions.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": false,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "responsive_behavior",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "PermissionRow",
+      "family": "permissions",
+      "source": "app/src/components/semester-design/permissions/PermissionRow.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/permissions/PermissionRow.jsx",
+          "app/src/components/semester-design/permissions/PermissionRow.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/permissions/permissions.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": false,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "responsive_behavior",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "PolicyBadge",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/PolicyBadge.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/PolicyBadge.jsx",
+          "app/src/components/semester-design/governance/PolicyBadge.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ProgressState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/ProgressState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/ProgressState.jsx",
+          "app/src/components/semester-design/feedback/ProgressState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ProvenanceChart",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/ProvenanceChart.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/ProvenanceChart.jsx",
+          "app/src/components/semester-design/data/ProvenanceChart.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data-viz.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ProvenanceChips",
+      "family": "trust",
+      "source": "app/src/components/semester-design/trust/ProvenanceChips.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/trust/ProvenanceChips.jsx",
+          "app/src/components/semester-design/trust/ProvenanceChips.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/trust/trust.card.html",
+          "app/src/components/unity/ProvenanceChips.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "QuickActions",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/QuickActions.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/QuickActions.jsx",
+          "app/src/components/semester-design/surfaces/QuickActions.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces-more.card.html",
+          "app/src/gallery/gallery.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ReadinessState",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/ReadinessState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/ReadinessState.jsx",
+          "app/src/components/semester-design/data/ReadinessState.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/connection.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "SaveState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/SaveState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/SaveState.jsx",
+          "app/src/components/semester-design/feedback/SaveState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "ScreenGuide",
+      "family": "surfaces",
+      "source": "app/src/components/semester-design/surfaces/ScreenGuide.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/surfaces/ScreenGuide.jsx",
+          "app/src/components/semester-design/surfaces/ScreenGuide.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/surfaces/surfaces-more.card.html",
+          "app/src/components/unity/unity.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SectionLabel",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/SectionLabel.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/SectionLabel.jsx",
+          "app/src/components/semester-design/core/SectionLabel.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/core/core.card.html",
+          "app/src/a11y/labels.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Segmented",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/Segmented.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/Segmented.jsx",
+          "app/src/components/semester-design/forms/Segmented.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms.card.html",
+          "app/src/styles/taps.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Select",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/Select.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/Select.jsx",
+          "app/src/components/semester-design/forms/Select.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms.card.html",
+          "app/src/screens/sheet.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SemesterDesignSurface",
+      "family": "root",
+      "source": "app/src/components/semester-design/SemesterDesignSurface.tsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/SemesterDesignSurface.tsx"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": false,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": false,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "story_or_test_fixture",
+        "light_and_dark_coverage",
+        "responsive_behavior",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "SessionRow",
+      "family": "permissions",
+      "source": "app/src/components/semester-design/permissions/SessionRow.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/permissions/SessionRow.jsx",
+          "app/src/components/semester-design/permissions/SessionRow.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/permissions/permissions.card.html",
+          "app/src/components/SignedInDevices.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": false,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "responsive_behavior",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "Sheet",
+      "family": "overlays",
+      "source": "app/src/components/semester-design/overlays/Sheet.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/overlays/Sheet.jsx",
+          "app/src/components/semester-design/overlays/Sheet.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/overlays/overlays.card.html",
+          "app/src/lib/cellstyle.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SideRail",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/SideRail.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/SideRail.jsx",
+          "app/src/components/semester-design/navigation/SideRail.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/navigation.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SlaTimer",
+      "family": "data",
+      "source": "app/src/components/semester-design/data/SlaTimer.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/data/SlaTimer.jsx",
+          "app/src/components/semester-design/data/SlaTimer.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/queue-controls.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "SourceBadge",
+      "family": "trust",
+      "source": "app/src/components/semester-design/trust/SourceBadge.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/trust/SourceBadge.jsx",
+          "app/src/components/semester-design/trust/SourceBadge.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data.card.html",
+          "app/src/components/SourceBadge.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SourceLine",
+      "family": "trust",
+      "source": "app/src/components/semester-design/trust/SourceLine.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/trust/SourceLine.jsx",
+          "app/src/components/semester-design/trust/SourceLine.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": false,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "story_or_test_fixture",
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "StatusChip",
+      "family": "trust",
+      "source": "app/src/components/semester-design/trust/StatusChip.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/trust/StatusChip.jsx",
+          "app/src/components/semester-design/trust/StatusChip.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/data/data.card.html",
+          "app/src/decisionlabels.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "StepStatus",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/StepStatus.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/StepStatus.jsx",
+          "app/src/components/semester-design/feedback/StepStatus.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/components/unity/rollout-a.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SuccessState",
+      "family": "feedback",
+      "source": "app/src/components/semester-design/feedback/SuccessState.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/feedback/SuccessState.jsx",
+          "app/src/components/semester-design/feedback/SuccessState.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/feedback/feedback.card.html",
+          "app/src/components/unity/unity.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SupportHandoff",
+      "family": "governance",
+      "source": "app/src/components/semester-design/governance/SupportHandoff.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/governance/SupportHandoff.jsx",
+          "app/src/components/semester-design/governance/SupportHandoff.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/governance/governance.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Switch",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/Switch.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/Switch.jsx",
+          "app/src/components/semester-design/forms/Switch.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms.card.html",
+          "app/src/community/feed.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "SystemContextBar",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/SystemContextBar.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/SystemContextBar.jsx",
+          "app/src/components/semester-design/navigation/SystemContextBar.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/navigation.card.html",
+          "app/src/components/unity/SystemContextBar.navigation.test.tsx"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "TabBar",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/TabBar.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/TabBar.jsx",
+          "app/src/components/semester-design/navigation/TabBar.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/navigation.card.html",
+          "app/src/lib/boundary.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "TabPanel",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/Tabs.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/Tabs.jsx",
+          "app/src/components/semester-design/navigation/Tabs.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/queue-controls.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "Tabs",
+      "family": "navigation",
+      "source": "app/src/components/semester-design/navigation/Tabs.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/navigation/Tabs.jsx",
+          "app/src/components/semester-design/navigation/Tabs.d.ts"
+        ],
+        "accessibility_behavior": [],
+        "visual_states": [],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/navigation/queue-controls.card.html",
+          "app/src/a11y/title.test.ts"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": []
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": false,
+        "visual_states": false,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": false
+      },
+      "missing": [
+        "accessibility_behavior",
+        "visual_states",
+        "light_and_dark_coverage",
+        "usage_documentation"
+      ]
+    },
+    {
+      "name": "TextField",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/TextField.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/TextField.jsx",
+          "app/src/components/semester-design/forms/TextField.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "UndoToast",
+      "family": "overlays",
+      "source": "app/src/components/semester-design/overlays/UndoToast.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/overlays/UndoToast.jsx",
+          "app/src/components/semester-design/overlays/UndoToast.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/overlays/overlays.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "VisibilityPicker",
+      "family": "forms",
+      "source": "app/src/components/semester-design/forms/VisibilityPicker.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/forms/VisibilityPicker.jsx",
+          "app/src/components/semester-design/forms/VisibilityPicker.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/forms/forms-advanced.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    },
+    {
+      "name": "Wordmark",
+      "family": "core",
+      "source": "app/src/components/semester-design/core/Wordmark.jsx",
+      "status": "evidence_incomplete",
+      "requirements": {
+        "typescript_api": [
+          "app/src/components/semester-design/core/Wordmark.jsx",
+          "app/src/components/semester-design/core/Wordmark.d.ts"
+        ],
+        "accessibility_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "visual_states": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "story_or_test_fixture": [
+          "app/src/components/semester-design/core/core.card.html"
+        ],
+        "light_and_dark_coverage": [],
+        "responsive_behavior": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ],
+        "reduced_motion_behavior": [
+          "docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md",
+          "app/src/styles/semester-design/integration.css"
+        ],
+        "usage_documentation": [
+          "docs/design-system/COMPONENT-SPEC-MATRIX.md"
+        ]
+      },
+      "satisfied": {
+        "typescript_api": true,
+        "accessibility_behavior": true,
+        "visual_states": true,
+        "story_or_test_fixture": true,
+        "light_and_dark_coverage": false,
+        "responsive_behavior": true,
+        "reduced_motion_behavior": true,
+        "usage_documentation": true
+      },
+      "missing": [
+        "light_and_dark_coverage"
+      ]
+    }
+  ]
+}
