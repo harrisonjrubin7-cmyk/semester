@@ -1,4 +1,5 @@
 import { CourseStudioEntry } from '../components/CourseStudio';
+import { FacultyWorkspaceView } from '../components/FacultyWorkspaceView';
 import { useState } from 'react';
 import { SYNC_WORDS } from '../lib/syncstatus';
 import { Review } from '../components/Review';
@@ -188,7 +189,7 @@ export function AccountScreen() {
         {/* Faculty Course Studio (D-100): shown only to an account the school
             has made faculty on a course, with the module on. See
             `components/CourseStudio.tsx`. */}
-        <CourseStudioEntry requested={state.workspaceView === 'course-studio'} />
+        {state.workspaceView === 'course-studio' ? <FacultyWorkspaceView /> : <CourseStudioEntry />}
 
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>

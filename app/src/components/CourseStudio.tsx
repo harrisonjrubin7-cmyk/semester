@@ -471,10 +471,14 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'history', label: 'History' },
 ];
 
+type PublicationRead = { key: string; status: 'ready'; value?: CoursePublication } | { key: string; status: 'failed' };
+
 export function CourseStudio({ courses, term }: { courses: string[]; term: string }) {
   const [code, setCode] = useState(courses[0] ?? '');
   const [tab, setTab] = useState<Tab>('rules');
-  const [current, setCurrent] = useState<{ key: string; value?: CoursePublication } | null>(null);
+  // A failed read is its own state. Folding it into "nothing published" let
+  // the tabs open a blank, editable draft over a publication that exists.
+  const [current, setCurrent] = useState<PublicationRead | null>(null);
   const [stamp, setStamp] = useState(0);
   const [said, setSaid] = useState('');
   const key = `${code}:${term}:${stamp}`;
@@ -483,8 +487,8 @@ export function CourseStudio({ courses, term }: { courses: string[]; term: strin
     if (!code) return;
     let alive = true;
     void loadPublications([code], term).then(
-      (p) => alive && setCurrent({ key, value: p[code] }),
-      () => alive && setCurrent({ key }),
+      (p) => alive && setCurrent({ key, status: 'ready', value: p[code] }),
+      () => alive && setCurrent({ key, status: 'failed' }),
     );
     return () => {
       alive = false;
@@ -492,6 +496,8 @@ export function CourseStudio({ courses, term }: { courses: string[]; term: strin
   }, [code, term, key]);
 
   const ready = current?.key === key;
+  const failed = current?.key === key && current.status === 'failed';
+  const loaded = current?.key === key && current.status === 'ready' ? current.value : undefined;
   const published = (line: string) => {
     setSaid(line);
     setStamp((n) => n + 1);
@@ -523,11 +529,20 @@ export function CourseStudio({ courses, term }: { courses: string[]; term: strin
       {said && <p role="status" className="sharing-lead">{said}</p>}
       {!ready && tab !== 'history' ? (
         <p className="sharing-lead">Reading what is published…</p>
+      ) : failed && tab !== 'history' ? (
+        <div>
+          <p role="alert" className="sharing-lead">
+            Could not read what is published for {code}. Nothing is shown as published or unpublished until it loads.
+          </p>
+          <button type="button" className="btn btn-secondary" onClick={() => setStamp((n) => n + 1)}>
+            Try again
+          </button>
+        </div>
       ) : (
         <>
-          {tab === 'rules' && <RulesTab key={key} code={code} term={term} current={current?.value} onPublished={published} />}
-          {tab === 'guidance' && <GuidanceTab key={key} code={code} term={term} current={current?.value} onPublished={published} />}
-          {tab === 'packs' && <PacksTab key={key} code={code} term={term} current={current?.value} onPublished={published} />}
+          {tab === 'rules' && <RulesTab key={key} code={code} term={term} current={loaded} onPublished={published} />}
+          {tab === 'guidance' && <GuidanceTab key={key} code={code} term={term} current={loaded} onPublished={published} />}
+          {tab === 'packs' && <PacksTab key={key} code={code} term={term} current={loaded} onPublished={published} />}
           {tab === 'history' && <HistoryTab code={code} term={term} stamp={stamp} />}
         </>
       )}
