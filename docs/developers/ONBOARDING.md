@@ -29,7 +29,7 @@ Not run on this page's behalf: the full `npm test`, `npm run test:shuffle` and `
 You need Git, Node.js 22 and npm.
 
 - CI installs Node with `node-version: 22` (the major only) in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml).
-- The root `package.json` declares `engines: { node: ">=22" }`; `app/package.json` declares no `engines` field and the repository has no `.nvmrc`. Nothing pins a patch version for you.
+- The root `package.json` declares `engines: { node: ">=22.6" }`; `app/package.json` declares no `engines` field and the repository has no `.nvmrc`. Nothing pins a patch version for you.
 - `jsdom` 30.1.1, which the tests use, declares `node: ^22.22.2 || ^24.15.0 || >=26.0.0`. On Node 22.22.0 `npm ci` prints four `EBADENGINE` warnings and still installs. Use Node 22.22.2 or later to avoid them.
 - The institution gateway uses `node:sqlite`, which Node 22 prints as an experimental warning when it starts.
 
@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is the workspace root for `app`, `packages/*` and `operator` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`) and the Semester Operator commands (`operator:typecheck`, `operator:test`, `operator:build`, `operator:demo`, and `operator -- <command>`; see [`operator/README.md`](../../operator/README.md)). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
+The repository's root `package.json` is the workspace root for `app`, `packages/*` and `operator` and holds the one lockfile. Install at the root. Product commands still run from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says; the root exposes only the platform-control registry commands (`registry:validate`, `registry:build`, `release:check`, `release:report`, and `platform-control:test`), the recovery and verification commands (`recovery:restore`, `recovery:rebuild-projections`, `recovery:reconcile`, `verify:feature-flags`, `verify:environment-boundaries`, and `test:operations`), and the Semester Operator commands (`operator:typecheck`, `operator:test`, `operator:build`, `operator:demo`, and `operator -- <command>`; see [`operator/README.md`](../../operator/README.md)). At the root, plain `npm test` still fails with "Missing script" instead of running the product suite.
 
 When the browser app consumes a workspace package, register that package consistently in `app/tsconfig.app.json`, `app/vite.config.ts`, and `app/src/lib/importgraph.ts`. Package build scripts may use Node built-ins; code under a package's `src/` remains inside the browser-safe leaf boundary unless its architecture explicitly says otherwise.
 

@@ -1,0 +1,36 @@
+recovery:
+  scope:
+    - operational_database
+    - audit_and_evidence_records
+    - source_snapshots
+    - workflow_state
+    - configuration_versions
+    - release_artifacts
+    - connector_mappings
+  recovery_objectives:
+    values: institution_and_service_specific
+    rule: >
+      Recovery time and data-loss objectives must be explicitly agreed,
+      measured through drills, and never represented as guarantees without
+      verified operating evidence.
+  restore_principles:
+    - restore_to_isolated_environment_first
+    - validate_tenant_boundaries_before_reconnection
+    - reconcile_authoritative_sources_after_restore
+    - preserve_audit_history
+    - record_operator_actions
+    - communicate_confirmed_scope_and_status
+  drills:
+    - restore_synthetic_tenant
+    - rebuild_read_model
+    - recover_quarantined_workflow
+    - restore_configuration_version
+    - revoke_connector_after_recovery
+  verification_sequence:
+    - "pnpm recovery:restore --fixture tenant-synthetic-a --target isolated-recovery-environment"
+    - "pnpm test:tenant-isolation"
+    - "pnpm test:rls"
+    - "pnpm test:source-authority"
+    - "pnpm recovery:rebuild-projections --tenant tenant-synthetic-a"
+    - "pnpm recovery:reconcile --tenant tenant-synthetic-a"
+    - "pnpm recovery:record-drill --drill DRILL-RECOVERY-001"

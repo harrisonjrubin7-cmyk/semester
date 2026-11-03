@@ -1,0 +1,47 @@
+# Three sequential 30-day increments that strengthen the shared platform before
+# widening the product surface.
+days_1_30:
+  primary_outcome: production_ready_pilot_foundation
+  shippable_artifacts:
+    - environments
+    - CI
+    - control_plane
+    - connector_passport
+    - RLS_policy_and_workflow_tests
+    - release_gate
+    - support_runbooks
+  objectives:
+    - prove_environment_and_secret_separation
+    - implement_release_evidence_and_safe_off
+    - certify_first_connector
+    - validate_RLS_policy_and_workflow_controls
+    - complete_staff_and_incident_runbooks
+days_31_60:
+  primary_outcome: operable_student_and_staff_wedge
+  shippable_artifacts:
+    - student_action_center
+    - readiness
+    - advisor_and_registrar_queues
+    - reconciliation
+    - privacy_and_session_controls
+    - hypercare_dashboard
+  objectives:
+    - activate_bounded_pilot_cohort
+    - operate_daily_hypercare
+    - launch_student_action_center
+    - deliver_advisor_and_registrar_operational_views
+    - collect_source_and_support_evidence
+days_61_90:
+  primary_outcome: repeatability_evidence
+  shippable_artifacts:
+    - pilot_result_pack
+    - second_tenant_simulation
+    - degree_planning_charter
+    - connector_reuse_evidence
+    - renewal_expansion_decision_record
+  objectives:
+    - close_pilot_measurement_cycle
+    - run_repeatability_simulation
+    - decide_renewal_expansion_or_remediation
+    - package_implementation_kit
+    - charter_next_adjacent_domain
