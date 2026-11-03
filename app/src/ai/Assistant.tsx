@@ -902,7 +902,7 @@ export function Assistant() {
       {ai.open && panelTrouble && <PanelGone error={panelTrouble} onClose={() => ai.hide()} />}
       {ai.open && !panelTrouble && Panel && (
         <PanelTrouble key="panel" onClose={() => ai.hide()}>
-          <Panel side={side} />
+          <Panel />
         </PanelTrouble>
       )}
     </>
