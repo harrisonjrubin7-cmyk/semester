@@ -10705,6 +10705,93 @@ button.adband-bar {
   gap: var(--sp-4);
 }
 
+.override-review {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.override-review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--sp-5);
+}
+
+.override-review-field,
+.override-review-recurrence {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.override-review-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.override-review-row {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.override-review-row summary {
+  cursor: pointer;
+}
+
+.override-review-summary-body {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.override-review-summary-copy {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.override-review-rule {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.override-review-summary-copy small,
+.override-review-summary-status,
+.override-review-facts dt {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.override-review-facts {
+  display: grid;
+  gap: var(--sp-3);
+  margin-block: var(--sp-5);
+}
+
+.override-review-facts div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.override-review-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 560px) {
   .control-plane-heading {
     display: grid;
