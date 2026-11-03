@@ -459,6 +459,8 @@
         "packages/platform/src/tenancy/context.ts",
         "app/server/institution/registration-readiness-commands.ts",
         "app/server/institution/registration-readiness-commands.test.ts",
+        "app/server/institution/registration-readiness-activation.ts",
+        "app/server/institution/registration-readiness-activation.test.ts",
         "app/server/institution/gateway.ts",
         "app/server/institution/registration-readiness-gateway.test.ts"
       ],

@@ -2,7 +2,7 @@
 
 > **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-10 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
 
-Status: repository contract, service-only Postgres persistence adapter, server orchestration service, authenticated HTTP command boundary, and bounded evaluator caller. The production runtime does not supply an evaluator, so both commands fail closed with `503 unavailable`; no live SIS connection or official registration write is activated by these modules.
+Status: repository contract, service-only Postgres persistence adapter, server orchestration service, authenticated HTTP command boundary, scoped activation wrapper, and bounded evaluator caller. The production runtime does not supply an evaluator or activation-fact gate, so both commands fail closed with `503 unavailable`; no live SIS connection or official registration write is activated by these modules.
 
 `packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-service.ts` loads the tenant-bound aggregate and applies those rules, `app/server/institution/readiness-repository.ts` is the service-only persistence adapter, and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. The held additive migration `20261010140000_registration_readiness_timeout_contract.sql` aligns that already-deployed service-only RPC with the timeout reason and event contract; merging it would auto-apply production SQL and therefore remains behind explicit approval. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
 
@@ -23,7 +23,25 @@ The root institution gateway now recognizes two authenticated commands:
 
 Both require a platform-format `Idempotency-Key`, refresh current membership immediately before execution, and derive tenant, subject, and requester from the verified server context. This first slice is intentionally student-self only; it does not infer advisor assignment from a role. An evaluation owned by somebody else is indistinguishable from a missing id. Responses contain the aggregate `evaluationId` and receipt, never the orchestration aggregate, source payload, holds, or prerequisite detail.
 
-The gateway path is present in the production runtime, but composition requires an explicitly injected `RegistrationReadinessEvaluator`. The deployed serverless entry point injects none, so requests fail closed. Adding a provider, tenant activation, or live configuration remains a separate approval gate.
+The gateway path is present in the production runtime, but composition requires both an explicitly injected `RegistrationReadinessEvaluator` and `RegistrationReadinessActivationGate`. The deployed serverless entry point injects neither, so requests fail closed. Adding a provider, tenant activation, or live configuration remains a separate approval gate.
+
+## Scoped activation boundary
+
+`app/server/institution/registration-readiness-activation.ts` wraps the durable command boundary before either a start can persist work or an evaluate command can enter the evaluator. It consumes a current projection of the existing control-plane authorities rather than creating a second entitlement or rollout store. A production source for that projection is not composed in this repository.
+
+Every decision keeps these facts separate and fails closed if any is absent, malformed, expired, cross-tenant, or negative:
+
+- the platform capability is available;
+- the exact tenant has a current entitlement;
+- the readiness evaluation rollout flag is enabled for an explicit campus, term, cohort, and role scope that covers the student;
+- an audited, two-person approval covers the same bounded scope and effective window;
+- the exact tenant's institutional source is healthy on fresh evidence;
+- the evaluator queue is accepting work; and
+- neither the global nor exact-tenant kill switch is engaged.
+
+The tenant, student and roles come from refreshed server context. Campus and cohort membership must be derived by the activation source from trusted institutional records; the HTTP body supplies only the term and never supplies activation authority. The wrapper reloads the decision for both `start` and `evaluate`, so an incident pause, expired approval, unhealthy integration, or closed queue prevents new work without a process restart. Re-enabling does not bypass any gate: the complete current fact set must pass again.
+
+The public refusal is one retryable `503 registration_readiness_paused` with an official-portal/advising fallback. Specific internal denial reasons remain policy evidence but are not exposed in a way that identifies another tenant, cohort, approval, or integration. Repository tests prove the default-off boundary and disable/re-enable behavior only; they are not a pilot-tenant safe-off exercise or activation evidence.
 
 ## Evaluator caller
 
@@ -70,7 +88,7 @@ The store now:
 5. keeps reconciliation work service-only; a later query surface must authorize an assigned advisor or registrar relationship before exposing it;
 6. documents forward rollback order and has database-negative tests for cross-tenant reads and writes.
 
-The adapter and command path are source-level implementation evidence only. The runtime has no approved evaluator dependency, so the deployed path remains unavailable. It has not been exercised against a live institution or used for an official registration write. Those remain separate gates.
+The adapter, activation wrapper and command path are source-level implementation evidence only. The runtime has no approved evaluator or activation-fact dependency, so the deployed path remains unavailable. It has not been exercised against a live institution or used for an official registration write. Those remain separate gates.
 
 ## Blocker routing decision rules
 

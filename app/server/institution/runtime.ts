@@ -14,12 +14,18 @@ import {
   RegistrationReadinessCommands,
   type RegistrationReadinessEvaluator,
 } from './registration-readiness-commands.ts';
+import {
+  ActivationControlledRegistrationReadinessCommands,
+  type RegistrationReadinessActivationGate,
+} from './registration-readiness-activation.ts';
 
 export type InstitutionEnvironment = Record<string, string | undefined>;
 
 export interface InstitutionRuntimeDependencies {
   /** Approved, tenant-bound source adapter. Omission keeps every readiness command unavailable. */
   registrationReadinessEvaluator?: RegistrationReadinessEvaluator;
+  /** Current activation facts from the existing control plane. Omission keeps readiness unavailable. */
+  registrationReadinessActivation?: RegistrationReadinessActivationGate;
 }
 
 export function exactAppOrigin(env: InstitutionEnvironment): string {
@@ -89,12 +95,19 @@ export function createProductionInstitutionRuntime(
   const readinessRepository = dependencies.registrationReadinessEvaluator
     ? new PostgresRegistrationReadinessRepository({ url: authUrl, serviceKey })
     : undefined;
-  const registrationReadiness = dependencies.registrationReadinessEvaluator && readinessRepository
+  const readinessCommands = dependencies.registrationReadinessEvaluator && readinessRepository
     ? new RegistrationReadinessCommands({
         service: new RegistrationReadinessService(readinessRepository),
         repository: readinessRepository,
         evaluator: dependencies.registrationReadinessEvaluator,
       })
+    : undefined;
+  const registrationReadiness = readinessCommands && readinessRepository && dependencies.registrationReadinessActivation
+    ? new ActivationControlledRegistrationReadinessCommands(
+        readinessCommands,
+        readinessRepository,
+        dependencies.registrationReadinessActivation,
+      )
     : undefined;
   return withScim(createGateway({
     origin: exactAppOrigin(env),
