@@ -1,10 +1,10 @@
 # When a school leaves
 
-Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** the schema migration is present in production, but no school has been offboarded and no offboarding case has been run there.
+Full-beta gate G3, decision D-1021. Written 30 Sep 2026. **Built, not used:** the base case migration is present in production; the export-generator migration is repository-only. No school has been offboarded and no offboarding case has been run in production.
 
 A school row is never deleted. `delete from schools` now fails with a message pointing here, for every role including the platform operator's own, because 125 tenant tables reference `schools` with `on delete cascade` and one statement would have silently taken all of them. A school leaves through a **case**, in steps, and every step but the last is undone by one call.
 
-Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks every refusal is `supabase/school-offboarding.check.sql` (98 checks; twelve guards were removed one at a time and each removal turned it red).
+Everything is a function called with a signed-in account (`supabase/migrations/20260930200000_school_offboarding.sql` and `20261026150000_offboarding_export_package.sql`). There is no screen: an offboarding is a rare, contractual event with two named people, and a screen would be a way to do it by accident. The suite that walks the refusals and synthetic export path is `supabase/school-offboarding.check.sql`.
 
 ## The steps
 
@@ -15,7 +15,7 @@ Everything is a function called with a signed-in account (`supabase/migrations/2
 | 3 | `approve_offboarding(case)` | **the other side, and a different person** | the inventory exists. A school-side proposal is approved by an operator; an operator-side proposal by the school's own administrator |
 | 4 | `record_offboarding_notice(case, date)` | either side | the date is not in the future. Records that students were told to take their own export; **sends nothing** |
 | 5 | `disable_school_access(case)` | operator | the notice is recorded. See below |
-| 6 | `record_offboarding_export(case, sha256, counts, delivered_to)` then `verify_offboarding_export(case)` | two different operators | the counts still match the school as it stands and cover every table the inventory found **and every table that holds rows for the school now** (a table empty at preflight that gained a row since cannot be left out); otherwise the case stays put and the rejection is audited |
+| 6 | `generate_offboarding_export(case, idempotency_key)`, `record_generated_offboarding_export(case, generation, delivered_to)`, then `verify_offboarding_export(case)` | generator/recorder and verifier are different operators | generation is operator-only and case-scoped; exact-key replay is actor-bound and byte-identical, while changed tenant data returns a visible refusal and requires a reviewed new key. Delivery binds the immutable generation receipt. Verification still requires current counts for every tenant table. `record_offboarding_export` remains only for a counsel-approved external generator |
 | 7 | `archive_school(case, retain_days)` | operator | the export is verified; at least 30 days (default 90) |
 | 8 | `authorize_school_purge(case, reason)` | an operator who neither proposed nor approved | archived, the window has run, **no live legal hold**. It records the authorization and **deletes nothing** |
 
@@ -34,13 +34,15 @@ Does not: touch a student's own session or account, delete or edit any record, o
 ## Legal holds and retention
 
 - Archiving keeps everything, so the retention sweeps continue to run on their normal clocks (`RETENTION.md`); offboarding neither speeds nor stops them.
+- Generation stores only an immutable receipt (case, operator, time, counts and hashes), not the package rows. The caller is told to use the approved encrypted delivery channel and remove its temporary copy after receipt. The receipt stays with the never-deleted offboarding case and audit evidence.
 - A live legal hold on the school (or a platform hold) blocks purge eligibility. Holds are read from `public.legal_holds` (on `main` since #1012): any unreleased hold placed over this school or one of its accounts, and any platform hold, counts. The reader still tolerates the table being absent, and the suite runs against the real table. **Before any purge is authorized, still confirm with counsel that no matter covers this school** — a hold nobody placed protects nothing. Whether a school's departure ends a hold is counsel's decision, not the database's.
+- A hold does not silently block portability. Its observed count and preserve-only effect are written into the generated manifest; generation performs no deletion and grants no purge authority.
 - The retention window (90 days default, 30 minimum) is a placeholder. Counsel sets the real length, and whether a former school's student work is kept, returned or destroyed (D-124 "no deletion ledger" may be reopened).
 
 ## What is not built
 
 - **The purge itself.** Deleting a school's records category by category, with a confirmation per category, does not exist. The trigger on `schools` therefore refuses *every* delete, including after `authorize_school_purge`. Building the purge is a separate piece of work needing its own authorization.
-- The export itself (the file handed to the school). Step 6 records and verifies an export made elsewhere; nothing here generates it.
+- A delivery job, archive/container format, operator screen, customer receipt workflow and target-environment acceptance. The database now returns a deterministic JSON package with per-table, manifest and package hashes and explicit credential/security/privileged-field exclusions, but does not write, retain, encrypt, transmit or deliver a file. The synchronous preview refuses packages above 100,000 tenant rows and points the operator to a separately reviewed chunked generator; that generator does not yet exist.
 - Notifying anyone. Step 4 records that it happened.
 - Any screen, and any offboarding from a school-set-up that predates a `tenant_rollout` row (the roll-out step is skipped when there is no row).
 - Department-, office- and course-scoped grants inside the school are not revoked; only `school`-scoped ones are. The grant that gives an administrator power over a whole school is school-scoped, so their authority ends; a course instructor's course-scoped grant does not, and reaches only that course's own records.

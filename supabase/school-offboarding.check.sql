@@ -79,8 +79,8 @@ do $$
 declare
   n_admin uuid; n_admin2 uuid; s_admin uuid; m_n uuid; m_n2 uuid; m_s uuid; newcomer uuid;
   op1 uuid; op2 uuid; op3 uuid; student uuid;
-  n_case uuid; s_case uuid; c2 uuid; k uuid;
-  n bigint; inv jsonb; res jsonb; counts jsonb; until timestamptz;
+  n_case uuid; s_case uuid; c2 uuid;
+  n bigint; inv jsonb; res jsonb; generated jsonb; counts jsonb; until timestamptz;
   s_grant uuid; s_conn uuid; n_conn uuid; sess int;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -266,26 +266,61 @@ begin
     format($q$select public.cancel_offboarding(%L, 'never mind')$q$, n_case));
   reset role;
 
-  -- ── Export and verification ──────────────────────────────────────────────
-  -- What the export tool would record: the live count of each table the
-  -- preflight found, taken now, after access was disabled (disabling itself
-  -- wrote a roll-out history row).
-  counts := '{}'::jsonb;
-  for k in select 1 where false loop end loop;
-  declare
-    tbl record; live bigint; col text;
-  begin
-    for tbl in select t->>'table' as name from jsonb_array_elements(inv->'tables') t loop
-      select min(column_name) into col from information_schema.columns
-       where table_schema = 'public' and table_name = tbl.name and column_name in ('tenant_id', 'school_id');
-      execute format('select count(*) from public.%I where %I::text = $1', tbl.name, col) into live using 'north-off';
-      counts := counts || jsonb_build_object(tbl.name, live);
-    end loop;
-  end;
+  -- ── Export generation, delivery record and verification ─────────────────
+  -- An active hold is disclosed in the package and preserves the source data;
+  -- it does not turn generation into a destructive action or block portability.
+  set local role postgres;
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+  values ('tenant', 'north-off', 'north-off', 'Export preservation hold', 'EXPORT-MATTER', op3);
+  reset role;
+
   perform pg_temp.become(op1);
-  perform pg_temp.must_refuse('an export with a malformed hash',
-    format($q$select public.record_offboarding_export(%L, 'abc', %L::jsonb, 'registrar')$q$, n_case, counts));
-  perform public.record_offboarding_export(n_case, repeat('a', 64), counts, 'the registrar, by secure transfer');
+  perform pg_temp.must_refuse('an export generation with a malformed idempotency key',
+    format($q$select public.generate_offboarding_export(%L, 'short')$q$, n_case));
+  generated := public.generate_offboarding_export(n_case, 'north-export-0001');
+  counts := generated -> 'counts';
+  perform pg_temp.counted('the generator returns a package', (generated->>'ok')::boolean::int, 1);
+  perform pg_temp.counted('the package is tenant-scoped (no south row)',
+    (position('south-off' in (generated->'package')::text) = 0)::int, 1);
+  perform pg_temp.counted('the package discloses the active hold',
+    ((generated->'package'->'manifest'->>'legal_holds_observed')::int = 1)::int, 1);
+  perform pg_temp.counted('the package performs no destructive action',
+    jsonb_array_length(generated->'package'->'manifest'->'destructive_actions'), 0);
+  perform pg_temp.counted('credential-like columns are not copied',
+    (select count(*) from jsonb_array_elements(generated->'package'->'files'->'integration_connections.json') r
+      where r ? 'credentials_reference'), 0);
+  perform pg_temp.counted('privileged legal-hold details are not copied',
+    (select count(*) from jsonb_array_elements(generated->'package'->'files'->'legal_holds.json') r
+      where r ?| array['reason', 'matter_ref', 'release_reason']), 0);
+  res := public.generate_offboarding_export(n_case, 'north-export-0001');
+  perform pg_temp.counted('the same operator and key replay byte-identical hashes',
+    ((res->>'replayed')::boolean and res->>'package_sha256' = generated->>'package_sha256')::int, 1);
+  reset role;
+
+  perform pg_temp.become(op2);
+  res := public.generate_offboarding_export(n_case, 'north-export-0001');
+  reset role;
+  perform pg_temp.counted('another operator cannot replay the first operator''s package',
+    ((not (res->>'ok')::boolean) and res->'error'->>'code' = 'replay_operator_mismatch')::int, 1);
+
+  -- Releasing the hold changes one tenant row. Reusing the old key fails
+  -- visibly and returns no package; a reviewed retry uses a new key.
+  set local role postgres;
+  perform set_config('request.jwt.claims', '', true);
+  update public.legal_holds set released_by = op2, released_at = now(), release_reason = 'Export review complete'
+   where matter_ref = 'EXPORT-MATTER';
+  reset role;
+  perform pg_temp.become(op1);
+  res := public.generate_offboarding_export(n_case, 'north-export-0001');
+  perform pg_temp.counted('a changed snapshot fails closed on replay',
+    ((not (res->>'ok')::boolean) and res->'error'->>'code' = 'snapshot_changed' and not (res ? 'package'))::int, 1);
+  generated := public.generate_offboarding_export(n_case, 'north-export-0002');
+  counts := generated -> 'counts';
+  perform pg_temp.must_refuse('recording a generation receipt that does not exist',
+    format($q$select public.record_generated_offboarding_export(%L, gen_random_uuid(), 'registrar')$q$, n_case));
+  perform public.record_generated_offboarding_export(n_case, (generated->>'generation_id')::uuid,
+    'the registrar, by approved encrypted transfer');
   perform pg_temp.must_refuse('the recorder verifying their own export',
     format($q$select public.verify_offboarding_export(%L)$q$, n_case));
   reset role;
@@ -383,7 +418,8 @@ begin
 
   set local role postgres;
   perform set_config('request.jwt.claims', '', true);
-  update public.legal_holds set released_by = op1, released_at = now(), release_reason = 'Matter closed';
+  update public.legal_holds set released_by = op1, released_at = now(), release_reason = 'Matter closed'
+   where matter_ref = 'MATTER-1';
   reset role;
   perform pg_temp.become(op1);
   perform pg_temp.must_refuse('the approver authorizing the purge',
@@ -508,7 +544,7 @@ begin
 
   -- ── The audit record ─────────────────────────────────────────────────────
   select count(distinct action) into n from public.audit_event where action like 'school.offboarding_%';
-  perform pg_temp.counted('every kind of step is in the audit record', n, 12);
+  perform pg_temp.counted('every kind of step and export generation outcome is in the audit record', n, 15);
   select count(*) into n from public.audit_event where action like 'school.offboarding_%'
      and (detail::text ~ '@' or detail::text ~* 'example');
   perform pg_temp.counted('and no event carries an address or a name', n, 0);
