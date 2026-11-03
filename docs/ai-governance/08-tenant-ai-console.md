@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/CONFIGURATION-STUDIO.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 08 · Tenant AI configuration console
 
 **Builds on:** [`../CONFIGURATION-STUDIO.md`](../CONFIGURATION-STUDIO.md) (versioned, reviewed configuration),

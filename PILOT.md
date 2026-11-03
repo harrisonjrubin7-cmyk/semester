@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: ANALYTICS.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # The pilot
 
 Stage 1 of the build-out plan ends when the pilot has run for two weeks with no

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Conversion funnel specification
 
 Status: proposed. Boundaries come from [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)

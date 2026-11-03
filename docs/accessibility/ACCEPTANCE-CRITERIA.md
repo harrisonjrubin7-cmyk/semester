@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/accessibility/PROGRAM.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Accessibility acceptance criteria
 
 Companion to [PROGRAM.md](PROGRAM.md). **Proposal, 2026-10-04.** These are the criteria a story must carry to

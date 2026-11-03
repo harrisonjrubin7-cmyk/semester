@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/business/templates/QBR_TEMPLATE.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Customer Health Score (pilot operating score and reconciliation)
 
 | Control | Value |

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/operating-model/QUALITY-MANAGEMENT.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 04 · Quality gates and CI
 
 > Part of the [quality-system pack](README.md). Status: **proposed**.

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/finance/11-PILOT-EVIDENCE-PLAN.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Real-numbers intake: replacing placeholders with the company's own figures
 
 | Control | Value |

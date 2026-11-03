@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/support/internal/escalation-map.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # I want to flag something unsafe
 
 > **Type:** help · **Audience:** students, support · **Owner:** `trust` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

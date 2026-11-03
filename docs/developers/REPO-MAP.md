@@ -1,3 +1,34 @@
+---
+stale-refs:
+  - source: labs/connected-workflow/lab/README.md
+    changed_at: "2026-10-18T16:29:24"
+    sections_changed: [Executable connected workflow lab]
+    summary: "Removed: Schema note: the approvals table gained a `reason` column, and grades gained a `submission_id` column (drafts record the submission they assess). Delete an existing synthetic database before running this version; `CREATE TABLE IF NOT EXISTS` does not migrate old files.. Added: Schema note: the approvals table gained a `reason` column, and grades gained a `submission_id` column (drafts record the submission they assess). An existing synthetic database is migrated on open: missing columns are added and existing grades are backfilled with their latest submission. Deleting it is still the simplest reset."
+  - source: README.md
+    changed_at: "2026-10-18T17:16:10"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/README.md
+    changed_at: "2026-10-18T17:16:12"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`
@@ -25,6 +56,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
+| `labs/` | Standalone, non-production reference labs. `connected-workflow/` is a loopback SQLite lab with synthetic data for the student–faculty grading loop and the registrar hold loop. Stdlib Python only; run `python3 -m unittest discover -s tests` from that directory (52 tests). It is not a second production authority: its invariants are to be mapped onto the TypeScript and Postgres code. See [`labs/connected-workflow/lab/README.md`](../../labs/connected-workflow/lab/README.md). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
 | `operations/` | The launch command center and the go/no-go scorecard (Phase 0 baseline): the ordered Phase 1 plan, stop conditions, dated exceptions. Sequences work; approves no launch. |
 | `operator/` | The Semester Operator: the agent team's runtime. Thirty-three agent contracts as data, five deterministic control modules (policy, approvals, scheduler, limits, audit and kill switch), isolated worktrees, and the operator CLI. An npm workspace of its own because it is Node code, not a browser-safe package. See [`operator/README.md`](../../operator/README.md). |

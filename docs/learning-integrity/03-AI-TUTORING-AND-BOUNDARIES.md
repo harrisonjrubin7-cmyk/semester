@@ -1,3 +1,24 @@
+---
+stale-refs:
+  - source: docs/learning-integrity/01-LEARNING-DESIGN-AND-EVIDENCE.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/learning-integrity/02-ASSESSMENT-MASTERY-AND-FEEDBACK.md
+    changed_at: "2026-10-18T20:45:23"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/README.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # 03 · AI tutoring boundaries, citation and source behaviour, instructor controls
 
 Deliverables covered: **AI tutoring boundaries**, **citation/source behaviour**,

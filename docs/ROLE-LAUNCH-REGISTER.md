@@ -1,3 +1,14 @@
+---
+stale-refs:
+  - source: SEMESTER-OPERATING-SYSTEM.md
+    changed_at: "2026-10-18T20:45:21"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
 # Role Launch Register
 
 <!-- Rendered from app/src/lib/rolelaunch.ts by rolelaunch.test.ts. Edit the data, then run `npm run registers` from app/. -->

@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/LMS-INTEROPERABILITY-MATRIX.md
+    changed_at: "2026-10-18T17:16:11"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # SIS and LMS Integration Boundaries
 
 | Control | Value |

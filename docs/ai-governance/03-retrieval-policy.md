@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/trust/AI-DATA-USE-STANDARD.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # 03 · Retrieval policy
 
 **Builds on:** [`../trust/AI-DATA-USE-STANDARD.md`](../trust/AI-DATA-USE-STANDARD.md),

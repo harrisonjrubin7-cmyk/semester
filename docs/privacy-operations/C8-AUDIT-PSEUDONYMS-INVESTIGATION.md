@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/privacy-operations/08-FINDINGS-AND-RECONCILIATION.md
+    changed_at: "2026-10-18T20:45:24"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # C8 investigation: audit pseudonyms and erasure
 
 Written 4 Oct 2026 for finding C8 in [08](08-FINDINGS-AND-RECONCILIATION.md). **No migration was built.** This note says why, so the next person does not redo the reading. Whether pseudonymous audit hashes must be unlinkable after erasure is counsel's question (P-08 in [07](07-COUNSEL-REVIEW-QUEUE.md), **[COUNSEL REQUIRED]**); nothing here is a legal claim.

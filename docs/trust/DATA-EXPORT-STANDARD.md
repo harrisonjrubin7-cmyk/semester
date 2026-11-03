@@ -1,3 +1,12 @@
+---
+stale-refs:
+  - source: docs/DATA-RETENTION-EXPORT-DELETION.md
+    changed_at: "2026-10-18T20:45:22"
+    sections_changed: []
+    summary: externally modified
+---
+
+
 # Semester data export standard — controlled draft
 
 - **Status:** `PARTIAL`
