@@ -30,13 +30,14 @@
 import type { Action } from '../state/shape';
 
 /**
- * The four lists Mine holds.
+ * The lists Mine holds. `documents` is the one kept on the school's service
+ * rather than the device (`components/workspace/Documents.tsx`).
  *
  * Named here rather than spelled out a fourth time. It was already written
  * three times — the `Ephemeral` field, the `setMineTab` action, and Mine's own
  * `Segmented` options — and a fourth copy is a fourth place to forget a tab.
  */
-export type MineTab = 'tasks' | 'appointments' | 'notes' | 'files';
+export type MineTab = 'tasks' | 'appointments' | 'notes' | 'files' | 'documents';
 
 /**
  * Opening Mine on a given tab, as data.

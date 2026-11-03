@@ -3934,7 +3934,9 @@
       "screens": [
         "app/src/screens/Career.tsx",
         "app/src/components/CareerEvidence.tsx",
-        "app/src/components/SkillsGraph.tsx"
+        "app/src/components/SkillsGraph.tsx",
+        "app/src/components/career/EmployerSharing.tsx",
+        "app/src/components/career/SharedWithMe.tsx"
       ],
       "modules": [
         "app/src/lib/career.ts",
@@ -3953,13 +3955,14 @@
         "app/src/components/CareerEvidence.test.tsx",
         "app/src/lib/career.test.ts",
         "supabase/career-evidence.check.sql",
-        "app/src/lib/workspace/evidence.test.ts"
+        "app/src/lib/workspace/evidence.test.ts",
+        "app/src/components/career/EmployerSharing.test.tsx"
       ],
       "flags": [
         "career_evidence"
       ],
-      "note": "Career workspace with evidence, skills graph, resume, contacts and fairs; persists through the local store synced by lib/cloud.ts push() into public.state/public.courses (20260901000100_schema.sql, sync.check.sql); employer-side postings exist only in the sandbox gateway. The server side of sharing portfolio evidence with an employer exists (career_evidence: pinned workspace versions, grants to one employer-role account scoped to named items, at most 180 days, revocable, every employer read audited, no grade data), with a typed client.",
-      "gap": "No live job feed or outcomes; applications/offers are sandbox-only (REPO_AUDIT J-011, J-023). Evidence sharing has no screen: nothing in the app saves a document to Semester yet, so there is nothing to choose."
+      "note": "Career workspace with evidence, skills graph, resume, contacts and fairs; persists through the local store synced by lib/cloud.ts push() into public.state/public.courses (20260901000100_schema.sql, sync.check.sql); employer-side postings exist only in the sandbox gateway. The server side of sharing portfolio evidence with an employer exists (career_evidence: pinned workspace versions, grants to one employer-role account scoped to named items, at most 180 days, revocable, every employer read audited, no grade data), with a typed client. Career › Employers is its screen: the student adds saved document versions as evidence, shares named items with one employer account until a date at most 180 days out, sees who can read what and until when, and ends it or withdraws an item; an account holding a live employer role sees what was shared with it, read-only. Implemented in UI with mocked-client component tests; the migration is not applied to the hosted project, so nothing is verified against a live database.",
+      "gap": "No live job feed or outcomes; applications/offers are sandbox-only (REPO_AUDIT J-011, J-023). Evidence sharing is not applied to the hosted database (20261023120000 not in the project listing), so the Employers tab answers not set up there; no employer onboarding exists to give an account the employer role."
     },
     "#/student/changes": {
       "status": "tested",
@@ -5395,7 +5398,10 @@
       ],
       "screens": [
         "app/src/screens/Write.tsx",
-        "app/src/screens/write/Paper.tsx"
+        "app/src/screens/write/Paper.tsx",
+        "app/src/components/workspace/Documents.tsx",
+        "app/src/components/workspace/DocumentDetail.tsx",
+        "app/src/components/workspace/DocumentShares.tsx"
       ],
       "modules": [
         "app/src/lib/docx.ts",
@@ -5410,11 +5416,12 @@
       ],
       "tests": [
         "supabase/workspace-objects.check.sql",
-        "app/src/lib/workspace/objects.test.ts"
+        "app/src/lib/workspace/objects.test.ts",
+        "app/src/components/workspace/Documents.test.tsx"
       ],
       "flags": [],
-      "note": "The document editor keeps versions in the device library and exports DOCX and PDF locally. The server side of keeping a document exists (workspace_objects: immutable versions with SHA-256, optimistic revision, idempotent saves, owner-only sharing of the live object or one pinned version) with a typed client in lib/workspace/objects.ts.",
-      "gap": "The editor does not save to the server yet: no 'Save a version to Semester' action, so no server persistence from the screen and no collaboration."
+      "note": "The document editor keeps versions in the device library and exports DOCX and PDF locally. The server side of keeping a document exists (workspace_objects: immutable versions with SHA-256, optimistic revision, idempotent saves, owner-only sharing of the live object or one pinned version) with a typed client in lib/workspace/objects.ts. Mine › Documents is its screen: list, create, edit and save a version on the revision read (a stale save shows the newer version and keeps the student’s text), open an earlier version read-only, share the live document or one pinned version with one account and stop a share. Implemented in UI with mocked-client component tests; the migration is not applied to the hosted project.",
+      "gap": "The device editor in Write still does not save to the server (no 'Save a version to Semester' action there); Mine › Documents is a separate plain-text/Markdown editor. A person given a share has no screen listing what was shared with them, and comment has no comment store. The migration is not applied to the hosted database, so the tab answers not set up there."
     },
     "#/studio/export": {
       "status": "code-present",

@@ -14,8 +14,10 @@
  * `stale` and writes nothing. Each write carries an idempotency key, which a
  * retry after an `unknown` failure must reuse.
  *
- * No screen calls this yet: there is no way in the app to save a document to
- * Semester (D-1661), so there would be nothing to choose as evidence.
+ * The Employers tab in Career is the screen that calls this: the student's
+ * side in `components/career/EmployerSharing.tsx`, an employer's in
+ * `components/career/SharedWithMe.tsx`. Evidence is chosen from the documents
+ * kept in Mine › Documents (`./objects.ts`).
  */
 
 import { cloud } from '../cloud';
@@ -221,6 +223,36 @@ export async function revokeEmployer(grantId: string, expectedRevision: number, 
   if (error) throw evidenceError(error, 'Access was not ended.');
   const r = obj(data);
   return { grant: text(r.grant), revokedAt: text(r.revoked_at), revision: num(r.revision) };
+}
+
+/**
+ * The employers this account acts for: its live `employer` role grants
+ * (`role_grants`, which "your roles are yours to see" lets it read). For
+ * deciding whether to offer "Shared with you" — it authorizes nothing, since
+ * `career_evidence_shared_with_me` re-checks the role on every call. Empty on
+ * any failure, as `loadMyCapabilities` is: a wrong answer only hides a list.
+ */
+export async function employerScopes(now: Date = new Date()): Promise<string[]> {
+  try {
+    const db = await cloud();
+    const { data, error } = await db
+      .from('role_grants')
+      .select('scope_id, expires_at, revoked_at')
+      .eq('role', 'employer')
+      .eq('scope_kind', 'employer')
+      .is('revoked_at', null);
+    if (error) return [];
+    return [
+      ...new Set(
+        rows(data)
+          .filter((g) => g.revoked_at == null && (g.expires_at == null || Date.parse(text(g.expires_at)) > now.getTime()))
+          .map((g) => text(g.scope_id))
+          .filter((s) => s !== ''),
+      ),
+    ].sort();
+  } catch {
+    return [];
+  }
 }
 
 /** For an employer: the live shares made to you. */

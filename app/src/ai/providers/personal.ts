@@ -43,6 +43,17 @@ export const mine: Provide = (look) => {
     };
   }
 
+  // Kept on the school's service, not in the device store, so there is nothing
+  // here to describe — and the assistant does not fetch them.
+  if (tab === 'documents') {
+    return {
+      summary: 'Your documents kept in Semester. Their titles and text are on your school’s service and are not read by the assistant.',
+      visible: [],
+      actions: ['open_screen'],
+      suggestions: ['How does sharing a document work?'],
+    };
+  }
+
   if (tab === 'appointments') {
     return {
       summary: `Your appointments — ${state.appointments.length}.`,

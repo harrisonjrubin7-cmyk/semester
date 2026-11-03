@@ -146,6 +146,13 @@ const NOT_CONTENT = new Set([
    */
   'demand_consents',
   'term_plan_courses',
+  /*
+   * A role somebody else granted this account (an employer, a school's
+   * roster) — never something the person made. Listed in `OWNED_TABLES` only
+   * because the app reads your own to decide whether to offer an employer's
+   * list, and the grant cascades with the account.
+   */
+  'role_grants',
   'push_devices',
   'push_queue',
   'access_log',

@@ -8,10 +8,10 @@
  * these functions only call it and say what it answered in words a student
  * can act on.
  *
- * Nothing on the device calls this yet. The editor (`screens/Write.tsx`) keeps
- * its documents and their history on the device (`lib/document.ts`,
- * `lib/docversions.ts`), and that is unchanged: this is the server half a
- * "Save a version to Semester" action will use.
+ * The Documents tab in Mine (`components/workspace/Documents.tsx`) is the one
+ * screen that calls this. The editor (`screens/Write.tsx`) still keeps its
+ * documents and their history on the device (`lib/document.ts`,
+ * `lib/docversions.ts`), and that is unchanged.
  *
  * Three answers get their own kind, because a screen does something different
  * for each:
@@ -273,6 +273,86 @@ export async function share(req: ShareRequest, key: string): Promise<GrantReceip
     grantedAt: text(r.granted_at),
   };
 }
+
+/** One saved version as the owner's history lists it: no body, which `readVersion` fetches. */
+export interface VersionEntry {
+  version: string;
+  versionNumber: number;
+  title: string;
+  byteLength: number;
+  sha256: string;
+  savedAt: string;
+}
+
+/**
+ * Every version of one of your objects, newest first. A plain read: the
+ * "owners read their versions" policy lets only the owner see these rows, and
+ * the body is left out so the list stays small.
+ */
+export async function listVersions(objectId: string): Promise<VersionEntry[]> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('workspace_object_versions')
+    .select('id, version_number, title, byte_length, content_sha256, created_at')
+    .eq('object_id', objectId)
+    .order('version_number', { ascending: false });
+  if (error) throw objectsError(error, 'Could not load its versions.');
+  return (Array.isArray(data) ? (data as Row[]) : []).map((r) => ({
+    version: text(r.id),
+    versionNumber: num(r.version_number),
+    title: text(r.title),
+    byteLength: num(r.byte_length),
+    sha256: text(r.content_sha256),
+    savedAt: text(r.created_at),
+  }));
+}
+
+/** A share you made, as you see it: live, expired or revoked. */
+export interface ShareEntry {
+  grant: string;
+  /** Null when the share is to the live object. */
+  version: string | null;
+  grantee: string;
+  permission: Permission;
+  purpose: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  grantedAt: string;
+}
+
+/**
+ * Every share of one of your objects, newest first, including ended ones so
+ * the owner can see what was shared and when it stopped. The grants policy
+ * lets the owner read these; a grantee sees only their own.
+ */
+export async function listShares(objectId: string): Promise<ShareEntry[]> {
+  const db = await cloud();
+  const { data, error } = await db
+    .from('workspace_object_grants')
+    .select('id, version_id, grantee, permission, purpose, expires_at, revoked_at, created_at')
+    .eq('object_id', objectId)
+    .order('created_at', { ascending: false });
+  if (error) throw objectsError(error, 'Could not load who it is shared with.');
+  return (Array.isArray(data) ? (data as Row[]) : []).map((r) => ({
+    grant: text(r.id),
+    version: r.version_id == null ? null : text(r.version_id),
+    grantee: text(r.grantee),
+    permission: text(r.permission) as Permission,
+    purpose: text(r.purpose),
+    expiresAt: r.expires_at == null ? null : text(r.expires_at),
+    revokedAt: r.revoked_at == null ? null : text(r.revoked_at),
+    grantedAt: text(r.created_at),
+  }));
+}
+
+/** Whether a share still gives anything at `now`: not revoked and not past its expiry. */
+export function shareLive(s: Pick<ShareEntry, 'revokedAt' | 'expiresAt'>, now: Date = new Date()): boolean {
+  if (s.revokedAt) return false;
+  return s.expiresAt == null || Date.parse(s.expiresAt) > now.getTime();
+}
+
+/** An account id as `auth.users` has them. The server checks the account exists. */
+export const ACCOUNT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Stop a share. Revoking one already revoked answers when it was revoked. */
 export async function revoke(grantId: string): Promise<{ grant: string; revokedAt: string }> {
