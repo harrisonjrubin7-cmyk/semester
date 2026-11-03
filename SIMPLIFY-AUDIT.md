@@ -1,3 +1,37 @@
+# One app — the thirty-sixth pass: the ten absent ids, traced
+
+Against `origin/main` at `162cd31d`. **No code changed.** This pass does the first item of the thirty-fifth's "Next": trace the ten ids that are not destinations in `lib/nav.ts`. Each was checked with `grep -rn "'<id>'"` over `app/src`, excluding tests.
+
+## The trace
+
+| Id | What it actually is | Where | Verdict |
+|---|---|---|---|
+| `weekly` | A toggle inside Plan (daily / weekly), and a digest option | `components/OperatingRhythmWorkspace.tsx:58`, `screens/Hub.tsx:219` | Not a destination. The Plan toggle is a view of the Plan screen. |
+| `ahead` | A **task tag** (`TASKS`, `lib/nav.ts:190`); a Due sub-tab; a Degree "Scenarios" tab | `lib/nav.ts:190`, `state/shape.ts:1005` (`dueTab`), `screens/Courses.tsx:355`, `screens/Degree.tsx:115` | Not a destination. Three views of "what is coming", all already under their own screens. |
+| `tonight` | A word the capture parser understands | `lib/capture.ts:145` | Not a destination. |
+| `chat` | A tab in a room, and a panel on a call | `components/room/Talk.tsx:37`, `screens/call/Stage.tsx:174` | Not a destination. Lives inside Rooms and Calls. |
+| `grades` | A **Courses tab** (`CoursesTab`, `lib/types.ts:862`), reached by `setCoursesTab` from four screens | `screens/Courses.tsx:58`, `screens/Gradebook.tsx:62,118`, `screens/Degree.tsx:439`, `screens/settings/Grading.tsx:86` | Not a destination of its own, **but a real overlap**: `screens/Gradebook.tsx` is also a screen file. See "Flagged" below. |
+| `standing` | A computed status `'ahead' \| 'overdue' \| 'done'` | `lib/standing.ts:22`, used by `screens/Today.tsx:1448` | Not a screen. A helper. |
+| `worked` | An example kind in the guide content | `lib/types.ts:339`, `lib/casework.ts:85`, `screens/Guide.tsx:1278` | Not a screen. Content. |
+| `everything` | A search keyword on one destination (`lib/nav.ts:838`), and a retired module name (`lib/nav.ts:1356`) | `lib/nav.ts:838` | Not a screen. Nothing to merge. The directory it describes is `me`/search. |
+| `springboard` | A **home layout** (`NavMode`), not a nav row | `lib/types.ts:957`, `lib/chrome.ts:202`, `App.tsx:719` | Not a destination. It chooses which home shape renders. |
+| `check` | A step id in a solver, and a Start Here sub-state | `lib/solve.ts:47`, `components/LearningMap.tsx:19` | Not a screen. |
+
+**Result: none of the ten is a registry destination.** None can be merged from `lib/nav.ts`, and none is reachable as a pathway a student could take to a second screen. The thirty-fifth pass's concern (that these ten "cannot be merged from the registry as written") is confirmed, and the answer is that they are not screens to merge.
+
+## Flagged
+
+- **`grades` overlaps `gradebook`.** The Courses screen carries a Grades tab, and there is also a `Gradebook` screen. Four screens dispatch `setCoursesTab: 'grades'` to reach it. This is the one real candidate for a subsume in the ten, and it needs its own pass: confirm what `Gradebook.tsx` renders against `Courses`' Grades tab, then pick a survivor. Not decided here.
+- **`weekly` vs `ahead` on the calendar question.** Plan's weekly view and Courses' Ahead tab both answer "what is the week holding". They are different questions (commitments versus deadlines), so they are kept distinct unless a later pass argues otherwise.
+
+## Next
+
+1. Compare `screens/Gradebook.tsx` with the Grades tab in `screens/Courses.tsx` (render, state read, route count). Verdict: merge, subsume, or keep.
+2. Finish the route count with the `openCourse` / `openItem` / `openEvent` / `openGuide` / `openLesson` call sites (still not counted).
+3. Confirm each `setLook` call site as a write (thirty-fifth, item 3).
+
+---
+
 # One app — the thirty-fifth pass: the audit before the merge (partial)
 
 Against `origin/main` at `fb51d663`. **63 destinations** in `lib/nav.ts`, not the 59 in the request. **No code changed.** This pass is Step 1 of "Make the app one app", and it is only partly done.
