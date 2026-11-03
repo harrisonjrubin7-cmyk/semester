@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 264 |
-| Tables created in `public` and not later dropped | 360 |
-| … of which enable row-level security in a migration | 360 |
-| Tables created in `private` and not later dropped | 59 |
-| … of which enable row-level security in a migration | 59 |
+| Migration files | 266 |
+| Tables created in `public` and not later dropped | 361 |
+| … of which enable row-level security in a migration | 361 |
+| Tables created in `private` and not later dropped | 60 |
+| … of which enable row-level security in a migration | 60 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 291 |
-| Tables with RLS found and no literal policy statement | 128 |
+| Tables named by at least one literal `create policy` statement | 292 |
+| Tables with RLS found and no literal policy statement | 129 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-166 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+167 files. `supabase/check.sh` runs every suite named in `supabase/check-suites.txt`, which lists every one of them, and exits 2 before building a cluster when that list and the files disagree, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -125,6 +125,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/ledger-chains.check.sql` | The hash chain over the academic-record and student-account ledgers: that a normal flow builds a chain the verifier accepts; that each kind of tampering it claims to catch is caught, and reported as… |
 | `supabase/ledger-seals.check.sql` | Signing the ledger chains: that a day is sealed once, per ledger and school, under a key no API role can read; that the seal check catches the attacker the link check cannot (one who rewrites an entr… |
 | `supabase/legal-holds.check.sql` | Legal holds (RM-02, RM-05): who may place one and over what, that it is released only by someone else with a reason, that it is never deleted or edited, that a held account cannot be deleted, and tha… |
+| `supabase/lifecycle-guidance.check.sql` | the guidance publisher wrapper and the descriptive lifecycle contract registry. |
 | `supabase/listings.check.sql` | Verified listings: who drafts, who publishes, who reads, and https only. |
 | `supabase/lti-capability.check.sql` | Whether an LTI launch's account holds lti:launch at the school, as the launch facts report it. |
 | `supabase/lti-integration.check.sql` | LTI bound to the integration control plane: the passback gate walks one gate at a time, unbound passback fails closed, and the launch's context is recorded only when every condition holds. |

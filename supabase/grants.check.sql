@@ -543,6 +543,10 @@ declare
     -- the last lists which courses that is, and nothing about students.
     'publish_course_rules(want_course text, want_term text, want_blanket text, want_uses jsonb, want_words text, want_link text, want_effective date)',
     'publish_course_guidance(want_course text, want_term text, want_body text)',
+    -- 20261024090100_course_guidance_once.sql: the same publish, keyed by a
+    -- command id and checked against the expected version. It authorises
+    -- before it replays a receipt, so a revoked caller cannot replay one.
+    'publish_course_guidance_once(want_command uuid, want_school text, want_course text, want_term text, want_body text, want_expected_version integer)',
     'publish_study_pack(want_course text, want_term text, want_pack uuid, want_title text, want_note text, want_items jsonb, want_retired boolean)',
     'my_course_studio_courses()',
     -- 20261009001500_course_material_retention_policy.sql: consumes one

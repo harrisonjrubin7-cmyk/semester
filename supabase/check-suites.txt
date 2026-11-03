@@ -91,6 +91,7 @@ learning-submissions
 ledger-chains
 ledger-seals
 legal-holds
+lifecycle-guidance
 listings
 lti
 lti-capability

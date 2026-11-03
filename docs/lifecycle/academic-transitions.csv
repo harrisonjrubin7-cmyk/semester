@@ -1,0 +1,25 @@
+aggregate,from_state,to_state,gate,actor,evidence
+Term,draft,review,validated configuration submitted,Academic operations,approval package
+Term,review,scheduled,approved exact configuration/version,Authorized publisher,publication receipt
+Term,scheduled,registration-open,approved effective time reached; activation permitted,Bound scheduler,activation evidence
+Term,registration-open,teaching,institution-approved term transition,Academic operations,source confirmation
+Term,teaching,grading,authorized calendar transition; preserve outstanding work,Academic operations,transition receipt
+Term,grading,reconciling,"grade handoff initiated, not assumed complete",Faculty / registrar,handoff receipts
+Term,reconciling,closed,required discrepancies resolved or formally accepted,Registrar,reconciliation evidence
+Term,closed,archived,retention and access rules applied,Authorized archive worker,archive evidence
+Enrollment,planned,requested,student confirms request; policy and idempotency checks,Student,request receipt
+Enrollment,requested,waitlisted / rejected / confirmed,authoritative registration result,Registrar / approved connector,source receipt
+Enrollment,confirmed,drop-requested,student request within applicable policy,Student / registrar,request receipt
+Enrollment,drop-requested,dropped / denied,authoritative outcome; do not clear confirmed enrollment on timeout,Registration authority,source receipt
+Assignment,draft,published,instructions/rubric/dates validated; authorized publication,Faculty,publication version
+Submission,draft,submitted,exact attempt/files confirmed,Student,submission receipt
+Submission,submitted,accepted / rejected,acceptance checks committed,Submission service,acceptance receipt
+Grade,draft,moderation / ready-for-release,assigned reviewer completes review,Faculty / moderator,review version
+Grade,ready-for-release,released,release authority and any required approval,Authorized releaser,release receipt
+Grade,released,passback-pending,institution permits; bound deployment; idempotency,Faculty / bound service,passback command
+Grade,passback-pending,posted / needs-reconciliation,official acknowledgement or unresolved discrepancy,Approved integration,official source evidence
+Academic record,posted,correction-proposed,authorized request; retain original,Registrar / records specialist,proposal version
+Academic record,correction-proposed,corrected / rejected,independent review and authorized posting,Authorized approver,correction history
+Affiliation,student-active,graduation-review,requirements review initiated; no automatic conferral,Student / registrar,review package
+Affiliation,graduation-review,conferred / deferred,authorized institutional decision,Graduation authority,conferral evidence
+Access,active,revoked / expired,exact grant revoked or expiry reached,Provisioner / policy predicate,grant audit / expiry reconciliation
