@@ -126,7 +126,7 @@ paths:
       operationId: revokeGrant
       parameters:
         - {name: grantId, in: path, required: true, schema: {type: string}}
-      - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
