@@ -171,3 +171,75 @@ it('has nothing in it about students', async () => {
     expect(host.textContent).not.toMatch(/students? (viewed|opened|read)|roster|enrolled|\d+ students/i);
   }
 });
+
+/* The entry is the only place an account's course list appears. These cover
+ * what happens to it when the account, the lookup, or the session changes. */
+
+function pendingRpc() {
+  let resolve!: (value: { data: { course_code: string }[]; error: null }) => void;
+  const promise = new Promise<{ data: { course_code: string }[]; error: null }>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+it('removes the prior account course list while a new account is checked', async () => {
+  const nextAccount = pendingRpc();
+  mock.rpc.mockResolvedValueOnce({ data: [{ course_code: 'ECON 1020' }], error: null });
+
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.textContent).toContain('ECON 1020');
+
+  mock.account = { id: 'another-prof' };
+  mock.rpc.mockReturnValueOnce(nextAccount.promise);
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+
+  expect(host.textContent).toContain('Checking connected teaching access');
+  expect(host.textContent).not.toContain('ECON 1020');
+
+  await act(async () => nextAccount.resolve({ data: [{ course_code: 'HIST 2100' }], error: null }));
+
+  expect(host.textContent).toContain('HIST 2100');
+  expect(host.textContent).not.toContain('ECON 1020');
+});
+
+it('ignores a late course lookup from the previous account', async () => {
+  const oldAccount = pendingRpc();
+  mock.rpc.mockReturnValueOnce(oldAccount.promise);
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+
+  mock.account = { id: 'new-prof' };
+  mock.rpc.mockResolvedValueOnce({ data: [{ course_code: 'HIST 2100' }], error: null });
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.textContent).toContain('HIST 2100');
+
+  await act(async () => oldAccount.resolve({ data: [{ course_code: 'ECON 1020' }], error: null }));
+
+  expect(host.textContent).toContain('HIST 2100');
+  expect(host.textContent).not.toContain('ECON 1020');
+});
+
+it('retries a failed access check without retaining old grants', async () => {
+  mock.rpc.mockRejectedValueOnce(new Error('offline'));
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.querySelector('[role="alert"]')?.textContent).toContain('Could not check connected teaching access');
+
+  mock.rpc.mockResolvedValueOnce({ data: [], error: null });
+  await act(async () => button(/Try again/)!.click());
+
+  expect(host.querySelector('[role="alert"]')).toBeNull();
+  expect(host.textContent).toContain('No connected teaching course was found');
+  expect(button(/Open Course Studio/)).toBeUndefined();
+});
+
+it('removes connected teaching content after sign-out', async () => {
+  mock.rpc.mockResolvedValueOnce({ data: [{ course_code: 'ECON 1020' }], error: null });
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+  expect(host.textContent).toContain('ECON 1020');
+
+  mock.account = null;
+  await act(async () => root.render(<CourseStudioEntry on requested />));
+
+  expect(host.textContent).toContain('Sign in to check connected teaching access');
+  expect(host.textContent).not.toContain('ECON 1020');
+});
