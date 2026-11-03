@@ -84,6 +84,8 @@ insert into fns values
   ('public.console_privacy_requests(false)'), ('public.console_privacy_requests(true)'),
   ('public.console_release_incidents(false)'), ('public.console_release_incidents(true)'),
   ('public.console_tenant_operations(false)'), ('public.console_tenant_operations(true)'),
+  ('public.console_pilots(false)'),           ('public.console_pilots(true)'),
+  ('public.console_delivery(false)'),         ('public.console_delivery(true)'),
   ('public.console_tenant_access(''nostudent-live'')'),
   ('public.console_audit_status()'),
   ('public.console_audit_read(now() - interval ''1 day'', 100)');
@@ -101,6 +103,7 @@ begin
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (operator, 'platform_admin', 'platform', '', 'platform'),
     (operator, 'incident_responder', 'platform', '', 'platform'),
+    (operator, 'account_executive', 'platform', '', 'platform'),
     (operator, 'integration_admin', 'school', 'nostudent-live', 'platform'),
     (operator, 'implementation_manager', 'school', 'nostudent-live', 'platform'),
     (operator, 'data_steward', 'school', 'nostudent-live', 'platform');

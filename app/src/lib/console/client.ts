@@ -845,6 +845,197 @@ export async function loadIntegrationHealth(includeDemo = false): Promise<Integr
   return rows(data).map(readIntegrationHealth);
 }
 
+// ── pilot portfolio ───────────────────────────────────────────────────────
+
+export type PilotStatus = 'proposed' | 'active' | 'decided';
+export type PilotDecisionKind = 'convert' | 'expand' | 'pause' | 'stop';
+
+export interface PilotPortfolioRow {
+  pilotId: string;
+  accountId: string;
+  accountPublicId: string;
+  accountName: string;
+  accountStatus: string;
+  segment: string;
+  tenantId: string | null;
+  tenantName: string | null;
+  isDemo: boolean;
+  workflow: string;
+  status: PilotStatus;
+  startDate: string;
+  endDate: string;
+  midpointReviewDate: string | null;
+  conversionDate: string | null;
+  hasSponsor: boolean;
+  hasChampion: boolean;
+  annualPriceAgreed: boolean;
+  productionDataApproved: boolean;
+  metricCount: number;
+  readinessProblems: string[];
+  outcomeDecision: PilotDecisionKind | null;
+  outcomeSignedAt: string | null;
+  unresolvedHighSeverity: number | null;
+  updatedAt: string | null;
+  provenance: string;
+  limitation: string;
+}
+
+const PILOT_STATUSES: PilotStatus[] = ['proposed', 'active', 'decided'];
+const PILOT_DECISIONS: PilotDecisionKind[] = ['convert', 'expand', 'pause', 'stop'];
+
+export function readPilot(r: Row): PilotPortfolioRow {
+  if (!PILOT_STATUSES.includes(r.status as PilotStatus)) {
+    throw new Error('The pilot portfolio response contained an unknown pilot status.');
+  }
+  const decision = maybe(r.outcome_decision);
+  if (decision !== null && !PILOT_DECISIONS.includes(decision as PilotDecisionKind)) {
+    throw new Error('The pilot portfolio response contained an unknown outcome decision.');
+  }
+  return {
+    pilotId: text(r.pilot_id), accountId: text(r.account_id), accountPublicId: text(r.account_public_id),
+    accountName: text(r.account_name), accountStatus: text(r.account_status), segment: text(r.segment),
+    tenantId: maybe(r.tenant_id), tenantName: maybe(r.tenant_name), isDemo: r.is_demo === true,
+    workflow: text(r.workflow), status: r.status as PilotStatus,
+    startDate: text(r.start_date), endDate: text(r.end_date),
+    midpointReviewDate: maybe(r.midpoint_review_date), conversionDate: maybe(r.conversion_date),
+    hasSponsor: r.has_sponsor === true, hasChampion: r.has_champion === true,
+    annualPriceAgreed: r.annual_price_agreed === true, productionDataApproved: r.production_data_approved === true,
+    metricCount: num(r.metric_count),
+    readinessProblems: Array.isArray(r.readiness_problems) ? r.readiness_problems.map((p) => text(p)) : [],
+    outcomeDecision: decision as PilotDecisionKind | null, outcomeSignedAt: maybe(r.outcome_signed_at),
+    unresolvedHighSeverity: r.unresolved_high_severity == null ? null : num(r.unresolved_high_severity),
+    updatedAt: maybe(r.updated_at), provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Semester's pilot pipeline, for holders of both the console shell and platform account:manage. */
+export async function loadPilots(includeDemo = false): Promise<PilotPortfolioRow[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_pilots', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read the pilot portfolio.'));
+  return rows(data).map(readPilot);
+}
+
+export type ImplementationStage =
+  | 'discover' | 'configure' | 'integrate' | 'validate' | 'train' | 'launch' | 'hypercare' | 'measure' | 'expand';
+export type ImplementationStatus = 'on_track' | 'at_risk' | 'blocked' | 'done';
+export type RenewalStage = 'review_120' | 'exec_90' | 'proposal_60' | 'signature_30' | 'decided';
+export type RenewalOutcome = 'pending' | 'renewed' | 'expanded' | 'downgraded' | 'churned';
+export type HealthStatus =
+  | 'healthy' | 'needs_attention' | 'at_risk_commercial' | 'implementation_blocked'
+  | 'compliance_action' | 'renewal_planning' | 'expansion';
+
+export interface DeliveryProject {
+  id: string;
+  tenantId: string | null;
+  stage: ImplementationStage;
+  status: ImplementationStatus;
+  kickoffAt: string | null;
+  goLiveAt: string | null;
+  hasOwner: boolean;
+  milestonesTotal: number;
+  milestonesDone: number;
+  milestonesOverdue: number;
+  nextMilestone: { name: string; ownerRole: string; dueAt: string | null } | null;
+}
+
+export interface DeliveryRenewal {
+  contractId: string;
+  contractKind: string;
+  renewalDate: string;
+  stage: RenewalStage;
+  outcome: RenewalOutcome;
+  decisionOn: string | null;
+  hasOwner: boolean;
+}
+
+export interface DeliveryAccountRow {
+  billingAccountId: string;
+  accountName: string;
+  tenantIds: string[];
+  tenantNames: string[];
+  isDemo: boolean;
+  projects: DeliveryProject[];
+  hasSuccessPlan: boolean;
+  successPlanHasOwner: boolean;
+  nextQbrAt: string | null;
+  lastQbrOn: string | null;
+  qbrCount: number;
+  renewals: DeliveryRenewal[];
+  healthStatus: HealthStatus | null;
+  healthReason: string | null;
+  healthNextAction: string | null;
+  healthHasOwner: boolean;
+  healthTakenAt: string | null;
+  provenance: string;
+  limitation: string;
+}
+
+const IMPLEMENTATION_STAGES: ImplementationStage[] = [
+  'discover', 'configure', 'integrate', 'validate', 'train', 'launch', 'hypercare', 'measure', 'expand',
+];
+const IMPLEMENTATION_STATUSES: ImplementationStatus[] = ['on_track', 'at_risk', 'blocked', 'done'];
+const RENEWAL_STAGES: RenewalStage[] = ['review_120', 'exec_90', 'proposal_60', 'signature_30', 'decided'];
+const RENEWAL_OUTCOMES: RenewalOutcome[] = ['pending', 'renewed', 'expanded', 'downgraded', 'churned'];
+const HEALTH_STATUSES: HealthStatus[] = [
+  'healthy', 'needs_attention', 'at_risk_commercial', 'implementation_blocked',
+  'compliance_action', 'renewal_planning', 'expansion',
+];
+
+function oneOf<T extends string>(value: unknown, allowed: readonly T[], what: string): T {
+  if (!allowed.includes(value as T)) throw new Error(`The delivery portfolio response contained an unknown ${what}.`);
+  return value as T;
+}
+
+function readDeliveryProject(p: Row): DeliveryProject {
+  const next = p.next_milestone && typeof p.next_milestone === 'object' ? (p.next_milestone as Row) : null;
+  return {
+    id: text(p.id), tenantId: maybe(p.tenant_id),
+    stage: oneOf(p.stage, IMPLEMENTATION_STAGES, 'implementation stage'),
+    status: oneOf(p.status, IMPLEMENTATION_STATUSES, 'implementation status'),
+    kickoffAt: maybe(p.kickoff_at), goLiveAt: maybe(p.go_live_at), hasOwner: p.has_owner === true,
+    milestonesTotal: num(p.milestones_total), milestonesDone: num(p.milestones_done),
+    milestonesOverdue: num(p.milestones_overdue),
+    nextMilestone: next ? { name: text(next.name), ownerRole: text(next.owner_role), dueAt: maybe(next.due_at) } : null,
+  };
+}
+
+function readDeliveryRenewal(r: Row): DeliveryRenewal {
+  return {
+    contractId: text(r.contract_id), contractKind: text(r.contract_kind), renewalDate: text(r.renewal_date),
+    stage: oneOf(r.stage, RENEWAL_STAGES, 'renewal stage'),
+    outcome: oneOf(r.outcome, RENEWAL_OUTCOMES, 'renewal outcome'),
+    decisionOn: maybe(r.decision_on), hasOwner: r.has_owner === true,
+  };
+}
+
+const list = (value: unknown): Row[] => (Array.isArray(value) ? (value as Row[]) : []);
+const texts = (value: unknown): string[] => (Array.isArray(value) ? value.map((v) => text(v)) : []);
+
+export function readDelivery(r: Row): DeliveryAccountRow {
+  const health = maybe(r.health_status);
+  return {
+    billingAccountId: text(r.billing_account_id), accountName: text(r.account_name),
+    tenantIds: texts(r.tenant_ids), tenantNames: texts(r.tenant_names), isDemo: r.is_demo === true,
+    projects: list(r.projects).map(readDeliveryProject),
+    hasSuccessPlan: r.has_success_plan === true, successPlanHasOwner: r.success_plan_has_owner === true,
+    nextQbrAt: maybe(r.next_qbr_at), lastQbrOn: maybe(r.last_qbr_on), qbrCount: num(r.qbr_count),
+    renewals: list(r.renewals).map(readDeliveryRenewal),
+    healthStatus: health === null ? null : oneOf(health, HEALTH_STATUSES, 'health status'),
+    healthReason: maybe(r.health_reason), healthNextAction: maybe(r.health_next_action),
+    healthHasOwner: r.health_has_owner === true, healthTakenAt: maybe(r.health_taken_at),
+    provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Implementation, success and renewal records, for holders of both the console shell and platform success:manage. */
+export async function loadDelivery(includeDemo = false): Promise<DeliveryAccountRow[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_delivery', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read the delivery portfolio.'));
+  return rows(data).map(readDelivery);
+}
+
 export type ReleaseIncidentState =
   | 'blocked'
   | 'release_candidate'

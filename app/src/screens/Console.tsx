@@ -28,8 +28,11 @@ import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
+import { MyWork } from '../components/console/MyWork';
 import { SupportQueue } from '../components/console/SupportQueue';
 import { TenantOperations } from '../components/console/TenantOperations';
+import { Pilots } from '../components/console/Pilots';
+import { Delivery } from '../components/console/Delivery';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
 import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
@@ -69,7 +72,7 @@ const Controls = lazy(() => import('../components/console/Controls').then((m) =>
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 const Ecosystem = lazy(() => import('../components/console/Ecosystem').then((m) => ({ default: m.Ecosystem })));
 
-const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
+const BLURB = 'Live operational exceptions, your work queue, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
 /** Preference keys, under `operator_preference`. */
 const PREF_TAB = 'console.tab';
@@ -273,11 +276,14 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={workspaces} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {tab === 'command' && <CommandCenter {...viewProps} />}
+        {tab === 'work' && <MyWork {...viewProps} grants={grants} onOpen={choose} />}
         {tab === 'support' && <SupportQueue {...viewProps} />}
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
+        {tab === 'pilots' && <Pilots {...viewProps} now={now} />}
+        {tab === 'delivery' && <Delivery {...viewProps} now={now} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
         {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}
