@@ -1,3 +1,56 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: OWNER-AND-ACCOUNTABILITY-MATRIX.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: commercial/GO_TO_MARKET_READINESS.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Semester — company live status (Phase 0)
 
 **Date:** 2026-10-04 · **Companion:** [`../../commercial/GO_TO_MARKET_READINESS.md`](../../commercial/GO_TO_MARKET_READINESS.md) · **Controlling:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md), [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../OWNER-AND-ACCOUNTABILITY-MATRIX.md)

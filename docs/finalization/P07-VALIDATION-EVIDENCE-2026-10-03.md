@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/product-design/FIRST-WIN-SPECIFICATION.md
+    changed_at: "2026-10-19T18:51:08"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # P07 validation evidence — 2026-10-03
 
 | Control | Value |

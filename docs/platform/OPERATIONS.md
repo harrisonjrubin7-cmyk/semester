@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Platform runbooks
 
 > **Status: written, not rehearsed.** Nothing here has been run in an incident or

@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/commercial/ACCOUNT-SCORING-AND-FORECAST.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Sales Pipeline Definitions
 
 | Control | Value |

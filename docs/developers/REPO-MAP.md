@@ -1,3 +1,86 @@
+---
+stale-refs:
+  - source: README.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/SUPPLY-CHAIN.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: ops/README.md
+    changed_at: "2026-10-19T16:39:57"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/target-architecture/02-MONOREPO-STRUCTURE.md
+    changed_at: "2026-10-19T16:39:55"
+    sections_changed: []
+    summary: externally modified
+  - source: infra/README.md
+    changed_at: "2026-10-19T18:51:11"
+    sections_changed: []
+    summary: externally modified
+  - source: course/semester-build-pack/COVERAGE-MATRIX.md
+    changed_at: "2026-10-19T16:39:39"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/architecture/0002-rls-is-the-authorization-boundary.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Repository map
 
 > **Type:** reference · **Audience:** contributors · **Owner:** `engineering` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/developers.test.ts`
@@ -20,6 +103,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
 | `course-engine/` | Standalone citation-first course-workspace MVP: Next.js web app, FastAPI API, background worker, PostgreSQL/Redis/MinIO Compose stack, renderer benchmarks, tests, and its own documentation. It is isolated from the deployed `app/` and is not an npm workspace. |
+| `course/` | The 16-week software-engineering curriculum pack: the learning portal (`semester-build-pack/portal.html`), the lab grader and starters, the developer-console OpenAPI contract, and the syllabus, architecture and certification documents. It is a prototype, not deployed, and is not part of the `app/` workspace. See [`course/semester-build-pack/COVERAGE-MATRIX.md`](../../course/semester-build-pack/COVERAGE-MATRIX.md). |
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
 | `deploy/` | Frontend-only container build (`Dockerfile.frontend`, `nginx.conf`, `compose.frontend.yml`). It returns 503 for `/api` and `/lab`, so it is not the multi-service Vercel deployment. |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |

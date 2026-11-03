@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: docs/institutional-implementation/README.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # Customer Success Playbook
 
 | Control | Value |

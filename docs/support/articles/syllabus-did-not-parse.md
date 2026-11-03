@@ -1,3 +1,42 @@
+---
+stale-refs:
+  - source: docs/support/README.md
+    changed_at: "2026-10-19T16:39:54"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/ai-unavailable.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/support/articles/old-version-showing.md
+    changed_at: "2026-10-19T18:51:09"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # My syllabus didn't parse, or the dates look wrong
 
 > **Type:** help · **Audience:** students, support · **Owner:** `success` · **Truth:** held · **Reviewed:** 2026-10-04 · **Held by:** `app/src/lib/docs/support.test.ts`

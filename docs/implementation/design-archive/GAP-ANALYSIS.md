@@ -1,3 +1,26 @@
+---
+stale-refs:
+  - source: docs/design-system/HANDOFF-INTEGRATION-STATUS.md
+    changed_at: "2026-10-19T16:39:42"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/implementation/design-archive/ROUTE-IDENTITY-CROSSWALK.md
+    changed_at: "2026-10-19T18:50:59"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
 # Gap analysis
 
 ## Executive finding

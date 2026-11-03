@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/architecture/data-architecture/08-search-and-retrieval.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # ADR-0021 · No tenant-bearing index, bucket, queue, cache, warehouse or vector store ships without a tenant key and a conformance test against the real service
 
 | Field | Value |

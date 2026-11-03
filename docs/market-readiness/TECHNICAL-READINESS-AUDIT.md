@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: docs/ARCHITECTURE.md
+    changed_at: "2026-10-19T16:39:40"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/OPERATIONAL-REALITY-REGISTER.md
+    changed_at: "2026-10-19T18:50:58"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Technical-readiness audit
 
 **Current status: YELLOW foundation / RED paid-pilot activation.** The repository contains substantial architecture, automated testing, tenant controls, policies, migrations, recovery patterns, and documentation. Target production operation is not evidenced.

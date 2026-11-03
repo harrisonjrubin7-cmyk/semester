@@ -1,3 +1,18 @@
+---
+stale-refs:
+  - source: docs/trust/PENETRATION-TEST-PLAN.md
+    changed_at: "2026-10-19T16:39:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
 # Semester security testing plan — controlled draft
 
 - **Status:** `PARTIAL / PLAN NOT FULLY EXECUTED`

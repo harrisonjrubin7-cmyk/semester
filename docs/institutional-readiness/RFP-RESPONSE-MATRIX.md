@@ -1,3 +1,16 @@
+---
+stale-refs:
+  - source: docs/institutional-readiness/INSTITUTIONAL-PROCUREMENT-READINESS.md
+    changed_at: "2026-10-19T16:39:44"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
 # RFP Response Matrix
 
 | Control | Value |

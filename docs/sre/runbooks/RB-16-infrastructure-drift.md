@@ -1,3 +1,20 @@
+---
+stale-refs:
+  - source: SECURITY.md
+    changed_at: "2026-10-19T18:50:57"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
 # RB-16 · Infrastructure drift detected, or the governed apply will not run
 
 Class C1 · role security · alerts `infra:drift-detected` · components `pipeline:drift`, `pipeline:infra-apply`, `pipeline:infra`. The procedure and its rules are [CHANGE-CONTROL.md](../../infrastructure/CHANGE-CONTROL.md); this page is the order to do things in.

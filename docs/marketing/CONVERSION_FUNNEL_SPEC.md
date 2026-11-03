@@ -1,3 +1,32 @@
+---
+stale-refs:
+  - source: GO-NO-GO-DECISION.md
+    changed_at: "2026-10-19T18:50:56"
+    sections_changed: []
+    summary: externally modified
+  - source: docs/marketing/INSTITUTIONAL_PILOT_CONVERSION_FLOW.md
+    changed_at: "2026-10-19T16:39:50"
+    sections_changed: []
+    summary: externally modified
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Conversion funnel specification
 
 Status: proposed. Boundaries come from [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)
