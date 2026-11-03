@@ -1,0 +1,19 @@
+{
+  "3.0": {
+    "status": "valid",
+    "errors": []
+  },
+  "3.1": {
+    "status": "valid",
+    "errors": []
+  },
+  "limitations": [
+    "Payload Schema Objects only; not full OAS or HTTP compliance",
+    "No authentication or registrar business-policy validation",
+    "No reference resolution; no full directional annotation validation"
+  ],
+  "schema_sha256": {
+    "schema30": "aba9f3203b019ced340088a6655dfb393e7b469b95fecf06172b3bc600d806f7",
+    "schema31": "244b9c3eb27a7b9c350224a94f98afe1b451bc5fe8b3d3953de62286282b8bf8"
+  }
+}
