@@ -22,14 +22,14 @@ import { SHARE_CACHE } from './shared';
  * asked what it actually deletes. A test that greps the source would pass on
  * any rewrite that kept the words and lost the behaviour.
  */
-function activateWith(present: string[]): { deleted: string[]; claimed: boolean } {
+function activateWith(present: string[], base = '/semester/'): { deleted: string[]; claimed: boolean } {
   const deleted: string[] = [];
   let claimed = false;
   const listeners = new Map<string, (event: unknown) => void>();
   const waiting: Promise<unknown>[] = [];
 
   const self = {
-    location: new URL('https://x.test/semester/sw.js'),
+    location: new URL(`https://x.test${base}sw.js`),
     addEventListener: (name: string, fn: (event: unknown) => void) => listeners.set(name, fn),
     skipWaiting: () => Promise.resolve(),
     registration: { showNotification: () => Promise.resolve() },
@@ -73,15 +73,46 @@ function activateWith(present: string[]): { deleted: string[]; claimed: boolean 
 }
 
 describe('what activate sweeps', () => {
-  it('drops the caches an older version of the worker left', async () => {
-    const { deleted } = activateWith(['semester-v0-shell', 'semester-v0-media', 'semester-v1-shell']);
+  it('drops only an older cache for its exact supported scope', async () => {
+    const { deleted } = activateWith([
+      'semester-v0-scope-semester-shell',
+      'semester-v0-scope-semester-media',
+      'semester-v1-scope-semester-shell',
+      'semester-v0-scope-app-shell',
+      'semester-v0-shell',
+      'unrelated-media',
+    ]);
     await Promise.resolve();
-    expect(deleted).toContain('semester-v0-shell');
-    expect(deleted).toContain('semester-v0-media');
+    expect(deleted).toEqual([
+      'semester-v0-scope-semester-shell',
+      'semester-v0-scope-semester-media',
+    ]);
   });
 
   it('keeps this version’s own caches', async () => {
-    const { deleted } = activateWith(['semester-v1-shell', 'semester-v1-media']);
+    const { deleted } = activateWith([
+      'semester-v1-scope-semester-shell',
+      'semester-v1-scope-semester-media',
+    ]);
+    await Promise.resolve();
+    expect(deleted).toEqual([]);
+  });
+
+  it('uses a collision-free scope token for nested paths and never sweeps them', async () => {
+    const { deleted } = activateWith([
+      'semester-v0-scope-a%2Fb-shell',
+      'semester-v0-scope-a-b-shell',
+    ], '/a/b/');
+    await Promise.resolve();
+    expect(deleted).toEqual([]);
+  });
+
+  it('does not sweep from a root-scoped legacy worker', async () => {
+    const { deleted } = activateWith([
+      'semester-v0-shell',
+      'semester-v1-shell',
+      'semester-v0-scope-app-shell',
+    ], '/');
     await Promise.resolve();
     expect(deleted).toEqual([]);
   });
@@ -89,9 +120,9 @@ describe('what activate sweeps', () => {
   // The bug: a deploy landing between the share and the importer took the file
   // with it, and the importer had nothing to say about where it went.
   it('keeps the shared-file handover, which carries no version in its name', async () => {
-    const { deleted } = activateWith(['semester-v0-shell', SHARE_CACHE]);
+    const { deleted } = activateWith(['semester-v0-scope-semester-shell', SHARE_CACHE]);
     await Promise.resolve();
-    expect(deleted).toEqual(['semester-v0-shell']);
+    expect(deleted).toEqual(['semester-v0-scope-semester-shell']);
     expect(deleted).not.toContain(SHARE_CACHE);
   });
 

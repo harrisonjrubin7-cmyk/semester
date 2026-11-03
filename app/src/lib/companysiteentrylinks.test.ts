@@ -15,13 +15,13 @@ import { parseEntry } from './entrycontext';
 const SITE = readFileSync(join(__dirname, '..', '..', '..', 'company-site', 'site.js'), 'utf8');
 const BLOCK = SITE.slice(SITE.indexOf('// <entry-links>'), SITE.indexOf('// </entry-links>'));
 // The address the site's own status probes already use; the block builds on it.
-const declared = SITE.match(/const APP_BASE="([^"]+)";/);
+const declared = SITE.match(/const LEGACY_APP_BASE="([^"]+)";/);
 const make = new Function('APP_BASE', `${BLOCK}; return { entryParams, withEntry, entryId };`) as (base: string) => {
   entryParams: (a: Record<string, string>, place?: string) => Record<string, string>;
   withEntry: (href: string, a: Record<string, string>, place?: string) => string;
   entryId: (v: string) => string;
 };
-if (!declared) throw new Error('company-site/site.js no longer declares APP_BASE');
+if (!declared) throw new Error('company-site/site.js no longer declares LEGACY_APP_BASE');
 const APP_BASE = declared[1];
 const { entryParams, withEntry, entryId } = make(APP_BASE);
 

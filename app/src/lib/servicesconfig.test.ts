@@ -23,7 +23,7 @@ const app = read('app/vercel.json');
 const company = read('company-site/vercel.json');
 
 describe('root vercel.json services carry what each folder file says', () => {
-  it('routes both API prefixes to an explicit Node service before the app catch-all', () => {
+  it('routes the unified host in priority order without changing semester.website', () => {
     expect(root.services.api.root).toBe('app');
     expect(root.services.api.entrypoint).toBe('server/institution/vercel-entrypoint.js');
     expect(root.services.api.headers).toEqual(app.headers);
@@ -52,12 +52,28 @@ describe('root vercel.json services carry what each folder file says', () => {
       { source: '/lab', destination: { service: 'workflow-lab' } },
       { source: '/lab/(.*)', destination: { service: 'workflow-lab' } },
     ]);
-    expect(root.rewrites.at(-1)).toEqual({ source: '/(.*)', destination: { service: 'app' } });
+    expect(root.rewrites.slice(9)).toEqual([
+      { source: '/app/(.*)', destination: { service: 'app' } },
+      { source: '/(.*)', destination: { service: 'company-site' } },
+    ]);
+    expect(root.redirects).toEqual([
+      {
+        source: '/app',
+        has: [{ type: 'host', value: '(?:(?:www\\.)?semesterintel\\.tech|.*\\.vercel\\.app)' }],
+        destination: '/app/',
+        permanent: true,
+      },
+    ]);
   });
 
   it('app: headers and function limits', () => {
     expect(root.services.app.headers).toEqual(app.headers);
     expect(root.services.app.functions).toEqual(app.functions);
+    expect(root.services.app.buildCommand).toBe('VITE_BASE=/app/ npm run build:hosting');
+    expect(root.services.app.routes).toBeUndefined();
+    expect(JSON.parse(readText('app/package.json')).scripts['build:hosting']).toBe(
+      'tsc -b && vite build --outDir dist/app',
+    );
   });
 
   it('company-site: headers and rewrites', () => {
