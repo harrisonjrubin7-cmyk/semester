@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### University administrators can control AI surfaces independently (not released)
+
+An administrator holding `ai:configure` now sees **AI controls** on University and can independently narrow assistant, tutoring, writing and advising by verified role and support mode. A missing policy is off, an enabled policy needs an institutional rationale, the server checks it before budget or provider access, and every change joins the tenant policy audit trail. Turning an AI surface off does not disable Today, Courses, Calendar, assignments, notes or other non-AI academic workflows. This is repository implementation only: the migration is not applied, no tenant is configured or activated, and no deployment is established by this entry.
+
 ### Students ask their instructor for an extension, an excused absence or an incomplete, and see the answer
 
 Only at a school that runs its gradebook in Semester, and only once the database change is applied (it is not yet). In the **Gradebook**, a student's course now has **Ask your instructor**: pick an extension (with the date you are asking for), an excused absence or an incomplete, optionally name the assignment, say why, review, and send. Your list shows each request's status in words, the instructor's question if they asked one (answer it right there), and the decision — an approved extension shows the new date, which may differ from the one you asked for. You can withdraw a request until it is decided. Instructors see **Student requests** under the course's grades: approve, deny with a note, or ask a question; teaching assistants can read the list but not decide. If somebody else decided first, the screen says so and offers to reload. An approved extension on an assignment now moves that student's due date for it (see below). Nobody else will notice anything.

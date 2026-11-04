@@ -550,7 +550,7 @@ curl -s 'http://127.0.0.1:8787/health'
 ```
 <!-- /example -->
 
-`GET /v1/intelligence/policy` returns the tenant policy `state` (`off`, `preview`, `sandbox` or `production`) and the `allowedModes` (`explain`, `hint`, `practice`, `review`, `draft`). It is `403 policy-disabled` when the state is `off` or none of the caller's roles is permitted.
+`GET /v1/intelligence/policy` returns the tenant policy `state` (`off`, `preview`, `sandbox` or `production`) and the `allowedModes` (`explain`, `hint`, `practice`, `review`, `draft`). It is `403 policy-disabled` when the state is `off` or none of the caller's roles is permitted. A successful policy response does not itself authorize a model call: `/respond` also derives one capability from the validated request (`assistant`, `tutoring`, `writing` or `advising`) and requires a live `ai_capability_policy` row for that tenant. A missing row is off. The row may narrow access by verified role and support mode; refusals are `capability-disabled`, `capability-role-disabled` or `capability-mode-disabled` and occur before budget reservation or provider access.
 
 <!-- example:intelligence-policy -->
 **Request**
@@ -573,7 +573,7 @@ curl -s 'http://127.0.0.1:8787/v1/intelligence/policy' \
 ```
 <!-- /example -->
 
-`POST /v1/intelligence/respond` takes the request documented in the OpenAPI file (`IntelligenceRequest`): `version: 1`, `clientState`, `tenantId` and `personId` (both must equal the verified identity, or `403 scope-refused`), `question` (at most 10,000 characters), `mode`, `category`, optional `agent` (`assistant`, `advisor`, `tutor`, `course-guide`), optional `courseId` and `term` (`^[0-9]{4}(FA|SP|SU)$`), `sourceIds` (1 to 100, each approved for the tenant), `evidenceIds` and `proposedActions` (at most 20). Roles other than `assistant` may propose only actions of class `prepare`. A successful answer lists the cited `sourceIds`, the `route`, the `usage`, and each proposed action with a new id and a five-minute expiry. Those actions are stored server-side.
+`POST /v1/intelligence/respond` takes the request documented in the OpenAPI file (`IntelligenceRequest`): `version: 1`, `clientState`, `tenantId` and `personId` (both must equal the verified identity, or `403 scope-refused`), `question` (at most 10,000 characters), `mode`, `category`, optional `agent` (`assistant`, `advisor`, `tutor`, `course-guide`), optional `courseId` and `term` (`^[0-9]{4}(FA|SP|SU)$`), `sourceIds` (1 to 100, each approved for the tenant), `evidenceIds` and `proposedActions` (at most 20). The server derives the capability from validated `agent` and `mode` values, never from a browser-supplied feature label: `draft` is writing, `advisor` is advising, `tutor` and `course-guide` are tutoring, and the remainder is assistant. Roles other than `assistant` may propose only actions of class `prepare`. A successful answer lists the cited `sourceIds`, the `route`, the `usage`, and each proposed action with a new id and a five-minute expiry. Those actions are stored server-side.
 
 <!-- example:intelligence-respond -->
 **Request**

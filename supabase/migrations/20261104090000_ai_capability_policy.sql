@@ -80,7 +80,17 @@ alter table public.tenant_policy_audit_event
 alter table public.tenant_policy_audit_event
   add constraint tenant_policy_audit_event_entity_type_check check (entity_type in (
     'tenant_feature_policy', 'ai_policy', 'ai_capability_policy',
-    'approved_source', 'consent_record'
+    'approved_source', 'consent_record',
+    'feature_kill_switch', 'data_classification_rules', 'integration_connections',
+    'integration_scopes', 'integration_mappings', 'integration_dead_letter_events',
+    'governance_policy_nodes', 'governance_steward_assignments', 'governance_config_requests',
+    'gtm_campaigns', 'gtm_campaign_reviews', 'gtm_sponsor_policy', 'gtm_sponsor_placements',
+    'migration_projects', 'migration_field_maps', 'migration_runs', 'migration_approvals',
+    'academic_record_changes', 'academic_record_subjects',
+    'student_account_requests', 'student_account_settings', 'student_account_reconciliations', 'student_account_closes',
+    'student_payment_plans',
+    'school_config_versions',
+    'workflow_versions'
   ));
 
 create or replace trigger audit_ai_capability_policy

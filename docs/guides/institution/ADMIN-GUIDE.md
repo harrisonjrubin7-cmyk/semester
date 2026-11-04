@@ -10,7 +10,7 @@ This guide tells an institution administrator which role does what, where each t
 <!-- status: Tenants, memberships, roles, scopes = IMPLEMENTED_NOT_RELEASED -->
 <!-- capabilities: tenant:configure, tenant:implement, audit:read, integration:approve, integration:view, integration:configure, integration:sync, integration:replay, roster:administer, killswitch:engage, breakglass:request, ai:configure, migration:approve, migration:manage, config:manage, config:publish, config:view, workflow:manage, workflow:publish, record:approve, data_request:handle, console:operate, approval:decide, platform:configure, outcomes:read -->
 <!-- roles: university_admin, implementation_manager, integration_admin, registrar, data_steward, incident_responder, platform_admin -->
-<!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Roster, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts -->
+<!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Roster, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts, AI controls -->
 <!-- labels: app/src/lib/console/workspaces.ts :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Connected ecosystem, Releases and flags, Launch readiness, Trust controls, Evidence, Views -->
 <!-- labels: app/src/components/SchoolClaim.tsx :: For this university's staff -->
 
@@ -69,6 +69,7 @@ A tab appears only when its condition holds. A flag is a build-time setting with
 | `Workflows` | `VITE_WORKFLOW_BUILDER` is not `off` and you hold a workflow capability | Same page |
 | `Academic record` | `VITE_RECORD_LEDGER` is not `off` and you hold a record capability | The approval-gated academic-record ledger |
 | `Student accounts` | `VITE_STUDENT_ACCOUNTS` is not `off` and you hold a `finance:` capability | The approval-gated student-account ledger |
+| `AI controls` | You hold `ai:configure` at your school | Independently enable the assistant, tutoring, writing and advising surfaces for selected verified roles and support modes. A missing policy is off. Each enabled surface needs a rationale; every change is audited. Disabling AI here does not disable Today, Courses, Calendar, assignments, notes or other non-AI academic work |
 
 Production changes made through the control plane are real only when a production-verified gateway returns a receipt. The screen says "Nothing is shown as applied" when it does not.
 
@@ -118,6 +119,7 @@ A grant with no request behind it is a finding at the quarterly access review. S
 5. **Review who has joined your school.** A person who holds `tenant:configure` sees requests to join under `For this university's staff` on the Account screen and can approve, decline or remove a member of your school.
 6. **Ask a student's question about their data.** Direct it to [audit and data requests](AUDIT-AND-DATA-REQUESTS.md).
 7. **Leave.** See the [exit plan](EXIT-PLAN.md). There is no offboarding screen by design.
+8. **Change an AI capability.** Open `AI controls`, choose the surface, verified roles and support modes, record the institutional rationale, and save. The server rechecks the policy for every request; hiding a control in the browser is not the security boundary. Keep a non-AI course, assignment, note or human-support path available for every task the capability assists.
 
 ## Known disagreements
 
