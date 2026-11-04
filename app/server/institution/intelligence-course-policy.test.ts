@@ -66,7 +66,13 @@ function setup(rules = [rule()], sources = [source()], now = '2026-10-01T12:00:0
   const service = createIntelligenceService({
     status: 'configured-sandbox',
     loadPolicy: async () => ({ state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
-      allowedModels: ['openai:test'], maxRequestCents: 2, retentionDays: 0 }),
+      allowedModels: ['openai:test'], maxRequestCents: 2, retentionDays: 0,
+      capabilities: {
+        assistant: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+        tutoring: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+        writing: { enabled: true, permittedRoles: ['student'], allowedModes: ['draft'] },
+        advising: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+      } }),
     loadApprovedSources: repo.loadApprovedSources, loadCoursePolicy: repo.loadCoursePolicy,
     modelTask: async () => ({ candidates: [{ provider: 'openai', model: 'openai:test', estimatedCents: 1 }] }),
     generate, execute: async () => ({ verified: false }),

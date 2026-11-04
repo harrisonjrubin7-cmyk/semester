@@ -45,6 +45,12 @@ const policy = (patch: Partial<TenantIntelligencePolicy> = {}): TenantIntelligen
   allowedModels: ['openai:gpt-5-mini'],
   maxRequestCents: 2,
   retentionDays: 30,
+  capabilities: {
+    assistant: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+    tutoring: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+    writing: { enabled: true, permittedRoles: ['student'], allowedModes: ['draft'] },
+    advising: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] },
+  },
   ...patch,
 });
 
@@ -75,6 +81,52 @@ describe('governed institution intelligence', () => {
     }));
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('role-disabled');
+  });
+
+  it('independently refuses a disabled capability before provider or budget work', async () => {
+    const generate = vi.fn();
+    const reserveBudget = vi.fn();
+    const audit = vi.fn();
+    const response = await respond(fixture({
+      request: request({ agent: 'tutor' }),
+      tenantPolicy: policy({ capabilities: {} }),
+      generate,
+      reserveBudget,
+      audit,
+    }));
+    expect(response).toMatchObject({ status: 403, body: { code: 'capability-disabled' } });
+    expect(generate).not.toHaveBeenCalled();
+    expect(reserveBudget).not.toHaveBeenCalled();
+    expect(audit).toHaveBeenCalledWith(identity, expect.objectContaining({ policyDecision: 'capability-disabled:tutoring' }));
+  });
+
+  it('derives the capability from validated mode and agent rather than the free-form category', async () => {
+    const response = await respond(fixture({
+      request: request({ category: 'assistant', mode: 'draft' }),
+      tenantPolicy: policy({
+        allowedModes: ['explain', 'hint', 'practice', 'review', 'draft'],
+        capabilities: { assistant: { enabled: true, permittedRoles: ['student'], allowedModes: ['draft'] } },
+      }),
+    }));
+    expect(response).toMatchObject({ status: 403, body: { code: 'capability-disabled' } });
+  });
+
+  it('keeps each capability narrowed by verified role and support mode', async () => {
+    const byRole = await respond(fixture({
+      request: request({ agent: 'advisor' }),
+      tenantPolicy: policy({ capabilities: {
+        advising: { enabled: true, permittedRoles: ['advisor'], allowedModes: ['explain'] },
+      } }),
+    }));
+    expect(byRole).toMatchObject({ status: 403, body: { code: 'capability-role-disabled' } });
+
+    const byMode = await respond(fixture({
+      request: request({ agent: 'tutor', mode: 'practice' }),
+      tenantPolicy: policy({ capabilities: {
+        tutoring: { enabled: true, permittedRoles: ['student'], allowedModes: ['hint'] },
+      } }),
+    }));
+    expect(byMode).toMatchObject({ status: 403, body: { code: 'capability-mode-disabled' } });
   });
 
   it('returns model prose separately from approved evidence identifiers', async () => {

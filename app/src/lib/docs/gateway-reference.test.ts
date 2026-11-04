@@ -912,7 +912,8 @@ async function intelligenceScenario() {
 
   const service = createIntelligenceService({
     status: 'configured-sandbox',
-    loadPolicy: async () => ({ state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain'], allowedModels: ['openai:stub'], maxRequestCents: 5, retentionDays: 30 }),
+    loadPolicy: async () => ({ state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain'], allowedModels: ['openai:stub'], maxRequestCents: 5, retentionDays: 30,
+      capabilities: { assistant: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain'] } } }),
     loadApprovedSources: async (context, _i, ids) => ids.map((id) => ({
       id,
       labels: {

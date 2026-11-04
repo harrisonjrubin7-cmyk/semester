@@ -23,6 +23,7 @@ const disabled = (audit?: IntelligenceRuntimeOptions['audit']): IntelligenceServ
     loadPolicy: async () => ({
       state: 'off', permittedRoles: [], allowedModes: [], allowedModels: [],
       maxRequestCents: 0, monthlyBudgetCents: 0, monthlySpentCents: 0, retentionDays: 0,
+      capabilities: {},
     }),
     loadApprovedSources: async () => [],
     modelTask: async () => ({ candidates: [] }),

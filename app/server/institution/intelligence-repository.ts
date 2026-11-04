@@ -3,6 +3,7 @@ import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/ins
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
   IntelligenceFeatureState,
+  IntelligenceCapability,
   IntelligenceMode,
   TenantIntelligencePolicy,
   UniversityIdentity,
@@ -16,6 +17,7 @@ import type { RequestContext } from '../../../packages/platform/src/index.ts';
 
 const STATES = new Set<IntelligenceFeatureState>(['off', 'preview', 'sandbox', 'production']);
 const MODES = new Set<IntelligenceMode>(['explain', 'hint', 'practice', 'review', 'draft']);
+const CAPABILITIES = new Set<IntelligenceCapability>(['assistant', 'tutoring', 'writing', 'advising']);
 
 export interface IntelligenceRepositoryOptions {
   client?: SupabaseClient;
@@ -73,7 +75,7 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
     },
 
     async loadPolicy(identity) {
-      const [feature, policy, usage] = await Promise.all([
+      const [feature, policy, capabilityPolicies, usage] = await Promise.all([
         client
           .from('tenant_feature_policy')
           .select('state, permitted_roles, permitted_cohorts')
@@ -85,9 +87,13 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
           .select('allowed_modes, allowed_providers, monthly_budget_cents, retention_days')
           .eq('tenant_id', identity.institutionId)
           .maybeSingle(),
+        client
+          .from('ai_capability_policy')
+          .select('feature_key, enabled, permitted_roles, allowed_modes')
+          .eq('tenant_id', identity.institutionId),
         client.rpc('ai_usage_spent', { want_tenant: identity.institutionId }),
       ]);
-      if (feature.error || policy.error || usage.error) {
+      if (feature.error || policy.error || capabilityPolicies.error || usage.error) {
         throw new Error('The authoritative institution AI policy could not be loaded.');
       }
       const featureRow = feature.data as { state?: string; permitted_roles?: unknown; permitted_cohorts?: unknown } | null;
@@ -100,6 +106,7 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       const off: TenantIntelligencePolicy = {
         state: 'off', permittedRoles: [], allowedModes: [], allowedModels: [],
         maxRequestCents: 0, monthlyBudgetCents: 0, monthlySpentCents: 0, retentionDays: 0,
+        capabilities: {},
       };
       if (!featureRow || !policyRow || !STATES.has(featureRow.state as IntelligenceFeatureState)) return off;
       // The release cohort: a school that limited Semester Intelligence to a
@@ -131,6 +138,21 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
         ? policyRow.allowed_providers.filter((provider): provider is string => typeof provider === 'string')
         : []);
       const allowedModels = options.configuredModels.filter((model) => providers.has(model.split(':', 1)[0]));
+      const capabilities: TenantIntelligencePolicy['capabilities'] = {};
+      if (!Array.isArray(capabilityPolicies.data)) {
+        throw new Error('The institution AI capability policy could not be loaded.');
+      }
+      for (const raw of capabilityPolicies.data as Array<Record<string, unknown>>) {
+        if (!CAPABILITIES.has(raw.feature_key as IntelligenceCapability)) continue;
+        const key = raw.feature_key as IntelligenceCapability;
+        capabilities[key] = {
+          enabled: raw.enabled === true,
+          permittedRoles: Array.isArray(raw.permitted_roles)
+            ? raw.permitted_roles.filter((role): role is string => typeof role === 'string') : [],
+          allowedModes: Array.isArray(raw.allowed_modes)
+            ? raw.allowed_modes.filter((mode): mode is IntelligenceMode => MODES.has(mode as IntelligenceMode)) : [],
+        };
+      }
       return {
         state: featureRow.state as IntelligenceFeatureState,
         permittedRoles,
@@ -140,6 +162,7 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
         monthlyBudgetCents: Number(policyRow.monthly_budget_cents) || 0,
         monthlySpentCents: Number(usage.data) || 0,
         retentionDays: Math.max(0, Math.floor(Number(policyRow.retention_days) || 0)),
+        capabilities,
       };
     },
 

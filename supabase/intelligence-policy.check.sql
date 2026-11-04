@@ -91,6 +91,10 @@ begin
   values
     ('northstar-check', array['explain', 'hint', 'practice', 'review'],
      array['institution'], 'institution', false, 25000, northstar_admin);
+  insert into public.ai_capability_policy
+    (tenant_id, feature_key, enabled, permitted_roles, allowed_modes, reason)
+  values
+    ('northstar-check', 'tutoring', true, array['student'], array['explain', 'hint'], 'Controlled pilot');
   insert into public.approved_source
     (tenant_id, course_id, title, origin, authority, created_by)
   values
@@ -138,6 +142,30 @@ begin
   end if;
   raise notice 'ok  a student cannot approve an authoritative source';
 
+  if not pg_temp.refused(
+    northstar_student,
+    format(
+      'insert into public.ai_capability_policy '
+      '(tenant_id, feature_key, enabled, permitted_roles, allowed_modes) '
+      'values (%L, %L, true, array[%L], array[%L])',
+      'northstar-check', 'writing', 'student', 'draft'
+    )
+  ) then
+    raise exception 'FAILED: a student enabled an AI capability';
+  end if;
+  raise notice 'ok  a student cannot enable an AI capability';
+
+  perform pg_temp.become(northstar_student);
+  select count(*) into n from public.ai_capability_policy
+   where tenant_id = 'northstar-check' and feature_key = 'tutoring' and enabled;
+  reset role;
+  perform pg_temp.counted('a school member reads the enabled tutoring scope', n, 1);
+
+  perform pg_temp.become(cedar_user);
+  select count(*) into n from public.ai_capability_policy where tenant_id = 'northstar-check';
+  reset role;
+  perform pg_temp.counted('another tenant cannot read AI capability policy', n, 0);
+
   perform pg_temp.become(cedar_user);
   update public.tenant_feature_policy
      set state = 'production'
@@ -164,6 +192,15 @@ begin
      and actor_id = northstar_admin
      and actor_grant_id is not null;
   perform pg_temp.counted('policy writes preserve actor and verified grant evidence', n, 2);
+
+  select count(*) into n
+    from public.tenant_policy_audit_event
+   where tenant_id = 'northstar-check'
+     and entity_type = 'ai_capability_policy'
+     and action = 'insert'
+     and actor_id = northstar_admin
+     and actor_grant_id is not null;
+  perform pg_temp.counted('AI capability writes preserve actor and verified grant evidence', n, 1);
 
   perform pg_temp.become(northstar_student);
   select count(*) into n from public.tenant_policy_audit_event;

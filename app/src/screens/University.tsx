@@ -69,6 +69,7 @@ import { forRole } from '../lib/role';
 const WorkflowBuilder = lazy(() => import('../components/institutional/WorkflowBuilder').then((m) => ({ default: m.WorkflowBuilder })));
 const ConfigurationStudio = lazy(() => import('../components/institutional/ConfigurationStudio').then((m) => ({ default: m.ConfigurationStudio })));
 const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
+const AiPolicyPanel = lazy(() => import('../components/institutional/AiPolicyPanel').then((m) => ({ default: m.AiPolicyPanel })));
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
 const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
@@ -163,6 +164,7 @@ const tabsFor = (verified: readonly string[]) => [
   // Only for someone the database says may configure this school: the switch
   // itself is refused to anyone else, and the tab would only be a dead end.
   ...(verified.includes('tenant:configure') ? [{ id: 'modules' as const, label: 'Modules' }] : []),
+  ...(verified.includes('ai:configure') ? [{ id: 'ai-policy' as const, label: 'AI controls' }] : []),
   ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
   // Staff only in practice: RLS returns nothing to an account without
   // `integration:view`, and the dashboard says so rather than inventing data.
@@ -213,7 +215,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts' | 'roster';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'ai-policy' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts' | 'roster';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -872,6 +874,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'modules' && verified.includes('tenant:configure') && (
         <Suspense fallback={<p role="status">Loading…</p>}>
           <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+        </Suspense>
+      )}
+
+      {tab === 'ai-policy' && verified.includes('ai:configure') && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <AiPolicyPanel school={school.id} />
         </Suspense>
       )}
 

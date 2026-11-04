@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseModel, parseIntelligenceGatewayRequest } from './intelligence.ts';
+import { chooseModel, intelligenceCapabilityFor, parseIntelligenceGatewayRequest } from './intelligence.ts';
 
 describe('institution intelligence contract', () => {
   it('routes only to an allowed model under the tenant cost ceiling', () => {
@@ -31,5 +31,13 @@ describe('institution intelligence contract', () => {
     });
     expect(parsed.evidenceIds).toEqual(['evidence-1']);
     expect(JSON.stringify(parsed)).not.toContain('excerpt');
+  });
+
+  it('derives independently governed capabilities from validated semantics', () => {
+    expect(intelligenceCapabilityFor({ mode: 'draft' })).toBe('writing');
+    expect(intelligenceCapabilityFor({ mode: 'hint', agent: 'tutor' })).toBe('tutoring');
+    expect(intelligenceCapabilityFor({ mode: 'review', agent: 'course-guide' })).toBe('tutoring');
+    expect(intelligenceCapabilityFor({ mode: 'explain', agent: 'advisor' })).toBe('advising');
+    expect(intelligenceCapabilityFor({ mode: 'practice', agent: 'assistant' })).toBe('assistant');
   });
 });
