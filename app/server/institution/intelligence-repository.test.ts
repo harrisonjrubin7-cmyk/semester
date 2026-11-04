@@ -73,6 +73,7 @@ describe('the institution repository reads the release cohort', () => {
     const client = {
       from: (table: string) => chain(table, table === 'tenant_feature_policy' ? feature
         : table === 'ai_policy' ? { data: { allowed_modes: ['explain'], allowed_providers: ['openai'], monthly_budget_cents: 100, retention_days: 30 }, error: null }
+        : table === 'ai_capability_policy' ? { data: [{ feature_key: 'assistant', enabled: true, permitted_roles: ['student'], allowed_modes: ['explain'] }], error: null }
         : members),
       rpc: async () => ({ data: 0, error: null }),
     } as unknown as SupabaseClient;
@@ -84,6 +85,9 @@ describe('the institution repository reads the release cohort', () => {
     const { repo, asked } = policyClient(feature([]), { data: [], error: null });
     expect((await repo.loadPolicy(identity)).state).toBe('production');
     expect(asked.map((a) => a.table)).not.toContain('feature_cohort_members');
+    expect((await repo.loadPolicy(identity)).capabilities.assistant).toEqual({
+      enabled: true, permittedRoles: ['student'], allowedModes: ['explain'],
+    });
   });
 
   it('is off for a student outside the named cohort, and on for a live member', async () => {

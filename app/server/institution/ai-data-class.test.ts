@@ -37,6 +37,7 @@ const request = (patch: Partial<IntelligenceGatewayRequest> = {}): IntelligenceG
 const policy = (): TenantIntelligencePolicy => ({
   state: 'sandbox', permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'],
   allowedModels: ['openai:gpt-5-mini'], maxRequestCents: 2, retentionDays: 30,
+  capabilities: { assistant: { enabled: true, permittedRoles: ['student'], allowedModes: ['explain', 'hint', 'practice', 'review'] } },
 });
 
 function fixture(patch: Partial<IntelligenceRespondInput> = {}) {

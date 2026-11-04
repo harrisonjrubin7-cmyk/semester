@@ -12,13 +12,13 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 264 |
-| Tables created in `public` and not later dropped | 360 |
-| … of which enable row-level security in a migration | 360 |
+| Migration files | 265 |
+| Tables created in `public` and not later dropped | 361 |
+| … of which enable row-level security in a migration | 361 |
 | Tables created in `private` and not later dropped | 59 |
 | … of which enable row-level security in a migration | 59 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 291 |
+| Tables named by at least one literal `create policy` statement | 292 |
 | Tables with RLS found and no literal policy statement | 128 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import {
   chooseModel,
+  intelligenceCapabilityFor,
   parseIntelligenceGatewayRequest,
   type ActionReceipt,
   type IntelligenceGatewayAction,
@@ -152,6 +153,25 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
   }
   if (!tenantPolicy.allowedModes.includes(request.mode)) {
     return result(403, { code: 'mode-disabled', message: 'This academic-integrity mode is not permitted.' });
+  }
+
+  const capability = intelligenceCapabilityFor(request);
+  const capabilityPolicy = tenantPolicy.capabilities[capability];
+  if (!capabilityPolicy?.enabled) {
+    await input.audit?.(identity, {
+      category: request.category, provider: '', model: '', inputTokens: 0, outputTokens: 0,
+      costCents: 0, policyDecision: `capability-disabled:${capability}`,
+    });
+    return result(403, {
+      code: 'capability-disabled',
+      message: 'Your institution has not enabled this AI capability. Core Semester coursework remains available.',
+    });
+  }
+  if (!identity.roles.some((role) => capabilityPolicy.permittedRoles.includes(role))) {
+    return result(403, { code: 'capability-role-disabled', message: 'This AI capability is not enabled for your verified role.' });
+  }
+  if (!capabilityPolicy.allowedModes.includes(request.mode)) {
+    return result(403, { code: 'capability-mode-disabled', message: 'This AI capability is not enabled for that support mode.' });
   }
 
   const agent = request.agent ?? 'assistant';

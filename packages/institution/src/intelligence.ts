@@ -4,6 +4,14 @@ export const INTELLIGENCE_GATEWAY_VERSION = 1 as const;
 
 export type IntelligenceFeatureState = 'off' | 'preview' | 'sandbox' | 'production';
 export type IntelligenceMode = 'explain' | 'hint' | 'practice' | 'review' | 'draft';
+export const INTELLIGENCE_CAPABILITIES = ['assistant', 'tutoring', 'writing', 'advising'] as const;
+export type IntelligenceCapability = (typeof INTELLIGENCE_CAPABILITIES)[number];
+
+export interface IntelligenceCapabilityPolicy {
+  enabled: boolean;
+  permittedRoles: string[];
+  allowedModes: IntelligenceMode[];
+}
 
 export interface IntelligenceGatewayAction {
   id: string;
@@ -60,6 +68,12 @@ export interface TenantIntelligencePolicy {
   monthlyBudgetCents?: number;
   monthlySpentCents?: number;
   retentionDays: number;
+  /**
+   * Independently administered AI surfaces. Missing entries are denied. The
+   * institution-wide role and mode lists remain ceilings: a surface can only
+   * narrow them, never widen them.
+   */
+  capabilities: Partial<Record<IntelligenceCapability, IntelligenceCapabilityPolicy>>;
 }
 
 export interface ModelCandidate {
@@ -76,6 +90,19 @@ export interface ModelRoute extends ModelCandidate {}
 
 const modes = new Set<IntelligenceMode>(['explain', 'hint', 'practice', 'review', 'draft']);
 const states = new Set<IntelligenceFeatureState>(['off', 'preview', 'sandbox', 'production']);
+
+/**
+ * Select the policy surface from validated request semantics, never from the
+ * free-form category supplied by a browser.
+ */
+export function intelligenceCapabilityFor(
+  request: Pick<IntelligenceGatewayRequest, 'agent' | 'mode'>,
+): IntelligenceCapability {
+  if (request.mode === 'draft') return 'writing';
+  if (request.agent === 'tutor' || request.agent === 'course-guide') return 'tutoring';
+  if (request.agent === 'advisor') return 'advising';
+  return 'assistant';
+}
 
 const strings = (value: unknown, name: string, maximum: number): string[] => {
   if (!Array.isArray(value) || value.length > maximum || value.some((item) => typeof item !== 'string' || !item || item.length > 300)) {

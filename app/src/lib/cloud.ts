@@ -1412,6 +1412,10 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'ai_capability_policy',
+    why: 'A school’s AI capability settings belong to the school, not the administrator who changed them. Deleting your account clears the updater reference; the settings and their separate audit history stay until the school changes or removes them.',
+  },
+  {
     table: 'module_mode_request',
     why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',
   },

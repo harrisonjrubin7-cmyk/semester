@@ -679,6 +679,9 @@ Returned flat, as `{"code", "message"}`, by `/v1/intelligence/respond`, `/policy
 | `policy-disabled` | 403 | yes | Tenant policy is `off`, or none of the caller's roles is permitted. |
 | `role-disabled` | 403 | yes | The caller's roles are not in the policy's permitted roles. |
 | `mode-disabled` | 403 | yes | The mode is not in the tenant's allowed modes. |
+| `capability-disabled` | 403 | yes | The requested AI surface is absent or disabled by the institution. Core academic workflows remain available. |
+| `capability-role-disabled` | 403 | yes | The requested AI surface is not enabled for the caller's verified institutional role. |
+| `capability-mode-disabled` | 403 | yes | The requested AI surface is not enabled for that support mode. |
 | `agent-action-refused` | 403 | yes | A role other than `assistant` proposed an action that is not `prepare`. |
 | `source-not-approved` | 403 | yes | No sources, or a source the tenant has not approved for this account. |
 | `source-context-refused` | 403 | yes | A source does not match the verified tenant, AI purpose, source identity, or current-freshness requirement. |

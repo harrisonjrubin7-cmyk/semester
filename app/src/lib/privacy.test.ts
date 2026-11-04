@@ -391,6 +391,7 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      'ai_capability_policy',
       'commercial_prices',
       'communities',
       'community_calibration_items',
