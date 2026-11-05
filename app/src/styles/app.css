@@ -2231,9 +2231,9 @@ a:hover {
 .section-label {
   font-family: var(--font-heading);
   font-size: calc(12px * var(--text-scale, 1));
-  letter-spacing: 0.2em;
+  letter-spacing: var(--tracking-section-label);
   text-transform: uppercase;
-  color: var(--app-accent-deep);
+  color: var(--text-secondary);
 }
 
 /* ── Industry components, restated for the stealth ground ───────────────── */

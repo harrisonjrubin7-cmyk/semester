@@ -167,6 +167,7 @@
      documentation should ask for. */
   --font-editorial: var(--font-heading);
   --font-product: var(--font-body);
+  --tracking-section-label: 0.12em;
   --type-role-display: var(--type-xl);
   --type-role-page: var(--type-display-lg);
   --type-role-section: var(--type-display-sm);

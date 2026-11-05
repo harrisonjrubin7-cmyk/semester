@@ -54,8 +54,8 @@ describe('accent', () => {
   });
 
   it('gives every accent a shade readable as text on the light ground', () => {
-    // Section labels and kickers are set in --app-accent-deep. A pale metal at
-    // 12px on parchment is a heading nobody can read, which is the failure a
+    // Kicker labels are set in --app-accent-deep. A pale metal at 10px on
+    // parchment is a label nobody can read, which is the failure a
     // light theme ships with when it is built by swapping the background.
     const paper = '#f4f1ea';
     for (const a of ACCENTS) {
