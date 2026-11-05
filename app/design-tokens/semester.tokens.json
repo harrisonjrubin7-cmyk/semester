@@ -3529,6 +3529,15 @@
         }
       }
     },
+    "tracking-section-label": {
+      "$type": "dimension",
+      "$value": "0.12em",
+      "$extensions": {
+        "semester": {
+          "css": "0.12em"
+        }
+      }
+    },
     "type-role-body": {
       "$type": "reference",
       "$value": "{primitive.type-base}",

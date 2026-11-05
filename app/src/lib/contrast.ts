@@ -4,7 +4,7 @@
  * `lib/look.ts` ships ten accents and six grounds, and any accent can be worn
  * on any ground. That is sixty pairings, and the four sample courses in the
  * repo have only ever been looked at in one or two of them. Nothing checked
- * the rest — so a combination that renders section labels at 2.4:1 against
+ * the rest — so a combination that renders kicker labels at 2.4:1 against
  * their panel would ship, and would only be found by the one person who
  * happened to choose it, who would have no way to know it was a bug rather
  * than a design.
@@ -19,8 +19,7 @@
  * non-text marks. The app uses the accent for three different jobs and they
  * are held to different bars:
  *
- *   - `--app-accent-deep` sets section labels and kickers — small uppercase
- *     text, so 4.5:1.
+ *   - `--app-accent-deep` sets kickers — small uppercase text, so 4.5:1.
  *   - `--app-accent` sets larger figures and active tab labels — 3:1.
  *   - `--app-accent-fill` is a dot, a bar, a meter. It carries meaning without
  *     being read, so 3:1 against what is behind it.

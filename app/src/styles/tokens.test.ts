@@ -68,6 +68,11 @@ describe('the semantic token layer', () => {
     expect(TOKENS).not.toMatch(/\brgba?\(|\bhsla?\(/i);
   });
 
+  it('keeps section headings quiet and tied to semantic tokens', () => {
+    expect(defs.get('--tracking-section-label')).toBe('0.12em');
+    expect(APP).toMatch(/\.section-label\s*\{[^}]*letter-spacing:\s*var\(--tracking-section-label\);[^}]*color:\s*var\(--text-secondary\);/);
+  });
+
   it('shares no name with industry.css', () => {
     const theirs = defined(INDUSTRY);
     expect([...defs.keys()].filter((k) => theirs.has(k))).toEqual([]);

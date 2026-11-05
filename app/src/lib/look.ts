@@ -42,10 +42,10 @@ export interface Accent {
   /**
    * The same metal, dark enough to be read as text on a light ground.
    *
-   * Not a nicety. Section labels and kickers are set in `--app-accent-deep`,
-   * and a pale metal at 12px on parchment is a heading you cannot read — which
-   * is exactly the failure a light theme ships with when it is built by
-   * swapping the background and calling it done.
+   * Not a nicety. Kicker text is set in `--app-accent-deep`, and a pale metal
+   * at 10px on parchment is a label you cannot read — which is exactly the
+   * failure a light theme ships with when it is built by swapping the
+   * background and calling it done.
    */
   shade: string;
 }
@@ -53,7 +53,7 @@ export interface Accent {
 /**
  * The accents the app will wear.
  *
- * The `deep` step sets section labels and kickers — small uppercase text — and
+ * The `deep` step sets kickers — small uppercase text — and
  * six of these were under WCAG's 4.5:1 against the darker panels, Oxblood
  * worst at 3.23:1 on Graphite. They have been lightened by the smallest amount
  * that clears it. Nothing was chosen by eye: `lib/contrast.test.ts` holds every
@@ -1366,8 +1366,8 @@ export function chartFor(g: Ground): string[] {
  * A whole accent from one hue.
  *
  * All four shades, not just the main one. `shade` in particular is not a
- * nicety — section labels are set in it, and a pale metal at 12px on parchment
- * is a heading nobody can read. Deriving it from the same hue is what keeps a
+ * nicety — kickers are set in it, and a pale metal at 10px on parchment is a
+ * label nobody can read. Deriving it from the same hue is what keeps a
  * dragged colour as usable as a chosen one, and `contrast()` is what proves it
  * on screen while the slider moves.
  */

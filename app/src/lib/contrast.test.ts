@@ -121,7 +121,7 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
       over(g.light ? a.shade : a.base, surface, g.light ? 0.1 : 0.12) ?? surface;
 
     return [
-      // Section labels and kickers: small uppercase text.
+      // Kicker labels: small uppercase text.
       { what: `${where} · accent-deep on panel`, ratio: contrast(t['--app-accent-deep'], panel) ?? 0, needs: AA_TEXT },
       { what: `${where} · accent-deep on bg`, ratio: contrast(t['--app-accent-deep'], bg) ?? 0, needs: AA_TEXT },
       // Figures and the active tab: larger text.
@@ -355,7 +355,7 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
 
   it('is legible in all of them', () => {
     // The failure this exists to catch: a pairing nobody has looked at that
-    // sets section labels at 2.4:1 and ships, findable only by the one person
+    // sets kicker labels at 2.4:1 and ships, findable only by the one person
     // who chose it — who has no way to know it is a bug and not a design.
     const failures: string[] = [];
     for (const { g, a } of combos) {
